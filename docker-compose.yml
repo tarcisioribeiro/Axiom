@@ -130,6 +130,7 @@ services:
       start_period: 40s
     networks:
       - network
+      - nginx_proxy_manager
 
   # React Frontend
   frontend:
@@ -155,6 +156,7 @@ services:
       start_period: 20s
     networks:
       - network
+      - nginx_proxy_manager
 
 volumes:
   postgres_data:
@@ -169,3 +171,6 @@ volumes:
 networks:
   network:
     driver: bridge
+  nginx_proxy_manager:
+    external: true
+    name: nginx_proxy_manager_default
