@@ -19,7 +19,7 @@ MindLedger/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, ai_assistant (Ollama-powered)
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, ai_assistant (Ollama-powered)
 
 **View Pattern**: Uses DRF generic views (not ViewSets). Each resource has two views:
 - `ResourceCreateListView(generics.ListCreateAPIView)` — GET list + POST create
