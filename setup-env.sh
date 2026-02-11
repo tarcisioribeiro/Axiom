@@ -339,6 +339,17 @@ if [ ! -d "$BACKUP_DIR" ]; then
     print_success "Diretório de backups criado: $BACKUP_DIR"
 fi
 
+# Corrigir permissões do diretório de media para o container Docker (appuser uid=1000)
+print_info "Corrigindo permissões do diretório de media..."
+if [ -d "./api/media" ]; then
+    sudo chown -R 1000:1000 ./api/media
+    print_success "Permissões do diretório de media corrigidas"
+else
+    mkdir -p ./api/media
+    sudo chown -R 1000:1000 ./api/media
+    print_success "Diretório de media criado com permissões corretas"
+fi
+
 # Resumo
 print_header "Resumo da Configuração"
 

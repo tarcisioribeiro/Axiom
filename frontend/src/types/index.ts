@@ -818,7 +818,9 @@ export interface ArchiveFormData {
 export interface ArchiveReveal {
   id: number;
   title: string;
-  text_content?: string;
+  text_content?: string | null;
+  error?: string | null;
+  error_type?: 'no_content' | 'decryption_failed' | null;
 }
 
 // Password Generator Types

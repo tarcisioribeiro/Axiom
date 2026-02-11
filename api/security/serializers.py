@@ -323,29 +323,9 @@ class ArchiveRevealSerializer(serializers.Serializer):
     """Serializer para revelar conteúdo de texto descriptografado."""
     id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(read_only=True)
-    text_content = serializers.SerializerMethodField()
-
-    def get_text_content(self, obj):
-        """Retorna o conteúdo descriptografado ou levanta exceção se falhar."""
-        if not obj._encrypted_text:
-            return None
-
-        try:
-            from app.encryption import FieldEncryption
-            decrypted = FieldEncryption.decrypt_data(obj._encrypted_text)
-            if decrypted is None:
-                raise serializers.ValidationError(
-                    "Não foi possível descriptografar o conteúdo. "
-                    "A chave de criptografia pode ter sido alterada."
-                )
-            return decrypted
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Erro ao descriptografar arquivo {obj.id}: {str(e)}")
-            raise serializers.ValidationError(
-                f"Erro ao descriptografar o conteúdo: {str(e)}"
-            )
+    text_content = serializers.CharField(read_only=True, allow_null=True, default=None)
+    error = serializers.CharField(read_only=True, allow_null=True, default=None)
+    error_type = serializers.CharField(read_only=True, allow_null=True, default=None)
 
 
 # ============================================================================

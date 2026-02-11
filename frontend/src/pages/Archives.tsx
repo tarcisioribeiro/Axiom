@@ -90,15 +90,22 @@ export default function Archives() {
     if (archive.archive_type === 'text' && archive.has_text) {
       try {
         const data = await archivesService.reveal(archive.id);
-        // Adiciona o texto descriptografado ao objeto archive
-        setSelectedArchive({ ...archive, text_content: data.text_content });
+        if (data.error) {
+          toast({
+            title: 'Erro ao carregar conteúdo',
+            description: data.error,
+            variant: 'destructive',
+          });
+          setSelectedArchive(archive);
+        } else {
+          setSelectedArchive({ ...archive, text_content: data.text_content ?? undefined });
+        }
       } catch (error: unknown) {
         toast({
           title: 'Erro ao carregar conteúdo',
           description: getErrorMessage(error),
           variant: 'destructive',
         });
-        // Ainda abre o diálogo, mas sem o conteúdo
         setSelectedArchive(archive);
       }
     } else {
@@ -150,7 +157,19 @@ export default function Archives() {
       setSelectedArchive(archive);
       const data = await archivesService.reveal(archive.id);
 
-      if (!data.text_content && data.text_content !== '') {
+      if (data.error) {
+        const title = data.error_type === 'decryption_failed'
+          ? 'Erro de descriptografia'
+          : 'Conteúdo indisponível';
+        toast({
+          title,
+          description: data.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (data.text_content == null) {
         toast({
           title: 'Conteúdo vazio',
           description: 'Este arquivo não possui conteúdo de texto armazenado.',
@@ -159,7 +178,7 @@ export default function Archives() {
         return;
       }
 
-      setRevealedContent(data.text_content || '');
+      setRevealedContent(data.text_content);
       setIsContentDialogOpen(true);
       toast({
         title: 'Conteúdo revelado',

@@ -1,3 +1,9 @@
+import logging
+import re
+import secrets
+import string
+from datetime import timedelta
+
 from rest_framework import generics, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,10 +14,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
-from datetime import timedelta
-import re
-import secrets
-import string
+
+logger = logging.getLogger(__name__)
 from app.permissions import GlobalDefaultPermission
 from security.models import (
     Password, StoredCreditCard, StoredBankAccount,
@@ -380,10 +384,28 @@ class ArchiveListCreateView(generics.ListCreateAPIView):
         return ArchiveSerializer
 
     def perform_create(self, serializer):
-        archive = serializer.save(
-            created_by=self.request.user,
-            updated_by=self.request.user
-        )
+        try:
+            archive = serializer.save(
+                created_by=self.request.user,
+                updated_by=self.request.user
+            )
+        except PermissionError:
+            logger.error("Permissão negada ao salvar arquivo em /app/media/security/")
+            raise serializers.ValidationError({
+                'encrypted_file': (
+                    'Erro de permissão ao salvar o arquivo no servidor. '
+                    'O diretório de armazenamento não possui permissão de escrita. '
+                    'Contate o administrador do sistema.'
+                )
+            })
+        except OSError as e:
+            logger.error(f"Erro de I/O ao salvar arquivo: {e}")
+            raise serializers.ValidationError({
+                'encrypted_file': (
+                    f'Erro ao salvar o arquivo no servidor: {e.strerror}. '
+                    'Contate o administrador do sistema.'
+                )
+            })
         log_activity(
             self.request,
             'create',
@@ -411,7 +433,25 @@ class ArchiveDetailView(generics.RetrieveUpdateDestroyAPIView):
         return ArchiveSerializer
 
     def perform_update(self, serializer):
-        archive = serializer.save(updated_by=self.request.user)
+        try:
+            archive = serializer.save(updated_by=self.request.user)
+        except PermissionError:
+            logger.error("Permissão negada ao atualizar arquivo em /app/media/security/")
+            raise serializers.ValidationError({
+                'encrypted_file': (
+                    'Erro de permissão ao salvar o arquivo no servidor. '
+                    'O diretório de armazenamento não possui permissão de escrita. '
+                    'Contate o administrador do sistema.'
+                )
+            })
+        except OSError as e:
+            logger.error(f"Erro de I/O ao atualizar arquivo: {e}")
+            raise serializers.ValidationError({
+                'encrypted_file': (
+                    f'Erro ao salvar o arquivo no servidor: {e.strerror}. '
+                    'Contate o administrador do sistema.'
+                )
+            })
         log_activity(
             self.request,
             'update',
@@ -456,8 +496,41 @@ class ArchiveRevealView(generics.RetrieveAPIView):
             f'Revelou conteúdo do arquivo: {instance.title}'
         )
 
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        response_data = {
+            'id': instance.id,
+            'title': instance.title,
+            'text_content': None,
+            'error': None,
+            'error_type': None,
+        }
+
+        if not instance._encrypted_text:
+            response_data['error'] = 'Este arquivo não possui conteúdo de texto armazenado.'
+            response_data['error_type'] = 'no_content'
+            return Response(response_data)
+
+        try:
+            from app.encryption import FieldEncryption
+            decrypted = FieldEncryption.decrypt_data(instance._encrypted_text)
+            if decrypted is None:
+                response_data['error'] = (
+                    'Não foi possível descriptografar o conteúdo. '
+                    'A chave de criptografia pode ter sido alterada.'
+                )
+                response_data['error_type'] = 'decryption_failed'
+            else:
+                response_data['text_content'] = decrypted
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao descriptografar arquivo {instance.id}: {str(e)}")
+            response_data['error'] = (
+                'Não foi possível descriptografar o conteúdo. '
+                'Verifique se a chave de criptografia (ENCRYPTION_KEY) está correta.'
+            )
+            response_data['error_type'] = 'decryption_failed'
+
+        return Response(response_data)
 
 
 class ArchiveDownloadView(APIView):
