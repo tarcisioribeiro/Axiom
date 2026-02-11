@@ -35,6 +35,8 @@ apps = [
     'personal_planning',
     'payables',
     'vaults',
+    'notifications',
+    'ai_assistant',
 ]
 
 # Buscar e adicionar permissões

@@ -5,7 +5,6 @@
 # - db: PostgreSQL para armazenamento de dados
 # - redis: Cache para sessões
 # - ollama: Servidor de IA local (LLM)
-# - minio: Object storage S3-compatible
 # - api: Django REST Framework backend
 # - frontend: React frontend
 # =============================================================================
@@ -87,30 +86,6 @@ services:
     networks:
       - network
 
-  # MinIO - S3-compatible Object Storage
-  minio:
-    image: minio/minio:latest
-    container_name: mindledger-minio
-    environment:
-      TZ: America/Sao_Paulo
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mindledger}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mindledger_secret}
-    ports:
-      - "${MINIO_PORT:-39105}:9000"
-      - "${MINIO_CONSOLE_PORT:-39106}:9001"
-    volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    networks:
-      - network
-
   # Django API Backend
   api:
     build:
@@ -130,12 +105,6 @@ services:
       - DJANGO_SETTINGS_MODULE=app.settings
       - REDIS_URL=redis://redis:6379/0
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-mindledger}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-mindledger_secret}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-mindledger}
-      - MINIO_USE_SSL=false
-      - MINIO_EXTERNAL_ENDPOINT=localhost:${MINIO_PORT:-39105}
     depends_on:
       db:
         condition: service_healthy
@@ -143,12 +112,11 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     volumes:
       - ./api:/app
+      - ./api/media:/app/media
       - ./api/logs:/app/logs
-      - ./api/staticfiles:/app/staticfiles
+      - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
     restart: unless-stopped
     healthcheck:
       test:
@@ -195,7 +163,7 @@ volumes:
     driver: local
   ollama_data:
     driver: local
-  minio_data:
+  staticfiles_data:
     driver: local
 
 networks:

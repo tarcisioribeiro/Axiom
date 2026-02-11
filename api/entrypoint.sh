@@ -31,34 +31,6 @@ if [ ! -w "/app/media/security/archives" ]; then
     echo "   Execute no host: sudo chown -R \$(id -u):\$(id -g) ./api/media"
 fi
 
-# Auto-create MinIO bucket if configured
-if [ -n "$MINIO_ENDPOINT" ]; then
-  echo "Criando bucket MinIO '$MINIO_BUCKET_NAME' se nao existir..."
-  python -c "
-import boto3
-from botocore.exceptions import ClientError
-import os
-
-endpoint = 'http://' + os.environ['MINIO_ENDPOINT']
-access_key = os.environ.get('MINIO_ACCESS_KEY', '')
-secret_key = os.environ.get('MINIO_SECRET_KEY', '')
-bucket = os.environ.get('MINIO_BUCKET_NAME', 'mindledger')
-
-s3 = boto3.client(
-    's3',
-    endpoint_url=endpoint,
-    aws_access_key_id=access_key,
-    aws_secret_access_key=secret_key,
-)
-try:
-    s3.head_bucket(Bucket=bucket)
-    print(f'Bucket {bucket} ja existe.')
-except ClientError:
-    s3.create_bucket(Bucket=bucket)
-    print(f'Bucket {bucket} criado com sucesso.')
-" || echo "Aviso: Nao foi possivel criar bucket MinIO (o servico pode nao estar pronto)."
-fi
-
 export PGPASSWORD="$DB_PASSWORD"
 
 # Create database if not exists
@@ -83,7 +55,18 @@ EOF
 
 python manage.py makemigrations
 python manage.py migrate
-python manage.py collectstatic --noinput
+
+# Collectstatic - tenta com --clear primeiro para evitar problemas de permissão
+# Se falhar, tenta sem --clear, e se ainda falhar, continua sem arquivos estáticos
+echo "📦 Coletando arquivos estáticos..."
+if ! python manage.py collectstatic --noinput --clear 2>/dev/null; then
+    echo "⚠️  collectstatic --clear falhou, tentando sem --clear..."
+    if ! python manage.py collectstatic --noinput 2>/dev/null; then
+        echo "⚠️  collectstatic falhou - arquivos estáticos podem não estar disponíveis"
+        echo "   Execute no host: sudo chown -R \$(id -u):\$(id -g) ./api/staticfiles"
+    fi
+fi
+
 python createsuperuser.py
 
 # Configurar grupo 'members' e suas permissões
