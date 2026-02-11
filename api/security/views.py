@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -10,6 +10,8 @@ from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta
 import re
+import secrets
+import string
 from app.permissions import GlobalDefaultPermission
 from security.models import (
     Password, StoredCreditCard, StoredBankAccount,
@@ -494,22 +496,32 @@ class ArchiveDownloadView(APIView):
         )
 
         # Retornar o arquivo
-        from django.http import FileResponse
-        import os
+        from django.core.files.storage import default_storage
+        from storages.backends.s3boto3 import S3Boto3Storage
 
-        file_path = archive.encrypted_file.path
-        if os.path.exists(file_path):
-            response = FileResponse(
-                open(file_path, 'rb'),
-                as_attachment=True,
-                filename=os.path.basename(file_path)
-            )
-            return response
+        if isinstance(default_storage, S3Boto3Storage):
+            # S3/MinIO: redirect to presigned URL
+            from django.http import HttpResponseRedirect
+            url = archive.encrypted_file.url
+            return HttpResponseRedirect(url)
         else:
-            return Response(
-                {'error': 'Arquivo não encontrado no sistema de arquivos'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            # Local filesystem
+            from django.http import FileResponse
+            import os
+
+            file_path = archive.encrypted_file.path
+            if os.path.exists(file_path):
+                response = FileResponse(
+                    open(file_path, 'rb'),
+                    as_attachment=True,
+                    filename=os.path.basename(file_path)
+                )
+                return response
+            else:
+                return Response(
+                    {'error': 'Arquivo não encontrado no sistema de arquivos'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
 
 # ============================================================================
@@ -768,3 +780,134 @@ class SecurityDashboardStatsView(APIView):
             return 'medium'
         else:
             return 'weak'
+
+
+def get_password_strength(password):
+    """Determina a força de uma senha (standalone function)."""
+    if len(password) < 8:
+        return 'weak'
+
+    has_upper = bool(re.search(r'[A-Z]', password))
+    has_lower = bool(re.search(r'[a-z]', password))
+    has_digit = bool(re.search(r'\d', password))
+    has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
+
+    criteria_met = sum([has_upper, has_lower, has_digit, has_special])
+
+    if len(password) >= 12 and criteria_met >= 3:
+        return 'strong'
+    elif len(password) >= 8 and criteria_met >= 2:
+        return 'medium'
+    else:
+        return 'weak'
+
+
+class PasswordGenerateSerializer(serializers.Serializer):
+    length = serializers.IntegerField(default=16, min_value=8, max_value=128)
+    uppercase = serializers.BooleanField(default=True)
+    lowercase = serializers.BooleanField(default=True)
+    numbers = serializers.BooleanField(default=True)
+    special_characters = serializers.BooleanField(default=True)
+    exclude_ambiguous = serializers.BooleanField(default=False)
+
+
+class PasswordGenerateView(APIView):
+    """
+    POST /api/v1/security/passwords/generate/
+
+    Gera uma senha criptograficamente segura com opcoes configuraveis.
+
+    Request body:
+    {
+        "length": 16,           // 8-128, default 16
+        "uppercase": true,      // Incluir A-Z
+        "lowercase": true,      // Incluir a-z
+        "numbers": true,        // Incluir 0-9
+        "special_characters": true,  // Incluir !@#$%^&*...
+        "exclude_ambiguous": false   // Excluir 0OIl1|
+    }
+
+    Response:
+    {
+        "password": "aB3$xY9!kL2@mN5&",
+        "length": 16,
+        "strength": "strong"
+    }
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PasswordGenerateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        length = data['length']
+        use_upper = data['uppercase']
+        use_lower = data['lowercase']
+        use_numbers = data['numbers']
+        use_special = data['special_characters']
+        exclude_ambiguous = data['exclude_ambiguous']
+
+        # Build character pools
+        ambiguous_chars = set('0OIl1|')
+        charset = ''
+        required_chars = []
+
+        if use_upper:
+            pool = string.ascii_uppercase
+            if exclude_ambiguous:
+                pool = ''.join(c for c in pool if c not in ambiguous_chars)
+            charset += pool
+            required_chars.append(secrets.choice(pool))
+
+        if use_lower:
+            pool = string.ascii_lowercase
+            if exclude_ambiguous:
+                pool = ''.join(c for c in pool if c not in ambiguous_chars)
+            charset += pool
+            required_chars.append(secrets.choice(pool))
+
+        if use_numbers:
+            pool = string.digits
+            if exclude_ambiguous:
+                pool = ''.join(c for c in pool if c not in ambiguous_chars)
+            charset += pool
+            required_chars.append(secrets.choice(pool))
+
+        if use_special:
+            pool = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+            if exclude_ambiguous:
+                pool = ''.join(c for c in pool if c not in ambiguous_chars)
+            charset += pool
+            required_chars.append(secrets.choice(pool))
+
+        if not charset:
+            return Response(
+                {'error': 'Selecione pelo menos um tipo de caractere.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate remaining characters
+        remaining_length = length - len(required_chars)
+        if remaining_length < 0:
+            remaining_length = 0
+
+        password_chars = required_chars + [
+            secrets.choice(charset) for _ in range(remaining_length)
+        ]
+
+        # Shuffle to avoid predictable positions of required chars
+        password_list = list(password_chars)
+        # Fisher-Yates shuffle using secrets
+        for i in range(len(password_list) - 1, 0, -1):
+            j = secrets.randbelow(i + 1)
+            password_list[i], password_list[j] = password_list[j], password_list[i]
+
+        generated_password = ''.join(password_list)
+        strength = get_password_strength(generated_password)
+
+        return Response({
+            'password': generated_password,
+            'length': len(generated_password),
+            'strength': strength,
+        })

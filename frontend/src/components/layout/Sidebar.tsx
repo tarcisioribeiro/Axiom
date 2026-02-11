@@ -35,6 +35,7 @@ import {
   ClipboardList,
   Vault,
   Bot,
+  Wand2,
 } from 'lucide-react';
 
 interface NavSubItem {
@@ -137,6 +138,7 @@ const navModules: NavModule[] = [
       { title: 'Senhas', href: '/security/passwords', icon: <Key className="w-4 h-4" /> },
       { title: 'Cartões Armazenados', href: '/security/stored-cards', icon: <CreditCard className="w-4 h-4" /> },
       { title: 'Contas Armazenadas', href: '/security/stored-accounts', icon: <Wallet className="w-4 h-4" /> },
+      { title: 'Gerador de Senhas', href: '/security/password-generator', icon: <Wand2 className="w-4 h-4" /> },
       { title: 'Arquivos', href: '/security/archives', icon: <Archive className="w-4 h-4" /> },
     ],
   },

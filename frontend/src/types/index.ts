@@ -821,6 +821,22 @@ export interface ArchiveReveal {
   text_content?: string;
 }
 
+// Password Generator Types
+export interface PasswordGenerateRequest {
+  length?: number;
+  uppercase?: boolean;
+  lowercase?: boolean;
+  numbers?: boolean;
+  special_characters?: boolean;
+  exclude_ambiguous?: boolean;
+}
+
+export interface PasswordGenerateResponse {
+  password: string;
+  length: number;
+  strength: string;
+}
+
 // Activity Log Types
 export interface ActivityLog {
   id: number;

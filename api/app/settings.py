@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'drf_spectacular',
+    'storages',
     'app',
     'authentication',
     'accounts',
@@ -164,6 +165,33 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# MinIO / S3 Storage Configuration
+MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', '')
+MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY', '')
+MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY', '')
+MINIO_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME', 'mindledger')
+MINIO_USE_SSL = os.getenv('MINIO_USE_SSL', 'false').lower() == 'true'
+MINIO_EXTERNAL_ENDPOINT = os.getenv('MINIO_EXTERNAL_ENDPOINT', '')
+
+if MINIO_ENDPOINT and 'test' not in sys.argv:
+    STORAGES = {
+        "default": {
+            "BACKEND": "app.storage.MinIOStorage",
+            "OPTIONS": {
+                "access_key": MINIO_ACCESS_KEY,
+                "secret_key": MINIO_SECRET_KEY,
+                "bucket_name": MINIO_BUCKET_NAME,
+                "endpoint_url": f"{'https' if MINIO_USE_SSL else 'http'}://{MINIO_ENDPOINT}",
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -298,7 +326,7 @@ os.makedirs(logs_dir, exist_ok=True)
 # Permitir apenas origens específicas (desenvolvimento e produção)
 CORS_ALLOWED_ORIGINS = os.getenv(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:3000,http://127.0.0.1:3000'
+    'http://localhost:39101,http://127.0.0.1:39101'
 ).split(',')
 CORS_ALLOW_CREDENTIALS = True
 

@@ -31,6 +31,34 @@ if [ ! -w "/app/media/security/archives" ]; then
     echo "   Execute no host: sudo chown -R \$(id -u):\$(id -g) ./api/media"
 fi
 
+# Auto-create MinIO bucket if configured
+if [ -n "$MINIO_ENDPOINT" ]; then
+  echo "Criando bucket MinIO '$MINIO_BUCKET_NAME' se nao existir..."
+  python -c "
+import boto3
+from botocore.exceptions import ClientError
+import os
+
+endpoint = 'http://' + os.environ['MINIO_ENDPOINT']
+access_key = os.environ.get('MINIO_ACCESS_KEY', '')
+secret_key = os.environ.get('MINIO_SECRET_KEY', '')
+bucket = os.environ.get('MINIO_BUCKET_NAME', 'mindledger')
+
+s3 = boto3.client(
+    's3',
+    endpoint_url=endpoint,
+    aws_access_key_id=access_key,
+    aws_secret_access_key=secret_key,
+)
+try:
+    s3.head_bucket(Bucket=bucket)
+    print(f'Bucket {bucket} ja existe.')
+except ClientError:
+    s3.create_bucket(Bucket=bucket)
+    print(f'Bucket {bucket} criado com sucesso.')
+" || echo "Aviso: Nao foi possivel criar bucket MinIO (o servico pode nao estar pronto)."
+fi
+
 export PGPASSWORD="$DB_PASSWORD"
 
 # Create database if not exists

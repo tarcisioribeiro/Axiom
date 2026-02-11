@@ -35,6 +35,7 @@ const Passwords = lazy(() => import('./pages/Passwords'));
 const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
+const PasswordGeneratorPage = lazy(() => import('./pages/PasswordGeneratorPage'));
 
 // Library Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
@@ -115,6 +116,7 @@ function AnimatedRoutes() {
           <Route path="/security/passwords" element={<Suspense fallback={<LoadingFallback />}><Passwords /></Suspense>} />
           <Route path="/security/stored-cards" element={<Suspense fallback={<LoadingFallback />}><StoredCards /></Suspense>} />
           <Route path="/security/stored-accounts" element={<Suspense fallback={<LoadingFallback />}><StoredAccounts /></Suspense>} />
+          <Route path="/security/password-generator" element={<Suspense fallback={<LoadingFallback />}><PasswordGeneratorPage /></Suspense>} />
           <Route path="/security/archives" element={<Suspense fallback={<LoadingFallback />}><Archives /></Suspense>} />
 
           {/* Library Module routes */}

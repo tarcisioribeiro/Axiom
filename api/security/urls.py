@@ -4,6 +4,7 @@ from security.views import (
     PasswordListCreateView,
     PasswordDetailView,
     PasswordRevealView,
+    PasswordGenerateView,
     # Stored Credit Card views
     StoredCreditCardListCreateView,
     StoredCreditCardDetailView,
@@ -29,6 +30,7 @@ urlpatterns = [
 
     # Passwords
     path('passwords/', PasswordListCreateView.as_view(), name='password-list-create'),
+    path('passwords/generate/', PasswordGenerateView.as_view(), name='password-generate'),
     path('passwords/<int:pk>/', PasswordDetailView.as_view(), name='password-detail'),
     path('passwords/<int:pk>/reveal/', PasswordRevealView.as_view(), name='password-reveal'),
 

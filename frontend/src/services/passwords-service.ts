@@ -1,6 +1,9 @@
 import { apiClient } from './api-client';
 import { API_CONFIG } from '@/config/constants';
-import type { Password, PasswordFormData, PasswordReveal, PaginatedResponse } from '@/types';
+import type {
+  Password, PasswordFormData, PasswordReveal, PaginatedResponse,
+  PasswordGenerateRequest, PasswordGenerateResponse,
+} from '@/types';
 
 /**
  * Servico para gerenciamento de senhas armazenadas.
@@ -69,6 +72,16 @@ class PasswordsService {
    */
   async reveal(id: number): Promise<PasswordReveal> {
     return apiClient.get<PasswordReveal>(`${API_CONFIG.ENDPOINTS.PASSWORDS}${id}/reveal/`);
+  }
+
+  /**
+   * Gera uma senha criptograficamente segura.
+   *
+   * @param options - Opcoes de geracao (comprimento, tipos de caracteres)
+   * @returns Senha gerada com informacao de forca
+   */
+  async generate(options: PasswordGenerateRequest = {}): Promise<PasswordGenerateResponse> {
+    return apiClient.post<PasswordGenerateResponse>(API_CONFIG.ENDPOINTS.PASSWORD_GENERATE, options);
   }
 }
 

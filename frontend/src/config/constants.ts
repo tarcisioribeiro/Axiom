@@ -5,26 +5,21 @@ const getApiBaseUrl = (): string => {
   // URL padrão da API (definida em build-time ou fallback)
   const defaultApiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100';
 
-  // Se estamos no browser, calcular dinamicamente para IPs de rede
+  // Sempre usar o hostname do browser para evitar problemas de cross-site cookies
+  // Ex: acessar via 127.0.0.1 mas API apontar para localhost causa SameSite cookie block
   if (typeof window !== 'undefined') {
     const { hostname, protocol } = window.location;
 
-    // Se o hostname não é localhost/127.0.0.1, usar o mesmo hostname para API
-    // Isso permite acesso via IP da rede (ex: 192.168.2.200)
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      // Extrai a porta da URL padrão ou usa 39100
-      let apiPort = '39100';
-      try {
-        const url = new URL(defaultApiUrl);
-        apiPort = url.port || '39100';
-      } catch {
-        // Se falhar ao parsear URL, usa porta padrão
-      }
+    try {
+      const url = new URL(defaultApiUrl);
+      const apiPort = url.port || '39100';
       return `${protocol}//${hostname}:${apiPort}`;
+    } catch {
+      // Se falhar ao parsear URL, usa porta padrão
     }
   }
 
-  // Fallback para URL padrão
+  // Fallback para URL padrão (SSR ou erro de parse)
   return defaultApiUrl;
 };
 
@@ -57,6 +52,7 @@ export const API_CONFIG = {
 
     // Security Module
     PASSWORDS: '/api/v1/security/passwords/',
+    PASSWORD_GENERATE: '/api/v1/security/passwords/generate/',
     STORED_CARDS: '/api/v1/security/stored-cards/',
     STORED_ACCOUNTS: '/api/v1/security/stored-accounts/',
     ARCHIVES: '/api/v1/security/archives/',

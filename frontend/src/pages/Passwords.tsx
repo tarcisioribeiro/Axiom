@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, Copy, ExternalLink, Key } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, Copy, ExternalLink, Key, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -38,6 +38,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
+import { PasswordGenerator } from '@/components/security/PasswordGenerator';
 
 export default function Passwords() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -49,6 +50,7 @@ export default function Passwords() {
   const [revealedPasswords, setRevealedPasswords] = useState<Map<number, string>>(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showGenerator, setShowGenerator] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -409,9 +411,21 @@ export default function Passwords() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">
-                Senha {selectedPassword ? '' : '*'}
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">
+                  Senha {selectedPassword ? '' : '*'}
+                </Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowGenerator(!showGenerator)}
+                  className="h-auto py-1 px-2 text-xs"
+                >
+                  <Wand2 className="mr-1 h-3 w-3" />
+                  {showGenerator ? 'Ocultar Gerador' : 'Gerar Senha'}
+                </Button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -419,6 +433,16 @@ export default function Passwords() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder={selectedPassword ? 'Deixe vazio para manter a atual' : ''}
               />
+              {showGenerator && (
+                <div className="border rounded-lg p-3 bg-muted/30">
+                  <PasswordGenerator
+                    compact
+                    onPasswordGenerated={(password) => {
+                      setFormData({ ...formData, password });
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

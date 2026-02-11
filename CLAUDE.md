@@ -179,6 +179,8 @@ def get_queryset(self):
 - **Database**: localhost:39102 (PostgreSQL)
 - **Redis**: localhost:39103
 - **Ollama**: localhost:39104
+- **MinIO API**: localhost:39105
+- **MinIO Console**: localhost:39106
 
 ## Tool Configuration
 
