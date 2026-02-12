@@ -189,37 +189,13 @@ build_images() {
 tag_and_push_images() {
   log_info "Tagging and pushing images to local registry..."
 
-<<<<<<< HEAD
-    # Tag images for local registry
-    docker tag mindledger-api:latest "localhost:${REGISTRY_PORT}/mindledger-api:latest"
-    docker tag mindledger-frontend:latest "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-||||||| 18a80e2
-    # Tag images for local registry
-    docker tag mindledger-api:latest "localhost:${REGISTRY_PORT}/mindledger-api:latest"
-    docker tag mindledger-frontend:latest "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-    docker tag mindledger-embeddings:latest "localhost:${REGISTRY_PORT}/mindledger-embeddings:latest"
-=======
   # Tag images for local registry
   docker tag mindledger-api:latest "localhost:${REGISTRY_PORT}/mindledger-api:latest"
   docker tag mindledger-frontend:latest "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-  docker tag mindledger-embeddings:latest "localhost:${REGISTRY_PORT}/mindledger-embeddings:latest"
->>>>>>> 27ed8c383b4c47d087f3d7604af2bbb621aa7ffc
 
-<<<<<<< HEAD
-    # Push to local registry
-    docker push "localhost:${REGISTRY_PORT}/mindledger-api:latest"
-    docker push "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-||||||| 18a80e2
-    # Push to local registry
-    docker push "localhost:${REGISTRY_PORT}/mindledger-api:latest"
-    docker push "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-    docker push "localhost:${REGISTRY_PORT}/mindledger-embeddings:latest"
-=======
   # Push to local registry
   docker push "localhost:${REGISTRY_PORT}/mindledger-api:latest"
   docker push "localhost:${REGISTRY_PORT}/mindledger-frontend:latest"
-  docker push "localhost:${REGISTRY_PORT}/mindledger-embeddings:latest"
->>>>>>> 27ed8c383b4c47d087f3d7604af2bbb621aa7ffc
 
   log_success "Images pushed to local registry."
 }
@@ -232,9 +208,14 @@ load_env_vars() {
   log_info "Loading environment variables from .env..."
 
   if [[ -f "${SCRIPT_DIR}/.env" ]]; then
-    set -a
-    source "${SCRIPT_DIR}/.env"
-    set +a
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      # Skip comments and empty lines
+      [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+      # Export the variable, quoting the value to handle special chars
+      if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*) ]]; then
+        export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+      fi
+    done < "${SCRIPT_DIR}/.env"
     log_success "Environment variables loaded."
   else
     log_error ".env file not found. Please create it from .env.example"
@@ -262,27 +243,9 @@ apply_manifests() {
   log_info "Deploying Redis..."
   kubectl apply -f "${K8S_DIR}/redis/"
 
-<<<<<<< HEAD
-    # Apply API
-    log_info "Deploying API..."
-    kubectl apply -f "${K8S_DIR}/api/"
-||||||| 18a80e2
-    # Apply Embeddings service
-    log_info "Deploying Embeddings service..."
-    kubectl apply -f "${K8S_DIR}/embeddings/"
-
-    # Apply API
-    log_info "Deploying API..."
-    kubectl apply -f "${K8S_DIR}/api/"
-=======
-  # Apply Embeddings service
-  log_info "Deploying Embeddings service..."
-  kubectl apply -f "${K8S_DIR}/embeddings/"
-
   # Apply API
   log_info "Deploying API..."
   kubectl apply -f "${K8S_DIR}/api/"
->>>>>>> 27ed8c383b4c47d087f3d7604af2bbb621aa7ffc
 
   # Apply Frontend
   log_info "Deploying Frontend..."
@@ -297,24 +260,10 @@ apply_manifests() {
 wait_for_deployments() {
   log_info "Waiting for deployments to be ready..."
 
-<<<<<<< HEAD
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/postgres || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/redis || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/api || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/frontend || true
-||||||| 18a80e2
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/postgres || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/redis || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/embeddings || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/api || true
-    kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/frontend || true
-=======
   kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/postgres || true
   kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/redis || true
-  kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/embeddings || true
   kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/api || true
   kubectl -n mindledger wait --for=condition=available --timeout=300s deployment/frontend || true
->>>>>>> 27ed8c383b4c47d087f3d7604af2bbb621aa7ffc
 
   log_success "All deployments are ready."
 }
