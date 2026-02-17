@@ -170,6 +170,15 @@ if [ "$MODE" == "auto" ]; then
     ENABLE_DEBUG_TOOLBAR="False"
     SHOW_SQL_QUERIES="False"
 
+    MINIO_ROOT_USER="mindledger"
+    MINIO_ROOT_PASSWORD="mindledger_secret"
+    MINIO_BUCKET_NAME="mindledger"
+    MINIO_ENDPOINT="minio:9000"
+    MINIO_EXTERNAL_ENDPOINT="localhost:39105"
+    MINIO_USE_SSL="false"
+    MINIO_PORT="39105"
+    MINIO_CONSOLE_PORT="39106"
+
 else
     # Modo interativo
     read -p "Host do banco de dados [db]: " DB_HOST
@@ -243,6 +252,28 @@ else
     BACKUP_DIR="./backups"
     ENABLE_DEBUG_TOOLBAR="False"
     SHOW_SQL_QUERIES="False"
+
+    print_header "Configuração do MinIO (Object Storage)"
+
+    read -p "Endpoint interno do MinIO [minio:9000]: " MINIO_ENDPOINT
+    MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio:9000}
+
+    read -p "Endpoint externo do MinIO [localhost:39105]: " MINIO_EXTERNAL_ENDPOINT
+    MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT:-localhost:39105}
+
+    read -p "Usuário do MinIO [mindledger]: " MINIO_ROOT_USER
+    MINIO_ROOT_USER=${MINIO_ROOT_USER:-mindledger}
+
+    read -sp "Senha do MinIO [mindledger_secret]: " MINIO_ROOT_PASSWORD
+    echo
+    MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-mindledger_secret}
+
+    read -p "Nome do bucket [mindledger]: " MINIO_BUCKET_NAME
+    MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-mindledger}
+
+    MINIO_USE_SSL="false"
+    MINIO_PORT="39105"
+    MINIO_CONSOLE_PORT="39106"
 fi
 
 # Criar arquivo .env
@@ -312,6 +343,18 @@ CSRF_COOKIE_SECURE=$CSRF_COOKIE_SECURE
 # BACKUP CONFIGURATION
 # ============================================================================
 BACKUP_DIR=$BACKUP_DIR
+
+# ============================================================================
+# MinIO / S3 Object Storage
+# ============================================================================
+MINIO_ROOT_USER=$MINIO_ROOT_USER
+MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
+MINIO_BUCKET_NAME=$MINIO_BUCKET_NAME
+MINIO_ENDPOINT=$MINIO_ENDPOINT
+MINIO_EXTERNAL_ENDPOINT=$MINIO_EXTERNAL_ENDPOINT
+MINIO_USE_SSL=$MINIO_USE_SSL
+MINIO_PORT=$MINIO_PORT
+MINIO_CONSOLE_PORT=$MINIO_CONSOLE_PORT
 
 # ============================================================================
 # DEVELOPMENT SETTINGS

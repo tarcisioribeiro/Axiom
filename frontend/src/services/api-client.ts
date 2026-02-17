@@ -460,6 +460,17 @@ class ApiClient {
     const response = await this.client.delete<T>(url);
     return response.data;
   }
+
+  /**
+   * Realiza uma requisicao GET que retorna um Blob (para download de arquivos).
+   *
+   * @param url - URL do endpoint (relativo ao BASE_URL)
+   * @returns Promise com o Blob da resposta
+   */
+  async getBlob(url: string): Promise<Blob> {
+    const response = await this.client.get(url, { responseType: 'blob' });
+    return response.data;
+  }
 }
 
 // Export singleton instance

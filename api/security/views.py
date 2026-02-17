@@ -568,33 +568,30 @@ class ArchiveDownloadView(APIView):
             f'Fez download do arquivo: {archive.title}'
         )
 
-        # Retornar o arquivo
-        from django.core.files.storage import default_storage
-        from storages.backends.s3boto3 import S3Boto3Storage
+        # Retornar o arquivo via streaming (proxy through Django to avoid CORS)
+        from django.http import FileResponse
+        import mimetypes
 
-        if isinstance(default_storage, S3Boto3Storage):
-            # S3/MinIO: redirect to presigned URL
-            from django.http import HttpResponseRedirect
-            url = archive.encrypted_file.url
-            return HttpResponseRedirect(url)
-        else:
-            # Local filesystem
-            from django.http import FileResponse
-            import os
+        try:
+            file = archive.encrypted_file.open('rb')
+        except Exception:
+            return Response(
+                {'error': 'Arquivo não encontrado no sistema de arquivos'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-            file_path = archive.encrypted_file.path
-            if os.path.exists(file_path):
-                response = FileResponse(
-                    open(file_path, 'rb'),
-                    as_attachment=True,
-                    filename=os.path.basename(file_path)
-                )
-                return response
-            else:
-                return Response(
-                    {'error': 'Arquivo não encontrado no sistema de arquivos'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+        filename = archive.file_name or archive.encrypted_file.name.split('/')[-1]
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            content_type = 'application/octet-stream'
+
+        response = FileResponse(
+            file,
+            as_attachment=True,
+            filename=filename,
+            content_type=content_type,
+        )
+        return response
 
 
 # ============================================================================

@@ -115,6 +115,8 @@ if 'test' in sys.argv:
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:'
     }
+    # Disable MinIO storage during tests — use default local filesystem
+    os.environ.pop('MINIO_ENDPOINT', None)
 
 AUTH_PASSWORD_TYPES = [
     'UserAttributeSimilarityValidator',
@@ -164,6 +166,28 @@ SIMPLE_JWT = {
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# MinIO / S3 Object Storage
+MINIO_ENDPOINT = os.getenv('MINIO_ENDPOINT', '')
+
+if MINIO_ENDPOINT:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'app.storage.MinIOStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+    AWS_ACCESS_KEY_ID = os.getenv('MINIO_ROOT_USER', 'mindledger')
+    AWS_SECRET_ACCESS_KEY = os.getenv('MINIO_ROOT_PASSWORD', 'mindledger_secret')
+    AWS_STORAGE_BUCKET_NAME = os.getenv('MINIO_BUCKET_NAME', 'mindledger')
+    AWS_S3_ENDPOINT_URL = f'http://{MINIO_ENDPOINT}'
+    AWS_S3_REGION_NAME = 'us-east-1'
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = True
+    AWS_S3_ADDRESSING_STYLE = 'path'
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

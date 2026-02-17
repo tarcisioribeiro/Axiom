@@ -56,10 +56,7 @@ class ArchivesService {
   }
 
   async download(id: number): Promise<Blob> {
-    const response = await apiClient.get(`${API_CONFIG.ENDPOINTS.ARCHIVES}${id}/download/`, {
-      responseType: 'blob',
-    });
-    return response as unknown as Blob;
+    return apiClient.getBlob(`${API_CONFIG.ENDPOINTS.ARCHIVES}${id}/download/`);
   }
 }
 
