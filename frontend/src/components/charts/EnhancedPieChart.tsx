@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { EnhancedTooltip } from './EnhancedTooltip';
 import { truncateLabel } from '@/lib/chart-formatters';
+import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import type { ChartDataPoint } from '@/lib/chart-types';
 
 interface EnhancedPieChartProps {
@@ -41,6 +42,7 @@ export const EnhancedPieChart = ({
   customColors,
   height = 300,
 }: EnhancedPieChartProps) => {
+  const dims = useChartDimensions();
 
   // Calcula o total para percentuais na legenda
   const total = useMemo(
@@ -69,8 +71,11 @@ export const EnhancedPieChart = ({
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-foreground/80 truncate max-w-[100px]" title={entry.value}>
-                {truncateLabel(entry.value, 12)}
+              <span
+                className={`text-foreground/80 truncate ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[100px]'}`}
+                title={entry.value}
+              >
+                {truncateLabel(entry.value, dims.truncateXAxisLabel)}
               </span>
               <span className="font-medium">
                 {percent}%
@@ -90,7 +95,7 @@ export const EnhancedPieChart = ({
           cx="50%"
           cy="45%"
           innerRadius="0%"
-          outerRadius="85%"
+          outerRadius={dims.pieOuterRadius}
           paddingAngle={2}
           dataKey={dataKey}
           nameKey={nameKey}

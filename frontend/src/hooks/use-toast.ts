@@ -53,6 +53,7 @@ type Action =
 
 interface State {
   toasts: ToasterToast[];
+  pending: ToasterToast[];
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
@@ -75,11 +76,18 @@ const addToRemoveQueue = (toastId: string) => {
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case 'ADD_TOAST':
+    case 'ADD_TOAST': {
+      if (state.toasts.length < TOAST_LIMIT) {
+        return {
+          ...state,
+          toasts: [action.toast, ...state.toasts],
+        };
+      }
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        pending: [...state.pending, action.toast],
       };
+    }
 
     case 'UPDATE_TOAST':
       return {
@@ -112,23 +120,30 @@ export const reducer = (state: State, action: Action): State => {
         ),
       };
     }
-    case 'REMOVE_TOAST':
+    case 'REMOVE_TOAST': {
       if (action.toastId === undefined) {
         return {
           ...state,
           toasts: [],
+          pending: [],
         };
       }
+      const filtered = state.toasts.filter((t) => t.id !== action.toastId);
+      const availableSlots = TOAST_LIMIT - filtered.length;
+      const toPromote = state.pending.slice(0, availableSlots);
+      const remainingPending = state.pending.slice(availableSlots);
       return {
         ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+        toasts: [...filtered, ...toPromote],
+        pending: remainingPending,
       };
+    }
   }
 };
 
 const listeners: Array<(state: State) => void> = [];
 
-let memoryState: State = { toasts: [] };
+let memoryState: State = { toasts: [], pending: [] };
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action);

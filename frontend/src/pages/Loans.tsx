@@ -33,6 +33,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { SearchInput } from '@/components/common/SearchInput';
 import type { Loan, LoanFormData, Account, Member } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -269,9 +270,14 @@ export default function Loans() {
       </div>
 
       {filteredLoans.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg bg-card">
-          <p>Nenhum empréstimo encontrado.</p>
-        </div>
+        <EmptyState
+          icon={<HandCoins className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhum empréstimo encontrado para a pesquisa atual.'
+              : 'Nenhum empréstimo cadastrado. Clique em "Novo Empréstimo" para começar.'
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredLoans.map((loan) => (

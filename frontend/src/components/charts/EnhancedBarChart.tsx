@@ -12,6 +12,7 @@ import {
 import { EnhancedTooltip } from './EnhancedTooltip';
 import { useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatNumber, truncateLabel } from '@/lib/chart-formatters';
+import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import type { ChartDataPoint, BarLayout } from '@/lib/chart-types';
 
 interface EnhancedBarChartProps {
@@ -49,6 +50,8 @@ export const EnhancedBarChart = ({
   layout = 'vertical',
   height = 300,
 }: EnhancedBarChartProps) => {
+  const dims = useChartDimensions();
+
   // Gera IDs únicos para gradientes
   const getGradientId = useChartGradientId('bar');
 
@@ -75,8 +78,9 @@ export const EnhancedBarChart = ({
   const barRadius: [number, number, number, number] =
     layout === 'vertical' ? [0, 6, 6, 0] : [6, 6, 0, 0];
 
-  // Largura do eixo Y para layout vertical (categorias)
-  const yAxisWidth = layout === 'vertical' ? 120 : 50;
+  // Largura do eixo Y para layout vertical (categorias) — responsiva
+  const yAxisWidth =
+    layout === 'vertical' ? dims.yAxisWidthWide : dims.yAxisWidth;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -104,7 +108,7 @@ export const EnhancedBarChart = ({
           <>
             <XAxis
               type="number"
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
               tickFormatter={axisFormatNumber}
@@ -113,10 +117,10 @@ export const EnhancedBarChart = ({
               dataKey={nameKey}
               type="category"
               width={yAxisWidth}
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => truncateLabel(String(value), 18)}
+              tickFormatter={(value) => truncateLabel(String(value), dims.truncateYAxisLabel)}
             />
           </>
         ) : (
@@ -124,22 +128,22 @@ export const EnhancedBarChart = ({
             <XAxis
               dataKey={nameKey}
               type="category"
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickFormatter={(value) => truncateLabel(String(value), 12)}
+              tickFormatter={(value) => truncateLabel(String(value), dims.truncateXAxisLabel)}
               interval={0}
               angle={data.length > 5 ? -35 : 0}
               textAnchor={data.length > 5 ? 'end' : 'middle'}
-              height={data.length > 5 ? 60 : 30}
+              height={data.length > 5 ? dims.xAxisHeightRotated : 30}
             />
             <YAxis
               type="number"
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={axisFormatNumber}
-              width={50}
+              width={dims.yAxisWidth}
             />
           </>
         )}

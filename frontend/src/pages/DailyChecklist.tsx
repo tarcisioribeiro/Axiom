@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +36,7 @@ import {
 } from '@/components/ui/dialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { taskInstancesService } from '@/services/task-instances-service';
@@ -473,17 +473,11 @@ export default function DailyChecklist() {
       </div>
 
       {cards.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <CheckCircle2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Nenhuma tarefa programada para este dia.</p>
-              <p className="text-sm">
-                Crie tarefas rotineiras para começar seu acompanhamento!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+          title="Nenhuma tarefa programada"
+          message="Nenhuma tarefa programada para este dia. Crie tarefas rotineiras para começar seu acompanhamento!"
+        />
       ) : (
         <DndContext
           sensors={sensors}

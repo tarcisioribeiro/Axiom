@@ -32,6 +32,7 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { SearchInput } from '@/components/common/SearchInput';
 import type { Payable, PayableFormData, Member } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -227,9 +228,14 @@ export default function Payables() {
       </div>
 
       {filteredPayables.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg bg-card">
-          <p>Nenhum valor a pagar encontrado.</p>
-        </div>
+        <EmptyState
+          icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhum valor a pagar encontrado para a pesquisa atual.'
+              : 'Nenhum valor a pagar cadastrado. Clique em "Novo Pagamento" para começar.'
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPayables.map((payable) => (

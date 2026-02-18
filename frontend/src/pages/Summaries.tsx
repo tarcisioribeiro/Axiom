@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { summariesService } from '@/services/summaries-service';
 import { booksService } from '@/services/books-service';
 import type { Summary, SummaryFormData, Book } from '@/types';
@@ -261,17 +262,14 @@ export default function Summaries() {
       </div>
 
       {filteredSummaries.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="w-12 h-12 mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhum resumo encontrado</p>
-            <p className="text-sm mb-4">
-              {searchTerm
-                ? 'Tente ajustar sua pesquisa'
-                : 'Comece adicionando seu primeiro resumo'}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<FileText className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhum resumo encontrado para a pesquisa atual.'
+              : 'Nenhum resumo cadastrado. Clique em "Novo Resumo" para começar.'
+          }
+        />
       ) : (
         <div className="grid gap-4">
           {filteredSummaries.map((summary) => (

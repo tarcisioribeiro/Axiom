@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/hooks/use-command-palette';
 import { sectionLabels, type Command, type CommandSection } from '@/config/commands';
 import { Search, Command as CommandIcon } from 'lucide-react';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from '@/components/ui/visually-hidden';
 
 /**
  * Command Palette global acessível via Ctrl+K / Cmd+K.

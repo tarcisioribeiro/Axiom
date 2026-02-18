@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/utils/error-utils';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
+import { PageContainer } from '@/components/common/PageContainer';
 import {
   Table,
   TableBody,
@@ -48,48 +50,49 @@ export default function ActivityLogs() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader
         title="Logs de Atividade"
         icon={<ScrollText />}
       />
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data/Hora</TableHead>
-              <TableHead>Ação</TableHead>
-              <TableHead>Descrição</TableHead>
-              <TableHead>IP</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {logs.map((log) => (
-              <TableRow key={log.id}>
-                <TableCell className="font-medium">
-                  {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
-                    locale: ptBR,
-                  })}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{log.action_display}</Badge>
-                </TableCell>
-                <TableCell>{log.description}</TableCell>
-                <TableCell>
-                  {log.ip_address || '-'}
-                </TableCell>
+      {logs.length === 0 ? (
+        <EmptyState
+          icon={<ScrollText className="h-12 w-12 text-muted-foreground" />}
+          message="Nenhum log de atividade encontrado."
+        />
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data/Hora</TableHead>
+                <TableHead>Ação</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>IP</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {logs.length === 0 && (
-        <div className="text-center py-12">
-          <p>Nenhum log encontrado.</p>
+            </TableHeader>
+            <TableBody>
+              {logs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell className="font-medium">
+                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
+                      locale: ptBR,
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{log.action_display}</Badge>
+                  </TableCell>
+                  <TableCell>{log.description}</TableCell>
+                  <TableCell>
+                    {log.ip_address || '-'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

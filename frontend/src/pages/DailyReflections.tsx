@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
+import { PageContainer } from '@/components/common/PageContainer';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/utils/error-utils';
 import type { DailyReflection } from '@/types';
@@ -37,7 +39,7 @@ export default function DailyReflections() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <PageContainer>
       <PageHeader
         title="Reflexões Diárias"
       >
@@ -48,15 +50,10 @@ export default function DailyReflections() {
       </PageHeader>
 
       {reflections.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="mb-4">
-            Nenhuma reflexão registrada
-          </p>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Criar primeira reflexão
-          </Button>
-        </div>
+        <EmptyState
+          icon={<StickyNote className="h-12 w-12 text-muted-foreground" />}
+          message="Nenhuma reflexão registrada."
+        />
       ) : (
         <div className="space-y-4">
           {reflections.map((reflection) => (
@@ -74,6 +71,6 @@ export default function DailyReflections() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

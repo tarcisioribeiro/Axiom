@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Users } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -93,11 +94,10 @@ export default function Members() {
       />
 
       {members.length === 0 ? (
-        <div className="bg-card border rounded-xl p-12 text-center"><p>Nenhum membro cadastrado.</p></div>
-      ) : members.length === 0 ? (
-        <div className="bg-card border rounded-xl p-12 text-center">
-          <p>Nenhum membro cadastrado.</p>
-        </div>
+        <EmptyState
+          icon={<Users className="h-12 w-12 text-muted-foreground" />}
+          message='Nenhum membro cadastrado. Clique em "Novo Membro" para começar.'
+        />
       ) : (
         <div className="bg-card border rounded-xl overflow-hidden">
           <div className="overflow-x-auto custom-scrollbar">

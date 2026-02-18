@@ -27,6 +27,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { formatDate } from '@/lib/formatters';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { BookForm } from '@/components/library/BookForm';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -321,10 +322,14 @@ export default function Books() {
       </div>
 
       {filteredBooks.length === 0 && (
-        <div className="text-center py-12 border rounded-lg bg-card">
-          <BookOpen className="h-12 w-12 mx-auto mb-4" />
-          <p>Nenhum livro encontrado.</p>
-        </div>
+        <EmptyState
+          icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhum livro encontrado para a pesquisa atual.'
+              : 'Nenhum livro cadastrado. Clique em "Novo Livro" para começar.'
+          }
+        />
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

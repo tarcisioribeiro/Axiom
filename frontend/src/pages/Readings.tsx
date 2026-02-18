@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { PageContainer } from '@/components/common/PageContainer';
 
@@ -164,17 +165,14 @@ export default function Readings() {
       </div>
 
       {filteredReadings.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <BookMarked className="w-12 h-12 mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhuma leitura encontrada</p>
-            <p className="text-sm mb-4">
-              {searchTerm
-                ? 'Tente ajustar sua pesquisa'
-                : 'Comece registrando sua primeira leitura'}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhuma leitura encontrada para a pesquisa atual.'
+              : 'Nenhuma leitura registrada. Clique em "Nova Leitura" para começar.'
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredReadings.map((reading) => (

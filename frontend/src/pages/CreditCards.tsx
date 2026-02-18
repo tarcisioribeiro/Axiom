@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import type { CreditCard, CreditCardFormData, Account } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
 
@@ -151,15 +152,11 @@ export default function CreditCards() {
       </div>
 
       {creditCards.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <CreditCardIcon className="w-12 h-12 mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhum cartão cadastrado</p>
-            <p className="text-sm mb-4">
-              Comece adicionando seu primeiro cartão de crédito
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<CreditCardIcon className="h-12 w-12 text-muted-foreground" />}
+          title="Nenhum cartão cadastrado"
+          message='Comece adicionando seu primeiro cartão de crédito.'
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {creditCards.map((card) => {

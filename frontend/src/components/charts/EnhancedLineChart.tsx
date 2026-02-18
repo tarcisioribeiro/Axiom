@@ -14,6 +14,7 @@ import {
 import { EnhancedTooltip } from './EnhancedTooltip';
 import { useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatNumber } from '@/lib/chart-formatters';
+import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import type { LineConfig, DualYAxisConfig, ChartDataPoint } from '@/lib/chart-types';
 
 interface EnhancedLineChartProps {
@@ -57,6 +58,8 @@ export const EnhancedLineChart = ({
   xAxisTickFormatter,
   tooltipLabelFormatter,
 }: EnhancedLineChartProps) => {
+  const dims = useChartDimensions();
+
   // Gera IDs únicos para gradientes
   const getGradientId = useChartGradientId('line-area');
 
@@ -121,7 +124,10 @@ export const EnhancedLineChart = ({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <ChartComponent data={data} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+      <ChartComponent
+        data={data}
+        margin={{ top: 5, right: 5, left: dims.isMobile ? -20 : -10, bottom: 5 }}
+      >
         <defs>{gradientDefs}</defs>
 
         <CartesianGrid
@@ -133,7 +139,7 @@ export const EnhancedLineChart = ({
 
         <XAxis
           dataKey={nameKey}
-          tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+          tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
           tickLine={false}
           axisLine={{ stroke: 'hsl(var(--border))' }}
           dy={8}
@@ -144,29 +150,29 @@ export const EnhancedLineChart = ({
           <>
             <YAxis
               yAxisId="left"
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={axisFormatNumber}
-              width={60}
+              width={dims.yAxisWidth}
             />
             <YAxis
               yAxisId="right"
               orientation="right"
-              tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
               tickFormatter={axisFormatNumber}
-              width={60}
+              width={dims.yAxisWidth}
             />
           </>
         ) : (
           <YAxis
-            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+            tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={axisFormatNumber}
-            width={60}
+            width={dims.yAxisWidth}
           />
         )}
 

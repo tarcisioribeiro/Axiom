@@ -35,6 +35,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { formatDate } from '@/lib/formatters';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -361,9 +362,14 @@ export default function Passwords() {
       </div>
 
       {filteredPasswords.length === 0 && (
-        <div className="text-center py-12 border rounded-lg bg-card">
-          <p>Nenhuma senha encontrada.</p>
-        </div>
+        <EmptyState
+          icon={<Key className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhuma senha encontrada para a pesquisa atual.'
+              : 'Nenhuma senha cadastrada. Clique em "Nova Senha" para começar.'
+          }
+        />
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

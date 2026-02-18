@@ -3,6 +3,8 @@ import { CheckCircle2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
+import { PageContainer } from '@/components/common/PageContainer';
 import { taskInstancesService } from '@/services/task-instances-service';
 import { appService } from '@/services/app-service';
 import { useToast } from '@/hooks/use-toast';
@@ -61,18 +63,17 @@ export default function TodayTasks() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <PageContainer>
       <PageHeader
         title="Tarefas de Hoje"
         icon={<CheckCircle2 />}
       />
 
       {tasks.length === 0 ? (
-        <div className="text-center py-12">
-          <p>
-            Nenhuma tarefa programada para hoje
-          </p>
-        </div>
+        <EmptyState
+          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
+          message="Nenhuma tarefa programada para hoje."
+        />
       ) : (
         <div className="space-y-4">
           {tasks.map((task) => (
@@ -102,6 +103,6 @@ export default function TodayTasks() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

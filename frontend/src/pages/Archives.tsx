@@ -21,6 +21,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { formatDate } from '@/lib/formatters';
 import { PageHeader } from '@/components/common/PageHeader';
 import { LoadingState } from '@/components/common/LoadingState';
+import { EmptyState } from '@/components/common/EmptyState';
 import type { Archive, ArchiveFormData, Member } from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
 
@@ -294,17 +295,14 @@ export default function Archives() {
       </div>
 
       {filteredArchives.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <ArchiveIcon className="w-12 h-12 mb-4" />
-            <p className="text-lg font-medium mb-2">Nenhum arquivo encontrado</p>
-            <p className="text-sm mb-4">
-              {searchTerm
-                ? 'Tente ajustar sua pesquisa'
-                : 'Comece adicionando seu primeiro arquivo confidencial'}
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<ArchiveIcon className="h-12 w-12 text-muted-foreground" />}
+          message={
+            searchTerm
+              ? 'Nenhum arquivo encontrado para a pesquisa atual.'
+              : 'Nenhum arquivo cadastrado. Clique em "Novo Arquivo" para começar.'
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredArchives.map((arc) => (
