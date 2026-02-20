@@ -1,30 +1,33 @@
-from rest_framework import generics, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from decimal import Decimal
+
 from django.db import transaction
 from django.utils import timezone
-from decimal import Decimal
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from django_filters.rest_framework import DjangoFilterBackend
+
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from app.permissions import GlobalDefaultPermission
 from credit_cards.models import (
     CreditCard,
     CreditCardBill,
-    CreditCardPurchase,
     CreditCardInstallment,
+    CreditCardPurchase,
 )
 from credit_cards.serializers import (
-    CreditCardSerializer,
     CreditCardBillsSerializer,
-    CreditCardPurchaseSerializer,
-    CreditCardPurchaseCreateSerializer,
-    CreditCardPurchaseUpdateSerializer,
     CreditCardInstallmentSerializer,
     CreditCardInstallmentUpdateSerializer,
+    CreditCardPurchaseCreateSerializer,
+    CreditCardPurchaseSerializer,
+    CreditCardPurchaseUpdateSerializer,
+    CreditCardSerializer,
     PayCreditCardBillSerializer,
 )
 from expenses.models import Expense
-from app.permissions import GlobalDefaultPermission
-from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
 class CreditCardCreateListView(BaseListCreateView):
@@ -44,16 +47,17 @@ class CreditCardCreateListView(BaseListCreateView):
     ordering : list
         Ordenação padrão por nome
     """
+
     serializer_class = CreditCardSerializer
-    ordering = ['name']
+    ordering = ["name"]
 
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
-        return CreditCard.objects.filter(
-            is_deleted=False
-        ).select_related(
-            'associated_account'
-        ).defer('_card_number')
+        return (
+            CreditCard.objects.filter(is_deleted=False)
+            .select_related("associated_account")
+            .defer("_card_number")
+        )
 
 
 class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -72,7 +76,10 @@ class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    queryset = CreditCard.objects.filter(is_deleted=False).select_related('associated_account')
+
+    queryset = CreditCard.objects.filter(is_deleted=False).select_related(
+        "associated_account"
+    )
     serializer_class = CreditCardSerializer
 
 
@@ -93,12 +100,12 @@ class CreditCardBillCreateListView(BaseListCreateView):
     ordering : list
         Ordenação por ano, mês e data de fim da fatura (descendente)
     """
+
     queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
-        'credit_card',
-        'credit_card__associated_account'
+        "credit_card", "credit_card__associated_account"
     )
     serializer_class = CreditCardBillsSerializer
-    ordering = ['-year', '-month', '-invoice_ending_date']
+    ordering = ["-year", "-month", "-invoice_ending_date"]
 
 
 class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -117,8 +124,9 @@ class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
-        'credit_card', 'credit_card__associated_account'
+        "credit_card", "credit_card__associated_account"
     )
     serializer_class = CreditCardBillsSerializer
 
@@ -126,6 +134,7 @@ class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 # ============================================================================
 # VIEWS FOR PURCHASE AND INSTALLMENT
 # ============================================================================
+
 
 class CreditCardPurchaseCreateListView(BaseListCreateView):
     """
@@ -139,20 +148,21 @@ class CreditCardPurchaseCreateListView(BaseListCreateView):
     - card: ID do cartão
     - category: Categoria da compra
     """
+
     queryset = CreditCardPurchase.objects.all()
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['card', 'category']
-    ordering = ['-purchase_date', '-id']
+    filterset_fields = ["card", "category"]
+    ordering = ["-purchase_date", "-id"]
 
     def get_queryset(self):
-        return CreditCardPurchase.objects.filter(is_deleted=False).select_related(
-            'card', 'card__associated_account', 'member'
-        ).prefetch_related(
-            'installments', 'installments__bill'
+        return (
+            CreditCardPurchase.objects.filter(is_deleted=False)
+            .select_related("card", "card__associated_account", "member")
+            .prefetch_related("installments", "installments__bill")
         )
 
     def get_serializer_class(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return CreditCardPurchaseCreateSerializer
         return CreditCardPurchaseSerializer
 
@@ -166,17 +176,18 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
     - PUT/PATCH: Atualiza uma compra existente (exceto valor e parcelas)
     - DELETE: Remove uma compra e suas parcelas
     """
+
     queryset = CreditCardPurchase.objects.all()
 
     def get_queryset(self):
-        return CreditCardPurchase.objects.filter(is_deleted=False).select_related(
-            'card', 'card__associated_account', 'member'
-        ).prefetch_related(
-            'installments', 'installments__bill'
+        return (
+            CreditCardPurchase.objects.filter(is_deleted=False)
+            .select_related("card", "card__associated_account", "member")
+            .prefetch_related("installments", "installments__bill")
         )
 
     def get_serializer_class(self):
-        if self.request.method in ['PUT', 'PATCH']:
+        if self.request.method in ["PUT", "PATCH"]:
             return CreditCardPurchaseUpdateSerializer
         return CreditCardPurchaseSerializer
 
@@ -191,25 +202,26 @@ class CreditCardInstallmentListView(generics.ListAPIView):
     - category: Categoria (via purchase__category)
     - payed: Status de pagamento (true/false)
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = CreditCardInstallment.objects.all()
     serializer_class = CreditCardInstallmentSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = {
-        'purchase__card': ['exact'],
-        'bill': ['exact', 'isnull'],
-        'purchase__category': ['exact'],
-        'payed': ['exact'],
+        "purchase__card": ["exact"],
+        "bill": ["exact", "isnull"],
+        "purchase__category": ["exact"],
+        "payed": ["exact"],
     }
-    ordering = ['due_date', 'purchase__description']
+    ordering = ["due_date", "purchase__description"]
 
     def get_queryset(self):
         return CreditCardInstallment.objects.filter(
-            is_deleted=False,
-            purchase__is_deleted=False
-        ).select_related(
-            'purchase', 'purchase__card', 'purchase__member', 'bill'
-        )
+            is_deleted=False, purchase__is_deleted=False
+        ).select_related("purchase", "purchase__card", "purchase__member", "bill")
 
 
 class CreditCardInstallmentUpdateView(generics.UpdateAPIView):
@@ -220,15 +232,18 @@ class CreditCardInstallmentUpdateView(generics.UpdateAPIView):
     - bill: Fatura associada
     - payed: Status de pagamento
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = CreditCardInstallment.objects.all()
     serializer_class = CreditCardInstallmentUpdateSerializer
 
     def get_queryset(self):
         return CreditCardInstallment.objects.filter(
-            is_deleted=False,
-            purchase__is_deleted=False
-        ).select_related('purchase', 'bill')
+            is_deleted=False, purchase__is_deleted=False
+        ).select_related("purchase", "bill")
 
 
 class PayCreditCardBillView(APIView):
@@ -245,7 +260,11 @@ class PayCreditCardBillView(APIView):
     5. Atualiza o credit_limit do cartão
     6. Atualiza o status da fatura conforme regras de negócio
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     # Required for GlobalDefaultPermission to derive model permissions
     queryset = CreditCardBill.objects.all()
 
@@ -254,13 +273,11 @@ class PayCreditCardBillView(APIView):
         # 1. Buscar a fatura
         try:
             bill = CreditCardBill.objects.select_related(
-                'credit_card',
-                'credit_card__associated_account'
+                "credit_card", "credit_card__associated_account"
             ).get(pk=pk, is_deleted=False)
         except CreditCardBill.DoesNotExist:
             return Response(
-                {'detail': 'Fatura não encontrada'},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
             )
 
         card = bill.credit_card
@@ -268,21 +285,20 @@ class PayCreditCardBillView(APIView):
 
         # 2. Validar os dados do pagamento
         serializer = PayCreditCardBillSerializer(
-            data=request.data,
-            context={'bill': bill}
+            data=request.data, context={"bill": bill}
         )
         serializer.is_valid(raise_exception=True)
 
-        amount = Decimal(str(serializer.validated_data['amount']))
-        payment_date = serializer.validated_data['payment_date']
-        notes = serializer.validated_data.get('notes', '')
+        amount = Decimal(str(serializer.validated_data["amount"]))
+        payment_date = serializer.validated_data["payment_date"]
+        notes = serializer.validated_data.get("notes", "")
 
         # Verificar se a fatura já está paga
         remaining = Decimal(str(bill.total_amount)) - Decimal(str(bill.paid_amount))
         if remaining <= 0:
             return Response(
-                {'detail': 'Esta fatura já foi totalmente paga'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Esta fatura já foi totalmente paga"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 3. Criar despesa na conta associada
@@ -295,11 +311,11 @@ class PayCreditCardBillView(APIView):
             value=amount,
             date=payment_date,
             horary=timezone.now().time(),
-            category='bills and services',
+            category="bills and services",
             account=account,
             payed=True,
             merchant=card.name,
-            payment_method='transfer',
+            payment_method="transfer",
             notes=notes or f"Pagamento de fatura do cartão {card.name}",
             related_bill_payment=bill,
         )
@@ -316,48 +332,49 @@ class PayCreditCardBillView(APIView):
 
         if new_paid_amount >= total_amount:
             # Fatura totalmente paga
-            bill.status = 'paid'
+            bill.status = "paid"
             bill.closed = True
 
             # 5.1 Marcar todas as parcelas desta fatura como pagas
             # Isso libera o limite do cartão automaticamente no cálculo
             CreditCardInstallment.objects.filter(
-                bill=bill,
-                is_deleted=False,
-                payed=False
+                bill=bill, is_deleted=False, payed=False
             ).update(payed=True)
         # Pagamentos parciais mantêm o status atual (não fecham a fatura)
 
         bill.save()
 
         # Retornar dados atualizados
-        return Response({
-            'message': 'Pagamento realizado com sucesso',
-            'payment': {
-                'amount': str(amount),
-                'payment_date': str(payment_date),
-                'expense_id': expense.id,
+        return Response(
+            {
+                "message": "Pagamento realizado com sucesso",
+                "payment": {
+                    "amount": str(amount),
+                    "payment_date": str(payment_date),
+                    "expense_id": expense.id,
+                },
+                "bill": {
+                    "id": bill.id,
+                    "total_amount": str(bill.total_amount),
+                    "paid_amount": str(bill.paid_amount),
+                    "remaining": str(total_amount - new_paid_amount),
+                    "status": bill.status,
+                    "closed": bill.closed,
+                },
+                "card": {
+                    "id": card.id,
+                    "name": card.name,
+                    "credit_limit": str(card.credit_limit),
+                    "max_limit": str(card.max_limit),
+                },
+                "account": {
+                    "id": account.id,
+                    "name": account.account_name,
+                    "balance": str(account.current_balance),
+                },
             },
-            'bill': {
-                'id': bill.id,
-                'total_amount': str(bill.total_amount),
-                'paid_amount': str(bill.paid_amount),
-                'remaining': str(total_amount - new_paid_amount),
-                'status': bill.status,
-                'closed': bill.closed,
-            },
-            'card': {
-                'id': card.id,
-                'name': card.name,
-                'credit_limit': str(card.credit_limit),
-                'max_limit': str(card.max_limit),
-            },
-            'account': {
-                'id': account.id,
-                'name': account.account_name,
-                'balance': str(account.current_balance),
-            }
-        }, status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK,
+        )
 
 
 class BillItemsView(APIView):
@@ -366,9 +383,14 @@ class BillItemsView(APIView):
 
     GET /api/v1/credit-cards-bills/{id}/items/
 
-    Retorna uma lista de todas as parcelas (CreditCardInstallment) associadas a uma fatura.
+    Retorna uma lista de todas as parcelas (CreditCardInstallment)
+    associadas a uma fatura.
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = CreditCardBill.objects.all()
 
     def get(self, request, pk):
@@ -377,57 +399,69 @@ class BillItemsView(APIView):
             bill = CreditCardBill.objects.get(pk=pk, is_deleted=False)
         except CreditCardBill.DoesNotExist:
             return Response(
-                {'detail': 'Fatura não encontrada'},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
             )
 
         items = []
 
         # Buscar parcelas (CreditCardInstallment)
-        installments = CreditCardInstallment.objects.filter(
-            bill=bill,
-            is_deleted=False,
-            purchase__is_deleted=False
-        ).select_related('purchase', 'purchase__card', 'purchase__member').order_by('-due_date', '-id')
+        installments = (
+            CreditCardInstallment.objects.filter(
+                bill=bill, is_deleted=False, purchase__is_deleted=False
+            )
+            .select_related("purchase", "purchase__card", "purchase__member")
+            .order_by("-due_date", "-id")
+        )
 
         for inst in installments:
-            items.append({
-                'id': inst.id,
-                'type': 'installment',
-                'description': inst.purchase.description,
-                'value': float(inst.value),
-                'date': inst.due_date.isoformat() if inst.due_date else None,
-                'category': inst.purchase.category,
-                'installment_number': inst.installment_number,
-                'total_installments': inst.purchase.total_installments,
-                'merchant': inst.purchase.merchant,
-                'payed': inst.payed,
-                'member_id': inst.purchase.member_id,
-                'member_name': inst.purchase.member.name if inst.purchase.member else None,
-                'notes': inst.purchase.notes,
-                'purchase_date': inst.purchase.purchase_date.isoformat() if inst.purchase.purchase_date else None,
-            })
+            items.append(
+                {
+                    "id": inst.id,
+                    "type": "installment",
+                    "description": inst.purchase.description,
+                    "value": float(inst.value),
+                    "date": inst.due_date.isoformat() if inst.due_date else None,
+                    "category": inst.purchase.category,
+                    "installment_number": inst.installment_number,
+                    "total_installments": inst.purchase.total_installments,
+                    "merchant": inst.purchase.merchant,
+                    "payed": inst.payed,
+                    "member_id": inst.purchase.member_id,
+                    "member_name": (
+                        inst.purchase.member.name if inst.purchase.member else None
+                    ),
+                    "notes": inst.purchase.notes,
+                    "purchase_date": (
+                        inst.purchase.purchase_date.isoformat()
+                        if inst.purchase.purchase_date
+                        else None
+                    ),
+                }
+            )
 
         # Ordenar por data (mais recente primeiro) e depois por valor
-        items.sort(key=lambda x: (x['date'] or '', -x['value']), reverse=True)
+        items.sort(key=lambda x: (x["date"] or "", -x["value"]), reverse=True)
 
         # Calcular totais
-        total_value = sum(item['value'] for item in items)
-        total_paid = sum(item['value'] for item in items if item['payed'])
+        total_value = sum(item["value"] for item in items)
+        total_paid = sum(item["value"] for item in items if item["payed"])
         total_pending = total_value - total_paid
 
-        return Response({
-            'bill_id': bill.id,
-            'bill_month': bill.month,
-            'bill_year': bill.year,
-            'total_items': len(items),
-            'total_value': total_value,
-            'total_paid': total_paid,
-            'total_pending': total_pending,
-            'paid_count': sum(1 for item in items if item['payed']),
-            'pending_count': sum(1 for item in items if not item['payed']),
-            'items': items,
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "bill_id": bill.id,
+                "bill_month": bill.month,
+                "bill_year": bill.year,
+                "total_items": len(items),
+                "total_value": total_value,
+                "total_paid": total_paid,
+                "total_pending": total_pending,
+                "paid_count": sum(1 for item in items if item["payed"]),
+                "pending_count": sum(1 for item in items if not item["payed"]),
+                "items": items,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class ReopenCreditCardBillView(APIView):
@@ -441,43 +475,49 @@ class ReopenCreditCardBillView(APIView):
     2. Verifica se a fatura está fechada ou paga
     3. Reabre a fatura (closed=False, status='open')
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = CreditCardBill.objects.all()
 
     @transaction.atomic
     def post(self, request, pk):
         # 1. Buscar a fatura
         try:
-            bill = CreditCardBill.objects.select_related(
-                'credit_card'
-            ).get(pk=pk, is_deleted=False)
+            bill = CreditCardBill.objects.select_related("credit_card").get(
+                pk=pk, is_deleted=False
+            )
         except CreditCardBill.DoesNotExist:
             return Response(
-                {'detail': 'Fatura não encontrada'},
-                status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
             )
 
         # 2. Verificar se a fatura pode ser reaberta
-        if not bill.closed and bill.status == 'open':
+        if not bill.closed and bill.status == "open":
             return Response(
-                {'detail': 'Esta fatura já está aberta'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Esta fatura já está aberta"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 3. Reabrir a fatura
         bill.closed = False
-        bill.status = 'open'
+        bill.status = "open"
         bill.save()
 
-        return Response({
-            'message': 'Fatura reaberta com sucesso',
-            'bill': {
-                'id': bill.id,
-                'month': bill.month,
-                'year': bill.year,
-                'total_amount': str(bill.total_amount),
-                'paid_amount': str(bill.paid_amount),
-                'status': bill.status,
-                'closed': bill.closed,
-            }
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "message": "Fatura reaberta com sucesso",
+                "bill": {
+                    "id": bill.id,
+                    "month": bill.month,
+                    "year": bill.year,
+                    "total_amount": str(bill.total_amount),
+                    "paid_amount": str(bill.paid_amount),
+                    "status": bill.status,
+                    "closed": bill.closed,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )

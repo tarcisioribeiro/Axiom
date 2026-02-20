@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { Plus, Pencil, Trash2, Users } from 'lucide-react';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
+import { useState, useEffect } from 'react';
+
 import { EmptyState } from '@/components/common/EmptyState';
-import { Button } from '@/components/ui/button';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -12,14 +16,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { MemberForm } from '@/components/members/MemberForm';
-import { membersService } from '@/services/members-service';
-import { useToast } from '@/hooks/use-toast';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
+import { useToast } from '@/hooks/use-toast';
+import { membersService } from '@/services/members-service';
 import type { Member, MemberFormData } from '@/types';
-import { format } from 'date-fns';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([]);

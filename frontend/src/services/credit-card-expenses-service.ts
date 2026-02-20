@@ -1,6 +1,7 @@
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { CreditCardExpense, CreditCardExpenseFormData } from '@/types';
+
+import { BaseService } from './base-service';
 
 class CreditCardExpensesService extends BaseService<CreditCardExpense, CreditCardExpenseFormData> {
   constructor() {

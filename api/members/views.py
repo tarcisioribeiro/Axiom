@@ -1,12 +1,13 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework import status
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from members.models import Member
-from members.serializers import MemberSerializer, MemberPermissionsSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from members.models import Member
+from members.serializers import MemberPermissionsSerializer, MemberSerializer
 
 
 class MemberCreateListView(BaseListCreateView):
@@ -24,6 +25,7 @@ class MemberCreateListView(BaseListCreateView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Member.objects.filter(is_deleted=False)
     serializer_class = MemberSerializer
 
@@ -44,11 +46,12 @@ class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Member.objects.filter(is_deleted=False)
     serializer_class = MemberSerializer
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_current_user_member(request):
     """
@@ -65,12 +68,12 @@ def get_current_user_member(request):
         return Response(serializer.data)
     except Member.DoesNotExist:
         return Response(
-            {'error': 'Membro não encontrado para este usuário'},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Membro não encontrado para este usuário"},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_member_permissions(request, pk):
     """
@@ -92,24 +95,23 @@ def get_member_permissions(request, pk):
         # Verificar se o membro tem um usuário associado
         if not member.user:
             return Response(
-                {'error': 'Membro não possui usuário associado'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Membro não possui usuário associado"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Obter todas as permissões do usuário
         user_permissions = member.user.user_permissions.all()
         permission_codenames = [perm.codename for perm in user_permissions]
 
-        return Response({'permissions': permission_codenames})
+        return Response({"permissions": permission_codenames})
 
     except Member.DoesNotExist:
         return Response(
-            {'error': 'Membro não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Membro não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
 
 
-@api_view(['PUT'])
+@api_view(["PUT"])
 @permission_classes([IsAuthenticated])
 def update_member_permissions(request, pk):
     """
@@ -137,8 +139,8 @@ def update_member_permissions(request, pk):
         # Verificar se o membro tem um usuário associado
         if not member.user:
             return Response(
-                {'error': 'Membro não possui usuário associado'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Membro não possui usuário associado"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Validar dados de entrada
@@ -146,7 +148,7 @@ def update_member_permissions(request, pk):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        permission_codenames = serializer.validated_data['permission_codenames']
+        permission_codenames = serializer.validated_data["permission_codenames"]
 
         # Limpar permissões atuais
         member.user.user_permissions.clear()
@@ -159,25 +161,26 @@ def update_member_permissions(request, pk):
                 permissions_to_add.append(permission)
             except Permission.DoesNotExist:
                 return Response(
-                    {'error': f'Permissão com codename "{codename}" não encontrada'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"error": f'Permissão com codename "{codename}" não encontrada'},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
         member.user.user_permissions.add(*permissions_to_add)
 
-        return Response({
-            'message': 'Permissões atualizadas com sucesso',
-            'permissions': permission_codenames
-        })
+        return Response(
+            {
+                "message": "Permissões atualizadas com sucesso",
+                "permissions": permission_codenames,
+            }
+        )
 
     except Member.DoesNotExist:
         return Response(
-            {'error': 'Membro não encontrado'},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Membro não encontrado"}, status=status.HTTP_404_NOT_FOUND
         )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_available_permissions(request):
     """
@@ -190,8 +193,14 @@ def get_available_permissions(request):
     """
     # Apps que queremos mostrar
     relevant_apps = [
-        'accounts', 'expenses', 'revenues', 'credit_cards',
-        'loans', 'transfers', 'security', 'library'
+        "accounts",
+        "expenses",
+        "revenues",
+        "credit_cards",
+        "loans",
+        "transfers",
+        "security",
+        "library",
     ]
 
     permissions_by_app = {}
@@ -206,10 +215,10 @@ def get_available_permissions(request):
 
             permissions_by_app[app_name] = [
                 {
-                    'id': perm.id,
-                    'name': perm.name,
-                    'codename': perm.codename,
-                    'app': app_name
+                    "id": perm.id,
+                    "name": perm.name,
+                    "codename": perm.codename,
+                    "app": app_name,
                 }
                 for perm in permissions
             ]

@@ -1,9 +1,11 @@
-import { useForm } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -12,17 +14,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { formatLocalDate } from '@/lib/utils';
 import type {
   CreditCardExpense,
   CreditCardExpenseFormData,
   CreditCard,
   CreditCardBill,
 } from '@/types';
-
-import { formatLocalDate } from '@/lib/utils';
 
 interface CreditCardExpenseFormProps {
   expense?: CreditCardExpense;
@@ -339,7 +339,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
             </SelectContent>
           </Select>
           {filteredBills.length === 0 && watchedCard > 0 && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-warning">
               Nenhuma fatura cadastrada para este cartão
             </p>
           )}

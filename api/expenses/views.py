@@ -1,10 +1,11 @@
 from django.db.models import Count
 from django.utils import timezone
-from django_filters import rest_framework as filters
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from django_filters import rest_framework as filters
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
@@ -22,15 +23,15 @@ from expenses.services import bulk_generate_fixed_expenses, get_fixed_expenses_s
 
 
 class ExpenseCreateListView(BaseListCreateView):
-    queryset = Expense.objects.filter(is_deleted=False).select_related('account')
+    queryset = Expense.objects.filter(is_deleted=False).select_related("account")
     serializer_class = ExpenseSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = ExpenseFilter
-    ordering = ['-date', '-id']
+    ordering = ["-date", "-id"]
 
 
 class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    queryset = Expense.objects.filter(is_deleted=False).select_related('account')
+    queryset = Expense.objects.filter(is_deleted=False).select_related("account")
     serializer_class = ExpenseSerializer
 
 
@@ -40,13 +41,13 @@ class FixedExpenseListCreateView(BaseListCreateView):
     def get_queryset(self):
         return (
             FixedExpense.objects.filter(is_deleted=False)
-            .select_related('account', 'member', 'credit_card')
-            .annotate(total_generated=Count('generated_expenses'))
-            .order_by('due_day', 'description')
+            .select_related("account", "member", "credit_card")
+            .annotate(total_generated=Count("generated_expenses"))
+            .order_by("due_day", "description")
         )
 
     def get_serializer_class(self):
-        if self.request.method == 'POST':
+        if self.request.method == "POST":
             return FixedExpenseCreateUpdateSerializer
         return FixedExpenseSerializer
 
@@ -56,11 +57,11 @@ class FixedExpenseListCreateView(BaseListCreateView):
 
 class FixedExpenseDetailView(BaseRetrieveUpdateDestroyView):
     queryset = FixedExpense.objects.filter(is_deleted=False).select_related(
-        'account', 'member', 'credit_card'
+        "account", "member", "credit_card"
     )
 
     def get_serializer_class(self):
-        if self.request.method in ['PUT', 'PATCH']:
+        if self.request.method in ["PUT", "PATCH"]:
             return FixedExpenseCreateUpdateSerializer
         return FixedExpenseSerializer
 
@@ -74,7 +75,10 @@ class FixedExpenseDetailView(BaseRetrieveUpdateDestroyView):
 
 
 class BulkGenerateFixedExpensesView(APIView):
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = FixedExpense.objects.none()  # Required for GlobalDefaultPermission
 
     def post(self, request):
@@ -82,39 +86,55 @@ class BulkGenerateFixedExpensesView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             result = bulk_generate_fixed_expenses(
-                month=serializer.validated_data['month'],
-                expense_values=serializer.validated_data['expense_values'],
+                month=serializer.validated_data["month"],
+                expense_values=serializer.validated_data["expense_values"],
                 user=request.user,
             )
-            return Response(BulkGenerateResponseSerializer(result).data, status=status.HTTP_201_CREATED)
+            return Response(
+                BulkGenerateResponseSerializer(result).data,
+                status=status.HTTP_201_CREATED,
+            )
         except FixedExpense.DoesNotExist:
             return Response(
-                {'error': 'Uma ou mais despesas fixas não foram encontradas ou estão inativas'},
+                {
+                    "error": (
+                        "Uma ou mais despesas fixas não foram"
+                        " encontradas ou estão inativas"
+                    )
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
             return Response(
-                {'error': f'Erro ao gerar despesas: {str(e)}'},
+                {"error": f"Erro ao gerar despesas: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
 class BulkMarkPaidView(APIView):
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def post(self, request):
         serializer = BulkMarkPaidSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         updated = Expense.objects.filter(
-            id__in=serializer.validated_data['expense_ids'],
+            id__in=serializer.validated_data["expense_ids"],
             is_deleted=False,
         ).update(payed=True, updated_by=request.user)
-        return Response({'success': True, 'updated_count': updated}, status=status.HTTP_200_OK)
+        return Response(
+            {"success": True, "updated_count": updated}, status=status.HTTP_200_OK
+        )
 
 
 class FixedExpensesStatsView(APIView):
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
+    permission_classes = (
+        IsAuthenticated,
+        GlobalDefaultPermission,
+    )
     queryset = FixedExpense.objects.none()  # Required for GlobalDefaultPermission
 
     def get(self, request):

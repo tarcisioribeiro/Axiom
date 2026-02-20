@@ -1,7 +1,9 @@
 import Cookies from 'js-cookie';
-import { apiClient } from './api-client';
+
 import { API_CONFIG, TOKEN_CONFIG } from '@/config/constants';
 import type { LoginCredentials, User, Permission } from '@/types';
+
+import { apiClient } from './api-client';
 
 /**
  * Servico de autenticacao.

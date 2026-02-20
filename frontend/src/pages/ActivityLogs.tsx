@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { ScrollText } from 'lucide-react';
-import { activityLogsService } from '@/services/activity-logs-service';
-import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/utils/error-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
+import { useState, useEffect } from 'react';
+
 import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -15,10 +16,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { activityLogsService } from '@/services/activity-logs-service';
 import type { ActivityLog } from '@/types';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function ActivityLogs() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);

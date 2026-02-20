@@ -5,10 +5,11 @@
  * Usado principalmente no Dashboard para exibir métricas financeiras.
  */
 
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+import React from 'react';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
 
 interface StatCardProps {

@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -6,10 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -17,12 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/utils/error-utils';
 import { formatCurrency } from '@/lib/formatters';
+import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense, BulkGenerateRequest } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 interface Props {
   isOpen: boolean;

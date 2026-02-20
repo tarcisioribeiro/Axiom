@@ -4,8 +4,7 @@
  * Functions to map financial data to receipt format and generate filenames.
  */
 
-import type { ReceiptData, ReceiptType, ReceiptStatementItem } from '@/types/receipt';
-import { RECEIPT_TYPE_LABELS, STATUS_LABELS } from '@/types/receipt';
+import { autoTranslate, translate } from '@/config/constants';
 import type {
   Expense,
   Revenue,
@@ -19,7 +18,8 @@ import type {
   Vault,
   VaultTransaction,
 } from '@/types';
-import { autoTranslate, translate } from '@/config/constants';
+import type { ReceiptData, ReceiptType, ReceiptStatementItem } from '@/types/receipt';
+import { RECEIPT_TYPE_LABELS, STATUS_LABELS } from '@/types/receipt';
 
 /**
  * Maps an Expense to ReceiptData

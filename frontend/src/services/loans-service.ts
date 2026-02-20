@@ -1,7 +1,8 @@
-import { apiClient } from './api-client';
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { Loan, LoanFormData } from '@/types';
+
+import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 
 class LoansService extends BaseService<Loan, LoanFormData> {
   constructor() {

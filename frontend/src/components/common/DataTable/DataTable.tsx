@@ -30,8 +30,9 @@
  */
 
 import React from 'react';
-import { LoadingState } from '../LoadingState';
+
 import { EmptyState } from '../EmptyState';
+import { LoadingState } from '../LoadingState';
 
 export interface Column<T> {
   key: string;

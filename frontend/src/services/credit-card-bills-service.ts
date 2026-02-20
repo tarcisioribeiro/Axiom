@@ -1,7 +1,8 @@
-import { apiClient } from './api-client';
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { CreditCardBill, CreditCardBillFormData, BillPaymentFormData, BillPaymentResponse, BillItemsResponse } from '@/types';
+
+import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 
 class CreditCardBillsService extends BaseService<CreditCardBill, CreditCardBillFormData> {
   constructor() {

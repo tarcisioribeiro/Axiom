@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -9,8 +8,16 @@ import {
   Wallet,
   RotateCcw,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
+import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
+import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -25,27 +32,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
-import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
-import { ReceiptButton } from '@/components/receipts';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { creditCardsService } from '@/services/credit-cards-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useAuthStore } from '@/stores/auth-store';
-import { getErrorMessage } from '@/utils/error-utils';
 import { translate, TRANSLATIONS } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { creditCardsService } from '@/services/credit-cards-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type {
   CreditCardBill,
   CreditCardBillFormData,
   CreditCard,
   BillPaymentFormData,
 } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function CreditCardBills() {
   const [bills, setBills] = useState<CreditCardBill[]>([]);
@@ -338,7 +339,7 @@ export default function CreditCardBills() {
       label: 'Pag. Mínimo',
       align: 'right',
       render: (bill) => (
-        <span className="text-sm font-medium text-amber-600">
+        <span className="text-sm font-medium text-warning">
           {formatCurrency(bill.minimum_payment)}
         </span>
       ),
@@ -487,7 +488,7 @@ export default function CreditCardBills() {
                 onClick={() => handleReopenBill(bill)}
                 aria-label="Reabrir fatura"
               >
-                <RotateCcw className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                <RotateCcw className="w-4 h-4 text-warning" aria-hidden="true" />
               </Button>
             )}
             <Button variant="ghost" size="icon" onClick={() => handleEdit(bill)} aria-label="Editar">

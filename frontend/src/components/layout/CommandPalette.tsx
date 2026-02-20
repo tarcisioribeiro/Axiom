@@ -1,12 +1,15 @@
-import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Command as CommandIcon } from 'lucide-react';
+import * as React from 'react';
+
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { useCommandPalette } from '@/hooks/use-command-palette';
-import { sectionLabels, type Command, type CommandSection } from '@/config/commands';
-import { Search, Command as CommandIcon } from 'lucide-react';
 import { VisuallyHidden } from '@/components/ui/visually-hidden';
+import { sectionLabels, type Command, type CommandSection } from '@/config/commands';
+import { useCommandPalette } from '@/hooks/use-command-palette';
+import { cn } from '@/lib/utils';
+
+
 
 /**
  * Command Palette global acessível via Ctrl+K / Cmd+K.

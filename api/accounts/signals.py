@@ -6,11 +6,12 @@ das contas quando receitas ou despesas são criadas, editadas ou deletadas.
 Também cria automaticamente uma receita quando uma conta é criada com saldo inicial.
 """
 
+from decimal import Decimal
+
 from django.db import models, transaction
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from decimal import Decimal
 
 
 def update_account_balance(account):
@@ -29,33 +30,27 @@ def update_account_balance(account):
 
     Usa transaction.atomic() para garantir consistência dos dados.
     """
-    from revenues.models import Revenue
     from expenses.models import Expense
+    from revenues.models import Revenue
 
     with transaction.atomic():
         # Calcula total de receitas recebidas
         total_revenues = Revenue.objects.filter(
-            account=account,
-            received=True
-        ).aggregate(
-            total=models.Sum('value')
-        )['total'] or Decimal('0.00')
+            account=account, received=True
+        ).aggregate(total=models.Sum("value"))["total"] or Decimal("0.00")
 
         # Calcula total de despesas pagas
-        total_expenses = Expense.objects.filter(
-            account=account,
-            payed=True
-        ).aggregate(
-            total=models.Sum('value')
-        )['total'] or Decimal('0.00')
+        total_expenses = Expense.objects.filter(account=account, payed=True).aggregate(
+            total=models.Sum("value")
+        )["total"] or Decimal("0.00")
 
         # Atualiza o saldo da conta
         new_balance = total_revenues - total_expenses
         account.current_balance = new_balance
-        account.save(update_fields=['current_balance'])
+        account.save(update_fields=["current_balance"])
 
 
-@receiver(post_save, sender='revenues.Revenue')
+@receiver(post_save, sender="revenues.Revenue")
 def update_balance_on_revenue_save(sender, instance, created, **kwargs):
     """
     Atualiza o saldo da conta quando uma receita é criada ou editada.
@@ -75,7 +70,7 @@ def update_balance_on_revenue_save(sender, instance, created, **kwargs):
         update_account_balance(instance.account)
 
 
-@receiver(post_delete, sender='revenues.Revenue')
+@receiver(post_delete, sender="revenues.Revenue")
 def update_balance_on_revenue_delete(sender, instance, **kwargs):
     """
     Atualiza o saldo da conta quando uma receita é deletada.
@@ -93,7 +88,7 @@ def update_balance_on_revenue_delete(sender, instance, **kwargs):
         update_account_balance(instance.account)
 
 
-@receiver(post_save, sender='expenses.Expense')
+@receiver(post_save, sender="expenses.Expense")
 def update_balance_on_expense_save(sender, instance, created, **kwargs):
     """
     Atualiza o saldo da conta quando uma despesa é criada ou editada.
@@ -113,7 +108,7 @@ def update_balance_on_expense_save(sender, instance, created, **kwargs):
         update_account_balance(instance.account)
 
 
-@receiver(post_delete, sender='expenses.Expense')
+@receiver(post_delete, sender="expenses.Expense")
 def update_balance_on_expense_delete(sender, instance, **kwargs):
     """
     Atualiza o saldo da conta quando uma despesa é deletada.
@@ -131,7 +126,7 @@ def update_balance_on_expense_delete(sender, instance, **kwargs):
         update_account_balance(instance.account)
 
 
-@receiver(post_save, sender='accounts.Account')
+@receiver(post_save, sender="accounts.Account")
 def create_initial_revenue_on_account_creation(sender, instance, created, **kwargs):
     """
     Cria automaticamente uma receita quando uma conta é criada com saldo inicial.
@@ -155,22 +150,22 @@ def create_initial_revenue_on_account_creation(sender, instance, created, **kwar
     from revenues.models import Revenue
 
     # Só criar receita se for uma nova conta E tiver saldo inicial
-    if created and instance.current_balance > Decimal('0.00'):
+    if created and instance.current_balance > Decimal("0.00"):
         # Usar a data de abertura da conta se disponível, senão usar a data atual
         revenue_date = instance.opening_date or timezone.now().date()
         revenue_time = timezone.now().time()
 
         # Criar a receita de saldo inicial
         Revenue.objects.create(
-            description='Saldo inicial',
+            description="Saldo inicial",
             value=instance.current_balance,
             date=revenue_date,
             horary=revenue_time,
-            category='deposit',
+            category="deposit",
             account=instance,
             received=True,
             member=instance.owner,
             created_by=instance.created_by,
             updated_by=instance.updated_by,
-            notes='Receita criada automaticamente a partir do saldo inicial da conta.'
+            notes="Receita criada automaticamente a partir do saldo inicial da conta.",
         )

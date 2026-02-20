@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { EnhancedTooltip } from './EnhancedTooltip';
-import { truncateLabel } from '@/lib/chart-formatters';
+
 import { useChartDimensions } from '@/hooks/use-chart-dimensions';
+import { truncateLabel } from '@/lib/chart-formatters';
 import type { ChartDataPoint } from '@/lib/chart-types';
+
+import { EnhancedTooltip } from './EnhancedTooltip';
 
 interface EnhancedPieChartProps {
   data: ChartDataPoint[];

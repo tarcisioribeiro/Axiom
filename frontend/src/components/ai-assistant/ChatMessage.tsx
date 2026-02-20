@@ -5,9 +5,11 @@
  */
 import { motion } from 'framer-motion';
 import { User, Bot } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
-import { ResponseRenderer } from './ResponseRenderer';
 import type { AiMessage } from '@/types';
+
+import { ResponseRenderer } from './ResponseRenderer';
 
 interface ChatMessageProps {
   message: AiMessage;

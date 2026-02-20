@@ -20,12 +20,12 @@ class JWTCookieMiddleware:
 
     def __call__(self, request):
         # Ler access token do cookie
-        access_token = request.COOKIES.get('access_token')
+        access_token = request.COOKIES.get("access_token")
 
         # Se existe token no cookie e não há Authorization header
-        if access_token and not request.META.get('HTTP_AUTHORIZATION'):
+        if access_token and not request.META.get("HTTP_AUTHORIZATION"):
             # Adicionar token ao header Authorization
-            request.META['HTTP_AUTHORIZATION'] = f'Bearer {access_token}'
+            request.META["HTTP_AUTHORIZATION"] = f"Bearer {access_token}"
 
         response = self.get_response(request)
         return response

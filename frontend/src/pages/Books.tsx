@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Plus, BookOpen, TrendingUp, Edit, Trash2, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
+import { BookForm } from '@/components/library/BookForm';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -17,20 +23,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { SearchInput } from '@/components/common/SearchInput';
-import { booksService } from '@/services/books-service';
-import { authorsService } from '@/services/authors-service';
-import { publishersService } from '@/services/publishers-service';
-import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
+import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { EmptyState } from '@/components/common/EmptyState';
-import { BookForm } from '@/components/library/BookForm';
+import { authorsService } from '@/services/authors-service';
+import { booksService } from '@/services/books-service';
+import { publishersService } from '@/services/publishers-service';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Books() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -180,7 +181,7 @@ export default function Books() {
             key={star}
             className={`h-4 w-4 ${
               star <= rating
-                ? 'fill-yellow-400 text-yellow-400'
+                ? 'fill-star text-star'
                 : 'fill-muted text-muted'
             }`}
           />

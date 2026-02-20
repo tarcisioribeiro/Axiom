@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/auth-store';
-import { useTheme } from '@/hooks/use-theme';
+
 import {
   getAllCommands,
   searchCommands,
@@ -9,6 +8,8 @@ import {
   type Command,
   type CommandSection,
 } from '@/config/commands';
+import { useTheme } from '@/hooks/use-theme';
+import { useAuthStore } from '@/stores/auth-store';
 
 interface UseCommandPaletteReturn {
   isOpen: boolean;

@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Plus, Trophy, Edit, Trash2, RefreshCw, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { type z } from 'zod';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,19 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
-import { LoadingState } from '@/components/common/LoadingState';
-import { GoalForm } from '@/components/personal-planning/GoalForm';
+import { Progress } from '@/components/ui/progress';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { type goalSchema } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
 import type { Goal, RoutineTask, GoalFormData as GoalApiFormData } from '@/types';
-import { type goalSchema } from '@/lib/validations';
-import { type z } from 'zod';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 type GoalFormData = z.infer<typeof goalSchema>;
 

@@ -70,14 +70,19 @@ services:
       - ./docker/ollama/init-models.sh:/init-models.sh:ro
     entrypoint: ["/bin/bash", "-c", "/init-models.sh & ollama serve"]
     restart: unless-stopped
-    # GPU support - uncomment the following lines if you have NVIDIA GPU
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+          cpus: '4'
+        reservations:
+          memory: 4g
+          cpus: '2'
+          # GPU support - uncomment the following lines if you have NVIDIA GPU
+          # devices:
+          #   - driver: nvidia
+          #     count: 1
+          #     capabilities: [gpu]
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 30s
@@ -138,6 +143,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+      target: production
     container_name: mindledger-api
     ports:
       - "${API_PORT:-39100}:${API_PORT:-39100}"
@@ -154,6 +160,7 @@ services:
       - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
       - MINIO_ENDPOINT=minio:9000
       - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT:-localhost:39105}
+    entrypoint: ["/app/entrypoint.sh"]
     depends_on:
       db:
         condition: service_healthy

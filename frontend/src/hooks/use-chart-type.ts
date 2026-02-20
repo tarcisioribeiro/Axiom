@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import type { ChartType } from '@/lib/chart-types';
 
 // Re-exporta o tipo para compatibilidade

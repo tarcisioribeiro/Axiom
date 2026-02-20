@@ -3,13 +3,14 @@
  *
  * Suporta agentes especializados com modelos e escopos diferentes.
  */
-import { apiClient } from './api-client';
 import type {
   AiResponse,
   AiHealthResponse,
   AiHistoryResponse,
   AiAgentsResponse,
 } from '@/types';
+
+import { apiClient } from './api-client';
 
 class AiAssistantService {
   private readonly baseUrl = '/api/v1/ai';

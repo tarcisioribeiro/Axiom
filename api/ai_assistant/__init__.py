@@ -1,2 +1,2 @@
 # AI Assistant Module
-default_app_config = 'ai_assistant.apps.AiAssistantConfig'
+default_app_config = "ai_assistant.apps.AiAssistantConfig"

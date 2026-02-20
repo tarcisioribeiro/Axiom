@@ -1,5 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Save, CheckCircle2, StickyNote, RefreshCw } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -14,17 +12,17 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { Save, CheckCircle2, StickyNote, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { KanbanCard } from '@/components/personal-planning/KanbanCard';
+import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -34,17 +32,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { EmptyState } from '@/components/common/EmptyState';
-import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
-import { KanbanCard } from '@/components/personal-planning/KanbanCard';
-import { taskInstancesService } from '@/services/task-instances-service';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { appService } from '@/services/app-service';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
-import { appService } from '@/services/app-service';
-import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/utils/error-utils';
+import { taskInstancesService } from '@/services/task-instances-service';
 import {
   MOOD_CHOICES,
   type TaskInstance,
@@ -52,9 +54,7 @@ import {
   type KanbanStatus,
   type InstanceStatus,
 } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
-
-import { formatLocalDate, parseLocalDate } from '@/lib/utils';
+import { getErrorMessage } from '@/utils/error-utils';
 
 // Mapeia status de instância para status do Kanban
 const mapInstanceToKanban = (status: InstanceStatus): KanbanStatus => {

@@ -1,5 +1,6 @@
-import { apiClient, type RequestData } from './api-client';
 import type { PaginatedResponse } from '@/types';
+
+import { apiClient, type RequestData } from './api-client';
 
 /**
  * Classe base generica para services CRUD.

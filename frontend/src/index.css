@@ -5,6 +5,8 @@
 @layer base {
   /* Tema Claro - Alucard Classic (Dracula Light Theme Oficial) */
   :root {
+    color-scheme: light;
+
     /* Backgrounds - Background (#FFFBEB) */
     --background: 48 100% 96%;
     --foreground: 0 0% 12%; /* Foreground (#1F1F1F) */
@@ -92,6 +94,9 @@
     /* Borders sutis */
     --border-subtle: 240 19% 90%;
 
+    /* Star rating color - golden yellow */
+    --star: 45 90% 48%;
+
     /* Typography scale */
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
@@ -124,6 +129,8 @@
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
   .dark {
+    color-scheme: dark;
+
     /* Backgrounds - Background (#282A36) */
     --background: 235 15% 18%;
     --foreground: 60 30% 96%; /* Foreground (#F8F8F2) */
@@ -194,6 +201,9 @@
 
     /* Borders sutis */
     --border-subtle: 232 14% 25%;
+
+    /* Star rating color - Dracula yellow (#F1FA8C) */
+    --star: 65 92% 76%;
   }
 }
 
@@ -397,6 +407,17 @@
 
   .text-subtle {
     color: hsl(var(--muted-foreground));
+  }
+
+  /* Smooth theme transition - cascades to all children during theme switch */
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition:
+      background-color var(--duration-normal) ease,
+      border-color var(--duration-normal) ease,
+      color var(--duration-normal) ease,
+      fill var(--duration-normal) ease,
+      stroke var(--duration-normal) ease !important;
   }
 }
 

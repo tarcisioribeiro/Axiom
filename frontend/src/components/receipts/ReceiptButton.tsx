@@ -1,10 +1,9 @@
+import { FileText, Image, Receipt, Eye, Loader2 } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ReceiptTemplate } from './ReceiptTemplate';
-import { ReceiptPreviewDialog } from './ReceiptPreviewDialog';
 import { useReceiptGenerator } from '@/hooks/use-receipt-generator';
-import type { ReceiptData, ExportFormat } from '@/types/receipt';
 import {
   mapExpenseToReceipt,
   mapRevenueToReceipt,
@@ -17,6 +16,7 @@ import {
   mapVaultDepositToReceipt,
   mapVaultWithdrawalToReceipt,
 } from '@/lib/receipt-utils';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import type {
   Expense,
   Revenue,
@@ -29,8 +29,10 @@ import type {
   Vault,
   VaultTransaction,
 } from '@/types';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { FileText, Image, Receipt, Eye, Loader2 } from 'lucide-react';
+import type { ReceiptData, ExportFormat } from '@/types/receipt';
+
+import { ReceiptPreviewDialog } from './ReceiptPreviewDialog';
+import { ReceiptTemplate } from './ReceiptTemplate';
 
 // Type for different data sources
 type ReceiptSourceData =

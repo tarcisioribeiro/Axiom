@@ -4,11 +4,11 @@ Serviço de geração de instâncias de tarefas.
 Responsável por criar TaskInstance a partir de templates (RoutineTask)
 para uma data específica, aplicando regras de recorrência e horários.
 """
+
 from datetime import datetime, time, timedelta
 from typing import List, Optional
 
 from django.db import transaction
-from django.utils import timezone
 
 from personal_planning.models import RoutineTask, TaskInstance
 
@@ -26,10 +26,7 @@ class InstanceGenerator:
 
     @classmethod
     def generate_for_date(
-        cls,
-        owner,
-        target_date,
-        force_regenerate: bool = False
+        cls, owner, target_date, force_regenerate: bool = False
     ) -> List[TaskInstance]:
         """
         Gera todas as instâncias de tarefas para um owner em uma data específica.
@@ -37,16 +34,15 @@ class InstanceGenerator:
         Args:
             owner: Member instance
             target_date: datetime.date
-            force_regenerate: Se True, recria instâncias pendentes (não altera completadas)
+            force_regenerate: Se True, recria instâncias pendentes
+                (não altera completadas)
 
         Returns:
             List of TaskInstance objects
         """
         # Busca templates ativos para este owner
         templates = RoutineTask.objects.filter(
-            owner=owner,
-            is_active=True,
-            deleted_at__isnull=True
+            owner=owner, is_active=True, deleted_at__isnull=True
         )
 
         instances = []
@@ -60,10 +56,9 @@ class InstanceGenerator:
                     instances.extend(new_instances)
 
         # Ordena por horário
-        instances.sort(key=lambda x: (
-            x.scheduled_time or time(23, 59),
-            x.occurrence_index
-        ))
+        instances.sort(
+            key=lambda x: (x.scheduled_time or time(23, 59), x.occurrence_index)
+        )
 
         return instances
 
@@ -74,21 +69,17 @@ class InstanceGenerator:
 
         Útil para visualização de histórico.
         """
-        return list(TaskInstance.objects.filter(
-            owner=owner,
-            scheduled_date=target_date,
-            deleted_at__isnull=True
-        ).select_related('template').order_by(
-            'scheduled_time', 'occurrence_index'
-        ))
+        return list(
+            TaskInstance.objects.filter(
+                owner=owner, scheduled_date=target_date, deleted_at__isnull=True
+            )
+            .select_related("template")
+            .order_by("scheduled_time", "occurrence_index")
+        )
 
     @classmethod
     def _generate_instances_for_template(
-        cls,
-        template: RoutineTask,
-        target_date,
-        owner,
-        force_regenerate: bool
+        cls, template: RoutineTask, target_date, owner, force_regenerate: bool
     ) -> List[TaskInstance]:
         """
         Gera instâncias para um template específico.
@@ -118,7 +109,7 @@ class InstanceGenerator:
                 occurrence_index=i,
                 scheduled_time=times[i] if times and i < len(times) else None,
                 owner=owner,
-                force_regenerate=force_regenerate
+                force_regenerate=force_regenerate,
             )
             instances.append(instance)
 
@@ -142,9 +133,7 @@ class InstanceGenerator:
 
     @classmethod
     def _calculate_times(
-        cls,
-        template: RoutineTask,
-        num_occurrences: int
+        cls, template: RoutineTask, num_occurrences: int
     ) -> Optional[List[time]]:
         """
         Calcula os horários para cada ocorrência.
@@ -156,7 +145,7 @@ class InstanceGenerator:
             parsed_times = []
             for t in template.scheduled_times[:num_occurrences]:
                 try:
-                    parsed_times.append(datetime.strptime(t, '%H:%M').time())
+                    parsed_times.append(datetime.strptime(t, "%H:%M").time())
                 except (ValueError, TypeError):
                     continue
             if parsed_times:
@@ -194,7 +183,7 @@ class InstanceGenerator:
         occurrence_index: int,
         scheduled_time: Optional[time],
         owner,
-        force_regenerate: bool
+        force_regenerate: bool,
     ) -> TaskInstance:
         """
         Obtém instância existente ou cria uma nova.
@@ -208,14 +197,14 @@ class InstanceGenerator:
             scheduled_date=target_date,
             occurrence_index=occurrence_index,
             owner=owner,
-            deleted_at__isnull=True
+            deleted_at__isnull=True,
         ).first()
 
         if existing:
             needs_update = False
 
             # Se force_regenerate e ainda pendente, atualiza dados do template
-            if force_regenerate and existing.status == 'pending':
+            if force_regenerate and existing.status == "pending":
                 existing.task_name = template.name
                 existing.task_description = template.description
                 existing.category = template.category
@@ -223,7 +212,8 @@ class InstanceGenerator:
                 existing.scheduled_time = scheduled_time
                 existing.unit = template.unit
                 needs_update = True
-            # Sempre atualiza scheduled_time se estiver vazio e temos horário do template
+            # Sempre atualiza scheduled_time se estiver vazio
+            # e temos horário do template
             elif existing.scheduled_time is None and scheduled_time is not None:
                 existing.scheduled_time = scheduled_time
                 needs_update = True
@@ -242,13 +232,13 @@ class InstanceGenerator:
             scheduled_date=target_date,
             scheduled_time=scheduled_time,
             occurrence_index=occurrence_index,
-            status='pending',
+            status="pending",
             target_quantity=1,  # Cada instância representa 1 unidade
             quantity_completed=0,
             unit=template.unit,
             owner=owner,
-            created_by=owner.user if hasattr(owner, 'user') and owner.user else None,
-            updated_by=owner.user if hasattr(owner, 'user') and owner.user else None
+            created_by=owner.user if hasattr(owner, "user") and owner.user else None,
+            updated_by=owner.user if hasattr(owner, "user") and owner.user else None,
         )
 
         return instance
@@ -269,11 +259,11 @@ class InstanceGenerator:
         owner,
         task_name: str,
         scheduled_date,
-        category: str = 'other',
+        category: str = "other",
         scheduled_time: Optional[time] = None,
-        description: str = None,
-        unit: str = 'vez',
-        icon: str = None
+        description: Optional[str] = None,
+        unit: str = "vez",
+        icon: Optional[str] = None,
     ) -> TaskInstance:
         """
         Cria uma tarefa avulsa (sem template).
@@ -289,11 +279,11 @@ class InstanceGenerator:
             scheduled_date=scheduled_date,
             scheduled_time=scheduled_time,
             occurrence_index=0,
-            status='pending',
+            status="pending",
             target_quantity=1,
             quantity_completed=0,
             unit=unit,
             owner=owner,
-            created_by=owner.user if hasattr(owner, 'user') and owner.user else None,
-            updated_by=owner.user if hasattr(owner, 'user') and owner.user else None
+            created_by=owner.user if hasattr(owner, "user") and owner.user else None,
+            updated_by=owner.user if hasattr(owner, "user") and owner.user else None,
         )

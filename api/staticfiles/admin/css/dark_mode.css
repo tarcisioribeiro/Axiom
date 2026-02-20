@@ -2,27 +2,27 @@
     :root {
         --primary: var(--dracula-comment-darker);
         --primary-fg: #f7f7f7;
-  
+
         --body-fg: var(--dracula-foreground);
         --body-bg: var(--dracula-background);
         --body-quiet-color: #d0d0d0;
         --body-medium-color: #e0e0e0;
         --body-loud-color: #ffffff;
-  
+
         --breadcrumbs-link-fg: #e0e0e0;
         --breadcrumbs-fg: var(--dracula-green);
-  
+
         --link-fg: var(--dracula-cyan);
         --link-hover-color: #4ac1f7;
         --link-selected-fg: #6f94c6;
-  
+
         --hairline-color: #272727;
         --border-color: #353535;
-  
+
         --message-success-bg: var(--dracula-background-dark);
         --message-warning-bg: var(--dracula-background-dark);
         --message-error-bg: var(--dracula-background-dark);
-  
+
         --darkened-bg: var(--dracula-background-light);
         --selected-bg: var(--dracula-comment-dark);
         --selected-row: var(--dracula-comment-dark);

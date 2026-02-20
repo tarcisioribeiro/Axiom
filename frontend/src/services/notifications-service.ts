@@ -1,6 +1,7 @@
-import { apiClient } from './api-client';
 import { API_CONFIG } from '@/config/constants';
 import type { Notification, NotificationSummary } from '@/types';
+
+import { apiClient } from './api-client';
 
 class NotificationsService {
   async getAll(): Promise<Notification[]> {

@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Calendar, TrendingDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
+import { FixedExpenseStats } from '@/components/expenses/FixedExpenseStats';
+import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,21 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { FixedExpenseForm } from '@/components/expenses/FixedExpenseForm';
-import { LaunchExpensesDialog } from '@/components/expenses/LaunchExpensesDialog';
-import { FixedExpenseStats } from '@/components/expenses/FixedExpenseStats';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
-import { fixedExpensesService } from '@/services/fixed-expenses-service';
+import { TRANSLATIONS } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
-import { formatCurrency } from '@/lib/formatters';
-import { TRANSLATIONS } from '@/config/constants';
+import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense, FixedExpenseFormData, Account, CreditCard } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function FixedExpenses() {
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -11,8 +10,16 @@ import {
   Calendar,
   Tag,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { ArchiveForm } from '@/components/security/ArchiveForm';
+import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -23,18 +30,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArchiveForm } from '@/components/security/ArchiveForm';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { formatDate } from '@/lib/formatters';
 import { archivesService } from '@/services/archives-service';
 import { membersService } from '@/services/members-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
-import { formatDate } from '@/lib/formatters';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { EmptyState } from '@/components/common/EmptyState';
 import type { Archive, ArchiveFormData, Member } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 const ARCHIVE_CATEGORIES: Record<string, string> = {
   personal: 'Pessoal',
@@ -289,6 +291,7 @@ export default function Archives() {
   }
 
   return (
+    <VaultGuard>
     <PageContainer>
       <PageHeader
         title="Arquivos Confidenciais"
@@ -459,5 +462,6 @@ export default function Archives() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+    </VaultGuard>
   );
 }

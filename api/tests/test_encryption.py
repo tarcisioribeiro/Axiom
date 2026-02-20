@@ -1,7 +1,9 @@
 import os
-from django.test import TestCase
-from django.core.exceptions import ValidationError
 from unittest.mock import patch
+
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+
 from cryptography.fernet import Fernet
 
 from app.encryption import FieldEncryption
@@ -15,7 +17,7 @@ class FieldEncryptionTest(TestCase):
         self.test_key = Fernet.generate_key()
         self.test_data = "123456789"
 
-    @patch.dict(os.environ, {'ENCRYPTION_KEY': ''})
+    @patch.dict(os.environ, {"ENCRYPTION_KEY": ""})
     def test_get_encryption_key_missing(self):
         """Testa erro quando a chave de criptografia não está definida"""
         # Remove a chave do ambiente
@@ -23,16 +25,13 @@ class FieldEncryptionTest(TestCase):
             with self.assertRaises(ValidationError) as context:
                 FieldEncryption.get_encryption_key()
 
-            self.assertIn(
-                "ENCRYPTION_KEY não encontrada",
-                str(context.exception)
-            )
+            self.assertIn("ENCRYPTION_KEY não encontrada", str(context.exception))
 
     @patch.dict(os.environ)
     def test_get_encryption_key_success(self):
         """Testa obtenção de chave de criptografia válida"""
         # Define chave de teste no ambiente
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         key = FieldEncryption.get_encryption_key()
         self.assertEqual(key, self.test_key)
@@ -40,7 +39,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_data_success(self):
         """Testa criptografia de dados com sucesso"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         encrypted = FieldEncryption.encrypt_data(self.test_data)
 
@@ -52,7 +51,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_decrypt_data_success(self):
         """Testa descriptografia de dados com sucesso"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Criptografa dados
         encrypted = FieldEncryption.encrypt_data(self.test_data)
@@ -66,7 +65,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_empty_data(self):
         """Testa criptografia de dados vazios"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa string vazia
         result = FieldEncryption.encrypt_data("")
@@ -79,7 +78,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_decrypt_empty_data(self):
         """Testa descriptografia de dados vazios"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa string vazia
         result = FieldEncryption.decrypt_data("")
@@ -92,7 +91,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_decrypt_invalid_data(self):
         """Testa descriptografia de dados inválidos"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa dados não criptografados
         with self.assertRaises(ValidationError) as context:
@@ -103,7 +102,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_with_wrong_key_format(self):
         """Testa criptografia com formato de chave inválido"""
-        os.environ['ENCRYPTION_KEY'] = "chave_invalida"
+        os.environ["ENCRYPTION_KEY"] = "chave_invalida"
 
         with self.assertRaises(ValidationError) as context:
             FieldEncryption.encrypt_data(self.test_data)
@@ -113,7 +112,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_decrypt_cycle_with_numbers(self):
         """Testa ciclo completo de criptografia/descriptografia com números"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa com dados numéricos convertidos para string
         numeric_data = "123"
@@ -125,7 +124,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_decrypt_cycle_with_special_characters(self):
         """Testa ciclo completo com caracteres especiais"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa com caracteres especiais
         special_data = "!@#$%^&*()_+-={}[]|\\:;\"'<>?,./"
@@ -137,7 +136,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_decrypt_cycle_with_unicode(self):
         """Testa ciclo completo com caracteres Unicode"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa com caracteres Unicode
         unicode_data = "áéíóúçñü中文字符"
@@ -179,7 +178,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_multiple_encryptions_same_data(self):
         """Testa que a mesma informação gera criptografias diferentes"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Criptografa os mesmos dados duas vezes
         encrypted1 = FieldEncryption.encrypt_data(self.test_data)
@@ -199,7 +198,7 @@ class FieldEncryptionTest(TestCase):
     @patch.dict(os.environ)
     def test_encrypt_large_data(self):
         """Testa criptografia de dados grandes"""
-        os.environ['ENCRYPTION_KEY'] = self.test_key.decode()
+        os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Cria string grande (1MB)
         large_data = "A" * (1024 * 1024)

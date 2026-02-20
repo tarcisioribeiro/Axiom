@@ -1,4 +1,7 @@
+import { FileText, Image, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
+
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,11 +9,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { ReceiptTemplate } from './ReceiptTemplate';
-import type { ReceiptData, ExportFormat } from '@/types/receipt';
 import { useReceiptGenerator } from '@/hooks/use-receipt-generator';
-import { FileText, Image, Loader2 } from 'lucide-react';
+import type { ReceiptData, ExportFormat } from '@/types/receipt';
+
+import { ReceiptTemplate } from './ReceiptTemplate';
+
 
 interface ReceiptPreviewDialogProps {
   open: boolean;

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Heart,
   BookOpen,
@@ -69,10 +68,13 @@ import {
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
-import { Button } from './button';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
-import { Input } from './input';
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
+
+import { Button } from './button';
+import { Input } from './input';
+import { Popover, PopoverContent, PopoverTrigger } from './popover';
 import { ScrollArea } from './scroll-area';
 
 // Map of icon names to icon components

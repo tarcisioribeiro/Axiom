@@ -1,9 +1,10 @@
-import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -11,12 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { formatLocalDate } from '@/lib/utils';
 import { creditCardExpensesService } from '@/services/credit-card-expenses-service';
 import type { CreditCardBill, CreditCardBillFormData, CreditCard } from '@/types';
-
-import { formatLocalDate } from '@/lib/utils';
 interface CreditCardBillFormProps {
   bill?: CreditCardBill;
   creditCards: CreditCard[];
@@ -298,7 +298,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 {...register('minimum_payment', { valueAsNumber: true })}
                 placeholder="0.00"
                 disabled
-                className="font-semibold text-amber-600"
+                className="font-semibold text-warning"
               />
               <p className="text-xs">10% do valor total</p>
             </div>

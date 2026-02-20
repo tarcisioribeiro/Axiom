@@ -1,6 +1,6 @@
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from transfers.models import Transfer
 from transfers.serializers import TransferSerializer
-from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
 class TransferCreateListView(BaseListCreateView):
@@ -18,6 +18,7 @@ class TransferCreateListView(BaseListCreateView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Transfer.objects.filter(is_deleted=False)
     serializer_class = TransferSerializer
 
@@ -49,6 +50,7 @@ class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Transfer.objects.filter(is_deleted=False)
     serializer_class = TransferSerializer
 

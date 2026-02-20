@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
 import { useBreadcrumb } from '@/hooks/use-breadcrumb';
 import { cn } from '@/lib/utils';
 

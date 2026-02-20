@@ -1,12 +1,13 @@
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useNavigate, Link } from 'react-router-dom';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/services/auth-service';
-import { Loader2 } from 'lucide-react';
 
 interface RegisterFormData {
   username: string;

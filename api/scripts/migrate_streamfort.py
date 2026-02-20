@@ -18,34 +18,38 @@ Uso:
 
 import os
 import sys
-import django
 from pathlib import Path
+
+import django
 
 # Setup Django
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 django.setup()
 
-import mysql.connector
-from django.contrib.auth.models import User
-from django.db import transaction
-from members.models import Member
-from security.models import (
-    Password, StoredCreditCard, StoredBankAccount,
-    Archive
-)
-from security.activity_logs.models import ActivityLog
+from django.contrib.auth.models import User  # noqa: E402
+from django.db import transaction  # noqa: E402
 
+import mysql.connector  # noqa: E402
+
+from members.models import Member  # noqa: E402
+from security.activity_logs.models import ActivityLog  # noqa: E402
+from security.models import (  # noqa: E402
+    Archive,
+    Password,
+    StoredBankAccount,
+    StoredCreditCard,
+)
 
 # Configuração do MySQL (StreamFort)
 MYSQL_CONFIG = {
-    'host': input("MySQL Host (default: localhost): ") or 'localhost',
-    'port': int(input("MySQL Port (default: 3306): ") or 3306),
-    'user': input("MySQL User (default: root): ") or 'root',
-    'password': input("MySQL Password: "),
-    'database': input("MySQL Database (default: seguranca): ") or 'seguranca',
-    'charset': 'utf8mb4'
+    "host": input("MySQL Host (default: localhost): ") or "localhost",
+    "port": int(input("MySQL Port (default: 3306): ") or 3306),
+    "user": input("MySQL User (default: root): ") or "root",
+    "password": input("MySQL Password: "),
+    "database": input("MySQL Database (default: seguranca): ") or "seguranca",
+    "charset": "utf8mb4",
 }
 
 
@@ -78,11 +82,11 @@ def migrate_users(cursor):
         try:
             # Dados do StreamFort
             user_id = row[0]  # id_usuario
-            login = row[1]     # login
-            senha = row[2]     # senha (bcrypt hash bytes)
-            nome = row[3]      # nome
-            documento = row[4] # documento_usuario (CPF)
-            sexo = row[5]      # sexo (M/F)
+            login = row[1]  # login
+            # row[2] is senha (bcrypt hash bytes) - not migrated
+            nome = row[3]  # nome
+            documento = row[4]  # documento_usuario (CPF)
+            sexo = row[5]  # sexo (M/F)
 
             # Verificar se usuário já existe
             if User.objects.filter(username=login).exists():
@@ -95,27 +99,27 @@ def migrate_users(cursor):
                 username=login,
                 email=f"{login}@mindledger.local",  # Email fake
                 first_name=nome.split()[0] if nome else login,
-                last_name=' '.join(nome.split()[1:]) if len(nome.split()) > 1 else ''
+                last_name=" ".join(nome.split()[1:]) if len(nome.split()) > 1 else "",
             )
 
             # Definir senha bcrypt diretamente
             # Django aceita bcrypt com prefixo 'bcrypt$'
             # Mas como a senha do StreamFort já está em bytes bcrypt,
             # vamos definir uma senha temporária e pedir ao usuário para trocar
-            user.set_password('MindLedger2024!')  # Senha temporária
+            user.set_password("MindLedger2024!")  # Senha temporária
             user.save()
 
             # Criar Member
             Member.objects.create(
                 name=nome,
-                document=documento or f'TEMP{user_id}',  # CPF ou ID temporário
-                phone='0000000000',  # Placeholder
+                document=documento or f"TEMP{user_id}",  # CPF ou ID temporário
+                phone="0000000000",  # Placeholder
                 email=user.email,
                 sex=sexo,
                 user=user,
                 owner=user,  # Self-owned
                 created_by=user,
-                updated_by=user
+                updated_by=user,
             )
 
             migrated += 1
@@ -146,34 +150,40 @@ def migrate_passwords(cursor):
     for row in passwords:
         try:
             # Dados do StreamFort
-            nome_site = row[1]      # nome_site
-            url_site = row[2]       # url_site
-            login = row[3]          # login
-            senha_bytes = row[4]    # senha (criptografada em bytes)
+            nome_site = row[1]  # nome_site
+            url_site = row[2]  # url_site
+            login = row[3]  # login
+            senha_bytes = row[4]  # senha (criptografada em bytes)
             usuario_associado = row[5]  # usuario_associado (nome)
-            documento = row[6]      # documento_usuario_associado
+            documento = row[6]  # documento_usuario_associado
 
             # Encontrar Member pelo documento
             try:
                 member = Member.objects.get(document=documento)
             except Member.DoesNotExist:
-                print(f"  ⚠ Member com documento '{documento}' não encontrado, pulando...")
+                print(
+                    f"  ⚠ Member com documento '{documento}' não encontrado, pulando..."
+                )
                 continue
 
             # Converter senha de bytes para string (já criptografada no StreamFort)
             # Vamos recriptografar com Fernet
-            senha_str = senha_bytes.decode('utf-8') if isinstance(senha_bytes, bytes) else str(senha_bytes)
+            senha_str = (
+                senha_bytes.decode("utf-8")
+                if isinstance(senha_bytes, bytes)
+                else str(senha_bytes)
+            )
 
             # Criar Password
             password_obj = Password(
                 title=nome_site,
                 site=url_site if url_site else None,
                 username=login,
-                category='other',  # Usuário pode categorizar depois
+                category="other",  # Usuário pode categorizar depois
                 notes=f"Migrado do StreamFort. Usuário original: {usuario_associado}",
                 owner=member,
                 created_by=member.user,
-                updated_by=member.user
+                updated_by=member.user,
             )
 
             # Usar property setter que criptografa automaticamente
@@ -207,19 +217,21 @@ def migrate_credit_cards(cursor):
     for row in cards:
         try:
             # Dados do StreamFort
-            nome_cartao = row[1]        # nome_cartao
-            numero_cartao = row[2]      # numero_cartao
-            nome_titular = row[3]       # nome_titular
-            proprietario = row[4]       # proprietario_cartao
-            documento = row[5]          # documento_titular
-            data_validade = row[6]      # data_validade (DATE)
-            cvv = row[7]                # codigo_seguranca
+            nome_cartao = row[1]  # nome_cartao
+            numero_cartao = row[2]  # numero_cartao
+            nome_titular = row[3]  # nome_titular
+            proprietario = row[4]  # proprietario_cartao
+            documento = row[5]  # documento_titular
+            data_validade = row[6]  # data_validade (DATE)
+            cvv = row[7]  # codigo_seguranca
 
             # Encontrar Member
             try:
                 member = Member.objects.get(document=documento)
             except Member.DoesNotExist:
-                print(f"  ⚠ Member com documento '{documento}' não encontrado, pulando...")
+                print(
+                    f"  ⚠ Member com documento '{documento}' não encontrado, pulando..."
+                )
                 continue
 
             # Extrair mês e ano da validade
@@ -228,12 +240,12 @@ def migrate_credit_cards(cursor):
 
             # Determinar bandeira (heurística simples)
             first_digit = str(numero_cartao)[0]
-            if first_digit == '4':
-                flag = 'VSA'
-            elif first_digit in ['5', '2']:
-                flag = 'MSC'
+            if first_digit == "4":
+                flag = "VSA"
+            elif first_digit in ["5", "2"]:
+                flag = "MSC"
             else:
-                flag = 'OTHER'
+                flag = "OTHER"
 
             # Criar StoredCreditCard
             card = StoredCreditCard(
@@ -245,7 +257,7 @@ def migrate_credit_cards(cursor):
                 notes=f"Migrado do StreamFort. Proprietário: {proprietario}",
                 owner=member,
                 created_by=member.user,
-                updated_by=member.user
+                updated_by=member.user,
             )
 
             # Usar property setters para criptografar
@@ -280,32 +292,34 @@ def migrate_bank_accounts(cursor):
     for row in accounts:
         try:
             # Dados do StreamFort
-            nome_conta = row[1]         # nome_conta
-            instituicao = row[2]        # instituicao_financeira
-            agencia = row[4]            # agencia
-            numero_conta = row[5]       # numero_conta
-            senha_bancaria = row[7]     # senha_bancaria_conta
-            senha_digital = row[8]      # senha_digital_conta
-            proprietario = row[9]       # nome_proprietario_conta
-            documento = row[10]         # documento_proprietario_conta
+            nome_conta = row[1]  # nome_conta
+            instituicao = row[2]  # instituicao_financeira
+            agencia = row[4]  # agencia
+            numero_conta = row[5]  # numero_conta
+            senha_bancaria = row[7]  # senha_bancaria_conta
+            senha_digital = row[8]  # senha_digital_conta
+            proprietario = row[9]  # nome_proprietario_conta
+            documento = row[10]  # documento_proprietario_conta
 
             # Encontrar Member
             try:
                 member = Member.objects.get(document=documento)
             except Member.DoesNotExist:
-                print(f"  ⚠ Member com documento '{documento}' não encontrado, pulando...")
+                print(
+                    f"  ⚠ Member com documento '{documento}' não encontrado, pulando..."
+                )
                 continue
 
             # Criar StoredBankAccount
             account = StoredBankAccount(
                 name=nome_conta,
                 institution_name=instituicao,
-                account_type='CC',  # Assumir Conta Corrente por padrão
+                account_type="CC",  # Assumir Conta Corrente por padrão
                 agency=agencia,
                 notes=f"Migrado do StreamFort. Proprietário: {proprietario}",
                 owner=member,
                 created_by=member.user,
-                updated_by=member.user
+                updated_by=member.user,
             )
 
             # Usar property setters para criptografar
@@ -344,27 +358,29 @@ def migrate_archives(cursor):
     for row in archives:
         try:
             # Dados do StreamFort
-            nome_arquivo = row[1]       # nome_arquivo
-            conteudo = row[2]           # conteudo (TEXT)
+            nome_arquivo = row[1]  # nome_arquivo
+            conteudo = row[2]  # conteudo (TEXT)
             usuario_associado = row[3]  # usuario_associado
-            documento = row[4]          # documento_usuario_associado
+            documento = row[4]  # documento_usuario_associado
 
             # Encontrar Member
             try:
                 member = Member.objects.get(document=documento)
             except Member.DoesNotExist:
-                print(f"  ⚠ Member com documento '{documento}' não encontrado, pulando...")
+                print(
+                    f"  ⚠ Member com documento '{documento}' não encontrado, pulando..."
+                )
                 continue
 
             # Criar Archive
             archive = Archive(
                 title=nome_arquivo or "Arquivo sem título",
-                category='other',
-                archive_type='text',
+                category="other",
+                archive_type="text",
                 notes=f"Migrado do StreamFort. Usuário: {usuario_associado}",
                 owner=member,
                 created_by=member.user,
-                updated_by=member.user
+                updated_by=member.user,
             )
 
             # Usar property setter para criptografar conteúdo
@@ -400,11 +416,11 @@ def migrate_activity_logs(cursor):
     for row in logs:
         try:
             # Dados do StreamFort
-            data_log = row[1]       # data_log
-            horario_log = row[2]    # horario_log
-            usuario_log = row[3]    # usuario_log (login)
-            tipo_log = row[4]       # tipo_log
-            conteudo_log = row[5]   # conteudo_log
+            data_log = row[1]  # data_log
+            horario_log = row[2]  # horario_log
+            usuario_log = row[3]  # usuario_log (login)
+            tipo_log = row[4]  # tipo_log
+            conteudo_log = row[5]  # conteudo_log
 
             # Encontrar User pelo login
             try:
@@ -414,14 +430,14 @@ def migrate_activity_logs(cursor):
 
             # Mapear tipo_log para ACTION_TYPES
             action_map = {
-                'Registro': 'create',
-                'Acesso': 'view',
-                'Consulta': 'view',
-                'Cadastro': 'create',
-                'Login': 'login',
-                'Logout': 'logout'
+                "Registro": "create",
+                "Acesso": "view",
+                "Consulta": "view",
+                "Cadastro": "create",
+                "Login": "login",
+                "Logout": "logout",
             }
-            action = action_map.get(tipo_log, 'other')
+            action = action_map.get(tipo_log, "other")
 
             # Criar ActivityLog
             from datetime import datetime, time
@@ -436,12 +452,12 @@ def migrate_activity_logs(cursor):
                 action=action,
                 description=conteudo_log,
                 user=user,
-                created_at=created_at
+                created_at=created_at,
             )
 
             migrated += 1
 
-        except Exception as e:
+        except Exception:
             errors += 1
             # Logs são opcionais, não imprimir erro para cada um
             pass
@@ -489,6 +505,7 @@ def main():
     except Exception as e:
         print(f"\n✗ ERRO CRÍTICO na migração: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:
@@ -497,13 +514,13 @@ def main():
         print("\n✓ Conexão MySQL encerrada.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Confirmação antes de executar
     print("\n⚠ ATENÇÃO: Este script irá migrar dados do StreamFort para o MindLedger.")
     print("  Certifique-se de ter um backup antes de continuar.")
     confirm = input("\nDeseja continuar? (sim/não): ")
 
-    if confirm.lower() in ['sim', 's', 'yes', 'y']:
+    if confirm.lower() in ["sim", "s", "yes", "y"]:
         main()
     else:
         print("Migração cancelada.")

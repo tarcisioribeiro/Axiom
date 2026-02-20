@@ -4,6 +4,8 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+import importPlugin from 'eslint-plugin-import'
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -14,6 +16,7 @@ export default defineConfig([
       tseslint.configs.recommendedTypeChecked,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
+      jsxA11y.flatConfigs.recommended,
     ],
     languageOptions: {
       ecmaVersion: 2020,
@@ -37,6 +40,8 @@ export default defineConfig([
         argsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_',
       }],
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-console': 'warn',
       'no-restricted-syntax': [
         'error',
         {
@@ -45,6 +50,36 @@ export default defineConfig([
             'Use rounded-lg instead of rounded-xl. The design token --radius (0.75rem) maps to rounded-lg.',
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: { import: importPlugin },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+        },
+      },
+    },
+    rules: {
+      'import/order': ['error', {
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+        pathGroups: [
+          {
+            pattern: '@/**',
+            group: 'internal',
+            position: 'before',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+      }],
+      'import/no-duplicates': 'error',
     },
   },
 ])

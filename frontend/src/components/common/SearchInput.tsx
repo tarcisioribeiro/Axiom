@@ -5,8 +5,9 @@
  * Padroniza a interface de busca em todas as páginas.
  */
 
-import React from 'react';
 import { Search } from 'lucide-react';
+import React from 'react';
+
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 

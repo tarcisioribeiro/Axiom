@@ -1,5 +1,3 @@
-import { useLocation } from 'react-router-dom';
-import { useMemo } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Home,
@@ -31,6 +29,8 @@ import {
   ClipboardList,
   ShoppingCart,
 } from 'lucide-react';
+import { useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface BreadcrumbItem {
   label: string;

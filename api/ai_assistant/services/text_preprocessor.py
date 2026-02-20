@@ -3,9 +3,10 @@ Pre-processador de texto para o assistente de IA.
 
 Normaliza e limpa texto antes da interpretacao.
 """
+
 import re
 import unicodedata
-from typing import List, Tuple
+from typing import List
 
 
 class TextPreprocessor:
@@ -22,192 +23,370 @@ class TextPreprocessor:
     # Abreviacoes comuns e suas expansoes
     ABBREVIATIONS = {
         # Perguntas
-        'qto': 'quanto',
-        'qts': 'quantos',
-        'qtas': 'quantas',
-        'qnd': 'quando',
-        'q': 'que',
-        'pq': 'porque',
-        'td': 'todo',
-        'tds': 'todos',
-        'tbm': 'tambem',
-        'tb': 'tambem',
-        'mt': 'muito',
-        'mts': 'muitos',
-        'msm': 'mesmo',
-        'cm': 'como',
-        'cmg': 'comigo',
-        'ctg': 'contigo',
-        'n': 'nao',
-        'nn': 'nao',
-        'vc': 'voce',
-        'vcs': 'voces',
-        'hj': 'hoje',
-        'hr': 'hora',
-        'hrs': 'horas',
-        'min': 'minutos',
-        'seg': 'segundos',
-        'sem': 'semana',
-        'sems': 'semanas',
-        'd': 'de',
-        'p': 'para',
-        'pra': 'para',
-        'pro': 'para o',
-        'c': 'com',
-        's': 'sim',
-        'obg': 'obrigado',
-        'vlw': 'valeu',
-        'blz': 'beleza',
-        'fds': 'fim de semana',
-
+        "qto": "quanto",
+        "qts": "quantos",
+        "qtas": "quantas",
+        "qnd": "quando",
+        "q": "que",
+        "pq": "porque",
+        "td": "todo",
+        "tds": "todos",
+        "tbm": "tambem",
+        "tb": "tambem",
+        "mt": "muito",
+        "mts": "muitos",
+        "msm": "mesmo",
+        "cm": "como",
+        "cmg": "comigo",
+        "ctg": "contigo",
+        "n": "nao",
+        "nn": "nao",
+        "vc": "voce",
+        "vcs": "voces",
+        "hj": "hoje",
+        "hr": "hora",
+        "hrs": "horas",
+        "min": "minutos",
+        "seg": "segundos",
+        "sem": "semana",
+        "sems": "semanas",
+        "d": "de",
+        "p": "para",
+        "pra": "para",
+        "pro": "para o",
+        "c": "com",
+        "s": "sim",
+        "obg": "obrigado",
+        "vlw": "valeu",
+        "blz": "beleza",
+        "fds": "fim de semana",
         # Financeiro
-        'cta': 'conta',
-        'ctas': 'contas',
-        'pgto': 'pagamento',
-        'pgtos': 'pagamentos',
-        'desp': 'despesa',
-        'desps': 'despesas',
-        'rec': 'receita',
-        'recs': 'receitas',
-        'transf': 'transferencia',
-        'transfs': 'transferencias',
-        'sld': 'saldo',
-        'fat': 'fatura',
-        'fats': 'faturas',
-        'lim': 'limite',
-        'cart': 'cartao',
-        'carts': 'cartoes',
-
+        "cta": "conta",
+        "ctas": "contas",
+        "pgto": "pagamento",
+        "pgtos": "pagamentos",
+        "desp": "despesa",
+        "desps": "despesas",
+        "rec": "receita",
+        "recs": "receitas",
+        "transf": "transferencia",
+        "transfs": "transferencias",
+        "sld": "saldo",
+        "fat": "fatura",
+        "fats": "faturas",
+        "lim": "limite",
+        "cart": "cartao",
+        "carts": "cartoes",
         # Meses abreviados
-        'jan': 'janeiro',
-        'fev': 'fevereiro',
-        'mar': 'marco',
-        'abr': 'abril',
-        'mai': 'maio',
-        'jun': 'junho',
-        'jul': 'julho',
-        'ago': 'agosto',
-        'set': 'setembro',
-        'out': 'outubro',
-        'nov': 'novembro',
-        'dez': 'dezembro',
+        "jan": "janeiro",
+        "fev": "fevereiro",
+        "mar": "marco",
+        "abr": "abril",
+        "mai": "maio",
+        "jun": "junho",
+        "jul": "julho",
+        "ago": "agosto",
+        "set": "setembro",
+        "out": "outubro",
+        "nov": "novembro",
+        "dez": "dezembro",
     }
 
     # Erros de digitacao comuns e suas correcoes
     TYPO_CORRECTIONS = {
         # Acentos faltando (comum em digitacao rapida)
-        'voce': 'voce',
-        'tambem': 'tambem',
-        'entao': 'entao',
-        'nao': 'nao',
-        'ja': 'ja',
-        'so': 'so',
-        'ate': 'ate',
-        'apos': 'apos',
-        'tres': 'tres',
-        'mes': 'mes',
-        'meses': 'meses',
-        'ano': 'ano',
-        'proxima': 'proxima',
-        'proximo': 'proximo',
-        'ultima': 'ultima',
-        'ultimo': 'ultimo',
-        'unica': 'unica',
-        'unico': 'unico',
-
+        "voce": "voce",
+        "tambem": "tambem",
+        "entao": "entao",
+        "nao": "nao",
+        "ja": "ja",
+        "so": "so",
+        "ate": "ate",
+        "apos": "apos",
+        "tres": "tres",
+        "mes": "mes",
+        "meses": "meses",
+        "ano": "ano",
+        "proxima": "proxima",
+        "proximo": "proximo",
+        "ultima": "ultima",
+        "ultimo": "ultimo",
+        "unica": "unica",
+        "unico": "unico",
         # Erros comuns de digitacao
-        'gastei': 'gastei',
-        'gasto': 'gasto',
-        'gastos': 'gastos',
-        'depsesa': 'despesa',
-        'desepsa': 'despesa',
-        'despea': 'despesa',
-        'despesas': 'despesas',
-        'recita': 'receita',
-        'receiat': 'receita',
-        'recetas': 'receitas',
-        'salod': 'saldo',
-        'slado': 'saldo',
-        'tranferencia': 'transferencia',
-        'trasferencia': 'transferencia',
-        'transferenca': 'transferencia',
-        'emprestmo': 'emprestimo',
-        'emrpestimo': 'emprestimo',
-        'cartaoo': 'cartao',
-        'carato': 'cartao',
-        'cartoao': 'cartao',
-        'faturaa': 'fatura',
-        'fatuar': 'fatura',
-        'livrso': 'livros',
-        'livross': 'livros',
-        'taerfas': 'tarefas',
-        'tarfeas': 'tarefas',
-        'senhas': 'senhas',
-        'senahss': 'senhas',
+        "gastei": "gastei",
+        "gasto": "gasto",
+        "gastos": "gastos",
+        "depsesa": "despesa",
+        "desepsa": "despesa",
+        "despea": "despesa",
+        "despesas": "despesas",
+        "recita": "receita",
+        "receiat": "receita",
+        "recetas": "receitas",
+        "salod": "saldo",
+        "slado": "saldo",
+        "tranferencia": "transferencia",
+        "trasferencia": "transferencia",
+        "transferenca": "transferencia",
+        "emprestmo": "emprestimo",
+        "emrpestimo": "emprestimo",
+        "cartaoo": "cartao",
+        "carato": "cartao",
+        "cartoao": "cartao",
+        "faturaa": "fatura",
+        "fatuar": "fatura",
+        "livrso": "livros",
+        "livross": "livros",
+        "taerfas": "tarefas",
+        "tarfeas": "tarefas",
+        "senhas": "senhas",
+        "senahss": "senhas",
     }
 
     # Stopwords que podem ser removidas sem perda de significado
     STOPWORDS = {
-        'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas',
-        'de', 'da', 'do', 'das', 'dos',
-        'em', 'na', 'no', 'nas', 'nos',
-        'por', 'pela', 'pelo', 'pelas', 'pelos',
-        'e', 'ou', 'mas',
-        'que', 'qual', 'quais',
-        'se', 'isso', 'isto',
-        'eu', 'meu', 'minha', 'meus', 'minhas',
-        'me', 'te', 'lhe', 'nos', 'vos', 'lhes',
-        'esse', 'essa', 'esses', 'essas',
-        'este', 'esta', 'estes', 'estas',
-        'aquele', 'aquela', 'aqueles', 'aquelas',
-        'foi', 'foram', 'era', 'eram',
-        'ser', 'estar', 'ter', 'haver',
-        'muito', 'muita', 'muitos', 'muitas',
-        'bem', 'mal',
-        'mais', 'menos',
-        'ja', 'ainda', 'agora', 'depois', 'antes',
-        'aqui', 'ali', 'la', 'ca',
-        'sim', 'nao',
-        'tambem', 'so', 'apenas',
-        'entao', 'portanto', 'assim',
-        'pois', 'porque', 'porquanto',
-        'onde', 'aonde', 'donde',
-        'como', 'quando',
-        'mesmo', 'propria', 'proprio',
-        'toda', 'todo', 'todas', 'todos',
-        'cada', 'algum', 'alguma', 'alguns', 'algumas',
-        'nenhum', 'nenhuma', 'nenhuns', 'nenhumas',
-        'outro', 'outra', 'outros', 'outras',
-        'tal', 'tais',
-        'tanto', 'tanta', 'tantos', 'tantas',
-        'pouco', 'pouca', 'poucos', 'poucas',
+        "o",
+        "a",
+        "os",
+        "as",
+        "um",
+        "uma",
+        "uns",
+        "umas",
+        "de",
+        "da",
+        "do",
+        "das",
+        "dos",
+        "em",
+        "na",
+        "no",
+        "nas",
+        "nos",
+        "por",
+        "pela",
+        "pelo",
+        "pelas",
+        "pelos",
+        "e",
+        "ou",
+        "mas",
+        "que",
+        "qual",
+        "quais",
+        "se",
+        "isso",
+        "isto",
+        "eu",
+        "meu",
+        "minha",
+        "meus",
+        "minhas",
+        "me",
+        "te",
+        "lhe",
+        "nos",
+        "vos",
+        "lhes",
+        "esse",
+        "essa",
+        "esses",
+        "essas",
+        "este",
+        "esta",
+        "estes",
+        "estas",
+        "aquele",
+        "aquela",
+        "aqueles",
+        "aquelas",
+        "foi",
+        "foram",
+        "era",
+        "eram",
+        "ser",
+        "estar",
+        "ter",
+        "haver",
+        "muito",
+        "muita",
+        "muitos",
+        "muitas",
+        "bem",
+        "mal",
+        "mais",
+        "menos",
+        "ja",
+        "ainda",
+        "agora",
+        "depois",
+        "antes",
+        "aqui",
+        "ali",
+        "la",
+        "ca",
+        "sim",
+        "nao",
+        "tambem",
+        "so",
+        "apenas",
+        "entao",
+        "portanto",
+        "assim",
+        "pois",
+        "porque",
+        "porquanto",
+        "onde",
+        "aonde",
+        "donde",
+        "como",
+        "quando",
+        "mesmo",
+        "propria",
+        "proprio",
+        "toda",
+        "todo",
+        "todas",
+        "todos",
+        "cada",
+        "algum",
+        "alguma",
+        "alguns",
+        "algumas",
+        "nenhum",
+        "nenhuma",
+        "nenhuns",
+        "nenhumas",
+        "outro",
+        "outra",
+        "outros",
+        "outras",
+        "tal",
+        "tais",
+        "tanto",
+        "tanta",
+        "tantos",
+        "tantas",
+        "pouco",
+        "pouca",
+        "poucos",
+        "poucas",
     }
 
     # Palavras que NAO devem ser removidas (importantes para contexto financeiro)
     KEEP_WORDS = {
-        'quanto', 'quantos', 'quantas',
-        'qual', 'quais',
-        'total', 'soma', 'media', 'maior', 'menor', 'maximo', 'minimo',
-        'hoje', 'ontem', 'amanha', 'semana', 'mes', 'ano', 'trimestre',
-        'ultimo', 'ultima', 'ultimos', 'ultimas',
-        'primeiro', 'primeira', 'primeiros', 'primeiras',
-        'proximo', 'proxima', 'proximos', 'proximas',
-        'entre', 'desde', 'ate',
-        'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
-        'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-        'saldo', 'despesa', 'despesas', 'receita', 'receitas',
-        'gasto', 'gastos', 'faturamento', 'ganho', 'ganhos',
-        'conta', 'contas', 'cartao', 'cartoes', 'fatura', 'faturas',
-        'limite', 'emprestimo', 'emprestimos', 'divida', 'dividas',
-        'transferencia', 'transferencias', 'pix', 'ted', 'doc',
-        'livro', 'livros', 'leitura', 'leituras', 'lendo', 'li',
-        'tarefa', 'tarefas', 'objetivo', 'objetivos', 'meta', 'metas',
-        'senha', 'senhas', 'credencial', 'credenciais', 'login',
-        'cofre', 'cofres', 'reserva', 'reservas', 'poupanca',
-        'categoria', 'categorias', 'tipo', 'tipos',
-        'pendente', 'pendentes', 'pago', 'pagos', 'atrasado', 'atrasados',
-        'ativo', 'ativos', 'inativo', 'inativos',
-        'devo', 'devem', 'devendo',
+        "quanto",
+        "quantos",
+        "quantas",
+        "qual",
+        "quais",
+        "total",
+        "soma",
+        "media",
+        "maior",
+        "menor",
+        "maximo",
+        "minimo",
+        "hoje",
+        "ontem",
+        "amanha",
+        "semana",
+        "mes",
+        "ano",
+        "trimestre",
+        "ultimo",
+        "ultima",
+        "ultimos",
+        "ultimas",
+        "primeiro",
+        "primeira",
+        "primeiros",
+        "primeiras",
+        "proximo",
+        "proxima",
+        "proximos",
+        "proximas",
+        "entre",
+        "desde",
+        "ate",
+        "janeiro",
+        "fevereiro",
+        "marco",
+        "abril",
+        "maio",
+        "junho",
+        "julho",
+        "agosto",
+        "setembro",
+        "outubro",
+        "novembro",
+        "dezembro",
+        "saldo",
+        "despesa",
+        "despesas",
+        "receita",
+        "receitas",
+        "gasto",
+        "gastos",
+        "faturamento",
+        "ganho",
+        "ganhos",
+        "conta",
+        "contas",
+        "cartao",
+        "cartoes",
+        "fatura",
+        "faturas",
+        "limite",
+        "emprestimo",
+        "emprestimos",
+        "divida",
+        "dividas",
+        "transferencia",
+        "transferencias",
+        "pix",
+        "ted",
+        "doc",
+        "livro",
+        "livros",
+        "leitura",
+        "leituras",
+        "lendo",
+        "li",
+        "tarefa",
+        "tarefas",
+        "objetivo",
+        "objetivos",
+        "meta",
+        "metas",
+        "senha",
+        "senhas",
+        "credencial",
+        "credenciais",
+        "login",
+        "cofre",
+        "cofres",
+        "reserva",
+        "reservas",
+        "poupanca",
+        "categoria",
+        "categorias",
+        "tipo",
+        "tipos",
+        "pendente",
+        "pendentes",
+        "pago",
+        "pagos",
+        "atrasado",
+        "atrasados",
+        "ativo",
+        "ativos",
+        "inativo",
+        "inativos",
+        "devo",
+        "devem",
+        "devendo",
     }
 
     @classmethod
@@ -222,7 +401,7 @@ class TextPreprocessor:
             Texto normalizado e limpo
         """
         if not text:
-            return ''
+            return ""
 
         # 1. Normaliza unicode e espacos
         text = cls._normalize_unicode(text)
@@ -292,12 +471,12 @@ class TextPreprocessor:
             Texto sem acentos, minusculas
         """
         if not text:
-            return ''
+            return ""
 
         text = text.lower()
         # Remove acentos
-        text = unicodedata.normalize('NFKD', text)
-        text = ''.join(c for c in text if not unicodedata.combining(c))
+        text = unicodedata.normalize("NFKD", text)
+        text = "".join(c for c in text if not unicodedata.combining(c))
 
         return text
 
@@ -305,7 +484,7 @@ class TextPreprocessor:
     def _normalize_unicode(cls, text: str) -> str:
         """Normaliza caracteres unicode."""
         # Normaliza para forma composta (NFC)
-        text = unicodedata.normalize('NFC', text)
+        text = unicodedata.normalize("NFC", text)
         return text
 
     @classmethod
@@ -316,15 +495,15 @@ class TextPreprocessor:
 
         for word in words:
             # Remove pontuacao para verificar abreviacao
-            clean_word = word.rstrip('.,!?;:')
-            suffix = word[len(clean_word):]
+            clean_word = word.rstrip(".,!?;:")
+            suffix = word[len(clean_word) :]
 
             if clean_word.lower() in cls.ABBREVIATIONS:
                 expanded.append(cls.ABBREVIATIONS[clean_word.lower()] + suffix)
             else:
                 expanded.append(word)
 
-        return ' '.join(expanded)
+        return " ".join(expanded)
 
     @classmethod
     def _fix_typos(cls, text: str) -> str:
@@ -334,28 +513,28 @@ class TextPreprocessor:
 
         for word in words:
             # Remove pontuacao para verificar erro
-            clean_word = word.rstrip('.,!?;:')
-            suffix = word[len(clean_word):]
+            clean_word = word.rstrip(".,!?;:")
+            suffix = word[len(clean_word) :]
 
             if clean_word.lower() in cls.TYPO_CORRECTIONS:
                 fixed.append(cls.TYPO_CORRECTIONS[clean_word.lower()] + suffix)
             else:
                 fixed.append(word)
 
-        return ' '.join(fixed)
+        return " ".join(fixed)
 
     @classmethod
     def _clean_special_chars(cls, text: str) -> str:
         """Remove caracteres especiais mantendo pontuacao basica."""
         # Mantem letras, numeros, espacos e pontuacao basica
         # Mantem tambem caracteres acentuados
-        text = re.sub(r'[^\w\s.,!?;:\-/]', ' ', text, flags=re.UNICODE)
+        text = re.sub(r"[^\w\s.,!?;:\-/]", " ", text, flags=re.UNICODE)
         return text
 
     @classmethod
     def _normalize_spaces(cls, text: str) -> str:
         """Normaliza espacos multiplos."""
-        return re.sub(r'\s+', ' ', text)
+        return re.sub(r"\s+", " ", text)
 
     @classmethod
     def _remove_stopwords(cls, text: str) -> str:
@@ -365,13 +544,13 @@ class TextPreprocessor:
 
         for word in words:
             # Remove pontuacao para verificar
-            clean_word = word.rstrip('.,!?;:').lower()
+            clean_word = word.rstrip(".,!?;:").lower()
 
             # Mantem se for uma palavra importante ou se nao for stopword
             if clean_word in cls.KEEP_WORDS or clean_word not in cls.STOPWORDS:
                 filtered.append(word)
 
-        return ' '.join(filtered)
+        return " ".join(filtered)
 
     @classmethod
     def get_text_variations(cls, text: str) -> List[str]:

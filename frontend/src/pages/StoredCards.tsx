@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -9,8 +8,15 @@ import {
   Copy,
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StoredCardForm } from '@/components/security/StoredCardForm';
+import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -19,23 +25,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { StoredCardForm } from '@/components/security/StoredCardForm';
-import { storedCardsService } from '@/services/stored-cards-service';
+import { translate } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { membersService } from '@/services/members-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
-import { translate } from '@/config/constants';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { storedCardsService } from '@/services/stored-cards-service';
 import type {
   StoredCreditCard,
   StoredCreditCardFormData,
   CreditCard,
   Member,
 } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function StoredCards() {
   const [cards, setCards] = useState<StoredCreditCard[]>([]);
@@ -294,6 +296,7 @@ export default function StoredCards() {
   ];
 
   return (
+    <VaultGuard>
     <PageContainer>
       <PageHeader
         title="Cartões Armazenados"
@@ -377,5 +380,6 @@ export default function StoredCards() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+    </VaultGuard>
   );
 }

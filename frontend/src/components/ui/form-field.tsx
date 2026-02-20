@@ -1,7 +1,8 @@
+import { Check, X, Loader2 } from 'lucide-react';
 import * as React from 'react';
+
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Check, X, Loader2 } from 'lucide-react';
 
 type ValidationState = 'idle' | 'validating' | 'valid' | 'invalid';
 

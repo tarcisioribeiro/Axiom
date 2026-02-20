@@ -5,8 +5,9 @@
  * Suporta dois modos: spinner tradicional ou skeleton para melhor perceived performance.
  */
 
-import React from 'react';
 import { Loader2 } from 'lucide-react';
+import React from 'react';
+
 import {
   SkeletonTable,
   SkeletonList,

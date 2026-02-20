@@ -1,21 +1,26 @@
 """
-Signals para atualização automática de empréstimos quando despesas/receitas são criadas/editadas/deletadas.
+Signals para atualização automática de empréstimos quando despesas/receitas
+são criadas/editadas/deletadas.
 
 Este módulo implementa signals que:
-- Atualizam automaticamente o payed_value de um empréstimo quando uma despesa ou receita vinculada é criada/editada/deletada
-- Atualizam automaticamente o status do empréstimo baseado no valor pago e data de vencimento
+- Atualizam automaticamente o payed_value de um empréstimo quando uma despesa
+  ou receita vinculada é criada/editada/deletada
+- Atualizam automaticamente o status do empréstimo baseado no valor pago
+  e data de vencimento
 """
 
-from django.db.models.signals import post_save, pre_delete, post_delete
-from django.dispatch import receiver
-from django.db.models import Sum
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
+
+from django.db.models import Sum
+from django.db.models.signals import post_delete, post_save, pre_delete
+from django.dispatch import receiver
 
 
 def update_loan_payed_value(loan):
     """
-    Recalcula o payed_value do empréstimo baseado em todas as receitas e despesas vinculadas.
+    Recalcula o payed_value do empréstimo baseado em todas as receitas
+    e despesas vinculadas.
 
     Parameters
     ----------
@@ -27,22 +32,20 @@ def update_loan_payed_value(loan):
 
     # Somar todas as despesas pagas vinculadas a este empréstimo
     expense_payments = Expense.objects.filter(
-        related_loan=loan,
-        is_deleted=False
-    ).aggregate(total=Sum('value'))['total'] or Decimal('0')
+        related_loan=loan, is_deleted=False
+    ).aggregate(total=Sum("value"))["total"] or Decimal("0")
 
     # Somar todas as receitas recebidas vinculadas a este empréstimo
     revenue_payments = Revenue.objects.filter(
-        related_loan=loan,
-        is_deleted=False
-    ).aggregate(total=Sum('value'))['total'] or Decimal('0')
+        related_loan=loan, is_deleted=False
+    ).aggregate(total=Sum("value"))["total"] or Decimal("0")
 
     # Total pago = despesas + receitas
     total_paid = expense_payments + revenue_payments
 
     # Atualizar payed_value do empréstimo
     loan.payed_value = total_paid
-    loan.save(update_fields=['payed_value', 'updated_at'])
+    loan.save(update_fields=["payed_value", "updated_at"])
 
 
 def update_loan_status(loan):
@@ -65,27 +68,27 @@ def update_loan_status(loan):
     # Atualizar status
     if loan.payed_value >= loan.value:
         # Totalmente pago
-        new_status = 'paid'
+        new_status = "paid"
     elif loan.due_date and date.today() > loan.due_date and remaining > 0:
         # Atrasado (tem data de vencimento, já passou, e ainda tem saldo)
-        new_status = 'overdue'
+        new_status = "overdue"
     else:
         # Ativo (não está pago completo, e não está atrasado)
-        new_status = 'active'
+        new_status = "active"
 
     # Atualizar se mudou
     if loan.status != new_status:
         loan.status = new_status
-        loan.save(update_fields=['status', 'updated_at'])
+        loan.save(update_fields=["status", "updated_at"])
 
 
-@receiver(post_save, sender='expenses.Expense')
+@receiver(post_save, sender="expenses.Expense")
 def update_loan_on_expense_save(sender, instance, created, **kwargs):
     """
     Atualiza o empréstimo quando uma despesa é criada ou editada.
 
-    Este signal incrementa automaticamente o payed_value do empréstimo quando uma despesa
-    vinculada é criada ou modificada.
+    Este signal incrementa automaticamente o payed_value do empréstimo
+    quando uma despesa vinculada é criada ou modificada.
 
     Parameters
     ----------
@@ -119,12 +122,13 @@ def update_loan_on_expense_save(sender, instance, created, **kwargs):
         pass
 
 
-@receiver(pre_delete, sender='expenses.Expense')
+@receiver(pre_delete, sender="expenses.Expense")
 def update_loan_on_expense_delete(sender, instance, **kwargs):
     """
     Atualiza o empréstimo quando uma despesa é deletada.
 
-    Este signal decrementa automaticamente o payed_value do empréstimo quando uma despesa
+    Este signal decrementa automaticamente o payed_value do empréstimo
+    quando uma despesa
     vinculada é deletada.
 
     Parameters
@@ -157,7 +161,7 @@ def update_loan_on_expense_delete(sender, instance, **kwargs):
         pass
 
 
-@receiver(post_delete, sender='expenses.Expense')
+@receiver(post_delete, sender="expenses.Expense")
 def recalculate_loan_after_expense_delete(sender, instance, **kwargs):
     """
     Recalcula o empréstimo após a despesa ser deletada.
@@ -191,12 +195,13 @@ def recalculate_loan_after_expense_delete(sender, instance, **kwargs):
         pass
 
 
-@receiver(post_save, sender='revenues.Revenue')
+@receiver(post_save, sender="revenues.Revenue")
 def update_loan_on_revenue_save(sender, instance, created, **kwargs):
     """
     Atualiza o empréstimo quando uma receita é criada ou editada.
 
-    Este signal incrementa automaticamente o payed_value do empréstimo quando uma receita
+    Este signal incrementa automaticamente o payed_value do empréstimo
+    quando uma receita
     vinculada é criada ou modificada.
 
     Parameters
@@ -230,12 +235,13 @@ def update_loan_on_revenue_save(sender, instance, created, **kwargs):
         pass
 
 
-@receiver(pre_delete, sender='revenues.Revenue')
+@receiver(pre_delete, sender="revenues.Revenue")
 def update_loan_on_revenue_delete(sender, instance, **kwargs):
     """
     Atualiza o empréstimo quando uma receita é deletada.
 
-    Este signal decrementa automaticamente o payed_value do empréstimo quando uma receita
+    Este signal decrementa automaticamente o payed_value do empréstimo
+    quando uma receita
     vinculada é deletada.
 
     Parameters
@@ -267,7 +273,7 @@ def update_loan_on_revenue_delete(sender, instance, **kwargs):
         pass
 
 
-@receiver(post_delete, sender='revenues.Revenue')
+@receiver(post_delete, sender="revenues.Revenue")
 def recalculate_loan_after_revenue_delete(sender, instance, **kwargs):
     """
     Recalcula o empréstimo após a receita ser deletada.

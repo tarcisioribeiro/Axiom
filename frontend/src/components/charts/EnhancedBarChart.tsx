@@ -9,11 +9,13 @@ import {
   Cell,
   ResponsiveContainer,
 } from 'recharts';
-import { EnhancedTooltip } from './EnhancedTooltip';
+
+import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import { useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatNumber, truncateLabel } from '@/lib/chart-formatters';
-import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import type { ChartDataPoint, BarLayout } from '@/lib/chart-types';
+
+import { EnhancedTooltip } from './EnhancedTooltip';
 
 interface EnhancedBarChartProps {
   data: ChartDataPoint[];

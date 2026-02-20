@@ -65,7 +65,7 @@ MindLedger/
 
 **Import alias**: `@/` → `frontend/src/`
 
-**Pre-commit**: Husky + lint-staged runs ESLint + Prettier on staged files.
+**Pre-commit**: Husky + lint-staged runs ESLint + Prettier on staged files. Commit messages are enforced via commitlint (see [Commit Convention](#commit-convention) below).
 
 ## Development Commands
 
@@ -117,11 +117,17 @@ npm run typecheck        # TypeScript type check only (no build)
 ```bash
 # Backend
 cd api && python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 python manage.py migrate && python manage.py runserver 0.0.0.0:8002
 
 # Frontend
 cd frontend && npm install && npm run dev
+```
+
+### Git Hooks (one-time setup, run from repo root)
+```bash
+pip install pre-commit   # if not already installed via requirements-dev.txt
+pre-commit install       # installs hooks into .git/hooks/pre-commit
 ```
 
 ### Database
@@ -216,6 +222,42 @@ def get_queryset(self):
 - **Ollama**: localhost:39104
 - **MinIO API**: localhost:39105
 - **MinIO Console**: localhost:39106
+
+## Commit Convention
+
+This project enforces [Conventional Commits](https://www.conventionalcommits.org/) via [commitlint](https://commitlint.js.org/).
+
+**Format**: `<type>(<optional scope>): <short description>`
+
+**Allowed types**:
+| Type | When to use |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `chore` | Maintenance (deps, config, tooling) |
+| `refactor` | Code restructuring with no feature or bug-fix change |
+| `docs` | Documentation only |
+| `test` | Test additions or corrections |
+| `ci` | CI/CD configuration |
+| `perf` | Performance improvement |
+| `revert` | Revert a previous commit |
+| `style` | Code style / formatting (no logic change) |
+
+**Examples**:
+```
+feat(auth): add JWT refresh token support
+fix(dashboard): correct balance calculation for credit cards
+chore(deps): update React to v19
+docs: add commit convention to CLAUDE.md
+test(expenses): add missing edge-case coverage
+```
+
+**Setup** (first time): Run the following to activate the commit-msg hook via `pre-commit`:
+```bash
+pre-commit install --hook-type commit-msg
+```
+
+Config is at `commitlint.config.js` (project root). Packages are in `frontend/devDependencies`.
 
 ## Tool Configuration
 

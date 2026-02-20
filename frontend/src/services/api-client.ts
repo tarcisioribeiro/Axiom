@@ -4,6 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 import Cookies from 'js-cookie';
+
 import { API_CONFIG } from '@/config/constants';
 
 // ============================================================================

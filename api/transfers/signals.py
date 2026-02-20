@@ -10,6 +10,7 @@ Isso garante que as transferências sejam refletidas nos saldos das contas.
 
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
+
 from transfers.models import Transfer
 
 
@@ -42,7 +43,7 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
         account=instance.origin_account,
         date=instance.date,
         horary=instance.horary,
-        value=instance.value + instance.fee  # Incluir taxa na despesa
+        value=instance.value + instance.fee,  # Incluir taxa na despesa
     ).first()
 
     existing_revenue = Revenue.objects.filter(
@@ -50,7 +51,7 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
         account=instance.destiny_account,
         date=instance.date,
         horary=instance.horary,
-        value=instance.value
+        value=instance.value,
     ).first()
 
     # Criar despesa na conta de origem (se não existir)
@@ -60,19 +61,19 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
             value=instance.value + instance.fee,  # Valor + taxa
             date=instance.date,
             horary=instance.horary,
-            category='others',  # Categoria "Outros"
+            category="others",  # Categoria "Outros"
             account=instance.origin_account,
             payed=instance.transfered,
             merchant=f"Transferência para {instance.destiny_account.account_name}",
-            payment_method='transfer',
+            payment_method="transfer",
             member=instance.member,
             related_transfer=instance,  # Vincular à transferência
             notes=f"Transferência ID: {instance.transaction_id or instance.uuid}\n"
-                  f"Tipo: {instance.get_category_display()}\n"
-                  f"Taxa: R$ {instance.fee}\n"
-                  f"{instance.notes or ''}",
+            f"Tipo: {instance.get_category_display()}\n"
+            f"Taxa: R$ {instance.fee}\n"
+            f"{instance.notes or ''}",
             created_by=instance.created_by,
-            updated_by=instance.updated_by
+            updated_by=instance.updated_by,
         )
 
     # Criar receita na conta de destino (se não existir)
@@ -82,17 +83,17 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
             value=instance.value,
             date=instance.date,
             horary=instance.horary,
-            category='transfer',  # Categoria "Transferência Recebida"
+            category="transfer",  # Categoria "Transferência Recebida"
             account=instance.destiny_account,
             received=instance.transfered,
             source=f"Transferência de {instance.origin_account.account_name}",
             member=instance.member,
             related_transfer=instance,  # Vincular à transferência
             notes=f"Transferência ID: {instance.transaction_id or instance.uuid}\n"
-                  f"Tipo: {instance.get_category_display()}\n"
-                  f"{instance.notes or ''}",
+            f"Tipo: {instance.get_category_display()}\n"
+            f"{instance.notes or ''}",
             created_by=instance.created_by,
-            updated_by=instance.updated_by
+            updated_by=instance.updated_by,
         )
 
 

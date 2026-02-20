@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Clock } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
 import type { TaskCard } from '@/types';

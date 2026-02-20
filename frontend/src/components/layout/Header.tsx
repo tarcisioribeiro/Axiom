@@ -1,10 +1,11 @@
-import { useAuthStore } from '@/stores/auth-store';
+import { LogOut, Moon, Sun, Menu } from 'lucide-react';
+
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useTheme } from '@/hooks/use-theme';
-import { Button } from '@/components/ui/button';
-import { Breadcrumb } from '@/components/layout/Breadcrumb';
-import { LogOut, Moon, Sun, Menu } from 'lucide-react';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { useAuthStore } from '@/stores/auth-store';
 
 export const Header = () => {
   const { logout } = useAuthStore();

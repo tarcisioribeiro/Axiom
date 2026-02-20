@@ -1,48 +1,43 @@
 from django.urls import path
-from . import views
 
+from . import views
 
 urlpatterns = [
     # Expense endpoints
     path(
-        'expenses/',
-        views.ExpenseCreateListView.as_view(),
-        name="expense-create-list"
+        "expenses/", views.ExpenseCreateListView.as_view(), name="expense-create-list"
     ),
     path(
-        'expenses/<int:pk>/',
+        "expenses/<int:pk>/",
         views.ExpenseRetrieveUpdateDestroyView.as_view(),
-        name='expense-detail-view'
+        name="expense-detail-view",
     ),
-
     # Fixed Expense endpoints
     path(
-        'fixed-expenses/',
+        "fixed-expenses/",
         views.FixedExpenseListCreateView.as_view(),
-        name='fixed-expense-list-create'
+        name="fixed-expense-list-create",
     ),
     path(
-        'fixed-expenses/<int:pk>/',
+        "fixed-expenses/<int:pk>/",
         views.FixedExpenseDetailView.as_view(),
-        name='fixed-expense-detail'
+        name="fixed-expense-detail",
     ),
-
     # Bulk operations
     path(
-        'fixed-expenses/generate/',
+        "fixed-expenses/generate/",
         views.BulkGenerateFixedExpensesView.as_view(),
-        name='fixed-expense-generate'
+        name="fixed-expense-generate",
     ),
     path(
-        'expenses/bulk-mark-paid/',
+        "expenses/bulk-mark-paid/",
         views.BulkMarkPaidView.as_view(),
-        name='expense-bulk-mark-paid'
+        name="expense-bulk-mark-paid",
     ),
-
     # Statistics
     path(
-        'fixed-expenses/stats/',
+        "fixed-expenses/stats/",
         views.FixedExpensesStatsView.as_view(),
-        name='fixed-expense-stats'
+        name="fixed-expense-stats",
     ),
 ]

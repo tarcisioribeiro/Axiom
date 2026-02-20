@@ -1,45 +1,43 @@
 from django.urls import path
-from library.views import (
-    # Author views
-    AuthorListCreateView,
+
+from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/Dashboard views
     AuthorDetailView,
-    # Publisher views
-    PublisherListCreateView,
-    PublisherDetailView,
-    # Book views
-    BookListCreateView,
+    AuthorListCreateView,
     BookDetailView,
-    # Summary views
-    SummaryListCreateView,
-    SummaryDetailView,
-    # Reading views
-    ReadingListCreateView,
-    ReadingDetailView,
-    # Dashboard views
+    BookListCreateView,
     LibraryDashboardStatsView,
+    PublisherDetailView,
+    PublisherListCreateView,
+    ReadingDetailView,
+    ReadingListCreateView,
+    SummaryDetailView,
+    SummaryListCreateView,
 )
 
 urlpatterns = [
     # Dashboard
-    path('dashboard/stats/', LibraryDashboardStatsView.as_view(), name='library-dashboard-stats'),
-
+    path(
+        "dashboard/stats/",
+        LibraryDashboardStatsView.as_view(),
+        name="library-dashboard-stats",
+    ),
     # Authors
-    path('authors/', AuthorListCreateView.as_view(), name='author-list-create'),
-    path('authors/<int:pk>/', AuthorDetailView.as_view(), name='author-detail'),
-
+    path("authors/", AuthorListCreateView.as_view(), name="author-list-create"),
+    path("authors/<int:pk>/", AuthorDetailView.as_view(), name="author-detail"),
     # Publishers
-    path('publishers/', PublisherListCreateView.as_view(), name='publisher-list-create'),
-    path('publishers/<int:pk>/', PublisherDetailView.as_view(), name='publisher-detail'),
-
+    path(
+        "publishers/", PublisherListCreateView.as_view(), name="publisher-list-create"
+    ),
+    path(
+        "publishers/<int:pk>/", PublisherDetailView.as_view(), name="publisher-detail"
+    ),
     # Books
-    path('books/', BookListCreateView.as_view(), name='book-list-create'),
-    path('books/<int:pk>/', BookDetailView.as_view(), name='book-detail'),
-
+    path("books/", BookListCreateView.as_view(), name="book-list-create"),
+    path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
     # Summaries
-    path('summaries/', SummaryListCreateView.as_view(), name='summary-list-create'),
-    path('summaries/<int:pk>/', SummaryDetailView.as_view(), name='summary-detail'),
-
+    path("summaries/", SummaryListCreateView.as_view(), name="summary-list-create"),
+    path("summaries/<int:pk>/", SummaryDetailView.as_view(), name="summary-detail"),
     # Readings
-    path('readings/', ReadingListCreateView.as_view(), name='reading-list-create'),
-    path('readings/<int:pk>/', ReadingDetailView.as_view(), name='reading-detail'),
+    path("readings/", ReadingListCreateView.as_view(), name="reading-list-create"),
+    path("readings/<int:pk>/", ReadingDetailView.as_view(), name="reading-detail"),
 ]

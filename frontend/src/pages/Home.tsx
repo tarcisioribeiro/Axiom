@@ -1,8 +1,4 @@
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageContainer } from '@/components/common/PageContainer';
-import { containerVariants, itemVariants } from '@/lib/animations';
 import {
   Wallet,
   TrendingDown,
@@ -18,6 +14,12 @@ import {
   Library,
   Calendar,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+import { PageContainer } from '@/components/common/PageContainer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { containerVariants, itemVariants } from '@/lib/animations';
+
 
 interface ModuleCard {
   title: string;

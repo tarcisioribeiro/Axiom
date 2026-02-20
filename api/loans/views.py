@@ -1,6 +1,6 @@
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from loans.models import Loan
 from loans.serializers import LoanSerializer
-from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
 class LoanCreateListView(BaseListCreateView):
@@ -18,6 +18,7 @@ class LoanCreateListView(BaseListCreateView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Loan.objects.filter(is_deleted=False)
     serializer_class = LoanSerializer
 
@@ -38,5 +39,6 @@ class LoanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Loan.objects.filter(is_deleted=False)
     serializer_class = LoanSerializer

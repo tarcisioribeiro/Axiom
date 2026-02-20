@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
 import flatpickr from 'flatpickr';
 import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
 // Importa estilos customizados (sem usar os padrões do Flatpickr)

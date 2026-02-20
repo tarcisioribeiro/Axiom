@@ -1,6 +1,7 @@
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { DailyReflection, DailyReflectionFormData } from '@/types';
+
+import { BaseService } from './base-service';
 
 class DailyReflectionsService extends BaseService<DailyReflection, DailyReflectionFormData> {
   constructor() {

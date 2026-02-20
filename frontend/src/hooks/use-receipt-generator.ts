@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import type { ReceiptData, ExportFormat } from '@/types/receipt';
+import { useState, useCallback, useRef } from 'react';
+
 import { generateReceiptFilename } from '@/lib/receipt-utils';
+import type { ReceiptData, ExportFormat } from '@/types/receipt';
 
 interface UseReceiptGeneratorReturn {
   isGenerating: boolean;

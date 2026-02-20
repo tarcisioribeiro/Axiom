@@ -20,12 +20,13 @@ class AccountCreateListView(BaseListCreateView):
     ordering : list
         Ordenação padrão por nome
     """
+
     serializer_class = AccountSerializer
-    ordering = ['name']  # Consistent ordering
+    ordering = ["name"]  # Consistent ordering
 
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
-        return Account.objects.filter(is_deleted=False).defer('_account_number')
+        return Account.objects.filter(is_deleted=False).defer("_account_number")
 
 
 class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -44,5 +45,6 @@ class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Account.objects.filter(is_deleted=False)
     serializer_class = AccountSerializer

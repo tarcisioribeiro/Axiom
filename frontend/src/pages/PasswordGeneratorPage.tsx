@@ -1,4 +1,8 @@
 import { Wand2 } from 'lucide-react';
+
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { PasswordGenerator } from '@/components/security/PasswordGenerator';
 import {
   Card,
   CardContent,
@@ -6,9 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PageHeader } from '@/components/common/PageHeader';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PasswordGenerator } from '@/components/security/PasswordGenerator';
 
 export default function PasswordGeneratorPage() {
   return (

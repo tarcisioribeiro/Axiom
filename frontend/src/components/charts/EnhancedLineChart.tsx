@@ -11,11 +11,13 @@ import {
   ResponsiveContainer,
   AreaChart,
 } from 'recharts';
-import { EnhancedTooltip } from './EnhancedTooltip';
+
+import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import { useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatNumber } from '@/lib/chart-formatters';
-import { useChartDimensions } from '@/hooks/use-chart-dimensions';
 import type { LineConfig, DualYAxisConfig, ChartDataPoint } from '@/lib/chart-types';
+
+import { EnhancedTooltip } from './EnhancedTooltip';
 
 interface EnhancedLineChartProps {
   data: ChartDataPoint[];

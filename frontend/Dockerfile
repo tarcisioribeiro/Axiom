@@ -30,6 +30,10 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy source code (changes frequently, comes last)
 COPY . .
 
+# Type-check and lint before building (fail fast on quality issues)
+RUN npm run typecheck
+RUN npm run lint
+
 # Build the application
 RUN npm run build
 

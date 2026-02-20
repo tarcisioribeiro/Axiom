@@ -1,6 +1,7 @@
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { Account, AccountFormData } from '@/types';
+
+import { BaseService } from './base-service';
 
 class AccountsService extends BaseService<Account, AccountFormData> {
   constructor() {

@@ -1,4 +1,8 @@
+import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -6,14 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { membersService } from '@/services/members-service';
 import { permissionsService, type Permission } from '@/services/permissions-service';
-import { getErrorMessage } from '@/utils/error-utils';
 import type { Member } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 // Mapeamento de apps para nomes amigáveis
 const APP_DISPLAY_NAMES: { [key: string]: string } = {

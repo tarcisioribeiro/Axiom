@@ -1,0 +1,59 @@
+repos:
+  # General file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  # Python formatting — config in api/pyproject.toml [tool.black]
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        files: ^api/
+        exclude: ^api/.*/migrations/
+        args: [--config, api/pyproject.toml]
+
+  # Import sorting — config in api/pyproject.toml [tool.isort]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        files: ^api/
+        exclude: ^api/.*/migrations/
+        args: [--settings-path, api/]
+
+  # Linting — mirrors api/pyproject.toml [tool.flake8] (flake8 doesn't read pyproject.toml natively)
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        files: ^api/
+        exclude: ^api/.*/migrations/
+        args: [--max-line-length=88, "--extend-ignore=E203,W503"]
+
+  # Type checking — uses system Python so api/ is importable by mypy_django_plugin.
+  # Requires: pip install -r api/requirements-dev.txt on the host.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        language: system
+        entry: bash -c 'cd api && python -m mypy --config-file pyproject.toml .'
+        pass_filenames: false
+        files: ^api/
+        exclude: ^api/.*/migrations/
+
+  # Commit message linting
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint
+        language: node
+        entry: commitlint --edit
+        additional_dependencies:
+          - '@commitlint/cli@19'
+          - '@commitlint/config-conventional@19'
+        stages: [commit-msg]

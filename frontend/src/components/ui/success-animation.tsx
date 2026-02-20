@@ -1,8 +1,9 @@
-import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { checkmarkCircleVariants, pulseRingVariants } from '@/lib/animations/variants';
+import * as React from 'react';
+
 import { DURATION } from '@/lib/animations/transitions';
+import { checkmarkCircleVariants, pulseRingVariants } from '@/lib/animations/variants';
+import { cn } from '@/lib/utils';
 
 type SuccessVariant = 'minimal' | 'standard' | 'celebration';
 

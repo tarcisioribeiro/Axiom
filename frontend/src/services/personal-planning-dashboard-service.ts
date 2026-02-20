@@ -1,5 +1,6 @@
-import { apiClient } from './api-client';
 import type { PersonalPlanningDashboardStats } from '@/types';
+
+import { apiClient } from './api-client';
 
 class PersonalPlanningDashboardService {
   async getStats(): Promise<PersonalPlanningDashboardStats> {

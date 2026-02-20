@@ -1,10 +1,10 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -12,9 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
-import type { Archive, Member } from '@/types';
 import { useAuthStore } from '@/stores/auth-store';
+import type { Archive, Member } from '@/types';
 
 const ARCHIVE_CATEGORIES = [
   { value: 'personal', label: 'Pessoal' },

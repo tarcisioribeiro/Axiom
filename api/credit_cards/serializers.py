@@ -1,13 +1,15 @@
-from rest_framework import serializers
-from django.db import transaction
-from decimal import Decimal
-from datetime import date
 import calendar
+from datetime import date
+from decimal import Decimal
+
+from django.db import transaction
+from rest_framework import serializers
+
 from credit_cards.models import (
     CreditCard,
     CreditCardBill,
-    CreditCardPurchase,
     CreditCardInstallment,
+    CreditCardPurchase,
 )
 
 
@@ -16,49 +18,47 @@ class CreditCardSerializer(serializers.ModelSerializer):
         max_length=4,
         min_length=3,
         write_only=True,
-        help_text="CVV do cartão (3 ou 4 dígitos)"
+        help_text="CVV do cartão (3 ou 4 dígitos)",
     )
     card_number = serializers.CharField(
         max_length=19,
         write_only=True,
         required=False,
         allow_blank=True,
-        help_text="Número do cartão (será criptografado)"
+        help_text="Número do cartão (será criptografado)",
     )
     card_number_masked = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Número do cartão mascarado"
+        read_only=True, help_text="Número do cartão mascarado"
     )
     associated_account_name = serializers.CharField(
-        source='associated_account.account_name',
+        source="associated_account.account_name",
         read_only=True,
-        help_text="Nome da conta associada"
+        help_text="Nome da conta associada",
     )
     used_credit = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Crédito utilizado (parcelas não pagas)"
+        read_only=True, help_text="Crédito utilizado (parcelas não pagas)"
     )
     available_credit = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Crédito disponível"
+        read_only=True, help_text="Crédito disponível"
     )
 
     class Meta:
         model = CreditCard
-        exclude = ['_security_code', '_card_number']
+        exclude = ["_security_code", "_card_number"]
 
     def get_used_credit(self, obj):
         """
         Retorna a soma das parcelas não pagas do cartão.
         """
         from django.db.models import Sum
+
         result = CreditCardInstallment.objects.filter(
             purchase__card=obj,
             purchase__is_deleted=False,
             is_deleted=False,
-            payed=False
-        ).aggregate(total=Sum('value'))
-        return float(result['total'] or 0)
+            payed=False,
+        ).aggregate(total=Sum("value"))
+        return float(result["total"] or 0)
 
     def get_available_credit(self, obj):
         """
@@ -88,6 +88,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
         Validação customizada para data de validade.
         """
         from datetime import date
+
         if value <= date.today():
             raise serializers.ValidationError(
                 "Data de validade deve ser posterior à data atual"
@@ -98,8 +99,8 @@ class CreditCardSerializer(serializers.ModelSerializer):
         """
         Override do create para lidar com os campos criptografados.
         """
-        security_code = validated_data.pop('security_code', None)
-        card_number = validated_data.pop('card_number', None)
+        security_code = validated_data.pop("security_code", None)
+        card_number = validated_data.pop("card_number", None)
 
         # Criar a instância sem salvar
         instance = CreditCard(**validated_data)
@@ -120,8 +121,8 @@ class CreditCardSerializer(serializers.ModelSerializer):
         """
         Override do update para lidar com os campos criptografados.
         """
-        security_code = validated_data.pop('security_code', None)
-        card_number = validated_data.pop('card_number', None)
+        security_code = validated_data.pop("security_code", None)
+        card_number = validated_data.pop("card_number", None)
 
         # Atualizar os campos do validated_data
         for attr, value in validated_data.items():
@@ -142,28 +143,25 @@ class CreditCardSerializer(serializers.ModelSerializer):
 
 class CreditCardBillsSerializer(serializers.ModelSerializer):
     credit_card_on_card_name = serializers.CharField(
-        source='credit_card.on_card_name',
+        source="credit_card.on_card_name",
         read_only=True,
-        help_text="Nome impresso no cartão"
+        help_text="Nome impresso no cartão",
     )
     credit_card_number_masked = serializers.SerializerMethodField(
-        read_only=True,
-        help_text="Últimos 4 dígitos do cartão"
+        read_only=True, help_text="Últimos 4 dígitos do cartão"
     )
     credit_card_flag = serializers.CharField(
-        source='credit_card.flag',
-        read_only=True,
-        help_text="Bandeira do cartão"
+        source="credit_card.flag", read_only=True, help_text="Bandeira do cartão"
     )
     credit_card_associated_account_name = serializers.CharField(
-        source='credit_card.associated_account.account_name',
+        source="credit_card.associated_account.account_name",
         read_only=True,
-        help_text="Nome da conta associada ao cartão"
+        help_text="Nome da conta associada ao cartão",
     )
 
     class Meta:
         model = CreditCardBill
-        fields = '__all__'
+        fields = "__all__"
 
     def get_credit_card_number_masked(self, obj):
         """
@@ -174,7 +172,7 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
             # Verifica se o cartão tem número válido (não é apenas asteriscos)
             if masked and masked != "****" and len(masked) >= 4:
                 # Remove os asteriscos e pega apenas os últimos 4 dígitos numéricos
-                digits_only = ''.join(c for c in masked if c.isdigit())
+                digits_only = "".join(c for c in masked if c.isdigit())
                 if len(digits_only) >= 4:
                     return digits_only[-4:]
         return "****"
@@ -190,25 +188,34 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
         - closed = False
         - due_date = calculado automaticamente se não fornecido
         """
-        from datetime import date
         import calendar
+        from datetime import date
 
-        validated_data['total_amount'] = 0
-        validated_data['minimum_payment'] = 0
-        validated_data['paid_amount'] = 0
-        validated_data['status'] = 'open'
-        validated_data['closed'] = False
+        validated_data["total_amount"] = 0
+        validated_data["minimum_payment"] = 0
+        validated_data["paid_amount"] = 0
+        validated_data["status"] = "open"
+        validated_data["closed"] = False
 
         # Calcular due_date automaticamente se não fornecido
-        if not validated_data.get('due_date'):
-            credit_card = validated_data.get('credit_card')
-            if credit_card and hasattr(credit_card, 'due_day') and credit_card.due_day:
-                year_str = validated_data.get('year', str(date.today().year))
-                month_str = validated_data.get('month', 'Jan')
+        if not validated_data.get("due_date"):
+            credit_card = validated_data.get("credit_card")
+            if credit_card and hasattr(credit_card, "due_day") and credit_card.due_day:
+                year_str = validated_data.get("year", str(date.today().year))
+                month_str = validated_data.get("month", "Jan")
                 month_map = {
-                    'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4,
-                    'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8,
-                    'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+                    "Jan": 1,
+                    "Feb": 2,
+                    "Mar": 3,
+                    "Apr": 4,
+                    "May": 5,
+                    "Jun": 6,
+                    "Jul": 7,
+                    "Aug": 8,
+                    "Sep": 9,
+                    "Oct": 10,
+                    "Nov": 11,
+                    "Dec": 12,
                 }
                 year = int(year_str)
                 month = month_map.get(month_str, 1)
@@ -223,7 +230,7 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
                 if due_day > max_day:
                     due_day = max_day
 
-                validated_data['due_date'] = date(due_year, due_month, due_day)
+                validated_data["due_date"] = date(due_year, due_month, due_day)
 
         return super().create(validated_data)
 
@@ -232,48 +239,71 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
 # SERIALIZERS FOR PURCHASE AND INSTALLMENT
 # ============================================================================
 
+
 class CreditCardInstallmentSerializer(serializers.ModelSerializer):
     """
     Serializer para leitura de parcelas.
     Inclui informações da compra para facilitar visualização.
     """
+
     value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
     # Campos derivados da compra (read-only)
-    description = serializers.CharField(source='purchase.description', read_only=True)
-    category = serializers.CharField(source='purchase.category', read_only=True)
-    card_id = serializers.IntegerField(source='purchase.card_id', read_only=True)
-    card_name = serializers.CharField(source='purchase.card.name', read_only=True)
+    description = serializers.CharField(source="purchase.description", read_only=True)
+    category = serializers.CharField(source="purchase.category", read_only=True)
+    card_id = serializers.IntegerField(source="purchase.card_id", read_only=True)
+    card_name = serializers.CharField(source="purchase.card.name", read_only=True)
     total_installments = serializers.IntegerField(
-        source='purchase.total_installments', read_only=True
+        source="purchase.total_installments", read_only=True
     )
-    merchant = serializers.CharField(source='purchase.merchant', read_only=True)
-    member_id = serializers.IntegerField(source='purchase.member_id', read_only=True)
-    member_name = serializers.CharField(source='purchase.member.name', read_only=True)
-    purchase_date = serializers.DateField(source='purchase.purchase_date', read_only=True)
+    merchant = serializers.CharField(source="purchase.merchant", read_only=True)
+    member_id = serializers.IntegerField(source="purchase.member_id", read_only=True)
+    member_name = serializers.CharField(source="purchase.member.name", read_only=True)
+    purchase_date = serializers.DateField(
+        source="purchase.purchase_date", read_only=True
+    )
     # Informações da fatura
-    bill_month = serializers.CharField(source='bill.month', read_only=True)
-    bill_year = serializers.CharField(source='bill.year', read_only=True)
+    bill_month = serializers.CharField(source="bill.month", read_only=True)
+    bill_year = serializers.CharField(source="bill.year", read_only=True)
 
     class Meta:
         model = CreditCardInstallment
         fields = [
-            'id', 'uuid', 'purchase', 'installment_number', 'value', 'due_date',
-            'bill', 'payed',
+            "id",
+            "uuid",
+            "purchase",
+            "installment_number",
+            "value",
+            "due_date",
+            "bill",
+            "payed",
             # Campos derivados da compra
-            'description', 'category', 'card_id', 'card_name', 'total_installments',
-            'merchant', 'member_id', 'member_name', 'purchase_date',
+            "description",
+            "category",
+            "card_id",
+            "card_name",
+            "total_installments",
+            "merchant",
+            "member_id",
+            "member_name",
+            "purchase_date",
             # Campos da fatura
-            'bill_month', 'bill_year',
+            "bill_month",
+            "bill_year",
             # Timestamps
-            'created_at', 'updated_at',
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = [
-            'id', 'uuid', 'purchase', 'installment_number', 'value', 'due_date',
-            'created_at', 'updated_at',
+            "id",
+            "uuid",
+            "purchase",
+            "installment_number",
+            "value",
+            "due_date",
+            "created_at",
+            "updated_at",
         ]
 
 
@@ -283,16 +313,14 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
     Permite alterar bill, payed e value.
     Atualiza automaticamente o status das faturas afetadas.
     """
+
     value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False,
-        required=False
+        max_digits=12, decimal_places=2, coerce_to_string=False, required=False
     )
 
     class Meta:
         model = CreditCardInstallment
-        fields = ['bill', 'payed', 'value']
+        fields = ["bill", "payed", "value"]
 
     def validate_value(self, value):
         if value is not None and value <= 0:
@@ -306,9 +334,9 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
         Se a parcela for movida para uma fatura diferente, atualiza os totais e status.
         """
         old_bill = instance.bill
-        new_bill = validated_data.get('bill', old_bill)
+        new_bill = validated_data.get("bill", old_bill)
         old_value = Decimal(str(instance.value))
-        new_value = Decimal(str(validated_data.get('value', instance.value)))
+        new_value = Decimal(str(validated_data.get("value", instance.value)))
 
         # Verificar se a fatura mudou
         bill_changed = old_bill != new_bill
@@ -323,12 +351,15 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
         if bill_changed and old_bill:
             old_bill.total_amount = Decimal(str(old_bill.total_amount)) - old_value
             if old_bill.total_amount < 0:
-                old_bill.total_amount = Decimal('0')
+                old_bill.total_amount = Decimal("0")
 
             # Recalcular status da fatura antiga
-            if Decimal(str(old_bill.paid_amount)) >= old_bill.total_amount and old_bill.total_amount > 0:
+            if (
+                Decimal(str(old_bill.paid_amount)) >= old_bill.total_amount
+                and old_bill.total_amount > 0
+            ):
                 if not old_bill.closed:
-                    old_bill.status = 'paid'
+                    old_bill.status = "paid"
             old_bill.save()
 
         # Atualizar fatura nova (adicionar valor)
@@ -336,9 +367,9 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
             new_bill.total_amount = Decimal(str(new_bill.total_amount)) + new_value
 
             # Se a fatura estava 'paid' mas não fechada, mudar status para 'open'
-            if new_bill.status == 'paid' and not new_bill.closed:
+            if new_bill.status == "paid" and not new_bill.closed:
                 if Decimal(str(new_bill.paid_amount)) < new_bill.total_amount:
-                    new_bill.status = 'open'
+                    new_bill.status = "open"
             new_bill.save()
 
         # Se apenas o valor mudou (sem mudar a fatura)
@@ -349,9 +380,9 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
             # Ajustar status conforme necessário
             if Decimal(str(old_bill.paid_amount)) >= old_bill.total_amount:
                 if not old_bill.closed:
-                    old_bill.status = 'paid'
-            elif old_bill.status == 'paid' and not old_bill.closed:
-                old_bill.status = 'open'
+                    old_bill.status = "paid"
+            elif old_bill.status == "paid" and not old_bill.closed:
+                old_bill.status = "open"
 
             old_bill.save()
 
@@ -362,19 +393,24 @@ class CreditCardInstallmentNestedSerializer(serializers.ModelSerializer):
     """
     Serializer simplificado para exibição aninhada em Purchase.
     """
+
     value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
-    bill_month = serializers.CharField(source='bill.month', read_only=True)
-    bill_year = serializers.CharField(source='bill.year', read_only=True)
+    bill_month = serializers.CharField(source="bill.month", read_only=True)
+    bill_year = serializers.CharField(source="bill.year", read_only=True)
 
     class Meta:
         model = CreditCardInstallment
         fields = [
-            'id', 'installment_number', 'value', 'due_date', 'bill', 'payed',
-            'bill_month', 'bill_year',
+            "id",
+            "installment_number",
+            "value",
+            "due_date",
+            "bill",
+            "payed",
+            "bill_month",
+            "bill_year",
         ]
 
 
@@ -383,38 +419,55 @@ class CreditCardPurchaseSerializer(serializers.ModelSerializer):
     Serializer para leitura de compras.
     Inclui parcelas aninhadas.
     """
+
     total_value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
     installment_value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False,
-        read_only=True
+        max_digits=12, decimal_places=2, coerce_to_string=False, read_only=True
     )
     installments = CreditCardInstallmentNestedSerializer(many=True, read_only=True)
     # Informações do cartão
-    card_name = serializers.CharField(source='card.name', read_only=True)
-    card_flag = serializers.CharField(source='card.flag', read_only=True)
+    card_name = serializers.CharField(source="card.name", read_only=True)
+    card_flag = serializers.CharField(source="card.flag", read_only=True)
     card_number_masked = serializers.CharField(
-        source='card.card_number_masked', read_only=True
+        source="card.card_number_masked", read_only=True
     )
     # Informações do membro
-    member_name = serializers.CharField(source='member.name', read_only=True)
+    member_name = serializers.CharField(source="member.name", read_only=True)
 
     class Meta:
         model = CreditCardPurchase
         fields = [
-            'id', 'uuid', 'description', 'total_value', 'installment_value',
-            'purchase_date', 'purchase_time', 'category', 'card', 'card_name',
-            'card_flag', 'card_number_masked', 'total_installments', 'merchant',
-            'member', 'member_name', 'notes', 'receipt',
-            'installments',
-            'created_at', 'updated_at',
+            "id",
+            "uuid",
+            "description",
+            "total_value",
+            "installment_value",
+            "purchase_date",
+            "purchase_time",
+            "category",
+            "card",
+            "card_name",
+            "card_flag",
+            "card_number_masked",
+            "total_installments",
+            "merchant",
+            "member",
+            "member_name",
+            "notes",
+            "receipt",
+            "installments",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'uuid', 'installment_value', 'created_at', 'updated_at']
+        read_only_fields = [
+            "id",
+            "uuid",
+            "installment_value",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
@@ -422,23 +475,32 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
     Serializer para criação de compras.
     Cria automaticamente as parcelas.
     """
+
     total_value = serializers.DecimalField(
-        max_digits=12,
-        decimal_places=2,
-        coerce_to_string=False
+        max_digits=12, decimal_places=2, coerce_to_string=False
     )
 
     class Meta:
         model = CreditCardPurchase
         fields = [
-            'description', 'total_value', 'purchase_date', 'purchase_time',
-            'category', 'card', 'total_installments', 'merchant', 'member',
-            'notes', 'receipt',
+            "description",
+            "total_value",
+            "purchase_date",
+            "purchase_time",
+            "category",
+            "card",
+            "total_installments",
+            "merchant",
+            "member",
+            "notes",
+            "receipt",
         ]
 
     def validate_total_installments(self, value):
         if value < 1:
-            raise serializers.ValidationError("Quantidade de parcelas deve ser pelo menos 1")
+            raise serializers.ValidationError(
+                "Quantidade de parcelas deve ser pelo menos 1"
+            )
         if value > 48:
             raise serializers.ValidationError("Quantidade máxima de parcelas é 48")
         return value
@@ -458,19 +520,18 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
         purchase = CreditCardPurchase.objects.create(**validated_data)
 
         # Calcular valor de cada parcela
-        total_installments = validated_data.get('total_installments', 1)
-        total_value = Decimal(str(validated_data['total_value']))
+        total_installments = validated_data.get("total_installments", 1)
+        total_value = Decimal(str(validated_data["total_value"]))
         installment_value = total_value / total_installments
 
         # Obter data inicial
-        purchase_date = validated_data['purchase_date']
-        card = validated_data['card']
+        purchase_date = validated_data["purchase_date"]
+        card = validated_data["card"]
 
         # Buscar faturas existentes para o cartão
         bills = CreditCardBill.objects.filter(
-            credit_card=card,
-            is_deleted=False
-        ).order_by('invoice_beginning_date')
+            credit_card=card, is_deleted=False
+        ).order_by("invoice_beginning_date")
 
         # Rastrear faturas que precisam ser atualizadas
         bills_to_update = {}
@@ -500,24 +561,24 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
             if matching_bill:
                 if matching_bill.id not in bills_to_update:
                     bills_to_update[matching_bill.id] = {
-                        'bill': matching_bill,
-                        'value_to_add': Decimal('0')
+                        "bill": matching_bill,
+                        "value_to_add": Decimal("0"),
                     }
-                bills_to_update[matching_bill.id]['value_to_add'] += installment_value
+                bills_to_update[matching_bill.id]["value_to_add"] += installment_value
 
         # Atualizar faturas afetadas
         for bill_data in bills_to_update.values():
-            bill = bill_data['bill']
-            value_to_add = bill_data['value_to_add']
+            bill = bill_data["bill"]
+            value_to_add = bill_data["value_to_add"]
 
             # Atualizar total_amount
             bill.total_amount = Decimal(str(bill.total_amount)) + value_to_add
 
             # Se a fatura estava 'paid' mas não fechada, mudar status para 'open'
             # porque agora o total é maior que o valor pago
-            if bill.status == 'paid' and not bill.closed:
+            if bill.status == "paid" and not bill.closed:
                 if Decimal(str(bill.paid_amount)) < bill.total_amount:
-                    bill.status = 'open'
+                    bill.status = "open"
 
             bill.save()
 
@@ -539,10 +600,15 @@ class CreditCardPurchaseUpdateSerializer(serializers.ModelSerializer):
     Serializer para atualização de compras.
     Não permite alterar valor total ou número de parcelas após criação.
     """
+
     class Meta:
         model = CreditCardPurchase
         fields = [
-            'description', 'category', 'merchant', 'member', 'notes',
+            "description",
+            "category",
+            "merchant",
+            "member",
+            "notes",
         ]
 
 
@@ -550,26 +616,23 @@ class PayCreditCardBillSerializer(serializers.Serializer):
     """
     Serializer para pagamento de fatura de cartão de crédito.
     """
+
     amount = serializers.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        required=True,
-        help_text="Valor do pagamento"
+        max_digits=10, decimal_places=2, required=True, help_text="Valor do pagamento"
     )
-    payment_date = serializers.DateField(
-        required=True,
-        help_text="Data do pagamento"
-    )
+    payment_date = serializers.DateField(required=True, help_text="Data do pagamento")
     notes = serializers.CharField(
         max_length=500,
         required=False,
         allow_blank=True,
-        help_text="Observações sobre o pagamento"
+        help_text="Observações sobre o pagamento",
     )
 
     def validate_amount(self, value):
         if value <= 0:
-            raise serializers.ValidationError("O valor do pagamento deve ser maior que zero")
+            raise serializers.ValidationError(
+                "O valor do pagamento deve ser maior que zero"
+            )
         return value
 
     def validate(self, attrs):
@@ -577,11 +640,16 @@ class PayCreditCardBillSerializer(serializers.Serializer):
         Validação customizada para verificar se o valor não excede o saldo restante.
         O contexto deve conter a fatura (bill) para esta validação.
         """
-        bill = self.context.get('bill')
+        bill = self.context.get("bill")
         if bill:
             remaining = Decimal(str(bill.total_amount)) - Decimal(str(bill.paid_amount))
-            if attrs['amount'] > remaining:
-                raise serializers.ValidationError({
-                    'amount': f'O valor não pode exceder o saldo restante da fatura (R$ {remaining:.2f})'
-                })
+            if attrs["amount"] > remaining:
+                raise serializers.ValidationError(
+                    {
+                        "amount": (
+                            "O valor não pode exceder o saldo restante"
+                            f" da fatura (R$ {remaining:.2f})"
+                        )
+                    }
+                )
         return attrs

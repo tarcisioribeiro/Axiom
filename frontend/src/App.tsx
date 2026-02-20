@@ -1,18 +1,18 @@
+import { AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
-import { useAuthStore } from './stores/auth-store';
-import { ProtectedRoute } from './components/common/ProtectedRoute';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { Layout } from './components/layout/Layout';
-import { Toaster } from './components/ui/toaster';
-import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
-import { Loader2 } from 'lucide-react';
 
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { Layout } from './components/layout/Layout';
+import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
+import { Toaster } from './components/ui/toaster';
 // Eager load (páginas públicas carregadas imediatamente)
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
+import { useAuthStore } from './stores/auth-store';
 
 // Lazy load (páginas protegidas carregadas sob demanda)
 const Home = lazy(() => import('./pages/Home'));

@@ -1,7 +1,8 @@
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-from django.db.models import Sum
 from decimal import Decimal
+
+from django.db.models import Sum
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
 
 
 def update_payable_paid_value(payable):
@@ -17,32 +18,28 @@ def update_payable_paid_value(payable):
 
     # Soma das despesas pagas vinculadas a este payable
     total_paid = Expense.objects.filter(
-        related_payable=payable,
-        is_deleted=False,
-        payed=True
-    ).aggregate(
-        total=Sum('value')
-    )['total'] or Decimal('0.00')
+        related_payable=payable, is_deleted=False, payed=True
+    ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
     # Atualizar paid_value e status
     payable.paid_value = total_paid
 
     # Atualizar status baseado no valor pago
     if total_paid >= payable.value:
-        payable.status = 'paid'
-    elif payable.status == 'paid':
+        payable.status = "paid"
+    elif payable.status == "paid":
         # Se estava pago mas agora não está mais (despesa desmarcada/deletada)
-        payable.status = 'active'
+        payable.status = "active"
 
     # Salvar sem trigger signal recursivo
     from payables.models import Payable
+
     Payable.objects.filter(pk=payable.pk).update(
-        paid_value=payable.paid_value,
-        status=payable.status
+        paid_value=payable.paid_value, status=payable.status
     )
 
 
-@receiver(post_save, sender='expenses.Expense')
+@receiver(post_save, sender="expenses.Expense")
 def expense_saved_update_payable(sender, instance, **kwargs):
     """
     Quando uma despesa é salva, atualiza o Payable relacionado.
@@ -51,7 +48,7 @@ def expense_saved_update_payable(sender, instance, **kwargs):
         update_payable_paid_value(instance.related_payable)
 
 
-@receiver(post_delete, sender='expenses.Expense')
+@receiver(post_delete, sender="expenses.Expense")
 def expense_deleted_update_payable(sender, instance, **kwargs):
     """
     Quando uma despesa é deletada, atualiza o Payable relacionado.

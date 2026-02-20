@@ -69,6 +69,7 @@ export default {
           DEFAULT: 'hsl(var(--info))',
           foreground: 'hsl(var(--info-foreground))',
         },
+        star: 'hsl(var(--star))',
         category: {
           finance: 'hsl(var(--category-finance))',
           health: 'hsl(var(--category-health))',

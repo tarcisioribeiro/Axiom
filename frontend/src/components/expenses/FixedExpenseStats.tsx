@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
 import { TrendingDown, TrendingUp, Calendar, DollarSign } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import { StatCard } from '@/components/common/StatCard';
-import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import { formatCurrency } from '@/lib/formatters';
+import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpenseStats as StatsType } from '@/types';
 
 export const FixedExpenseStats = () => {

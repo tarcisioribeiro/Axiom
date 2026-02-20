@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
   Pencil,
@@ -8,8 +7,16 @@ import {
   Calendar,
   DollarSign,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useMemo } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
+import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
+import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -25,26 +32,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CreditCardPurchaseForm } from '@/components/credit-cards/CreditCardPurchaseForm';
-import { CreditCardInstallmentForm } from '@/components/credit-cards/CreditCardInstallmentForm';
-import { ReceiptButton } from '@/components/receipts';
-import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
-import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
-import { creditCardsService } from '@/services/credit-cards-service';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useAuthStore } from '@/stores/auth-store';
-import { getErrorMessage } from '@/utils/error-utils';
 import {
   translate,
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
 } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
+import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
+import { creditCardsService } from '@/services/credit-cards-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type {
   CreditCardPurchase,
   CreditCardPurchaseFormData,
@@ -53,7 +54,7 @@ import type {
   CreditCard,
   CreditCardBill,
 } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function CreditCardExpenses() {
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);

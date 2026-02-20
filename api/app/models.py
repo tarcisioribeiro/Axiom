@@ -1,6 +1,7 @@
 import uuid
-from django.db import models
+
 from django.contrib.auth.models import User
+from django.db import models
 
 
 class BaseModel(models.Model):
@@ -22,28 +23,22 @@ class BaseModel(models.Model):
         Flag para indicar se o registro foi excluído (soft delete).
     deleted_at : DateTimeField
         Data e hora da exclusão do registro.
+    deleted_by : ForeignKey
+        Usuário que realizou a exclusão do registro.
     """
+
     uuid = models.UUIDField(
-        default=uuid.uuid4,
-        editable=False,
-        unique=True,
-        verbose_name="UUID"
+        default=uuid.uuid4, editable=False, unique=True, verbose_name="UUID"
     )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Criado em"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Atualizado em"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="%(class)s_created",
-        verbose_name="Criado por"
+        verbose_name="Criado por",
     )
     updated_by = models.ForeignKey(
         User,
@@ -51,16 +46,17 @@ class BaseModel(models.Model):
         null=True,
         blank=True,
         related_name="%(class)s_updated",
-        verbose_name="Atualizado por"
+        verbose_name="Atualizado por",
     )
-    is_deleted = models.BooleanField(
-        default=False,
-        verbose_name="Excluído"
-    )
-    deleted_at = models.DateTimeField(
+    is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Excluído em")
+    deleted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        verbose_name="Excluído em"
+        related_name="%(class)s_deleted",
+        verbose_name="Excluído por",
     )
 
     class Meta:
@@ -69,34 +65,34 @@ class BaseModel(models.Model):
 
 # Choices comuns
 PAYMENT_FREQUENCY_CHOICES = (
-    ('daily', 'Diário'),
-    ('weekly', 'Semanal'),
-    ('monthly', 'Mensal'),
-    ('quarterly', 'Trimestral'),
-    ('semiannual', 'Semestral'),
-    ('annual', 'Anual')
+    ("daily", "Diário"),
+    ("weekly", "Semanal"),
+    ("monthly", "Mensal"),
+    ("quarterly", "Trimestral"),
+    ("semiannual", "Semestral"),
+    ("annual", "Anual"),
 )
 
 PAYMENT_METHOD_CHOICES = (
-    ('cash', 'Dinheiro'),
-    ('debit_card', 'Cartão de Débito'),
-    ('credit_card', 'Cartão de Crédito'),
-    ('pix', 'PIX'),
-    ('transfer', 'Transferência'),
-    ('check', 'Cheque'),
-    ('other', 'Outro')
+    ("cash", "Dinheiro"),
+    ("debit_card", "Cartão de Débito"),
+    ("credit_card", "Cartão de Crédito"),
+    ("pix", "PIX"),
+    ("transfer", "Transferência"),
+    ("check", "Cheque"),
+    ("other", "Outro"),
 )
 
 LOAN_STATUS_CHOICES = (
-    ('active', 'Ativo'),
-    ('paid', 'Quitado'),
-    ('overdue', 'Em atraso'),
-    ('cancelled', 'Cancelado')
+    ("active", "Ativo"),
+    ("paid", "Quitado"),
+    ("overdue", "Em atraso"),
+    ("cancelled", "Cancelado"),
 )
 
 BILL_STATUS_CHOICES = (
-    ('open', 'Aberta'),
-    ('closed', 'Fechada'),
-    ('paid', 'Paga'),
-    ('overdue', 'Em atraso')
+    ("open", "Aberta"),
+    ("closed", "Fechada"),
+    ("paid", "Paga"),
+    ("overdue", "Em atraso"),
 )

@@ -1,6 +1,6 @@
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from payables.models import Payable
 from payables.serializers import PayableSerializer
-from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
 class PayableCreateListView(BaseListCreateView):
@@ -18,6 +18,7 @@ class PayableCreateListView(BaseListCreateView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Payable.objects.filter(is_deleted=False)
     serializer_class = PayableSerializer
 
@@ -38,5 +39,6 @@ class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class : class
         Serializer usado para validação e serialização
     """
+
     queryset = Payable.objects.filter(is_deleted=False)
     serializer_class = PayableSerializer

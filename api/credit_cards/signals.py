@@ -1,6 +1,8 @@
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 from decimal import Decimal
+
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+
 from .models import CreditCardBill, CreditCardInstallment
 
 
@@ -26,19 +28,17 @@ def _recalculate_bill_total(bill):
     """
     Recalcula o total de uma fatura baseado nas parcelas associadas.
     """
-    total = Decimal('0.00')
+    total = Decimal("0.00")
 
     # Soma parcelas
     installments = CreditCardInstallment.objects.filter(
-        bill=bill,
-        is_deleted=False,
-        purchase__is_deleted=False
+        bill=bill, is_deleted=False, purchase__is_deleted=False
     )
     total += sum(Decimal(str(inst.value)) for inst in installments)
 
     # Atualiza o total e o pagamento mínimo (10%)
     bill.total_amount = total
-    bill.minimum_payment = total * Decimal('0.10')  # 10% do total
+    bill.minimum_payment = total * Decimal("0.10")  # 10% do total
     bill.save()
 
 
@@ -51,8 +51,8 @@ def ensure_bill_defaults(sender, instance, created, **kwargs):
     if created:
         needs_update = False
 
-        if instance.status != 'open':
-            instance.status = 'open'
+        if instance.status != "open":
+            instance.status = "open"
             needs_update = True
 
         if instance.closed:
@@ -63,6 +63,5 @@ def ensure_bill_defaults(sender, instance, created, **kwargs):
         if needs_update:
             # Usa update para evitar disparar o signal novamente
             CreditCardBill.objects.filter(pk=instance.pk).update(
-                status='open',
-                closed=False
+                status="open", closed=False
             )

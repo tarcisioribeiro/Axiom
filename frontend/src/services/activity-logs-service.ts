@@ -1,6 +1,7 @@
-import { apiClient } from './api-client';
 import { API_CONFIG } from '@/config/constants';
 import type { ActivityLog, PaginatedResponse } from '@/types';
+
+import { apiClient } from './api-client';
 
 class ActivityLogsService {
   async getAll(): Promise<ActivityLog[]> {

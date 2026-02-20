@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
+import { useEffect } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { NotificationItem } from './NotificationItem';
 import { useNotificationsStore } from '@/stores/notifications-store';
+
+import { NotificationItem } from './NotificationItem';
 
 export function NotificationBell() {
   const {

@@ -4,9 +4,7 @@
  * Interface de chat com agentes especializados por módulo.
  * Cada agente tem seu próprio modelo Ollama e escopo de dados.
  */
-import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { staggerConfig } from '@/lib/animations/transitions';
 import {
   Bot,
   Trash2,
@@ -18,21 +16,24 @@ import {
   BookOpen,
   ChevronDown,
 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+
+import { ChatInput } from '@/components/ai-assistant/ChatInput';
+import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChatMessage } from '@/components/ai-assistant/ChatMessage';
-import { ChatInput } from '@/components/ai-assistant/ChatInput';
-import { aiAssistantService } from '@/services/ai-assistant-service';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { staggerConfig } from '@/lib/animations/transitions';
+import { aiAssistantService } from '@/services/ai-assistant-service';
 import type { AiMessage, AiAgent } from '@/types';
 
 // Mapeamento de ícones por nome

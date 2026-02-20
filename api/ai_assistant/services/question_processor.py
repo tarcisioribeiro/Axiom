@@ -8,15 +8,15 @@ Coordena o fluxo completo de processamento:
 4. Geracao de query
 5. Formatacao de resposta
 """
+
 import logging
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List
 
-from .text_preprocessor import TextPreprocessor
-from .intent_classifier import IntentClassifier, IntentType, IntentResult
 from .entity_extractor import EntityExtractor, ExtractedEntities
+from .intent_classifier import IntentClassifier, IntentResult, IntentType
 from .response_formatter import ResponseFormatter
-
+from .text_preprocessor import TextPreprocessor
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProcessedQuestion:
     """Resultado do processamento de uma pergunta."""
+
     # Texto original e processado
     original_text: str
     preprocessed_text: str
@@ -59,47 +60,108 @@ class QuestionProcessor:
 
     # Mapeamento de modulo baseado em palavras-chave (backup)
     MODULE_KEYWORDS: Dict[str, List[str]] = {
-        'revenues': [
-            'faturamento', 'receita', 'receitas', 'ganho', 'ganhos',
-            'entrada', 'entradas', 'renda', 'rendas', 'salario',
-            'quanto ganhei', 'quanto recebi', 'rendimento',
+        "revenues": [
+            "faturamento",
+            "receita",
+            "receitas",
+            "ganho",
+            "ganhos",
+            "entrada",
+            "entradas",
+            "renda",
+            "rendas",
+            "salario",
+            "quanto ganhei",
+            "quanto recebi",
+            "rendimento",
         ],
-        'expenses': [
-            'despesa', 'despesas', 'gasto', 'gastos', 'custo',
-            'pagamento', 'pagamentos', 'compra', 'compras',
-            'quanto gastei', 'quanto paguei',
+        "expenses": [
+            "despesa",
+            "despesas",
+            "gasto",
+            "gastos",
+            "custo",
+            "pagamento",
+            "pagamentos",
+            "compra",
+            "compras",
+            "quanto gastei",
+            "quanto paguei",
         ],
-        'accounts': [
-            'saldo', 'saldos', 'conta bancaria', 'conta corrente',
-            'poupanca', 'banco', 'quanto tenho',
+        "accounts": [
+            "saldo",
+            "saldos",
+            "conta bancaria",
+            "conta corrente",
+            "poupanca",
+            "banco",
+            "quanto tenho",
         ],
-        'credit_cards': [
-            'cartao', 'cartoes', 'cartao de credito', 'fatura',
-            'limite', 'credito disponivel',
+        "credit_cards": [
+            "cartao",
+            "cartoes",
+            "cartao de credito",
+            "fatura",
+            "limite",
+            "credito disponivel",
         ],
-        'loans': [
-            'emprestimo', 'emprestimos', 'divida', 'dividas',
-            'devo', 'devem', 'emprestei',
+        "loans": [
+            "emprestimo",
+            "emprestimos",
+            "divida",
+            "dividas",
+            "devo",
+            "devem",
+            "emprestei",
         ],
-        'library': [
-            'livro', 'livros', 'leitura', 'leituras', 'biblioteca',
-            'lendo', 'li', 'autor',
+        "library": [
+            "livro",
+            "livros",
+            "leitura",
+            "leituras",
+            "biblioteca",
+            "lendo",
+            "li",
+            "autor",
         ],
-        'personal_planning': [
-            'tarefa', 'tarefas', 'objetivo', 'objetivos', 'meta',
-            'rotina', 'habito', 'pendente', 'concluido',
+        "personal_planning": [
+            "tarefa",
+            "tarefas",
+            "objetivo",
+            "objetivos",
+            "meta",
+            "rotina",
+            "habito",
+            "pendente",
+            "concluido",
         ],
-        'security': [
-            'senha', 'senhas', 'credencial', 'credenciais', 'login',
-            'usuario', 'password', 'acesso',
+        "security": [
+            "senha",
+            "senhas",
+            "credencial",
+            "credenciais",
+            "login",
+            "usuario",
+            "password",
+            "acesso",
         ],
-        'vaults': [
-            'cofre', 'cofres', 'reserva', 'reservas', 'guardado',
-            'economizei', 'investimento',
+        "vaults": [
+            "cofre",
+            "cofres",
+            "reserva",
+            "reservas",
+            "guardado",
+            "economizei",
+            "investimento",
         ],
-        'transfers': [
-            'transferencia', 'transferencias', 'pix', 'ted', 'doc',
-            'transferi', 'enviei',
+        "transfers": [
+            "transferencia",
+            "transferencias",
+            "pix",
+            "ted",
+            "doc",
+            "transferi",
+            "enviei",
         ],
     }
 
@@ -122,8 +184,10 @@ class QuestionProcessor:
 
         # 2. Classificacao de intencao
         intent_result = IntentClassifier.classify(question)
-        logger.debug(f"Intencao detectada: {intent_result.intent.value} "
-                    f"(confianca: {intent_result.confidence:.2f})")
+        logger.debug(
+            f"Intencao detectada: {intent_result.intent.value} "
+            f"(confianca: {intent_result.confidence:.2f})"
+        )
 
         # 3. Deteccao de modulo
         detected_module = cls._detect_module(preprocessed, intent_result)
@@ -131,11 +195,15 @@ class QuestionProcessor:
 
         # 4. Extracao de entidades
         entities = EntityExtractor.extract(question, detected_module)
-        logger.debug(f"Entidades extraidas - Datas: {entities.date_range.description}, "
-                    f"Categorias: {entities.categories}")
+        logger.debug(
+            f"Entidades extraidas - Datas: {entities.date_range.description}, "
+            f"Categorias: {entities.categories}"
+        )
 
         # 5. Determina agregacao
-        suggested_aggregation = IntentClassifier.intent_to_aggregation(intent_result.intent)
+        suggested_aggregation = IntentClassifier.intent_to_aggregation(
+            intent_result.intent
+        )
 
         # 6. Calcula confianca geral
         confidence = cls._calculate_confidence(intent_result, detected_module, entities)
@@ -151,15 +219,11 @@ class QuestionProcessor:
             detected_module=detected_module,
             suggested_aggregation=suggested_aggregation,
             confidence=confidence,
-            metadata=metadata
+            metadata=metadata,
         )
 
     @classmethod
-    def _detect_module(
-        cls,
-        text: str,
-        intent_result: IntentResult
-    ) -> str:
+    def _detect_module(cls, text: str, intent_result: IntentResult) -> str:
         """
         Detecta o modulo mais provavel para a pergunta.
 
@@ -168,8 +232,8 @@ class QuestionProcessor:
         - Matching de palavras-chave
         """
         # 1. Verifica hint do classificador
-        if intent_result.entities_hint and 'module' in intent_result.entities_hint:
-            module_hint = intent_result.entities_hint['module']
+        if intent_result.entities_hint and "module" in intent_result.entities_hint:
+            module_hint = intent_result.entities_hint["module"]
             if module_hint:
                 return module_hint
 
@@ -183,17 +247,14 @@ class QuestionProcessor:
                 scores[module] = score
 
         if scores:
-            return max(scores, key=scores.get)
+            return max(scores, key=lambda k: scores[k])
 
         # 3. Fallback para unknown
-        return 'unknown'
+        return "unknown"
 
     @classmethod
     def _calculate_confidence(
-        cls,
-        intent_result: IntentResult,
-        module: str,
-        entities: ExtractedEntities
+        cls, intent_result: IntentResult, module: str, entities: ExtractedEntities
     ) -> float:
         """
         Calcula confianca geral do processamento.
@@ -206,7 +267,7 @@ class QuestionProcessor:
         confidence = intent_result.confidence
 
         # Penaliza se modulo nao foi identificado
-        if module == 'unknown':
+        if module == "unknown":
             confidence *= 0.5
 
         # Bonus se encontrou entidades
@@ -221,21 +282,18 @@ class QuestionProcessor:
 
     @classmethod
     def _build_metadata(
-        cls,
-        question: str,
-        intent_result: IntentResult,
-        entities: ExtractedEntities
+        cls, question: str, intent_result: IntentResult, entities: ExtractedEntities
     ) -> Dict[str, Any]:
         """Constroi metadados do processamento."""
         return {
-            'question_length': len(question),
-            'intent_type': intent_result.intent.value,
-            'intent_confidence': intent_result.confidence,
-            'has_date_filter': entities.date_range.start is not None,
-            'date_description': entities.date_range.description,
-            'categories_found': len(entities.categories),
-            'values_found': len(entities.values),
-            'names_found': len(entities.names),
+            "question_length": len(question),
+            "intent_type": intent_result.intent.value,
+            "intent_confidence": intent_result.confidence,
+            "has_date_filter": entities.date_range.start is not None,
+            "date_description": entities.date_range.description,
+            "categories_found": len(entities.categories),
+            "values_found": len(entities.values),
+            "names_found": len(entities.names),
         }
 
     @classmethod
@@ -262,33 +320,36 @@ class QuestionProcessor:
         """Retorna resposta para saudacao, contextualizada pelo agente."""
         if agent_config:
             agent_greetings = {
-                'financial': (
+                "financial": (
                     "Ola! Sou o assistente de Controle Financeiro do MindLedger. "
                     "Posso ajudar voce com informacoes sobre receitas, despesas, "
                     "saldos, cartoes de credito, emprestimos, transferencias e cofres. "
                     "O que voce gostaria de saber?"
                 ),
-                'security': (
+                "security": (
                     "Ola! Sou o assistente de Seguranca do MindLedger. "
                     "Posso ajudar voce a consultar suas senhas e credenciais "
                     "armazenadas de forma segura. O que voce precisa?"
                 ),
-                'planning': (
+                "planning": (
                     "Ola! Sou o assistente de Planejamento Pessoal do MindLedger. "
                     "Posso ajudar voce com suas tarefas, habitos, objetivos e metas. "
                     "Como posso ajudar?"
                 ),
-                'reading': (
+                "reading": (
                     "Ola! Sou o assistente de Leitura do MindLedger. "
                     "Posso ajudar voce com informacoes sobre seus livros, "
                     "sessoes de leitura e progresso. O que voce gostaria de saber?"
                 ),
             }
-            return agent_greetings.get(agent_config.key, (
-                f"Ola! Sou o assistente {agent_config.name} do MindLedger. "
-                f"Posso ajudar com: {agent_config.description}. "
-                "O que voce gostaria de saber?"
-            ))
+            return agent_greetings.get(
+                agent_config.key,
+                (
+                    f"Ola! Sou o assistente {agent_config.name} do MindLedger. "
+                    f"Posso ajudar com: {agent_config.description}. "
+                    "O que voce gostaria de saber?"
+                ),
+            )
 
         return (
             "Ola! Sou o assistente do MindLedger. "
@@ -302,7 +363,7 @@ class QuestionProcessor:
         """Retorna resposta para pedido de ajuda, contextualizada pelo agente."""
         if agent_config:
             agent_help = {
-                'financial': (
+                "financial": (
                     "Posso ajudar com consultas financeiras. Exemplos:\n\n"
                     "Receitas:\n"
                     "  - Quanto recebi este mes?\n"
@@ -323,7 +384,7 @@ class QuestionProcessor:
                     "Voce pode usar periodos como: hoje, esta semana, "
                     "mes passado, ultimos 3 meses, etc."
                 ),
-                'security': (
+                "security": (
                     "Posso ajudar com suas senhas e credenciais. Exemplos:\n\n"
                     "  - Qual a senha do Netflix?\n"
                     "  - Quais senhas tenho cadastradas?\n"
@@ -331,7 +392,7 @@ class QuestionProcessor:
                     "  - Senha do email do trabalho?\n\n"
                     "As senhas sao exibidas parcialmente mascaradas por seguranca."
                 ),
-                'planning': (
+                "planning": (
                     "Posso ajudar com seu planejamento pessoal. Exemplos:\n\n"
                     "Tarefas:\n"
                     "  - Quais sao minhas tarefas de hoje?\n"
@@ -343,7 +404,7 @@ class QuestionProcessor:
                     "  - Quais sao minhas tarefas rotineiras?\n"
                     "  - Quantas tarefas completei esta semana?"
                 ),
-                'reading': (
+                "reading": (
                     "Posso ajudar com sua biblioteca pessoal. Exemplos:\n\n"
                     "  - Quais livros estou lendo?\n"
                     "  - Quantos livros ja li?\n"
@@ -352,10 +413,13 @@ class QuestionProcessor:
                     "Voce pode filtrar por periodo: este mes, esta semana, etc."
                 ),
             }
-            return agent_help.get(agent_config.key, (
-                f"Este agente ({agent_config.name}) pode ajudar com: "
-                f"{agent_config.description}. Tente fazer uma pergunta!"
-            ))
+            return agent_help.get(
+                agent_config.key,
+                (
+                    f"Este agente ({agent_config.name}) pode ajudar com: "
+                    f"{agent_config.description}. Tente fazer uma pergunta!"
+                ),
+            )
 
         return (
             "Posso ajudar com diversas consultas. Aqui estao alguns exemplos:\n\n"

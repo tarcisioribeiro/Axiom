@@ -1,7 +1,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { KanbanCard } from './KanbanCard';
+
 import type { TaskCard, KanbanStatus } from '@/types';
+
+import { KanbanCard } from './KanbanCard';
 
 interface KanbanColumnProps {
   status: KanbanStatus;

@@ -1,6 +1,13 @@
+import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { PublisherForm } from '@/components/library/PublisherForm';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -8,12 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
-import { publishersService } from '@/services/publishers-service';
-import type { Publisher, PublisherFormData } from '@/types';
-import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,11 +22,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { EmptyState } from '@/components/common/EmptyState';
-import { PublisherForm } from '@/components/library/PublisherForm';
-import { PageContainer } from '@/components/common/PageContainer';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { publishersService } from '@/services/publishers-service';
+import type { Publisher, PublisherFormData } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Publishers() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);

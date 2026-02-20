@@ -1,12 +1,13 @@
 import { forwardRef } from 'react';
-import type { ReceiptData } from '@/types/receipt';
+
+import { autoTranslate } from '@/config/constants';
 import {
   formatReceiptCurrency,
   formatReceiptDate,
   formatReceiptTime,
   formatGeneratedAt,
 } from '@/lib/receipt-utils';
-import { autoTranslate } from '@/config/constants';
+import type { ReceiptData } from '@/types/receipt';
 
 interface ReceiptTemplateProps {
   data: ReceiptData;

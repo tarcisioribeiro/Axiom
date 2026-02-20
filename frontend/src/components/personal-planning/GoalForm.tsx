@@ -1,12 +1,13 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { type z } from 'zod';
+
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -14,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { formatLocalDate } from '@/lib/utils';
 import { goalSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import {
@@ -22,9 +25,7 @@ import {
   type Goal,
   type RoutineTask,
 } from '@/types';
-import { type z } from 'zod';
 
-import { formatLocalDate } from '@/lib/utils';
 type GoalFormData = z.infer<typeof goalSchema>;
 
 interface GoalFormProps {

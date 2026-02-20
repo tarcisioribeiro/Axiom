@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+
 import { useChartType } from '@/hooks/use-chart-type';
-import { EnhancedPieChart } from './EnhancedPieChart';
-import { EnhancedBarChart } from './EnhancedBarChart';
-import { EnhancedLineChart } from './EnhancedLineChart';
-import { cn } from '@/lib/utils';
 import type {
   ChartType,
   LineConfig,
@@ -13,6 +10,11 @@ import type {
   ChartDataPoint,
   BarLayout,
 } from '@/lib/chart-types';
+import { cn } from '@/lib/utils';
+
+import { EnhancedBarChart } from './EnhancedBarChart';
+import { EnhancedLineChart } from './EnhancedLineChart';
+import { EnhancedPieChart } from './EnhancedPieChart';
 
 interface ChartContainerProps {
   chartId: string;

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -10,8 +9,15 @@ import {
   Building2,
   Wallet,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StoredAccountForm } from '@/components/security/StoredAccountForm';
+import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -20,23 +26,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { StoredAccountForm } from '@/components/security/StoredAccountForm';
-import { storedAccountsService } from '@/services/stored-accounts-service';
+import { translate } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { accountsService } from '@/services/accounts-service';
 import { membersService } from '@/services/members-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
-import { translate } from '@/config/constants';
+import { storedAccountsService } from '@/services/stored-accounts-service';
 import type {
   StoredBankAccount,
   StoredBankAccountFormData,
   Account,
   Member,
 } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 const ACCOUNT_TYPES: Record<string, string> = {
   CC: 'Conta Corrente',
@@ -316,6 +318,7 @@ export default function StoredAccounts() {
   ];
 
   return (
+    <VaultGuard>
     <PageContainer>
       <PageHeader
         title="Contas Bancárias"
@@ -399,5 +402,6 @@ export default function StoredAccounts() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+    </VaultGuard>
   );
 }

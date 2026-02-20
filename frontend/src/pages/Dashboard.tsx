@@ -1,56 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Wallet,
-  TrendingDown,
-  TrendingUp,
-  CreditCard,
-  LayoutDashboard,
-  Building2,
-  Calculator,
-  ArrowUpRight,
-  ArrowDownRight,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { AnimatedPage } from '@/components/common/AnimatedPage';
-import { containerVariants, itemVariants } from '@/lib/animations';
-import { StatCard } from '@/components/common/StatCard';
-import { dashboardService } from '@/services/dashboard-service';
-import { expensesService } from '@/services/expenses-service';
-import { revenuesService } from '@/services/revenues-service';
-import { creditCardsService } from '@/services/credit-cards-service';
-import { creditCardBillsService } from '@/services/credit-card-bills-service';
-import { useToast } from '@/hooks/use-toast';
-import { translate, TRANSLATIONS } from '@/config/constants';
-import { getErrorMessage } from '@/utils/error-utils';
-import { formatCurrency } from '@/lib/formatters';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import type {
-  DashboardStats,
-  Expense,
-  Revenue,
-  AccountBalance,
-  CreditCard as CreditCardType,
-  CreditCardBill,
-  CreditCardExpensesByCategory,
-  BalanceForecast,
-} from '@/types';
 import {
   format,
   subMonths,
@@ -69,9 +16,63 @@ import {
   eachDayOfInterval,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useChartColors } from '@/lib/chart-colors';
+import { motion } from 'framer-motion';
+import {
+  Wallet,
+  TrendingDown,
+  TrendingUp,
+  CreditCard,
+  LayoutDashboard,
+  Building2,
+  Calculator,
+  ArrowUpRight,
+  ArrowDownRight,
+} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+
 import { ChartContainer } from '@/components/charts';
+import { AnimatedPage } from '@/components/common/AnimatedPage';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { translate, TRANSLATIONS } from '@/config/constants';
+import { useToast } from '@/hooks/use-toast';
+import { containerVariants, itemVariants } from '@/lib/animations';
+import { useChartColors } from '@/lib/chart-colors';
+import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
+import { creditCardsService } from '@/services/credit-cards-service';
+import { dashboardService } from '@/services/dashboard-service';
+import { expensesService } from '@/services/expenses-service';
+import { revenuesService } from '@/services/revenues-service';
+import type {
+  DashboardStats,
+  Expense,
+  Revenue,
+  AccountBalance,
+  CreditCard as CreditCardType,
+  CreditCardBill,
+  CreditCardExpensesByCategory,
+  BalanceForecast,
+} from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 type CategoryStat = { category: string; name: string; value: number };
 

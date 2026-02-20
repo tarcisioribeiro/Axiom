@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { Star } from 'lucide-react';
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
@@ -64,8 +65,8 @@ export function StarRating({
               sizeClasses[size],
               'transition-colors duration-150',
               rating <= displayValue
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'fill-transparent hover:text-yellow-400/50'
+                ? 'fill-star text-star'
+                : 'fill-transparent hover:text-star/50'
             )}
             aria-hidden="true"
           />

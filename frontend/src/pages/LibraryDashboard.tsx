@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Library,
   BookOpen,
@@ -9,19 +10,19 @@ import {
   BookCheck,
   Clock,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { ChartContainer } from '@/components/charts';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { useChartColors } from '@/lib/chart-colors';
 import {
   libraryDashboardService,
   type LibraryDashboardStats,
 } from '@/services/library-dashboard-service';
-import { useToast } from '@/hooks/use-toast';
-import { PageHeader } from '@/components/common/PageHeader';
 import { getErrorMessage } from '@/utils/error-utils';
-import { LoadingState } from '@/components/common/LoadingState';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { useChartColors } from '@/lib/chart-colors';
-import { ChartContainer } from '@/components/charts';
 
 export default function LibraryDashboard() {
   const [stats, setStats] = useState<LibraryDashboardStats | null>(null);

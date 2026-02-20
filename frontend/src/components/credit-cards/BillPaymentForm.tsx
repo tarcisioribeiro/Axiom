@@ -1,11 +1,12 @@
-import { useForm } from 'react-hook-form';
+import { CreditCard, Calendar, Wallet, Building2, AlertCircle } from 'lucide-react';
 import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
-import { CreditCard, Calendar, Wallet, Building2, AlertCircle } from 'lucide-react';
 import { translate } from '@/config/constants';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -143,9 +144,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {/* Warning if bill is already paid */}
       {remaining <= 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <AlertCircle className="h-5 w-5 text-amber-500" />
-          <p className="text-sm text-amber-700">Esta fatura já foi totalmente paga.</p>
+        <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4">
+          <AlertCircle className="h-5 w-5 text-warning" />
+          <p className="text-sm text-warning">Esta fatura já foi totalmente paga.</p>
         </div>
       )}
 

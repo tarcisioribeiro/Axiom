@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { User, Permission, LoginCredentials } from '@/types';
+
 import { authService } from '@/services/auth-service';
 import { membersService } from '@/services/members-service';
+import type { User, Permission, LoginCredentials } from '@/types';
 
 // Variável para evitar múltiplas chamadas simultâneas de loadUserData
 let loadUserDataPromise: Promise<void> | null = null;

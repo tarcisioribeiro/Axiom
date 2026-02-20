@@ -1,10 +1,11 @@
-import { apiClient } from './api-client';
 import type {
   DashboardStats,
   AccountBalance,
   CreditCardExpensesByCategory,
   BalanceForecast,
 } from '@/types';
+
+import { apiClient } from './api-client';
 
 interface CreditCardExpensesByCategoryParams {
   card?: number;

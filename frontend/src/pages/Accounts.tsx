@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { AccountForm } from '@/components/accounts/AccountForm';
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,17 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AccountForm } from '@/components/accounts/AccountForm';
-import { accountsService } from '@/services/accounts-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { translate } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getErrorMessage } from '@/lib/utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { accountsService } from '@/services/accounts-service';
 import type { Account, AccountFormData } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);

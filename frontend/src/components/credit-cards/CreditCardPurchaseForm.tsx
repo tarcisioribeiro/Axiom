@@ -1,9 +1,11 @@
-import { useForm } from 'react-hook-form';
 import { useEffect, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -12,17 +14,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { formatCurrency } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
 import type {
   CreditCardPurchase,
   CreditCardPurchaseFormData,
   CreditCard,
 } from '@/types';
 
-import { formatLocalDate } from '@/lib/utils';
 
 interface CreditCardPurchaseFormProps {
   purchase?: CreditCardPurchase;
@@ -202,7 +203,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             disabled={isLoading || isEditMode}
           />
           {isEditMode && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-warning">
               Valor total não pode ser alterado após criação
             </p>
           )}
@@ -281,7 +282,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             </SelectContent>
           </Select>
           {isEditMode && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-warning">
               Cartão não pode ser alterado após criação
             </p>
           )}
@@ -334,7 +335,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             )}
           </div>
           {isEditMode && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-warning">
               Parcelas não podem ser alteradas após criação
             </p>
           )}

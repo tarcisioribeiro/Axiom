@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
 import { Shield, Key, CreditCard, Wallet, Archive } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+import { ChartContainer } from '@/components/charts';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageHeader } from '@/components/common/PageHeader';
+import { VaultGuard } from '@/components/security/VaultGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
 import {
   securityDashboardService,
   type SecurityDashboardStats,
 } from '@/services/security-dashboard-service';
-import { useToast } from '@/hooks/use-toast';
-import { PageHeader } from '@/components/common/PageHeader';
 import { getErrorMessage } from '@/utils/error-utils';
-import { LoadingState } from '@/components/common/LoadingState';
-import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
-import { ChartContainer } from '@/components/charts';
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
 
@@ -66,6 +68,7 @@ export default function SecurityDashboard() {
   }
 
   return (
+    <VaultGuard>
     <div className="space-y-6 px-4 py-8">
       <PageHeader title="Dashboard de Segurança" icon={<Shield />} />
 
@@ -200,5 +203,6 @@ export default function SecurityDashboard() {
         </Card>
       </div>
     </div>
+    </VaultGuard>
   );
 }

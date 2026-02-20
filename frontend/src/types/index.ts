@@ -659,6 +659,27 @@ export interface TimeSeriesData {
 // SECURITY MODULE TYPES
 // ============================================================================
 
+// Vault Config Types
+export interface VaultStatus {
+  is_configured: boolean;
+  is_unlocked: boolean;
+}
+
+export interface VaultSetupData {
+  master_password: string;
+  confirm_master_password: string;
+}
+
+export interface VaultUnlockData {
+  master_password: string;
+}
+
+export interface VaultChangePasswordData {
+  current_master_password: string;
+  new_master_password: string;
+  confirm_new_master_password: string;
+}
+
 // Password Types
 export interface Password {
   id: number;

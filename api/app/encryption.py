@@ -1,11 +1,13 @@
-import os
 import logging
+import os
 import threading
 from typing import Any, Callable, Optional, overload
-from cryptography.fernet import Fernet, InvalidToken
+
 from django.core.exceptions import ValidationError
 
-logger = logging.getLogger('expenselit')
+from cryptography.fernet import Fernet, InvalidToken
+
+logger = logging.getLogger("expenselit")
 
 # Thread-local storage para cache de decriptacao
 _decryption_cache = threading.local()
@@ -13,24 +15,26 @@ _decryption_cache = threading.local()
 
 class EncryptionError(Exception):
     """Erro base para operacoes de criptografia."""
+
     pass
 
 
 class DecryptionError(EncryptionError):
     """Erro ao descriptografar dados."""
+
     pass
 
 
 def get_decryption_cache() -> dict:
     """Retorna o cache de decriptacao para a thread atual."""
-    if not hasattr(_decryption_cache, 'cache'):
+    if not hasattr(_decryption_cache, "cache"):
         _decryption_cache.cache = {}
     return _decryption_cache.cache
 
 
 def clear_decryption_cache() -> None:
     """Limpa o cache de decriptacao da thread atual."""
-    if hasattr(_decryption_cache, 'cache'):
+    if hasattr(_decryption_cache, "cache"):
         _decryption_cache.cache.clear()
 
 
@@ -42,6 +46,7 @@ class FieldEncryption:
     Inclui cache de decriptacao por request para evitar multiplas
     decriptacoes do mesmo valor durante um unico request.
     """
+
     @staticmethod
     def get_encryption_key():
         """
@@ -53,7 +58,7 @@ class FieldEncryption:
         Raises:
             ValidationError: Se ENCRYPTION_KEY nao estiver configurada
         """
-        encryption_key = os.getenv('ENCRYPTION_KEY')
+        encryption_key = os.getenv("ENCRYPTION_KEY")
         if not encryption_key:
             raise ValidationError(
                 "ENCRYPTION_KEY nao encontrada nas variaveis de ambiente"
@@ -130,7 +135,9 @@ class FieldEncryption:
         except ValidationError:
             raise
         except InvalidToken:
-            logger.warning("Token invalido ao descriptografar - dados corrompidos ou chave errada")
+            logger.warning(
+                "Token invalido ao descriptografar - dados corrompidos ou chave errada"
+            )
             raise DecryptionError("Dados criptografados invalidos ou chave incorreta")
         except ValueError as e:
             logger.error(f"Chave de criptografia invalida: {e}")
@@ -138,6 +145,53 @@ class FieldEncryption:
         except TypeError as e:
             logger.error(f"Tipo de dado invalido para descriptografia: {e}")
             raise DecryptionError("Tipo de dado invalido para descriptografia")
+
+    @staticmethod
+    def encrypt_with_key(data: str, key: bytes) -> str:
+        """
+        Criptografa dados com uma chave Fernet fornecida explicitamente.
+
+        Args:
+            data (str): Dados a serem criptografados
+            key (bytes): Chave Fernet (44 bytes base64url-safe)
+
+        Returns:
+            str: Dados criptografados em string base64
+        """
+        if not data:
+            return data
+        try:
+            fernet = Fernet(key)
+            return fernet.encrypt(str(data).encode()).decode()
+        except (ValueError, TypeError) as e:
+            logger.error(f"Erro ao criptografar com chave fornecida: {e}")
+            raise EncryptionError("Erro ao criptografar dados")
+
+    @staticmethod
+    def decrypt_with_key(encrypted_data: str, key: bytes) -> str:
+        """
+        Descriptografa dados com uma chave Fernet fornecida explicitamente.
+
+        Args:
+            encrypted_data (str): Dados criptografados em string base64
+            key (bytes): Chave Fernet (44 bytes base64url-safe)
+
+        Returns:
+            str: Dados descriptografados
+
+        Raises:
+            DecryptionError: Se a chave for incorreta ou os dados estiverem corrompidos
+        """
+        if not encrypted_data:
+            return encrypted_data
+        try:
+            fernet = Fernet(key)
+            return fernet.decrypt(encrypted_data.encode()).decode()
+        except InvalidToken:
+            raise DecryptionError("Chave incorreta ou dados corrompidos")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Erro ao descriptografar com chave fornecida: {e}")
+            raise DecryptionError("Erro ao descriptografar dados")
 
     @staticmethod
     def generate_key():
@@ -148,7 +202,6 @@ class FieldEncryption:
             str: Chave de criptografia em base64
         """
         return Fernet.generate_key().decode()
-
 
 
 class EncryptedField:
@@ -197,7 +250,9 @@ class EncryptedField:
     @overload
     def __get__(self, obj: Any, objtype: Any) -> Optional[str]: ...
 
-    def __get__(self, obj: Any, objtype: Any = None) -> "EncryptedField | Optional[str]":
+    def __get__(
+        self, obj: Any, objtype: Any = None
+    ) -> "EncryptedField | Optional[str]":
         if obj is None:
             return self
         raw: Optional[str] = getattr(obj, self.storage_attr)
@@ -253,7 +308,9 @@ class MaskedEncryptedField:
     @overload
     def __get__(self, obj: Any, objtype: Any) -> Optional[str]: ...
 
-    def __get__(self, obj: Any, objtype: Any = None) -> "MaskedEncryptedField | Optional[str]":
+    def __get__(
+        self, obj: Any, objtype: Any = None
+    ) -> "MaskedEncryptedField | Optional[str]":
         if obj is None:
             return self
         raw: Optional[str] = getattr(obj, self.storage_attr)
@@ -271,4 +328,3 @@ class MaskedEncryptedField:
         raise AttributeError(
             f"'{type(obj).__name__}.{self.public_name}' is a read-only masked field"
         )
-

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -11,15 +10,17 @@ import {
   Key,
   Wand2,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
+import { PasswordGenerator } from '@/components/security/PasswordGenerator';
+import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -27,10 +28,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { SearchInput } from '@/components/common/SearchInput';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -38,19 +44,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { passwordsService } from '@/services/passwords-service';
-import { membersService } from '@/services/members-service';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { getErrorMessage } from '@/utils/error-utils';
+import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { EmptyState } from '@/components/common/EmptyState';
+import { membersService } from '@/services/members-service';
+import { passwordsService } from '@/services/passwords-service';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PasswordGenerator } from '@/components/security/PasswordGenerator';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Passwords() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -269,6 +271,7 @@ export default function Passwords() {
   }
 
   return (
+    <VaultGuard>
     <PageContainer>
       <PageHeader
         title="Senhas"
@@ -520,5 +523,6 @@ export default function Passwords() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+    </VaultGuard>
   );
 }

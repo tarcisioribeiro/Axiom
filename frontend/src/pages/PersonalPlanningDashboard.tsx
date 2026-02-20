@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from 'react';
 import {
   Target,
   CheckCircle2,
@@ -13,17 +12,19 @@ import {
   SmilePlus,
   Angry,
 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+
+import { ChartContainer } from '@/components/charts';
+import { LoadingState } from '@/components/common/LoadingState';
+import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/utils/error-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { LoadingState } from '@/components/common/LoadingState';
-import { StatCard } from '@/components/common/StatCard';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
+import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import type { PersonalPlanningDashboardStats, DailyReflection } from '@/types';
-import { ChartContainer } from '@/components/charts';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function PersonalPlanningDashboard() {
   const [stats, setStats] = useState<PersonalPlanningDashboardStats | null>(null);

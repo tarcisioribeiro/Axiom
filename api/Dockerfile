@@ -27,7 +27,24 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip && \
     pip install -r requirements.txt
 
-# Stage 3: Production image
+# Stage 3: Dev dependencies (for quality checks)
+FROM deps AS dev-deps
+
+COPY requirements-dev.txt .
+
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements-dev.txt
+
+# Stage 4: Quality checks (runs black, isort, flake8 — fails fast before production build)
+FROM dev-deps AS quality
+
+WORKDIR /app
+
+COPY . .
+
+RUN black --check . && isort --check . && flake8 .
+
+# Stage 5: Production image
 FROM base AS production
 
 WORKDIR /app
@@ -39,8 +56,8 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 # Create non-root user
 RUN useradd -m -u 1000 appuser
 
-# Copy application code (changes frequently, comes last)
-COPY --chown=appuser:appuser . .
+# Copy application code from quality stage (ensures checks have passed)
+COPY --from=quality --chown=appuser:appuser /app .
 
 # Create required directories with correct permissions (after COPY to ensure proper ownership)
 RUN mkdir -p /app/media/security/archives /app/media/loans /app/logs /app/staticfiles && \

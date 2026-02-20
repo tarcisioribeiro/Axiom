@@ -1,6 +1,7 @@
-import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '@/stores/auth-store';
 import { Loader2 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+
+import { useAuthStore } from '@/stores/auth-store';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import type { LucideIcon } from 'lucide-react';
+import { create } from 'zustand';
 
 /** Variante visual do dialog */
 type AlertVariant = 'default' | 'success' | 'warning' | 'destructive' | 'info';

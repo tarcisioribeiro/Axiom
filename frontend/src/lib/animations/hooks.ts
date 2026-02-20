@@ -1,5 +1,6 @@
 import { useInView, useMotionValue, animate } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+
 import { EASING } from './transitions';
 
 export const useScrollAnimation = (once = true) => {

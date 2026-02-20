@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { cva, type VariantProps } from 'class-variance-authority';
 import {
@@ -9,8 +8,10 @@ import {
   Info,
   type LucideIcon,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from 'react';
+
 import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const AlertDialog = AlertDialogPrimitive.Root;
 

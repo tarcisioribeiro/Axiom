@@ -1,7 +1,5 @@
-import { apiClient } from './api-client';
-import { BaseService } from './base-service';
-import { formatLocalDate } from '@/lib/utils';
 import { API_CONFIG } from '@/config/constants';
+import { formatLocalDate } from '@/lib/utils';
 import type {
   TaskInstance,
   TaskInstanceFormData,
@@ -11,6 +9,9 @@ import type {
   TaskInstanceBulkUpdateResponse,
   InstanceStatus,
 } from '@/types';
+
+import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 
 class TaskInstancesService extends BaseService<TaskInstance, TaskInstanceFormData, TaskInstanceUpdateData> {
   constructor() {

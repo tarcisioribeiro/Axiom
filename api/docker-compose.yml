@@ -58,4 +58,3 @@ volumes:
 networks:
   mindledger-network:
     driver: bridge
-

@@ -1,11 +1,12 @@
-import { apiClient } from './api-client';
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type {
   CreditCardPurchase,
   CreditCardPurchaseFormData,
   PaginatedResponse,
 } from '@/types';
+
+import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 
 class CreditCardPurchasesService extends BaseService<CreditCardPurchase, CreditCardPurchaseFormData> {
   constructor() {

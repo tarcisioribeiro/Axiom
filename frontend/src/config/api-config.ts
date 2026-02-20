@@ -57,6 +57,11 @@ export const API_CONFIG = {
     STORED_ACCOUNTS: '/api/v1/security/stored-accounts/',
     ARCHIVES: '/api/v1/security/archives/',
     ACTIVITY_LOGS: '/api/v1/security/activity-logs/',
+    SECURITY_VAULT_STATUS: '/api/v1/security/vault/status/',
+    SECURITY_VAULT_SETUP: '/api/v1/security/vault/setup/',
+    SECURITY_VAULT_UNLOCK: '/api/v1/security/vault/unlock/',
+    SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
+    SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',

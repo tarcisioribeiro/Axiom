@@ -1,148 +1,170 @@
 import json
 import logging
-from django.utils.timezone import now
-from django.utils.deprecation import MiddlewareMixin
+from typing import Any
+
 from django.http import HttpRequest, HttpResponse
+from django.utils.deprecation import MiddlewareMixin
+from django.utils.timezone import now
 
-
-logger = logging.getLogger('expenselit.audit')
+logger = logging.getLogger("expenselit.audit")
 
 
 class AuditLoggingMiddleware(MiddlewareMixin):
     """
     Middleware for logging user actions and API requests.
-    Logs all POST, PUT, PATCH, DELETE requests with user information.
+    Logs all POST, PUT, PATCH, DELETE requests, errors, and
+    GET requests to sensitive endpoints (security vault).
     """
 
     # Sensitive fields that should not be logged
     SENSITIVE_FIELDS = [
-        'password', 'token', 'key', 'secret', 'cvv',
-        'security_code', '_security_code', 'csrf_token'
+        "password",
+        "token",
+        "key",
+        "secret",
+        "cvv",
+        "security_code",
+        "_security_code",
+        "csrf_token",
     ]
 
     # Paths to exclude from logging
     EXCLUDED_PATHS = [
-        '/admin/jsi18n/',
-        '/health/',
-        '/ready/',
-        '/live/',
-        '/static/',
-        '/media/',
+        "/admin/jsi18n/",
+        "/health/",
+        "/ready/",
+        "/live/",
+        "/static/",
+        "/media/",
+    ]
+
+    # Sensitive paths where GET requests should also be logged
+    SENSITIVE_PATHS = [
+        "/api/v1/security/passwords/",
+        "/api/v1/security/stored-cards/",
+        "/api/v1/security/stored-accounts/",
+        "/api/v1/security/archives/",
     ]
 
     def process_request(self, request: HttpRequest) -> None:
         """Store request start time and body for performance tracking and logging"""
-        request._audit_start_time = now()
+        request._audit_start_time = now()  # type: ignore[attr-defined]
 
         # Store request body for later use in logging
         # This is necessary because request.body can only be read once
-        if request.method in ['POST', 'PUT', 'PATCH']:
+        if request.method in ["POST", "PUT", "PATCH"]:
             try:
-                request._cached_body = request.body
+                request._cached_body = request.body  # type: ignore[attr-defined]
             except Exception:
-                request._cached_body = None
+                request._cached_body = None  # type: ignore[attr-defined]
 
         return None
 
-    def process_response(self, request: HttpRequest,
-                         response: HttpResponse) -> HttpResponse:
+    def process_response(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> HttpResponse:
         """Log the request after processing"""
 
         # Skip logging for excluded paths
         if any(request.path.startswith(path) for path in self.EXCLUDED_PATHS):
             return response
 
-        # Only log modification requests and errors
-        if (request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] or
-                response.status_code >= 400):
+        # Log modification requests, errors, and GET requests to sensitive paths
+        if (
+            request.method in ["POST", "PUT", "PATCH", "DELETE"]
+            or response.status_code >= 400
+            or (request.method == "GET" and self._is_sensitive_path(request.path))
+        ):
             self._log_request(request, response)
 
         return response
 
-    def _log_request(self, request: HttpRequest,
-                     response: HttpResponse) -> None:
+    def _is_sensitive_path(self, path: str) -> bool:
+        """Check if the request path matches a sensitive endpoint."""
+        return any(path.startswith(p) for p in self.SENSITIVE_PATHS)
+
+    def _log_request(self, request: HttpRequest, response: HttpResponse) -> None:
         """Create audit log entry"""
 
         try:
             # Calculate request duration
             duration = None
-            if hasattr(request, '_audit_start_time'):
-                duration = ((now() - request._audit_start_time)
-                            .total_seconds())
+            if hasattr(request, "_audit_start_time"):
+                duration = (now() - request._audit_start_time).total_seconds()
 
             # Prepare log data
             log_data = {
-                'timestamp': now().isoformat(),
-                'method': request.method,
-                'path': request.path,
-                'status_code': response.status_code,
-                'user': self._get_user_info(request),
-                'ip_address': self._get_client_ip(request),
-                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
-                'duration_seconds': duration,
+                "timestamp": now().isoformat(),
+                "method": request.method,
+                "path": request.path,
+                "status_code": response.status_code,
+                "user": self._get_user_info(request),
+                "ip_address": self._get_client_ip(request),
+                "user_agent": request.META.get("HTTP_USER_AGENT", ""),
+                "duration_seconds": duration,
             }
 
             # Add request body for modification operations
-            if request.method in ['POST', 'PUT', 'PATCH']:
-                log_data['request_data'] = self._get_safe_request_data(request)
+            if request.method in ["POST", "PUT", "PATCH"]:
+                log_data["request_data"] = self._get_safe_request_data(request)
 
             # Add query parameters
             if request.GET:
-                log_data['query_params'] = dict(request.GET)
+                log_data["query_params"] = dict(request.GET)
 
             # Add response info for errors
             if response.status_code >= 400:
-                log_data['error'] = True
+                log_data["error"] = True
                 # Try to get error message from response
                 try:
-                    if hasattr(response, 'data'):
-                        log_data['error_details'] = response.data
+                    if hasattr(response, "data"):
+                        log_data["error_details"] = response.data
                     elif response.content:
-                        content = response.content.decode('utf-8')
+                        content = response.content.decode("utf-8")
                         # Only log short error messages
                         if len(content) < 1000:
-                            log_data['error_details'] = content
+                            log_data["error_details"] = content
                 except Exception:
                     pass
 
             # Log the audit entry
             if response.status_code >= 400:
-                logger.error('API request failed', extra=log_data)
+                logger.error("API request failed", extra=log_data)
             else:
-                logger.info('User action logged', extra=log_data)
+                logger.info("User action logged", extra=log_data)
 
         except Exception as e:
             # Don't let audit logging break the request
-            logger.error(f'Failed to create audit log: {str(e)}')
+            logger.error(f"Failed to create audit log: {str(e)}")
 
     def _get_user_info(self, request: HttpRequest) -> dict:
         """Extract safe user information"""
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if hasattr(request, "user") and request.user.is_authenticated:
             return {
-                'id': request.user.id,
-                'username': request.user.username,
-                'email': request.user.email,
-                'is_staff': request.user.is_staff,
-                'is_superuser': request.user.is_superuser,
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email,
+                "is_staff": request.user.is_staff,
+                "is_superuser": request.user.is_superuser,
             }
-        return {'authenticated': False}
+        return {"authenticated": False}
 
     def _get_client_ip(self, request: HttpRequest) -> str:
         """Get client IP address, handling proxies"""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
+            ip = x_forwarded_for.split(",")[0].strip()
         else:
-            ip = request.META.get('REMOTE_ADDR', '')
+            ip = request.META.get("REMOTE_ADDR", "")
         return ip
 
     def _get_safe_request_data(self, request: HttpRequest) -> dict:
         """Get request data with sensitive fields removed"""
         try:
             # Use cached body if available
-            if hasattr(request, '_cached_body') and request._cached_body:
+            if hasattr(request, "_cached_body") and request._cached_body:
                 # Handle JSON request body
-                if request.content_type == 'application/json':
+                if request.content_type == "application/json":
                     data = json.loads(request._cached_body)
                 else:
                     # Handle form data
@@ -157,21 +179,20 @@ class AuditLoggingMiddleware(MiddlewareMixin):
             # Limit size of logged data
             data_str = json.dumps(safe_data)
             if len(data_str) > 2000:
-                return {'message': 'Request data too large to log'}
+                return {"message": "Request data too large to log"}
 
             return safe_data
 
         except Exception as e:
-            return {'error': f'Could not parse request data: {str(e)}'}
+            return {"error": f"Could not parse request data: {str(e)}"}
 
-    def _sanitize_data(self, data) -> dict:
+    def _sanitize_data(self, data: Any) -> Any:
         """Recursively remove sensitive fields from data"""
         if isinstance(data, dict):
             sanitized = {}
             for key, value in data.items():
-                if any(sensitive in key.lower()
-                       for sensitive in self.SENSITIVE_FIELDS):
-                    sanitized[key] = '[REDACTED]'
+                if any(sensitive in key.lower() for sensitive in self.SENSITIVE_FIELDS):
+                    sanitized[key] = "[REDACTED]"
                 else:
                     sanitized[key] = self._sanitize_data(value)
             return sanitized
@@ -186,30 +207,34 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
     Middleware to add security headers to responses.
     """
 
-    def process_response(self, request: HttpRequest,
-                         response: HttpResponse) -> HttpResponse:
+    def process_response(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> HttpResponse:
         """Add security headers"""
 
         # Only add security headers to HTML responses and API responses
-        content_type = response.get('Content-Type', '')
-        if content_type.startswith(('text/html', 'application/json')):
+        content_type = response.get("Content-Type", "")
+        if content_type.startswith(("text/html", "application/json")):
             # Prevent MIME type sniffing
-            response['X-Content-Type-Options'] = 'nosniff'
+            response["X-Content-Type-Options"] = "nosniff"
 
             # Enable XSS protection
-            response['X-XSS-Protection'] = '1; mode=block'
+            response["X-XSS-Protection"] = "1; mode=block"
 
             # Referrer policy
-            response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+            response["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
             # Strict Transport Security (HSTS) - apenas em HTTPS
             # Em produção, descomentar a linha abaixo:
-            # response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+            # response['Strict-Transport-Security'] = (
+            #     'max-age=31536000; includeSubDomains; preload'
+            # )
 
             # Content Security Policy (CSP)
-            # Nota: 'unsafe-inline' mantido em style-src para compatibilidade com CSS-in-JS
+            # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
+            # com CSS-in-JS
             # Em producao, considerar implementar nonces para scripts
-            response['Content-Security-Policy'] = (
+            response["Content-Security-Policy"] = (
                 "default-src 'self'; "
                 "script-src 'self'; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
@@ -222,7 +247,7 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             )
 
             # Permissions Policy (substitui Feature-Policy)
-            response['Permissions-Policy'] = (
+            response["Permissions-Policy"] = (
                 "geolocation=(), "
                 "microphone=(), "
                 "camera=(), "
@@ -235,7 +260,7 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
 
         # X-Frame-Options para prevenir clickjacking
         # Aplicar em todas as respostas
-        response['X-Frame-Options'] = 'DENY'
+        response["X-Frame-Options"] = "DENY"
 
         return response
 
@@ -249,16 +274,18 @@ class DecryptionCacheMiddleware(MiddlewareMixin):
     campo criptografado e acessado varias vezes.
     """
 
-    def process_response(self, request: HttpRequest,
-                         response: HttpResponse) -> HttpResponse:
+    def process_response(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> HttpResponse:
         """Limpa o cache de decriptacao no final do request."""
         from app.encryption import clear_decryption_cache
+
         clear_decryption_cache()
         return response
 
-    def process_exception(self, request: HttpRequest,
-                          exception: Exception) -> None:
+    def process_exception(self, request: HttpRequest, exception: Exception) -> None:
         """Limpa o cache mesmo em caso de excecao."""
         from app.encryption import clear_decryption_cache
+
         clear_decryption_cache()
         return None

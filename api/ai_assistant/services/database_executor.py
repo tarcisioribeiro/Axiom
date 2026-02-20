@@ -3,18 +3,19 @@ Executor de queries SQL seguro para o AI Assistant.
 
 Usa psycopg2 com parameterized queries para evitar SQL injection.
 """
-import os
+
 import logging
-from typing import List, Dict, Any, Optional
-from decimal import Decimal
+import os
 from datetime import date, datetime, time
+from decimal import Decimal
+from typing import Any, Dict, List
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from app.encryption import FieldEncryption
-from .query_interpreter import QueryResult
 
+from .query_interpreter import QueryResult
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +35,11 @@ class DatabaseExecutor:
         Usa variáveis de ambiente configuradas no .env.
         """
         return psycopg2.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            port=os.getenv('DB_PORT', '5432'),
-            dbname=os.getenv('DB_NAME', 'mindledger_db'),
-            user=os.getenv('DB_USER', 'postgres'),
-            password=os.getenv('DB_PASSWORD', ''),
+            host=os.getenv("DB_HOST", "localhost"),
+            port=os.getenv("DB_PORT", "5432"),
+            dbname=os.getenv("DB_NAME", "mindledger_db"),
+            user=os.getenv("DB_USER", "postgres"),
+            password=os.getenv("DB_PASSWORD", ""),
         )
 
     @classmethod
@@ -54,11 +55,11 @@ class DatabaseExecutor:
         """
         if not query_result.sql:
             return {
-                'data': [],
-                'count': 0,
-                'module': query_result.module,
-                'display_type': query_result.display_type,
-                'description': query_result.description,
+                "data": [],
+                "count": 0,
+                "module": query_result.module,
+                "display_type": query_result.display_type,
+                "description": query_result.description,
             }
 
         conn = None
@@ -74,15 +75,15 @@ class DatabaseExecutor:
                 # Decripta campos se necessário
                 if query_result.requires_decryption:
                     data = cls._decrypt_fields(
-                        data, query_result.decryption_fields
+                        data, query_result.decryption_fields or []
                     )
 
                 return {
-                    'data': data,
-                    'count': len(data),
-                    'module': query_result.module,
-                    'display_type': query_result.display_type,
-                    'description': query_result.description,
+                    "data": data,
+                    "count": len(data),
+                    "module": query_result.module,
+                    "display_type": query_result.display_type,
+                    "description": query_result.description,
                 }
 
         except psycopg2.Error as e:
@@ -101,14 +102,14 @@ class DatabaseExecutor:
         """
         result = []
         for row in rows:
-            serialized = {}
+            serialized: Dict[str, Any] = {}
             for key, value in row.items():
                 if isinstance(value, Decimal):
                     serialized[key] = float(value)
                 elif isinstance(value, (date, datetime)):
                     serialized[key] = value.isoformat()
                 elif isinstance(value, time):
-                    serialized[key] = value.strftime('%H:%M')
+                    serialized[key] = value.strftime("%H:%M")
                 elif value is None:
                     serialized[key] = None
                 else:
@@ -118,8 +119,7 @@ class DatabaseExecutor:
 
     @staticmethod
     def _decrypt_fields(
-        data: List[Dict[str, Any]],
-        fields: List[str]
+        data: List[Dict[str, Any]], fields: List[str]
     ) -> List[Dict[str, Any]]:
         """
         Decripta campos sensíveis usando FieldEncryption.
@@ -137,12 +137,12 @@ class DatabaseExecutor:
                     try:
                         decrypted = FieldEncryption.decrypt_data(row[field])
                         # Substitui o campo criptografado pelo decriptado
-                        row[field.replace('_criptografada', '')] = decrypted
+                        row[field.replace("_criptografada", "")] = decrypted
                         # Remove o campo criptografado original
                         del row[field]
                     except Exception as e:
                         logger.warning(f"Failed to decrypt field {field}: {e}")
-                        row[field.replace('_criptografada', '')] = '***'
+                        row[field.replace("_criptografada", "")] = "***"
                         if field in row:
                             del row[field]
         return data
@@ -150,4 +150,5 @@ class DatabaseExecutor:
 
 class DatabaseError(Exception):
     """Exceção para erros de banco de dados."""
+
     pass

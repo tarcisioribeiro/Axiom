@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, TrendingUp, Filter, ChevronDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { ReceiptButton } from '@/components/receipts';
+import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -17,27 +26,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { RevenueForm } from '@/components/revenues/RevenueForm';
-import { ReceiptButton } from '@/components/receipts';
-import { TRANSLATIONS } from '@/config/constants';
-import { revenuesService } from '@/services/revenues-service';
-import { accountsService } from '@/services/accounts-service';
-import { loansService } from '@/services/loans-service';
-import { useToast } from '@/hooks/use-toast';
+import { TRANSLATIONS , translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useAuthStore } from '@/stores/auth-store';
-import { getErrorMessage } from '@/utils/error-utils';
-import { translate } from '@/config/constants';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { accountsService } from '@/services/accounts-service';
+import { loansService } from '@/services/loans-service';
+import { revenuesService } from '@/services/revenues-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
-import { PageContainer } from '@/components/common/PageContainer';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Revenues() {
   const [revenues, setRevenues] = useState<Revenue[]>([]);
@@ -344,7 +344,7 @@ export default function Revenues() {
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-sm">Data Inicial</label>
+            <span className="text-sm">Data Inicial</span>
             <DatePicker
               value={startDate}
               onChange={setStartDate}
@@ -353,7 +353,7 @@ export default function Revenues() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm">Data Final</label>
+            <span className="text-sm">Data Final</span>
             <DatePicker
               value={endDate}
               onChange={setEndDate}
@@ -362,7 +362,7 @@ export default function Revenues() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm">Contas</label>
+            <span className="text-sm">Contas</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
@@ -375,6 +375,7 @@ export default function Revenues() {
               <PopoverContent className="w-full p-2">
                 <div className="max-h-60 space-y-2 overflow-y-auto">
                   {accounts.map((account) => (
+                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                     <div
                       key={account.id}
                       className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"

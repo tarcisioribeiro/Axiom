@@ -1,6 +1,7 @@
-import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type { RoutineTask, RoutineTaskFormData } from '@/types';
+
+import { BaseService } from './base-service';
 
 class RoutineTasksService extends BaseService<RoutineTask, RoutineTaskFormData> {
   constructor() {

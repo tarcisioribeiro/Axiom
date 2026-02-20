@@ -1,14 +1,15 @@
-import { useState } from 'react';
 import { Copy, RefreshCw, Loader2, Check } from 'lucide-react';
+import { useState } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { passwordsService } from '@/services/passwords-service';
 import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/utils/error-utils';
 import { cn } from '@/lib/utils';
+import { passwordsService } from '@/services/passwords-service';
+import { getErrorMessage } from '@/utils/error-utils';
 
 interface PasswordGeneratorProps {
   onPasswordGenerated?: (password: string) => void;
@@ -18,19 +19,19 @@ interface PasswordGeneratorProps {
 const strengthConfig = {
   weak: {
     label: 'Fraca',
-    color: 'bg-red-500',
+    color: 'bg-destructive',
     badgeVariant: 'destructive' as const,
     width: 'w-1/3',
   },
   medium: {
     label: 'Média',
-    color: 'bg-yellow-500',
+    color: 'bg-warning',
     badgeVariant: 'secondary' as const,
     width: 'w-2/3',
   },
   strong: {
     label: 'Forte',
-    color: 'bg-green-500',
+    color: 'bg-success',
     badgeVariant: 'default' as const,
     width: 'w-full',
   },
@@ -217,7 +218,7 @@ export function PasswordGenerator({
             </code>
             <Button size="sm" variant="ghost" onClick={handleCopy} className="shrink-0">
               {copied ? (
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-[hsl(var(--success))]" />
               ) : (
                 <Copy className="h-4 w-4" />
               )}

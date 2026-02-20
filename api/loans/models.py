@@ -1,34 +1,24 @@
 from django.db import models
+
 from accounts.models import Account
+from app.models import LOAN_STATUS_CHOICES, PAYMENT_FREQUENCY_CHOICES, BaseModel
 from expenses.models import EXPENSES_CATEGORIES
 from members.models import Member
-from app.models import (
-    BaseModel,
-    PAYMENT_FREQUENCY_CHOICES,
-    LOAN_STATUS_CHOICES
-)
 
 
 class Loan(BaseModel):
     description = models.CharField(
-        max_length=200,
-        verbose_name='Descrição',
-        null=False,
-        blank=False
+        max_length=200, verbose_name="Descrição", null=False, blank=False
     )
     value = models.DecimalField(
-        verbose_name="Valor",
-        null=False,
-        blank=False,
-        max_digits=10,
-        decimal_places=2
+        verbose_name="Valor", null=False, blank=False, max_digits=10, decimal_places=2
     )
     payed_value = models.DecimalField(
         verbose_name="Valor Pago",
         null=False,
         blank=False,
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
     horary = models.TimeField(verbose_name="Horário", null=False, blank=False)
@@ -37,14 +27,10 @@ class Loan(BaseModel):
         choices=EXPENSES_CATEGORIES,
         null=False,
         blank=False,
-        verbose_name="Categoria"
+        verbose_name="Categoria",
     )
     account = models.ForeignKey(
-        Account,
-        on_delete=models.PROTECT,
-        null=False,
-        blank=False,
-        verbose_name="Conta"
+        Account, on_delete=models.PROTECT, null=False, blank=False, verbose_name="Conta"
     )
     benefited = models.ForeignKey(
         Member,
@@ -52,7 +38,7 @@ class Loan(BaseModel):
         null=False,
         blank=False,
         verbose_name="Beneficiado",
-        related_name="Benefited"
+        related_name="Benefited",
     )
     creditor = models.ForeignKey(
         Member,
@@ -60,7 +46,7 @@ class Loan(BaseModel):
         null=False,
         blank=False,
         verbose_name="Credor",
-        related_name="Creditor"
+        related_name="Creditor",
     )
     payed = models.BooleanField(verbose_name="Pago")
     interest_rate = models.DecimalField(
@@ -68,34 +54,26 @@ class Loan(BaseModel):
         max_digits=5,
         decimal_places=2,
         null=True,
-        blank=True
+        blank=True,
     )
-    installments = models.IntegerField(
-        verbose_name="Número de Parcelas",
-        default=1
-    )
+    installments = models.IntegerField(verbose_name="Número de Parcelas", default=1)
     due_date = models.DateField(
-        verbose_name="Data de Vencimento",
-        null=True,
-        blank=True
+        verbose_name="Data de Vencimento", null=True, blank=True
     )
     contract_document = models.FileField(
-        upload_to='loans/contracts/',
+        upload_to="loans/contracts/",
         verbose_name="Documento do Contrato",
         null=True,
-        blank=True
+        blank=True,
     )
     payment_frequency = models.CharField(
         max_length=20,
         choices=PAYMENT_FREQUENCY_CHOICES,
         verbose_name="Frequência de Pagamento",
-        default='monthly'
+        default="monthly",
     )
     late_fee = models.DecimalField(
-        verbose_name="Multa por Atraso",
-        max_digits=10,
-        decimal_places=2,
-        default=0.00
+        verbose_name="Multa por Atraso", max_digits=10, decimal_places=2, default=0.00
     )
     guarantor = models.ForeignKey(
         Member,
@@ -103,22 +81,18 @@ class Loan(BaseModel):
         verbose_name="Avalista",
         related_name="Guarantor",
         null=True,
-        blank=True
+        blank=True,
     )
-    notes = models.TextField(
-        verbose_name="Observações",
-        null=True,
-        blank=True
-    )
+    notes = models.TextField(verbose_name="Observações", null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=LOAN_STATUS_CHOICES,
         verbose_name="Status",
-        default='active'
+        default="active",
     )
 
     class Meta:
-        ordering = ['-date']
+        ordering = ["-date"]
         verbose_name = "Empréstimo"
         verbose_name_plural = "Empréstimos"
 
@@ -136,9 +110,14 @@ class Loan(BaseModel):
         # Validar que valor pago não excede valor total
         if self.payed_value and self.value:
             if self.payed_value > self.value:
-                raise ValidationError({
-                    'payed_value': 'O valor pago não pode ser maior que o valor total do empréstimo.'
-                })
+                raise ValidationError(
+                    {
+                        "payed_value": (
+                            "O valor pago não pode ser maior que"
+                            " o valor total do empréstimo."
+                        )
+                    }
+                )
 
     def save(self, *args, **kwargs):
         """

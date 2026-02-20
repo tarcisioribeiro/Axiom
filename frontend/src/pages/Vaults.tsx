@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Plus,
   Pencil,
@@ -9,9 +8,15 @@ import {
   RefreshCcw,
   History,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +25,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -27,26 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ReceiptButton } from '@/components/receipts';
-import { vaultsService } from '@/services/vaults-service';
-import { accountsService } from '@/services/accounts-service';
-import { useToast } from '@/hooks/use-toast';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useAuthStore } from '@/stores/auth-store';
-import { getErrorMessage } from '@/utils/error-utils';
-import { formatCurrency } from '@/lib/formatters';
-import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { PageHeader } from '@/components/common/PageHeader';
-import { DataTable, type Column } from '@/components/common/DataTable';
-import type {
-  Vault as VaultType,
-  VaultFormData,
-  Account,
-  VaultTransaction,
-} from '@/types';
 import {
   Table,
   TableBody,
@@ -55,8 +42,22 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PageContainer } from '@/components/common/PageContainer';
+import { Textarea } from '@/components/ui/textarea';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
+import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
+import { vaultsService } from '@/services/vaults-service';
+import { useAuthStore } from '@/stores/auth-store';
+import type {
+  Vault as VaultType,
+  VaultFormData,
+  Account,
+  VaultTransaction,
+} from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Vaults() {
   const [vaults, setVaults] = useState<VaultType[]>([]);

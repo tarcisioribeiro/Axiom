@@ -48,7 +48,7 @@ export function useTheme(): UseThemeReturn {
     const root = document.documentElement;
 
     if (withTransition) {
-      root.classList.add('transition-colors', 'duration-300');
+      root.classList.add('theme-transitioning');
     }
 
     if (dark) {
@@ -59,7 +59,7 @@ export function useTheme(): UseThemeReturn {
 
     if (withTransition) {
       setTimeout(() => {
-        root.classList.remove('transition-colors', 'duration-300');
+        root.classList.remove('theme-transitioning');
       }, 300);
     }
   }, []);

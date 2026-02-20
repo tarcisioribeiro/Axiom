@@ -1,9 +1,3 @@
-import { Link, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/stores/auth-store';
-import { useSidebar } from '@/hooks/use-sidebar';
-import { useThemeAssets } from '@/hooks/use-theme-assets';
-import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   X,
@@ -37,6 +31,13 @@ import {
   Bot,
   Wand2,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+
+import { useSidebar } from '@/hooks/use-sidebar';
+import { useThemeAssets } from '@/hooks/use-theme-assets';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 
 interface NavSubItem {
   title: string;
