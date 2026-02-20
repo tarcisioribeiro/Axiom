@@ -1,11 +1,9 @@
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from payables.models import Payable
 from payables.serializers import PayableSerializer
-from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class PayableCreateListView(generics.ListCreateAPIView):
+class PayableCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar Payables (valores a pagar).
 
@@ -15,19 +13,16 @@ class PayableCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de payables não deletados
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Payable.objects.filter(is_deleted=False)
     serializer_class = PayableSerializer
 
 
-class PayableRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em Payables.
 
@@ -38,13 +33,10 @@ class PayableRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de payables não deletados
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Payable.objects.filter(is_deleted=False)
     serializer_class = PayableSerializer

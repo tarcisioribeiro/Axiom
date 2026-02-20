@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from app.models import BaseModel
-from app.encryption import FieldEncryption, DecryptionError
+from app.encryption import DecryptionError, EncryptedField, FieldEncryption, MaskedEncryptedField
 
 
 # ============================================================================
@@ -36,21 +36,7 @@ class Password(BaseModel):
     last_password_change = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey('members.Member', on_delete=models.PROTECT, related_name='passwords')
 
-    @property
-    def password(self):
-        if self._password:
-            try:
-                return FieldEncryption.decrypt_data(self._password)
-            except DecryptionError:
-                return None
-        return None
-
-    @password.setter
-    def password(self, value):
-        if value:
-            self._password = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._password = None
+    password = EncryptedField('_password')
 
     class Meta:
         verbose_name = "Senha"
@@ -76,6 +62,20 @@ FLAGS = (
 )
 
 
+def _normalize_card_number(value: object) -> str:
+    return str(value).replace(' ', '').replace('-', '')
+
+
+def _validate_card_number(value: str) -> None:
+    if not value.isdigit() or len(value) < 13 or len(value) > 19:
+        raise ValidationError("Número do cartão inválido.")
+
+
+def _validate_cvv(value: str) -> None:
+    if not value.isdigit() or len(value) not in [3, 4]:
+        raise ValidationError("CVV inválido.")
+
+
 class StoredCreditCard(BaseModel):
     """Armazenamento seguro de credenciais de cartões de crédito."""
     name = models.CharField(max_length=200, verbose_name="Nome do Cartão")
@@ -90,55 +90,17 @@ class StoredCreditCard(BaseModel):
     finance_card = models.ForeignKey('credit_cards.CreditCard', on_delete=models.SET_NULL,
                                     null=True, blank=True, related_name='stored_credentials')
 
-    @property
-    def card_number(self):
-        if self._card_number:
-            try:
-                return FieldEncryption.decrypt_data(self._card_number)
-            except DecryptionError:
-                return None
-        return None
-
-    @card_number.setter
-    def card_number(self, value):
-        if value:
-            clean_value = str(value).replace(' ', '').replace('-', '')
-            if not clean_value.isdigit() or len(clean_value) < 13 or len(clean_value) > 19:
-                raise ValidationError("Número do cartão inválido.")
-            self._card_number = FieldEncryption.encrypt_data(clean_value)
-        else:
-            self._card_number = None
-
-    @property
-    def card_number_masked(self):
-        if self._card_number:
-            try:
-                full_number = FieldEncryption.decrypt_data(self._card_number)
-                if full_number and len(full_number) >= 4:
-                    return '*' * (len(full_number) - 4) + full_number[-4:]
-                return full_number
-            except DecryptionError:
-                return None
-        return None
-
-    @property
-    def security_code(self):
-        if self._security_code:
-            try:
-                return FieldEncryption.decrypt_data(self._security_code)
-            except DecryptionError:
-                return None
-        return None
-
-    @security_code.setter
-    def security_code(self, value):
-        if value:
-            clean_value = str(value).strip()
-            if not clean_value.isdigit() or len(clean_value) not in [3, 4]:
-                raise ValidationError("CVV inválido.")
-            self._security_code = FieldEncryption.encrypt_data(clean_value)
-        else:
-            self._security_code = None
+    card_number = EncryptedField(
+        '_card_number',
+        preprocessor=_normalize_card_number,
+        validator=_validate_card_number,
+    )
+    card_number_masked = MaskedEncryptedField('_card_number')
+    security_code = EncryptedField(
+        '_security_code',
+        preprocessor=lambda v: str(v).strip(),
+        validator=_validate_cvv,
+    )
 
     class Meta:
         verbose_name = "Cartão Armazenado"
@@ -176,65 +138,10 @@ class StoredBankAccount(BaseModel):
     finance_account = models.ForeignKey('accounts.Account', on_delete=models.SET_NULL,
                                        null=True, blank=True, related_name='stored_credentials')
 
-    @property
-    def account_number(self):
-        if self._account_number:
-            try:
-                return FieldEncryption.decrypt_data(self._account_number)
-            except DecryptionError:
-                return None
-        return None
-
-    @account_number.setter
-    def account_number(self, value):
-        if value:
-            self._account_number = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._account_number = None
-
-    @property
-    def account_number_masked(self):
-        if self._account_number:
-            try:
-                full_number = FieldEncryption.decrypt_data(self._account_number)
-                if full_number and len(full_number) >= 4:
-                    return '*' * (len(full_number) - 4) + full_number[-4:]
-                return full_number
-            except DecryptionError:
-                return None
-        return None
-
-    @property
-    def password(self):
-        if self._password:
-            try:
-                return FieldEncryption.decrypt_data(self._password)
-            except DecryptionError:
-                return None
-        return None
-
-    @password.setter
-    def password(self, value):
-        if value:
-            self._password = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._password = None
-
-    @property
-    def digital_password(self):
-        if self._digital_password:
-            try:
-                return FieldEncryption.decrypt_data(self._digital_password)
-            except DecryptionError:
-                return None
-        return None
-
-    @digital_password.setter
-    def digital_password(self, value):
-        if value:
-            self._digital_password = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._digital_password = None
+    account_number = EncryptedField('_account_number')
+    account_number_masked = MaskedEncryptedField('_account_number')
+    password = EncryptedField('_password')
+    digital_password = EncryptedField('_digital_password')
 
     class Meta:
         verbose_name = "Conta Bancária Armazenada"

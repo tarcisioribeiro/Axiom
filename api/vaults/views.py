@@ -21,16 +21,16 @@ from .serializers import (
     FinancialGoalListSerializer,
 )
 from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class VaultListCreateView(generics.ListCreateAPIView):
+class VaultListCreateView(BaseListCreateView):
     """
     ViewSet para listar e criar cofres.
 
     GET: Lista todos os cofres ativos
     POST: Cria um novo cofre
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Vault.objects.filter(is_deleted=False)
     serializer_class = VaultSerializer
 
@@ -51,7 +51,7 @@ class VaultListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 
-class VaultDetailView(generics.RetrieveUpdateDestroyAPIView):
+class VaultDetailView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em cofres.
 
@@ -59,7 +59,6 @@ class VaultDetailView(generics.RetrieveUpdateDestroyAPIView):
     PUT/PATCH: Atualiza um cofre
     DELETE: Remove um cofre (soft delete)
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Vault.objects.filter(is_deleted=False)
     serializer_class = VaultSerializer
 
@@ -468,14 +467,13 @@ class VaultTransactionUpdateView(APIView):
 
 # ============== Financial Goals Views ==============
 
-class FinancialGoalListCreateView(generics.ListCreateAPIView):
+class FinancialGoalListCreateView(BaseListCreateView):
     """
     ViewSet para listar e criar metas financeiras.
 
     GET: Lista todas as metas
     POST: Cria uma nova meta
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = FinancialGoal.objects.filter(is_deleted=False)
 
     def get_serializer_class(self):
@@ -503,7 +501,7 @@ class FinancialGoalListCreateView(generics.ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 
-class FinancialGoalDetailView(generics.RetrieveUpdateDestroyAPIView):
+class FinancialGoalDetailView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em metas financeiras.
 
@@ -511,7 +509,6 @@ class FinancialGoalDetailView(generics.RetrieveUpdateDestroyAPIView):
     PUT/PATCH: Atualiza uma meta
     DELETE: Remove uma meta (soft delete)
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = FinancialGoal.objects.filter(is_deleted=False)
     serializer_class = FinancialGoalSerializer
 

@@ -24,9 +24,10 @@ from credit_cards.serializers import (
 )
 from expenses.models import Expense
 from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class CreditCardCreateListView(generics.ListCreateAPIView):
+class CreditCardCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar cartões de crédito.
 
@@ -36,8 +37,6 @@ class CreditCardCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet dos cartões (exclui deletados) com conta associada carregada
     serializer_class : class
@@ -45,7 +44,6 @@ class CreditCardCreateListView(generics.ListCreateAPIView):
     ordering : list
         Ordenação padrão por nome
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     serializer_class = CreditCardSerializer
     ordering = ['name']
 
@@ -58,9 +56,7 @@ class CreditCardCreateListView(generics.ListCreateAPIView):
         ).defer('_card_number')
 
 
-class CreditCardRetrieveUpdateDestroyView(
-    generics.RetrieveUpdateDestroyAPIView
-):
+class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em cartões de crédito.
 
@@ -71,19 +67,16 @@ class CreditCardRetrieveUpdateDestroyView(
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet dos cartões (exclui deletados) com conta associada carregada
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = CreditCard.objects.filter(is_deleted=False).select_related('associated_account')
     serializer_class = CreditCardSerializer
 
 
-class CreditCardBillCreateListView(generics.ListCreateAPIView):
+class CreditCardBillCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar faturas de cartão de crédito.
 
@@ -93,8 +86,6 @@ class CreditCardBillCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet das faturas (exclui deletadas) com cartão e conta associada carregados
     serializer_class : class
@@ -102,7 +93,6 @@ class CreditCardBillCreateListView(generics.ListCreateAPIView):
     ordering : list
         Ordenação por ano, mês e data de fim da fatura (descendente)
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
         'credit_card',
         'credit_card__associated_account'
@@ -111,9 +101,7 @@ class CreditCardBillCreateListView(generics.ListCreateAPIView):
     ordering = ['-year', '-month', '-invoice_ending_date']
 
 
-class CreditCardBillRetrieveUpdateDestroyView(
-    generics.RetrieveUpdateDestroyAPIView
-):
+class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em faturas de cartão.
 
@@ -124,14 +112,11 @@ class CreditCardBillRetrieveUpdateDestroyView(
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet das faturas (exclui deletadas) com cartão e conta associada carregados
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
         'credit_card', 'credit_card__associated_account'
     )
@@ -142,7 +127,7 @@ class CreditCardBillRetrieveUpdateDestroyView(
 # VIEWS FOR PURCHASE AND INSTALLMENT
 # ============================================================================
 
-class CreditCardPurchaseCreateListView(generics.ListCreateAPIView):
+class CreditCardPurchaseCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar compras de cartão de crédito.
 
@@ -154,7 +139,6 @@ class CreditCardPurchaseCreateListView(generics.ListCreateAPIView):
     - card: ID do cartão
     - category: Categoria da compra
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = CreditCardPurchase.objects.all()
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['card', 'category']
@@ -173,9 +157,7 @@ class CreditCardPurchaseCreateListView(generics.ListCreateAPIView):
         return CreditCardPurchaseSerializer
 
 
-class CreditCardPurchaseRetrieveUpdateDestroyView(
-    generics.RetrieveUpdateDestroyAPIView
-):
+class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em compras de cartão.
 
@@ -183,13 +165,7 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(
     - GET: Recupera uma compra específica com parcelas
     - PUT/PATCH: Atualiza uma compra existente (exceto valor e parcelas)
     - DELETE: Remove uma compra e suas parcelas
-
-    Attributes
-    ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = CreditCardPurchase.objects.all()
 
     def get_queryset(self):

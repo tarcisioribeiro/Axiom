@@ -1,11 +1,9 @@
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from revenues.models import Revenue
 from revenues.serializers import RevenueSerializer
-from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class RevenueCreateListView(generics.ListCreateAPIView):
+class RevenueCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar receitas.
 
@@ -15,8 +13,6 @@ class RevenueCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de todas as receitas (exclui deletadas) com relação account pré-carregada
     serializer_class : class
@@ -24,13 +20,12 @@ class RevenueCreateListView(generics.ListCreateAPIView):
     ordering : list
         Ordenação padrão por data e ID decrescente
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Revenue.objects.filter(is_deleted=False).select_related('account')
     serializer_class = RevenueSerializer
     ordering = ['-date', '-id']  # Consistent ordering for pagination
 
 
-class RevenueRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em receitas.
 
@@ -41,13 +36,10 @@ class RevenueRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de todas as receitas (exclui deletadas) com relação account pré-carregada
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Revenue.objects.filter(is_deleted=False).select_related('account')
     serializer_class = RevenueSerializer

@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from accounts.models import Account
 from expenses.models import EXPENSES_CATEGORIES
-from app.encryption import FieldEncryption, DecryptionError
+from app.encryption import EncryptedField, MaskedEncryptedField
 from app.models import BaseModel, BILL_STATUS_CHOICES
 
 
@@ -37,6 +37,11 @@ MONTHS = (
     ('Nov', 'Novembro'),
     ('Dec', 'Dezembro')
 )
+
+
+def _validate_cvv(value: str) -> None:
+    if not value.isdigit() or len(value) not in [3, 4]:
+        raise ValidationError("CVV deve conter 3 ou 4 dígitos numéricos")
 
 
 class CreditCard(BaseModel):
@@ -140,104 +145,16 @@ class CreditCard(BaseModel):
         blank=True
     )
 
+    security_code = EncryptedField('_security_code', validator=_validate_cvv)
+    card_number = EncryptedField('_card_number')
+    card_number_masked = MaskedEncryptedField('_card_number', fallback='****')
+
     class Meta:
         verbose_name = "Cartão de Crédito"
         verbose_name_plural = "Cartões de Crédito"
 
     def __str__(self):
         return self.name
-
-    @property
-    def security_code(self):
-        """
-        Propriedade para descriptografar o CVV ao acessá-lo.
-
-        Returns
-        -------
-        str or None
-            Código de segurança (CVV) descriptografado ou None em caso de erro.
-        """
-        try:
-            return FieldEncryption.decrypt_data(self._security_code)
-        except (ValidationError, DecryptionError):
-            return None
-
-    @security_code.setter
-    def security_code(self, value):
-        """
-        Setter para criptografar o CVV antes de salvá-lo.
-
-        Parameters
-        ----------
-        value : str or None
-            Código de segurança (CVV) de 3 ou 4 dígitos.
-
-        Raises
-        ------
-        ValidationError
-            Se o CVV não for numérico ou não tiver 3 ou 4 dígitos.
-        """
-        if value is not None:
-            # Validação básica do CVV (3 ou 4 dígitos)
-            if not str(value).isdigit() or len(str(value)) not in [3, 4]:
-                raise ValidationError(
-                    "CVV deve conter 3 ou 4 dígitos numéricos"
-                )
-            self._security_code = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._security_code = None
-
-    @property
-    def card_number(self):
-        """
-        Propriedade para descriptografar o número do cartão.
-
-        Returns
-        -------
-        str or None
-            Número do cartão descriptografado ou None se não existir.
-        """
-        if self._card_number:
-            try:
-                return FieldEncryption.decrypt_data(self._card_number)
-            except DecryptionError:
-                return None
-        return None
-
-    @property
-    def card_number_masked(self):
-        """
-        Propriedade para retornar o número do cartão mascarado.
-
-        Returns
-        -------
-        str
-            Número do cartão mascarado (****1234) ou "****" se não existir.
-        """
-        if self._card_number:
-            try:
-                full_number = FieldEncryption.decrypt_data(self._card_number)
-                if full_number and len(full_number) >= 4:
-                    return '*' * (len(full_number) - 4) + full_number[-4:]
-                return full_number if full_number else "****"
-            except DecryptionError:
-                return "****"
-        return "****"
-
-    @card_number.setter
-    def card_number(self, value):
-        """
-        Setter para criptografar o número do cartão.
-
-        Parameters
-        ----------
-        value : str or None
-            Número do cartão a ser criptografado.
-        """
-        if value:
-            self._card_number = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._card_number = None
 
     def clean(self):
         """

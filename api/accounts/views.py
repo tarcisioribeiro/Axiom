@@ -1,11 +1,9 @@
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from accounts.models import Account
 from accounts.serializers import AccountSerializer
-from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class AccountCreateListView(generics.ListCreateAPIView):
+class AccountCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar contas bancárias.
 
@@ -15,8 +13,6 @@ class AccountCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de contas não deletadas
     serializer_class : class
@@ -24,7 +20,6 @@ class AccountCreateListView(generics.ListCreateAPIView):
     ordering : list
         Ordenação padrão por nome
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     serializer_class = AccountSerializer
     ordering = ['name']  # Consistent ordering
 
@@ -33,7 +28,7 @@ class AccountCreateListView(generics.ListCreateAPIView):
         return Account.objects.filter(is_deleted=False).defer('_account_number')
 
 
-class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em contas bancárias.
 
@@ -44,13 +39,10 @@ class AccountRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de contas não deletadas
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Account.objects.filter(is_deleted=False)
     serializer_class = AccountSerializer

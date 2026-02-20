@@ -1,11 +1,11 @@
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta, date
-from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from personal_planning.models import (
     RoutineTask, Goal, DailyReflection, TaskInstance
 )
@@ -50,9 +50,8 @@ def get_client_ip(request):
 # ROUTINE TASK VIEWS
 # ============================================================================
 
-class RoutineTaskListCreateView(generics.ListCreateAPIView):
+class RoutineTaskListCreateView(BaseListCreateView):
     """Lista todas as tarefas rotineiras ou cria uma nova."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = RoutineTask.objects.all()
 
     def get_queryset(self):
@@ -77,9 +76,8 @@ class RoutineTaskListCreateView(generics.ListCreateAPIView):
         )
 
 
-class RoutineTaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta uma tarefa rotineira."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = RoutineTask.objects.all()
 
     def get_queryset(self):
@@ -113,9 +111,8 @@ class RoutineTaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 # GOAL VIEWS
 # ============================================================================
 
-class GoalListCreateView(generics.ListCreateAPIView):
+class GoalListCreateView(BaseListCreateView):
     """Lista todos os objetivos ou cria um novo."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = Goal.objects.all()
 
     def get_queryset(self):
@@ -140,9 +137,8 @@ class GoalListCreateView(generics.ListCreateAPIView):
         )
 
 
-class GoalDetailView(generics.RetrieveUpdateDestroyAPIView):
+class GoalDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta um objetivo."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = Goal.objects.all()
 
     def get_queryset(self):
@@ -255,9 +251,8 @@ class GoalResetView(APIView):
 # DAILY REFLECTION VIEWS
 # ============================================================================
 
-class DailyReflectionListCreateView(generics.ListCreateAPIView):
+class DailyReflectionListCreateView(BaseListCreateView):
     """Lista todas as reflexoes diarias ou cria uma nova."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = DailyReflection.objects.all()
 
     def get_queryset(self):
@@ -282,9 +277,8 @@ class DailyReflectionListCreateView(generics.ListCreateAPIView):
         )
 
 
-class DailyReflectionDetailView(generics.RetrieveUpdateDestroyAPIView):
+class DailyReflectionDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta uma reflexao diaria."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = DailyReflection.objects.all()
 
     def get_queryset(self):
@@ -566,9 +560,8 @@ class PersonalPlanningDashboardStatsView(APIView):
 # TASK INSTANCE VIEWS
 # ============================================================================
 
-class TaskInstanceListCreateView(generics.ListCreateAPIView):
+class TaskInstanceListCreateView(BaseListCreateView):
     """Lista todas as instancias de tarefas ou cria uma nova (tarefa avulsa)."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
 
     def get_queryset(self):
         qs = TaskInstance.objects.filter(
@@ -613,9 +606,8 @@ class TaskInstanceListCreateView(generics.ListCreateAPIView):
         )
 
 
-class TaskInstanceDetailView(generics.RetrieveUpdateDestroyAPIView):
+class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta uma instancia de tarefa."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
 
     def get_queryset(self):
         return TaskInstance.objects.filter(

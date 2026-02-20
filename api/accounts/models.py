@@ -1,6 +1,6 @@
 from django.db import models
 from app.models import BaseModel
-from app.encryption import FieldEncryption, DecryptionError
+from app.encryption import EncryptedField, MaskedEncryptedField
 
 
 ACCOUNT_TYPES = (
@@ -105,64 +105,13 @@ class Account(BaseModel):
         blank=True
     )
 
+    account_number = EncryptedField('_account_number')
+    account_number_masked = MaskedEncryptedField('_account_number')
+
     class Meta:
         ordering = ['-account_name']
         verbose_name = "Conta"
         verbose_name_plural = "Contas"
-
-    @property
-    def account_number(self):
-        """
-        Propriedade para descriptografar o número da conta.
-
-        Returns
-        -------
-        str or None
-            Número da conta descriptografado ou None se não existir.
-        """
-        if self._account_number:
-            try:
-                return FieldEncryption.decrypt_data(self._account_number)
-            except DecryptionError:
-                return None
-        return None
-
-    @property
-    def account_number_masked(self):
-        """
-        Propriedade para retornar o número da conta mascarado.
-
-        Returns
-        -------
-        str or None
-            Número da conta mascarado (****1234) ou None se não existir.
-        """
-        if self._account_number:
-            try:
-                full_number = FieldEncryption.decrypt_data(
-                    self._account_number
-                )
-                if full_number and len(full_number) >= 4:
-                    return '*' * (len(full_number) - 4) + full_number[-4:]
-                return full_number
-            except DecryptionError:
-                return None
-        return None
-
-    @account_number.setter
-    def account_number(self, value):
-        """
-        Setter para criptografar o número da conta.
-
-        Parameters
-        ----------
-        value : str or None
-            Número da conta a ser criptografado.
-        """
-        if value:
-            self._account_number = FieldEncryption.encrypt_data(str(value))
-        else:
-            self._account_number = None
 
     def __str__(self):
         return self.account_name

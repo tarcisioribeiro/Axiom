@@ -17,6 +17,7 @@ from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from security.models import (
     Password, StoredCreditCard, StoredBankAccount,
     Archive, PASSWORD_CATEGORIES
@@ -58,9 +59,8 @@ def log_activity(request, action, model_name, object_id, description):
 # PASSWORD VIEWS
 # ============================================================================
 
-class PasswordListCreateView(generics.ListCreateAPIView):
+class PasswordListCreateView(BaseListCreateView):
     """Lista todas as senhas ou cria uma nova."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = Password.objects.all()
 
     def get_queryset(self):
@@ -89,9 +89,8 @@ class PasswordListCreateView(generics.ListCreateAPIView):
         )
 
 
-class PasswordDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PasswordDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta uma senha."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = Password.objects.all()
 
     def get_queryset(self):
@@ -161,9 +160,8 @@ class PasswordRevealView(generics.RetrieveAPIView):
 # STORED CREDIT CARD VIEWS
 # ============================================================================
 
-class StoredCreditCardListCreateView(generics.ListCreateAPIView):
+class StoredCreditCardListCreateView(BaseListCreateView):
     """Lista todos os cartões ou cria um novo."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = StoredCreditCard.objects.all()
 
     def get_queryset(self):
@@ -192,9 +190,8 @@ class StoredCreditCardListCreateView(generics.ListCreateAPIView):
         )
 
 
-class StoredCreditCardDetailView(generics.RetrieveUpdateDestroyAPIView):
+class StoredCreditCardDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta um cartão."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = StoredCreditCard.objects.all()
 
     def get_queryset(self):
@@ -262,9 +259,8 @@ class StoredCreditCardRevealView(generics.RetrieveAPIView):
 # STORED BANK ACCOUNT VIEWS
 # ============================================================================
 
-class StoredBankAccountListCreateView(generics.ListCreateAPIView):
+class StoredBankAccountListCreateView(BaseListCreateView):
     """Lista todas as contas bancárias ou cria uma nova."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = StoredBankAccount.objects.all()
 
     def get_queryset(self):
@@ -295,9 +291,8 @@ class StoredBankAccountListCreateView(generics.ListCreateAPIView):
         )
 
 
-class StoredBankAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
+class StoredBankAccountDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta uma conta bancária."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     queryset = StoredBankAccount.objects.all()
 
     def get_queryset(self):
@@ -365,9 +360,8 @@ class StoredBankAccountRevealView(generics.RetrieveAPIView):
 # ARCHIVE VIEWS
 # ============================================================================
 
-class ArchiveListCreateView(generics.ListCreateAPIView):
+class ArchiveListCreateView(BaseListCreateView):
     """Lista todos os arquivos ou cria um novo."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = Archive.objects.all()
 
@@ -415,9 +409,8 @@ class ArchiveListCreateView(generics.ListCreateAPIView):
         )
 
 
-class ArchiveDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ArchiveDetailView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta um arquivo."""
-    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = Archive.objects.all()
 

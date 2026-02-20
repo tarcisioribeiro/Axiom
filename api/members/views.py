@@ -1,4 +1,3 @@
-from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -7,10 +6,10 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from members.models import Member
 from members.serializers import MemberSerializer, MemberPermissionsSerializer
-from app.permissions import GlobalDefaultPermission
+from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 
 
-class MemberCreateListView(generics.ListCreateAPIView):
+class MemberCreateListView(BaseListCreateView):
     """
     ViewSet para listar e criar membros.
 
@@ -20,19 +19,16 @@ class MemberCreateListView(generics.ListCreateAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de membros não deletados
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Member.objects.filter(is_deleted=False)
     serializer_class = MemberSerializer
 
 
-class MemberRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """
     ViewSet para operações individuais em membros.
 
@@ -43,14 +39,11 @@ class MemberRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
     Attributes
     ----------
-    permission_classes : tuple
-        Permissões necessárias (IsAuthenticated, GlobalDefaultPermission)
     queryset : QuerySet
         QuerySet de membros não deletados
     serializer_class : class
         Serializer usado para validação e serialização
     """
-    permission_classes = (IsAuthenticated, GlobalDefaultPermission,)
     queryset = Member.objects.filter(is_deleted=False)
     serializer_class = MemberSerializer
 
