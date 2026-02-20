@@ -18,14 +18,19 @@ interface EmptyStateProps {
   };
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, action }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
+  title,
+  message,
+  action,
+}) => {
   return (
-    <div className="bg-card border rounded-xl p-12 text-center space-y-4">
-      {icon && (
-        <div className="flex justify-center">
-          {icon}
-        </div>
-      )}
+    <section
+      role="status"
+      aria-label={title ?? message}
+      className="space-y-4 rounded-lg border bg-card p-12 text-center"
+    >
+      {icon && <div className="flex justify-center">{icon}</div>}
       {title && <h3 className="text-lg font-semibold">{title}</h3>}
       <p>{message}</p>
       {action && (
@@ -33,6 +38,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, message, ac
           {action.label}
         </Button>
       )}
-    </div>
+    </section>
   );
 };

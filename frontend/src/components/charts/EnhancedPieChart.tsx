@@ -1,12 +1,5 @@
 import { useMemo } from 'react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { EnhancedTooltip } from './EnhancedTooltip';
 import { truncateLabel } from '@/lib/chart-formatters';
 import { useChartDimensions } from '@/hooks/use-chart-dimensions';
@@ -53,33 +46,30 @@ export const EnhancedPieChart = ({
   // Renderizador customizado da legenda
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderLegend = (props: any) => {
-    const { payload } = props as { payload?: Array<{ value: string; color: string; payload: ChartDataPoint }> };
+    const { payload } = props as {
+      payload?: Array<{ value: string; color: string; payload: ChartDataPoint }>;
+    };
     if (!payload) return null;
 
     return (
-      <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-2 px-2">
+      <ul className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1.5 px-2">
         {payload.map((entry, index) => {
           const value = Number(entry.payload[dataKey] || 0);
           const percent = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
 
           return (
-            <li
-              key={`legend-${index}`}
-              className="flex items-center gap-1.5 text-xs"
-            >
+            <li key={`legend-${index}`} className="flex items-center gap-1.5 text-xs">
               <span
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
               <span
-                className={`text-foreground/80 truncate ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[100px]'}`}
+                className={`truncate text-foreground/80 ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[100px]'}`}
                 title={entry.value}
               >
                 {truncateLabel(entry.value, dims.truncateXAxisLabel)}
               </span>
-              <span className="font-medium">
-                {percent}%
-              </span>
+              <span className="font-medium">{percent}%</span>
             </li>
           );
         })}
@@ -123,11 +113,7 @@ export const EnhancedPieChart = ({
 
         <Tooltip content={<EnhancedTooltip formatter={formatter} />} />
 
-        <Legend
-          content={renderLegend}
-          verticalAlign="bottom"
-          align="center"
-        />
+        <Legend content={renderLegend} verticalAlign="bottom" align="center" />
       </PieChart>
     </ResponsiveContainer>
   );

@@ -12,7 +12,15 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { summariesService } from '@/services/summaries-service';
 import { booksService } from '@/services/books-service';
 import type { Summary, SummaryFormData, Book } from '@/types';
-import { Plus, Edit, Trash2, FileText, BookOpen, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  FileText,
+  BookOpen,
+  CheckCircle2,
+  XCircle,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -50,7 +58,7 @@ export default function Summaries() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -62,7 +70,7 @@ export default function Summaries() {
       ]);
       setSummaries(summariesData);
       setBooks(booksData);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao carregar dados',
         description: 'Não foi possível carregar os resumos.',
@@ -88,8 +96,8 @@ export default function Summaries() {
         text: '',
         owner: 0,
       });
-      loadData();
-    } catch (error) {
+      void loadData();
+    } catch {
       toast({
         title: 'Erro ao criar resumo',
         description: 'Não foi possível criar o resumo.',
@@ -116,8 +124,8 @@ export default function Summaries() {
         text: '',
         owner: 0,
       });
-      loadData();
-    } catch (error) {
+      void loadData();
+    } catch {
       toast({
         title: 'Erro ao atualizar resumo',
         description: 'Não foi possível atualizar o resumo.',
@@ -129,7 +137,8 @@ export default function Summaries() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir resumo',
-      description: 'Tem certeza que deseja excluir este resumo? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir este resumo? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -137,14 +146,14 @@ export default function Summaries() {
 
     if (!confirmed) return;
 
-    try{
+    try {
       await summariesService.delete(id);
       toast({
         title: 'Resumo excluído',
         description: 'O resumo foi excluído com sucesso.',
       });
-      loadData();
-    } catch (error) {
+      void loadData();
+    } catch {
       toast({
         title: 'Erro ao excluir resumo',
         description: 'Não foi possível excluir o resumo.',
@@ -171,11 +180,12 @@ export default function Summaries() {
   );
 
   const handleCreateClick = () => {
-    const readBooks = books.filter(book => book.read_status === 'read');
+    const readBooks = books.filter((book) => book.read_status === 'read');
     if (readBooks.length === 0) {
       toast({
         title: 'Ação não permitida',
-        description: 'É necessário ter pelo menos um livro completamente lido antes de criar um resumo.',
+        description:
+          'É necessário ter pelo menos um livro completamente lido antes de criar um resumo.',
         variant: 'destructive',
       });
       return;
@@ -194,7 +204,7 @@ export default function Summaries() {
         icon={<FileText />}
         action={{
           label: 'Novo Resumo',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreateClick,
         }}
       />
@@ -220,17 +230,21 @@ export default function Summaries() {
                 <Label htmlFor="book">Livro *</Label>
                 <Select
                   value={formData.book.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, book: parseInt(value) })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, book: parseInt(value) })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um livro" />
                   </SelectTrigger>
                   <SelectContent>
-                    {books.filter(book => book.read_status === 'read').map((book) => (
-                      <SelectItem key={book.id} value={book.id.toString()}>
-                        {book.title}
-                      </SelectItem>
-                    ))}
+                    {books
+                      .filter((book) => book.read_status === 'read')
+                      .map((book) => (
+                        <SelectItem key={book.id} value={book.id.toString()}>
+                          {book.title}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -277,25 +291,28 @@ export default function Summaries() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BookOpen className="w-5 h-5" />
+                    <div className="mb-2 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5" />
                       <CardTitle className="text-xl">{summary.book_title}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
                       {summary.is_vectorized ? (
                         <Badge variant="default" className="gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
+                          <CheckCircle2 className="h-3 w-3" />
                           Vetorizado
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1">
-                          <XCircle className="w-3 h-3" />
+                          <XCircle className="h-3 w-3" />
                           Não Vetorizado
                         </Badge>
                       )}
                       {summary.vectorization_date && (
                         <span className="text-xs">
-                          em {new Date(summary.vectorization_date).toLocaleDateString('pt-BR')}
+                          em{' '}
+                          {new Date(summary.vectorization_date).toLocaleDateString(
+                            'pt-BR'
+                          )}
                         </span>
                       )}
                     </div>
@@ -305,21 +322,23 @@ export default function Summaries() {
                       variant="ghost"
                       size="icon"
                       onClick={() => openEditDialog(summary)}
+                      aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(summary.id)}
+                      aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm whitespace-pre-wrap line-clamp-6">
+                <p className="line-clamp-6 whitespace-pre-wrap text-sm">
                   {summary.text}
                 </p>
               </CardContent>
@@ -349,17 +368,21 @@ export default function Summaries() {
                 <Label htmlFor="edit-book">Livro *</Label>
                 <Select
                   value={formData.book.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, book: parseInt(value) })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, book: parseInt(value) })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {books.filter(book => book.read_status === 'read').map((book) => (
-                      <SelectItem key={book.id} value={book.id.toString()}>
-                        {book.title}
-                      </SelectItem>
-                    ))}
+                    {books
+                      .filter((book) => book.read_status === 'read')
+                      .map((book) => (
+                        <SelectItem key={book.id} value={book.id.toString()}>
+                          {book.title}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

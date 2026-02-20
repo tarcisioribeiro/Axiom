@@ -46,7 +46,11 @@ export function parseLocalDate(dateStr: string): Date | undefined {
   const date = new Date(year, month, day);
 
   // Validar se a data é válida
-  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ) {
     return undefined;
   }
 
@@ -76,7 +80,10 @@ export function toLocalDate(value: string | Date | undefined): Date | undefined 
  * }
  * ```
  */
-export function getErrorMessage(error: unknown, fallback = 'Ocorreu um erro inesperado'): string {
+export function getErrorMessage(
+  error: unknown,
+  fallback = 'Ocorreu um erro inesperado'
+): string {
   if (error instanceof Error) {
     return error.message;
   }

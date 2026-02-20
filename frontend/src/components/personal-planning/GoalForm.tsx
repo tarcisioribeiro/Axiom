@@ -22,7 +22,7 @@ import {
   type Goal,
   type RoutineTask,
 } from '@/types';
-import { z } from 'zod';
+import { type z } from 'zod';
 
 import { formatLocalDate } from '@/lib/utils';
 type GoalFormData = z.infer<typeof goalSchema>;
@@ -90,7 +90,7 @@ export function GoalForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [goal, setValue]);
 
   return (
@@ -104,7 +104,7 @@ export function GoalForm({
             placeholder="Ex: Meditar 30 dias consecutivos"
           />
           {errors.title && (
-            <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -117,7 +117,7 @@ export function GoalForm({
             rows={3}
           />
           {errors.description && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.description.message}
             </p>
           )}
@@ -141,9 +141,7 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.goal_type && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.goal_type.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.goal_type.message}</p>
           )}
         </div>
 
@@ -168,7 +166,7 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.related_task && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.related_task.message}
             </p>
           )}
@@ -181,11 +179,11 @@ export function GoalForm({
             type="number"
             min="1"
             {...register('target_value', {
-              setValueAs: (value) => (value === '' ? 1 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
             })}
           />
           {errors.target_value && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.target_value.message}
             </p>
           )}
@@ -198,11 +196,11 @@ export function GoalForm({
             type="number"
             min="0"
             {...register('current_value', {
-              setValueAs: (value) => (value === '' ? 0 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
             })}
           />
           {errors.current_value && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.current_value.message}
             </p>
           )}
@@ -212,13 +210,13 @@ export function GoalForm({
           <Label htmlFor="start_date">Data de Início *</Label>
           <DatePicker
             value={watch('start_date')}
-            onChange={(date) => setValue('start_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('start_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data de início"
           />
           {errors.start_date && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.start_date.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.start_date.message}</p>
           )}
         </div>
 
@@ -230,9 +228,7 @@ export function GoalForm({
             placeholder="Selecione a data de término"
           />
           {errors.end_date && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.end_date.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.end_date.message}</p>
           )}
         </div>
 
@@ -254,14 +250,12 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.status && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.status.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.status.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

@@ -153,18 +153,18 @@ export default function DailyChecklist() {
       try {
         const serverDate = await appService.getCurrentDate();
         setSelectedDate(serverDate);
-      } catch (error) {
+      } catch {
         setSelectedDate(formatLocalDate(new Date()));
       }
     };
 
-    loadCurrentUserMember();
-    initializeDate();
+    void loadCurrentUserMember();
+    void initializeDate();
   }, []);
 
   useEffect(() => {
     if (ownerId > 0 && selectedDate) {
-      loadData();
+      void loadData();
     }
   }, [selectedDate, ownerId]);
 
@@ -256,7 +256,7 @@ export default function DailyChecklist() {
       }
 
       return prevCards.map((card) =>
-        card.id === activeId ? { ...card, status: targetStatus! } : card
+        card.id === activeId ? { ...card, status: targetStatus } : card
       );
     });
   };
@@ -322,13 +322,18 @@ export default function DailyChecklist() {
         };
 
         if (reflectionId) {
-          reflectionPromise = dailyReflectionsService.update(reflectionId, reflectionData);
+          reflectionPromise = dailyReflectionsService.update(
+            reflectionId,
+            reflectionData
+          );
         } else {
           reflectionPromise = dailyReflectionsService.create(reflectionData);
         }
       }
 
-      await Promise.all([updatePromise, reflectionPromise].filter(Boolean));
+      const promises: Promise<unknown>[] = [updatePromise];
+      if (reflectionPromise) promises.push(reflectionPromise);
+      await Promise.all(promises);
 
       toast({
         title: 'Dados salvos',
@@ -336,7 +341,7 @@ export default function DailyChecklist() {
       });
 
       // Recarrega dados para obter IDs e contagens atualizados
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -375,10 +380,7 @@ export default function DailyChecklist() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Checklist Diário"
-        icon={<CheckCircle2 />}
-      />
+      <PageHeader title="Checklist Diário" icon={<CheckCircle2 />} />
 
       <div className="flex items-center gap-4">
         <div className="flex items-end gap-2">
@@ -396,9 +398,9 @@ export default function DailyChecklist() {
             size="icon"
             onClick={handleSync}
             disabled={isSyncing || isLoading}
-            title="Sincronizar tarefas com dados atuais"
+            aria-label="Sincronizar tarefas com dados atuais"
           >
-            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
           </Button>
           <Dialog open={isReflectionOpen} onOpenChange={setIsReflectionOpen}>
             <DialogTrigger asChild>
@@ -406,11 +408,11 @@ export default function DailyChecklist() {
                 variant="outline"
                 size="icon"
                 className="relative"
-                title="Adicionar reflexão do dia"
+                aria-label="Adicionar reflexão do dia"
               >
-                <StickyNote className="h-4 w-4" />
+                <StickyNote className="h-4 w-4" aria-hidden="true" />
                 {(reflection.trim() || mood) && (
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary" />
                 )}
               </Button>
             </DialogTrigger>
@@ -447,7 +449,7 @@ export default function DailyChecklist() {
                     rows={6}
                   />
                   {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="text-sm text-destructive mt-1">
+                    <p className="mt-1 text-sm text-destructive">
                       A reflexão deve ter no mínimo 10 caracteres
                     </p>
                   )}
@@ -465,7 +467,7 @@ export default function DailyChecklist() {
         <div className="text-lg font-semibold">
           {completedTasks} de {cards.length} itens concluídos
           {summary.completion_rate > 0 && (
-            <span className="text-sm ml-2">
+            <span className="ml-2 text-sm">
               ({summary.completion_rate.toFixed(0)}%)
             </span>
           )}
@@ -488,21 +490,9 @@ export default function DailyChecklist() {
           onDragEnd={handleDragEnd}
         >
           <div className="grid grid-cols-3 gap-6">
-            <KanbanColumn
-              status="todo"
-              title="A Fazer"
-              cards={cardsByStatus.todo}
-            />
-            <KanbanColumn
-              status="doing"
-              title="Fazendo"
-              cards={cardsByStatus.doing}
-            />
-            <KanbanColumn
-              status="done"
-              title="Concluído"
-              cards={cardsByStatus.done}
-            />
+            <KanbanColumn status="todo" title="A Fazer" cards={cardsByStatus.todo} />
+            <KanbanColumn status="doing" title="Fazendo" cards={cardsByStatus.doing} />
+            <KanbanColumn status="done" title="Concluído" cards={cardsByStatus.done} />
           </div>
 
           <DragOverlay>

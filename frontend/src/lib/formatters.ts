@@ -43,12 +43,15 @@ export const formatCurrency = (value: string | number): string => {
  * formatDate("2025-12-30") // "30/12/2025"
  * formatDate("2025-12-30", "dd/MM/yy") // "30/12/25"
  */
-export const formatDate = (date: string | Date, formatStr: string = 'dd/MM/yyyy'): string => {
+export const formatDate = (
+  date: string | Date,
+  formatStr: string = 'dd/MM/yyyy'
+): string => {
   try {
     const dateObj = typeof date === 'string' ? parseLocalDate(date) : date;
     if (!dateObj) return 'Data inválida';
     return format(dateObj, formatStr);
-  } catch (error) {
+  } catch {
     return 'Data inválida';
   }
 };
@@ -75,7 +78,7 @@ export const formatDateTime = (date: string, time?: string): string => {
     }
 
     return format(dateObj, 'dd/MM/yyyy HH:mm');
-  } catch (error) {
+  } catch {
     return 'Data inválida';
   }
 };

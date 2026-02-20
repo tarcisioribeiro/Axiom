@@ -10,7 +10,7 @@ export const FixedExpenseStats = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadStats();
+    void loadStats();
   }, []);
 
   const loadStats = async () => {
@@ -30,23 +30,23 @@ export const FixedExpenseStats = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title="Modelos Ativos"
         value={stats.active_templates}
-        icon={<Calendar className="w-5 h-5" />}
+        icon={<Calendar className="h-5 w-5" />}
         variant="default"
       />
       <StatCard
         title="Total do Mês"
         value={formatCurrency(stats.current_month.total_value)}
-        icon={<DollarSign className="w-5 h-5" />}
+        icon={<DollarSign className="h-5 w-5" />}
         variant="danger"
       />
       <StatCard
         title="Pagas / Pendentes"
         value={`${stats.current_month.paid_count} / ${stats.current_month.pending_count}`}
-        icon={<TrendingDown className="w-5 h-5" />}
+        icon={<TrendingDown className="h-5 w-5" />}
         variant={stats.current_month.pending_count > 0 ? 'warning' : 'success'}
       />
       <StatCard
@@ -54,9 +54,9 @@ export const FixedExpenseStats = () => {
         value={formatCurrency(Math.abs(stats.comparison.difference))}
         icon={
           stats.comparison.difference >= 0 ? (
-            <TrendingUp className="w-5 h-5" />
+            <TrendingUp className="h-5 w-5" />
           ) : (
-            <TrendingDown className="w-5 h-5" />
+            <TrendingDown className="h-5 w-5" />
           )
         }
         variant={stats.comparison.difference >= 0 ? 'danger' : 'success'}

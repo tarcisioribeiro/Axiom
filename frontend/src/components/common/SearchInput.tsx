@@ -24,7 +24,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 }) => {
   return (
     <div className={cn('relative flex-1', className)}>
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
       <Input
         type="text"
         placeholder={placeholder}

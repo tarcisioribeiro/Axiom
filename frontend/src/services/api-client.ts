@@ -1,10 +1,14 @@
-import axios, { type AxiosInstance, AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  type AxiosInstance,
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 import Cookies from 'js-cookie';
 import { API_CONFIG } from '@/config/constants';
 
-// ============================================================================ 
+// ============================================================================
 // Types
-// ============================================================================ 
+// ============================================================================
 
 /**
  * Formato de resposta de erro do Django REST Framework.
@@ -153,7 +157,11 @@ class ApiClient {
     // Não precisamos adicionar Authorization header manualmente
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        console.log('[ApiClient] Request to', config.url, '(tokens enviados via httpOnly cookies)');
+        console.log(
+          '[ApiClient] Request to',
+          config.url,
+          '(tokens enviados via httpOnly cookies)'
+        );
 
         // Se o data é FormData, remove o Content-Type para que o axios defina automaticamente
         // o multipart/form-data com o boundary correto
@@ -165,7 +173,7 @@ class ApiClient {
 
         return config;
       },
-      (error: unknown) => Promise.reject(error)
+      (error: unknown) => Promise.reject(error instanceof Error ? error : new Error(String(error)))
     );
 
     // Response interceptor - Handle token refresh
@@ -184,12 +192,16 @@ class ApiClient {
           API_CONFIG.ENDPOINTS.REGISTER,
         ];
 
-        const isAuthEndpoint = authEndpoints.some(endpoint =>
+        const isAuthEndpoint = authEndpoints.some((endpoint) =>
           originalRequest.url?.includes(endpoint)
         );
 
         // If error is 401 and we haven't retried yet and NOT an auth endpoint
-        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isAuthEndpoint
+        ) {
           if (this.isRefreshing) {
             // Wait for refresh to complete
             return new Promise((resolve) => {
@@ -224,7 +236,11 @@ class ApiClient {
             console.error('[ApiClient] Token refresh failed:', refreshError);
             this.clearTokens();
             // Não redireciona aqui - deixa o erro ser tratado normalmente
-            return Promise.reject(new AuthenticationError('Sua sessão expirou. Por favor, faça login novamente.'));
+            return Promise.reject(
+              new AuthenticationError(
+                'Sua sessão expirou. Por favor, faça login novamente.'
+              )
+            );
           } finally {
             this.isRefreshing = false;
           }
@@ -276,7 +292,7 @@ class ApiClient {
       return new Error('Erro de rede. Por favor, verifique sua conexão.');
     }
 
-    const data = response.data as unknown;
+    const data = response.data;
 
     switch (response.status) {
       case 400: {
@@ -294,7 +310,8 @@ class ApiClient {
         );
       case 403:
         return new PermissionError(
-          this.formatErrorMessage(data) || 'Você não tem permissão para realizar esta ação'
+          this.formatErrorMessage(data) ||
+            'Você não tem permissão para realizar esta ação'
         );
       case 404:
         return new NotFoundError(
@@ -302,7 +319,8 @@ class ApiClient {
         );
       case 500:
         return new Error(
-          this.formatErrorMessage(data) || 'Erro interno do servidor. Por favor, tente novamente mais tarde.'
+          this.formatErrorMessage(data) ||
+            'Erro interno do servidor. Por favor, tente novamente mais tarde.'
         );
       default:
         return new Error(
@@ -362,7 +380,10 @@ class ApiClient {
     if (this.tokenValidationCache) {
       const age = Date.now() - this.tokenValidationCache.timestamp;
       if (age < this.CACHE_DURATION) {
-        console.log('[ApiClient] Using cached token validation:', this.tokenValidationCache.isValid);
+        console.log(
+          '[ApiClient] Using cached token validation:',
+          this.tokenValidationCache.isValid
+        );
         return this.tokenValidationCache.isValid;
       }
     }
@@ -468,7 +489,7 @@ class ApiClient {
    * @returns Promise com o Blob da resposta
    */
   async getBlob(url: string): Promise<Blob> {
-    const response = await this.client.get(url, { responseType: 'blob' });
+    const response = await this.client.get<Blob>(url, { responseType: 'blob' });
     return response.data;
   }
 }

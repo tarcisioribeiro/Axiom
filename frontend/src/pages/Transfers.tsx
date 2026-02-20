@@ -2,7 +2,13 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, ArrowLeftRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { TransferForm } from '@/components/transfers/TransferForm';
 import { ReceiptButton } from '@/components/receipts';
 import { transfersService } from '@/services/transfers-service';
@@ -31,7 +37,7 @@ export default function Transfers() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -44,7 +50,11 @@ export default function Transfers() {
       setTransfers(transfersData);
       setAccounts(accountsData);
     } catch (error: unknown) {
-      toast({ title: 'Erro ao carregar dados', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar dados',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -55,15 +65,25 @@ export default function Transfers() {
       setIsSubmitting(true);
       if (selectedTransfer) {
         await transfersService.update(selectedTransfer.id, data);
-        toast({ title: 'Transferência atualizada', description: 'A transferência foi atualizada com sucesso.' });
+        toast({
+          title: 'Transferência atualizada',
+          description: 'A transferência foi atualizada com sucesso.',
+        });
       } else {
         await transfersService.create(data);
-        toast({ title: 'Transferência criada', description: 'A transferência foi criada com sucesso.' });
+        toast({
+          title: 'Transferência criada',
+          description: 'A transferência foi criada com sucesso.',
+        });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao salvar', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +93,8 @@ export default function Transfers() {
     if (accounts.length < 2) {
       toast({
         title: 'Ação não permitida',
-        description: 'É necessário ter pelo menos duas contas cadastradas antes de criar uma transferência.',
+        description:
+          'É necessário ter pelo menos duas contas cadastradas antes de criar uma transferência.',
         variant: 'destructive',
       });
       return;
@@ -85,7 +106,8 @@ export default function Transfers() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir transferência',
-      description: 'Tem certeza que deseja excluir esta transferência? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta transferência? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -93,10 +115,17 @@ export default function Transfers() {
     if (!confirmed) return;
     try {
       await transfersService.delete(id);
-      toast({ title: 'Transferência excluída', description: 'A transferência foi excluída com sucesso.' });
-      loadData();
+      toast({
+        title: 'Transferência excluída',
+        description: 'A transferência foi excluída com sucesso.',
+      });
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao excluir', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao excluir',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -154,7 +183,7 @@ export default function Transfers() {
         icon={<ArrowLeftRight />}
         action={{
           label: 'Nova Transferência',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
@@ -173,11 +202,11 @@ export default function Transfers() {
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(transfer)}>
-              <Pencil className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(transfer)} aria-label="Editar">
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(transfer.id)}>
-              <Trash2 className="w-4 h-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(transfer.id)} aria-label="Excluir">
+              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -186,10 +215,22 @@ export default function Transfers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedTransfer ? 'Editar Transferência' : 'Nova Transferência'}</DialogTitle>
-            <DialogDescription>{selectedTransfer ? 'Atualize as informações da transferência' : 'Adicione uma nova transferência ao sistema'}</DialogDescription>
+            <DialogTitle>
+              {selectedTransfer ? 'Editar Transferência' : 'Nova Transferência'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedTransfer
+                ? 'Atualize as informações da transferência'
+                : 'Adicione uma nova transferência ao sistema'}
+            </DialogDescription>
           </DialogHeader>
-          <TransferForm transfer={selectedTransfer} accounts={accounts} onSubmit={handleSubmit} onCancel={() => setIsDialogOpen(false)} isLoading={isSubmitting} />
+          <TransferForm
+            transfer={selectedTransfer}
+            accounts={accounts}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

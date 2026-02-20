@@ -69,7 +69,7 @@ export function StoredCardForm({
           cardholder_name: card.cardholder_name,
           expiration_month: card.expiration_month,
           expiration_year: card.expiration_year,
-          flag: card.flag as any,
+          flag: card.flag as StoredCreditCardFormData['flag'],
           notes: card.notes || '',
           owner: card.owner,
           finance_card: card.finance_card || undefined,
@@ -101,13 +101,9 @@ export function StoredCardForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <Label htmlFor="name">Nome do Cartão *</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder="Ex: Cartão Pessoal"
-          />
+          <Input id="name" {...register('name')} placeholder="Ex: Cartão Pessoal" />
           {errors.name && (
-            <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -124,15 +120,13 @@ export function StoredCardForm({
             }}
           />
           {errors.card_number && (
-            <p className="text-sm text-destructive mt-1">{errors.card_number.message}</p>
-          )}
-          {!card && (
-            <p className="text-xs mt-1">
-              16 dígitos sem espaços ou hífens
+            <p className="mt-1 text-sm text-destructive">
+              {errors.card_number.message}
             </p>
           )}
+          {!card && <p className="mt-1 text-xs">16 dígitos sem espaços ou hífens</p>}
           {card && (
-            <p className="text-xs text-warning mt-1">
+            <p className="mt-1 text-xs text-warning">
               Deixe vazio para manter o número atual (criptografado)
             </p>
           )}
@@ -146,7 +140,7 @@ export function StoredCardForm({
             placeholder="Nome como está no cartão"
           />
           {errors.cardholder_name && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.cardholder_name.message}
             </p>
           )}
@@ -165,12 +159,12 @@ export function StoredCardForm({
             }}
           />
           {errors.security_code && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.security_code.message}
             </p>
           )}
           {card && (
-            <p className="text-xs text-warning mt-1">
+            <p className="mt-1 text-xs text-warning">
               Deixe vazio para manter o CVV atual
             </p>
           )}
@@ -180,7 +174,7 @@ export function StoredCardForm({
           <Label htmlFor="flag">Bandeira *</Label>
           <Select
             value={watch('flag')}
-            onValueChange={(value) => setValue('flag', value as any)}
+            onValueChange={(value) => setValue('flag', value as StoredCreditCardFormData['flag'])}
           >
             <SelectTrigger>
               <SelectValue />
@@ -194,7 +188,7 @@ export function StoredCardForm({
             </SelectContent>
           </Select>
           {errors.flag && (
-            <p className="text-sm text-destructive mt-1">{errors.flag.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.flag.message}</p>
           )}
         </div>
 
@@ -216,7 +210,7 @@ export function StoredCardForm({
             </SelectContent>
           </Select>
           {errors.expiration_month && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.expiration_month.message}
             </p>
           )}
@@ -240,7 +234,7 @@ export function StoredCardForm({
             </SelectContent>
           </Select>
           {errors.expiration_year && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.expiration_year.message}
             </p>
           )}
@@ -267,7 +261,7 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               Vincule este cartão armazenado a um cartão do módulo financeiro
             </p>
           </div>
@@ -282,12 +276,12 @@ export function StoredCardForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="text-sm text-destructive mt-1">{errors.notes.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

@@ -34,9 +34,6 @@ export function useThemeAssets(): ThemeAssets {
       attributeFilter: ['class'],
     });
 
-    // Sync initial state
-    setIsDark(document.documentElement.classList.contains('dark'));
-
     return () => observer.disconnect();
   }, []);
 

@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, Download, FileText, File, Archive as ArchiveIcon, Calendar, Tag } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  Download,
+  FileText,
+  File,
+  Archive as ArchiveIcon,
+  Calendar,
+  Tag,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,7 +69,7 @@ export default function Archives() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -99,7 +110,10 @@ export default function Archives() {
           });
           setSelectedArchive(archive);
         } else {
-          setSelectedArchive({ ...archive, text_content: data.text_content ?? undefined });
+          setSelectedArchive({
+            ...archive,
+            text_content: data.text_content ?? undefined,
+          });
         }
       } catch (error: unknown) {
         toast({
@@ -133,7 +147,7 @@ export default function Archives() {
         title: 'Arquivo excluído',
         description: 'O arquivo foi excluído com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -159,9 +173,10 @@ export default function Archives() {
       const data = await archivesService.reveal(archive.id);
 
       if (data.error) {
-        const title = data.error_type === 'decryption_failed'
-          ? 'Erro de descriptografia'
-          : 'Conteúdo indisponível';
+        const title =
+          data.error_type === 'decryption_failed'
+            ? 'Erro de descriptografia'
+            : 'Conteúdo indisponível';
         toast({
           title,
           description: data.error,
@@ -199,7 +214,7 @@ export default function Archives() {
   const handleDownload = async (archive: Archive) => {
     if (archive.archive_type === 'text') {
       // Para texto, revelar conteúdo ao invés de download
-      handleRevealContent(archive);
+      void handleRevealContent(archive);
       return;
     }
 
@@ -243,7 +258,7 @@ export default function Archives() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -258,8 +273,8 @@ export default function Archives() {
   const filteredArchives = archives.filter(
     (arc) =>
       arc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (arc.tags && arc.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (arc.file_name && arc.file_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (arc.tags?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (arc.file_name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const formatFileSize = (bytes?: number) => {
@@ -309,21 +324,21 @@ export default function Archives() {
             <Card key={arc.id}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
                       {arc.archive_type === 'text' ? (
-                        <FileText className="w-4 h-4 flex-shrink-0" />
+                        <FileText className="h-4 w-4 flex-shrink-0" />
                       ) : (
-                        <File className="w-4 h-4 flex-shrink-0" />
+                        <File className="h-4 w-4 flex-shrink-0" />
                       )}
-                      <CardTitle className="text-base truncate">{arc.title}</CardTitle>
+                      <CardTitle className="truncate text-base">{arc.title}</CardTitle>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge>{ARCHIVE_CATEGORIES[arc.category]}</Badge>
                       <Badge variant="outline">{ARCHIVE_TYPES[arc.archive_type]}</Badge>
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex flex-shrink-0 gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -334,19 +349,19 @@ export default function Archives() {
                           : handleDownload(arc)
                       }
                       disabled={isRevealing}
-                      title={arc.archive_type === 'text' ? 'Ver conteúdo' : 'Baixar arquivo'}
+                      aria-label={arc.archive_type === 'text' ? 'Ver conteúdo' : 'Baixar arquivo'}
                     >
                       {arc.archive_type === 'text' ? (
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-4 w-4" aria-hidden="true" />
                       ) : (
-                        <Download className="h-4 w-4" />
+                        <Download className="h-4 w-4" aria-hidden="true" />
                       )}
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(arc)}>
-                      <Pencil className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(arc)} aria-label="Editar">
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(arc.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(arc.id)} aria-label="Excluir">
+                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -354,20 +369,23 @@ export default function Archives() {
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="h-4 w-4" />
                     <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
                   </div>
                   <span>{formatFileSize(arc.file_size)}</span>
                 </div>
                 {arc.tags && (
                   <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 flex-shrink-0" />
+                    <Tag className="h-4 w-4 flex-shrink-0" />
                     <div className="flex flex-wrap gap-1">
-                      {arc.tags.split(',').slice(0, 3).map((tag, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {tag.trim()}
-                        </Badge>
-                      ))}
+                      {arc.tags
+                        .split(',')
+                        .slice(0, 3)
+                        .map((tag, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {tag.trim()}
+                          </Badge>
+                        ))}
                       {arc.tags.split(',').length > 3 && (
                         <Badge variant="secondary" className="text-xs">
                           +{arc.tags.split(',').length - 3}
@@ -384,7 +402,7 @@ export default function Archives() {
 
       {/* Dialog para criar/editar arquivo */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedArchive ? 'Editar' : 'Novo'} Arquivo Confidencial
@@ -407,11 +425,12 @@ export default function Archives() {
 
       {/* Dialog para visualizar conteúdo de texto */}
       <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedArchive?.title}</DialogTitle>
             <DialogDescription>
-              Conteúdo descriptografado - {ARCHIVE_CATEGORIES[selectedArchive?.category || 'other']}
+              Conteúdo descriptografado -{' '}
+              {ARCHIVE_CATEGORIES[selectedArchive?.category || 'other']}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -425,7 +444,7 @@ export default function Archives() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  navigator.clipboard.writeText(revealedContent);
+                  void navigator.clipboard.writeText(revealedContent);
                   toast({
                     title: 'Copiado!',
                     description: 'Conteúdo copiado para a área de transferência.',

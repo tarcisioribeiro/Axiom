@@ -73,12 +73,15 @@ export function FormField({
   const describedByParts: string[] = [];
   if (error) describedByParts.push(errorId);
   if (description) describedByParts.push(descriptionId);
-  const ariaDescribedBy = describedByParts.length > 0 ? describedByParts.join(' ') : undefined;
+  const ariaDescribedBy =
+    describedByParts.length > 0 ? describedByParts.join(' ') : undefined;
 
   // Classes de validação para o input
   const validationClasses = cn({
-    'ring-2 ring-destructive/50 border-destructive focus-visible:ring-destructive': computedState === 'invalid',
-    'ring-2 ring-success/50 border-success focus-visible:ring-success': computedState === 'valid',
+    'ring-2 ring-destructive/50 border-destructive focus-visible:ring-destructive':
+      computedState === 'invalid',
+    'ring-2 ring-success/50 border-success focus-visible:ring-success':
+      computedState === 'valid',
   });
 
   // Clona o children (input) adicionando props de acessibilidade e classes
@@ -97,16 +100,15 @@ export function FormField({
     switch (computedState) {
       case 'validating':
         return (
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" aria-hidden="true" />
+          <Loader2
+            className="h-4 w-4 animate-spin text-muted-foreground"
+            aria-hidden="true"
+          />
         );
       case 'valid':
-        return (
-          <Check className="w-4 h-4 text-success" aria-hidden="true" />
-        );
+        return <Check className="h-4 w-4 text-success" aria-hidden="true" />;
       case 'invalid':
-        return (
-          <X className="w-4 h-4 text-destructive" aria-hidden="true" />
-        );
+        return <X className="h-4 w-4 text-destructive" aria-hidden="true" />;
       default:
         return null;
     }
@@ -117,7 +119,11 @@ export function FormField({
       <div className="flex items-center justify-between">
         <Label htmlFor={id}>
           {label}
-          {required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
+          {required && (
+            <span className="ml-1 text-destructive" aria-hidden="true">
+              *
+            </span>
+          )}
         </Label>
         {renderValidationIcon()}
       </div>
@@ -133,7 +139,7 @@ export function FormField({
       {error && (
         <p
           id={errorId}
-          className="text-sm text-destructive animate-in slide-in-from-top-1 duration-200"
+          className="animate-in slide-in-from-top-1 text-sm text-destructive duration-200"
           role="alert"
           aria-live="polite"
         >

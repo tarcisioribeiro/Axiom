@@ -1,8 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { KanbanCard } from './KanbanCard';
 import type { TaskCard, KanbanStatus } from '@/types';
 
@@ -36,18 +33,22 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
   };
 
   return (
-    <div className="flex flex-col max-h-[calc(100vh-14rem)]">
+    <div className="flex max-h-[calc(100vh-14rem)] flex-col">
       {/* Column Header */}
-      <div className={`${getHeaderColor()} text-white px-4 py-3 rounded-t-lg flex-shrink-0`}>
-        <h3 className="font-semibold text-lg">{title}</h3>
-        <p className="text-sm opacity-90">{cards.length} {cards.length === 1 ? 'tarefa' : 'tarefas'}</p>
+      <div
+        className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-4 py-3 text-white`}
+      >
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <p className="text-sm opacity-90">
+          {cards.length} {cards.length === 1 ? 'tarefa' : 'tarefas'}
+        </p>
       </div>
 
       {/* Column Body */}
       <div
         ref={setNodeRef}
-        className={`flex-1 ${getColorClasses()} border-2 rounded-b-lg p-4 min-h-[200px] transition-colors overflow-y-auto kanban-scrollbar ${
-          isOver ? 'border-dashed border-4 border-info bg-info/20' : ''
+        className={`flex-1 ${getColorClasses()} kanban-scrollbar min-h-[200px] overflow-y-auto rounded-b-lg border-2 p-4 transition-colors ${
+          isOver ? 'border-4 border-dashed border-info bg-info/20' : ''
         }`}
       >
         <SortableContext
@@ -56,7 +57,7 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
         >
           <div className="space-y-3">
             {cards.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <p className="text-sm">Nenhuma tarefa</p>
               </div>
             ) : (

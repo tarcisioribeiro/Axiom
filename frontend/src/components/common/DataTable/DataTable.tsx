@@ -95,7 +95,7 @@ export function DataTable<T>({
       return <EmptyState {...emptyState} />;
     }
     return (
-      <div className="bg-card border rounded-xl p-12 text-center">
+      <div className="rounded-lg border bg-card p-12 text-center">
         <p>Nenhum registro encontrado.</p>
       </div>
     );
@@ -123,14 +123,15 @@ export function DataTable<T>({
 
   return (
     <div className="space-y-4">
-      <div className="bg-card border rounded-xl overflow-hidden">
-        <div className="overflow-x-auto custom-scrollbar">
+      <div className="overflow-hidden rounded-lg border bg-card">
+        <div className="custom-scrollbar overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50 border-b">
+            <thead className="border-b bg-muted/50">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key}
+                    scope="col"
                     className={`px-6 py-4 ${getAlignClass(column.align)} text-sm font-semibold ${
                       column.className || ''
                     }`}
@@ -139,13 +140,18 @@ export function DataTable<T>({
                   </th>
                 ))}
                 {actions && (
-                  <th className="px-6 py-4 text-right text-sm font-semibold">Ações</th>
+                  <th scope="col" className="px-6 py-4 text-right text-sm font-semibold">
+                    Ações
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody className="divide-y">
               {data.map((item) => (
-                <tr key={keyExtractor(item)} className="hover:bg-muted/30 transition-colors">
+                <tr
+                  key={keyExtractor(item)}
+                  className="transition-colors hover:bg-muted/30"
+                >
                   {columns.map((column) => (
                     <td
                       key={column.key}
@@ -168,12 +174,10 @@ export function DataTable<T>({
       {pagination && (
         <div className="flex items-center justify-between">
           <p className="text-sm">
-            Mostrando {Math.min(pagination.pageSize, pagination.total)} de {pagination.total}{' '}
-            registros
+            Mostrando {Math.min(pagination.pageSize, pagination.total)} de{' '}
+            {pagination.total} registros
           </p>
-          <div className="flex gap-2">
-            {/* Pagination controls aqui */}
-          </div>
+          <div className="flex gap-2">{/* Pagination controls aqui */}</div>
         </div>
       )}
     </div>

@@ -3,11 +3,21 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { translate, TRANSLATIONS } from '@/config/constants';
 import { formatDate, formatCurrency } from '@/lib/formatters';
-import type { CreditCardInstallment, CreditCardInstallmentUpdateData, CreditCardBill } from '@/types';
+import type {
+  CreditCardInstallment,
+  CreditCardInstallmentUpdateData,
+  CreditCardBill,
+} from '@/types';
 
 interface CreditCardInstallmentFormProps {
   installment: CreditCardInstallment;
@@ -24,13 +34,14 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   onCancel,
   isLoading = false,
 }) => {
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardInstallmentUpdateData>({
-    defaultValues: {
-      value: installment.value,
-      payed: installment.payed,
-      bill: installment.bill,
-    },
-  });
+  const { register, handleSubmit, setValue, watch } =
+    useForm<CreditCardInstallmentUpdateData>({
+      defaultValues: {
+        value: installment.value,
+        payed: installment.payed,
+        bill: installment.bill,
+      },
+    });
 
   useEffect(() => {
     setValue('value', installment.value);
@@ -39,7 +50,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   }, [installment, setValue]);
 
   // Filtrar faturas do mesmo cartão
-  const availableBills = bills.filter(b => b.credit_card === installment.card_id);
+  const availableBills = bills.filter((b) => b.credit_card === installment.card_id);
 
   const handleFormSubmit = (data: CreditCardInstallmentUpdateData) => {
     onSubmit(data);
@@ -48,7 +59,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       {/* Informações da parcela (somente leitura) */}
-      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+      <div className="space-y-2 rounded-lg bg-muted/50 p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Compra</span>
           <span className="font-semibold">{installment.description}</span>
@@ -73,11 +84,15 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Vencimento</span>
-          <span className="text-sm">{formatDate(installment.due_date, 'dd/MM/yyyy')}</span>
+          <span className="text-sm">
+            {formatDate(installment.due_date, 'dd/MM/yyyy')}
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Data da Compra</span>
-          <span className="text-sm">{formatDate(installment.purchase_date || '', 'dd/MM/yyyy')}</span>
+          <span className="text-sm">
+            {formatDate(installment.purchase_date || '', 'dd/MM/yyyy')}
+          </span>
         </div>
       </div>
 
@@ -129,7 +144,8 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
               <SelectItem value="none">Nenhuma</SelectItem>
               {availableBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
-                  {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/{b.year}
+                  {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
+                  {b.year}
                 </SelectItem>
               ))}
             </SelectContent>

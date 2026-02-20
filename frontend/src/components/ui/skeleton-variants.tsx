@@ -79,8 +79,8 @@ export function SkeletonTable({
  */
 export function SkeletonListItem({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-4 p-4 border-b', className)}>
-      <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+    <div className={cn('flex items-center gap-4 border-b p-4', className)}>
+      <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
@@ -123,7 +123,7 @@ export function SkeletonStat({ className }: { className?: string }) {
           </div>
           <Skeleton className="h-12 w-12 rounded-full" />
         </div>
-        <Skeleton className="h-3 w-20 mt-4" />
+        <Skeleton className="mt-4 h-3 w-20" />
       </CardContent>
     </Card>
   );

@@ -1,4 +1,5 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type {
   CreditCardInstallment,
@@ -13,7 +14,15 @@ interface InstallmentFilters {
   payed?: boolean;
 }
 
-class CreditCardInstallmentsService {
+class CreditCardInstallmentsService extends BaseService<
+  CreditCardInstallment,
+  Partial<CreditCardInstallment>,
+  CreditCardInstallmentUpdateData
+> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.CREDIT_CARD_INSTALLMENTS);
+  }
+
   /**
    * Busca todas as parcelas, lidando com paginação automaticamente.
    * Busca todas as páginas e concatena os resultados.
@@ -25,13 +34,11 @@ class CreditCardInstallmentsService {
 
     while (hasMore) {
       const response = await apiClient.get<PaginatedResponse<CreditCardInstallment>>(
-        API_CONFIG.ENDPOINTS.CREDIT_CARD_INSTALLMENTS,
-        { ...params, page } as Record<string, any>
+        this.endpoint,
+        { ...params, page } as Record<string, unknown>
       );
 
       allResults.push(...response.results);
-
-      // Verifica se há mais páginas
       hasMore = response.next !== null;
       page++;
     }
@@ -43,10 +50,7 @@ class CreditCardInstallmentsService {
     id: number,
     data: CreditCardInstallmentUpdateData
   ): Promise<CreditCardInstallment> {
-    return apiClient.patch<CreditCardInstallment>(
-      `${API_CONFIG.ENDPOINTS.CREDIT_CARD_INSTALLMENTS}${id}/`,
-      data
-    );
+    return apiClient.patch<CreditCardInstallment>(`${this.endpoint}${id}/`, data);
   }
 
   async getByCard(cardId: number): Promise<CreditCardInstallment[]> {

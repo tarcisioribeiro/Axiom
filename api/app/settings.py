@@ -3,6 +3,8 @@ import sys
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 
 load_dotenv()
@@ -26,6 +28,7 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
+    'django_prometheus',
     'django_admin_dracula',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -65,6 +68,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'app.middleware.DecryptionCacheMiddleware',  # Limpa cache de decriptacao por request
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -77,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'app.middleware.SecurityHeadersMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'app.urls'
@@ -346,6 +351,18 @@ CORS_ALLOW_CREDENTIALS = True
 # NUNCA use DEBUG=True em producao
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+
+# Production security settings
+# These default to False (dev-safe) and must be explicitly enabled via env vars.
+# SECURE_SSL_REDIRECT: redirect all HTTP requests to HTTPS.
+# Note: if SSL termination happens at a reverse proxy/ingress, keep this False
+# and use SECURE_PROXY_SSL_HEADER instead to avoid redirect loops.
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False') == 'True'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'False') == 'True'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'False') == 'True'
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -365,3 +382,16 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Sentry Error Tracking
+SENTRY_DSN = os.getenv('SENTRY_DSN', '')
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=os.getenv('SENTRY_ENVIRONMENT', 'production'),
+        traces_sample_rate=0.1,
+        profiles_sample_rate=0.1,
+        send_default_pii=False,
+    )

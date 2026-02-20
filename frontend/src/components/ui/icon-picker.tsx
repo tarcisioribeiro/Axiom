@@ -76,6 +76,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from './scroll-area';
 
 // Map of icon names to icon components
+// eslint-disable-next-line react-refresh/only-export-components
 export const TASK_ICONS: Record<string, LucideIcon> = {
   // Health & Wellness
   Heart: Heart,
@@ -180,6 +181,7 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
 };
 
 // Get icon component by name
+// eslint-disable-next-line react-refresh/only-export-components
 export function getIconByName(name: string | null | undefined): LucideIcon | null {
   if (!name) return null;
   return TASK_ICONS[name] || null;
@@ -187,23 +189,23 @@ export function getIconByName(name: string | null | undefined): LucideIcon | nul
 
 // Group icons by category for better organization
 const ICON_CATEGORIES = {
-  'Saude': ['Heart', 'Pill', 'Stethoscope', 'Activity'],
-  'Exercicio': ['Dumbbell', 'PersonStanding', 'Bike', 'Mountain'],
-  'Nutricao': ['Utensils', 'Apple', 'Coffee', 'Droplets'],
+  Saude: ['Heart', 'Pill', 'Stethoscope', 'Activity'],
+  Exercicio: ['Dumbbell', 'PersonStanding', 'Bike', 'Mountain'],
+  Nutricao: ['Utensils', 'Apple', 'Coffee', 'Droplets'],
   'Mental/Espiritual': ['Brain', 'Sparkles', 'Sun', 'Moon', 'Leaf', 'Wind', 'Flower2'],
-  'Estudos': ['BookOpen', 'GraduationCap', 'Languages', 'Code', 'Laptop'],
-  'Criatividade': ['Pen', 'Palette', 'Camera', 'Music', 'Film'],
-  'Trabalho': ['Briefcase', 'Target', 'TrendingUp', 'ListTodo'],
-  'Lazer': ['Gamepad2', 'Headphones', 'Tv', 'Video', 'Mic'],
-  'Social': ['Users', 'MessageCircle', 'Baby'],
-  'Financas': ['Wallet', 'CreditCard', 'PiggyBank', 'ShoppingCart'],
-  'Casa': ['Home', 'Trash2', 'Recycle', 'Trees'],
-  'Pessoal': ['Star', 'CheckCircle', 'Zap', 'Flame'],
-  'Tempo': ['Timer', 'AlarmClock', 'CalendarDays'],
-  'Viagem': ['Car', 'Plane', 'Ship', 'Globe'],
-  'Tech': ['Smartphone'],
-  'Pets': ['Dog', 'Cat', 'Bird', 'Fish', 'Bug'],
-  'Outros': ['MoreHorizontal'],
+  Estudos: ['BookOpen', 'GraduationCap', 'Languages', 'Code', 'Laptop'],
+  Criatividade: ['Pen', 'Palette', 'Camera', 'Music', 'Film'],
+  Trabalho: ['Briefcase', 'Target', 'TrendingUp', 'ListTodo'],
+  Lazer: ['Gamepad2', 'Headphones', 'Tv', 'Video', 'Mic'],
+  Social: ['Users', 'MessageCircle', 'Baby'],
+  Financas: ['Wallet', 'CreditCard', 'PiggyBank', 'ShoppingCart'],
+  Casa: ['Home', 'Trash2', 'Recycle', 'Trees'],
+  Pessoal: ['Star', 'CheckCircle', 'Zap', 'Flame'],
+  Tempo: ['Timer', 'AlarmClock', 'CalendarDays'],
+  Viagem: ['Car', 'Plane', 'Ship', 'Globe'],
+  Tech: ['Smartphone'],
+  Pets: ['Dog', 'Cat', 'Bird', 'Fish', 'Bug'],
+  Outros: ['MoreHorizontal'],
 };
 
 interface IconPickerProps {
@@ -221,9 +223,10 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
   // Filter icons by search
   const filteredCategories = Object.entries(ICON_CATEGORIES).reduce(
     (acc, [category, icons]) => {
-      const filteredIcons = icons.filter((iconName) =>
-        iconName.toLowerCase().includes(search.toLowerCase()) ||
-        category.toLowerCase().includes(search.toLowerCase())
+      const filteredIcons = icons.filter(
+        (iconName) =>
+          iconName.toLowerCase().includes(search.toLowerCase()) ||
+          category.toLowerCase().includes(search.toLowerCase())
       );
       if (filteredIcons.length > 0) {
         acc[category] = filteredIcons;
@@ -253,7 +256,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
-        <div className="p-2 border-b">
+        <div className="border-b p-2">
           <Input
             placeholder="Buscar icone..."
             value={search}
@@ -267,7 +270,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start mb-2 text-muted-foreground"
+              className="mb-2 w-full justify-start text-muted-foreground"
               onClick={() => {
                 onChange(null);
                 setOpen(false);
@@ -279,7 +282,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
 
             {Object.entries(filteredCategories).map(([category, icons]) => (
               <div key={category} className="mb-3">
-                <div className="text-xs font-medium text-muted-foreground mb-1 px-2">
+                <div className="mb-1 px-2 text-xs font-medium text-muted-foreground">
                   {category}
                 </div>
                 <div className="grid grid-cols-4 gap-1">
@@ -306,7 +309,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             ))}
 
             {Object.keys(filteredCategories).length === 0 && (
-              <div className="text-center text-muted-foreground py-4 text-sm">
+              <div className="py-4 text-center text-sm text-muted-foreground">
                 Nenhum icone encontrado
               </div>
             )}

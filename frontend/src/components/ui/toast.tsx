@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +23,7 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-toast-slide-in-right data-[state=closed]:animate-toast-slide-out-right backdrop-blur-sm',
+  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-lg border p-4 pr-8 shadow-lg backdrop-blur-sm',
   {
     variants: {
       variant: {
@@ -33,8 +34,7 @@ const toastVariants = cva(
           'group border-success/50 bg-success/90 text-success-foreground shadow-strong',
         warning:
           'group border-warning/50 bg-warning/90 text-warning-foreground shadow-strong',
-        info:
-          'group border-info/50 bg-info/90 text-info-foreground shadow-strong',
+        info: 'group border-info/50 bg-info/90 text-info-foreground shadow-strong',
       },
     },
     defaultVariants: {
@@ -47,13 +47,36 @@ const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
     VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => {
+>(({ className, variant, children, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(
+        'pointer-events-auto',
+        'data-[swipe=cancel]:translate-x-0 data-[swipe=cancel]:transition-[transform]',
+        'data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]',
+        'data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]',
+        'data-[swipe=move]:transition-none'
+      )}
       {...props}
-    />
+    >
+      <motion.div
+        className={cn(toastVariants({ variant }), className)}
+        initial={{ opacity: 0, x: '100%' }}
+        animate={{
+          opacity: 1,
+          x: 0,
+          transition: { duration: 0.3, ease: [0.21, 1.02, 0.73, 1] },
+        }}
+        exit={{
+          opacity: 0,
+          x: '100%',
+          transition: { duration: 0.2, ease: [0.06, 0.71, 0.55, 1] },
+        }}
+      >
+        {children}
+      </motion.div>
+    </ToastPrimitives.Root>
   );
 });
 Toast.displayName = ToastPrimitives.Root.displayName;

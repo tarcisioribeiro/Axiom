@@ -10,7 +10,9 @@ export const appService = {
    * This ensures frontend and backend use the same date reference.
    */
   getCurrentDate: async (): Promise<string> => {
-    const response = await apiClient.get<CurrentDateResponse>('/api/v1/app/current-date/');
+    const response = await apiClient.get<CurrentDateResponse>(
+      '/api/v1/app/current-date/'
+    );
     return response.date;
   },
 };

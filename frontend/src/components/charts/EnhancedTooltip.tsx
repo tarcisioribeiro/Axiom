@@ -19,14 +19,10 @@ export const EnhancedTooltip = ({
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div
-      className="bg-popover/95 backdrop-blur-md border border-border
-                 rounded-xl shadow-lg p-3 min-w-[140px] max-w-[280px]
-                 animate-in fade-in-0 zoom-in-95 duration-150"
-    >
+    <div className="animate-in fade-in-0 zoom-in-95 min-w-[140px] max-w-[280px] rounded-lg border border-border bg-popover/95 p-3 shadow-lg backdrop-blur-md duration-150">
       {/* Label/Título */}
       {label && (
-        <p className="text-xs font-medium mb-2 pb-2 border-b border-border/50">
+        <p className="mb-2 border-b border-border/50 pb-2 text-xs font-medium">
           {labelFormatter ? labelFormatter(label) : label}
         </p>
       )}
@@ -39,18 +35,16 @@ export const EnhancedTooltip = ({
             className="flex items-center justify-between gap-3"
           >
             {/* Indicador de cor + Nome */}
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
               <span
-                className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-1 ring-white/20"
+                className="h-2.5 w-2.5 flex-shrink-0 rounded-full ring-1 ring-white/20"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-sm text-foreground/80 truncate">
-                {entry.name}
-              </span>
+              <span className="truncate text-sm text-foreground/80">{entry.name}</span>
             </div>
 
             {/* Valor */}
-            <span className="text-sm font-semibold text-foreground tabular-nums">
+            <span className="text-sm font-semibold tabular-nums text-foreground">
               {formatter ? formatter(entry.value) : entry.value}
             </span>
           </div>

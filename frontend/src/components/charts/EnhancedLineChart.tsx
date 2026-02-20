@@ -69,7 +69,7 @@ export const EnhancedLineChart = ({
   // Configuração de linhas memoizada
   const lineConfigs: LineConfig[] = useMemo(() => {
     if (lines) return lines;
-    if (isSingleLine) return [{ dataKey: dataKey!, stroke: colors[0] }];
+    if (isSingleLine) return [{ dataKey: dataKey, stroke: colors[0] }];
     return [];
   }, [lines, isSingleLine, dataKey, colors]);
 
@@ -95,7 +95,7 @@ export const EnhancedLineChart = ({
   const ChartComponent = withArea ? AreaChart : LineChart;
 
   // Props comuns para Line e Area
-  const getSeriesProps = (line: LineConfig, _idx: number) => ({
+  const getSeriesProps = (line: LineConfig) => ({
     type: 'monotone' as const,
     dataKey: line.dataKey,
     stroke: line.stroke,
@@ -177,8 +177,17 @@ export const EnhancedLineChart = ({
         )}
 
         <Tooltip
-          content={<EnhancedTooltip formatter={formatter} labelFormatter={tooltipLabelFormatter} />}
-          cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '4 4' }}
+          content={
+            <EnhancedTooltip
+              formatter={formatter}
+              labelFormatter={tooltipLabelFormatter}
+            />
+          }
+          cursor={{
+            stroke: 'hsl(var(--muted-foreground))',
+            strokeWidth: 1,
+            strokeDasharray: '4 4',
+          }}
         />
 
         {lineConfigs.length > 1 && (
@@ -186,7 +195,7 @@ export const EnhancedLineChart = ({
             wrapperStyle={{ paddingTop: 16 }}
             iconType="circle"
             iconSize={8}
-            formatter={(value, _entry) => {
+            formatter={(value) => {
               const lineConfig = lineConfigs.find((l) => l.dataKey === value);
               return (
                 <span className="text-sm text-foreground/80">
@@ -201,14 +210,14 @@ export const EnhancedLineChart = ({
           ? lineConfigs.map((line, idx) => (
               <Area
                 key={`area-${idx}`}
-                {...getSeriesProps(line, idx)}
+                {...getSeriesProps(line)}
                 fill={`url(#${getGradientId(idx)})`}
               />
             ))
           : lineConfigs.map((line, idx) => (
               <Line
                 key={`line-${idx}`}
-                {...getSeriesProps(line, idx)}
+                {...getSeriesProps(line)}
               />
             ))}
       </ChartComponent>

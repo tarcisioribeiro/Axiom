@@ -94,11 +94,20 @@ export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
  * } = useCrudPage(accountsService, { resourceName: 'conta' });
  * ```
  */
-export function useCrudPage<T extends { id: number }, CreateData, UpdateData = CreateData>(
+export function useCrudPage<
+  T extends { id: number },
+  CreateData,
+  UpdateData = CreateData,
+>(
   service: CrudService<T, CreateData, UpdateData>,
   options: UseCrudPageOptions<T>
 ): UseCrudPageReturn<T, CreateData, UpdateData> {
-  const { resourceName, resourceNamePlural = `${resourceName}s`, messages = {}, onSuccess } = options;
+  const {
+    resourceName,
+    resourceNamePlural = `${resourceName}s`,
+    messages = {},
+    onSuccess,
+  } = options;
 
   const [items, setItems] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,9 +121,12 @@ export function useCrudPage<T extends { id: number }, CreateData, UpdateData = C
   // Mensagens padrao
   const defaultMessages = {
     loadError: messages.loadError ?? `Erro ao carregar ${resourceNamePlural}`,
-    createSuccess: messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
-    updateSuccess: messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
-    deleteSuccess: messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
+    createSuccess:
+      messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
+    updateSuccess:
+      messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
+    deleteSuccess:
+      messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
     deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
     saveError: messages.saveError ?? `Erro ao salvar ${resourceName}`,
     deleteConfirmTitle: messages.deleteConfirmTitle ?? `Excluir ${resourceName}`,
@@ -142,7 +154,7 @@ export function useCrudPage<T extends { id: number }, CreateData, UpdateData = C
 
   // Carrega dados ao montar
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   // Abre dialog para criar

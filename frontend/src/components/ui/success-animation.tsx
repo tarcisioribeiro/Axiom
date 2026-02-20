@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import {
-  checkmarkCircleVariants,
-  pulseRingVariants,
-} from '@/lib/animations/variants';
+import { checkmarkCircleVariants, pulseRingVariants } from '@/lib/animations/variants';
+import { DURATION } from '@/lib/animations/transitions';
 
 type SuccessVariant = 'minimal' | 'standard' | 'celebration';
 
@@ -97,7 +95,7 @@ export function SuccessAnimation({
       return (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 rounded-full"
+          className="absolute h-2 w-2 rounded-full"
           style={{ backgroundColor: color }}
           initial={{ scale: 0, opacity: 1, x: 0, y: 0 }}
           animate={{
@@ -107,9 +105,9 @@ export function SuccessAnimation({
             y: Math.sin(angle) * 40,
           }}
           transition={{
-            duration: 0.6,
+            duration: DURATION.slow,
             ease: 'easeOut',
-            delay: 0.2,
+            delay: DURATION.fast,
           }}
         />
       );
@@ -166,8 +164,8 @@ export function SuccessAnimation({
               opacity: 1,
               scale: 1,
               transition: {
-                delay: variant === 'minimal' ? 0 : 0.2,
-                duration: 0.3,
+                delay: variant === 'minimal' ? 0 : DURATION.fast,
+                duration: DURATION.normal,
                 type: 'spring',
                 stiffness: 300,
                 damping: 20,
@@ -176,7 +174,11 @@ export function SuccessAnimation({
           >
             <motion.path
               d="M5 13l4 4L19 7"
-              stroke={variant === 'minimal' ? 'hsl(var(--success))' : 'hsl(var(--success-foreground))'}
+              stroke={
+                variant === 'minimal'
+                  ? 'hsl(var(--success))'
+                  : 'hsl(var(--success-foreground))'
+              }
               strokeWidth={3}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -184,7 +186,7 @@ export function SuccessAnimation({
               animate={{
                 pathLength: 1,
                 transition: {
-                  delay: variant === 'minimal' ? 0.1 : 0.3,
+                  delay: variant === 'minimal' ? 0.1 : DURATION.normal,
                   duration: 0.4,
                   ease: 'easeOut',
                 },

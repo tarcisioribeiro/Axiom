@@ -70,7 +70,7 @@ export function PublisherForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [publisher, setValue]);
 
   return (
@@ -78,13 +78,9 @@ export function PublisherForm({
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nome *</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder="Nome da editora"
-          />
+          <Input id="name" {...register('name')} placeholder="Nome da editora" />
           {errors.name && (
-            <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -106,9 +102,7 @@ export function PublisherForm({
             </SelectContent>
           </Select>
           {errors.country && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.country.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.country.message}</p>
           )}
         </div>
 
@@ -121,9 +115,7 @@ export function PublisherForm({
             placeholder="https://exemplo.com.br"
           />
           {errors.website && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.website.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.website.message}</p>
           )}
         </div>
 
@@ -135,18 +127,18 @@ export function PublisherForm({
             min="1000"
             max={new Date().getFullYear()}
             {...register('founded_year', {
-              setValueAs: (value) => (value === '' ? undefined : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? undefined : parseInt(value)),
             })}
           />
           {errors.founded_year && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.founded_year.message}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

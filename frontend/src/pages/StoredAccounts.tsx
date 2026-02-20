@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, Copy, Building2, Wallet } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Copy,
+  Building2,
+  Wallet,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,7 +30,12 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { translate } from '@/config/constants';
-import type { StoredBankAccount, StoredBankAccountFormData, Account, Member } from '@/types';
+import type {
+  StoredBankAccount,
+  StoredBankAccountFormData,
+  Account,
+  Member,
+} from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
 
 const ACCOUNT_TYPES: Record<string, string> = {
@@ -37,7 +52,9 @@ export default function StoredAccounts() {
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<StoredBankAccount | undefined>();
+  const [selectedAccount, setSelectedAccount] = useState<
+    StoredBankAccount | undefined
+  >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [revealedData, setRevealedData] = useState<
     Map<number, { password?: string; password2?: string }>
@@ -48,7 +65,7 @@ export default function StoredAccounts() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -101,7 +118,7 @@ export default function StoredAccounts() {
         title: 'Conta excluída',
         description: 'A conta foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -166,8 +183,8 @@ export default function StoredAccounts() {
       if (selectedAccount) {
         // Remove campos vazios (não atualizar dados sensíveis vazios)
         const updateData = { ...data };
-        if (!updateData.password) delete (updateData as any).password;
-        if (!updateData.digital_password) delete (updateData as any).digital_password;
+        if (!updateData.password) delete updateData.password;
+        if (!updateData.digital_password) delete updateData.digital_password;
 
         await storedAccountsService.update(selectedAccount.id, updateData);
         toast({
@@ -182,7 +199,7 @@ export default function StoredAccounts() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -198,7 +215,7 @@ export default function StoredAccounts() {
     (acc) =>
       acc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       acc.institution_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (acc.account_number_masked && acc.account_number_masked.includes(searchTerm))
+      acc.account_number_masked?.includes(searchTerm)
   );
 
   const getFinanceAccountName = (id?: number) => {
@@ -213,7 +230,7 @@ export default function StoredAccounts() {
       label: 'Nome',
       render: (acc) => (
         <div className="flex items-center gap-2">
-          <Building2 className="w-4 h-4" />
+          <Building2 className="h-4 w-4" />
           <span className="font-medium">{acc.name}</span>
         </div>
       ),
@@ -221,12 +238,18 @@ export default function StoredAccounts() {
     {
       key: 'institution',
       label: 'Instituição',
-      render: (acc) => <span className="text-sm">{translate('institutions', acc.institution_name)}</span>,
+      render: (acc) => (
+        <span className="text-sm">
+          {translate('institutions', acc.institution_name)}
+        </span>
+      ),
     },
     {
       key: 'type',
       label: 'Tipo',
-      render: (acc) => <Badge variant="outline">{ACCOUNT_TYPES[acc.account_type]}</Badge>,
+      render: (acc) => (
+        <Badge variant="outline">{ACCOUNT_TYPES[acc.account_type]}</Badge>
+      ),
     },
     {
       key: 'account_number',
@@ -239,9 +262,7 @@ export default function StoredAccounts() {
       key: 'agency',
       label: 'Agência',
       align: 'center',
-      render: (acc) => (
-        <span className="font-mono text-sm">{acc.agency || '-'}</span>
-      ),
+      render: (acc) => <span className="font-mono text-sm">{acc.agency || '-'}</span>,
     },
     {
       key: 'passwords',
@@ -335,28 +356,28 @@ export default function StoredAccounts() {
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : revealedData.has(acc.id) ? (
                 <>
-                  <EyeOff className="h-3 w-3 mr-1" />
+                  <EyeOff className="mr-1 h-3 w-3" />
                   Ocultar
                 </>
               ) : (
                 <>
-                  <Eye className="h-3 w-3 mr-1" />
+                  <Eye className="mr-1 h-3 w-3" />
                   Revelar
                 </>
               )}
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(acc)}>
-              <Pencil className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(acc)} aria-label="Editar">
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(acc.id)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(acc.id)} aria-label="Excluir">
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedAccount ? 'Editar' : 'Nova'} Conta Bancária

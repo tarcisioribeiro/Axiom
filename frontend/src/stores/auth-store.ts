@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Fetch member data to get full name
       try {
         const memberData = await membersService.getCurrentUserMember();
-        if (memberData && memberData.name) {
+        if (memberData?.name) {
           // Parse the member name into first_name and last_name
           const nameParts = memberData.name.trim().split(' ');
           user = {
@@ -86,7 +86,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Handle specific error cases
       if (err.name === 'PermissionError') {
-        errorMessage = 'Superusuários não podem acessar o frontend. Por favor, faça login com um usuário regular.';
+        errorMessage =
+          'Superusuários não podem acessar o frontend. Por favor, faça login com um usuário regular.';
       }
 
       set({
@@ -141,7 +142,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (isAuthenticated && user && !user.first_name) {
             try {
               const memberData = await membersService.getCurrentUserMember();
-              if (memberData && memberData.name) {
+              if (memberData?.name) {
                 const nameParts = memberData.name.trim().split(' ');
                 user = {
                   ...user,
@@ -151,7 +152,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 authService.saveUserData(user);
               }
             } catch (memberError) {
-              console.log('[AuthStore] Could not fetch member data on reload:', memberError);
+              console.log(
+                '[AuthStore] Could not fetch member data on reload:',
+                memberError
+              );
             }
           }
 
@@ -161,9 +165,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isAuthenticated,
             isInitializing: false,
           });
-        } catch (verifyError) {
+        } catch {
           // Erro ao verificar token (401, 429, etc) - trata como não autenticado
-          console.log('[AuthStore] Token verification failed - treating as not authenticated');
+          console.log(
+            '[AuthStore] Token verification failed - treating as not authenticated'
+          );
           set({
             user: null,
             permissions: [],

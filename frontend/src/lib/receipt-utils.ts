@@ -4,15 +4,8 @@
  * Functions to map financial data to receipt format and generate filenames.
  */
 
-import type {
-  ReceiptData,
-  ReceiptType,
-  ReceiptStatementItem,
-} from '@/types/receipt';
-import {
-  RECEIPT_TYPE_LABELS,
-  STATUS_LABELS,
-} from '@/types/receipt';
+import type { ReceiptData, ReceiptType, ReceiptStatementItem } from '@/types/receipt';
+import { RECEIPT_TYPE_LABELS, STATUS_LABELS } from '@/types/receipt';
 import type {
   Expense,
   Revenue,
@@ -31,10 +24,7 @@ import { autoTranslate, translate } from '@/config/constants';
 /**
  * Maps an Expense to ReceiptData
  */
-export function mapExpenseToReceipt(
-  expense: Expense,
-  memberName: string
-): ReceiptData {
+export function mapExpenseToReceipt(expense: Expense, memberName: string): ReceiptData {
   return {
     type: 'expense',
     typeLabel: RECEIPT_TYPE_LABELS.expense,
@@ -55,10 +45,7 @@ export function mapExpenseToReceipt(
 /**
  * Maps a Revenue to ReceiptData
  */
-export function mapRevenueToReceipt(
-  revenue: Revenue,
-  memberName: string
-): ReceiptData {
+export function mapRevenueToReceipt(revenue: Revenue, memberName: string): ReceiptData {
   return {
     type: 'revenue',
     typeLabel: RECEIPT_TYPE_LABELS.revenue,
@@ -197,7 +184,7 @@ export function mapCreditCardPurchaseToReceipt(
   purchase: CreditCardPurchase,
   memberName: string
 ): ReceiptData {
-  const paidInstallments = purchase.installments?.filter(i => i.payed).length || 0;
+  const paidInstallments = purchase.installments?.filter((i) => i.payed).length || 0;
   const isPaid = paidInstallments === purchase.total_installments;
 
   return {
@@ -223,10 +210,7 @@ export function mapCreditCardPurchaseToReceipt(
 /**
  * Maps a Loan to ReceiptData
  */
-export function mapLoanToReceipt(
-  loan: Loan,
-  memberName: string
-): ReceiptData {
+export function mapLoanToReceipt(loan: Loan, memberName: string): ReceiptData {
   return {
     type: 'loan',
     typeLabel: RECEIPT_TYPE_LABELS.loan,
@@ -249,10 +233,7 @@ export function mapLoanToReceipt(
 /**
  * Maps a Payable to ReceiptData
  */
-export function mapPayableToReceipt(
-  payable: Payable,
-  memberName: string
-): ReceiptData {
+export function mapPayableToReceipt(payable: Payable, memberName: string): ReceiptData {
   return {
     type: 'payable',
     typeLabel: RECEIPT_TYPE_LABELS.payable,
@@ -261,7 +242,8 @@ export function mapPayableToReceipt(
     date: payable.date,
     category: payable.category,
     status: payable.status,
-    statusLabel: payable.status_display || STATUS_LABELS[payable.status] || payable.status,
+    statusLabel:
+      payable.status_display || STATUS_LABELS[payable.status] || payable.status,
     memberName,
     notes: payable.notes,
     generatedAt: new Date(),
@@ -284,7 +266,9 @@ export function mapTransferToReceipt(
     time: transfer.horary,
     category: transfer.category,
     status: transfer.transfered ? 'transfered' : 'not_transfered',
-    statusLabel: transfer.transfered ? STATUS_LABELS.transfered : STATUS_LABELS.not_transfered,
+    statusLabel: transfer.transfered
+      ? STATUS_LABELS.transfered
+      : STATUS_LABELS.not_transfered,
     originAccountName: transfer.origin_account_name,
     destinyAccountName: transfer.destiny_account_name,
     memberName,
@@ -304,7 +288,8 @@ export function mapVaultDepositToReceipt(
     type: 'vault_deposit',
     typeLabel: RECEIPT_TYPE_LABELS.vault_deposit,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: transaction.description || `Deposito\u00A0em\u00A0${vault.description}`,
+    description:
+      transaction.description || `Deposito\u00A0em\u00A0${vault.description}`,
     value: parseFloat(transaction.amount),
     date: transaction.transaction_date,
     category: 'deposito',
@@ -454,7 +439,7 @@ export function getMemberDisplayName(
   user?: { first_name?: string; last_name?: string; username?: string } | null
 ): string {
   // First priority: member_name from the record
-  if (memberName && memberName.trim()) {
+  if (memberName?.trim()) {
     return memberName;
   }
 

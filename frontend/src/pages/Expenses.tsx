@@ -3,8 +3,20 @@ import { Plus, Pencil, Trash2, Filter, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -49,12 +61,20 @@ export default function Expenses() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   useEffect(() => {
     filterExpenses();
-  }, [searchTerm, categoryFilter, statusFilter, startDate, endDate, selectedAccounts, expenses]);
+  }, [
+    searchTerm,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+    expenses,
+  ]);
 
   const loadData = async () => {
     try {
@@ -71,7 +91,11 @@ export default function Expenses() {
       setLoans(Array.isArray(loansData) ? loansData : []);
       setPayables(Array.isArray(payablesData) ? payablesData : []);
     } catch (error: unknown) {
-      toast({ title: 'Erro ao carregar dados', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar dados',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -80,30 +104,32 @@ export default function Expenses() {
   const filterExpenses = () => {
     let filtered = [...expenses];
     if (searchTerm) {
-      filtered = filtered.filter(e => e.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      filtered = filtered.filter((e) =>
+        e.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     if (categoryFilter !== 'all') {
-      filtered = filtered.filter(e => e.category === categoryFilter);
+      filtered = filtered.filter((e) => e.category === categoryFilter);
     }
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(e => statusFilter === 'paid' ? e.payed : !e.payed);
+      filtered = filtered.filter((e) => (statusFilter === 'paid' ? e.payed : !e.payed));
     }
     if (startDate) {
-      filtered = filtered.filter(e => new Date(e.date) >= startDate);
+      filtered = filtered.filter((e) => new Date(e.date) >= startDate);
     }
     if (endDate) {
-      filtered = filtered.filter(e => new Date(e.date) <= endDate);
+      filtered = filtered.filter((e) => new Date(e.date) <= endDate);
     }
     if (selectedAccounts.length > 0) {
-      filtered = filtered.filter(e => selectedAccounts.includes(e.account));
+      filtered = filtered.filter((e) => selectedAccounts.includes(e.account));
     }
     setFilteredExpenses(filtered);
   };
 
   const toggleAccount = (accountId: number) => {
-    setSelectedAccounts(prev =>
+    setSelectedAccounts((prev) =>
       prev.includes(accountId)
-        ? prev.filter(id => id !== accountId)
+        ? prev.filter((id) => id !== accountId)
         : [...prev, accountId]
     );
   };
@@ -122,15 +148,25 @@ export default function Expenses() {
       setIsSubmitting(true);
       if (selectedExpense) {
         await expensesService.update(selectedExpense.id, data);
-        toast({ title: 'Despesa atualizada', description: 'A despesa foi atualizada com sucesso.' });
+        toast({
+          title: 'Despesa atualizada',
+          description: 'A despesa foi atualizada com sucesso.',
+        });
       } else {
         await expensesService.create(data);
-        toast({ title: 'Despesa criada', description: 'A despesa foi criada com sucesso.' });
+        toast({
+          title: 'Despesa criada',
+          description: 'A despesa foi criada com sucesso.',
+        });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao salvar', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -140,7 +176,8 @@ export default function Expenses() {
     if (accounts.length === 0) {
       toast({
         title: 'Ação não permitida',
-        description: 'É necessário ter pelo menos uma conta cadastrada antes de criar uma despesa.',
+        description:
+          'É necessário ter pelo menos uma conta cadastrada antes de criar uma despesa.',
         variant: 'destructive',
       });
       return;
@@ -152,7 +189,8 @@ export default function Expenses() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir despesa',
-      description: 'Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -160,10 +198,17 @@ export default function Expenses() {
     if (!confirmed) return;
     try {
       await expensesService.delete(id);
-      toast({ title: 'Despesa excluída', description: 'A despesa foi excluída com sucesso.' });
-      loadData();
+      toast({
+        title: 'Despesa excluída',
+        description: 'A despesa foi excluída com sucesso.',
+      });
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao excluir', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao excluir',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -207,7 +252,9 @@ export default function Expenses() {
       key: 'category',
       label: 'Categoria',
       render: (expense) => (
-        <Badge variant="secondary">{translate('expenseCategories', expense.category)}</Badge>
+        <Badge variant="secondary">
+          {translate('expenseCategories', expense.category)}
+        </Badge>
       ),
     },
     {
@@ -240,24 +287,29 @@ export default function Expenses() {
         icon={<TrendingDown />}
         action={{
           label: 'Nova Despesa',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
 
-      <div className="bg-card border rounded-xl p-4 space-y-4">
+      <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4" />
+            <Filter className="h-4 w-4" />
             <span className="font-semibold">Filtros</span>
           </div>
-          {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || startDate || endDate || selectedAccounts.length > 0) && (
+          {(searchTerm ||
+            categoryFilter !== 'all' ||
+            statusFilter !== 'all' ||
+            startDate ||
+            endDate ||
+            selectedAccounts.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               Limpar Filtros
             </Button>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Input
             placeholder="Buscar por descrição..."
             value={searchTerm}
@@ -287,7 +339,7 @@ export default function Expenses() {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
             <label className="text-sm">Data Inicial</label>
             <DatePicker
@@ -314,15 +366,15 @@ export default function Expenses() {
                   {selectedAccounts.length === 0
                     ? 'Todas as Contas'
                     : `${selectedAccounts.length} conta(s) selecionada(s)`}
-                  <ChevronDown className="w-4 h-4 ml-2" />
+                  <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-2">
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="max-h-60 space-y-2 overflow-y-auto">
                   {accounts.map((account) => (
                     <div
                       key={account.id}
-                      className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer"
+                      className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"
                       onClick={() => toggleAccount(account.id)}
                     >
                       <Checkbox
@@ -337,7 +389,7 @@ export default function Expenses() {
             </Popover>
           </div>
         </div>
-        <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
             {filteredExpenses.length} despesa(s) encontrada(s)
           </span>
@@ -361,11 +413,11 @@ export default function Expenses() {
               source={{ type: 'expense', data: expense }}
               memberName={getMemberDisplayName(expense.member_name, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(expense)}>
-              <Pencil className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(expense)} aria-label="Editar">
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)}>
-              <Trash2 className="w-4 h-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} aria-label="Excluir">
+              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -374,10 +426,24 @@ export default function Expenses() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedExpense ? 'Editar Despesa' : 'Nova Despesa'}</DialogTitle>
-            <DialogDescription>{selectedExpense ? 'Atualize as informações da despesa' : 'Adicione uma nova despesa ao sistema'}</DialogDescription>
+            <DialogTitle>
+              {selectedExpense ? 'Editar Despesa' : 'Nova Despesa'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedExpense
+                ? 'Atualize as informações da despesa'
+                : 'Adicione uma nova despesa ao sistema'}
+            </DialogDescription>
           </DialogHeader>
-          <ExpenseForm expense={selectedExpense} accounts={accounts} loans={loans} payables={payables} onSubmit={handleSubmit} onCancel={() => setIsDialogOpen(false)} isLoading={isSubmitting} />
+          <ExpenseForm
+            expense={selectedExpense}
+            accounts={accounts}
+            loans={loans}
+            payables={payables}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

@@ -1,5 +1,7 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { formatLocalDate } from '@/lib/utils';
+import { API_CONFIG } from '@/config/constants';
 import type {
   TaskInstance,
   TaskInstanceFormData,
@@ -10,9 +12,11 @@ import type {
   InstanceStatus,
 } from '@/types';
 
-const BASE_URL = '/api/v1/personal-planning/instances/';
+class TaskInstancesService extends BaseService<TaskInstance, TaskInstanceFormData, TaskInstanceUpdateData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.TASK_INSTANCES);
+  }
 
-class TaskInstancesService {
   /**
    * Lista todas as instâncias de tarefas.
    * Suporta filtros por date, status e template.
@@ -27,7 +31,7 @@ class TaskInstancesService {
     if (params?.status) queryParams.append('status', params.status);
     if (params?.template) queryParams.append('template', params.template.toString());
 
-    const url = queryParams.toString() ? `${BASE_URL}?${queryParams}` : BASE_URL;
+    const url = queryParams.toString() ? `${this.endpoint}?${queryParams}` : this.endpoint;
     const response = await apiClient.get<{ results: TaskInstance[] } | TaskInstance[]>(url);
 
     // Handle both paginated and non-paginated responses
@@ -35,38 +39,17 @@ class TaskInstancesService {
   }
 
   /**
-   * Obtém uma instância específica por ID.
-   */
-  async getById(id: number): Promise<TaskInstance> {
-    return apiClient.get<TaskInstance>(`${BASE_URL}${id}/`);
-  }
-
-  /**
-   * Cria uma nova tarefa avulsa (one-off task).
-   */
-  async create(data: TaskInstanceFormData): Promise<TaskInstance> {
-    return apiClient.post<TaskInstance>(BASE_URL, data);
-  }
-
-  /**
    * Atualiza uma instância existente.
    */
   async update(id: number, data: TaskInstanceUpdateData): Promise<TaskInstance> {
-    return apiClient.patch<TaskInstance>(`${BASE_URL}${id}/`, data);
+    return apiClient.patch<TaskInstance>(`${this.endpoint}${id}/`, data);
   }
 
   /**
    * Atualiza apenas o status de uma instância.
    */
   async updateStatus(id: number, status: InstanceStatus, notes?: string): Promise<TaskInstance> {
-    return apiClient.patch<TaskInstance>(`${BASE_URL}${id}/status/`, { status, notes });
-  }
-
-  /**
-   * Deleta uma instância (soft delete).
-   */
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${BASE_URL}${id}/`);
+    return apiClient.patch<TaskInstance>(`${this.endpoint}${id}/status/`, { status, notes });
   }
 
   /**
@@ -76,9 +59,12 @@ class TaskInstancesService {
    * @param date - Data no formato YYYY-MM-DD
    * @param sync - Se true, sincroniza instâncias pendentes com dados atuais do template
    */
-  async getForDate(date: string, sync: boolean = false): Promise<InstancesForDateResponse> {
+  async getForDate(
+    date: string,
+    sync: boolean = false
+  ): Promise<InstancesForDateResponse> {
     const syncParam = sync ? '&sync=true' : '';
-    return apiClient.get<InstancesForDateResponse>(`${BASE_URL}for-date/?date=${date}${syncParam}`);
+    return apiClient.get<InstancesForDateResponse>(`${this.endpoint}for-date/?date=${date}${syncParam}`);
   }
 
   /**
@@ -86,7 +72,7 @@ class TaskInstancesService {
    * Útil para salvar o estado do Kanban.
    */
   async bulkUpdate(updates: TaskInstanceBulkUpdate[]): Promise<TaskInstanceBulkUpdateResponse> {
-    return apiClient.post<TaskInstanceBulkUpdateResponse>(`${BASE_URL}bulk-update/`, { updates });
+    return apiClient.post<TaskInstanceBulkUpdateResponse>(`${this.endpoint}bulk-update/`, { updates });
   }
 
   /**

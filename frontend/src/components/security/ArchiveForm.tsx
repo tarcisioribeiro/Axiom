@@ -82,8 +82,8 @@ export function ArchiveForm({
     defaultValues: archive
       ? {
           title: archive.title,
-          category: archive.category as any,
-          archive_type: archive.archive_type as any,
+          category: archive.category as ArchiveFormData['category'],
+          archive_type: archive.archive_type as ArchiveFormData['archive_type'],
           text_content: archive.text_content || '',
           notes: archive.notes || '',
           tags: archive.tags || '',
@@ -116,9 +116,9 @@ export function ArchiveForm({
     }
 
     // Use logged-in user as owner for new archives
-    const submitData: any = {
+    const submitData: ArchiveFormData & { file?: File } = {
       ...data,
-      owner: archive ? data.owner : (user?.id || 0),
+      owner: archive ? data.owner : user?.id || 0,
       file,
     };
 
@@ -130,9 +130,16 @@ export function ArchiveForm({
 
     // Durante update de arquivo tipo texto, se text_content estiver vazio,
     // não enviar para preservar o conteúdo existente (exceto se usuário realmente quer limpar)
-    if (archive && data.archive_type === 'text' && !data.text_content && archive.archive_type === 'text') {
+    if (
+      archive &&
+      data.archive_type === 'text' &&
+      !data.text_content &&
+      archive.archive_type === 'text'
+    ) {
       // Avisar que não pode deixar vazio
-      alert('Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.');
+      alert(
+        'Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.'
+      );
       return;
     }
 
@@ -150,7 +157,7 @@ export function ArchiveForm({
             placeholder="Nome descritivo do arquivo"
           />
           {errors.title && (
-            <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -158,7 +165,7 @@ export function ArchiveForm({
           <Label htmlFor="category">Categoria *</Label>
           <Select
             value={watch('category')}
-            onValueChange={(value) => setValue('category', value as any)}
+            onValueChange={(value) => setValue('category', value as ArchiveFormData['category'])}
           >
             <SelectTrigger>
               <SelectValue />
@@ -172,7 +179,7 @@ export function ArchiveForm({
             </SelectContent>
           </Select>
           {errors.category && (
-            <p className="text-sm text-destructive mt-1">{errors.category.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
           )}
         </div>
 
@@ -180,7 +187,7 @@ export function ArchiveForm({
           <Label htmlFor="archive_type">Tipo de Arquivo *</Label>
           <Select
             value={watch('archive_type')}
-            onValueChange={(value) => setValue('archive_type', value as any)}
+            onValueChange={(value) => setValue('archive_type', value as ArchiveFormData['archive_type'])}
           >
             <SelectTrigger>
               <SelectValue />
@@ -194,7 +201,9 @@ export function ArchiveForm({
             </SelectContent>
           </Select>
           {errors.archive_type && (
-            <p className="text-sm text-destructive mt-1">{errors.archive_type.message}</p>
+            <p className="mt-1 text-sm text-destructive">
+              {errors.archive_type.message}
+            </p>
           )}
         </div>
 
@@ -209,29 +218,27 @@ export function ArchiveForm({
               className="font-mono text-sm"
             />
             {errors.text_content && (
-              <p className="text-sm text-destructive mt-1">{errors.text_content.message}</p>
+              <p className="mt-1 text-sm text-destructive">
+                {errors.text_content.message}
+              </p>
             )}
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               O texto será criptografado antes de ser armazenado
             </p>
           </div>
         ) : (
           <div className="col-span-2">
-            <Label htmlFor="file">
-              Arquivo {!archive && '*'}
-            </Label>
-            <Input
-              id="file"
-              type="file"
-              accept={FILE_TYPES_ACCEPT}
-            />
+            <Label htmlFor="file">Arquivo {!archive && '*'}</Label>
+            <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
             {archive ? (
-              <p className="text-xs text-warning mt-1">
-                Deixe vazio para manter o arquivo atual. Upload de novo arquivo substituirá o existente.
+              <p className="mt-1 text-xs text-warning">
+                Deixe vazio para manter o arquivo atual. Upload de novo arquivo
+                substituirá o existente.
               </p>
             ) : (
-              <p className="text-xs mt-1">
-                O arquivo será criptografado antes de ser armazenado. Tipos suportados: PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.
+              <p className="mt-1 text-xs">
+                O arquivo será criptografado antes de ser armazenado. Tipos suportados:
+                PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.
               </p>
             )}
           </div>
@@ -239,17 +246,11 @@ export function ArchiveForm({
 
         <div className="col-span-2">
           <Label htmlFor="tags">Tags</Label>
-          <Input
-            id="tags"
-            {...register('tags')}
-            placeholder="tag1, tag2, tag3"
-          />
+          <Input id="tags" {...register('tags')} placeholder="tag1, tag2, tag3" />
           {errors.tags && (
-            <p className="text-sm text-destructive mt-1">{errors.tags.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.tags.message}</p>
           )}
-          <p className="text-xs mt-1">
-            Separe as tags com vírgulas
-          </p>
+          <p className="mt-1 text-xs">Separe as tags com vírgulas</p>
         </div>
 
         <div className="col-span-2">
@@ -261,12 +262,12 @@ export function ArchiveForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="text-sm text-destructive mt-1">{errors.notes.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

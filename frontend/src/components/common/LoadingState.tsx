@@ -7,7 +7,11 @@
 
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { SkeletonTable, SkeletonList, SkeletonStatsGrid } from '@/components/ui/skeleton-variants';
+import {
+  SkeletonTable,
+  SkeletonList,
+  SkeletonStatsGrid,
+} from '@/components/ui/skeleton-variants';
 
 type SkeletonVariant = 'table' | 'list' | 'stats' | 'custom';
 
@@ -101,7 +105,10 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       aria-live="polite"
       aria-busy="true"
     >
-      <Loader2 className={`${iconSizes[size]} animate-spin text-primary`} aria-hidden="true" />
+      <Loader2
+        className={`${iconSizes[size]} animate-spin text-primary`}
+        aria-hidden="true"
+      />
       {message && <p className="text-sm">{message}</p>}
       <span className="sr-only">{message || 'Carregando...'}</span>
     </div>

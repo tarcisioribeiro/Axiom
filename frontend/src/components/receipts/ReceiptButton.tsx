@@ -142,7 +142,7 @@ export function ReceiptButton({
   return (
     <>
       {/* Hidden receipt template for direct export */}
-      <div className="fixed -left-[9999px] top-0 pointer-events-none">
+      <div className="pointer-events-none fixed -left-[9999px] top-0">
         <ReceiptTemplate ref={receiptRef} data={receiptData} forExport />
       </div>
 
@@ -151,7 +151,7 @@ export function ReceiptButton({
         onOpenChange={(open) => {
           setIsOpen(open);
           if (open) {
-            loadBillItems();
+            void loadBillItems();
           }
         }}
       >
@@ -163,16 +163,16 @@ export function ReceiptButton({
             title="Gerar comprovante"
           >
             {isGenerating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Receipt className="w-4 h-4" />
+              <Receipt className="h-4 w-4" />
             )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-48 p-2" align="end">
           {isLoadingItems ? (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               <span className="text-sm text-muted-foreground">Carregando...</span>
             </div>
           ) : (
@@ -183,7 +183,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={handlePreview}
               >
-                <Eye className="w-4 h-4 mr-2" />
+                <Eye className="mr-2 h-4 w-4" />
                 Visualizar
               </Button>
               <Button
@@ -192,7 +192,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('pdf')}
               >
-                <FileText className="w-4 h-4 mr-2" />
+                <FileText className="mr-2 h-4 w-4" />
                 Exportar PDF
               </Button>
               <Button
@@ -201,7 +201,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('png')}
               >
-                <Image className="w-4 h-4 mr-2" />
+                <Image className="mr-2 h-4 w-4" />
                 Exportar PNG
               </Button>
             </div>

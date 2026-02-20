@@ -39,7 +39,7 @@ import type { PaginatedResponse } from '@/types';
 export abstract class BaseService<
   T extends { id: number },
   CreateData = Partial<T>,
-  UpdateData = CreateData
+  UpdateData = Partial<CreateData>,
 > {
   protected readonly endpoint: string;
 
@@ -51,15 +51,17 @@ export abstract class BaseService<
    * Lista todos os recursos.
    * Retorna apenas os resultados da paginacao.
    */
-  async getAll(): Promise<T[]> {
-    const response = await apiClient.get<PaginatedResponse<T>>(this.endpoint);
+  async getAll(params?: Record<string, unknown>): Promise<T[]> {
+    const response = await apiClient.get<PaginatedResponse<T>>(this.endpoint, params);
     return response.results;
   }
 
   /**
    * Lista todos os recursos com dados de paginacao.
    */
-  async getAllPaginated(params?: Record<string, unknown>): Promise<PaginatedResponse<T>> {
+  async getAllPaginated(
+    params?: Record<string, unknown>
+  ): Promise<PaginatedResponse<T>> {
     return apiClient.get<PaginatedResponse<T>>(this.endpoint, params);
   }
 
@@ -113,7 +115,7 @@ export abstract class BaseService<
 export function createCrudService<
   T extends { id: number },
   CreateData = Partial<T>,
-  UpdateData = CreateData
+  UpdateData = CreateData,
 >(endpoint: string) {
   return new (class extends BaseService<T, CreateData, UpdateData> {
     constructor() {

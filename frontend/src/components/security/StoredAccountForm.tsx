@@ -65,7 +65,7 @@ export function StoredAccountForm({
       ? {
           name: account.name,
           institution_name: account.institution_name,
-          account_type: account.account_type as any,
+          account_type: account.account_type as StoredBankAccountFormData['account_type'],
           account_number: account.account_number || '',
           agency: account.agency || '',
           password: '', // Não carregar senha por segurança
@@ -93,13 +93,9 @@ export function StoredAccountForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <Label htmlFor="name">Nome *</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder="Ex: Conta Banco X"
-          />
+          <Input id="name" {...register('name')} placeholder="Ex: Conta Banco X" />
           {errors.name && (
-            <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -121,7 +117,7 @@ export function StoredAccountForm({
             </SelectContent>
           </Select>
           {errors.institution_name && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.institution_name.message}
             </p>
           )}
@@ -131,7 +127,7 @@ export function StoredAccountForm({
           <Label htmlFor="account_type">Tipo de Conta *</Label>
           <Select
             value={watch('account_type')}
-            onValueChange={(value) => setValue('account_type', value as any)}
+            onValueChange={(value) => setValue('account_type', value as StoredBankAccountFormData['account_type'])}
           >
             <SelectTrigger>
               <SelectValue />
@@ -145,7 +141,7 @@ export function StoredAccountForm({
             </SelectContent>
           </Select>
           {errors.account_type && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.account_type.message}
             </p>
           )}
@@ -159,7 +155,7 @@ export function StoredAccountForm({
             placeholder="Ex: 12345-6"
           />
           {errors.account_number && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.account_number.message}
             </p>
           )}
@@ -167,13 +163,9 @@ export function StoredAccountForm({
 
         <div>
           <Label htmlFor="agency">Agência</Label>
-          <Input
-            id="agency"
-            {...register('agency')}
-            placeholder="Ex: 1234"
-          />
+          <Input id="agency" {...register('agency')} placeholder="Ex: 1234" />
           {errors.agency && (
-            <p className="text-sm text-destructive mt-1">{errors.agency.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.agency.message}</p>
           )}
         </div>
 
@@ -184,7 +176,9 @@ export function StoredAccountForm({
               id="password"
               type={showPassword ? 'text' : 'password'}
               {...register('password')}
-              placeholder={account ? 'Deixe vazio para manter a atual' : 'Senha do app/site'}
+              placeholder={
+                account ? 'Deixe vazio para manter a atual' : 'Senha do app/site'
+              }
             />
             <Button
               type="button"
@@ -201,10 +195,10 @@ export function StoredAccountForm({
             </Button>
           </div>
           {errors.password && (
-            <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
           )}
           {account && (
-            <p className="text-xs text-warning mt-1">
+            <p className="mt-1 text-xs text-warning">
               Deixe vazio para manter a senha atual (criptografada)
             </p>
           )}
@@ -217,7 +211,9 @@ export function StoredAccountForm({
               id="digital_password"
               type={showSecondPassword ? 'text' : 'password'}
               {...register('digital_password')}
-              placeholder={account ? 'Deixe vazio para manter a atual' : 'Senha do cartão'}
+              placeholder={
+                account ? 'Deixe vazio para manter a atual' : 'Senha do cartão'
+              }
             />
             <Button
               type="button"
@@ -234,17 +230,24 @@ export function StoredAccountForm({
             </Button>
           </div>
           {errors.digital_password && (
-            <p className="text-sm text-destructive mt-1">{errors.digital_password.message}</p>
+            <p className="mt-1 text-sm text-destructive">
+              {errors.digital_password.message}
+            </p>
           )}
         </div>
 
         {financeAccounts.length > 0 && (
           <div className="col-span-2">
-            <Label htmlFor="finance_account">Conta Financeira Vinculada (Opcional)</Label>
+            <Label htmlFor="finance_account">
+              Conta Financeira Vinculada (Opcional)
+            </Label>
             <Select
               value={watch('finance_account')?.toString() || 'none'}
               onValueChange={(value) =>
-                setValue('finance_account', value === 'none' ? undefined : parseInt(value))
+                setValue(
+                  'finance_account',
+                  value === 'none' ? undefined : parseInt(value)
+                )
               }
             >
               <SelectTrigger>
@@ -259,7 +262,7 @@ export function StoredAccountForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               Vincule esta conta armazenada a uma conta do módulo financeiro
             </p>
           </div>
@@ -274,12 +277,12 @@ export function StoredAccountForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="text-sm text-destructive mt-1">{errors.notes.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

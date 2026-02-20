@@ -31,7 +31,7 @@ export default function Accounts() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -63,7 +63,8 @@ export default function Accounts() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir conta',
-      description: 'Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -77,7 +78,7 @@ export default function Accounts() {
         title: 'Conta excluída',
         description: 'A conta foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -104,7 +105,7 @@ export default function Accounts() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -127,7 +128,9 @@ export default function Accounts() {
       key: 'account_type',
       label: 'Tipo',
       render: (account) => (
-        <Badge variant="secondary">{translate('accountTypes', account.account_type)}</Badge>
+        <Badge variant="secondary">
+          {translate('accountTypes', account.account_type)}
+        </Badge>
       ),
     },
     {
@@ -149,9 +152,7 @@ export default function Accounts() {
       render: (account) => (
         <span
           className={`font-semibold ${
-            parseFloat(account.balance) >= 0
-              ? 'text-success'
-              : 'text-destructive'
+            parseFloat(account.balance) >= 0 ? 'text-success' : 'text-destructive'
           }`}
         >
           {formatCurrency(account.balance)}
@@ -174,7 +175,7 @@ export default function Accounts() {
         icon={<Wallet />}
         action={{
           label: 'Nova Conta',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
@@ -189,11 +190,11 @@ export default function Accounts() {
         }}
         actions={(account) => (
           <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(account)}>
-              <Pencil className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(account)} aria-label="Editar">
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(account.id)}>
-              <Trash2 className="w-4 h-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(account.id)} aria-label="Excluir">
+              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -204,10 +205,17 @@ export default function Accounts() {
           <DialogHeader>
             <DialogTitle>{selectedAccount ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
             <DialogDescription>
-              {selectedAccount ? 'Atualize as informações da conta bancária' : 'Adicione uma nova conta bancária ao sistema'}
+              {selectedAccount
+                ? 'Atualize as informações da conta bancária'
+                : 'Adicione uma nova conta bancária ao sistema'}
             </DialogDescription>
           </DialogHeader>
-          <AccountForm account={selectedAccount} onSubmit={handleSubmit} onCancel={() => setIsDialogOpen(false)} isLoading={isSubmitting} />
+          <AccountForm
+            account={selectedAccount}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

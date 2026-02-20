@@ -38,7 +38,7 @@ export function AuthorForm({
     watch,
     formState: { errors },
   } = useForm<AuthorFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
     resolver: zodResolver(authorSchema) as any,
     defaultValues: author
       ? {
@@ -76,7 +76,7 @@ export function AuthorForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [author, setValue]);
 
   return (
@@ -84,13 +84,9 @@ export function AuthorForm({
       <div className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">Nome *</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder="Nome completo do autor"
-          />
+          <Input id="name" {...register('name')} placeholder="Nome completo do autor" />
           {errors.name && (
-            <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -104,7 +100,7 @@ export function AuthorForm({
               placeholder="Ex: 384"
             />
             {errors.birth_year && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.birth_year.message}
               </p>
             )}
@@ -128,7 +124,7 @@ export function AuthorForm({
               </SelectContent>
             </Select>
             {errors.birth_era && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.birth_era.message}
               </p>
             )}
@@ -145,7 +141,7 @@ export function AuthorForm({
               placeholder="Ex: 322 (opcional)"
             />
             {errors.death_year && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.death_year.message}
               </p>
             )}
@@ -155,7 +151,9 @@ export function AuthorForm({
             <Label htmlFor="death_era">Era (Falecimento)</Label>
             <Select
               value={watch('death_era') || ''}
-              onValueChange={(value) => setValue('death_era', value as 'AC' | 'DC' | undefined || undefined)}
+              onValueChange={(value) =>
+                setValue('death_era', (value as 'AC' | 'DC' | undefined) || undefined)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a era (opcional)" />
@@ -169,7 +167,7 @@ export function AuthorForm({
               </SelectContent>
             </Select>
             {errors.death_era && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.death_era.message}
               </p>
             )}
@@ -194,7 +192,7 @@ export function AuthorForm({
             </SelectContent>
           </Select>
           {errors.nationality && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.nationality.message}
             </p>
           )}
@@ -209,14 +207,12 @@ export function AuthorForm({
             rows={4}
           />
           {errors.biography && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.biography.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.biography.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

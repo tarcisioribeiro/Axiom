@@ -4,9 +4,9 @@ import type { Notification, NotificationSummary } from '@/types';
 
 class NotificationsService {
   async getAll(): Promise<Notification[]> {
-    const response = await apiClient.get<
-      { results: Notification[] } | Notification[]
-    >(API_CONFIG.ENDPOINTS.NOTIFICATIONS);
+    const response = await apiClient.get<{ results: Notification[] } | Notification[]>(
+      API_CONFIG.ENDPOINTS.NOTIFICATIONS
+    );
     return Array.isArray(response) ? response : response.results;
   }
 

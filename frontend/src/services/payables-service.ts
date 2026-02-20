@@ -1,24 +1,20 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
-import type { Payable, PayableFormData, PaginatedResponse } from '@/types';
+import type { Payable, PayableFormData } from '@/types';
 
-class PayablesService {
-  async getAll(): Promise<Payable[]> {
-    const response = await apiClient.get<PaginatedResponse<Payable>>(API_CONFIG.ENDPOINTS.PAYABLES);
-    return response.results;
-  }
-
-  async getById(id: number): Promise<Payable> {
-    return apiClient.get<Payable>(`${API_CONFIG.ENDPOINTS.PAYABLES}${id}/`);
+class PayablesService extends BaseService<Payable, PayableFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.PAYABLES);
   }
 
   async getActive(): Promise<Payable[]> {
     const all = await this.getAll();
-    return all.filter(p => p.status === 'active' || p.status === 'overdue');
+    return all.filter((p) => p.status === 'active' || p.status === 'overdue');
   }
 
   async create(data: PayableFormData): Promise<Payable> {
-    return apiClient.post<Payable>(API_CONFIG.ENDPOINTS.PAYABLES, {
+    return apiClient.post<Payable>(this.endpoint, {
       description: data.description,
       value: data.value,
       paid_value: data.paid_value || 0,
@@ -44,11 +40,7 @@ class PayablesService {
     if (data.notes !== undefined) payload.notes = data.notes;
     if (data.status !== undefined) payload.status = data.status;
 
-    return apiClient.patch<Payable>(`${API_CONFIG.ENDPOINTS.PAYABLES}${id}/`, payload);
-  }
-
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.PAYABLES}${id}/`);
+    return apiClient.patch<Payable>(`${this.endpoint}${id}/`, payload);
   }
 }
 

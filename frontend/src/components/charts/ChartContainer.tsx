@@ -66,7 +66,10 @@ export const ChartContainer = ({
   xAxisTickFormatter,
   tooltipLabelFormatter,
 }: ChartContainerProps) => {
-  const { chartType: storedChartType, cycleChartType } = useChartType(chartId, defaultType);
+  const { chartType: storedChartType, cycleChartType } = useChartType(
+    chartId,
+    defaultType
+  );
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Se lockChartType estiver definido, use-o; caso contrário, use o tipo armazenado
@@ -91,11 +94,8 @@ export const ChartContainer = ({
   // Empty state
   if (!data || data.length === 0) {
     return (
-      <div
-        className="flex flex-col items-center justify-center"
-        style={{ height }}
-      >
-        <div className="h-12 w-12 mb-3 opacity-40 flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center" style={{ height }}>
+        <div className="mb-3 flex h-12 w-12 items-center justify-center opacity-40">
           <RefreshCw className="h-8 w-8" />
         </div>
         <p className="text-sm">{emptyMessage}</p>
@@ -107,12 +107,11 @@ export const ChartContainer = ({
     <div className="relative">
       {/* Botão de alternância - Oculto quando lockChartType está definido */}
       {!lockChartType && enabledTypes.length > 1 && (
-        <div className="absolute top-0 right-0 z-10 group">
+        <div className="group absolute right-0 top-0 z-10">
           <motion.button
             onClick={handleToggle}
             disabled={isAnimating}
-            className="p-2 rounded-lg bg-background/80 backdrop-blur-sm border border-border
-                       hover:bg-accent/10 transition-colors disabled:opacity-50 shadow-sm"
+            className="rounded-lg border border-border bg-background/80 p-2 shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Alternar tipo de gráfico"
@@ -126,12 +125,7 @@ export const ChartContainer = ({
           </motion.button>
 
           {/* Tooltip no hover */}
-          <div
-            className="absolute top-full right-0 mt-1 opacity-0 group-hover:opacity-100
-                       text-xs bg-popover/95 backdrop-blur-sm
-                       border border-border rounded-md px-2 py-1 shadow-md transition-opacity
-                       whitespace-nowrap pointer-events-none z-20"
-          >
+          <div className="pointer-events-none absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-border bg-popover/95 px-2 py-1 text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
             Alternar visualização
           </div>
         </div>

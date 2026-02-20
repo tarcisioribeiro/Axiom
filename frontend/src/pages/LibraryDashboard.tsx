@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Library, BookOpen, User, Building2, FileText, BookMarked, BookCheck, Clock } from 'lucide-react';
+import {
+  Library,
+  BookOpen,
+  User,
+  Building2,
+  FileText,
+  BookMarked,
+  BookCheck,
+  Clock,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { libraryDashboardService, type LibraryDashboardStats } from '@/services/library-dashboard-service';
+import {
+  libraryDashboardService,
+  type LibraryDashboardStats,
+} from '@/services/library-dashboard-service';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -17,17 +29,17 @@ export default function LibraryDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
 
     // Recarregar dados quando a aba/janela volta ao foco
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadData();
+        void loadData();
       }
     };
 
     const handleFocus = () => {
-      loadData();
+      void loadData();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -48,7 +60,7 @@ export default function LibraryDashboard() {
       toast({
         title: 'Erro ao carregar dados',
         description: getErrorMessage(error),
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -62,14 +74,11 @@ export default function LibraryDashboard() {
   }
 
   return (
-    <div className="px-4 py-8 space-y-6">
-      <PageHeader
-        title="Dashboard de Leitura"
-        icon={<Library />}
-      />
+    <div className="space-y-6 px-4 py-8">
+      <PageHeader title="Dashboard de Leitura" icon={<Library />} />
 
       {/* Métricas Principais - Grid 4 colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Livros</CardTitle>
@@ -77,7 +86,7 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_books || 0}</div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.total_books === 1 ? 'livro cadastrado' : 'livros cadastrados'}
             </p>
           </CardContent>
@@ -90,7 +99,7 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_authors || 0}</div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.total_authors === 1 ? 'autor' : 'autores'}
             </p>
           </CardContent>
@@ -103,7 +112,7 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_publishers || 0}</div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.total_publishers === 1 ? 'editora' : 'editoras'}
             </p>
           </CardContent>
@@ -116,7 +125,7 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_pages_read || 0}</div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               Média: {stats?.average_rating?.toFixed(1) || 0} ★
             </p>
           </CardContent>
@@ -124,7 +133,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Progresso de Leitura - Grid 3 colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lendo</CardTitle>
@@ -134,8 +143,10 @@ export default function LibraryDashboard() {
             <div className="text-2xl font-bold text-info">
               {stats?.books_reading || 0}
             </div>
-            <p className="text-xs mt-1">
-              {stats?.books_reading === 1 ? 'livro em andamento' : 'livros em andamento'}
+            <p className="mt-1 text-xs">
+              {stats?.books_reading === 1
+                ? 'livro em andamento'
+                : 'livros em andamento'}
             </p>
           </CardContent>
         </Card>
@@ -149,7 +160,7 @@ export default function LibraryDashboard() {
             <div className="text-2xl font-bold text-warning">
               {stats?.books_to_read || 0}
             </div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.books_to_read === 1 ? 'livro na fila' : 'livros na fila'}
             </p>
           </CardContent>
@@ -164,7 +175,7 @@ export default function LibraryDashboard() {
             <div className="text-2xl font-bold text-success">
               {stats?.books_read || 0}
             </div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.books_read === 1 ? 'livro completo' : 'livros completos'}
             </p>
           </CardContent>
@@ -172,7 +183,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Row 3: Novas Estatísticas - Grid 4 colunas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Card 1: Tempo Total de Leitura */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -180,10 +191,10 @@ export default function LibraryDashboard() {
             <Clock className="h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_reading_time_hours || 0}h</div>
-            <p className="text-xs mt-1">
-              Tempo total registrado
-            </p>
+            <div className="text-2xl font-bold">
+              {stats?.total_reading_time_hours || 0}h
+            </div>
+            <p className="mt-1 text-xs">Tempo total registrado</p>
           </CardContent>
         </Card>
 
@@ -197,9 +208,7 @@ export default function LibraryDashboard() {
             <div className="text-2xl font-bold">
               {stats?.average_pages_per_book?.toFixed(0) || 0}
             </div>
-            <p className="text-xs mt-1">
-              Páginas por livro
-            </p>
+            <p className="mt-1 text-xs">Páginas por livro</p>
           </CardContent>
         </Card>
 
@@ -212,11 +221,17 @@ export default function LibraryDashboard() {
           <CardContent>
             {stats?.most_read_author ? (
               <>
-                <div className="text-lg font-bold truncate" title={stats.most_read_author.name}>
+                <div
+                  className="truncate text-lg font-bold"
+                  title={stats.most_read_author.name}
+                >
                   {stats.most_read_author.name}
                 </div>
-                <p className="text-xs mt-1">
-                  {stats.most_read_author.books_count} {stats.most_read_author.books_count === 1 ? 'livro lido' : 'livros lidos'}
+                <p className="mt-1 text-xs">
+                  {stats.most_read_author.books_count}{' '}
+                  {stats.most_read_author.books_count === 1
+                    ? 'livro lido'
+                    : 'livros lidos'}
                 </p>
               </>
             ) : (
@@ -234,11 +249,17 @@ export default function LibraryDashboard() {
           <CardContent>
             {stats?.most_read_publisher ? (
               <>
-                <div className="text-lg font-bold truncate" title={stats.most_read_publisher.name}>
+                <div
+                  className="truncate text-lg font-bold"
+                  title={stats.most_read_publisher.name}
+                >
                   {stats.most_read_publisher.name}
                 </div>
-                <p className="text-xs mt-1">
-                  {stats.most_read_publisher.books_count} {stats.most_read_publisher.books_count === 1 ? 'livro lido' : 'livros lidos'}
+                <p className="mt-1 text-xs">
+                  {stats.most_read_publisher.books_count}{' '}
+                  {stats.most_read_publisher.books_count === 1
+                    ? 'livro lido'
+                    : 'livros lidos'}
                 </p>
               </>
             ) : (
@@ -248,7 +269,7 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Livros por Gênero */}
         <Card>
           <CardHeader>
@@ -293,7 +314,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Row 5: Timeline e Top Autores */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Gráfico: Timeline de Leituras (Line) */}
         <Card>
           <CardHeader>
@@ -314,7 +335,7 @@ export default function LibraryDashboard() {
                 try {
                   const [year, month, day] = value.split('-');
                   const date = new Date(Number(year), Number(month) - 1, Number(day));
-                  return format(date, "dd/MM/yy", { locale: ptBR });
+                  return format(date, 'dd/MM/yy', { locale: ptBR });
                 } catch {
                   return value;
                 }
@@ -323,18 +344,32 @@ export default function LibraryDashboard() {
                 try {
                   const [year, month, day] = String(label).split('-');
                   const date = new Date(Number(year), Number(month) - 1, Number(day));
-                  return format(date, "dd/MM/yyyy", { locale: ptBR });
+                  return format(date, 'dd/MM/yyyy', { locale: ptBR });
                 } catch {
                   return String(label);
                 }
               }}
               dualYAxis={{
                 left: { dataKey: 'pages_read', label: 'Páginas', color: COLORS[0] },
-                right: { dataKey: 'reading_time_hours', label: 'Horas', color: COLORS[1] }
+                right: {
+                  dataKey: 'reading_time_hours',
+                  label: 'Horas',
+                  color: COLORS[1],
+                },
               }}
               lines={[
-                { dataKey: 'pages_read', stroke: COLORS[0], yAxisId: 'left', name: 'Páginas Lidas' },
-                { dataKey: 'reading_time_hours', stroke: COLORS[1], yAxisId: 'right', name: 'Tempo (horas)' }
+                {
+                  dataKey: 'pages_read',
+                  stroke: COLORS[0],
+                  yAxisId: 'left',
+                  name: 'Páginas Lidas',
+                },
+                {
+                  dataKey: 'reading_time_hours',
+                  stroke: COLORS[1],
+                  yAxisId: 'right',
+                  name: 'Tempo (horas)',
+                },
               ]}
             />
           </CardContent>
@@ -363,7 +398,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Row 6: Ratings e Distribuições */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Gráfico: Distribuição de Ratings (Vertical Bar) */}
         <Card>
           <CardHeader>
@@ -392,10 +427,10 @@ export default function LibraryDashboard() {
             <p className="text-sm">Por idioma e tipo de mídia</p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Seção: Por Idioma */}
               <div>
-                <h4 className="text-sm font-semibold mb-3">Por Idioma</h4>
+                <h4 className="mb-3 text-sm font-semibold">Por Idioma</h4>
                 <ChartContainer
                   chartId="library-language-distribution"
                   data={stats?.books_by_language || []}
@@ -411,7 +446,7 @@ export default function LibraryDashboard() {
 
               {/* Seção: Por Tipo de Mídia */}
               <div>
-                <h4 className="text-sm font-semibold mb-3">Por Tipo de Mídia</h4>
+                <h4 className="mb-3 text-sm font-semibold">Por Tipo de Mídia</h4>
                 <ChartContainer
                   chartId="library-media-type-distribution"
                   data={stats?.books_by_media_type || []}
@@ -437,7 +472,7 @@ export default function LibraryDashboard() {
         </CardHeader>
         <CardContent>
           {!stats || stats.recent_readings.length === 0 ? (
-            <div className="h-32 flex items-center justify-center">
+            <div className="flex h-32 items-center justify-center">
               Nenhuma leitura registrada
             </div>
           ) : (
@@ -445,19 +480,22 @@ export default function LibraryDashboard() {
               {stats.recent_readings.map((reading, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className="flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
                 >
                   <div className="flex items-center gap-3">
                     <BookOpen className="h-5 w-5" />
                     <div>
-                      <p className="font-medium text-sm">{reading.book_title}</p>
+                      <p className="text-sm font-medium">{reading.book_title}</p>
                       <p className="text-xs">
-                        {reading.pages_read} {reading.pages_read === 1 ? 'página' : 'páginas'}
+                        {reading.pages_read}{' '}
+                        {reading.pages_read === 1 ? 'página' : 'páginas'}
                       </p>
                     </div>
                   </div>
                   <span className="text-xs">
-                    {format(new Date(reading.reading_date), "dd 'de' MMM", { locale: ptBR })}
+                    {format(new Date(reading.reading_date), "dd 'de' MMM", {
+                      locale: ptBR,
+                    })}
                   </span>
                 </div>
               ))}

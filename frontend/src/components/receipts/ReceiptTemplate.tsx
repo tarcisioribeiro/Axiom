@@ -263,9 +263,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       <div ref={ref} style={styles.container}>
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.headerTitle}>
-            Comprovante de {data.typeLabel}
-          </h1>
+          <h1 style={styles.headerTitle}>Comprovante de {data.typeLabel}</h1>
         </div>
 
         {/* Main Content */}
@@ -278,9 +276,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
 
           {/* Value - Prominent display */}
           <div style={styles.valueHighlight}>
-            <span style={styles.valueLarge}>
-              {formatReceiptCurrency(data.value)}
-            </span>
+            <span style={styles.valueLarge}>{formatReceiptCurrency(data.value)}</span>
           </div>
 
           {/* Date */}
@@ -364,7 +360,8 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
             <div style={styles.row}>
               <span style={styles.labelCell}>Parcelas:</span>
               <span style={styles.valueCell}>
-                {data.installments || 0}/{data.totalInstallments}x de {formatReceiptCurrency(data.installmentValue || 0)}
+                {data.installments || 0}/{data.totalInstallments}x de{' '}
+                {formatReceiptCurrency(data.installmentValue || 0)}
               </span>
             </div>
           )}
@@ -399,26 +396,31 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
             data.statementItems.length > 0 && (
               <div style={styles.statementSection}>
                 <div style={styles.statementTitle}>
-                  Extrato ({data.totalItems} {data.totalItems === 1 ? 'item' : 'itens'}):
+                  Extrato ({data.totalItems} {data.totalItems === 1 ? 'item' : 'itens'}
+                  ):
                 </div>
                 <div>
                   {data.statementItems.map((item, index) => (
                     <div key={index} style={styles.statementItem}>
                       <div style={styles.statementItemDesc}>
-                        <span style={styles.itemDescText}>
-                          {item.description}
-                        </span>
+                        <span style={styles.itemDescText}>{item.description}</span>
                         {item.totalInstallments && item.totalInstallments > 1 && (
                           <span style={styles.installmentBadge}>
                             ({item.installmentNumber}/{item.totalInstallments})
                           </span>
                         )}
-                        <span style={styles.statementCategory}>{item.categoryLabel}</span>
+                        <span style={styles.statementCategory}>
+                          {item.categoryLabel}
+                        </span>
                       </div>
-                      <div style={{
-                        ...styles.statementItemValue,
-                        ...(item.payed ? styles.itemValuePaid : styles.itemValueDefault),
-                      }}>
+                      <div
+                        style={{
+                          ...styles.statementItemValue,
+                          ...(item.payed
+                            ? styles.itemValuePaid
+                            : styles.itemValueDefault),
+                        }}
+                      >
                         {formatReceiptCurrency(item.value)}
                       </div>
                     </div>

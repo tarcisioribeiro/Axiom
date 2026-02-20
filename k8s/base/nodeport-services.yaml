@@ -1,59 +1,15 @@
-# NodePort services for external access (development)
-# These expose the API, Frontend and Database externally via NodePort
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: api-nodeport
-  namespace: mindledger
-  labels:
-    app.kubernetes.io/name: mindledger
-    app.kubernetes.io/component: api
-spec:
-  type: NodePort
-  selector:
-    app: api
-  ports:
-    - port: 8002
-      targetPort: 8002
-      nodePort: 30100
-      protocol: TCP
-      name: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-nodeport
-  namespace: mindledger
-  labels:
-    app.kubernetes.io/name: mindledger
-    app.kubernetes.io/component: frontend
-spec:
-  type: NodePort
-  selector:
-    app: frontend
-  ports:
-    - port: 80
-      targetPort: 8080
-      nodePort: 30101
-      protocol: TCP
-      name: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-nodeport
-  namespace: mindledger
-  labels:
-    app.kubernetes.io/name: mindledger
-    app.kubernetes.io/component: postgres
-spec:
-  type: NodePort
-  selector:
-    app: postgres
-  ports:
-    - port: 5432
-      targetPort: 5432
-      nodePort: 30102
-      protocol: TCP
-      name: postgres
+# NodePort services have been removed and replaced by an nginx-ingress controller.
+#
+# External traffic is now routed through the Ingress resource defined in
+# k8s/ingress.yaml, which provides:
+#   - Path-based routing  (/api → api-service, / → frontend-service)
+#   - TLS termination via cert-manager + Let's Encrypt
+#   - A single external entry-point (ports 80/443 on the ingress controller)
+#
+# The postgres-nodeport service that previously exposed PostgreSQL on
+# NodePort 30102 has been permanently removed. The database is reachable
+# only through its ClusterIP service (postgres-service:5432) inside the
+# cluster. It must never be exposed externally.
+#
+# To install the nginx-ingress controller for Kind, see the instructions
+# at the top of k8s/ingress.yaml.

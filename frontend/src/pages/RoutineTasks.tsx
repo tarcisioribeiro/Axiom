@@ -18,9 +18,9 @@ import { routineTasksService } from '@/services/routine-tasks-service';
 import { useToast } from '@/hooks/use-toast';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { getErrorMessage } from '@/utils/error-utils';
-import type { RoutineTask } from '@/types';
-import { routineTaskSchema } from '@/lib/validations';
-import { z } from 'zod';
+import type { RoutineTask, RoutineTaskFormData as RoutineTaskApiFormData } from '@/types';
+import { type routineTaskSchema } from '@/lib/validations';
+import { type z } from 'zod';
 import { PageContainer } from '@/components/common/PageContainer';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
@@ -35,7 +35,7 @@ export default function RoutineTasks() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -82,7 +82,7 @@ export default function RoutineTasks() {
         title: 'Tarefa excluída',
         description: 'A tarefa foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir tarefa',
@@ -103,20 +103,20 @@ export default function RoutineTasks() {
       };
 
       if (selectedTask) {
-        await routineTasksService.update(selectedTask.id, apiData as any);
+        await routineTasksService.update(selectedTask.id, apiData as RoutineTaskApiFormData);
         toast({
           title: 'Tarefa atualizada',
           description: 'A tarefa foi atualizada com sucesso.',
         });
       } else {
-        await routineTasksService.create(apiData as any);
+        await routineTasksService.create(apiData as RoutineTaskApiFormData);
         toast({
           title: 'Tarefa criada',
           description: 'A tarefa foi criada com sucesso.',
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -165,7 +165,9 @@ export default function RoutineTasks() {
         const TaskIcon = getIconByName(task.icon);
         return (
           <div className="flex items-center gap-2 font-medium">
-            {TaskIcon && <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />}
+            {TaskIcon && (
+              <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            )}
             <span>{task.name}</span>
           </div>
         );
@@ -187,15 +189,9 @@ export default function RoutineTasks() {
         <div className="text-sm">
           <div>{task.periodicity_display}</div>
           {task.weekday_display && (
-            <div className="text-xs">
-              {task.weekday_display}
-            </div>
+            <div className="text-xs">{task.weekday_display}</div>
           )}
-          {task.day_of_month && (
-            <div className="text-xs">
-              Dia {task.day_of_month}
-            </div>
-          )}
+          {task.day_of_month && <div className="text-xs">Dia {task.day_of_month}</div>}
         </div>
       ),
     },
@@ -237,15 +233,17 @@ export default function RoutineTasks() {
             variant="ghost"
             size="icon"
             onClick={() => handleEdit(task)}
+            aria-label="Editar"
           >
-            <Edit className="h-4 w-4" />
+            <Edit className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(task.id)}
+            aria-label="Excluir"
           >
-            <Trash2 className="h-4 w-4 text-destructive" />
+            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>
         </div>
       ),
@@ -281,11 +279,9 @@ export default function RoutineTasks() {
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedTask ? 'Editar Tarefa' : 'Nova Tarefa'}
-            </DialogTitle>
+            <DialogTitle>{selectedTask ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
             <DialogDescription>
               {selectedTask
                 ? 'Atualize as informações da tarefa rotineira.'

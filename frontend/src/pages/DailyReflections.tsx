@@ -15,10 +15,10 @@ export default function DailyReflections() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = () => {
     try {
       setIsLoading(true);
       // TODO: Implementar chamada ao service
@@ -27,7 +27,7 @@ export default function DailyReflections() {
       toast({
         title: 'Erro ao carregar reflexões',
         description: getErrorMessage(error),
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -40,9 +40,7 @@ export default function DailyReflections() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Reflexões Diárias"
-      >
+      <PageHeader title="Reflexões Diárias">
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Nova Reflexão
@@ -57,13 +55,11 @@ export default function DailyReflections() {
       ) : (
         <div className="space-y-4">
           {reflections.map((reflection) => (
-            <div key={reflection.id} className="border rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
+            <div key={reflection.id} className="rounded-lg border p-4">
+              <div className="mb-2 flex items-start justify-between">
                 <span className="font-semibold">{reflection.date}</span>
                 {reflection.mood && (
-                  <span className="text-sm capitalize">
-                    {reflection.mood}
-                  </span>
+                  <span className="text-sm capitalize">{reflection.mood}</span>
                 )}
               </div>
               <p>{reflection.reflection}</p>

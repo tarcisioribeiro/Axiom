@@ -5,19 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
 import type { TaskCard } from '@/types';
 
+function TaskIconDisplay({ icon }: { icon: string | null | undefined }) {
+  const Icon = getIconByName(icon);
+  // eslint-disable-next-line react-hooks/static-components -- Icon is a stable Lucide reference, not a dynamic component
+  return Icon ? <Icon className="h-4 w-4 shrink-0" /> : null;
+}
+
 interface KanbanCardProps {
   card: TaskCard;
 }
 
 export function KanbanCard({ card }: KanbanCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: card.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: card.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -53,7 +53,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-card p-4 rounded-lg border-2 border-border shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+      className="cursor-grab rounded-lg border-2 border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
@@ -67,10 +67,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <h4 className="font-semibold text-sm leading-tight flex items-center gap-1.5">
-                {(() => {
-                  const TaskIcon = getIconByName(card.icon);
-                  return TaskIcon ? <TaskIcon className="h-4 w-4 shrink-0" /> : null;
-                })()}
+                <TaskIconDisplay icon={card.icon} />
                 <span>
                   {card.task_name}
                   {card.total_instances > 1 && (
@@ -81,7 +78,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 </span>
               </h4>
               {card.scheduled_time && (
-                <div className="flex items-center gap-1 mt-1 text-xs">
+                <div className="mt-1 flex items-center gap-1 text-xs">
                   <Clock className="h-3 w-3" />
                   <span>{card.scheduled_time}</span>
                 </div>
@@ -94,16 +91,16 @@ export function KanbanCard({ card }: KanbanCardProps) {
 
           {/* Task Description */}
           {card.description && (
-            <p className="text-xs leading-relaxed whitespace-pre-wrap">
+            <p className="whitespace-pre-wrap text-xs leading-relaxed">
               {card.description}
             </p>
           )}
 
           {/* Daily Notes */}
           {card.notes && (
-            <div className="p-2.5 bg-warning/20 border border-warning rounded-md">
-              <p className="text-xs font-medium mb-1">Notas:</p>
-              <p className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+            <div className="rounded-md border border-warning bg-warning/20 p-2.5">
+              <p className="mb-1 text-xs font-medium">Notas:</p>
+              <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
                 {card.notes}
               </p>
             </div>

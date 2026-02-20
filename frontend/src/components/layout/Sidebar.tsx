@@ -76,82 +76,194 @@ const navItems: NavItem[] = [
   {
     title: 'Início',
     href: '/',
-    icon: <Home className="w-5 h-5" />,
+    icon: <Home className="h-5 w-5" />,
   },
   {
     title: 'Assistente IA',
     href: '/ai-assistant',
-    icon: <Bot className="w-5 h-5" />,
+    icon: <Bot className="h-5 w-5" />,
   },
 ];
 
 const navModules: NavModule[] = [
   {
     title: 'Planejamento Pessoal',
-    icon: <Calendar className="w-5 h-5" />,
+    icon: <Calendar className="h-5 w-5" />,
     items: [
-      { title: 'Dashboard', href: '/planning/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { title: 'Checklist Diário', href: '/planning/daily', icon: <CheckCircle2 className="w-4 h-4" /> },
-      { title: 'Tarefas Rotineiras', href: '/planning/routine-tasks', icon: <Calendar className="w-4 h-4" /> },
-      { title: 'Objetivos', href: '/planning/goals', icon: <Target className="w-4 h-4" /> },
+      {
+        title: 'Dashboard',
+        href: '/planning/dashboard',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+      },
+      {
+        title: 'Checklist Diário',
+        href: '/planning/daily',
+        icon: <CheckCircle2 className="h-4 w-4" />,
+      },
+      {
+        title: 'Tarefas Rotineiras',
+        href: '/planning/routine-tasks',
+        icon: <Calendar className="h-4 w-4" />,
+      },
+      {
+        title: 'Objetivos',
+        href: '/planning/goals',
+        icon: <Target className="h-4 w-4" />,
+      },
     ],
   },
   {
     title: 'Controle Financeiro',
-    icon: <Wallet className="w-5 h-5" />,
+    icon: <Wallet className="h-5 w-5" />,
     topItems: [
-      { title: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+      {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+      },
     ],
     subModules: [
       {
         title: 'Cadastros',
-        icon: <FolderOpen className="w-4 h-4" />,
+        icon: <FolderOpen className="h-4 w-4" />,
         items: [
-          { title: 'Contas', href: '/accounts', icon: <Wallet className="w-4 h-4" /> },
-          { title: 'Cartões de Crédito', href: '/credit-cards', icon: <CreditCard className="w-4 h-4" /> },
-          { title: 'Faturas', href: '/credit-card-bills', icon: <Receipt className="w-4 h-4" /> },
-          { title: 'Gastos Fixos', href: '/fixed-expenses', icon: <CalendarClock className="w-4 h-4" /> },
-          { title: 'Valores a Pagar', href: '/payables', icon: <Receipt className="w-4 h-4" /> },
-          { title: 'Metas Financeiras', href: '/financial-goals', icon: <Target className="w-4 h-4" /> },
-          { title: 'Beneficiários/Credores', href: '/members', icon: <Users className="w-4 h-4" /> },
+          { title: 'Contas', href: '/accounts', icon: <Wallet className="h-4 w-4" /> },
+          {
+            title: 'Cartões de Crédito',
+            href: '/credit-cards',
+            icon: <CreditCard className="h-4 w-4" />,
+          },
+          {
+            title: 'Faturas',
+            href: '/credit-card-bills',
+            icon: <Receipt className="h-4 w-4" />,
+          },
+          {
+            title: 'Gastos Fixos',
+            href: '/fixed-expenses',
+            icon: <CalendarClock className="h-4 w-4" />,
+          },
+          {
+            title: 'Valores a Pagar',
+            href: '/payables',
+            icon: <Receipt className="h-4 w-4" />,
+          },
+          {
+            title: 'Metas Financeiras',
+            href: '/financial-goals',
+            icon: <Target className="h-4 w-4" />,
+          },
+          {
+            title: 'Beneficiários/Credores',
+            href: '/members',
+            icon: <Users className="h-4 w-4" />,
+          },
         ],
       },
       {
         title: 'Registros',
-        icon: <ClipboardList className="w-4 h-4" />,
+        icon: <ClipboardList className="h-4 w-4" />,
         items: [
-          { title: 'Despesas', href: '/expenses', icon: <TrendingDown className="w-4 h-4" /> },
-          { title: 'Receitas', href: '/revenues', icon: <TrendingUp className="w-4 h-4" /> },
-          { title: 'Gastos do Cartão', href: '/credit-card-expenses', icon: <ShoppingCart className="w-4 h-4" /> },
-          { title: 'Transferências', href: '/transfers', icon: <ArrowLeftRight className="w-4 h-4" /> },
-          { title: 'Empréstimos', href: '/loans', icon: <HandCoins className="w-4 h-4" /> },
-          { title: 'Cofres', href: '/vaults', icon: <Vault className="w-4 h-4" /> },
+          {
+            title: 'Despesas',
+            href: '/expenses',
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            title: 'Receitas',
+            href: '/revenues',
+            icon: <TrendingUp className="h-4 w-4" />,
+          },
+          {
+            title: 'Gastos do Cartão',
+            href: '/credit-card-expenses',
+            icon: <ShoppingCart className="h-4 w-4" />,
+          },
+          {
+            title: 'Transferências',
+            href: '/transfers',
+            icon: <ArrowLeftRight className="h-4 w-4" />,
+          },
+          {
+            title: 'Empréstimos',
+            href: '/loans',
+            icon: <HandCoins className="h-4 w-4" />,
+          },
+          { title: 'Cofres', href: '/vaults', icon: <Vault className="h-4 w-4" /> },
         ],
       },
     ],
   },
   {
     title: 'Segurança',
-    icon: <Shield className="w-5 h-5" />,
+    icon: <Shield className="h-5 w-5" />,
     items: [
-      { title: 'Dashboard', href: '/security/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { title: 'Senhas', href: '/security/passwords', icon: <Key className="w-4 h-4" /> },
-      { title: 'Cartões Armazenados', href: '/security/stored-cards', icon: <CreditCard className="w-4 h-4" /> },
-      { title: 'Contas Armazenadas', href: '/security/stored-accounts', icon: <Wallet className="w-4 h-4" /> },
-      { title: 'Gerador de Senhas', href: '/security/password-generator', icon: <Wand2 className="w-4 h-4" /> },
-      { title: 'Arquivos', href: '/security/archives', icon: <Archive className="w-4 h-4" /> },
+      {
+        title: 'Dashboard',
+        href: '/security/dashboard',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+      },
+      {
+        title: 'Senhas',
+        href: '/security/passwords',
+        icon: <Key className="h-4 w-4" />,
+      },
+      {
+        title: 'Cartões Armazenados',
+        href: '/security/stored-cards',
+        icon: <CreditCard className="h-4 w-4" />,
+      },
+      {
+        title: 'Contas Armazenadas',
+        href: '/security/stored-accounts',
+        icon: <Wallet className="h-4 w-4" />,
+      },
+      {
+        title: 'Gerador de Senhas',
+        href: '/security/password-generator',
+        icon: <Wand2 className="h-4 w-4" />,
+      },
+      {
+        title: 'Arquivos',
+        href: '/security/archives',
+        icon: <Archive className="h-4 w-4" />,
+      },
     ],
   },
   {
     title: 'Leitura',
-    icon: <Library className="w-5 h-5" />,
+    icon: <Library className="h-5 w-5" />,
     items: [
-      { title: 'Dashboard', href: '/library/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { title: 'Livros', href: '/library/books', icon: <BookOpen className="w-4 h-4" /> },
-      { title: 'Autores', href: '/library/authors', icon: <UserPen className="w-4 h-4" /> },
-      { title: 'Editoras', href: '/library/publishers', icon: <Building2 className="w-4 h-4" /> },
-      { title: 'Resumos', href: '/library/summaries', icon: <FileText className="w-4 h-4" /> },
-      { title: 'Leituras', href: '/library/readings', icon: <BookMarked className="w-4 h-4" /> },
+      {
+        title: 'Dashboard',
+        href: '/library/dashboard',
+        icon: <LayoutDashboard className="h-4 w-4" />,
+      },
+      {
+        title: 'Livros',
+        href: '/library/books',
+        icon: <BookOpen className="h-4 w-4" />,
+      },
+      {
+        title: 'Autores',
+        href: '/library/authors',
+        icon: <UserPen className="h-4 w-4" />,
+      },
+      {
+        title: 'Editoras',
+        href: '/library/publishers',
+        icon: <Building2 className="h-4 w-4" />,
+      },
+      {
+        title: 'Resumos',
+        href: '/library/summaries',
+        icon: <FileText className="h-4 w-4" />,
+      },
+      {
+        title: 'Leituras',
+        href: '/library/readings',
+        icon: <BookMarked className="h-4 w-4" />,
+      },
     ],
   },
 ];
@@ -212,7 +324,9 @@ export const Sidebar = () => {
         // Verificar se está em um submódulo
         if (module.subModules) {
           module.subModules.forEach((sub) => {
-            const isSubActive = sub.items.some((item) => location.pathname === item.href);
+            const isSubActive = sub.items.some(
+              (item) => location.pathname === item.href
+            );
             if (isSubActive) {
               setExpandedSubModule(sub.title);
             }
@@ -244,7 +358,7 @@ export const Sidebar = () => {
       {/* Overlay para mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={close}
           aria-hidden="true"
         />
@@ -253,220 +367,233 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50',
-          'w-72 bg-card border-r min-h-screen p-4',
+          'fixed inset-y-0 left-0 z-50 lg:static',
+          'min-h-screen w-72 border-r bg-card p-4',
           'flex flex-col',
           'transform transition-transform duration-300 ease-in-out lg:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
-              <img src={icon} alt="MindLedger" className="w-10 h-10 object-contain" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              MindLedger
-            </span>
-          </Link>
-
-          {/* Botão fechar (apenas mobile) */}
-          <button
-            onClick={close}
-            className="lg:hidden p-2 hover:bg-accent rounded-lg transition-colors"
-            aria-label="Fechar menu"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      <nav className="space-y-2 flex-1 overflow-y-auto custom-scrollbar" aria-label="Menu principal">
-        {/* Items principais */}
-        {filteredNavItems.map((item) => {
-          const isActive = location.pathname === item.href;
-
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground font-medium'
-                  : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
-              )}
-            >
-              {item.icon}
-              <span>{item.title}</span>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg">
+                <img src={icon} alt="MindLedger" className="h-10 w-10 object-contain" />
+              </div>
+              <span className="bg-gradient-primary bg-clip-text text-xl font-bold text-transparent">
+                MindLedger
+              </span>
             </Link>
-          );
-        })}
 
-        {/* Divisória */}
-        <div className="border-t my-2" />
+            {/* Botão fechar (apenas mobile) */}
+            <button
+              onClick={close}
+              className="rounded-lg p-2 transition-colors hover:bg-accent lg:hidden"
+              aria-label="Fechar menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
 
-        {/* Módulos com submenus */}
-        {navModules.map((module) => {
-          const isExpanded = isModuleExpanded(module.title);
-          const allItems = getAllModuleItems(module);
-          const hasActiveItem = allItems.some((item) => location.pathname === item.href);
+        <nav
+          className="custom-scrollbar flex-1 space-y-2 overflow-y-auto"
+          aria-label="Menu principal"
+        >
+          {/* Items principais */}
+          {filteredNavItems.map((item) => {
+            const isActive = location.pathname === item.href;
 
-          return (
-            <div key={module.title} className="space-y-1">
-              {/* Cabeçalho do módulo */}
-              <button
-                onClick={() => toggleModule(module.title)}
-                aria-expanded={isExpanded}
-                aria-controls={`module-${module.title.replace(/\s+/g, '-').toLowerCase()}`}
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full',
-                  hasActiveItem
-                    ? 'bg-accent text-accent-foreground font-medium'
+                  'flex items-center gap-3 rounded-lg px-4 py-3 transition-colors',
+                  isActive
+                    ? 'bg-primary font-medium text-primary-foreground'
                     : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
                 )}
               >
-                {module.icon}
-                <span className="flex-1 text-left">{module.title}</span>
-                <ChevronDown
+                {item.icon}
+                <span>{item.title}</span>
+              </Link>
+            );
+          })}
+
+          {/* Divisória */}
+          <div className="my-2 border-t" />
+
+          {/* Módulos com submenus */}
+          {navModules.map((module) => {
+            const isExpanded = isModuleExpanded(module.title);
+            const allItems = getAllModuleItems(module);
+            const hasActiveItem = allItems.some(
+              (item) => location.pathname === item.href
+            );
+
+            return (
+              <div key={module.title} className="space-y-1">
+                {/* Cabeçalho do módulo */}
+                <button
+                  onClick={() => toggleModule(module.title)}
+                  aria-expanded={isExpanded}
+                  aria-controls={`module-${module.title.replace(/\s+/g, '-').toLowerCase()}`}
                   className={cn(
-                    'w-4 h-4 transition-transform duration-200',
-                    isExpanded ? 'rotate-0' : '-rotate-90'
+                    'flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200',
+                    hasActiveItem
+                      ? 'bg-accent font-medium text-accent-foreground'
+                      : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
                   )}
-                />
-              </button>
+                >
+                  {module.icon}
+                  <span className="flex-1 text-left">{module.title}</span>
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 transition-transform duration-200',
+                      isExpanded ? 'rotate-0' : '-rotate-90'
+                    )}
+                  />
+                </button>
 
-              {/* Conteúdo expandível com animação */}
-              <div
-                id={`module-${module.title.replace(/\s+/g, '-').toLowerCase()}`}
-                className={cn(
-                  'grid transition-all duration-200 ease-in-out',
-                  isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                )}
-              >
-                <div className="overflow-hidden">
-                  <div className="ml-4 space-y-1 py-1">
-                    {/* Top Items (sem submódulo, ex: Dashboard) */}
-                    {module.topItems?.map((item) => {
-                      const isActive = location.pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          className={cn(
-                            'flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-150 text-sm',
-                            isActive
-                              ? 'bg-primary text-primary-foreground font-medium'
-                              : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
-                          )}
-                        >
-                          {item.icon}
-                          <span>{item.title}</span>
-                        </Link>
-                      );
-                    })}
-
-                    {/* Submódulos */}
-                    {module.subModules?.map((subModule) => {
-                      const isSubExpanded = isSubModuleExpanded(subModule.title);
-                      const hasSubActiveItem = subModule.items.some(
-                        (item) => location.pathname === item.href
-                      );
-
-                      return (
-                        <div key={subModule.title} className="space-y-1">
-                          {/* Cabeçalho do submódulo */}
-                          <button
-                            onClick={() => toggleSubModule(subModule.title)}
-                            aria-expanded={isSubExpanded}
-                            aria-controls={`submodule-${subModule.title.replace(/\s+/g, '-').toLowerCase()}`}
+                {/* Conteúdo expandível com animação */}
+                <div
+                  id={`module-${module.title.replace(/\s+/g, '-').toLowerCase()}`}
+                  className={cn(
+                    'grid transition-all duration-200 ease-in-out',
+                    isExpanded
+                      ? 'grid-rows-[1fr] opacity-100'
+                      : 'grid-rows-[0fr] opacity-0'
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="ml-4 space-y-1 py-1">
+                      {/* Top Items (sem submódulo, ex: Dashboard) */}
+                      {module.topItems?.map((item) => {
+                        const isActive = location.pathname === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            to={item.href}
                             className={cn(
-                              'flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-150 w-full text-sm',
-                              isSubExpanded
-                                ? 'bg-primary/10 text-primary font-medium'
-                                : hasSubActiveItem
-                                  ? 'bg-accent/50 text-accent-foreground font-medium'
-                                  : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                              'flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
+                              isActive
+                                ? 'bg-primary font-medium text-primary-foreground'
+                                : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
                             )}
                           >
-                            <span className={cn(
-                              'transition-colors duration-150',
-                              isSubExpanded ? 'text-primary' : ''
-                            )}>
-                              {subModule.icon}
-                            </span>
-                            <span className="flex-1 text-left">{subModule.title}</span>
-                            <ChevronDown
+                            {item.icon}
+                            <span>{item.title}</span>
+                          </Link>
+                        );
+                      })}
+
+                      {/* Submódulos */}
+                      {module.subModules?.map((subModule) => {
+                        const isSubExpanded = isSubModuleExpanded(subModule.title);
+                        const hasSubActiveItem = subModule.items.some(
+                          (item) => location.pathname === item.href
+                        );
+
+                        return (
+                          <div key={subModule.title} className="space-y-1">
+                            {/* Cabeçalho do submódulo */}
+                            <button
+                              onClick={() => toggleSubModule(subModule.title)}
+                              aria-expanded={isSubExpanded}
+                              aria-controls={`submodule-${subModule.title.replace(/\s+/g, '-').toLowerCase()}`}
                               className={cn(
-                                'w-3 h-3 transition-transform duration-200',
-                                isSubExpanded ? 'rotate-0' : '-rotate-90'
+                                'flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
+                                isSubExpanded
+                                  ? 'bg-primary/10 font-medium text-primary'
+                                  : hasSubActiveItem
+                                    ? 'bg-accent/50 font-medium text-accent-foreground'
+                                    : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
                               )}
-                            />
-                          </button>
+                            >
+                              <span
+                                className={cn(
+                                  'transition-colors duration-150',
+                                  isSubExpanded ? 'text-primary' : ''
+                                )}
+                              >
+                                {subModule.icon}
+                              </span>
+                              <span className="flex-1 text-left">
+                                {subModule.title}
+                              </span>
+                              <ChevronDown
+                                className={cn(
+                                  'h-3 w-3 transition-transform duration-200',
+                                  isSubExpanded ? 'rotate-0' : '-rotate-90'
+                                )}
+                              />
+                            </button>
 
-                          {/* Itens do submódulo com animação */}
-                          <div
-                            id={`submodule-${subModule.title.replace(/\s+/g, '-').toLowerCase()}`}
-                            className={cn(
-                              'grid transition-all duration-200 ease-in-out',
-                              isSubExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                            )}
-                          >
-                            <div className="overflow-hidden">
-                              <div className="ml-4 space-y-1 py-1">
-                                {subModule.items.map((item) => {
-                                  const isActive = location.pathname === item.href;
-                                  return (
-                                    <Link
-                                      key={item.href}
-                                      to={item.href}
-                                      className={cn(
-                                        'flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all duration-150 text-sm',
-                                        isActive
-                                          ? 'bg-primary text-primary-foreground font-medium'
-                                          : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
-                                      )}
-                                    >
-                                      {item.icon}
-                                      <span>{item.title}</span>
-                                    </Link>
-                                  );
-                                })}
+                            {/* Itens do submódulo com animação */}
+                            <div
+                              id={`submodule-${subModule.title.replace(/\s+/g, '-').toLowerCase()}`}
+                              className={cn(
+                                'grid transition-all duration-200 ease-in-out',
+                                isSubExpanded
+                                  ? 'grid-rows-[1fr] opacity-100'
+                                  : 'grid-rows-[0fr] opacity-0'
+                              )}
+                            >
+                              <div className="overflow-hidden">
+                                <div className="ml-4 space-y-1 py-1">
+                                  {subModule.items.map((item) => {
+                                    const isActive = location.pathname === item.href;
+                                    return (
+                                      <Link
+                                        key={item.href}
+                                        to={item.href}
+                                        className={cn(
+                                          'flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-all duration-150',
+                                          isActive
+                                            ? 'bg-primary font-medium text-primary-foreground'
+                                            : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                                        )}
+                                      >
+                                        {item.icon}
+                                        <span>{item.title}</span>
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
 
-                    {/* Items normais (módulos sem submódulos) */}
-                    {module.items?.map((item) => {
-                      const isActive = location.pathname === item.href;
-                      return (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          className={cn(
-                            'flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-150 text-sm',
-                            isActive
-                              ? 'bg-primary text-primary-foreground font-medium'
-                              : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
-                          )}
-                        >
-                          {item.icon}
-                          <span>{item.title}</span>
-                        </Link>
-                      );
-                    })}
+                      {/* Items normais (módulos sem submódulos) */}
+                      {module.items?.map((item) => {
+                        const isActive = location.pathname === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            className={cn(
+                              'flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
+                              isActive
+                                ? 'bg-primary font-medium text-primary-foreground'
+                                : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                            )}
+                          >
+                            {item.icon}
+                            <span>{item.title}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+            );
+          })}
+        </nav>
+      </aside>
     </>
   );
 };

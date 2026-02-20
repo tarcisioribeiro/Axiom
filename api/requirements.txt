@@ -18,6 +18,8 @@ drf-spectacular
 
 # Monitoring and logging
 python-json-logger==2.0.7
+django-prometheus>=0.4.0
+sentry-sdk[django]>=2.0.0
 
 # HTTP client
 requests>=2.31.0

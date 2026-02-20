@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS } from '@/config/constants';
 import { creditCardExpensesService } from '@/services/credit-card-expenses-service';
@@ -24,7 +30,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   creditCards,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
 }) => {
   const { showAlert } = useAlertDialog();
   const [isCalculating, setIsCalculating] = useState(false);
@@ -53,7 +59,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
       // Calcular valor já pago (despesas marcadas como pagas)
       const paidAmount = expenses
-        .filter(exp => exp.payed)
+        .filter((exp) => exp.payed)
         .reduce((sum, exp) => sum + parseFloat(exp.value), 0);
 
       // Calcular pagamento mínimo (10% do total)
@@ -87,7 +93,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
       if (bill.payment_date) setValue('payment_date', bill.payment_date);
 
       // Calcular valores automaticamente ao carregar fatura existente
-      calculateBillAmounts(bill.id);
+      void calculateBillAmounts(bill.id);
     } else if (creditCards.length > 0) {
       setValue('credit_card', creditCards[0].id);
     }
@@ -106,13 +112,15 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     // Validações de datas
     const beginningDate = new Date(data.invoice_beginning_date);
     const endingDate = new Date(data.invoice_ending_date);
-    const dueDate = data.due_date && data.due_date.trim() !== '' ? new Date(data.due_date) : null;
+    const dueDate =
+      data.due_date && data.due_date.trim() !== '' ? new Date(data.due_date) : null;
 
     // Validação: Data de início deve ser anterior à data de fechamento
     if (beginningDate >= endingDate) {
       await showAlert({
         title: 'Data inválida',
-        description: 'A data de início da fatura deve ser anterior à data de fechamento.',
+        description:
+          'A data de início da fatura deve ser anterior à data de fechamento.',
         confirmText: 'Ok',
       });
       return;
@@ -124,7 +132,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
       if (beginningDate >= dueDate) {
         await showAlert({
           title: 'Data inválida',
-          description: 'A data de início da fatura deve ser anterior à data de vencimento.',
+          description:
+            'A data de início da fatura deve ser anterior à data de vencimento.',
           confirmText: 'Ok',
         });
         return;
@@ -134,7 +143,8 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
       if (endingDate >= dueDate) {
         await showAlert({
           title: 'Data inválida',
-          description: 'A data de fechamento da fatura deve ser anterior à data de vencimento.',
+          description:
+            'A data de fechamento da fatura deve ser anterior à data de vencimento.',
           confirmText: 'Ok',
         });
         return;
@@ -144,8 +154,12 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     // Garantir que campos de data vazios sejam enviados como undefined ao invés de strings vazias
     const sanitizedData = {
       ...data,
-      due_date: data.due_date && data.due_date.trim() !== '' ? data.due_date : undefined,
-      payment_date: data.payment_date && data.payment_date.trim() !== '' ? data.payment_date : undefined,
+      due_date:
+        data.due_date && data.due_date.trim() !== '' ? data.due_date : undefined,
+      payment_date:
+        data.payment_date && data.payment_date.trim() !== ''
+          ? data.payment_date
+          : undefined,
       closed: data.closed !== undefined ? data.closed : false,
     };
 
@@ -157,20 +171,28 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label>Cartão de Crédito *</Label>
           <Select
             value={watch('credit_card')?.toString() || ''}
             onValueChange={(v) => setValue('credit_card', parseInt(v))}
           >
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {creditCards.map((c) => {
                 // Extrai apenas os dígitos do número mascarado
-                const digitsOnly = c.card_number_masked ? c.card_number_masked.replace(/[^\d]/g, '') : '';
-                const last4 = digitsOnly && digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
-                const brandName = TRANSLATIONS.cardBrands[c.flag as keyof typeof TRANSLATIONS.cardBrands] || c.flag;
+                const digitsOnly = c.card_number_masked
+                  ? c.card_number_masked.replace(/[^\d]/g, '')
+                  : '';
+                const last4 =
+                  digitsOnly && digitsOnly.length >= 4 ? digitsOnly.slice(-4) : '****';
+                const brandName =
+                  TRANSLATIONS.cardBrands[
+                    c.flag as keyof typeof TRANSLATIONS.cardBrands
+                  ] || c.flag;
                 const accountName = c.associated_account_name || 'Conta não informada';
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
@@ -185,9 +207,15 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         <div className="space-y-2">
           <Label>Ano *</Label>
           <Select value={watch('year')} onValueChange={(v) => setValue('year', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
-              {years.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              {years.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -195,10 +223,14 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         <div className="space-y-2">
           <Label>Mês *</Label>
           <Select value={watch('month')} onValueChange={(v) => setValue('month', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.months).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -208,7 +240,9 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           <Label htmlFor="invoice_beginning_date">Data de Início *</Label>
           <DatePicker
             value={watch('invoice_beginning_date')}
-            onChange={(date) => setValue('invoice_beginning_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('invoice_beginning_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data de início"
             disabled={isLoading}
           />
@@ -218,7 +252,9 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           <Label htmlFor="invoice_ending_date">Data de Fim *</Label>
           <DatePicker
             value={watch('invoice_ending_date')}
-            onChange={(date) => setValue('invoice_ending_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('invoice_ending_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data de fim"
             disabled={isLoading}
           />
@@ -250,9 +286,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 disabled
                 className="font-semibold"
               />
-              <p className="text-xs">
-                Soma de todas as despesas associadas à fatura
-              </p>
+              <p className="text-xs">Soma de todas as despesas associadas à fatura</p>
             </div>
 
             <div className="space-y-2">
@@ -266,9 +300,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 disabled
                 className="font-semibold text-amber-600"
               />
-              <p className="text-xs">
-                10% do valor total
-              </p>
+              <p className="text-xs">10% do valor total</p>
             </div>
 
             <div className="space-y-2">
@@ -282,16 +314,16 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 disabled
                 className="font-semibold text-success"
               />
-              <p className="text-xs">
-                Soma das despesas marcadas como pagas
-              </p>
+              <p className="text-xs">Soma das despesas marcadas como pagas</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="payment_date">Data de Pagamento</Label>
               <DatePicker
                 value={watch('payment_date')}
-                onChange={(date) => setValue('payment_date', date ? formatLocalDate(date) : '')}
+                onChange={(date) =>
+                  setValue('payment_date', date ? formatLocalDate(date) : '')
+                }
                 placeholder="Selecione a data de pagamento"
                 disabled={isLoading}
               />

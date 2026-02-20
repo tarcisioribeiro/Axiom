@@ -58,7 +58,7 @@ export const FixedExpenseForm = ({
         console.error('Erro ao carregar membro:', error);
       }
     };
-    loadMember();
+    void loadMember();
   }, [fixedExpense, setValue]);
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export const FixedExpenseForm = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Input
@@ -178,7 +178,8 @@ export const FixedExpenseForm = ({
             </SelectContent>
           </Select>
           <p className="text-xs">
-            Escolha se a despesa será debitada de uma conta bancária ou lançada em um cartão de crédito
+            Escolha se a despesa será debitada de uma conta bancária ou lançada em um
+            cartão de crédito
           </p>
         </div>
 
@@ -277,9 +278,7 @@ export const FixedExpenseForm = ({
             />
             Despesa Ativa
           </Label>
-          <p className="text-xs">
-            Desative para não incluir nas próximas gerações
-          </p>
+          <p className="text-xs">Desative para não incluir nas próximas gerações</p>
         </div>
 
         <div className="space-y-2">

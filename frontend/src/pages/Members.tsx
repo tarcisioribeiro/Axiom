@@ -5,7 +5,13 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { MemberForm } from '@/components/members/MemberForm';
 import { membersService } from '@/services/members-service';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +31,7 @@ export default function Members() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -34,7 +40,11 @@ export default function Members() {
       const data = await membersService.getAll();
       setMembers(data);
     } catch (error: unknown) {
-      toast({ title: 'Erro ao carregar dados', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar dados',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -45,15 +55,25 @@ export default function Members() {
       setIsSubmitting(true);
       if (selectedMember) {
         await membersService.update(selectedMember.id, data);
-        toast({ title: 'Membro atualizado', description: 'O membro foi atualizado com sucesso.' });
+        toast({
+          title: 'Membro atualizado',
+          description: 'O membro foi atualizado com sucesso.',
+        });
       } else {
         await membersService.create(data);
-        toast({ title: 'Membro criado', description: 'O membro foi criado com sucesso.' });
+        toast({
+          title: 'Membro criado',
+          description: 'O membro foi criado com sucesso.',
+        });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao salvar', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -62,7 +82,8 @@ export default function Members() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir membro',
-      description: 'Tem certeza que deseja excluir este membro? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir este membro? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -70,10 +91,17 @@ export default function Members() {
     if (!confirmed) return;
     try {
       await membersService.delete(id);
-      toast({ title: 'Membro excluído', description: 'O membro foi excluído com sucesso.' });
-      loadData();
+      toast({
+        title: 'Membro excluído',
+        description: 'O membro foi excluído com sucesso.',
+      });
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao excluir', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao excluir',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -88,8 +116,11 @@ export default function Members() {
         icon={<Users />}
         action={{
           label: 'Novo Membro',
-          icon: <Plus className="w-4 h-4" />,
-          onClick: () => { setSelectedMember(undefined); setIsDialogOpen(true); }
+          icon: <Plus className="h-4 w-4" />,
+          onClick: () => {
+            setSelectedMember(undefined);
+            setIsDialogOpen(true);
+          },
         }}
       />
 
@@ -99,39 +130,57 @@ export default function Members() {
           message='Nenhum membro cadastrado. Clique em "Novo Membro" para começar.'
         />
       ) : (
-        <div className="bg-card border rounded-xl overflow-hidden">
-          <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-hidden rounded-lg border bg-card">
+          <div className="custom-scrollbar overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted/50 border-b">
+              <thead className="border-b bg-muted/50">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Nome</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Documento</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Telefone</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Documento
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Telefone
+                  </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Papel</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Criado em</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    Criado em
+                  </th>
                   <th className="px-6 py-4 text-right text-sm font-semibold">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {members.map((member) => (
-                  <tr key={member.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4"><div className="font-medium">{member.name}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm">{member.document}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm">{member.phone}</div></td>
+                  <tr key={member.id} className="transition-colors hover:bg-muted/30">
+                    <td className="px-6 py-4">
+                      <div className="font-medium">{member.name}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm">{member.document}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm">{member.phone}</div>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-1">
-                        {member.is_creditor && <Badge variant="secondary">Credor</Badge>}
-                        {member.is_benefited && <Badge variant="outline">Beneficiário</Badge>}
+                        {member.is_creditor && (
+                          <Badge variant="secondary">Credor</Badge>
+                        )}
+                        {member.is_benefited && (
+                          <Badge variant="outline">Beneficiário</Badge>
+                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm">{format(new Date(member.created_at), 'dd/MM/yyyy')}</td>
+                    <td className="px-6 py-4 text-sm">
+                      {format(new Date(member.created_at), 'dd/MM/yyyy')}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => { setSelectedMember(member); setIsDialogOpen(true); }}>
-                          <Pencil className="w-4 h-4" />
+                        <Button variant="ghost" size="icon" onClick={() => { setSelectedMember(member); setIsDialogOpen(true); }} aria-label="Editar">
+                          <Pencil className="w-4 h-4" aria-hidden="true" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(member.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(member.id)} aria-label="Excluir">
+                          <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
                         </Button>
                       </div>
                     </td>
@@ -146,10 +195,21 @@ export default function Members() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedMember ? 'Editar Membro' : 'Novo Membro'}</DialogTitle>
-            <DialogDescription>{selectedMember ? 'Atualize as informações do membro' : 'Adicione um novo membro ao sistema'}</DialogDescription>
+            <DialogTitle>
+              {selectedMember ? 'Editar Membro' : 'Novo Membro'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedMember
+                ? 'Atualize as informações do membro'
+                : 'Adicione um novo membro ao sistema'}
+            </DialogDescription>
           </DialogHeader>
-          <MemberForm member={selectedMember} onSubmit={handleSubmit} onCancel={() => setIsDialogOpen(false)} isLoading={isSubmitting} />
+          <MemberForm
+            member={selectedMember}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

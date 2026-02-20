@@ -26,7 +26,7 @@ export default function ActivityLogs() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -51,10 +51,7 @@ export default function ActivityLogs() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Logs de Atividade"
-        icon={<ScrollText />}
-      />
+      <PageHeader title="Logs de Atividade" icon={<ScrollText />} />
 
       {logs.length === 0 ? (
         <EmptyState
@@ -62,7 +59,7 @@ export default function ActivityLogs() {
           message="Nenhum log de atividade encontrado."
         />
       ) : (
-        <div className="border rounded-lg">
+        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -76,7 +73,7 @@ export default function ActivityLogs() {
               {logs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="font-medium">
-                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss", {
+                    {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', {
                       locale: ptBR,
                     })}
                   </TableCell>
@@ -84,9 +81,7 @@ export default function ActivityLogs() {
                     <Badge variant="secondary">{log.action_display}</Badge>
                   </TableCell>
                   <TableCell>{log.description}</TableCell>
-                  <TableCell>
-                    {log.ip_address || '-'}
-                  </TableCell>
+                  <TableCell>{log.ip_address || '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -18,7 +18,7 @@ export default function TodayTasks() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -38,7 +38,7 @@ export default function TodayTasks() {
       toast({
         title: 'Erro ao carregar tarefas',
         description: getErrorMessage(error),
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -64,10 +64,7 @@ export default function TodayTasks() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Tarefas de Hoje"
-        icon={<CheckCircle2 />}
-      />
+      <PageHeader title="Tarefas de Hoje" icon={<CheckCircle2 />} />
 
       {tasks.length === 0 ? (
         <EmptyState
@@ -77,7 +74,10 @@ export default function TodayTasks() {
       ) : (
         <div className="space-y-4">
           {tasks.map((task) => (
-            <div key={task.id} className="border rounded-lg p-4 flex items-center gap-4">
+            <div
+              key={task.id}
+              className="flex items-center gap-4 rounded-lg border p-4"
+            >
               <CheckCircle2
                 className={`h-6 w-6 ${
                   task.status === 'completed' ? 'text-success' : 'text-muted'
@@ -91,13 +91,9 @@ export default function TodayTasks() {
                   </Badge>
                 </div>
                 {task.time_display && (
-                  <p className="text-sm">
-                    Horário: {task.time_display}
-                  </p>
+                  <p className="text-sm">Horário: {task.time_display}</p>
                 )}
-                {task.notes && (
-                  <p className="text-sm">{task.notes}</p>
-                )}
+                {task.notes && <p className="text-sm">{task.notes}</p>}
               </div>
             </div>
           ))}

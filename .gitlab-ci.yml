@@ -1,0 +1,318 @@
+# ==============================================================================
+# MindLedger — GitLab CI/CD Pipeline
+# ==============================================================================
+#
+# Stage flow (each stage waits for all prior stages to pass):
+#
+#   lint            code style / formatting checks (backend + frontend, parallel)
+#   typecheck       static type analysis            (backend + frontend, parallel)
+#   test            backend unit & integration tests with coverage report
+#   build           Docker image build & push to GitLab Container Registry
+#   deploy-staging  auto-deploy to staging on every merge to main
+#   deploy-production  manual-gate deploy to production
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# Required CI/CD variables  (Settings → CI/CD → Variables)
+# ──────────────────────────────────────────────────────────────────────────────
+#   AUTO-PROVIDED BY GITLAB
+#     CI_REGISTRY               GitLab Container Registry host
+#     CI_REGISTRY_USER          Registry auth user
+#     CI_REGISTRY_PASSWORD      Registry auth password
+#
+#   SET MANUALLY
+#     VITE_API_BASE_URL_STAGING     e.g. https://api.staging.example.com
+#     VITE_API_BASE_URL_PRODUCTION  e.g. https://api.example.com
+#     KUBE_CONFIG_STAGING           base64-encoded kubeconfig (staging cluster)
+#     KUBE_CONFIG_PRODUCTION        base64-encoded kubeconfig (production cluster)
+#     STAGING_URL                   e.g. https://staging.example.com
+#     PRODUCTION_URL                e.g. https://example.com
+# ==============================================================================
+
+stages:
+  - lint
+  - typecheck
+  - test
+  - build
+  - deploy-staging
+  - deploy-production
+
+# ------------------------------------------------------------------------------
+# Global defaults
+# ------------------------------------------------------------------------------
+default:
+  interruptible: true
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: "1"
+  # pip caches downloaded wheels; keyed by requirements files in .python_base
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
+  # npm caches package tarballs; keyed by package-lock.json in .node_base
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  # Convenience shortcuts for image names
+  API_IMAGE: "$CI_REGISTRY_IMAGE/api"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+
+# Avoid duplicate pipelines: when an open MR exists for a branch, run only the
+# MR pipeline (not the redundant branch pipeline).
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# ==============================================================================
+# Base job templates
+# ==============================================================================
+
+# ── Python / Django ─────────────────────────────────────────────────────────
+.python_base:
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - api/requirements.txt
+        - api/requirements-dev.txt
+    paths:
+      - .pip_cache/
+  before_script:
+    - pip install --quiet --cache-dir "$PIP_CACHE_DIR"
+        -r api/requirements.txt
+        -r api/requirements-dev.txt
+
+# ── Node / React ─────────────────────────────────────────────────────────────
+.node_base:
+  image: node:20-alpine
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    # npm ci uses npm_config_cache (set in global variables) for the tarball
+    # cache, giving fast repeatable installs without committing node_modules.
+    - cd frontend && npm ci --prefer-offline
+
+# ── Docker-in-Docker ─────────────────────────────────────────────────────────
+.docker_base:
+  image: docker:26
+  services:
+    - name: docker:26-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+# ==============================================================================
+# STAGE: lint
+# ==============================================================================
+
+lint:backend:
+  extends: .python_base
+  stage: lint
+  script:
+    - cd api
+    # Formatting — fail on any reformatting needed
+    - black --check --diff .
+    # Import ordering — fail on any reordering needed
+    - isort --check-only --diff .
+    # Style / complexity
+    - flake8 .
+
+lint:frontend:
+  extends: .node_base
+  stage: lint
+  script:
+    - npm run lint
+    - npm run format:check
+
+# ==============================================================================
+# STAGE: typecheck
+# ==============================================================================
+
+typecheck:backend:
+  extends: .python_base
+  stage: typecheck
+  needs:
+    - lint:backend
+  script:
+    - cd api
+    - mypy .
+
+typecheck:frontend:
+  extends: .node_base
+  stage: typecheck
+  needs:
+    - lint:frontend
+  script:
+    - npm run typecheck
+
+# ==============================================================================
+# STAGE: test
+# ==============================================================================
+
+test:backend:
+  extends: .python_base
+  stage: test
+  needs:
+    - typecheck:backend
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+  variables:
+    # ── PostgreSQL service ──────────────────────────────────────────────────
+    POSTGRES_DB: mindledger_test
+    POSTGRES_USER: mindledger
+    POSTGRES_PASSWORD: ci_test_password
+    POSTGRES_HOST_AUTH_METHOD: trust
+    # ── Django application (test-only values, never used in production) ─────
+    SECRET_KEY: "ci-insecure-key-not-for-production-use-000000000000000000000"
+    DEBUG: "True"
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: mindledger_test
+    DB_USER: mindledger
+    DB_PASSWORD: ci_test_password
+    ALLOWED_HOSTS: "*"
+    CORS_ALLOWED_ORIGINS: "http://localhost:39101"
+    LOG_FORMAT: "text"
+    LOG_LEVEL: "WARNING"
+  before_script:
+    # Include the parent's pip install step, then generate a fresh Fernet key.
+    # A new key per job is safe because the test database is ephemeral.
+    - !reference [.python_base, before_script]
+    - export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+  script:
+    - cd api
+    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+  # Capture the coverage percentage shown in pytest-cov's TOTAL line
+  coverage: '/TOTAL.*\s+(\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: api/coverage.xml
+    expire_in: 1 week
+
+# ==============================================================================
+# STAGE: build
+# ==============================================================================
+# Both jobs run on: main branch pushes + merge request pipelines.
+# The `latest` tag is only pushed on the default branch.
+# Image tags produced:
+#   <registry>/api:<git-sha>          unique, immutable reference
+#   <registry>/api:<branch-slug>      convenient branch reference
+#   <registry>/api:latest             updated only on main (branch pipelines)
+
+build:api:
+  extends: .docker_base
+  stage: build
+  needs:
+    - typecheck:backend
+    - test:backend
+  script:
+    # Pull the previous latest for layer cache (ignore error on first run)
+    - docker pull "$API_IMAGE:latest" || true
+    - |
+      docker build \
+        --cache-from "$API_IMAGE:latest" \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        -t "$API_IMAGE:$CI_COMMIT_SHA" \
+        -t "$API_IMAGE:$CI_COMMIT_REF_SLUG" \
+        ./api
+    - docker push "$API_IMAGE:$CI_COMMIT_SHA"
+    - docker push "$API_IMAGE:$CI_COMMIT_REF_SLUG"
+    - |
+      # CI_COMMIT_BRANCH is only set in branch pipelines, not in MR pipelines
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHA" "$API_IMAGE:latest"
+        docker push "$API_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+build:frontend:
+  extends: .docker_base
+  stage: build
+  needs:
+    - typecheck:frontend
+  script:
+    - docker pull "$FRONTEND_IMAGE:latest" || true
+    - |
+      docker build \
+        --cache-from "$FRONTEND_IMAGE:latest" \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --build-arg VITE_API_BASE_URL="${VITE_API_BASE_URL_STAGING}" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHA" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG" \
+        ./frontend
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHA" "$FRONTEND_IMAGE:latest"
+        docker push "$FRONTEND_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ==============================================================================
+# STAGE: deploy-staging
+# ==============================================================================
+# Automatically triggered on every merge to main.
+# Uses `kubectl set image` so only the container image is updated; all other
+# manifest fields remain as applied via the k8s/ directory.
+
+deploy:staging:
+  image: bitnami/kubectl:latest
+  stage: deploy-staging
+  needs:
+    - build:api
+    - build:frontend
+  environment:
+    name: staging
+    url: $STAGING_URL
+  before_script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG_STAGING" | base64 -d > ~/.kube/config
+    - chmod 600 ~/.kube/config
+  script:
+    - kubectl -n mindledger-staging set image deployment/api      api="$API_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger-staging rollout status deployment/api      --timeout=120s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ==============================================================================
+# STAGE: deploy-production
+# ==============================================================================
+# Always requires a manual click in the GitLab pipeline UI.
+# Uses the same image SHA that was deployed to and verified in staging.
+
+deploy:production:
+  image: bitnami/kubectl:latest
+  stage: deploy-production
+  needs:
+    - deploy:staging
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  before_script:
+    - mkdir -p ~/.kube
+    - echo "$KUBE_CONFIG_PRODUCTION" | base64 -d > ~/.kube/config
+    - chmod 600 ~/.kube/config
+  script:
+    - kubectl -n mindledger set image deployment/api      api="$API_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger rollout status deployment/api      --timeout=120s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual

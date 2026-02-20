@@ -94,8 +94,8 @@ services:
     command: server /data --console-address ":9001"
     environment:
       TZ: America/Sao_Paulo
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mindledger}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mindledger_secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "${MINIO_PORT:-39105}:9000"
       - "${MINIO_CONSOLE_PORT:-39106}:9001"
@@ -120,8 +120,8 @@ services:
         condition: service_healthy
     environment:
       TZ: America/Sao_Paulo
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-mindledger}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-mindledger_secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-mindledger}
     entrypoint: >
       /bin/sh -c "
@@ -164,7 +164,6 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./api:/app
       - ./api/media:/app/media
       - ./api/logs:/app/logs
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão

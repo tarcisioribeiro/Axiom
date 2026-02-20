@@ -1,7 +1,8 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type {
-  Password, PasswordFormData, PasswordReveal, PaginatedResponse,
+  Password, PasswordFormData, PasswordReveal,
   PasswordGenerateRequest, PasswordGenerateResponse,
 } from '@/types';
 
@@ -22,43 +23,9 @@ import type {
  * const { password } = await passwordsService.reveal(id);
  * ```
  */
-class PasswordsService {
-  /**
-   * Lista todas as senhas do usuario.
-   * As senhas retornadas NAO incluem o valor real (criptografado).
-   */
-  async getAll(): Promise<Password[]> {
-    const response = await apiClient.get<PaginatedResponse<Password>>(API_CONFIG.ENDPOINTS.PASSWORDS);
-    return response.results;
-  }
-
-  /**
-   * Busca uma senha por ID (sem revelar valor).
-   */
-  async getById(id: number): Promise<Password> {
-    return apiClient.get<Password>(`${API_CONFIG.ENDPOINTS.PASSWORDS}${id}/`);
-  }
-
-  /**
-   * Cria uma nova senha armazenada.
-   * O valor e criptografado antes de salvar.
-   */
-  async create(data: PasswordFormData): Promise<Password> {
-    return apiClient.post<Password>(API_CONFIG.ENDPOINTS.PASSWORDS, data);
-  }
-
-  /**
-   * Atualiza uma senha existente.
-   */
-  async update(id: number, data: Partial<PasswordFormData>): Promise<Password> {
-    return apiClient.put<Password>(`${API_CONFIG.ENDPOINTS.PASSWORDS}${id}/`, data);
-  }
-
-  /**
-   * Remove uma senha (soft delete).
-   */
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.PASSWORDS}${id}/`);
+class PasswordsService extends BaseService<Password, PasswordFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.PASSWORDS);
   }
 
   /**
@@ -71,7 +38,7 @@ class PasswordsService {
    * @returns Dados da senha incluindo o valor descriptografado
    */
   async reveal(id: number): Promise<PasswordReveal> {
-    return apiClient.get<PasswordReveal>(`${API_CONFIG.ENDPOINTS.PASSWORDS}${id}/reveal/`);
+    return apiClient.get<PasswordReveal>(`${this.endpoint}${id}/reveal/`);
   }
 
   /**
@@ -80,8 +47,13 @@ class PasswordsService {
    * @param options - Opcoes de geracao (comprimento, tipos de caracteres)
    * @returns Senha gerada com informacao de forca
    */
-  async generate(options: PasswordGenerateRequest = {}): Promise<PasswordGenerateResponse> {
-    return apiClient.post<PasswordGenerateResponse>(API_CONFIG.ENDPOINTS.PASSWORD_GENERATE, options);
+  async generate(
+    options: PasswordGenerateRequest = {}
+  ): Promise<PasswordGenerateResponse> {
+    return apiClient.post<PasswordGenerateResponse>(
+      API_CONFIG.ENDPOINTS.PASSWORD_GENERATE,
+      options
+    );
   }
 }
 

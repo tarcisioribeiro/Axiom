@@ -55,7 +55,9 @@ export const AlertDialogProvider = () => {
       <AlertDialogContent variant={variant} animation={animation} overlayBlur={blur}>
         <AlertDialogHeader variant={variant} icon={icon} showIcon={showIcon}>
           <AlertDialogTitle className="text-xl font-semibold">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="text-base">{description}</AlertDialogDescription>
+          <AlertDialogDescription className="text-base">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           {onCancel && (
@@ -63,7 +65,10 @@ export const AlertDialogProvider = () => {
               {cancelText || 'Cancelar'}
             </AlertDialogCancel>
           )}
-          <AlertDialogAction onClick={handleConfirm} className={cn('min-w-24', getActionButtonClass())}>
+          <AlertDialogAction
+            onClick={handleConfirm}
+            className={cn('min-w-24', getActionButtonClass())}
+          >
             {confirmText || 'Confirmar'}
           </AlertDialogAction>
         </AlertDialogFooter>

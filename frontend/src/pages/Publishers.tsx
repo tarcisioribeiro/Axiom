@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/common/SearchInput';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -32,7 +38,7 @@ export default function Publishers() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadPublishers();
+    void loadPublishers();
   }, []);
 
   const loadPublishers = async () => {
@@ -64,7 +70,8 @@ export default function Publishers() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir editora',
-      description: 'Tem certeza que deseja excluir esta editora? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta editora? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -78,7 +85,7 @@ export default function Publishers() {
         title: 'Editora excluída',
         description: 'A editora foi excluída com sucesso.',
       });
-      loadPublishers();
+      void loadPublishers();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir editora',
@@ -105,7 +112,7 @@ export default function Publishers() {
         });
       }
       setIsDialogOpen(false);
-      loadPublishers();
+      void loadPublishers();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -174,15 +181,17 @@ export default function Publishers() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(publisher)}
+                      aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(publisher.id)}
+                      aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -190,29 +199,28 @@ export default function Publishers() {
               <CardContent className="space-y-3">
                 {publisher.founded_year && (
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm">
-                      Fundada em {publisher.founded_year}
-                    </span>
+                    <Calendar className="h-4 w-4" />
+                    <span className="text-sm">Fundada em {publisher.founded_year}</span>
                   </div>
                 )}
                 {publisher.website && (
                   <div className="flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
+                    <Globe className="h-4 w-4" />
                     <a
                       href={publisher.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline truncate"
+                      className="truncate text-sm text-primary hover:underline"
                     >
                       {publisher.website.replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpen className="h-4 w-4" />
                   <span className="text-sm">
-                    {publisher.books_count} {publisher.books_count === 1 ? 'livro' : 'livros'}
+                    {publisher.books_count}{' '}
+                    {publisher.books_count === 1 ? 'livro' : 'livros'}
                   </span>
                 </div>
               </CardContent>
@@ -224,9 +232,7 @@ export default function Publishers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedPublisher ? 'Editar' : 'Nova'} Editora
-            </DialogTitle>
+            <DialogTitle>{selectedPublisher ? 'Editar' : 'Nova'} Editora</DialogTitle>
             <DialogDescription>
               {selectedPublisher
                 ? 'Atualize as informações da editora'

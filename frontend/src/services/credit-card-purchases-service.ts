@@ -1,4 +1,5 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
 import type {
   CreditCardPurchase,
@@ -6,25 +7,27 @@ import type {
   PaginatedResponse,
 } from '@/types';
 
-class CreditCardPurchasesService {
+class CreditCardPurchasesService extends BaseService<CreditCardPurchase, CreditCardPurchaseFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES);
+  }
+
   /**
    * Busca todas as compras, lidando com paginação automaticamente.
    * Busca todas as páginas e concatena os resultados.
    */
-  async getAll(params?: Record<string, any>): Promise<CreditCardPurchase[]> {
+  async getAll(params?: Record<string, unknown>): Promise<CreditCardPurchase[]> {
     const allResults: CreditCardPurchase[] = [];
     let page = 1;
     let hasMore = true;
 
     while (hasMore) {
       const response = await apiClient.get<PaginatedResponse<CreditCardPurchase>>(
-        API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES,
+        this.endpoint,
         { ...params, page }
       );
 
       allResults.push(...response.results);
-
-      // Verifica se há mais páginas
       hasMore = response.next !== null;
       page++;
     }
@@ -32,31 +35,8 @@ class CreditCardPurchasesService {
     return allResults;
   }
 
-  async getById(id: number): Promise<CreditCardPurchase> {
-    return apiClient.get<CreditCardPurchase>(
-      `${API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES}${id}/`
-    );
-  }
-
-  async create(data: CreditCardPurchaseFormData): Promise<CreditCardPurchase> {
-    return apiClient.post<CreditCardPurchase>(
-      API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES,
-      data
-    );
-  }
-
-  async update(
-    id: number,
-    data: Partial<CreditCardPurchaseFormData>
-  ): Promise<CreditCardPurchase> {
-    return apiClient.patch<CreditCardPurchase>(
-      `${API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES}${id}/`,
-      data
-    );
-  }
-
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES}${id}/`);
+  async update(id: number, data: Partial<CreditCardPurchaseFormData>): Promise<CreditCardPurchase> {
+    return apiClient.patch<CreditCardPurchase>(`${this.endpoint}${id}/`, data);
   }
 
   async getByCard(cardId: number): Promise<CreditCardPurchase[]> {

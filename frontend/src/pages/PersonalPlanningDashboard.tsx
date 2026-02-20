@@ -1,8 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Target, CheckCircle2, Calendar, TrendingUp,
-  Award, ListTodo, Flag, Smile, Frown, Meh,
-  SmilePlus, Angry
+  Target,
+  CheckCircle2,
+  Calendar,
+  TrendingUp,
+  Award,
+  ListTodo,
+  Flag,
+  Smile,
+  Frown,
+  Meh,
+  SmilePlus,
+  Angry,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -24,17 +33,17 @@ export default function PersonalPlanningDashboard() {
   const categoryColors = useTaskCategoryColors();
 
   useEffect(() => {
-    loadData();
+    void loadData();
 
     // Recarregar dados quando a aba/janela volta ao foco
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadData();
+        void loadData();
       }
     };
 
     const handleFocus = () => {
-      loadData();
+      void loadData();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -55,7 +64,7 @@ export default function PersonalPlanningDashboard() {
       toast({
         title: 'Erro ao carregar dados',
         description: getErrorMessage(error),
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -65,7 +74,7 @@ export default function PersonalPlanningDashboard() {
   // Processar dados para gráficos
   const weeklyProgressData = useMemo(() => {
     if (!stats?.weekly_progress) return [];
-    return stats.weekly_progress.map(item => {
+    return stats.weekly_progress.map((item) => {
       // Parse da data sem problemas de timezone - a data vem como "YYYY-MM-DD"
       const parts = item.date.split('-');
       const day = parts[2];
@@ -75,23 +84,25 @@ export default function PersonalPlanningDashboard() {
         date: dateStr,
         total: item.total,
         completadas: item.completed,
-        taxa: parseFloat(item.rate.toFixed(1))
+        taxa: parseFloat(item.rate.toFixed(1)),
       };
     });
   }, [stats?.weekly_progress]);
 
   const tasksByCategoryData = useMemo(() => {
     if (!stats?.tasks_by_category) return [];
-    return stats.tasks_by_category.map(item => ({
+    return stats.tasks_by_category.map((item) => ({
       category: item.category,
       name: item.category_display,
-      count: item.count
+      count: item.count,
     }));
   }, [stats?.tasks_by_category]);
 
   // Função para obter cor por categoria (usa cores do tema)
   const getCategoryColor = (category: string) => {
-    return categoryColors[category as keyof typeof categoryColors] || categoryColors.other;
+    return (
+      categoryColors[category as keyof typeof categoryColors] || categoryColors.other
+    );
   };
 
   // Ícone de mood - usando cores Dracula
@@ -118,24 +129,16 @@ export default function PersonalPlanningDashboard() {
 
   if (!stats) {
     return (
-      <div className="px-4 py-8 space-y-6">
-        <PageHeader
-          title="Dashboard de Planejamento Pessoal"
-          icon={<Calendar />}
-        />
-        <p className="text-center">
-          Nenhum dado disponível
-        </p>
+      <div className="space-y-6 px-4 py-8">
+        <PageHeader title="Dashboard de Planejamento Pessoal" icon={<Calendar />} />
+        <p className="text-center">Nenhum dado disponível</p>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-8 space-y-6">
-      <PageHeader
-        title="Dashboard de Planejamento Pessoal"
-        icon={<Calendar />}
-      />
+    <div className="space-y-6 px-4 py-8">
+      <PageHeader title="Dashboard de Planejamento Pessoal" icon={<Calendar />} />
 
       {/* Grid 1: 8 Cards de Métricas Principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -211,12 +214,27 @@ export default function PersonalPlanningDashboard() {
                 lockChartType="line"
                 dualYAxis={{
                   left: { dataKey: 'total', label: 'Tarefas', color: COLORS[0] },
-                  right: { dataKey: 'taxa', label: 'Taxa %', color: COLORS[1] }
+                  right: { dataKey: 'taxa', label: 'Taxa %', color: COLORS[1] },
                 }}
                 lines={[
-                  { dataKey: 'total', stroke: COLORS[0], yAxisId: 'left', name: 'Total' },
-                  { dataKey: 'completadas', stroke: COLORS[3], yAxisId: 'left', name: 'Completadas' },
-                  { dataKey: 'taxa', stroke: COLORS[1], yAxisId: 'right', name: 'Taxa %' }
+                  {
+                    dataKey: 'total',
+                    stroke: COLORS[0],
+                    yAxisId: 'left',
+                    name: 'Total',
+                  },
+                  {
+                    dataKey: 'completadas',
+                    stroke: COLORS[3],
+                    yAxisId: 'left',
+                    name: 'Completadas',
+                  },
+                  {
+                    dataKey: 'taxa',
+                    stroke: COLORS[1],
+                    yAxisId: 'right',
+                    name: 'Taxa %',
+                  },
                 ]}
                 height={350}
               />
@@ -241,7 +259,9 @@ export default function PersonalPlanningDashboard() {
                 nameKey="name"
                 formatter={(value) => `${value} ${value === 1 ? 'tarefa' : 'tarefas'}`}
                 colors={COLORS}
-                customColors={(entry) => getCategoryColor(String(entry.category || 'other'))}
+                customColors={(entry) =>
+                  getCategoryColor(String(entry.category || 'other'))
+                }
                 emptyMessage="Nenhuma tarefa cadastrada"
                 lockChartType="pie"
                 layout="horizontal"
@@ -265,15 +285,15 @@ export default function PersonalPlanningDashboard() {
             <div className="space-y-6">
               {stats.active_goals_progress.map((goal, index) => (
                 <div key={index}>
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <span className="font-medium">{goal.title}</span>
-                    <span className="text-sm">
-                      {goal.progress_percentage}%
-                    </span>
+                    <span className="text-sm">{goal.progress_percentage}%</span>
                   </div>
                   <Progress value={goal.progress_percentage} className="h-3" />
-                  <div className="flex justify-between items-center mt-1 text-xs">
-                    <span>{goal.current_value}/{goal.target_value}</span>
+                  <div className="mt-1 flex items-center justify-between text-xs">
+                    <span>
+                      {goal.current_value}/{goal.target_value}
+                    </span>
                     <span>{goal.days_active} dias ativos</span>
                   </div>
                 </div>
@@ -295,8 +315,11 @@ export default function PersonalPlanningDashboard() {
           <CardContent>
             <div className="space-y-4">
               {stats.recent_reflections.map((reflection: DailyReflection) => (
-                <div key={reflection.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex justify-between items-start mb-2">
+                <div
+                  key={reflection.id}
+                  className="border-b pb-4 last:border-b-0 last:pb-0"
+                >
+                  <div className="mb-2 flex items-start justify-between">
                     <span className="text-sm font-medium">
                       {new Date(reflection.date).toLocaleDateString('pt-BR')}
                     </span>
@@ -309,9 +332,7 @@ export default function PersonalPlanningDashboard() {
                       </div>
                     )}
                   </div>
-                  <p className="text-sm leading-relaxed">
-                    {reflection.reflection}
-                  </p>
+                  <p className="text-sm leading-relaxed">{reflection.reflection}</p>
                 </div>
               ))}
             </div>

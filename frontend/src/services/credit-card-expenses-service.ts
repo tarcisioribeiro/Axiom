@@ -1,27 +1,10 @@
-import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
-import type { CreditCardExpense, CreditCardExpenseFormData , PaginatedResponse } from '@/types';
+import type { CreditCardExpense, CreditCardExpenseFormData } from '@/types';
 
-class CreditCardExpensesService {
-  async getAll(params?: Record<string, any>): Promise<CreditCardExpense[]> {
-    const response = await apiClient.get<PaginatedResponse<CreditCardExpense>>(API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES, params);
-    return response.results;
-  }
-
-  async getById(id: number): Promise<CreditCardExpense> {
-    return apiClient.get<CreditCardExpense>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES}${id}/`);
-  }
-
-  async create(data: CreditCardExpenseFormData): Promise<CreditCardExpense> {
-    return apiClient.post<CreditCardExpense>(API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES, data);
-  }
-
-  async update(id: number, data: Partial<CreditCardExpenseFormData>): Promise<CreditCardExpense> {
-    return apiClient.put<CreditCardExpense>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES}${id}/`, data);
-  }
-
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES}${id}/`);
+class CreditCardExpensesService extends BaseService<CreditCardExpense, CreditCardExpenseFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES);
   }
 
   async getByCard(cardId: number): Promise<CreditCardExpense[]> {

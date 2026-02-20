@@ -22,36 +22,30 @@ export function ChatMessage({ message }: ChatMessageProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'flex gap-3 p-4 rounded-lg',
-        isUser
-          ? 'bg-muted ml-8'
-          : 'bg-primary/5 border border-primary/10 mr-8'
+        'flex gap-3 rounded-lg p-4',
+        isUser ? 'ml-8 bg-muted' : 'mr-8 border border-primary/10 bg-primary/5'
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-          isUser
-            ? 'bg-muted-foreground/20'
-            : 'bg-primary/20'
+          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
+          isUser ? 'bg-muted-foreground/20' : 'bg-primary/20'
         )}
       >
         {isUser ? (
-          <User className="w-4 h-4 text-muted-foreground" />
+          <User className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <Bot className="w-4 h-4 text-primary" />
+          <Bot className="h-4 w-4 text-primary" />
         )}
       </div>
 
       {/* Conteúdo */}
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-sm mb-1">
-          {isUser ? 'Você' : 'Assistente'}
-        </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 text-sm font-medium">{isUser ? 'Você' : 'Assistente'}</div>
 
         {isUser ? (
-          <p className="text-foreground whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap text-foreground">{message.content}</p>
         ) : (
           <ResponseRenderer
             content={message.content}
@@ -62,7 +56,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         {/* Timestamp */}
         {message.timestamp && (
-          <div className="text-xs text-muted-foreground mt-2">
+          <div className="mt-2 text-xs text-muted-foreground">
             {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
               hour: '2-digit',
               minute: '2-digit',

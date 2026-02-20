@@ -22,7 +22,7 @@ export default function Login() {
 
     try {
       await login({ username, password });
-      navigate('/');
+      void navigate('/');
     } catch (err) {
       // Error is handled by the store
       console.error('Login error:', err);
@@ -30,32 +30,32 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-4 relative">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-4">
       {/* Theme Toggle Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={toggleTheme}
         className="absolute top-4 right-4 hover:bg-secondary transition-all"
-        title={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
+        aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
       >
         {isDark ? (
-          <Sun className="w-5 h-5 text-warning transition-transform hover:rotate-180 duration-500" />
+          <Sun className="w-5 h-5 text-warning transition-transform hover:rotate-180 duration-500" aria-hidden="true" />
         ) : (
-          <Moon className="w-5 h-5 text-primary transition-transform hover:rotate-[-15deg] duration-300" />
+          <Moon className="w-5 h-5 text-primary transition-transform hover:rotate-[-15deg] duration-300" aria-hidden="true" />
         )}
       </Button>
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex items-center justify-center">
-            <img src={logo} alt="MindLedger" className="w-64 h-auto" />
+            <img src={logo} alt="MindLedger" className="h-auto w-64" />
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg text-sm">
+              <div className="rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -88,7 +88,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full gradient-primary text-white font-semibold"
+              className="gradient-primary w-full font-semibold text-white"
               disabled={isLoading}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
@@ -97,7 +97,7 @@ export default function Login() {
 
           <div className="mt-6 text-center text-sm">
             <span>Não tem uma conta? </span>
-            <Link to="/register" className="text-primary hover:underline font-medium">
+            <Link to="/register" className="font-medium text-primary hover:underline">
               Cadastre-se
             </Link>
           </div>

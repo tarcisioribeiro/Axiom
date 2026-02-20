@@ -51,36 +51,137 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/ai-assistant': { label: 'Assistente IA', icon: Bot },
 
   // Personal Planning Module
-  '/planning/dashboard': { label: 'Dashboard', icon: LayoutDashboard, module: 'Planejamento Pessoal' },
-  '/planning/daily': { label: 'Checklist Diário', icon: CheckCircle2, module: 'Planejamento Pessoal' },
-  '/planning/routine-tasks': { label: 'Tarefas Rotineiras', icon: Calendar, module: 'Planejamento Pessoal' },
-  '/planning/goals': { label: 'Objetivos', icon: Target, module: 'Planejamento Pessoal' },
+  '/planning/dashboard': {
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    module: 'Planejamento Pessoal',
+  },
+  '/planning/daily': {
+    label: 'Checklist Diário',
+    icon: CheckCircle2,
+    module: 'Planejamento Pessoal',
+  },
+  '/planning/routine-tasks': {
+    label: 'Tarefas Rotineiras',
+    icon: Calendar,
+    module: 'Planejamento Pessoal',
+  },
+  '/planning/goals': {
+    label: 'Objetivos',
+    icon: Target,
+    module: 'Planejamento Pessoal',
+  },
 
   // Financial Control Module
-  '/dashboard': { label: 'Dashboard', icon: LayoutDashboard, module: 'Controle Financeiro' },
-  '/accounts': { label: 'Contas', icon: Wallet, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/credit-cards': { label: 'Cartões de Crédito', icon: CreditCard, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/credit-card-bills': { label: 'Faturas', icon: Receipt, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/fixed-expenses': { label: 'Gastos Fixos', icon: CalendarClock, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/payables': { label: 'Valores a Pagar', icon: Receipt, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/financial-goals': { label: 'Metas Financeiras', icon: Target, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/members': { label: 'Beneficiários/Credores', icon: Users, module: 'Controle Financeiro', subModule: 'Cadastros' },
-  '/expenses': { label: 'Despesas', icon: TrendingDown, module: 'Controle Financeiro', subModule: 'Registros' },
-  '/revenues': { label: 'Receitas', icon: TrendingUp, module: 'Controle Financeiro', subModule: 'Registros' },
-  '/credit-card-expenses': { label: 'Gastos do Cartão', icon: ShoppingCart, module: 'Controle Financeiro', subModule: 'Registros' },
-  '/transfers': { label: 'Transferências', icon: ArrowLeftRight, module: 'Controle Financeiro', subModule: 'Registros' },
-  '/loans': { label: 'Empréstimos', icon: HandCoins, module: 'Controle Financeiro', subModule: 'Registros' },
-  '/vaults': { label: 'Cofres', icon: Vault, module: 'Controle Financeiro', subModule: 'Registros' },
+  '/dashboard': {
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    module: 'Controle Financeiro',
+  },
+  '/accounts': {
+    label: 'Contas',
+    icon: Wallet,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/credit-cards': {
+    label: 'Cartões de Crédito',
+    icon: CreditCard,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/credit-card-bills': {
+    label: 'Faturas',
+    icon: Receipt,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/fixed-expenses': {
+    label: 'Gastos Fixos',
+    icon: CalendarClock,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/payables': {
+    label: 'Valores a Pagar',
+    icon: Receipt,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/financial-goals': {
+    label: 'Metas Financeiras',
+    icon: Target,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/members': {
+    label: 'Beneficiários/Credores',
+    icon: Users,
+    module: 'Controle Financeiro',
+    subModule: 'Cadastros',
+  },
+  '/expenses': {
+    label: 'Despesas',
+    icon: TrendingDown,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
+  '/revenues': {
+    label: 'Receitas',
+    icon: TrendingUp,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
+  '/credit-card-expenses': {
+    label: 'Gastos do Cartão',
+    icon: ShoppingCart,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
+  '/transfers': {
+    label: 'Transferências',
+    icon: ArrowLeftRight,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
+  '/loans': {
+    label: 'Empréstimos',
+    icon: HandCoins,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
+  '/vaults': {
+    label: 'Cofres',
+    icon: Vault,
+    module: 'Controle Financeiro',
+    subModule: 'Registros',
+  },
 
   // Security Module
-  '/security/dashboard': { label: 'Dashboard', icon: LayoutDashboard, module: 'Segurança' },
+  '/security/dashboard': {
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    module: 'Segurança',
+  },
   '/security/passwords': { label: 'Senhas', icon: Key, module: 'Segurança' },
-  '/security/stored-cards': { label: 'Cartões Armazenados', icon: CreditCard, module: 'Segurança' },
-  '/security/stored-accounts': { label: 'Contas Armazenadas', icon: Wallet, module: 'Segurança' },
+  '/security/stored-cards': {
+    label: 'Cartões Armazenados',
+    icon: CreditCard,
+    module: 'Segurança',
+  },
+  '/security/stored-accounts': {
+    label: 'Contas Armazenadas',
+    icon: Wallet,
+    module: 'Segurança',
+  },
   '/security/archives': { label: 'Arquivos', icon: Archive, module: 'Segurança' },
 
   // Library Module
-  '/library/dashboard': { label: 'Dashboard', icon: LayoutDashboard, module: 'Leitura' },
+  '/library/dashboard': {
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    module: 'Leitura',
+  },
   '/library/books': { label: 'Livros', icon: BookOpen, module: 'Leitura' },
   '/library/authors': { label: 'Autores', icon: UserPen, module: 'Leitura' },
   '/library/publishers': { label: 'Editoras', icon: Building2, module: 'Leitura' },
@@ -91,13 +192,13 @@ const routeConfigs: Record<string, RouteConfig> = {
 const moduleIcons: Record<string, LucideIcon> = {
   'Planejamento Pessoal': Calendar,
   'Controle Financeiro': Wallet,
-  'Segurança': Shield,
-  'Leitura': Library,
+  Segurança: Shield,
+  Leitura: Library,
 };
 
 const subModuleIcons: Record<string, LucideIcon> = {
-  'Cadastros': FolderOpen,
-  'Registros': ClipboardList,
+  Cadastros: FolderOpen,
+  Registros: ClipboardList,
 };
 
 /**
@@ -122,9 +223,7 @@ export function useBreadcrumb() {
       return [{ label: 'Início', href: '/', icon: Home }];
     }
 
-    const items: BreadcrumbItem[] = [
-      { label: 'Início', href: '/', icon: Home },
-    ];
+    const items: BreadcrumbItem[] = [{ label: 'Início', href: '/', icon: Home }];
 
     // Adiciona módulo se existir
     if (config.module) {

@@ -149,8 +149,18 @@ export const useAlertDialog = () => {
    * @param description - Descricao/mensagem
    * @param options - Opcoes adicionais
    */
-  const showSuccess = (title: string, description: string, options?: Partial<typeof defaultOptions>): Promise<void> => {
-    return showAlert({ title, description, variant: 'success', animation: 'bounce', ...options });
+  const showSuccess = (
+    title: string,
+    description: string,
+    options?: Partial<DefaultOptions>
+  ): Promise<void> => {
+    return showAlert({
+      title,
+      description,
+      variant: 'success',
+      animation: 'bounce',
+      ...options,
+    });
   };
 
   /**
@@ -161,8 +171,18 @@ export const useAlertDialog = () => {
    * @param options - Opcoes adicionais
    * @returns Promise que resolve para true (confirmou) ou false (cancelou)
    */
-  const showWarning = (title: string, description: string, options?: Partial<typeof defaultOptions>): Promise<boolean> => {
-    return showConfirm({ title, description, variant: 'warning', animation: 'slideDown', ...options });
+  const showWarning = (
+    title: string,
+    description: string,
+    options?: Partial<DefaultOptions>
+  ): Promise<boolean> => {
+    return showConfirm({
+      title,
+      description,
+      variant: 'warning',
+      animation: 'slideDown',
+      ...options,
+    });
   };
 
   /**
@@ -172,8 +192,18 @@ export const useAlertDialog = () => {
    * @param description - Descricao/mensagem de erro
    * @param options - Opcoes adicionais
    */
-  const showError = (title: string, description: string, options?: Partial<typeof defaultOptions>): Promise<void> => {
-    return showAlert({ title, description, variant: 'destructive', animation: 'shake', ...options });
+  const showError = (
+    title: string,
+    description: string,
+    options?: Partial<DefaultOptions>
+  ): Promise<void> => {
+    return showAlert({
+      title,
+      description,
+      variant: 'destructive',
+      animation: 'shake',
+      ...options,
+    });
   };
 
   /**
@@ -183,8 +213,18 @@ export const useAlertDialog = () => {
    * @param description - Descricao/informacao
    * @param options - Opcoes adicionais
    */
-  const showInfo = (title: string, description: string, options?: Partial<typeof defaultOptions>): Promise<void> => {
-    return showAlert({ title, description, variant: 'info', animation: 'slideUp', ...options });
+  const showInfo = (
+    title: string,
+    description: string,
+    options?: Partial<DefaultOptions>
+  ): Promise<void> => {
+    return showAlert({
+      title,
+      description,
+      variant: 'info',
+      animation: 'slideUp',
+      ...options,
+    });
   };
 
   /**
@@ -204,7 +244,10 @@ export const useAlertDialog = () => {
    * }
    * ```
    */
-  const showDelete = (itemName: string, options?: Partial<typeof defaultOptions>): Promise<boolean> => {
+  const showDelete = (
+    itemName: string,
+    options?: Partial<DefaultOptions>
+  ): Promise<boolean> => {
     return showConfirm({
       title: 'Confirmar exclusao',
       description: `Tem certeza que deseja excluir ${itemName}? Esta acao nao pode ser desfeita.`,
@@ -227,10 +270,10 @@ export const useAlertDialog = () => {
   };
 };
 
-const defaultOptions = {
-  confirmText: 'OK',
-  cancelText: 'Cancelar',
-  animation: 'default' as AnimationType,
-  blur: 'md' as BlurLevel,
-  showIcon: true,
+type DefaultOptions = {
+  confirmText: string;
+  cancelText: string;
+  animation: AnimationType;
+  blur: BlurLevel;
+  showIcon: boolean;
 };

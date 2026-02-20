@@ -39,11 +39,28 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { formatLocalDate } from '@/lib/utils';
 
 const EXPENSE_CATEGORIES = [
-  'food and drink', 'bills and services', 'electronics', 'family and friends',
-  'pets', 'digital signs', 'house', 'purchases', 'donate', 'education',
-  'loans', 'entertainment', 'taxes', 'investments', 'others', 'vestuary',
-  'health and care', 'professional services', 'supermarket', 'rates',
-  'transport', 'travels'
+  'food and drink',
+  'bills and services',
+  'electronics',
+  'family and friends',
+  'pets',
+  'digital signs',
+  'house',
+  'purchases',
+  'donate',
+  'education',
+  'loans',
+  'entertainment',
+  'taxes',
+  'investments',
+  'others',
+  'vestuary',
+  'health and care',
+  'professional services',
+  'supermarket',
+  'rates',
+  'transport',
+  'travels',
 ];
 
 const PAYABLE_STATUSES = ['active', 'paid', 'overdue', 'cancelled'];
@@ -70,7 +87,7 @@ export default function Payables() {
   });
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -136,7 +153,7 @@ export default function Payables() {
           title: 'Valor a pagar excluído',
           description: 'O valor a pagar foi excluído com sucesso.',
         });
-        loadData();
+        void loadData();
       } catch (error: unknown) {
         toast({
           title: 'Erro ao excluir',
@@ -171,7 +188,7 @@ export default function Payables() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -183,13 +200,17 @@ export default function Payables() {
     }
   };
 
-  const filteredPayables = payables.filter((payable) =>
-    payable.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payable.member_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPayables = payables.filter(
+    (payable) =>
+      payable.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payable.member_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       active: 'default',
       paid: 'secondary',
       overdue: 'destructive',
@@ -213,7 +234,7 @@ export default function Payables() {
         icon={<Receipt />}
         action={{
           label: 'Novo Valor a Pagar',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
@@ -239,7 +260,10 @@ export default function Payables() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPayables.map((payable) => (
-            <div key={payable.id} className="p-4 bg-card border rounded-lg space-y-3 hover:shadow-md transition-shadow">
+            <div
+              key={payable.id}
+              className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md"
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold">{payable.description}</h3>
@@ -257,17 +281,23 @@ export default function Payables() {
                 </div>
                 <div className="flex justify-between">
                   <span>Valor Pago:</span>
-                  <span className="font-medium">{formatCurrency(payable.paid_value)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(payable.paid_value)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Saldo Restante:</span>
                   <span className="font-medium text-destructive">
-                    {formatCurrency(parseFloat(payable.value) - parseFloat(payable.paid_value))}
+                    {formatCurrency(
+                      parseFloat(payable.value) - parseFloat(payable.paid_value)
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Data de Registro:</span>
-                  <span className="font-medium">{formatDate(payable.date, 'dd/MM/yyyy')}</span>
+                  <span className="font-medium">
+                    {formatDate(payable.date, 'dd/MM/yyyy')}
+                  </span>
                 </div>
                 {payable.due_date && (
                   <div className="flex justify-between">
@@ -285,19 +315,29 @@ export default function Payables() {
                 )}
               </div>
 
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex gap-2 border-t pt-2">
                 <ReceiptButton
                   source={{ type: 'payable', data: payable }}
                   memberName={getMemberDisplayName(payable.member_name, user)}
                   variant="outline"
                   size="sm"
                 />
-                <Button variant="outline" size="sm" onClick={() => handleEdit(payable)} className="flex-1">
-                  <Pencil className="w-3 h-3 mr-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(payable)}
+                  className="flex-1"
+                >
+                  <Pencil className="mr-1 h-3 w-3" />
                   Editar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(payable)} className="flex-1">
-                  <Trash2 className="w-3 h-3 mr-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(payable)}
+                  className="flex-1"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
                   Excluir
                 </Button>
               </div>
@@ -307,7 +347,7 @@ export default function Payables() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedPayable ? 'Editar Valor a Pagar' : 'Novo Valor a Pagar'}
@@ -326,7 +366,9 @@ export default function Payables() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   required
                   placeholder="Ex: Tratamento dentário, Conserto do carro"
                 />
@@ -339,7 +381,9 @@ export default function Payables() {
                   type="number"
                   step="0.01"
                   value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, value: parseFloat(e.target.value) })
+                  }
                   required
                 />
               </div>
@@ -351,7 +395,9 @@ export default function Payables() {
                   type="number"
                   step="0.01"
                   value={formData.paid_value || 0}
-                  onChange={(e) => setFormData({ ...formData, paid_value: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, paid_value: parseFloat(e.target.value) })
+                  }
                 />
               </div>
 
@@ -359,7 +405,12 @@ export default function Payables() {
                 <Label htmlFor="date">Data de Registro *</Label>
                 <DatePicker
                   value={formData.date || undefined}
-                  onChange={(date) => setFormData({ ...formData, date: date ? formatLocalDate(date) : '' })}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      date: date ? formatLocalDate(date) : '',
+                    })
+                  }
                   placeholder="Selecione a data"
                 />
               </div>
@@ -368,14 +419,24 @@ export default function Payables() {
                 <Label htmlFor="due_date">Data de Vencimento</Label>
                 <DatePicker
                   value={formData.due_date || undefined}
-                  onChange={(date) => setFormData({ ...formData, due_date: date ? formatLocalDate(date) : undefined })}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      due_date: date ? formatLocalDate(date) : undefined,
+                    })
+                  }
                   placeholder="Selecione a data de vencimento"
                 />
               </div>
 
               <div>
                 <Label htmlFor="category">Categoria *</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -391,7 +452,12 @@ export default function Payables() {
 
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') => setFormData({ ...formData, status: value })}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') =>
+                    setFormData({ ...formData, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -417,14 +483,18 @@ export default function Payables() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <div className="flex justify-end gap-2 border-t pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Salvando...
                   </>
                 ) : (

@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, Copy, CreditCard as CreditCardIcon } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Copy,
+  CreditCard as CreditCardIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,7 +29,12 @@ import { getErrorMessage } from '@/utils/error-utils';
 import { translate } from '@/config/constants';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DataTable, type Column } from '@/components/common/DataTable';
-import type { StoredCreditCard, StoredCreditCardFormData, CreditCard, Member } from '@/types';
+import type {
+  StoredCreditCard,
+  StoredCreditCardFormData,
+  CreditCard,
+  Member,
+} from '@/types';
 import { PageContainer } from '@/components/common/PageContainer';
 
 export default function StoredCards() {
@@ -31,16 +45,16 @@ export default function StoredCards() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<StoredCreditCard | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [revealedData, setRevealedData] = useState<Map<number, { number: string; cvv: string }>>(
-    new Map()
-  );
+  const [revealedData, setRevealedData] = useState<
+    Map<number, { number: string; cvv: string }>
+  >(new Map());
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -93,7 +107,7 @@ export default function StoredCards() {
         title: 'Cartão excluído',
         description: 'O cartão foi excluído com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -146,9 +160,9 @@ export default function StoredCards() {
       setIsSubmitting(true);
       if (selectedCard) {
         // Remove campos vazios (não atualizar dados sensíveis vazios)
-        const updateData = { ...data };
-        if (!updateData.card_number) delete (updateData as any).card_number;
-        if (!updateData.security_code) delete (updateData as any).security_code;
+        const updateData: Partial<StoredCreditCardFormData> = { ...data };
+        if (!updateData.card_number) delete updateData.card_number;
+        if (!updateData.security_code) delete updateData.security_code;
 
         await storedCardsService.update(selectedCard.id, updateData);
         toast({
@@ -163,7 +177,7 @@ export default function StoredCards() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -179,7 +193,7 @@ export default function StoredCards() {
     (card) =>
       card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.cardholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (card.last_four_digits && card.last_four_digits.includes(searchTerm))
+      (card.last_four_digits?.includes(searchTerm))
   );
 
   const getFinanceCardName = (id?: number) => {
@@ -194,7 +208,7 @@ export default function StoredCards() {
       label: 'Nome',
       render: (card) => (
         <div className="flex items-center gap-2">
-          <CreditCardIcon className="w-4 h-4" />
+          <CreditCardIcon className="h-4 w-4" />
           <span className="font-medium">{card.name}</span>
         </div>
       ),
@@ -238,7 +252,7 @@ export default function StoredCards() {
         const revealed = revealedData.get(card.id);
         if (revealed) {
           return (
-            <div className="flex items-center gap-2 font-mono text-sm justify-center">
+            <div className="flex items-center justify-center gap-2 font-mono text-sm">
               <span>{revealed.cvv}</span>
               <Button
                 size="sm"
@@ -320,28 +334,28 @@ export default function StoredCards() {
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : revealedData.has(card.id) ? (
                 <>
-                  <EyeOff className="h-3 w-3 mr-1" />
+                  <EyeOff className="mr-1 h-3 w-3" />
                   Ocultar
                 </>
               ) : (
                 <>
-                  <Eye className="h-3 w-3 mr-1" />
+                  <Eye className="mr-1 h-3 w-3" />
                   Revelar
                 </>
               )}
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(card)}>
-              <Pencil className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(card)} aria-label="Editar">
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(card.id)}>
-              <Trash2 className="h-4 w-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(card.id)} aria-label="Excluir">
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedCard ? 'Editar' : 'Novo'} Cartão Armazenado

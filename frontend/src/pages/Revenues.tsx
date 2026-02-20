@@ -3,8 +3,20 @@ import { Plus, Pencil, Trash2, TrendingUp, Filter, ChevronDown } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -47,43 +59,54 @@ export default function Revenues() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   useEffect(() => {
     filterRevenues();
-  }, [searchTerm, categoryFilter, statusFilter, startDate, endDate, selectedAccounts, revenues]);
+  }, [
+    searchTerm,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+    revenues,
+  ]);
 
   const filterRevenues = () => {
     let filtered = [...revenues];
     if (searchTerm) {
-      filtered = filtered.filter(r =>
-        r.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (r.source && r.source.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (r) =>
+          r.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.source?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (categoryFilter !== 'all') {
-      filtered = filtered.filter(r => r.category === categoryFilter);
+      filtered = filtered.filter((r) => r.category === categoryFilter);
     }
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(r => statusFilter === 'received' ? r.received : !r.received);
+      filtered = filtered.filter((r) =>
+        statusFilter === 'received' ? r.received : !r.received
+      );
     }
     if (startDate) {
-      filtered = filtered.filter(r => new Date(r.date) >= startDate);
+      filtered = filtered.filter((r) => new Date(r.date) >= startDate);
     }
     if (endDate) {
-      filtered = filtered.filter(r => new Date(r.date) <= endDate);
+      filtered = filtered.filter((r) => new Date(r.date) <= endDate);
     }
     if (selectedAccounts.length > 0) {
-      filtered = filtered.filter(r => selectedAccounts.includes(r.account));
+      filtered = filtered.filter((r) => selectedAccounts.includes(r.account));
     }
     setFilteredRevenues(filtered);
   };
 
   const toggleAccount = (accountId: number) => {
-    setSelectedAccounts(prev =>
+    setSelectedAccounts((prev) =>
       prev.includes(accountId)
-        ? prev.filter(id => id !== accountId)
+        ? prev.filter((id) => id !== accountId)
         : [...prev, accountId]
     );
   };
@@ -110,7 +133,11 @@ export default function Revenues() {
       setAccounts(accountsData);
       setLoans(Array.isArray(loansData) ? loansData : []);
     } catch (error: unknown) {
-      toast({ title: 'Erro ao carregar dados', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao carregar dados',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -121,15 +148,25 @@ export default function Revenues() {
       setIsSubmitting(true);
       if (selectedRevenue) {
         await revenuesService.update(selectedRevenue.id, data);
-        toast({ title: 'Receita atualizada', description: 'A receita foi atualizada com sucesso.' });
+        toast({
+          title: 'Receita atualizada',
+          description: 'A receita foi atualizada com sucesso.',
+        });
       } else {
         await revenuesService.create(data);
-        toast({ title: 'Receita criada', description: 'A receita foi criada com sucesso.' });
+        toast({
+          title: 'Receita criada',
+          description: 'A receita foi criada com sucesso.',
+        });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao salvar', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -139,7 +176,8 @@ export default function Revenues() {
     if (accounts.length === 0) {
       toast({
         title: 'Ação não permitida',
-        description: 'É necessário ter pelo menos uma conta cadastrada antes de criar uma receita.',
+        description:
+          'É necessário ter pelo menos uma conta cadastrada antes de criar uma receita.',
         variant: 'destructive',
       });
       return;
@@ -151,7 +189,8 @@ export default function Revenues() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir receita',
-      description: 'Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -159,10 +198,17 @@ export default function Revenues() {
     if (!confirmed) return;
     try {
       await revenuesService.delete(id);
-      toast({ title: 'Receita excluída', description: 'A receita foi excluída com sucesso.' });
-      loadData();
+      toast({
+        title: 'Receita excluída',
+        description: 'A receita foi excluída com sucesso.',
+      });
+      void loadData();
     } catch (error: unknown) {
-      toast({ title: 'Erro ao excluir', description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: 'Erro ao excluir',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -184,9 +230,7 @@ export default function Revenues() {
       render: (revenue) => (
         <div>
           <div className="font-medium">{revenue.description}</div>
-          {revenue.source && (
-            <div className="text-xs">Origem: {revenue.source}</div>
-          )}
+          {revenue.source && <div className="text-xs">Origem: {revenue.source}</div>}
         </div>
       ),
     },
@@ -211,7 +255,9 @@ export default function Revenues() {
       key: 'category',
       label: 'Categoria',
       render: (revenue) => (
-        <Badge variant="success">{translate('revenueCategories', revenue.category)}</Badge>
+        <Badge variant="success">
+          {translate('revenueCategories', revenue.category)}
+        </Badge>
       ),
     },
     {
@@ -244,24 +290,29 @@ export default function Revenues() {
         icon={<TrendingUp />}
         action={{
           label: 'Nova Receita',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
 
-      <div className="bg-card border rounded-xl p-4 space-y-4">
+      <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4" />
+            <Filter className="h-4 w-4" />
             <span className="font-semibold">Filtros</span>
           </div>
-          {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || startDate || endDate || selectedAccounts.length > 0) && (
+          {(searchTerm ||
+            categoryFilter !== 'all' ||
+            statusFilter !== 'all' ||
+            startDate ||
+            endDate ||
+            selectedAccounts.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
               Limpar Filtros
             </Button>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Input
             placeholder="Buscar por descrição ou origem..."
             value={searchTerm}
@@ -291,7 +342,7 @@ export default function Revenues() {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
             <label className="text-sm">Data Inicial</label>
             <DatePicker
@@ -318,15 +369,15 @@ export default function Revenues() {
                   {selectedAccounts.length === 0
                     ? 'Todas as Contas'
                     : `${selectedAccounts.length} conta(s) selecionada(s)`}
-                  <ChevronDown className="w-4 h-4 ml-2" />
+                  <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-2">
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="max-h-60 space-y-2 overflow-y-auto">
                   {accounts.map((account) => (
                     <div
                       key={account.id}
-                      className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer"
+                      className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"
                       onClick={() => toggleAccount(account.id)}
                     >
                       <Checkbox
@@ -341,7 +392,7 @@ export default function Revenues() {
             </Popover>
           </div>
         </div>
-        <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
             {filteredRevenues.length} receita(s) encontrada(s)
           </span>
@@ -365,11 +416,11 @@ export default function Revenues() {
               source={{ type: 'revenue', data: revenue }}
               memberName={getMemberDisplayName(revenue.member_name, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(revenue)}>
-              <Pencil className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={() => handleEdit(revenue)} aria-label="Editar">
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(revenue.id)}>
-              <Trash2 className="w-4 h-4 text-destructive" />
+            <Button variant="ghost" size="icon" onClick={() => handleDelete(revenue.id)} aria-label="Excluir">
+              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -378,10 +429,23 @@ export default function Revenues() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedRevenue ? 'Editar Receita' : 'Nova Receita'}</DialogTitle>
-            <DialogDescription>{selectedRevenue ? 'Atualize as informações da receita' : 'Adicione uma nova receita ao sistema'}</DialogDescription>
+            <DialogTitle>
+              {selectedRevenue ? 'Editar Receita' : 'Nova Receita'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedRevenue
+                ? 'Atualize as informações da receita'
+                : 'Adicione uma nova receita ao sistema'}
+            </DialogDescription>
           </DialogHeader>
-          <RevenueForm revenue={selectedRevenue} accounts={accounts} loans={loans} onSubmit={handleSubmit} onCancel={() => setIsDialogOpen(false)} isLoading={isSubmitting} />
+          <RevenueForm
+            revenue={selectedRevenue}
+            accounts={accounts}
+            loans={loans}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
     </PageContainer>

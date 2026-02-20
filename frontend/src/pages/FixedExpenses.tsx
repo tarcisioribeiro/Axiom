@@ -38,7 +38,7 @@ export default function FixedExpenses() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -80,7 +80,7 @@ export default function FixedExpenses() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -109,7 +109,7 @@ export default function FixedExpenses() {
         title: 'Despesa fixa excluída',
         description: 'A despesa fixa foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -151,8 +151,9 @@ export default function FixedExpenses() {
       label: 'Categoria',
       render: (item) => (
         <Badge variant="secondary">
-          {TRANSLATIONS.expenseCategories[item.category as keyof typeof TRANSLATIONS.expenseCategories] ||
-            item.category}
+          {TRANSLATIONS.expenseCategories[
+            item.category as keyof typeof TRANSLATIONS.expenseCategories
+          ] || item.category}
         </Badge>
       ),
     },
@@ -169,9 +170,7 @@ export default function FixedExpenses() {
       key: 'total_generated',
       label: 'Geradas',
       align: 'center',
-      render: (item) => (
-        <span className="text-sm">{item.total_generated}x</span>
-      ),
+      render: (item) => <span className="text-sm">{item.total_generated}x</span>,
     },
   ];
 
@@ -179,10 +178,10 @@ export default function FixedExpenses() {
     <PageContainer>
       <PageHeader
         title="Gastos Fixos Mensais"
-        icon={<Calendar className="w-6 h-6" />}
+        icon={<Calendar className="h-6 w-6" />}
         action={{
           label: 'Nova Despesa Fixa',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             setSelectedExpense(undefined);
             setIsDialogOpen(true);
@@ -194,16 +193,16 @@ export default function FixedExpenses() {
       <FixedExpenseStats />
 
       {/* Launch Button */}
-      <div className="bg-card border rounded-xl p-4">
+      <div className="rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-lg">Lançar Despesas do Mês</h3>
+            <h3 className="text-lg font-semibold">Lançar Despesas do Mês</h3>
             <p className="text-sm">
               Gere todas as despesas fixas para o mês selecionado
             </p>
           </div>
           <Button onClick={() => setIsLaunchDialogOpen(true)} size="lg">
-            <TrendingDown className="w-4 h-4 mr-2" />
+            <TrendingDown className="mr-2 h-4 w-4" />
             Lançar Despesas
           </Button>
         </div>
@@ -225,15 +224,17 @@ export default function FixedExpenses() {
                 setSelectedExpense(item);
                 setIsDialogOpen(true);
               }}
+              aria-label="Editar"
             >
-              <Pencil className="w-4 h-4" />
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(item.id)}
+              aria-label="Excluir"
             >
-              <Trash2 className="w-4 h-4 text-destructive" />
+              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

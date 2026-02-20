@@ -79,8 +79,7 @@ export const EnhancedBarChart = ({
     layout === 'vertical' ? [0, 6, 6, 0] : [6, 6, 0, 0];
 
   // Largura do eixo Y para layout vertical (categorias) — responsiva
-  const yAxisWidth =
-    layout === 'vertical' ? dims.yAxisWidthWide : dims.yAxisWidth;
+  const yAxisWidth = layout === 'vertical' ? dims.yAxisWidthWide : dims.yAxisWidth;
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -120,7 +119,9 @@ export const EnhancedBarChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => truncateLabel(String(value), dims.truncateYAxisLabel)}
+              tickFormatter={(value) =>
+                truncateLabel(String(value), dims.truncateYAxisLabel)
+              }
             />
           </>
         ) : (
@@ -131,7 +132,9 @@ export const EnhancedBarChart = ({
               tick={{ fontSize: dims.fontSize, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={{ stroke: 'hsl(var(--border))' }}
-              tickFormatter={(value) => truncateLabel(String(value), dims.truncateXAxisLabel)}
+              tickFormatter={(value) =>
+                truncateLabel(String(value), dims.truncateXAxisLabel)
+              }
               interval={0}
               angle={data.length > 5 ? -35 : 0}
               textAnchor={data.length > 5 ? 'end' : 'middle'}

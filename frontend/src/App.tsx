@@ -46,7 +46,9 @@ const Summaries = lazy(() => import('./pages/Summaries'));
 const Readings = lazy(() => import('./pages/Readings'));
 
 // Personal Planning Module
-const PersonalPlanningDashboard = lazy(() => import('./pages/PersonalPlanningDashboard'));
+const PersonalPlanningDashboard = lazy(
+  () => import('./pages/PersonalPlanningDashboard')
+);
 const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
 const Goals = lazy(() => import('./pages/Goals'));
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
@@ -60,8 +62,8 @@ const AiAssistant = lazy(() => import('./pages/AiAssistant'));
 
 // Loading component
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen">
-    <Loader2 className="w-12 h-12 animate-spin text-primary" />
+  <div className="flex h-screen items-center justify-center">
+    <Loader2 className="h-12 w-12 animate-spin text-primary" />
   </div>
 );
 
@@ -75,15 +77,11 @@ function AnimatedRoutes() {
         {/* Public routes */}
         <Route
           path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/" replace /> : <Login />
-          }
+          element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
         />
         <Route
           path="/register"
-          element={
-            isAuthenticated ? <Navigate to="/" replace /> : <Register />
-          }
+          element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
         />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -97,48 +95,272 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Suspense fallback={<LoadingFallback />}><Home /></Suspense>} />
-          <Route path="/dashboard" element={<Suspense fallback={<LoadingFallback />}><Dashboard /></Suspense>} />
-          <Route path="/accounts" element={<Suspense fallback={<LoadingFallback />}><Accounts /></Suspense>} />
-          <Route path="/expenses" element={<Suspense fallback={<LoadingFallback />}><Expenses /></Suspense>} />
-          <Route path="/fixed-expenses" element={<Suspense fallback={<LoadingFallback />}><FixedExpenses /></Suspense>} />
-          <Route path="/revenues" element={<Suspense fallback={<LoadingFallback />}><Revenues /></Suspense>} />
-          <Route path="/credit-cards" element={<Suspense fallback={<LoadingFallback />}><CreditCards /></Suspense>} />
-          <Route path="/credit-card-bills" element={<Suspense fallback={<LoadingFallback />}><CreditCardBills /></Suspense>} />
-          <Route path="/credit-card-expenses" element={<Suspense fallback={<LoadingFallback />}><CreditCardExpenses /></Suspense>} />
-          <Route path="/transfers" element={<Suspense fallback={<LoadingFallback />}><Transfers /></Suspense>} />
-          <Route path="/loans" element={<Suspense fallback={<LoadingFallback />}><Loans /></Suspense>} />
-          <Route path="/payables" element={<Suspense fallback={<LoadingFallback />}><Payables /></Suspense>} />
-          <Route path="/members" element={<Suspense fallback={<LoadingFallback />}><Members /></Suspense>} />
+          <Route
+            path="/"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Home />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Dashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/accounts"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Accounts />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Expenses />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/fixed-expenses"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <FixedExpenses />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/revenues"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Revenues />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/credit-cards"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreditCards />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/credit-card-bills"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreditCardBills />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/credit-card-expenses"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreditCardExpenses />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/transfers"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Transfers />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/loans"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Loans />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/payables"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Payables />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/members"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Members />
+              </Suspense>
+            }
+          />
 
           {/* Security Module routes */}
-          <Route path="/security/dashboard" element={<Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense>} />
-          <Route path="/security/passwords" element={<Suspense fallback={<LoadingFallback />}><Passwords /></Suspense>} />
-          <Route path="/security/stored-cards" element={<Suspense fallback={<LoadingFallback />}><StoredCards /></Suspense>} />
-          <Route path="/security/stored-accounts" element={<Suspense fallback={<LoadingFallback />}><StoredAccounts /></Suspense>} />
-          <Route path="/security/password-generator" element={<Suspense fallback={<LoadingFallback />}><PasswordGeneratorPage /></Suspense>} />
-          <Route path="/security/archives" element={<Suspense fallback={<LoadingFallback />}><Archives /></Suspense>} />
+          <Route
+            path="/security/dashboard"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <SecurityDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/passwords"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Passwords />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/stored-cards"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <StoredCards />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/stored-accounts"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <StoredAccounts />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/password-generator"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PasswordGeneratorPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/archives"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Archives />
+              </Suspense>
+            }
+          />
 
           {/* Library Module routes */}
-          <Route path="/library/dashboard" element={<Suspense fallback={<LoadingFallback />}><LibraryDashboard /></Suspense>} />
-          <Route path="/library/books" element={<Suspense fallback={<LoadingFallback />}><Books /></Suspense>} />
-          <Route path="/library/authors" element={<Suspense fallback={<LoadingFallback />}><Authors /></Suspense>} />
-          <Route path="/library/publishers" element={<Suspense fallback={<LoadingFallback />}><Publishers /></Suspense>} />
-          <Route path="/library/summaries" element={<Suspense fallback={<LoadingFallback />}><Summaries /></Suspense>} />
-          <Route path="/library/readings" element={<Suspense fallback={<LoadingFallback />}><Readings /></Suspense>} />
+          <Route
+            path="/library/dashboard"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <LibraryDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/books"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Books />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/authors"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Authors />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/publishers"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Publishers />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/summaries"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Summaries />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/readings"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Readings />
+              </Suspense>
+            }
+          />
 
           {/* Personal Planning Module routes */}
-          <Route path="/planning/dashboard" element={<Suspense fallback={<LoadingFallback />}><PersonalPlanningDashboard /></Suspense>} />
-          <Route path="/planning/routine-tasks" element={<Suspense fallback={<LoadingFallback />}><RoutineTasks /></Suspense>} />
-          <Route path="/planning/goals" element={<Suspense fallback={<LoadingFallback />}><Goals /></Suspense>} />
-          <Route path="/planning/daily" element={<Suspense fallback={<LoadingFallback />}><DailyChecklist /></Suspense>} />
+          <Route
+            path="/planning/dashboard"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PersonalPlanningDashboard />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/planning/routine-tasks"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <RoutineTasks />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/planning/goals"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Goals />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/planning/daily"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <DailyChecklist />
+              </Suspense>
+            }
+          />
 
           {/* Vaults Module routes (Cofres e Metas) */}
-          <Route path="/vaults" element={<Suspense fallback={<LoadingFallback />}><Vaults /></Suspense>} />
-          <Route path="/financial-goals" element={<Suspense fallback={<LoadingFallback />}><FinancialGoals /></Suspense>} />
+          <Route
+            path="/vaults"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Vaults />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/financial-goals"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <FinancialGoals />
+              </Suspense>
+            }
+          />
 
           {/* AI Assistant Module */}
-          <Route path="/ai-assistant" element={<Suspense fallback={<LoadingFallback />}><AiAssistant /></Suspense>} />
+          <Route
+            path="/ai-assistant"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <AiAssistant />
+              </Suspense>
+            }
+          />
         </Route>
 
         {/* Fallback */}
@@ -153,7 +375,7 @@ function App() {
 
   useEffect(() => {
     // Load user data from cookies on app start
-    loadUserData();
+    void loadUserData();
   }, [loadUserData]);
 
   // Mostra loading durante inicialização

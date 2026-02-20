@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { membersService } from '@/services/members-service';
@@ -21,7 +27,15 @@ interface ExpenseFormProps {
   isLoading?: boolean;
 }
 
-export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loans, payables, onSubmit, onCancel, isLoading = false }) => {
+export const ExpenseForm: React.FC<ExpenseFormProps> = ({
+  expense,
+  accounts,
+  loans,
+  payables,
+  onSubmit,
+  onCancel,
+  isLoading = false,
+}) => {
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
   const [eligiblePayables, setEligiblePayables] = useState<Payable[]>([]);
@@ -56,16 +70,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [expense, setValue]);
 
   useEffect(() => {
     if (loans && currentUserMember) {
       // Filtrar empréstimos onde o usuário atual é o benefited (pegou emprestado, está pagando)
-      const filtered = loans.filter(loan =>
-        loan.benefited === currentUserMember.id &&
-        loan.status !== 'paid' &&
-        loan.status !== 'cancelled'
+      const filtered = loans.filter(
+        (loan) =>
+          loan.benefited === currentUserMember.id &&
+          loan.status !== 'paid' &&
+          loan.status !== 'cancelled'
       );
       setEligibleLoans(filtered);
     }
@@ -74,8 +89,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
   useEffect(() => {
     if (payables) {
       // Filtrar payables ativos ou em atraso (que ainda podem receber pagamentos)
-      const filtered = payables.filter(payable =>
-        payable.status === 'active' || payable.status === 'overdue'
+      const filtered = payables.filter(
+        (payable) => payable.status === 'active' || payable.status === 'overdue'
       );
       setEligiblePayables(filtered);
     }
@@ -125,14 +140,26 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição *</Label>
-          <Input id="description" {...register('description', { required: true })} placeholder="Ex: Compra no supermercado" disabled={isLoading} />
+          <Input
+            id="description"
+            {...register('description', { required: true })}
+            placeholder="Ex: Compra no supermercado"
+            disabled={isLoading}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="value">Valor *</Label>
-          <Input id="value" type="number" step="0.01" {...register('value', { required: true, valueAsNumber: true })} placeholder="0.00" disabled={isLoading} />
+          <Input
+            id="value"
+            type="number"
+            step="0.01"
+            {...register('value', { required: true, valueAsNumber: true })}
+            placeholder="0.00"
+            disabled={isLoading}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="date">Data *</Label>
@@ -145,21 +172,40 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
         </div>
         <div className="space-y-2">
           <Label htmlFor="horary">Horário *</Label>
-          <Input id="horary" type="time" {...register('horary', { required: true })} disabled={isLoading} />
+          <Input
+            id="horary"
+            type="time"
+            {...register('horary', { required: true })}
+            disabled={isLoading}
+          />
         </div>
         <div className="space-y-2">
           <Label>Categoria *</Label>
-          <Select value={watch('category') || ''} onValueChange={(v) => setValue('category', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Select
+            value={watch('category') || ''}
+            onValueChange={(v) => setValue('category', v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label>Status de Pagamento *</Label>
-          <Select value={watch('payed') ? 'true' : 'false'} onValueChange={(v) => setValue('payed', v === 'true')}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Select
+            value={watch('payed') ? 'true' : 'false'}
+            onValueChange={(v) => setValue('payed', v === 'true')}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="false">Pendente</SelectItem>
               <SelectItem value="true">Pago</SelectItem>
@@ -168,10 +214,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
         </div>
         <div className="space-y-2">
           <Label>Conta *</Label>
-          <Select value={watch('account')?.toString() || ''} onValueChange={(v) => setValue('account', parseInt(v))}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Select
+            value={watch('account')?.toString() || ''}
+            onValueChange={(v) => setValue('account', parseInt(v))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
-              {accounts.map((a) => <SelectItem key={a.id} value={a.id.toString()}>{a.account_name}</SelectItem>)}
+              {accounts.map((a) => (
+                <SelectItem key={a.id} value={a.id.toString()}>
+                  {a.account_name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -179,10 +234,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
           <Label>Empréstimo Relacionado (Opcional)</Label>
           <Select
             value={watch('related_loan')?.toString() || 'none'}
-            onValueChange={(v) => setValue('related_loan', v === 'none' ? null : parseInt(v))}
+            onValueChange={(v) =>
+              setValue('related_loan', v === 'none' ? null : parseInt(v))
+            }
             disabled={isLoading}
           >
-            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione (opcional)" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
               {eligibleLoans.map((loan) => (
@@ -200,10 +259,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
           <Label>Valor a Pagar Relacionado (Opcional)</Label>
           <Select
             value={watch('related_payable')?.toString() || 'none'}
-            onValueChange={(v) => setValue('related_payable', v === 'none' ? null : parseInt(v))}
+            onValueChange={(v) =>
+              setValue('related_payable', v === 'none' ? null : parseInt(v))
+            }
             disabled={isLoading}
           >
-            <SelectTrigger><SelectValue placeholder="Selecione (opcional)" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione (opcional)" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhum</SelectItem>
               {eligiblePayables.map((payable) => (
@@ -219,8 +282,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ expense, accounts, loa
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>Cancelar</Button>
-        <Button type="submit" disabled={isLoading}>{isLoading ? 'Salvando...' : expense ? 'Atualizar' : 'Criar'}</Button>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Salvando...' : expense ? 'Atualizar' : 'Criar'}
+        </Button>
       </div>
     </form>
   );

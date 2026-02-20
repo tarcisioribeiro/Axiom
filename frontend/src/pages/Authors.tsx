@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/common/SearchInput';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -32,7 +38,7 @@ export default function Authors() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadAuthors();
+    void loadAuthors();
   }, []);
 
   const loadAuthors = async () => {
@@ -64,7 +70,8 @@ export default function Authors() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir autor',
-      description: 'Tem certeza que deseja excluir este autor? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir este autor? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -78,7 +85,7 @@ export default function Authors() {
         title: 'Autor excluído',
         description: 'O autor foi excluído com sucesso.',
       });
-      loadAuthors();
+      void loadAuthors();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir autor',
@@ -105,7 +112,7 @@ export default function Authors() {
         });
       }
       setIsDialogOpen(false);
-      loadAuthors();
+      void loadAuthors();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -174,15 +181,17 @@ export default function Authors() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(author)}
+                      aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(author.id)}
+                      aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
@@ -190,7 +199,7 @@ export default function Authors() {
               <CardContent className="space-y-3">
                 {(author.birth_year || author.death_year) && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="h-4 w-4" />
                     <span>
                       {author.birth_year && (
                         <>
@@ -207,12 +216,10 @@ export default function Authors() {
                   </div>
                 )}
                 {author.biography && (
-                  <p className="text-sm line-clamp-3">
-                    {author.biography}
-                  </p>
+                  <p className="line-clamp-3 text-sm">{author.biography}</p>
                 )}
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpen className="h-4 w-4" />
                   <span className="text-sm">
                     {author.books_count} {author.books_count === 1 ? 'livro' : 'livros'}
                   </span>
@@ -226,9 +233,7 @@ export default function Authors() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedAuthor ? 'Editar' : 'Novo'} Autor
-            </DialogTitle>
+            <DialogTitle>{selectedAuthor ? 'Editar' : 'Novo'} Autor</DialogTitle>
             <DialogDescription>
               {selectedAuthor
                 ? 'Atualize as informações do autor'

@@ -1,0 +1,28 @@
+# =============================================================================
+# MindLedger - Production Overrides
+# =============================================================================
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Does NOT bind-mount source code — application code runs from the built image.
+# Enables Django production security hardening via environment variables.
+# =============================================================================
+
+services:
+  api:
+    environment:
+      - DEBUG=False
+      - SECURE_SSL_REDIRECT=True
+      - SESSION_COOKIE_SECURE=True
+      - CSRF_COOKIE_SECURE=True
+      - SECURE_HSTS_SECONDS=31536000
+      - SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+    restart: always
+
+  frontend:
+    restart: always
+
+  db:
+    restart: always
+
+  redis:
+    restart: always

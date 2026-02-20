@@ -44,26 +44,6 @@ export function useTheme(): UseThemeReturn {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // Apply theme to document on mount and when isDark changes
-  useEffect(() => {
-    applyTheme(isDark);
-  }, [isDark]);
-
-  // Listen for system preference changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      // Only apply if user hasn't set a preference
-      if (localStorage.getItem(STORAGE_KEY) === null) {
-        setIsDark(e.matches);
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
   const applyTheme = useCallback((dark: boolean, withTransition = false) => {
     const root = document.documentElement;
 
@@ -82,6 +62,26 @@ export function useTheme(): UseThemeReturn {
         root.classList.remove('transition-colors', 'duration-300');
       }, 300);
     }
+  }, []);
+
+  // Apply theme to document on mount and when isDark changes
+  useEffect(() => {
+    applyTheme(isDark);
+  }, [isDark, applyTheme]);
+
+  // Listen for system preference changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only apply if user hasn't set a preference
+      if (localStorage.getItem(STORAGE_KEY) === null) {
+        setIsDark(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const toggle = useCallback(() => {

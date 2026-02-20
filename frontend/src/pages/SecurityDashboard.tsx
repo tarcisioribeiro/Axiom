@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Shield, Key, CreditCard, Wallet, Archive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { securityDashboardService, type SecurityDashboardStats } from '@/services/security-dashboard-service';
+import {
+  securityDashboardService,
+  type SecurityDashboardStats,
+} from '@/services/security-dashboard-service';
 import { useToast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -17,17 +20,17 @@ export default function SecurityDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    loadData();
+    void loadData();
 
     // Recarregar dados quando a aba/janela volta ao foco
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        loadData();
+        void loadData();
       }
     };
 
     const handleFocus = () => {
-      loadData();
+      void loadData();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -48,7 +51,7 @@ export default function SecurityDashboard() {
       toast({
         title: 'Erro ao carregar dados',
         description: getErrorMessage(error),
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -63,14 +66,11 @@ export default function SecurityDashboard() {
   }
 
   return (
-    <div className="px-4 py-8 space-y-6">
-      <PageHeader
-        title="Dashboard de Segurança"
-        icon={<Shield />}
-      />
+    <div className="space-y-6 px-4 py-8">
+      <PageHeader title="Dashboard de Segurança" icon={<Shield />} />
 
       {/* Métricas Principais - Grid 2x2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Senhas</CardTitle>
@@ -78,7 +78,7 @@ export default function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_passwords || 0}</div>
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               {stats?.total_passwords === 1 ? 'senha cadastrada' : 'senhas cadastradas'}
             </p>
           </CardContent>
@@ -91,8 +91,10 @@ export default function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_stored_cards || 0}</div>
-            <p className="text-xs mt-1">
-              {stats?.total_stored_cards === 1 ? 'cartão armazenado' : 'cartões armazenados'}
+            <p className="mt-1 text-xs">
+              {stats?.total_stored_cards === 1
+                ? 'cartão armazenado'
+                : 'cartões armazenados'}
             </p>
           </CardContent>
         </Card>
@@ -103,9 +105,13 @@ export default function SecurityDashboard() {
             <Wallet className="h-4 w-4" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_stored_accounts || 0}</div>
-            <p className="text-xs mt-1">
-              {stats?.total_stored_accounts === 1 ? 'conta armazenada' : 'contas armazenadas'}
+            <div className="text-2xl font-bold">
+              {stats?.total_stored_accounts || 0}
+            </div>
+            <p className="mt-1 text-xs">
+              {stats?.total_stored_accounts === 1
+                ? 'conta armazenada'
+                : 'contas armazenadas'}
             </p>
           </CardContent>
         </Card>
@@ -117,14 +123,16 @@ export default function SecurityDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_archives || 0}</div>
-            <p className="text-xs mt-1">
-              {stats?.total_archives === 1 ? 'arquivo armazenado' : 'arquivos armazenados'}
+            <p className="mt-1 text-xs">
+              {stats?.total_archives === 1
+                ? 'arquivo armazenado'
+                : 'arquivos armazenados'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Distribuição de Itens */}
         <Card>
           <CardHeader>
@@ -181,14 +189,15 @@ export default function SecurityDashboard() {
               nameKey="strength_display"
               formatter={(value) => `${value} ${value === 1 ? 'senha' : 'senhas'}`}
               colors={COLORS}
-              customColors={(entry) => strengthColors[entry.strength as PasswordStrength] || COLORS[0]}
+              customColors={(entry) =>
+                strengthColors[entry.strength as PasswordStrength] || COLORS[0]
+              }
               emptyMessage="Nenhuma senha cadastrada"
               lockChartType="pie"
               height={350}
             />
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

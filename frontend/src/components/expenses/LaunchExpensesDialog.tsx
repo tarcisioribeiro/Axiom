@@ -116,7 +116,8 @@ export const LaunchExpensesDialog = ({
       const response = await fixedExpensesService.bulkGenerate(request);
 
       // Formatar mês para exibição (YYYY-MM -> Mês/Ano)
-      const monthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || selectedMonth;
+      const monthLabel =
+        monthOptions.find((m) => m.value === selectedMonth)?.label || selectedMonth;
 
       toast({
         title: 'Despesas lançadas com sucesso!',
@@ -143,7 +144,7 @@ export const LaunchExpensesDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-3xl">
         <DialogHeader>
           <DialogTitle>Lançar Despesas Fixas do Mês</DialogTitle>
           <DialogDescription>
@@ -172,7 +173,10 @@ export const LaunchExpensesDialog = ({
           {/* Expense list with editable values */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Despesas ({selectedExpenses.length} de {fixedExpenses.length} selecionadas)</Label>
+              <Label>
+                Despesas ({selectedExpenses.length} de {fixedExpenses.length}{' '}
+                selecionadas)
+              </Label>
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="select-all"
@@ -181,18 +185,18 @@ export const LaunchExpensesDialog = ({
                 />
                 <label
                   htmlFor="select-all"
-                  className="text-sm font-medium cursor-pointer"
+                  className="cursor-pointer text-sm font-medium"
                 >
                   Selecionar todas
                 </label>
               </div>
             </div>
-            <ScrollArea className="h-[400px] border rounded-md p-4">
+            <ScrollArea className="h-[400px] rounded-md border p-4">
               <div className="space-y-3">
                 {fixedExpenses.map((exp) => (
                   <div
                     key={exp.id}
-                    className={`flex items-center gap-4 p-3 border rounded-lg transition-colors ${
+                    className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
                       selectedExpenseIds.has(exp.id)
                         ? 'bg-background'
                         : 'bg-muted/50 opacity-60'
@@ -214,9 +218,7 @@ export const LaunchExpensesDialog = ({
                         <Input
                           type="number"
                           step="0.01"
-                          value={
-                            expenseValues[exp.id] ?? parseFloat(exp.default_value)
-                          }
+                          value={expenseValues[exp.id] ?? parseFloat(exp.default_value)}
                           onChange={(e) => handleValueChange(exp.id, e.target.value)}
                           disabled={isSubmitting || !selectedExpenseIds.has(exp.id)}
                         />
@@ -233,7 +235,7 @@ export const LaunchExpensesDialog = ({
           </div>
 
           {/* Total */}
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className="flex items-center justify-between rounded-lg bg-muted p-4">
             <span className="font-semibold">Total:</span>
             <span className="text-2xl font-bold text-destructive">
               {formatCurrency(totalValue)}
@@ -254,7 +256,9 @@ export const LaunchExpensesDialog = ({
               onClick={handleSubmit}
               disabled={isSubmitting || selectedExpenses.length === 0}
             >
-              {isSubmitting ? 'Gerando...' : `Gerar ${selectedExpenses.length} Despesa${selectedExpenses.length !== 1 ? 's' : ''}`}
+              {isSubmitting
+                ? 'Gerando...'
+                : `Gerar ${selectedExpenses.length} Despesa${selectedExpenses.length !== 1 ? 's' : ''}`}
             </Button>
           </div>
         </div>

@@ -21,7 +21,9 @@
   padding: 0;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 150ms ease, transform 150ms ease;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
   transform: translateY(-4px);
   /* Garante posicionamento acima de outros elementos */
   z-index: 9999 !important;
@@ -294,9 +296,18 @@ span.flatpickr-weekday {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-4px); }
-  40%, 80% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 /* ========================================

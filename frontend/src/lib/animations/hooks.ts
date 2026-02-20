@@ -1,5 +1,6 @@
-import { useInView } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { useInView, useMotionValue, animate } from 'framer-motion';
+import { useRef, useEffect, useState } from 'react';
+import { EASING } from './transitions';
 
 export const useScrollAnimation = (once = true) => {
   const ref = useRef(null);
@@ -9,23 +10,17 @@ export const useScrollAnimation = (once = true) => {
 };
 
 export const useCounter = (end: number, duration = 2) => {
+  const motionValue = useMotionValue(0);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let start = 0;
-    const increment = end / (duration * 60);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 1000 / 60);
-
-    return () => clearInterval(timer);
-  }, [end, duration]);
+    const controls = animate(motionValue, end, {
+      duration,
+      ease: EASING.smooth,
+      onUpdate: setCount,
+    });
+    return controls.stop;
+  }, [end, duration, motionValue]);
 
   return count;
 };

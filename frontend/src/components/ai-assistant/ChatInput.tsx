@@ -45,8 +45,8 @@ export function ChatInput({ onSend, isLoading, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="flex gap-2 items-end p-4 border-t bg-card">
-      <div className="flex-1 relative">
+    <div className="flex items-end gap-2 border-t bg-card p-4">
+      <div className="relative flex-1">
         <textarea
           ref={textareaRef}
           value={message}
@@ -58,12 +58,12 @@ export function ChatInput({ onSend, isLoading, disabled }: ChatInputProps) {
           className={cn(
             'w-full resize-none rounded-lg border bg-background px-4 py-3 pr-12',
             'text-sm placeholder:text-muted-foreground',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
+            'focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            'min-h-[48px] max-h-[120px]'
+            'max-h-[120px] min-h-[48px]'
           )}
         />
-        <div className="absolute right-2 bottom-2 text-xs text-muted-foreground">
+        <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
           {message.length}/500
         </div>
       </div>
@@ -73,11 +73,12 @@ export function ChatInput({ onSend, isLoading, disabled }: ChatInputProps) {
         disabled={!message.trim() || isLoading || disabled}
         size="icon"
         className="h-12 w-12 rounded-lg"
+        aria-label="Enviar mensagem"
       >
         {isLoading ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Send className="w-5 h-5" />
+          <Send className="w-5 h-5" aria-hidden="true" />
         )}
       </Button>
     </div>

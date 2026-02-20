@@ -65,39 +65,36 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Fallback padrao
       return (
-        <div className="flex items-center justify-center min-h-[400px] p-4">
-          <Card className="max-w-md w-full">
+        <div className="flex min-h-[400px] items-center justify-center p-4">
+          <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-3 bg-destructive/10 rounded-full w-fit">
+              <div className="mx-auto mb-4 w-fit rounded-full bg-destructive/10 p-3">
                 <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <CardTitle className="text-xl">Algo deu errado</CardTitle>
             </CardHeader>
-            <CardContent className="text-center space-y-4">
+            <CardContent className="space-y-4 text-center">
               <p className="text-muted-foreground">
                 Ocorreu um erro inesperado ao carregar este componente.
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="text-left text-sm bg-muted p-3 rounded-lg">
-                  <summary className="cursor-pointer font-medium mb-2">
+                <details className="rounded-lg bg-muted p-3 text-left text-sm">
+                  <summary className="mb-2 cursor-pointer font-medium">
                     Detalhes do erro (desenvolvimento)
                   </summary>
-                  <pre className="overflow-auto text-xs text-destructive whitespace-pre-wrap">
+                  <pre className="overflow-auto whitespace-pre-wrap text-xs text-destructive">
                     {this.state.error.message}
                     {'\n\n'}
                     {this.state.error.stack}
                   </pre>
                 </details>
               )}
-              <div className="flex gap-2 justify-center">
+              <div className="flex justify-center gap-2">
                 <Button onClick={this.handleRetry} variant="default">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Tentar novamente
                 </Button>
-                <Button
-                  onClick={() => window.location.reload()}
-                  variant="outline"
-                >
+                <Button onClick={() => window.location.reload()} variant="outline">
                   Recarregar pagina
                 </Button>
               </div>

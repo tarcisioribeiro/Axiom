@@ -74,7 +74,7 @@ export function ReadingForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [reading, setValue]);
 
   const selectedBook = watch('book');
@@ -104,7 +104,7 @@ export function ReadingForm({
             </SelectContent>
           </Select>
           {errors.book && (
-            <p className="text-sm text-destructive mt-1">{errors.book.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.book.message}</p>
           )}
         </div>
 
@@ -116,18 +116,14 @@ export function ReadingForm({
             min="1"
             max={selectedBook ? getBookMaxPages(selectedBook) : undefined}
             {...register('pages_read', {
-              setValueAs: (value) => (value === '' ? 0 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
             })}
           />
           {errors.pages_read && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.pages_read.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.pages_read.message}</p>
           )}
           {selectedBook > 0 && (
-            <p className="text-xs">
-              Máximo: {getBookMaxPages(selectedBook)} páginas
-            </p>
+            <p className="text-xs">Máximo: {getBookMaxPages(selectedBook)} páginas</p>
           )}
         </div>
 
@@ -135,11 +131,13 @@ export function ReadingForm({
           <Label htmlFor="reading_date">Data da Leitura *</Label>
           <DatePicker
             value={watch('reading_date')}
-            onChange={(date) => setValue('reading_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('reading_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data de leitura"
           />
           {errors.reading_date && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.reading_date.message}
             </p>
           )}
@@ -152,11 +150,11 @@ export function ReadingForm({
             type="number"
             min="0"
             {...register('reading_time', {
-              setValueAs: (value) => (value === '' ? 0 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
             })}
           />
           {errors.reading_time && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.reading_time.message}
             </p>
           )}
@@ -171,12 +169,12 @@ export function ReadingForm({
             rows={4}
           />
           {errors.notes && (
-            <p className="text-sm text-destructive mt-1">{errors.notes.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

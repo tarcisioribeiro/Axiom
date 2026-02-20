@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import {
   Toast,
   ToastClose,
@@ -15,7 +16,11 @@ export function Toaster() {
   const { toasts } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopy = async (id: string, title?: React.ReactNode, description?: React.ReactNode) => {
+  const handleCopy = async (
+    id: string,
+    title?: React.ReactNode,
+    description?: React.ReactNode
+  ) => {
     const titleText = typeof title === 'string' ? title : '';
     const descriptionText = typeof description === 'string' ? description : '';
     const textToCopy = `${titleText}\n${descriptionText}`.trim();
@@ -32,12 +37,7 @@ export function Toaster() {
   return (
     <ToastProvider>
       {/* ARIA live region para anunciar notificacoes */}
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {toasts.map(({ id, title, description }) => (
           <span key={id}>
             {typeof title === 'string' ? title : ''}
@@ -45,37 +45,39 @@ export function Toaster() {
           </span>
         ))}
       </div>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        return (
-          <Toast key={id} {...props} role="alert" aria-live="assertive">
-            <div className="grid gap-1 flex-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
-              {description && (
-                <ToastDescription>{description}</ToastDescription>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {(title || description) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleCopy(id, title, description)}
-                  aria-label="Copiar mensagem"
-                >
-                  {copiedId === id ? (
-                    <Check className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Copy className="h-4 w-4" aria-hidden="true" />
+      <AnimatePresence>
+        {toasts
+          .filter((t) => t.open !== false)
+          .map(function ({ id, title, description, action, ...props }) {
+            return (
+              <Toast key={id} {...props} role="alert" aria-live="assertive">
+                <div className="grid flex-1 gap-1">
+                  {title && <ToastTitle>{title}</ToastTitle>}
+                  {description && <ToastDescription>{description}</ToastDescription>}
+                </div>
+                <div className="flex items-center gap-2">
+                  {(title || description) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleCopy(id, title, description)}
+                      aria-label="Copiar mensagem"
+                    >
+                      {copiedId === id ? (
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      ) : (
+                        <Copy className="h-4 w-4" aria-hidden="true" />
+                      )}
+                    </Button>
                   )}
-                </Button>
-              )}
-              {action}
-            </div>
-            <ToastClose aria-label="Fechar notificacao" />
-          </Toast>
-        );
-      })}
+                  {action}
+                </div>
+                <ToastClose aria-label="Fechar notificacao" />
+              </Toast>
+            );
+          })}
+      </AnimatePresence>
       <ToastViewport />
     </ToastProvider>
   );

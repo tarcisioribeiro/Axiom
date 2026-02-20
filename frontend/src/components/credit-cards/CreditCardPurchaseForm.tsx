@@ -4,13 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
-import type { CreditCardPurchase, CreditCardPurchaseFormData, CreditCard } from '@/types';
+import type {
+  CreditCardPurchase,
+  CreditCardPurchaseFormData,
+  CreditCard,
+} from '@/types';
 
 import { formatLocalDate } from '@/lib/utils';
 
@@ -30,20 +40,21 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   isLoading = false,
 }) => {
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardPurchaseFormData>({
-    defaultValues: {
-      description: '',
-      total_value: 0,
-      purchase_date: formatLocalDate(new Date()),
-      purchase_time: new Date().toTimeString().split(' ')[0].substring(0, 5),
-      category: '',
-      card: 0,
-      total_installments: 1,
-      merchant: '',
-      member: null,
-      notes: '',
-    },
-  });
+  const { register, handleSubmit, setValue, watch } =
+    useForm<CreditCardPurchaseFormData>({
+      defaultValues: {
+        description: '',
+        total_value: 0,
+        purchase_date: formatLocalDate(new Date()),
+        purchase_time: new Date().toTimeString().split(' ')[0].substring(0, 5),
+        category: '',
+        card: 0,
+        total_installments: 1,
+        merchant: '',
+        member: null,
+        notes: '',
+      },
+    });
 
   // Watch valores para cálculo de parcela
   const watchedTotalValue = watch('total_value');
@@ -61,7 +72,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   // Obter informações do cartão selecionado (limite disponível)
   const selectedCardInfo = useMemo(() => {
     if (!watchedCard || watchedCard === 0) return null;
-    const card = creditCards.find(c => c.id === watchedCard);
+    const card = creditCards.find((c) => c.id === watchedCard);
     if (!card) return null;
     return {
       name: card.name,
@@ -82,7 +93,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
     const digitsOnly = card.card_number_masked?.replace(/[^\d]/g, '') || '';
     const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : null;
     const hasNumber = last4 !== null;
-    const brandName = TRANSLATIONS.cardBrands[card.flag as keyof typeof TRANSLATIONS.cardBrands] || card.flag;
+    const brandName =
+      TRANSLATIONS.cardBrands[card.flag as keyof typeof TRANSLATIONS.cardBrands] ||
+      card.flag;
     const accountName = card.associated_account_name || '';
 
     return { last4, hasNumber, brandName, accountName };
@@ -104,7 +117,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   // Atualizar membro quando cartão muda
   useEffect(() => {
     if (watchedCard && watchedCard !== 0 && creditCards.length > 0 && !purchase) {
-      const selectedCard = creditCards.find(c => c.id === watchedCard);
+      const selectedCard = creditCards.find((c) => c.id === watchedCard);
 
       // Atualizar membro
       if (selectedCard?.owner) {
@@ -147,7 +160,11 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
       return;
     }
     // Validar limite disponível (apenas para novas compras)
-    if (!purchase && selectedCardInfo && data.total_value > selectedCardInfo.availableCredit) {
+    if (
+      !purchase &&
+      selectedCardInfo &&
+      data.total_value > selectedCardInfo.availableCredit
+    ) {
       await showAlert({
         title: 'Limite insuficiente',
         description: `O valor de ${formatCurrency(data.total_value)} excede o limite disponível de ${formatCurrency(selectedCardInfo.availableCredit)} no cartão selecionado.`,
@@ -163,7 +180,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Input
@@ -193,11 +210,18 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
 
         <div className="space-y-2">
           <Label>Categoria *</Label>
-          <Select value={watch('category') || ''} onValueChange={(v) => setValue('category', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Select
+            value={watch('category') || ''}
+            onValueChange={(v) => setValue('category', v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -207,7 +231,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           <Label htmlFor="purchase_date">Data da Compra *</Label>
           <DatePicker
             value={watch('purchase_date')}
-            onChange={(date) => setValue('purchase_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('purchase_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data"
             disabled={isLoading}
           />
@@ -230,10 +256,13 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             onValueChange={(v) => setValue('card', parseInt(v))}
             disabled={isEditMode}
           >
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {creditCards.map((c) => {
-                const { last4, hasNumber, brandName, accountName } = getCardDisplayInfo(c);
+                const { last4, hasNumber, brandName, accountName } =
+                  getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
                     <div className="flex items-center gap-2">
@@ -241,10 +270,10 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                       <span className="text-sm">
                         {hasNumber ? `**** ${last4}` : 'Não cadastrado'}
                       </span>
-                      <Badge variant="secondary" className="text-xs">{brandName}</Badge>
-                      {accountName && (
-                        <span className="text-xs">• {accountName}</span>
-                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        {brandName}
+                      </Badge>
+                      {accountName && <span className="text-xs">• {accountName}</span>}
                     </div>
                   </SelectItem>
                 );
@@ -258,16 +287,21 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           )}
           {/* Exibir limite disponível do cartão selecionado */}
           {selectedCardInfo && !isEditMode && (
-            <div className={`p-2 rounded-md text-sm ${exceedsLimit ? 'bg-destructive/10 border border-destructive/30' : 'bg-muted'}`}>
-              <div className="flex justify-between items-center">
+            <div
+              className={`rounded-md p-2 text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
+            >
+              <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Limite disponível:</span>
-                <span className={`font-semibold ${exceedsLimit ? 'text-destructive' : 'text-success'}`}>
+                <span
+                  className={`font-semibold ${exceedsLimit ? 'text-destructive' : 'text-success'}`}
+                >
                   {formatCurrency(selectedCardInfo.availableCredit)}
                 </span>
               </div>
               {exceedsLimit && watchedTotalValue > 0 && (
-                <p className="text-xs text-destructive mt-1">
-                  Valor excede o limite em {formatCurrency(watchedTotalValue - selectedCardInfo.availableCredit)}
+                <p className="mt-1 text-xs text-destructive">
+                  Valor excede o limite em{' '}
+                  {formatCurrency(watchedTotalValue - selectedCardInfo.availableCredit)}
                 </p>
               )}
             </div>
@@ -281,13 +315,19 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             type="number"
             min="1"
             max="48"
-            {...register('total_installments', { required: true, valueAsNumber: true, min: 1, max: 48 })}
+            {...register('total_installments', {
+              required: true,
+              valueAsNumber: true,
+              min: 1,
+              max: 48,
+            })}
             disabled={isLoading || isEditMode}
           />
-          <div className="bg-muted p-2 rounded-md">
+          <div className="rounded-md bg-muted p-2">
             {watchedTotalInstallments > 1 ? (
               <p className="text-sm font-medium text-primary">
-                {formatCurrency(watchedTotalValue)} em {watchedTotalInstallments}x de {formatCurrency(installmentValue)}
+                {formatCurrency(watchedTotalValue)} em {watchedTotalInstallments}x de{' '}
+                {formatCurrency(installmentValue)}
               </p>
             ) : (
               <p className="text-sm">Pagamento à vista</p>

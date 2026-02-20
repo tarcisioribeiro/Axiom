@@ -30,7 +30,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AccountFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: account
       ? {
@@ -39,7 +45,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           institution: account.institution as AccountFormData['institution'],
           account_number: '', // Can't show encrypted number
           balance: parseFloat(account.balance),
-          overdraft_limit: account.overdraft_limit ? parseFloat(account.overdraft_limit) : 0,
+          overdraft_limit: account.overdraft_limit
+            ? parseFloat(account.overdraft_limit)
+            : 0,
           owner: account.owner,
         }
       : {
@@ -64,7 +72,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [setValue]);
 
   const accountType = watch('account_type') || 'CC';
@@ -72,12 +80,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="account_type">Tipo de Conta *</Label>
           <Select
             value={accountType}
-            onValueChange={(value) => setValue('account_type', value as AccountFormData['account_type'])}
+            onValueChange={(value) =>
+              setValue('account_type', value as AccountFormData['account_type'])
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione o tipo" />
@@ -99,7 +109,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           <Label htmlFor="institution">Instituição *</Label>
           <Select
             value={institution}
-            onValueChange={(value) => setValue('institution', value as AccountFormData['institution'])}
+            onValueChange={(value) =>
+              setValue('institution', value as AccountFormData['institution'])
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione a instituição" />
@@ -172,7 +184,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             <p className="text-sm text-destructive">{errors.overdraft_limit.message}</p>
           )}
         </div>
-
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

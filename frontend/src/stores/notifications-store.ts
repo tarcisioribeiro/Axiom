@@ -77,7 +77,7 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
   setDropdownOpen: (open: boolean) => {
     set({ isDropdownOpen: open });
     if (open) {
-      get().fetchNotifications();
+      void get().fetchNotifications();
     }
   },
 
@@ -86,10 +86,10 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     if (pollingInterval) return;
 
     // Initial fetch
-    get().fetchSummary();
+    void get().fetchSummary();
 
     const interval = setInterval(() => {
-      get().fetchSummary();
+      void get().fetchSummary();
     }, 60000); // 60 seconds
 
     set({ pollingInterval: interval });

@@ -4,12 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
-import type { CreditCardExpense, CreditCardExpenseFormData, CreditCard, CreditCardBill } from '@/types';
+import type {
+  CreditCardExpense,
+  CreditCardExpenseFormData,
+  CreditCard,
+  CreditCardBill,
+} from '@/types';
 
 import { formatLocalDate } from '@/lib/utils';
 
@@ -28,23 +39,24 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
   bills = [],
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
 }) => {
   const { showAlert } = useAlertDialog();
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardExpenseFormData>({
-    defaultValues: {
-      description: '',
-      value: 0,
-      date: formatLocalDate(new Date()),
-      horary: new Date().toTimeString().split(' ')[0].substring(0, 5),
-      category: '',
-      card: 0,
-      total_installments: 1,
-      bill: null,
-      member: null,
-      notes: '',
-    },
-  });
+  const { register, handleSubmit, setValue, watch } =
+    useForm<CreditCardExpenseFormData>({
+      defaultValues: {
+        description: '',
+        value: 0,
+        date: formatLocalDate(new Date()),
+        horary: new Date().toTimeString().split(' ')[0].substring(0, 5),
+        category: '',
+        card: 0,
+        total_installments: 1,
+        bill: null,
+        member: null,
+        notes: '',
+      },
+    });
 
   // Watch valores para cálculo de parcela
   const watchedValue = watch('value');
@@ -52,14 +64,15 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
   const watchedCard = watch('card');
 
   // Calcular valor por parcela
-  const installmentValue = watchedTotalInstallments > 0
-    ? (watchedValue / watchedTotalInstallments)
-    : watchedValue;
+  const installmentValue =
+    watchedTotalInstallments > 0
+      ? watchedValue / watchedTotalInstallments
+      : watchedValue;
 
   // Faturas filtradas pelo cartão selecionado
   const filteredBills = useMemo(() => {
     if (!watchedCard || watchedCard === 0) return [];
-    return bills.filter(b => b.credit_card === watchedCard);
+    return bills.filter((b) => b.credit_card === watchedCard);
   }, [watchedCard, bills]);
 
   // Função para encontrar a fatura atual de um cartão
@@ -67,10 +80,10 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
     if (!bills || bills.length === 0) return null;
 
     const today = new Date();
-    const cardBills = bills.filter(b => b.credit_card === cardId);
+    const cardBills = bills.filter((b) => b.credit_card === cardId);
 
     // Encontrar fatura cujo período inclui a data atual
-    const currentBill = cardBills.find(b => {
+    const currentBill = cardBills.find((b) => {
       const beginDate = new Date(b.invoice_beginning_date);
       const endDate = new Date(b.invoice_ending_date);
       return today >= beginDate && today <= endDate;
@@ -79,9 +92,13 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
     if (currentBill) return currentBill.id;
 
     // Se não encontrar, pegar a fatura mais recente em aberto
-    const openBills = cardBills.filter(b => b.status === 'open');
+    const openBills = cardBills.filter((b) => b.status === 'open');
     if (openBills.length > 0) {
-      openBills.sort((a, b) => new Date(b.invoice_beginning_date).getTime() - new Date(a.invoice_beginning_date).getTime());
+      openBills.sort(
+        (a, b) =>
+          new Date(b.invoice_beginning_date).getTime() -
+          new Date(a.invoice_beginning_date).getTime()
+      );
       return openBills[0].id;
     }
 
@@ -98,7 +115,9 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
     const digitsOnly = card.card_number_masked?.replace(/[^\d]/g, '') || '';
     const last4 = digitsOnly.length >= 4 ? digitsOnly.slice(-4) : null;
     const hasNumber = last4 !== null;
-    const brandName = TRANSLATIONS.cardBrands[card.flag as keyof typeof TRANSLATIONS.cardBrands] || card.flag;
+    const brandName =
+      TRANSLATIONS.cardBrands[card.flag as keyof typeof TRANSLATIONS.cardBrands] ||
+      card.flag;
     const accountName = card.associated_account_name || '';
 
     return { last4, hasNumber, brandName, accountName };
@@ -126,7 +145,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
   // Atualizar membro e fatura quando cartão muda
   useEffect(() => {
     if (watchedCard && watchedCard !== 0 && creditCards.length > 0 && !expense) {
-      const selectedCard = creditCards.find(c => c.id === watchedCard);
+      const selectedCard = creditCards.find((c) => c.id === watchedCard);
 
       // Atualizar membro
       if (selectedCard?.owner) {
@@ -177,7 +196,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Input
@@ -202,11 +221,18 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
 
         <div className="space-y-2">
           <Label>Categoria *</Label>
-          <Select value={watch('category') || ''} onValueChange={(v) => setValue('category', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Select
+            value={watch('category') || ''}
+            onValueChange={(v) => setValue('category', v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -238,10 +264,13 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
             value={watch('card')?.toString() || ''}
             onValueChange={(v) => setValue('card', parseInt(v))}
           >
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
             <SelectContent>
               {creditCards.map((c) => {
-                const { last4, hasNumber, brandName, accountName } = getCardDisplayInfo(c);
+                const { last4, hasNumber, brandName, accountName } =
+                  getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
                     <div className="flex items-center gap-2">
@@ -249,10 +278,10 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                       <span className="text-sm">
                         {hasNumber ? `**** ${last4}` : 'Não cadastrado'}
                       </span>
-                      <Badge variant="secondary" className="text-xs">{brandName}</Badge>
-                      {accountName && (
-                        <span className="text-xs">• {accountName}</span>
-                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        {brandName}
+                      </Badge>
+                      {accountName && <span className="text-xs">• {accountName}</span>}
                     </div>
                   </SelectItem>
                 );
@@ -285,15 +314,26 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
             disabled={filteredBills.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder={filteredBills.length === 0 ? "Nenhuma fatura disponível" : "Selecione"} />
+              <SelectValue
+                placeholder={
+                  filteredBills.length === 0 ? 'Nenhuma fatura disponível' : 'Selecione'
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">Nenhuma</SelectItem>
               {filteredBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
-                  {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/{b.year}
-                  {b.status === 'open' && <span className="ml-2 text-xs text-success">(Aberta)</span>}
-                  {b.status === 'closed' && <span className="ml-2 text-xs text-muted-foreground">(Fechada)</span>}
+                  {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
+                  {b.year}
+                  {b.status === 'open' && (
+                    <span className="ml-2 text-xs text-success">(Aberta)</span>
+                  )}
+                  {b.status === 'closed' && (
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      (Fechada)
+                    </span>
+                  )}
                 </SelectItem>
               ))}
             </SelectContent>

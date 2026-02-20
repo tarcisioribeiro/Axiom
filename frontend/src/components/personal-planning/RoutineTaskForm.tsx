@@ -24,7 +24,7 @@ import {
   WEEKDAY_CHOICES,
   type RoutineTask,
 } from '@/types';
-import { z } from 'zod';
+import { type z } from 'zod';
 
 import { formatLocalDate } from '@/lib/utils';
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
@@ -103,7 +103,7 @@ export function RoutineTaskForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [task, setValue]);
 
   // Reset conditional fields when periodicity changes
@@ -135,7 +135,7 @@ export function RoutineTaskForm({
             placeholder="Ex: Meditar, Exercitar-se, Estudar..."
           />
           {errors.name && (
-            <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -148,7 +148,7 @@ export function RoutineTaskForm({
             rows={3}
           />
           {errors.description && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.description.message}
             </p>
           )}
@@ -172,9 +172,7 @@ export function RoutineTaskForm({
             </SelectContent>
           </Select>
           {errors.category && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.category.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
           )}
         </div>
 
@@ -185,9 +183,7 @@ export function RoutineTaskForm({
             onChange={(value) => setValue('icon', value)}
           />
           {errors.icon && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.icon.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.icon.message}</p>
           )}
         </div>
 
@@ -209,7 +205,7 @@ export function RoutineTaskForm({
             </SelectContent>
           </Select>
           {errors.periodicity && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.periodicity.message}
             </p>
           )}
@@ -235,9 +231,7 @@ export function RoutineTaskForm({
               </SelectContent>
             </Select>
             {errors.weekday && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.weekday.message}
-              </p>
+              <p className="mt-1 text-sm text-destructive">{errors.weekday.message}</p>
             )}
           </div>
         )}
@@ -252,12 +246,12 @@ export function RoutineTaskForm({
               min="1"
               max="31"
               {...register('day_of_month', {
-                setValueAs: (value) => (value === '' ? undefined : parseInt(value)),
+                setValueAs: (value: string) => (value === '' ? undefined : parseInt(value)),
               })}
               placeholder="1-31"
             />
             {errors.day_of_month && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.day_of_month.message}
               </p>
             )}
@@ -267,21 +261,19 @@ export function RoutineTaskForm({
         {/* Conditional: Weekdays (only for weekdays tasks) */}
         {periodicity === 'weekdays' && (
           <div className="col-span-2">
-            <p className="text-sm">
-              Esta tarefa aparecerá de Segunda a Sexta-feira.
-            </p>
+            <p className="text-sm">Esta tarefa aparecerá de Segunda a Sexta-feira.</p>
           </div>
         )}
 
         {/* Conditional: Custom periodicity */}
         {periodicity === 'custom' && (
-          <div className="col-span-2 space-y-4 border rounded-lg p-4 bg-muted/50">
-            <h4 className="font-medium text-sm">Configuração Personalizada</h4>
+          <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
+            <h4 className="text-sm font-medium">Configuração Personalizada</h4>
 
             {/* Custom Weekdays */}
             <div>
               <Label className="text-sm">Dias da Semana (opcional)</Label>
-              <div className="grid grid-cols-7 gap-2 mt-2">
+              <div className="mt-2 grid grid-cols-7 gap-2">
                 {WEEKDAY_CHOICES.map((day) => (
                   <div key={day.value} className="flex flex-col items-center gap-1">
                     <Checkbox
@@ -297,7 +289,10 @@ export function RoutineTaskForm({
                         );
                       }}
                     />
-                    <Label htmlFor={`custom-weekday-${day.value}`} className="text-xs cursor-pointer">
+                    <Label
+                      htmlFor={`custom-weekday-${day.value}`}
+                      className="cursor-pointer text-xs"
+                    >
                       {day.label.substring(0, 3)}
                     </Label>
                   </div>
@@ -337,7 +332,7 @@ export function RoutineTaskForm({
                   min="1"
                   max="7"
                   {...register('times_per_week', {
-                    setValueAs: (value) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
                   })}
                   placeholder="1-7"
                 />
@@ -352,7 +347,7 @@ export function RoutineTaskForm({
                   min="1"
                   max="31"
                   {...register('times_per_month', {
-                    setValueAs: (value) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
                   })}
                   placeholder="1-31"
                 />
@@ -370,7 +365,7 @@ export function RoutineTaskForm({
                   type="number"
                   min="1"
                   {...register('interval_days', {
-                    setValueAs: (value) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
                   })}
                   placeholder="Ex: 3"
                 />
@@ -381,7 +376,12 @@ export function RoutineTaskForm({
                 </Label>
                 <DatePicker
                   value={watch('interval_start_date') ?? undefined}
-                  onChange={(date) => setValue('interval_start_date', date ? formatLocalDate(date) : undefined)}
+                  onChange={(date) =>
+                    setValue(
+                      'interval_start_date',
+                      date ? formatLocalDate(date) : undefined
+                    )
+                  }
                   placeholder="Selecione a data de início"
                 />
               </div>
@@ -402,11 +402,11 @@ export function RoutineTaskForm({
             type="number"
             min="1"
             {...register('target_quantity', {
-              setValueAs: (value) => (value === '' ? 1 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
             })}
           />
           {errors.target_quantity && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.target_quantity.message}
             </p>
           )}
@@ -420,13 +420,13 @@ export function RoutineTaskForm({
             placeholder="Ex: vez, minutos, páginas..."
           />
           {errors.unit && (
-            <p className="text-sm text-destructive mt-1">{errors.unit.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.unit.message}</p>
           )}
         </div>
 
         {/* Seção de Agendamento de Horários */}
-        <div className="col-span-2 space-y-4 border rounded-lg p-4 bg-muted/50">
-          <h4 className="font-medium text-sm">Agendamento de Horários</h4>
+        <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
+          <h4 className="text-sm font-medium">Agendamento de Horários</h4>
           <p className="text-xs">
             Configure horários específicos para cada ocorrência da tarefa no dia.
           </p>
@@ -440,11 +440,9 @@ export function RoutineTaskForm({
                 value={watch('default_time') || ''}
                 onChange={(e) => setValue('default_time', e.target.value || null)}
               />
-              <p className="text-xs mt-1">
-                Horário base para todas as ocorrências
-              </p>
+              <p className="mt-1 text-xs">Horário base para todas as ocorrências</p>
               {errors.default_time && (
-                <p className="text-sm text-destructive mt-1">
+                <p className="mt-1 text-sm text-destructive">
                   {errors.default_time.message}
                 </p>
               )}
@@ -458,12 +456,10 @@ export function RoutineTaskForm({
                 min="1"
                 max="24"
                 {...register('daily_occurrences', {
-                  setValueAs: (value) => (value === '' ? 1 : parseInt(value)),
+                  setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
                 })}
               />
-              <p className="text-xs mt-1">
-                Quantas vezes no dia (1-24)
-              </p>
+              <p className="mt-1 text-xs">Quantas vezes no dia (1-24)</p>
             </div>
           </div>
 
@@ -475,14 +471,20 @@ export function RoutineTaskForm({
               min="1"
               max="12"
               value={watch('interval_hours') || ''}
-              onChange={(e) => setValue('interval_hours', e.target.value ? parseInt(e.target.value) : null)}
+              onChange={(e) =>
+                setValue(
+                  'interval_hours',
+                  e.target.value ? parseInt(e.target.value) : null
+                )
+              }
               placeholder="Ex: 4 (a cada 4 horas)"
             />
-            <p className="text-xs mt-1">
-              Requer horário padrão. Ex: Horário padrão 8:00 + intervalo 4h = 8:00, 12:00, 16:00...
+            <p className="mt-1 text-xs">
+              Requer horário padrão. Ex: Horário padrão 8:00 + intervalo 4h = 8:00,
+              12:00, 16:00...
             </p>
             {errors.interval_hours && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.interval_hours.message}
               </p>
             )}
@@ -503,11 +505,11 @@ export function RoutineTaskForm({
                 setValue('scheduled_times', times.length > 0 ? times : null);
               }}
             />
-            <p className="text-xs mt-1">
+            <p className="mt-1 text-xs">
               Sobrescreve intervalo. Separe por vírgula (HH:MM)
             </p>
             {errors.scheduled_times && (
-              <p className="text-sm text-destructive mt-1">
+              <p className="mt-1 text-sm text-destructive">
                 {errors.scheduled_times.message}
               </p>
             )}
@@ -529,7 +531,7 @@ export function RoutineTaskForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

@@ -7,7 +7,7 @@ import {
   XCircle,
   AlertTriangle,
   Info,
-  type LucideIcon
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
@@ -36,7 +36,8 @@ const alertDialogOverlayVariants = cva(
 );
 
 interface AlertDialogOverlayProps
-  extends React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>,
+  extends
+    React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>,
     VariantProps<typeof alertDialogOverlayVariants> {}
 
 const AlertDialogOverlay = React.forwardRef<
@@ -46,7 +47,7 @@ const AlertDialogOverlay = React.forwardRef<
   <AlertDialogPrimitive.Overlay
     className={cn(
       alertDialogOverlayVariants({ blur }),
-      'data-[state=open]:animate-dialog-overlay-show data-[state=closed]:animate-dialog-overlay-hide',
+      'data-[state=closed]:animate-dialog-overlay-hide data-[state=open]:animate-dialog-overlay-show',
       className
     )}
     {...props}
@@ -56,15 +57,20 @@ const AlertDialogOverlay = React.forwardRef<
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
 const alertDialogContentVariants = cva(
-  'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-2xl sm:rounded-xl focus:outline-none',
+  'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-2xl sm:rounded-lg focus:outline-none',
   {
     variants: {
       animation: {
-        default: 'data-[state=open]:animate-dialog-content-show data-[state=closed]:animate-dialog-content-hide',
-        slideUp: 'data-[state=open]:animate-slide-up-fade data-[state=closed]:animate-dialog-content-hide',
-        slideDown: 'data-[state=open]:animate-slide-down-fade data-[state=closed]:animate-dialog-content-hide',
-        bounce: 'data-[state=open]:animate-bounce-in data-[state=closed]:animate-dialog-content-hide',
-        shake: 'data-[state=open]:animate-shake data-[state=closed]:animate-dialog-content-hide',
+        default:
+          'data-[state=open]:animate-dialog-content-show data-[state=closed]:animate-dialog-content-hide',
+        slideUp:
+          'data-[state=open]:animate-slide-up-fade data-[state=closed]:animate-dialog-content-hide',
+        slideDown:
+          'data-[state=open]:animate-slide-down-fade data-[state=closed]:animate-dialog-content-hide',
+        bounce:
+          'data-[state=open]:animate-bounce-in data-[state=closed]:animate-dialog-content-hide',
+        shake:
+          'data-[state=open]:animate-shake data-[state=closed]:animate-dialog-content-hide',
       },
       variant: {
         default: '',
@@ -82,7 +88,8 @@ const alertDialogContentVariants = cva(
 );
 
 interface AlertDialogContentProps
-  extends React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>,
+  extends
+    React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>,
     VariantProps<typeof alertDialogContentVariants> {
   overlayBlur?: 'none' | 'sm' | 'md' | 'lg';
 }
@@ -95,10 +102,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogOverlay blur={overlayBlur} />
     <AlertDialogPrimitive.Content
       ref={ref}
-      className={cn(
-        alertDialogContentVariants({ animation, variant }),
-        className
-      )}
+      className={cn(alertDialogContentVariants({ animation, variant }), className)}
       {...props}
     />
   </AlertDialogPortal>
@@ -143,10 +147,7 @@ const AlertDialogHeader = ({
 
   return (
     <div
-      className={cn(
-        'flex flex-col space-y-3 text-center sm:text-left',
-        className
-      )}
+      className={cn('flex flex-col space-y-3 text-center sm:text-left', className)}
       {...props}
     >
       {showIcon && (
@@ -154,15 +155,17 @@ const AlertDialogHeader = ({
           {typeof icon === 'object' && icon !== null ? (
             icon
           ) : IconComponent ? (
-            <div className={cn(
-              'rounded-full p-3 w-12 h-12 flex items-center justify-center',
-              variant === 'success' && 'bg-success/10',
-              variant === 'warning' && 'bg-warning/10',
-              variant === 'destructive' && 'bg-destructive/10',
-              variant === 'info' && 'bg-info/10',
-              variant === 'default' && 'bg-muted'
-            )}>
-              <IconComponent className={cn('w-6 h-6', variantIconColors[variant])} />
+            <div
+              className={cn(
+                'flex h-12 w-12 items-center justify-center rounded-full p-3',
+                variant === 'success' && 'bg-success/10',
+                variant === 'warning' && 'bg-warning/10',
+                variant === 'destructive' && 'bg-destructive/10',
+                variant === 'info' && 'bg-info/10',
+                variant === 'default' && 'bg-muted'
+              )}
+            >
+              <IconComponent className={cn('h-6 w-6', variantIconColors[variant])} />
             </div>
           ) : null}
         </div>
@@ -209,8 +212,7 @@ const AlertDialogDescription = React.forwardRef<
     {...props}
   />
 ));
-AlertDialogDescription.displayName =
-  AlertDialogPrimitive.Description.displayName;
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
@@ -230,11 +232,7 @@ const AlertDialogCancel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
-    className={cn(
-      buttonVariants({ variant: 'outline' }),
-      'mt-2 sm:mt-0',
-      className
-    )}
+    className={cn(buttonVariants({ variant: 'outline' }), 'mt-2 sm:mt-0', className)}
     {...props}
   />
 ));

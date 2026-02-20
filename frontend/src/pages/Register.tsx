@@ -57,10 +57,12 @@ export default function Register() {
         description: 'Você já pode fazer login com suas credenciais.',
       });
 
-      navigate('/login');
+      void navigate('/login');
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Ocorreu um erro ao tentar cadastrar. Tente novamente.';
+        error instanceof Error
+          ? error.message
+          : 'Ocorreu um erro ao tentar cadastrar. Tente novamente.';
       toast({
         title: 'Erro ao cadastrar',
         description: errorMessage,
@@ -72,18 +74,23 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <div className="w-full max-w-md">
-        <div className="bg-card border rounded-2xl shadow-2xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+        <div className="rounded-2xl border bg-card p-8 shadow-2xl">
+          <div className="mb-8 text-center">
+            <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
               MindLedger
             </h1>
             <p className="mt-2">Crie sua conta</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-            <FormField id="name" label="Nome Completo" error={errors.name?.message} required>
+            <FormField
+              id="name"
+              label="Nome Completo"
+              error={errors.name?.message}
+              required
+            >
               <Input
                 type="text"
                 {...register('name', { required: 'Nome é obrigatório' })}
@@ -92,7 +99,12 @@ export default function Register() {
               />
             </FormField>
 
-            <FormField id="document" label="CPF" error={errors.document?.message} required>
+            <FormField
+              id="document"
+              label="CPF"
+              error={errors.document?.message}
+              required
+            >
               <Input
                 type="text"
                 {...register('document', {
@@ -108,7 +120,12 @@ export default function Register() {
               />
             </FormField>
 
-            <FormField id="phone" label="Telefone" error={errors.phone?.message} required>
+            <FormField
+              id="phone"
+              label="Telefone"
+              error={errors.phone?.message}
+              required
+            >
               <Input
                 type="tel"
                 {...register('phone', { required: 'Telefone é obrigatório' })}
@@ -136,7 +153,12 @@ export default function Register() {
               />
             </FormField>
 
-            <FormField id="username" label="Nome de Usuário" error={errors.username?.message} required>
+            <FormField
+              id="username"
+              label="Nome de Usuário"
+              error={errors.username?.message}
+              required
+            >
               <Input
                 type="text"
                 {...register('username', {
@@ -151,7 +173,12 @@ export default function Register() {
               />
             </FormField>
 
-            <FormField id="password" label="Senha" error={errors.password?.message} required>
+            <FormField
+              id="password"
+              label="Senha"
+              error={errors.password?.message}
+              required
+            >
               <Input
                 type="password"
                 {...register('password', {
@@ -197,7 +224,7 @@ export default function Register() {
 
           <div className="mt-6 text-center text-sm">
             <span>Já tem uma conta? </span>
-            <Link to="/login" className="text-primary hover:underline font-medium">
+            <Link to="/login" className="font-medium text-primary hover:underline">
               Fazer login
             </Link>
           </div>

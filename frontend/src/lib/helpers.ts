@@ -40,14 +40,17 @@ export const groupByProperty = <T>(
   array: T[],
   property: keyof T
 ): Record<string, T[]> => {
-  return array.reduce((acc, item) => {
-    const key = String(item[property]);
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(item);
-    return acc;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (acc, item) => {
+      const key = String(item[property]);
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(item);
+      return acc;
+    },
+    {} as Record<string, T[]>
+  );
 };
 
 /**
@@ -190,13 +193,13 @@ export const truncate = (text: string, maxLength: number): string => {
  * const debouncedSearch = debounce((query) => searchAPI(query), 300);
  * debouncedSearch('termo'); // Só executa após 300ms sem novas chamadas
  */
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
+export const debounce = <TArgs extends unknown[]>(
+  func: (...args: TArgs) => unknown,
   delay: number
-): ((...args: Parameters<T>) => void) => {
+): ((...args: TArgs) => void) => {
   let timeoutId: ReturnType<typeof setTimeout>;
 
-  return (...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };

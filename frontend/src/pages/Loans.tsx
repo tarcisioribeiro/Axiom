@@ -40,14 +40,40 @@ import { PageContainer } from '@/components/common/PageContainer';
 
 import { formatLocalDate } from '@/lib/utils';
 const EXPENSE_CATEGORIES = [
-  'food and drink', 'bills and services', 'electronics', 'family and friends',
-  'pets', 'digital signs', 'house', 'purchases', 'donate', 'education',
-  'loans', 'entertainment', 'taxes', 'investments', 'others', 'vestuary',
-  'health and care', 'professional services', 'supermarket', 'rates',
-  'transport', 'travels'
+  'food and drink',
+  'bills and services',
+  'electronics',
+  'family and friends',
+  'pets',
+  'digital signs',
+  'house',
+  'purchases',
+  'donate',
+  'education',
+  'loans',
+  'entertainment',
+  'taxes',
+  'investments',
+  'others',
+  'vestuary',
+  'health and care',
+  'professional services',
+  'supermarket',
+  'rates',
+  'transport',
+  'travels',
 ];
 
-const PAYMENT_FREQUENCIES = ['daily', 'weekly', 'biweekly', 'monthly', 'bimonthly', 'quarterly', 'semiannual', 'annual'];
+const PAYMENT_FREQUENCIES = [
+  'daily',
+  'weekly',
+  'biweekly',
+  'monthly',
+  'bimonthly',
+  'quarterly',
+  'semiannual',
+  'annual',
+];
 const LOAN_STATUSES = ['active', 'paid', 'defaulted', 'cancelled'];
 
 export default function Loans() {
@@ -81,7 +107,7 @@ export default function Loans() {
   });
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -180,7 +206,7 @@ export default function Loans() {
           title: 'Empréstimo excluído',
           description: 'O empréstimo foi excluído com sucesso.',
         });
-        loadData();
+        void loadData();
       } catch (error: unknown) {
         toast({
           title: 'Erro ao excluir',
@@ -198,7 +224,7 @@ export default function Loans() {
     try {
       if (selectedLoan) {
         // Exclude payed_value when updating to preserve auto-calculated value
-        const { payed_value, ...updateData } = formData;
+        const { payed_value: _payed_value, ...updateData } = formData;
         await loansService.update(selectedLoan.id, updateData);
         toast({
           title: 'Empréstimo atualizado',
@@ -212,7 +238,7 @@ export default function Loans() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -224,14 +250,18 @@ export default function Loans() {
     }
   };
 
-  const filteredLoans = loans.filter((loan) =>
-    loan.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loan.benefited_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loan.creditor_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLoans = loans.filter(
+    (loan) =>
+      loan.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.benefited_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.creditor_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+    const variants: Record<
+      string,
+      'default' | 'secondary' | 'destructive' | 'outline'
+    > = {
       active: 'default',
       paid: 'secondary',
       defaulted: 'destructive',
@@ -255,7 +285,7 @@ export default function Loans() {
         icon={<HandCoins />}
         action={{
           label: 'Novo Empréstimo',
-          icon: <Plus className="w-4 h-4" />,
+          icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
@@ -281,7 +311,10 @@ export default function Loans() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredLoans.map((loan) => (
-            <div key={loan.id} className="p-4 bg-card border rounded-lg space-y-3 hover:shadow-md transition-shadow">
+            <div
+              key={loan.id}
+              className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md"
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold">{loan.description}</h3>
@@ -299,12 +332,16 @@ export default function Loans() {
                 </div>
                 <div className="flex justify-between">
                   <span>Valor Pago:</span>
-                  <span className="font-medium">{formatCurrency(loan.payed_value)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(loan.payed_value)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Saldo:</span>
                   <span className="font-medium text-destructive">
-                    {formatCurrency(parseFloat(loan.value) - parseFloat(loan.payed_value))}
+                    {formatCurrency(
+                      parseFloat(loan.value) - parseFloat(loan.payed_value)
+                    )}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -329,25 +366,35 @@ export default function Loans() {
                 )}
               </div>
 
-              <div className="flex gap-2 pt-2 border-t">
+              <div className="flex gap-2 border-t pt-2">
                 <ReceiptButton
                   source={{ type: 'loan', data: loan }}
                   memberName={getMemberDisplayName(loan.benefited_name, user)}
                   variant="outline"
                   size="sm"
                 />
-                <Button variant="outline" size="sm" onClick={() => handleEdit(loan)} className="flex-1">
-                  <Pencil className="w-3 h-3 mr-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(loan)}
+                  className="flex-1"
+                >
+                  <Pencil className="mr-1 h-3 w-3" />
                   Editar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(loan)} className="flex-1">
-                  <Trash2 className="w-3 h-3 mr-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDelete(loan)}
+                  className="flex-1"
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
                   Excluir
                 </Button>
                 {loan.contract_document && (
                   <Button variant="outline" size="sm" asChild>
                     <a href={loan.contract_document} download>
-                      <Download className="w-3 h-3" />
+                      <Download className="h-3 w-3" />
                     </a>
                   </Button>
                 )}
@@ -358,7 +405,7 @@ export default function Loans() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedLoan ? 'Editar Empréstimo' : 'Novo Empréstimo'}
@@ -377,7 +424,9 @@ export default function Loans() {
                 <Input
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -389,25 +438,34 @@ export default function Loans() {
                   type="number"
                   step="0.01"
                   value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, value: parseFloat(e.target.value) })
+                  }
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="payed_value">Valor Pago {selectedLoan ? '(Calculado)' : '*'}</Label>
+                <Label htmlFor="payed_value">
+                  Valor Pago {selectedLoan ? '(Calculado)' : '*'}
+                </Label>
                 <Input
                   id="payed_value"
                   type="number"
                   step="0.01"
                   value={formData.payed_value}
-                  onChange={(e) => setFormData({ ...formData, payed_value: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payed_value: parseFloat(e.target.value),
+                    })
+                  }
                   required={!selectedLoan}
                   disabled={!!selectedLoan}
-                  className={selectedLoan ? 'bg-muted cursor-not-allowed' : ''}
+                  className={selectedLoan ? 'cursor-not-allowed bg-muted' : ''}
                 />
                 {selectedLoan && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Calculado automaticamente a partir das receitas/despesas vinculadas
                   </p>
                 )}
@@ -417,7 +475,12 @@ export default function Loans() {
                 <Label htmlFor="date">Data *</Label>
                 <DatePicker
                   value={formData.date || undefined}
-                  onChange={(date) => setFormData({ ...formData, date: date ? formatLocalDate(date) : '' })}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      date: date ? formatLocalDate(date) : '',
+                    })
+                  }
                   placeholder="Selecione a data"
                 />
               </div>
@@ -435,7 +498,12 @@ export default function Loans() {
 
               <div>
                 <Label htmlFor="category">Categoria *</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, category: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -451,7 +519,12 @@ export default function Loans() {
 
               <div>
                 <Label htmlFor="account">Conta *</Label>
-                <Select value={formData.account.toString()} onValueChange={(value) => setFormData({ ...formData, account: parseInt(value) })}>
+                <Select
+                  value={formData.account.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, account: parseInt(value) })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -467,7 +540,12 @@ export default function Loans() {
 
               <div>
                 <Label htmlFor="benefited">Beneficiado *</Label>
-                <Select value={formData.benefited.toString()} onValueChange={(value) => setFormData({ ...formData, benefited: parseInt(value) })}>
+                <Select
+                  value={formData.benefited.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, benefited: parseInt(value) })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -483,7 +561,12 @@ export default function Loans() {
 
               <div>
                 <Label htmlFor="creditor">Credor *</Label>
-                <Select value={formData.creditor.toString()} onValueChange={(value) => setFormData({ ...formData, creditor: parseInt(value) })}>
+                <Select
+                  value={formData.creditor.toString()}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, creditor: parseInt(value) })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -503,7 +586,9 @@ export default function Loans() {
                   id="installments"
                   type="number"
                   value={formData.installments}
-                  onChange={(e) => setFormData({ ...formData, installments: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, installments: parseInt(e.target.value) })
+                  }
                 />
               </div>
 
@@ -514,7 +599,12 @@ export default function Loans() {
                   type="number"
                   step="0.01"
                   value={formData.interest_rate || ''}
-                  onChange={(e) => setFormData({ ...formData, interest_rate: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      interest_rate: parseFloat(e.target.value),
+                    })
+                  }
                 />
               </div>
 
@@ -522,14 +612,24 @@ export default function Loans() {
                 <Label htmlFor="due_date">Data de Vencimento</Label>
                 <DatePicker
                   value={formData.due_date || undefined}
-                  onChange={(date) => setFormData({ ...formData, due_date: date ? formatLocalDate(date) : '' })}
+                  onChange={(date) =>
+                    setFormData({
+                      ...formData,
+                      due_date: date ? formatLocalDate(date) : '',
+                    })
+                  }
                   placeholder="Selecione a data de vencimento"
                 />
               </div>
 
               <div>
                 <Label htmlFor="payment_frequency">Frequência de Pagamento</Label>
-                <Select value={formData.payment_frequency} onValueChange={(value) => setFormData({ ...formData, payment_frequency: value })}>
+                <Select
+                  value={formData.payment_frequency}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, payment_frequency: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -550,13 +650,18 @@ export default function Loans() {
                   type="number"
                   step="0.01"
                   value={formData.late_fee}
-                  onChange={(e) => setFormData({ ...formData, late_fee: parseFloat(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, late_fee: parseFloat(e.target.value) })
+                  }
                 />
               </div>
 
               <div>
                 <Label htmlFor="status">Status</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -574,7 +679,12 @@ export default function Loans() {
                 <Label htmlFor="guarantor">Avalista</Label>
                 <Select
                   value={formData.guarantor?.toString() || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, guarantor: value === 'none' ? null : parseInt(value) })}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      guarantor: value === 'none' ? null : parseInt(value),
+                    })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione..." />
@@ -605,7 +715,12 @@ export default function Loans() {
                 <Input
                   id="contract_document"
                   type="file"
-                  onChange={(e) => setFormData({ ...formData, contract_document: e.target.files?.[0] || null })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      contract_document: e.target.files?.[0] || null,
+                    })
+                  }
                 />
               </div>
 
@@ -614,7 +729,9 @@ export default function Loans() {
                   type="checkbox"
                   id="payed"
                   checked={formData.payed}
-                  onChange={(e) => setFormData({ ...formData, payed: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, payed: e.target.checked })
+                  }
                   className="rounded"
                 />
                 <Label htmlFor="payed" className="cursor-pointer">
@@ -623,14 +740,18 @@ export default function Loans() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <div className="flex justify-end gap-2 border-t pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Salvando...
                   </>
                 ) : (

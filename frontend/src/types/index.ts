@@ -1154,7 +1154,7 @@ export const TASK_CATEGORIES = [
   { value: 'finance', label: 'Finanças' },
   { value: 'household', label: 'Casa' },
   { value: 'personal_care', label: 'Cuidado Pessoal' },
-  { value: 'other', label: 'Outros' }
+  { value: 'other', label: 'Outros' },
 ] as const;
 
 export const PERIODICITY_CHOICES = [
@@ -1162,7 +1162,7 @@ export const PERIODICITY_CHOICES = [
   { value: 'weekdays', label: 'Dias Úteis' },
   { value: 'weekly', label: 'Semanal' },
   { value: 'monthly', label: 'Mensal' },
-  { value: 'custom', label: 'Personalizado' }
+  { value: 'custom', label: 'Personalizado' },
 ] as const;
 
 export const WEEKDAY_CHOICES = [
@@ -1172,21 +1172,21 @@ export const WEEKDAY_CHOICES = [
   { value: 3, label: 'Quinta-feira' },
   { value: 4, label: 'Sexta-feira' },
   { value: 5, label: 'Sábado' },
-  { value: 6, label: 'Domingo' }
+  { value: 6, label: 'Domingo' },
 ] as const;
 
 export const GOAL_TYPE_CHOICES = [
   { value: 'consecutive_days', label: 'Dias Consecutivos' },
   { value: 'total_days', label: 'Total de Dias' },
   { value: 'avoid_habit', label: 'Evitar Hábito' },
-  { value: 'custom', label: 'Personalizado' }
+  { value: 'custom', label: 'Personalizado' },
 ] as const;
 
 export const GOAL_STATUS_CHOICES = [
   { value: 'active', label: 'Ativo' },
   { value: 'completed', label: 'Concluído' },
   { value: 'failed', label: 'Falhou' },
-  { value: 'cancelled', label: 'Cancelado' }
+  { value: 'cancelled', label: 'Cancelado' },
 ] as const;
 
 export const MOOD_CHOICES = [
@@ -1194,7 +1194,7 @@ export const MOOD_CHOICES = [
   { value: 'good', label: 'Bom' },
   { value: 'neutral', label: 'Neutro' },
   { value: 'bad', label: 'Ruim' },
-  { value: 'terrible', label: 'Péssimo' }
+  { value: 'terrible', label: 'Péssimo' },
 ] as const;
 
 // Routine Task Types
@@ -1346,10 +1346,10 @@ export const INSTANCE_STATUS_CHOICES = [
   { value: 'in_progress', label: 'Em Andamento' },
   { value: 'completed', label: 'Concluída' },
   { value: 'skipped', label: 'Pulada' },
-  { value: 'cancelled', label: 'Cancelada' }
+  { value: 'cancelled', label: 'Cancelada' },
 ] as const;
 
-export type InstanceStatus = typeof INSTANCE_STATUS_CHOICES[number]['value'];
+export type InstanceStatus = (typeof INSTANCE_STATUS_CHOICES)[number]['value'];
 
 export interface TaskInstance {
   id: number;

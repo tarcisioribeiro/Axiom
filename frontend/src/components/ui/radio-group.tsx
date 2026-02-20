@@ -1,9 +1,9 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
 interface RadioGroupProps extends React.HTMLAttributes<HTMLDivElement> {
-  value?: string
-  onValueChange?: (value: string) => void
+  value?: string;
+  onValueChange?: (value: string) => void;
 }
 
 const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
@@ -11,29 +11,29 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
     return (
       <div
         ref={ref}
-        className={cn("grid gap-2", className)}
+        className={cn('grid gap-2', className)}
         role="radiogroup"
         {...props}
       >
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
-            const childElement = child as React.ReactElement<RadioGroupItemProps>
+            const childElement = child as React.ReactElement<RadioGroupItemProps>;
             return React.cloneElement(childElement, {
               checked: childElement.props.value === value,
               onChange: () => onValueChange?.(childElement.props.value),
-            })
+            });
           }
-          return child
+          return child;
         })}
       </div>
-    )
+    );
   }
-)
-RadioGroup.displayName = "RadioGroup"
+);
+RadioGroup.displayName = 'RadioGroup';
 
 interface RadioGroupItemProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  value: string
-  checked?: boolean
+  value: string;
+  checked?: boolean;
 }
 
 const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
@@ -46,14 +46,14 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
         checked={checked}
         onChange={onChange}
         className={cn(
-          "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          'aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         {...props}
       />
-    )
+    );
   }
-)
-RadioGroupItem.displayName = "RadioGroupItem"
+);
+RadioGroupItem.displayName = 'RadioGroupItem';
 
-export { RadioGroup, RadioGroupItem }
+export { RadioGroup, RadioGroupItem };

@@ -45,7 +45,7 @@ export default function Books() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -95,7 +95,8 @@ export default function Books() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir livro',
-      description: 'Tem certeza que deseja excluir este livro? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir este livro? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -109,7 +110,7 @@ export default function Books() {
         title: 'Livro excluído',
         description: 'O livro foi excluído com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir livro',
@@ -136,7 +137,7 @@ export default function Books() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -215,13 +216,11 @@ export default function Books() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredBooks.map((book) => (
-          <Card key={book.id} className="hover:shadow-lg transition-shadow">
+          <Card key={book.id} className="transition-shadow hover:shadow-lg">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg line-clamp-2">
-                    {book.title}
-                  </CardTitle>
+                  <CardTitle className="line-clamp-2 text-lg">{book.title}</CardTitle>
                   <CardDescription className="line-clamp-1">
                     {book.authors_names.join(', ')}
                   </CardDescription>
@@ -231,15 +230,17 @@ export default function Books() {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleEdit(book)}
+                    aria-label="Editar"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => handleDelete(book.id)}
+                    aria-label="Excluir"
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -247,9 +248,7 @@ export default function Books() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <Badge
-                    variant={getStatusVariant(book.read_status)}
-                  >
+                  <Badge variant={getStatusVariant(book.read_status)}>
                     {book.read_status_display}
                   </Badge>
                   <Badge variant="secondary">{book.genre_display}</Badge>
@@ -262,26 +261,18 @@ export default function Books() {
                 )}
 
                 {book.synopsis && (
-                  <p className="text-sm line-clamp-2">
-                    {book.synopsis}
-                  </p>
+                  <p className="line-clamp-2 text-sm">{book.synopsis}</p>
                 )}
 
-                <div className="text-sm">
-                  {book.publisher_name}
-                </div>
+                <div className="text-sm">{book.publisher_name}</div>
 
                 <div className="flex items-center gap-2 text-sm">
                   <BookOpen className="h-4 w-4" />
-                  <span>
-                    {book.pages} páginas
-                  </span>
+                  <span>{book.pages} páginas</span>
                   {book.media_type_display && (
                     <>
                       <span>•</span>
-                      <span>
-                        {book.media_type_display}
-                      </span>
+                      <span>{book.media_type_display}</span>
                     </>
                   )}
                 </div>
@@ -293,9 +284,7 @@ export default function Books() {
                         <TrendingUp className="h-3 w-3" />
                         Progresso
                       </span>
-                      <span className="font-medium">
-                        {book.reading_progress}%
-                      </span>
+                      <span className="font-medium">{book.reading_progress}%</span>
                     </div>
                     <Progress value={book.reading_progress} className="h-2" />
                     <p className="text-xs">
@@ -310,7 +299,7 @@ export default function Books() {
                   </Badge>
                 )}
 
-                <div className="text-xs pt-2">
+                <div className="pt-2 text-xs">
                   {book.publish_date
                     ? `Publicado em ${formatDate(book.publish_date, 'dd/MM/yyyy')}`
                     : `Adicionado em ${formatDate(book.created_at, 'dd/MM/yyyy')}`}
@@ -333,11 +322,9 @@ export default function Books() {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {selectedBook ? 'Editar' : 'Novo'} Livro
-            </DialogTitle>
+            <DialogTitle>{selectedBook ? 'Editar' : 'Novo'} Livro</DialogTitle>
             <DialogDescription>
               {selectedBook
                 ? 'Atualize as informações do livro'

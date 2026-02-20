@@ -128,7 +128,10 @@ export function DatePicker({
       const newDate = dateValue;
 
       // Só atualiza se a data realmente mudou
-      if (newDate && (!currentDate || formatLocalDate(currentDate) !== formatLocalDate(newDate))) {
+      if (
+        newDate &&
+        (!currentDate || formatLocalDate(currentDate) !== formatLocalDate(newDate))
+      ) {
         flatpickrRef.current.setDate(newDate, false);
       } else if (!newDate && currentDate) {
         flatpickrRef.current.clear(false);
@@ -147,9 +150,7 @@ export function DatePicker({
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       {/* Ícone do calendário */}
-      <CalendarIcon
-        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/70 pointer-events-none z-10"
-      />
+      <CalendarIcon className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-primary/70" />
 
       {/* Input do Flatpickr */}
       <input
@@ -159,13 +160,13 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'w-full h-10 pl-10 pr-10 py-2',
-          'bg-background border border-input rounded-md',
+          'h-10 w-full py-2 pl-10 pr-10',
+          'rounded-md border border-input bg-background',
           'text-sm text-foreground placeholder:text-foreground',
-          'focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary',
+          'focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring',
           'transition-all duration-200',
           'hover:border-primary/40',
-          disabled && 'opacity-50 cursor-not-allowed'
+          disabled && 'cursor-not-allowed opacity-50'
         )}
       />
 
@@ -174,8 +175,9 @@ export function DatePicker({
         <button
           type="button"
           onClick={handleClear}
+          aria-label="Limpar data"
           className={cn(
-            'absolute right-3 top-1/2 -translate-y-1/2 z-10',
+            'absolute right-3 top-1/2 z-10 -translate-y-1/2',
             'h-5 w-5 rounded-full',
             'flex items-center justify-center',
             'hover:text-destructive',
@@ -183,7 +185,7 @@ export function DatePicker({
             'transition-colors duration-150'
           )}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       )}
     </div>

@@ -45,7 +45,7 @@ export function NotificationItem({
   return (
     <button
       className={cn(
-        'w-full flex items-start gap-3 p-3 text-left rounded-md transition-colors hover:bg-accent',
+        'flex w-full items-start gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent',
         !notification.is_read && 'bg-accent/50'
       )}
       onClick={() => {
@@ -55,24 +55,21 @@ export function NotificationItem({
       }}
     >
       <div className={cn('mt-0.5 shrink-0', iconColor)}>
-        <Icon className="w-4 h-4" />
+        <Icon className="h-4 w-4" />
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p
-            className={cn(
-              'text-sm truncate',
-              !notification.is_read && 'font-semibold'
-            )}
+            className={cn('truncate text-sm', !notification.is_read && 'font-semibold')}
           >
             {notification.title}
           </p>
           {!notification.is_read && (
-            <span className="shrink-0 w-2 h-2 rounded-full bg-primary" />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
           )}
         </div>
         {notification.message && (
-          <p className="text-xs text-muted-foreground truncate mt-0.5">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {notification.message}
           </p>
         )}

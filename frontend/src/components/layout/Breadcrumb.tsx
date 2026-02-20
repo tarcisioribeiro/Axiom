@@ -26,12 +26,9 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
   }
 
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className={cn('flex items-center', className)}
-    >
+    <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
       {/* Versão desktop - todos os items */}
-      <ol className="hidden md:flex items-center gap-1 text-sm">
+      <ol className="hidden items-center gap-1 text-sm md:flex">
         {breadcrumbs.map((item, index) => {
           const isLast = index === breadcrumbs.length - 1;
           const Icon = item.icon;
@@ -39,27 +36,25 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
           return (
             <li key={`${item.label}-${index}`} className="flex items-center gap-1">
               {index > 0 && (
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               )}
               {item.href && !isLast ? (
                 <Link
                   to={item.href}
-                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  {Icon && <Icon className="w-4 h-4" />}
+                  {Icon && <Icon className="h-4 w-4" />}
                   <span>{item.label}</span>
                 </Link>
               ) : (
                 <span
                   className={cn(
                     'flex items-center gap-1.5',
-                    isLast
-                      ? 'text-foreground font-medium'
-                      : 'text-muted-foreground'
+                    isLast ? 'font-medium text-foreground' : 'text-muted-foreground'
                   )}
                   aria-current={isLast ? 'page' : undefined}
                 >
-                  {Icon && <Icon className="w-4 h-4" />}
+                  {Icon && <Icon className="h-4 w-4" />}
                   <span>{item.label}</span>
                 </span>
               )}
@@ -69,17 +64,17 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
       </ol>
 
       {/* Versão mobile - apenas item atual */}
-      <div className="flex md:hidden items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-sm md:hidden">
         {breadcrumbs.length > 1 && (
           <>
             <Link
               to="/"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Voltar ao início"
             >
-              <ChevronRight className="w-4 h-4 rotate-180" />
+              <ChevronRight className="h-4 w-4 rotate-180" />
             </Link>
-            <span className="text-foreground font-medium">
+            <span className="font-medium text-foreground">
               {breadcrumbs[breadcrumbs.length - 1].label}
             </span>
           </>

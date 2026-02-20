@@ -51,9 +51,12 @@ export function StarRating({
           disabled={disabled}
           onClick={() => handleClick(rating)}
           onMouseEnter={() => !disabled && setHoverValue(rating)}
+          aria-label={`${rating} estrela${rating > 1 ? 's' : ''}`}
           className={cn(
-            'transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-sm',
-            disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'
+            'rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+            disabled
+              ? 'cursor-not-allowed opacity-50'
+              : 'cursor-pointer hover:scale-110'
           )}
         >
           <Star
@@ -64,6 +67,7 @@ export function StarRating({
                 ? 'fill-yellow-400 text-yellow-400'
                 : 'fill-transparent hover:text-yellow-400/50'
             )}
+            aria-hidden="true"
           />
         </button>
       ))}
@@ -71,7 +75,7 @@ export function StarRating({
         <button
           type="button"
           onClick={() => onChange?.(null)}
-          className="ml-2 text-xs hover:text-destructive transition-colors"
+          className="ml-2 text-xs transition-colors hover:text-destructive"
         >
           Limpar
         </button>

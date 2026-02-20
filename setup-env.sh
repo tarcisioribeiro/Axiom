@@ -171,7 +171,7 @@ if [ "$MODE" == "auto" ]; then
     SHOW_SQL_QUERIES="False"
 
     MINIO_ROOT_USER="mindledger"
-    MINIO_ROOT_PASSWORD="mindledger_secret"
+    MINIO_ROOT_PASSWORD="$(openssl rand -base64 32 | tr -d /=+ | cut -c1-25)"
     MINIO_BUCKET_NAME="mindledger"
     MINIO_ENDPOINT="minio:9000"
     MINIO_EXTERNAL_ENDPOINT="localhost:39105"
@@ -264,9 +264,12 @@ else
     read -p "Usuário do MinIO [mindledger]: " MINIO_ROOT_USER
     MINIO_ROOT_USER=${MINIO_ROOT_USER:-mindledger}
 
-    read -sp "Senha do MinIO [mindledger_secret]: " MINIO_ROOT_PASSWORD
+    read -sp "Senha do MinIO (Enter para gerar aleatoriamente): " MINIO_ROOT_PASSWORD
     echo
-    MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-mindledger_secret}
+    if [ -z "$MINIO_ROOT_PASSWORD" ]; then
+        MINIO_ROOT_PASSWORD="$(openssl rand -base64 32 | tr -d /=+ | cut -c1-25)"
+        print_info "Senha gerada automaticamente"
+    fi
 
     read -p "Nome do bucket [mindledger]: " MINIO_BUCKET_NAME
     MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-mindledger}

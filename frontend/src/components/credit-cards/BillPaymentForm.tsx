@@ -22,11 +22,17 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   bill,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
 }) => {
   const remaining = parseFloat(bill.total_amount) - parseFloat(bill.paid_amount);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<BillPaymentFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<BillPaymentFormData>({
     defaultValues: {
       amount: remaining > 0 ? remaining : 0,
       payment_date: formatLocalDate(new Date()),
@@ -59,63 +65,77 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const last4 = bill.credit_card_number_masked || '****';
   const isValidNumber = last4 !== '****' && /^\d{4}$/.test(last4);
   const cardNumber = isValidNumber ? `**** ${last4}` : '';
-  const flag = bill.credit_card_flag ? translate('cardBrands', bill.credit_card_flag) : '';
+  const flag = bill.credit_card_flag
+    ? translate('cardBrands', bill.credit_card_flag)
+    : '';
   const accountName = bill.credit_card_associated_account_name || 'N/A';
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Bill Summary */}
-      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-        <h4 className="font-semibold text-sm text-muted-foreground">Resumo da Fatura</h4>
+      <div className="space-y-3 rounded-lg bg-muted/50 p-4">
+        <h4 className="text-sm font-semibold text-muted-foreground">
+          Resumo da Fatura
+        </h4>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-muted-foreground" />
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Cartão</p>
-              <p className="font-medium text-sm">{cardholderName} {cardNumber}</p>
+              <p className="text-sm font-medium">
+                {cardholderName} {cardNumber}
+              </p>
               <p className="text-xs text-muted-foreground">{flag}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-muted-foreground" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Conta de Débito</p>
-              <p className="font-medium text-sm">{accountName}</p>
+              <p className="text-sm font-medium">{accountName}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Período</p>
-              <p className="font-medium text-sm">{translate('months', bill.month)}/{bill.year}</p>
+              <p className="text-sm font-medium">
+                {translate('months', bill.month)}/{bill.year}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Vencimento</p>
-              <p className="font-medium text-sm">{bill.due_date ? formatDate(bill.due_date) : 'N/A'}</p>
+              <p className="text-sm font-medium">
+                {bill.due_date ? formatDate(bill.due_date) : 'N/A'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t pt-3 mt-3">
+        <div className="mt-3 border-t pt-3">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-xs text-muted-foreground">Valor Total</p>
-              <p className="font-bold text-lg">{formatCurrency(bill.total_amount)}</p>
+              <p className="text-lg font-bold">{formatCurrency(bill.total_amount)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Já Pago</p>
-              <p className="font-bold text-lg text-success">{formatCurrency(bill.paid_amount)}</p>
+              <p className="text-lg font-bold text-success">
+                {formatCurrency(bill.paid_amount)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Saldo Restante</p>
-              <p className="font-bold text-lg text-primary">{formatCurrency(remaining.toString())}</p>
+              <p className="text-lg font-bold text-primary">
+                {formatCurrency(remaining.toString())}
+              </p>
             </div>
           </div>
         </div>
@@ -123,8 +143,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {/* Warning if bill is already paid */}
       {remaining <= 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500" />
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <AlertCircle className="h-5 w-5 text-amber-500" />
           <p className="text-sm text-amber-700">Esta fatura já foi totalmente paga.</p>
         </div>
       )}
@@ -135,7 +155,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <div className="space-y-2">
             <Label htmlFor="amount">Valor do Pagamento *</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                R$
+              </span>
               <Input
                 id="amount"
                 type="number"
@@ -147,7 +169,10 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
                   valueAsNumber: true,
                   required: 'Valor é obrigatório',
                   min: { value: 0.01, message: 'Valor deve ser maior que zero' },
-                  max: { value: remaining, message: `Valor não pode exceder ${formatCurrency(remaining.toString())}` }
+                  max: {
+                    value: remaining,
+                    message: `Valor não pode exceder ${formatCurrency(remaining.toString())}`,
+                  },
                 })}
                 disabled={isLoading}
               />
@@ -164,7 +189,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             <Label htmlFor="payment_date">Data do Pagamento *</Label>
             <DatePicker
               value={watch('payment_date')}
-              onChange={(date) => setValue('payment_date', date ? formatLocalDate(date) : '')}
+              onChange={(date) =>
+                setValue('payment_date', date ? formatLocalDate(date) : '')
+              }
               placeholder="Selecione a data do pagamento"
               disabled={isLoading}
             />
@@ -183,7 +210,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           Cancelar
         </Button>
@@ -193,7 +220,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             disabled={isLoading || !isAmountValid}
             className="gap-2"
           >
-            <Wallet className="w-4 h-4" />
+            <Wallet className="h-4 w-4" />
             {isLoading ? 'Processando...' : 'Pagar Fatura'}
           </Button>
         )}

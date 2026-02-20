@@ -1,10 +1,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/hooks/use-command-palette';
@@ -77,7 +73,7 @@ export function CommandPalette() {
         onClick={() => executeCommand(command)}
         onMouseEnter={() => setSelectedIndex(index)}
         className={cn(
-          'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
+          'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
           isSelected
             ? 'bg-primary text-primary-foreground'
             : 'hover:bg-accent hover:text-accent-foreground'
@@ -88,16 +84,16 @@ export function CommandPalette() {
       >
         <Icon
           className={cn(
-            'w-5 h-5 flex-shrink-0',
+            'h-5 w-5 flex-shrink-0',
             isSelected ? 'text-primary-foreground' : 'text-muted-foreground'
           )}
         />
-        <div className="flex-1 min-w-0">
-          <div className="font-medium truncate">{command.title}</div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-medium">{command.title}</div>
           {command.description && (
             <div
               className={cn(
-                'text-xs truncate',
+                'truncate text-xs',
                 isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'
               )}
             >
@@ -108,7 +104,7 @@ export function CommandPalette() {
         {command.shortcut && (
           <kbd
             className={cn(
-              'hidden sm:inline-flex px-1.5 py-0.5 text-xs font-mono rounded',
+              'hidden rounded px-1.5 py-0.5 font-mono text-xs sm:inline-flex',
               isSelected
                 ? 'bg-primary-foreground/20 text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -121,18 +117,20 @@ export function CommandPalette() {
     );
   };
 
-  const renderSection = (section: CommandSection, commands: Command[], startIndex: number) => {
+  const renderSection = (
+    section: CommandSection,
+    commands: Command[],
+    startIndex: number
+  ) => {
     if (commands.length === 0) return null;
 
     return (
       <div key={section} className="py-2">
-        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {sectionLabels[section]}
         </div>
         <div className="space-y-1">
-          {commands.map((command, i) =>
-            renderCommandItem(command, startIndex + i)
-          )}
+          {commands.map((command, i) => renderCommandItem(command, startIndex + i))}
         </div>
       </div>
     );
@@ -142,14 +140,13 @@ export function CommandPalette() {
   const sectionStartIndices: Record<CommandSection, number> = {
     navigation: 0,
     actions: groupedCommands.navigation.length,
-    settings:
-      groupedCommands.navigation.length + groupedCommands.actions.length,
+    settings: groupedCommands.navigation.length + groupedCommands.actions.length,
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && close()}>
       <DialogContent
-        className="sm:max-w-xl p-0 gap-0 overflow-hidden"
+        className="gap-0 overflow-hidden p-0 sm:max-w-xl"
         onKeyDown={handleKeyDown}
       >
         <VisuallyHidden>
@@ -157,25 +154,25 @@ export function CommandPalette() {
         </VisuallyHidden>
 
         {/* Header com campo de busca */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b">
-          <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center gap-3 border-b px-4 py-3">
+          <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
           <Input
             ref={inputRef}
             type="text"
             placeholder="Buscar comandos..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto text-base"
+            className="h-auto border-0 px-0 text-base shadow-none focus-visible:ring-0"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-mono bg-muted text-muted-foreground rounded">
-            <CommandIcon className="w-3 h-3" />K
+          <kbd className="hidden items-center gap-1 rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground sm:inline-flex">
+            <CommandIcon className="h-3 w-3" />K
           </kbd>
         </div>
 
         {/* Lista de comandos */}
         <div
           ref={listRef}
-          className="max-h-[60vh] overflow-y-auto custom-scrollbar p-2"
+          className="custom-scrollbar max-h-[60vh] overflow-y-auto p-2"
           role="listbox"
           aria-label="Comandos disponíveis"
         >
@@ -211,7 +208,7 @@ export function CommandPalette() {
                 exit={{ opacity: 0 }}
                 className="py-12 text-center text-muted-foreground"
               >
-                <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <Search className="mx-auto mb-3 h-12 w-12 opacity-50" />
                 <p className="font-medium">Nenhum comando encontrado</p>
                 <p className="text-sm">Tente buscar por outra palavra-chave</p>
               </motion.div>
@@ -220,20 +217,20 @@ export function CommandPalette() {
         </div>
 
         {/* Footer com dicas de atalho */}
-        <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/50 text-xs text-muted-foreground">
+        <div className="flex items-center justify-between border-t bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-background rounded border">↑</kbd>
-              <kbd className="px-1.5 py-0.5 bg-background rounded border">↓</kbd>
+              <kbd className="rounded border bg-background px-1.5 py-0.5">↑</kbd>
+              <kbd className="rounded border bg-background px-1.5 py-0.5">↓</kbd>
               <span>navegar</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-background rounded border">Enter</kbd>
+              <kbd className="rounded border bg-background px-1.5 py-0.5">Enter</kbd>
               <span>selecionar</span>
             </span>
           </div>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-background rounded border">Esc</kbd>
+            <kbd className="rounded border bg-background px-1.5 py-0.5">Esc</kbd>
             <span>fechar</span>
           </span>
         </div>

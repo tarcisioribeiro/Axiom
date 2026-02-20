@@ -466,7 +466,9 @@ export function searchCommands(commands: Command[], query: string): Command[] {
 /**
  * Agrupa comandos por seção
  */
-export function groupCommandsBySection(commands: Command[]): Record<CommandSection, Command[]> {
+export function groupCommandsBySection(
+  commands: Command[]
+): Record<CommandSection, Command[]> {
   return {
     navigation: commands.filter((c) => c.section === 'navigation'),
     actions: commands.filter((c) => c.section === 'actions'),

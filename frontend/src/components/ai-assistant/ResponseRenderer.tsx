@@ -29,12 +29,12 @@ export function ResponseRenderer({
 }: ResponseRendererProps) {
   // Renderiza o texto principal
   const renderText = () => (
-    <div className="whitespace-pre-wrap text-foreground leading-relaxed">
+    <div className="whitespace-pre-wrap leading-relaxed text-foreground">
       {content.split('\n').map((line, i) => {
         // Detecta linhas com bullet points
         if (line.startsWith('- ') || line.startsWith('• ')) {
           return (
-            <div key={i} className="flex gap-2 my-1">
+            <div key={i} className="my-1 flex gap-2">
               <span className="text-primary">•</span>
               <span>{line.substring(2)}</span>
             </div>
@@ -44,8 +44,8 @@ export function ResponseRenderer({
         const numberedMatch = line.match(/^(\d+)\.\s/);
         if (numberedMatch) {
           return (
-            <div key={i} className="flex gap-2 my-1">
-              <span className="text-primary font-medium min-w-[1.5rem]">
+            <div key={i} className="my-1 flex gap-2">
+              <span className="min-w-[1.5rem] font-medium text-primary">
                 {numberedMatch[1]}.
               </span>
               <span>{line.substring(numberedMatch[0].length)}</span>
@@ -53,7 +53,13 @@ export function ResponseRenderer({
           );
         }
         // Linha normal
-        return line ? <p key={i} className="my-1">{line}</p> : <br key={i} />;
+        return line ? (
+          <p key={i} className="my-1">
+            {line}
+          </p>
+        ) : (
+          <br key={i} />
+        );
       })}
     </div>
   );
@@ -68,11 +74,11 @@ export function ResponseRenderer({
       <div className="space-y-3">
         {/* Texto de contexto */}
         {content && !content.startsWith('1.') && (
-          <p className="text-foreground mb-3">{content}</p>
+          <p className="mb-3 text-foreground">{content}</p>
         )}
 
         {/* Tabela */}
-        <div className="rounded-lg border overflow-hidden">
+        <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -87,9 +93,7 @@ export function ResponseRenderer({
               {data.map((row, i) => (
                 <TableRow key={i}>
                   {columns.map((col) => (
-                    <TableCell key={col}>
-                      {formatCellValue(col, row[col])}
-                    </TableCell>
+                    <TableCell key={col}>{formatCellValue(col, row[col])}</TableCell>
                   ))}
                 </TableRow>
               ))}
@@ -111,7 +115,7 @@ export function ResponseRenderer({
       const valueFields = ['total', 'saldo_total', 'valor', 'media', 'total_guardado'];
       for (const field of valueFields) {
         if (firstItem[field] !== undefined && typeof firstItem[field] === 'number') {
-          valorPrincipal = firstItem[field] as number;
+          valorPrincipal = firstItem[field];
           break;
         }
       }
@@ -120,13 +124,13 @@ export function ResponseRenderer({
     return (
       <div className="space-y-3">
         {valorPrincipal !== null && (
-          <div className="bg-primary/10 rounded-lg p-4 text-center">
+          <div className="rounded-lg bg-primary/10 p-4 text-center">
             <div className="text-3xl font-bold text-primary">
               {formatCurrency(valorPrincipal)}
             </div>
           </div>
         )}
-        <div className="text-foreground whitespace-pre-wrap">{content}</div>
+        <div className="whitespace-pre-wrap text-foreground">{content}</div>
       </div>
     );
   };
@@ -135,23 +139,25 @@ export function ResponseRenderer({
   const renderPassword = () => {
     return (
       <div className="space-y-3">
-        <div className="text-foreground whitespace-pre-wrap">{content}</div>
+        <div className="whitespace-pre-wrap text-foreground">{content}</div>
 
         {data && data.length > 0 && (
           <div className="space-y-2">
             {data.map((item, i) => (
               <div
                 key={i}
-                className="bg-muted/50 rounded-lg p-3 flex items-center justify-between"
+                className="flex items-center justify-between rounded-lg bg-muted/50 p-3"
               >
                 <div>
-                  <div className="font-medium">{String(item.titulo || item.title || '')}</div>
+                  <div className="font-medium">
+                    {String((item.titulo || item.title || '') as string)}
+                  </div>
                   <div className="text-sm text-muted-foreground">
-                    {String(item.usuario || item.username || '')}
-                    {item.site ? ` • ${String(item.site)}` : null}
+                    {String((item.usuario || item.username || '') as string)}
+                    {item.site ? ` • ${String(item.site as string)}` : null}
                   </div>
                 </div>
-                {(item.categoria || item.category) ? (
+                {item.categoria || item.category ? (
                   <Badge variant="secondary">
                     {autoTranslate(String(item.categoria || item.category))}
                   </Badge>
@@ -348,7 +354,7 @@ function formatColumnName(name: string): string {
   return name
     .replace(/_/g, ' ')
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
 
@@ -404,14 +410,37 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
 
   // Valores monetários
   const currencyColumns = [
-    'valor', 'value', 'saldo', 'balance', 'total', 'limite', 'limit',
-    'limite_disponivel', 'limite_total', 'credit_limit', 'current_balance',
-    'valor_total', 'valor_pago', 'payed_value', 'valor_restante',
-    'valor_recebido', 'valor_a_receber', 'media', 'average',
-    'rendimentos', 'accumulated_yield', 'valor_fatura', 'total_amount',
-    'total_guardado', 'total_rendimentos', 'total_transferido'
+    'valor',
+    'value',
+    'saldo',
+    'balance',
+    'total',
+    'limite',
+    'limit',
+    'limite_disponivel',
+    'limite_total',
+    'credit_limit',
+    'current_balance',
+    'valor_total',
+    'valor_pago',
+    'payed_value',
+    'valor_restante',
+    'valor_recebido',
+    'valor_a_receber',
+    'media',
+    'average',
+    'rendimentos',
+    'accumulated_yield',
+    'valor_fatura',
+    'total_amount',
+    'total_guardado',
+    'total_rendimentos',
+    'total_transferido',
   ];
-  if (currencyColumns.some(col => columnLower.includes(col)) && typeof value === 'number') {
+  if (
+    currencyColumns.some((col) => columnLower.includes(col)) &&
+    typeof value === 'number'
+  ) {
     return (
       <span className={cn(value < 0 ? 'text-destructive' : 'text-success')}>
         {formatCurrency(value)}
@@ -421,19 +450,33 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
 
   // Datas
   const dateColumns = [
-    'data', 'date', 'inicio', 'start', 'fim', 'end',
-    'created_at', 'updated_at', 'ultima_alteracao', 'last_password_change',
-    'scheduled_date', 'reading_date', 'start_date', 'end_date'
+    'data',
+    'date',
+    'inicio',
+    'start',
+    'fim',
+    'end',
+    'created_at',
+    'updated_at',
+    'ultima_alteracao',
+    'last_password_change',
+    'scheduled_date',
+    'reading_date',
+    'start_date',
+    'end_date',
   ];
-  if (dateColumns.some(col => columnLower.includes(col))) {
+  if (dateColumns.some((col) => columnLower.includes(col))) {
     if (typeof value === 'string' || value instanceof Date) {
-      return formatDateBR(value as string | Date);
+      return formatDateBR(value);
     }
   }
 
   // Horários
   const timeColumns = ['horario', 'scheduled_time', 'time'];
-  if (timeColumns.some(col => columnLower.includes(col)) && typeof value === 'string') {
+  if (
+    timeColumns.some((col) => columnLower.includes(col)) &&
+    typeof value === 'string'
+  ) {
     return value.substring(0, 5); // HH:MM
   }
 
@@ -478,21 +521,32 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
       inactive: 'bg-muted text-muted-foreground',
       inativo: 'bg-muted text-muted-foreground',
     };
-    const statusKey = String(value).toLowerCase().replace(/ /g, '_');
+    const statusKey = String(value as string).toLowerCase().replace(/ /g, '_');
     return (
       <Badge className={cn('font-normal', statusColors[statusKey] || '')}>
-        {autoTranslate(String(value))}
+        {autoTranslate(String(value as string))}
       </Badge>
     );
   }
 
   // Categorias e tipos - traduz
   const translateColumns = [
-    'categoria', 'category', 'tipo', 'type', 'genero', 'genre',
-    'periodicidade', 'periodicity', 'bandeira', 'flag', 'goal_type'
+    'categoria',
+    'category',
+    'tipo',
+    'type',
+    'genero',
+    'genre',
+    'periodicidade',
+    'periodicity',
+    'bandeira',
+    'flag',
+    'goal_type',
   ];
-  if (translateColumns.some(col => columnLower === col || columnLower.includes(col))) {
-    return autoTranslate(String(value));
+  if (
+    translateColumns.some((col) => columnLower === col || columnLower.includes(col))
+  ) {
+    return autoTranslate(String(value as string));
   }
 
   // Booleanos
@@ -516,7 +570,10 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
 
   // Avaliação (rating)
   const ratingColumns = ['avaliacao', 'rating'];
-  if (ratingColumns.some(col => columnLower.includes(col)) && typeof value === 'number') {
+  if (
+    ratingColumns.some((col) => columnLower.includes(col)) &&
+    typeof value === 'number'
+  ) {
     if (value >= 1 && value <= 5) {
       return '⭐'.repeat(value);
     }
@@ -525,7 +582,10 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
 
   // Percentuais e taxas
   const percentColumns = ['taxa', 'rate', 'percent', 'taxa_conclusao', 'yield_rate'];
-  if (percentColumns.some(col => columnLower.includes(col)) && typeof value === 'number') {
+  if (
+    percentColumns.some((col) => columnLower.includes(col)) &&
+    typeof value === 'number'
+  ) {
     // Se o valor já está em formato decimal (0.15 = 15%)
     if (value >= -1 && value <= 1 && !columnLower.includes('conclusao')) {
       return `${formatNumberBR(value * 100, 2)}%`;
@@ -535,8 +595,18 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
   }
 
   // Quantidades e contagens (números inteiros)
-  const countColumns = ['quantidade', 'count', 'paginas', 'pages', 'minutos', 'minutes'];
-  if (countColumns.some(col => columnLower.includes(col)) && typeof value === 'number') {
+  const countColumns = [
+    'quantidade',
+    'count',
+    'paginas',
+    'pages',
+    'minutos',
+    'minutes',
+  ];
+  if (
+    countColumns.some((col) => columnLower.includes(col)) &&
+    typeof value === 'number'
+  ) {
     if (Number.isInteger(value)) {
       return value.toLocaleString('pt-BR');
     }
@@ -546,8 +616,18 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
   // Meses (número para nome)
   if ((columnLower === 'mes' || columnLower === 'month') && typeof value === 'number') {
     const monthNames = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      'Janeiro',
+      'Fevereiro',
+      'Março',
+      'Abril',
+      'Maio',
+      'Junho',
+      'Julho',
+      'Agosto',
+      'Setembro',
+      'Outubro',
+      'Novembro',
+      'Dezembro',
     ];
     if (value >= 1 && value <= 12) {
       return monthNames[value - 1];
@@ -567,16 +647,43 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
     // Verifica se é uma string que parece ser um termo em inglês comum
     const lowerValue = value.toLowerCase();
     const commonEnglishTerms = [
-      'pending', 'active', 'inactive', 'completed', 'cancelled', 'overdue',
-      'paid', 'open', 'closed', 'reading', 'read', 'to_read', 'abandoned',
-      'fiction', 'non_fiction', 'philosophy', 'psychology', 'history',
-      'salary', 'income', 'refund', 'cashback', 'award', 'bonus',
-      'food and drink', 'transport', 'health', 'education', 'entertainment'
+      'pending',
+      'active',
+      'inactive',
+      'completed',
+      'cancelled',
+      'overdue',
+      'paid',
+      'open',
+      'closed',
+      'reading',
+      'read',
+      'to_read',
+      'abandoned',
+      'fiction',
+      'non_fiction',
+      'philosophy',
+      'psychology',
+      'history',
+      'salary',
+      'income',
+      'refund',
+      'cashback',
+      'award',
+      'bonus',
+      'food and drink',
+      'transport',
+      'health',
+      'education',
+      'entertainment',
     ];
-    if (commonEnglishTerms.includes(lowerValue) || commonEnglishTerms.includes(lowerValue.replace(/_/g, ' '))) {
+    if (
+      commonEnglishTerms.includes(lowerValue) ||
+      commonEnglishTerms.includes(lowerValue.replace(/_/g, ' '))
+    ) {
       return autoTranslate(value);
     }
   }
 
-  return String(value);
+  return String(value as string);
 }

@@ -11,10 +11,7 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn(
-        'animate-pulse rounded-md bg-muted',
-        className
-      )}
+      className={cn('animate-pulse rounded-md bg-muted', className)}
       aria-hidden="true"
     />
   );
@@ -25,13 +22,13 @@ export function Skeleton({ className }: SkeletonProps) {
  */
 export function SkeletonStatCard() {
   return (
-    <div className="p-6 rounded-lg border bg-card">
+    <div className="rounded-lg border bg-card p-6">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-10 w-10 rounded-full" />
       </div>
-      <Skeleton className="h-8 w-32 mt-4" />
-      <Skeleton className="h-3 w-20 mt-2" />
+      <Skeleton className="mt-4 h-8 w-32" />
+      <Skeleton className="mt-2 h-3 w-20" />
     </div>
   );
 }
@@ -54,9 +51,19 @@ export function SkeletonTableRow({ columns = 5 }: { columns?: number }) {
 /**
  * Skeleton para tabela completa.
  */
-export function SkeletonTable({ rows = 5, columns = 5 }: { rows?: number; columns?: number }) {
+export function SkeletonTable({
+  rows = 5,
+  columns = 5,
+}: {
+  rows?: number;
+  columns?: number;
+}) {
   return (
-    <div className="rounded-lg border bg-card" role="status" aria-label="Carregando tabela">
+    <div
+      className="rounded-lg border bg-card"
+      role="status"
+      aria-label="Carregando tabela"
+    >
       {/* Header */}
       <div className="border-b p-4">
         <div className="flex gap-4">
@@ -68,7 +75,7 @@ export function SkeletonTable({ rows = 5, columns = 5 }: { rows?: number; column
       {/* Rows */}
       <div className="divide-y">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="p-4 flex gap-4">
+          <div key={i} className="flex gap-4 p-4">
             {Array.from({ length: columns }).map((_, j) => (
               <Skeleton key={j} className="h-4 flex-1" />
             ))}
@@ -84,7 +91,7 @@ export function SkeletonTable({ rows = 5, columns = 5 }: { rows?: number; column
  */
 export function SkeletonCard() {
   return (
-    <div className="p-4 rounded-lg border bg-card space-y-3">
+    <div className="space-y-3 rounded-lg border bg-card p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="flex-1 space-y-2">
@@ -123,7 +130,7 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
           <Skeleton className="h-10 w-full" />
         </div>
       ))}
-      <Skeleton className="h-10 w-32 mt-6" />
+      <Skeleton className="mt-6 h-10 w-32" />
     </div>
   );
 }
@@ -135,19 +142,19 @@ export function SkeletonDashboard() {
   return (
     <div className="space-y-6" role="status" aria-label="Carregando dashboard">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <SkeletonStatCard key={i} />
         ))}
       </div>
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 rounded-lg border bg-card">
-          <Skeleton className="h-6 w-32 mb-4" />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border bg-card p-6">
+          <Skeleton className="mb-4 h-6 w-32" />
           <Skeleton className="h-64 w-full" />
         </div>
-        <div className="p-6 rounded-lg border bg-card">
-          <Skeleton className="h-6 w-32 mb-4" />
+        <div className="rounded-lg border bg-card p-6">
+          <Skeleton className="mb-4 h-6 w-32" />
           <Skeleton className="h-64 w-full" />
         </div>
       </div>

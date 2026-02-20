@@ -4,7 +4,9 @@ import type { ActivityLog, PaginatedResponse } from '@/types';
 
 class ActivityLogsService {
   async getAll(): Promise<ActivityLog[]> {
-    const response = await apiClient.get<PaginatedResponse<ActivityLog>>(API_CONFIG.ENDPOINTS.ACTIVITY_LOGS);
+    const response = await apiClient.get<PaginatedResponse<ActivityLog>>(
+      API_CONFIG.ENDPOINTS.ACTIVITY_LOGS
+    );
     return response.results;
   }
 }

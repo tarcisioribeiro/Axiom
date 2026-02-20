@@ -31,8 +31,7 @@ export function ReceiptPreviewDialog({
 }: ReceiptPreviewDialogProps) {
   // Ref for the hidden full-size receipt (used for export)
   const captureRef = useRef<HTMLDivElement>(null);
-  const { isGenerating, error, generateReceipt, clearError } =
-    useReceiptGenerator();
+  const { isGenerating, error, generateReceipt, clearError } = useReceiptGenerator();
 
   const handleExport = async (format: ExportFormat) => {
     if (!data) return;
@@ -54,14 +53,17 @@ export function ReceiptPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent size="lg" className="max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <DialogContent
+        size="lg"
+        className="custom-scrollbar max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle>Comprovante de {data.typeLabel}</DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="flex justify-center bg-muted rounded-lg p-4 overflow-auto custom-scrollbar">
-          <div className="transform scale-[0.65] origin-top">
+        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-4">
+          <div className="origin-top scale-[0.65] transform">
             <ReceiptTemplate data={data} />
           </div>
         </div>
@@ -81,13 +83,13 @@ export function ReceiptPreviewDialog({
 
         {/* Error Message */}
         {error && (
-          <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {/* Export Buttons */}
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button
             variant="outline"
             onClick={() => handleExport('png')}
@@ -95,9 +97,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Image className="w-4 h-4 mr-2" />
+              <Image className="mr-2 h-4 w-4" />
             )}
             Exportar PNG
           </Button>
@@ -107,9 +109,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <FileText className="w-4 h-4 mr-2" />
+              <FileText className="mr-2 h-4 w-4" />
             )}
             Exportar PDF
           </Button>

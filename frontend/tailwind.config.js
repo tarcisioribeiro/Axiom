@@ -155,57 +155,6 @@ export default {
           '10%, 30%, 50%, 70%, 90%': { transform: 'translate(-50%, -50%) translateX(-4px)' },
           '20%, 40%, 60%, 80%': { transform: 'translate(-50%, -50%) translateX(4px)' },
         },
-        // Animações para Toast
-        'toast-slide-in-right': {
-          from: {
-            opacity: '0',
-            transform: 'translateX(100%)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translateX(0)',
-          },
-        },
-        'toast-slide-out-right': {
-          from: {
-            opacity: '1',
-            transform: 'translateX(0)',
-          },
-          to: {
-            opacity: '0',
-            transform: 'translateX(100%)',
-          },
-        },
-        'toast-slide-in-bottom': {
-          from: {
-            opacity: '0',
-            transform: 'translateY(100%)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'translateY(0)',
-          },
-        },
-        'toast-fade-in': {
-          from: {
-            opacity: '0',
-            transform: 'scale(0.95)',
-          },
-          to: {
-            opacity: '1',
-            transform: 'scale(1)',
-          },
-        },
-        'toast-fade-out': {
-          from: {
-            opacity: '1',
-            transform: 'scale(1)',
-          },
-          to: {
-            opacity: '0',
-            transform: 'scale(0.95)',
-          },
-        },
       },
       animation: {
         'dialog-overlay-show': 'dialog-overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -216,15 +165,38 @@ export default {
         'slide-down-fade': 'slide-down-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
         'shake': 'shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97)',
-        // Animações para Toast
-        'toast-slide-in-right': 'toast-slide-in-right 300ms cubic-bezier(0.21, 1.02, 0.73, 1)',
-        'toast-slide-out-right': 'toast-slide-out-right 200ms cubic-bezier(0.06, 0.71, 0.55, 1)',
-        'toast-slide-in-bottom': 'toast-slide-in-bottom 300ms cubic-bezier(0.21, 1.02, 0.73, 1)',
-        'toast-fade-in': 'toast-fade-in 200ms ease-out',
-        'toast-fade-out': 'toast-fade-out 150ms ease-in',
+      },
+      transitionDuration: {
+        fast: 'var(--duration-fast)',
+        normal: 'var(--duration-normal)',
+        slow: 'var(--duration-slow)',
+      },
+      transitionTimingFunction: {
+        spring: 'var(--ease-spring)',
       },
       backdropBlur: {
         xs: '2px',
+      },
+      fontSize: {
+        xs: ['var(--text-xs)', { lineHeight: 'var(--leading-xs)' }],
+        sm: ['var(--text-sm)', { lineHeight: 'var(--leading-sm)' }],
+        base: ['var(--text-base)', { lineHeight: 'var(--leading-base)' }],
+        lg: ['var(--text-lg)', { lineHeight: 'var(--leading-lg)' }],
+        xl: ['var(--text-xl)', { lineHeight: 'var(--leading-xl)' }],
+        '2xl': ['var(--text-2xl)', { lineHeight: 'var(--leading-2xl)' }],
+      },
+      fontWeight: {
+        normal: 'var(--font-normal)',
+        medium: 'var(--font-medium)',
+        semibold: 'var(--font-semibold)',
+        bold: 'var(--font-bold)',
+      },
+      spacing: {
+        xs: 'var(--spacing-xs)',
+        sm: 'var(--spacing-sm)',
+        md: 'var(--spacing-md)',
+        lg: 'var(--spacing-lg)',
+        xl: 'var(--spacing-xl)',
       },
     },
   },

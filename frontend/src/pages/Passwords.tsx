@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Loader2, Copy, ExternalLink, Key, Wand2 } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Copy,
+  ExternalLink,
+  Key,
+  Wand2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -48,7 +59,9 @@ export default function Passwords() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPassword, setSelectedPassword] = useState<Password | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [revealedPasswords, setRevealedPasswords] = useState<Map<number, string>>(new Map());
+  const [revealedPasswords, setRevealedPasswords] = useState<Map<number, string>>(
+    new Map()
+  );
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showGenerator, setShowGenerator] = useState(false);
@@ -67,7 +80,7 @@ export default function Passwords() {
   });
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -129,7 +142,8 @@ export default function Passwords() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir senha',
-      description: 'Tem certeza que deseja excluir esta senha? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta senha? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -143,7 +157,7 @@ export default function Passwords() {
         title: 'Senha excluída',
         description: 'A senha foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir',
@@ -198,7 +212,11 @@ export default function Passwords() {
     e.preventDefault();
 
     // Validações
-    if (!formData.title || !formData.username || (!selectedPassword && !formData.password)) {
+    if (
+      !formData.title ||
+      !formData.username ||
+      (!selectedPassword && !formData.password)
+    ) {
       toast({
         title: 'Campos obrigatórios',
         description: 'Preencha todos os campos obrigatórios.',
@@ -210,9 +228,9 @@ export default function Passwords() {
     try {
       setIsSubmitting(true);
       if (selectedPassword) {
-        const updateData = { ...formData };
+        const updateData: Partial<PasswordFormData> = { ...formData };
         if (!updateData.password) {
-          delete (updateData as any).password; // Não enviar senha vazia
+          delete updateData.password; // Não enviar senha vazia
         }
         await passwordsService.update(selectedPassword.id, updateData);
         toast({
@@ -227,7 +245,7 @@ export default function Passwords() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -243,7 +261,7 @@ export default function Passwords() {
     (pwd) =>
       pwd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (pwd.site && pwd.site.toLowerCase().includes(searchTerm.toLowerCase()))
+      (pwd.site?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (isLoading) {
@@ -273,9 +291,9 @@ export default function Passwords() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredPasswords.map((password) => (
-          <Card key={password.id} className="hover:shadow-lg transition-shadow">
+          <Card key={password.id} className="transition-shadow hover:shadow-lg">
             <CardHeader>
-              <div className="flex justify-between items-start">
+              <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <CardTitle className="text-lg">{password.title}</CardTitle>
                   <CardDescription>{password.username}</CardDescription>
@@ -292,7 +310,7 @@ export default function Passwords() {
                       href={password.site}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:underline truncate"
+                      className="truncate hover:underline"
                     >
                       {password.site}
                     </a>
@@ -300,7 +318,7 @@ export default function Passwords() {
                 )}
 
                 {revealedPasswords.has(password.id) && (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                  <div className="flex items-center gap-2 rounded bg-muted p-2">
                     <code className="flex-1 text-sm">
                       {revealedPasswords.get(password.id)}
                     </code>
@@ -418,15 +436,13 @@ export default function Passwords() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">
-                  Senha {selectedPassword ? '' : '*'}
-                </Label>
+                <Label htmlFor="password">Senha {selectedPassword ? '' : '*'}</Label>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowGenerator(!showGenerator)}
-                  className="h-auto py-1 px-2 text-xs"
+                  className="h-auto px-2 py-1 text-xs"
                 >
                   <Wand2 className="mr-1 h-3 w-3" />
                   {showGenerator ? 'Ocultar Gerador' : 'Gerar Senha'}
@@ -440,7 +456,7 @@ export default function Passwords() {
                 placeholder={selectedPassword ? 'Deixe vazio para manter a atual' : ''}
               />
               {showGenerator && (
-                <div className="border rounded-lg p-3 bg-muted/30">
+                <div className="rounded-lg border bg-muted/30 p-3">
                   <PasswordGenerator
                     compact
                     onPasswordGenerated={(password) => {
@@ -481,7 +497,7 @@ export default function Passwords() {
               />
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"

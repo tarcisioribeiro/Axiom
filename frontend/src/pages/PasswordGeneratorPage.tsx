@@ -13,18 +13,15 @@ import { PasswordGenerator } from '@/components/security/PasswordGenerator';
 export default function PasswordGeneratorPage() {
   return (
     <PageContainer>
-      <PageHeader
-        title="Gerador de Senhas"
-        icon={<Wand2 />}
-      />
+      <PageHeader title="Gerador de Senhas" icon={<Wand2 />} />
 
-      <div className="max-w-2xl mx-auto">
+      <div className="mx-auto max-w-2xl">
         <Card>
           <CardHeader>
             <CardTitle>Gerar Senha Segura</CardTitle>
             <CardDescription>
-              Crie senhas criptograficamente seguras com opções configuráveis.
-              As senhas são geradas no servidor usando algoritmos seguros.
+              Crie senhas criptograficamente seguras com opções configuráveis. As senhas
+              são geradas no servidor usando algoritmos seguros.
             </CardDescription>
           </CardHeader>
           <CardContent>

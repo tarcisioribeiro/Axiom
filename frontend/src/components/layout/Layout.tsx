@@ -9,7 +9,7 @@ export const Layout = () => {
       {/* Skip link para acessibilidade - permite pular navegacao */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         Pular para o conteudo principal
       </a>
@@ -18,7 +18,7 @@ export const Layout = () => {
       <Sidebar />
 
       {/* Main content: ocupa espaço restante */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col">
         <Header />
         <main id="main-content" className="flex-1 p-4 lg:p-6" role="main">
           <Outlet />

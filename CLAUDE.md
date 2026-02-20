@@ -131,6 +131,41 @@ docker-compose exec -T db psql -U $DB_USER mindledger_db < backups/your_backup.s
 docker-compose exec db psql -U $DB_USER -d mindledger_db    # PostgreSQL shell
 ```
 
+## Design Token System
+
+Typography, spacing, and weight values are managed through CSS variables defined in `frontend/src/index.css` and mapped into Tailwind via `frontend/tailwind.config.js`. This allows global visual changes by editing a single variable.
+
+### Font Size Scale (`--text-*`)
+| CSS Variable     | Value       | Tailwind utility |
+|-----------------|-------------|-----------------|
+| `--text-xs`     | `0.75rem`   | `text-xs`       |
+| `--text-sm`     | `0.875rem`  | `text-sm`       |
+| `--text-base`   | `1rem`      | `text-base`     |
+| `--text-lg`     | `1.125rem`  | `text-lg`       |
+| `--text-xl`     | `1.25rem`   | `text-xl`       |
+| `--text-2xl`    | `1.5rem`    | `text-2xl`      |
+
+Each `fontSize` entry includes a companion `lineHeight` via `--leading-{size}`.
+
+### Font Weight Scale (`--font-*`)
+| CSS Variable       | Value | Tailwind utility   |
+|-------------------|-------|--------------------|
+| `--font-normal`   | `400` | `font-normal`      |
+| `--font-medium`   | `500` | `font-medium`      |
+| `--font-semibold` | `600` | `font-semibold`    |
+| `--font-bold`     | `700` | `font-bold`        |
+
+### Semantic Spacing (`--spacing-*`)
+| CSS Variable      | Value      | Tailwind utilities              |
+|------------------|------------|---------------------------------|
+| `--spacing-xs`   | `0.25rem`  | `p-xs`, `m-xs`, `gap-xs`, …    |
+| `--spacing-sm`   | `0.5rem`   | `p-sm`, `m-sm`, `gap-sm`, …    |
+| `--spacing-md`   | `1rem`     | `p-md`, `m-md`, `gap-md`, …    |
+| `--spacing-lg`   | `1.5rem`   | `p-lg`, `m-lg`, `gap-lg`, …    |
+| `--spacing-xl`   | `2rem`     | `p-xl`, `m-xl`, `gap-xl`, …    |
+
+**Rule**: Prefer semantic spacing tokens (`p-md`, `gap-lg`) over numeric Tailwind defaults (`p-4`, `gap-6`) for layout and component padding. Numeric values are still acceptable for small adjustments (borders, icon sizes, etc.).
+
 ## Key Patterns and Conventions
 
 ### Adding a New Backend Resource

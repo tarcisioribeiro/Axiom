@@ -1,34 +1,20 @@
 import { apiClient } from './api-client';
+import { BaseService } from './base-service';
 import { API_CONFIG } from '@/config/constants';
-import type { CreditCardBill, CreditCardBillFormData, BillPaymentFormData, BillPaymentResponse, PaginatedResponse, BillItemsResponse } from '@/types';
+import type { CreditCardBill, CreditCardBillFormData, BillPaymentFormData, BillPaymentResponse, BillItemsResponse } from '@/types';
 
-class CreditCardBillsService {
-  async getAll(params?: Record<string, any>): Promise<CreditCardBill[]> {
-    const response = await apiClient.get<PaginatedResponse<CreditCardBill>>(API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS, params);
-    return response.results;
-  }
-
-  async getById(id: number): Promise<CreditCardBill> {
-    return apiClient.get<CreditCardBill>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${id}/`);
-  }
-
-  async create(data: CreditCardBillFormData): Promise<CreditCardBill> {
-    return apiClient.post<CreditCardBill>(API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS, data);
-  }
-
-  async update(id: number, data: Partial<CreditCardBillFormData>): Promise<CreditCardBill> {
-    return apiClient.put<CreditCardBill>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${id}/`, data);
-  }
-
-  async delete(id: number): Promise<void> {
-    return apiClient.delete(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${id}/`);
+class CreditCardBillsService extends BaseService<CreditCardBill, CreditCardBillFormData> {
+  constructor() {
+    super(API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS);
   }
 
   async getByCard(cardId: number): Promise<CreditCardBill[]> {
     return this.getAll({ credit_card: cardId });
   }
 
-  async getByStatus(status: 'open' | 'closed' | 'paid' | 'overdue'): Promise<CreditCardBill[]> {
+  async getByStatus(
+    status: 'open' | 'closed' | 'paid' | 'overdue'
+  ): Promise<CreditCardBill[]> {
     return this.getAll({ status });
   }
 
@@ -37,11 +23,11 @@ class CreditCardBillsService {
   }
 
   async payBill(billId: number, data: BillPaymentFormData): Promise<BillPaymentResponse> {
-    return apiClient.post<BillPaymentResponse>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${billId}/pay/`, data);
+    return apiClient.post<BillPaymentResponse>(`${this.endpoint}${billId}/pay/`, data);
   }
 
   async reopenBill(billId: number): Promise<{ message: string; bill: CreditCardBill }> {
-    return apiClient.post<{ message: string; bill: CreditCardBill }>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${billId}/reopen/`, {});
+    return apiClient.post<{ message: string; bill: CreditCardBill }>(`${this.endpoint}${billId}/reopen/`, {});
   }
 
   /**
@@ -50,7 +36,7 @@ class CreditCardBillsService {
    * incluindo despesas fixas (CreditCardExpense) e parcelas de compras (CreditCardInstallment).
    */
   async getBillItems(billId: number): Promise<BillItemsResponse> {
-    return apiClient.get<BillItemsResponse>(`${API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS}${billId}/items/`);
+    return apiClient.get<BillItemsResponse>(`${this.endpoint}${billId}/items/`);
   }
 }
 

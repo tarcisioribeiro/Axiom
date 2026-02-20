@@ -35,11 +35,13 @@ class AuthService {
    * @returns Promise com mensagem de sucesso e dados basicos do usuario
    * @throws {AuthenticationError} Se credenciais invalidas
    */
-  async login(credentials: LoginCredentials): Promise<{ message: string; user: { username: string } }> {
-    const response = await apiClient.post<{ message: string; user: { username: string } }>(
-      API_CONFIG.ENDPOINTS.LOGIN,
-      credentials
-    );
+  async login(
+    credentials: LoginCredentials
+  ): Promise<{ message: string; user: { username: string } }> {
+    const response = await apiClient.post<{
+      message: string;
+      user: { username: string };
+    }>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
 
     return response;
   }
@@ -60,21 +62,29 @@ class AuthService {
     document: string;
     phone: string;
     email?: string;
-  }): Promise<{ message: string; user_id: number; member_id: number; username: string }> {
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+  }): Promise<{
+    message: string;
+    user_id: number;
+    member_id: number;
+    username: string;
+  }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      }
+    );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Erro ao cadastrar usuario');
+      const errorData = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(errorData.error ?? 'Erro ao cadastrar usuario');
     }
 
-    return response.json();
+    return response.json() as Promise<{ message: string; user_id: number; member_id: number; username: string }>;
   }
 
   /**
@@ -94,7 +104,10 @@ class AuthService {
     }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
 
     if (!Array.isArray(response.permissions)) {
-      console.error('Invalid permissions format received from API:', response.permissions);
+      console.error(
+        'Invalid permissions format received from API:',
+        response.permissions
+      );
       return [];
     }
 
@@ -157,7 +170,7 @@ class AuthService {
     if (!userData) return null;
 
     try {
-      return JSON.parse(userData);
+      return JSON.parse(userData) as User;
     } catch {
       return null;
     }
@@ -186,7 +199,7 @@ class AuthService {
     if (!permsData) return [];
 
     try {
-      return JSON.parse(permsData);
+      return JSON.parse(permsData) as Permission[];
     } catch {
       return [];
     }

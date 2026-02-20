@@ -16,9 +16,12 @@ interface PageContainerProps {
  * - py-8: padding vertical
  * - space-y-6: espaçamento entre elementos filhos
  */
-export const PageContainer: React.FC<PageContainerProps> = ({ children, className }) => {
+export const PageContainer: React.FC<PageContainerProps> = ({
+  children,
+  className,
+}) => {
   return (
-    <AnimatedPage className={cn("px-4 py-8 space-y-6", className)}>
+    <AnimatedPage className={cn('space-y-6 px-4 py-8', className)}>
       {children}
     </AnimatedPage>
   );

@@ -18,12 +18,7 @@ import {
 } from '@/components/ui/select';
 import { bookSchema, type BookFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
-import {
-  BOOK_LANGUAGES,
-  BOOK_GENRES,
-  LITERARY_TYPES,
-  MEDIA_TYPES,
-} from '@/types';
+import { BOOK_LANGUAGES, BOOK_GENRES, LITERARY_TYPES, MEDIA_TYPES } from '@/types';
 import type { Book, Author, Publisher } from '@/types';
 
 import { formatLocalDate } from '@/lib/utils';
@@ -44,9 +39,7 @@ export function BookForm({
   onCancel,
   isLoading = false,
 }: BookFormProps) {
-  const [selectedAuthors, setSelectedAuthors] = useState<number[]>(
-    book?.authors || []
-  );
+  const [selectedAuthors, setSelectedAuthors] = useState<number[]>(book?.authors || []);
 
   const {
     register,
@@ -104,7 +97,7 @@ export function BookForm({
       }
     };
 
-    loadCurrentUserMember();
+    void loadCurrentUserMember();
   }, [book, setValue]);
 
   const handleAuthorToggle = (authorId: number) => {
@@ -126,13 +119,9 @@ export function BookForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <Label htmlFor="title">Título *</Label>
-          <Input
-            id="title"
-            {...register('title')}
-            placeholder="Título do livro"
-          />
+          <Input id="title" {...register('title')} placeholder="Título do livro" />
           {errors.title && (
-            <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -151,7 +140,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {selectedAuthors.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {selectedAuthors.map((authorId) => {
                 const author = authors.find((a) => a.id === authorId);
                 return author ? (
@@ -160,9 +149,10 @@ export function BookForm({
                     <button
                       type="button"
                       onClick={() => handleRemoveAuthor(authorId)}
+                      aria-label={`Remover ${author.name}`}
                       className="ml-1 hover:text-destructive"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3 w-3" aria-hidden="true" />
                     </button>
                   </Badge>
                 ) : null;
@@ -170,7 +160,7 @@ export function BookForm({
             </div>
           )}
           {errors.authors && (
-            <p className="text-sm text-destructive mt-1">{errors.authors.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.authors.message}</p>
           )}
         </div>
 
@@ -181,11 +171,11 @@ export function BookForm({
             type="number"
             min="1"
             {...register('pages', {
-              setValueAs: (value) => (value === '' ? 0 : parseInt(value)),
+              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
             })}
           />
           {errors.pages && (
-            <p className="text-sm text-destructive mt-1">{errors.pages.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.pages.message}</p>
           )}
         </div>
 
@@ -207,9 +197,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.publisher && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.publisher.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.publisher.message}</p>
           )}
         </div>
 
@@ -231,9 +219,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.language && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.language.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.language.message}</p>
           )}
         </div>
 
@@ -255,7 +241,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.genre && (
-            <p className="text-sm text-destructive mt-1">{errors.genre.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.genre.message}</p>
           )}
         </div>
 
@@ -277,7 +263,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.literarytype && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.literarytype.message}
             </p>
           )}
@@ -301,21 +287,15 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.media_type && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.media_type.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.media_type.message}</p>
           )}
         </div>
 
         <div>
           <Label htmlFor="edition">Edição *</Label>
-          <Input
-            id="edition"
-            {...register('edition')}
-            placeholder="Ex: 1ª edição"
-          />
+          <Input id="edition" {...register('edition')} placeholder="Ex: 1ª edição" />
           {errors.edition && (
-            <p className="text-sm text-destructive mt-1">{errors.edition.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.edition.message}</p>
           )}
         </div>
 
@@ -323,11 +303,13 @@ export function BookForm({
           <Label htmlFor="publish_date">Data de Publicação</Label>
           <DatePicker
             value={watch('publish_date')}
-            onChange={(date) => setValue('publish_date', date ? formatLocalDate(date) : '')}
+            onChange={(date) =>
+              setValue('publish_date', date ? formatLocalDate(date) : '')
+            }
             placeholder="Selecione a data de publicação"
           />
           {errors.publish_date && (
-            <p className="text-sm text-destructive mt-1">
+            <p className="mt-1 text-sm text-destructive">
               {errors.publish_date.message}
             </p>
           )}
@@ -342,7 +324,7 @@ export function BookForm({
             className="mt-2"
           />
           {errors.rating && (
-            <p className="text-sm text-destructive mt-1">{errors.rating.message}</p>
+            <p className="mt-1 text-sm text-destructive">{errors.rating.message}</p>
           )}
         </div>
 
@@ -355,14 +337,12 @@ export function BookForm({
             rows={5}
           />
           {errors.synopsis && (
-            <p className="text-sm text-destructive mt-1">
-              {errors.synopsis.message}
-            </p>
+            <p className="mt-1 text-sm text-destructive">{errors.synopsis.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4 border-t">
+      <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

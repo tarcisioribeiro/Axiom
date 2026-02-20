@@ -36,7 +36,7 @@ export default function Readings() {
   const { showConfirm } = useAlertDialog();
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -63,7 +63,8 @@ export default function Readings() {
     if (books.length === 0) {
       toast({
         title: 'Ação não permitida',
-        description: 'É necessário ter pelo menos um livro cadastrado antes de registrar uma leitura.',
+        description:
+          'É necessário ter pelo menos um livro cadastrado antes de registrar uma leitura.',
         variant: 'destructive',
       });
       return;
@@ -80,7 +81,8 @@ export default function Readings() {
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
       title: 'Excluir leitura',
-      description: 'Tem certeza que deseja excluir esta leitura? Esta ação não pode ser desfeita.',
+      description:
+        'Tem certeza que deseja excluir esta leitura? Esta ação não pode ser desfeita.',
       confirmText: 'Excluir',
       cancelText: 'Cancelar',
       variant: 'destructive',
@@ -94,7 +96,7 @@ export default function Readings() {
         title: 'Leitura excluída',
         description: 'A leitura foi excluída com sucesso.',
       });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao excluir leitura',
@@ -121,7 +123,7 @@ export default function Readings() {
         });
       }
       setIsDialogOpen(false);
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       toast({
         title: 'Erro ao salvar',
@@ -136,7 +138,7 @@ export default function Readings() {
   const filteredReadings = readings.filter(
     (reading) =>
       reading.book_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (reading.notes && reading.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      (reading.notes?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   if (loading) {
@@ -179,14 +181,16 @@ export default function Readings() {
             <Card key={reading.id}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <BookOpen className="w-4 h-4 flex-shrink-0" />
-                      <CardTitle className="text-base truncate">{reading.book_title}</CardTitle>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 flex-shrink-0" />
+                      <CardTitle className="truncate text-base">
+                        {reading.book_title}
+                      </CardTitle>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="h-3 w-3" />
                         {formatDate(reading.reading_date, 'dd/MM/yyyy')}
                       </div>
                       <Badge variant="secondary" className="text-xs">
@@ -194,31 +198,31 @@ export default function Readings() {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex flex-shrink-0 gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleEdit(reading)}
+                      aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleDelete(reading.id)}
+                      aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               {reading.notes && (
                 <CardContent className="pt-0">
-                  <p className="text-sm line-clamp-3">
-                    {reading.notes}
-                  </p>
+                  <p className="line-clamp-3 text-sm">{reading.notes}</p>
                 </CardContent>
               )}
             </Card>

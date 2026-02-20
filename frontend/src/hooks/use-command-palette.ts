@@ -106,7 +106,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
       if (command.action) {
         command.action();
       } else if (command.href) {
-        navigate(command.href);
+        void navigate(command.href);
       }
       close();
     },
