@@ -215,11 +215,26 @@ export default function CreditCards() {
                       )}
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(card)} aria-label="Editar">
-                        <Pencil className="w-4 h-4" aria-hidden="true" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(card)}
+                        aria-label="Editar"
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(card.id)} aria-label="Excluir">
-                        <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleDelete(card.id)}
+                        aria-label="Excluir"
+                      >
+                        <Trash2
+                          className="h-4 w-4 text-destructive"
+                          aria-hidden="true"
+                        />
                       </Button>
                     </div>
                   </div>

@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotificationsStore } from '@/stores/notifications-store';
 
 import { NotificationItem } from './NotificationItem';
@@ -32,10 +31,10 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative hover:bg-secondary transition-all hover-lift"
+          className="hover-lift relative transition-all hover:bg-secondary"
           aria-label="Notificações"
         >
-          <Bell className="w-5 h-5" aria-hidden="true" />
+          <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
             <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-primary-foreground">
               {unreadCount > 99 ? '99+' : unreadCount}
@@ -43,8 +42,8 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
-        <div className="flex items-center justify-between border-b p-3">
+      <PopoverContent align="end" className="w-96 p-0" sideOffset={8}>
+        <div className="flex items-center justify-between border-b px-3 py-2">
           <h4 className="text-sm font-semibold">Notificações</h4>
           {unreadCount > 0 && (
             <Button
@@ -59,7 +58,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        <ScrollArea className="max-h-80">
+        <div className="custom-scrollbar max-h-[380px] overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               Carregando...
@@ -69,7 +68,7 @@ export function NotificationBell() {
               Nenhuma notificação
             </div>
           ) : (
-            <div className="p-1">
+            <div className="divide-y divide-border">
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
@@ -79,7 +78,7 @@ export function NotificationBell() {
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -191,11 +191,21 @@ export default function Accounts() {
         }}
         actions={(account) => (
           <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(account)} aria-label="Editar">
-              <Pencil className="w-4 h-4" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(account)}
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(account.id)} aria-label="Excluir">
-              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDelete(account.id)}
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

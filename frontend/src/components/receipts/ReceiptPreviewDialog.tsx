@@ -14,7 +14,6 @@ import type { ReceiptData, ExportFormat } from '@/types/receipt';
 
 import { ReceiptTemplate } from './ReceiptTemplate';
 
-
 interface ReceiptPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

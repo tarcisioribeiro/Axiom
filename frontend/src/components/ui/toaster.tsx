@@ -13,8 +13,6 @@ import {
 } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 
-
-
 export function Toaster() {
   const { toasts } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -29,7 +27,19 @@ export function Toaster() {
     const textToCopy = `${titleText}\n${descriptionText}`.trim();
 
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        // Fallback para contextos não-seguros (HTTP)
+        const el = document.createElement('textarea');
+        el.value = textToCopy;
+        el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
@@ -58,12 +68,12 @@ export function Toaster() {
                   {title && <ToastTitle>{title}</ToastTitle>}
                   {description && <ToastDescription>{description}</ToastDescription>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-1">
                   {(title || description) && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       onClick={() => handleCopy(id, title, description)}
                       aria-label="Copiar mensagem"
                     >
@@ -75,8 +85,11 @@ export function Toaster() {
                     </Button>
                   )}
                   {action}
+                  <ToastClose
+                    aria-label="Fechar notificacao"
+                    className="static translate-y-0 opacity-100"
+                  />
                 </div>
-                <ToastClose aria-label="Fechar notificacao" />
               </Toast>
             );
           })}

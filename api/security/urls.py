@@ -3,6 +3,7 @@ from django.urls import path
 from security.vault_config import (
     VaultChangePasswordView,
     VaultLockView,
+    VaultMigrateFromBackupView,
     VaultSetupView,
     VaultStatusView,
     VaultUnlockView,
@@ -36,6 +37,11 @@ urlpatterns = [
         "vault/change-master-password/",
         VaultChangePasswordView.as_view(),
         name="vault-change-password",
+    ),
+    path(
+        "vault/migrate-from-backup/",
+        VaultMigrateFromBackupView.as_view(),
+        name="vault-migrate-from-backup",
     ),
     # Dashboard
     path(

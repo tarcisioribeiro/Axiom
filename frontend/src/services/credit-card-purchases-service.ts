@@ -8,7 +8,10 @@ import type {
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
-class CreditCardPurchasesService extends BaseService<CreditCardPurchase, CreditCardPurchaseFormData> {
+class CreditCardPurchasesService extends BaseService<
+  CreditCardPurchase,
+  CreditCardPurchaseFormData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.CREDIT_CARD_PURCHASES);
   }
@@ -36,7 +39,10 @@ class CreditCardPurchasesService extends BaseService<CreditCardPurchase, CreditC
     return allResults;
   }
 
-  async update(id: number, data: Partial<CreditCardPurchaseFormData>): Promise<CreditCardPurchase> {
+  async update(
+    id: number,
+    data: Partial<CreditCardPurchaseFormData>
+  ): Promise<CreditCardPurchase> {
     return apiClient.patch<CreditCardPurchase>(`${this.endpoint}${id}/`, data);
   }
 

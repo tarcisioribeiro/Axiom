@@ -31,46 +31,55 @@ class AccountSerializerTest(TestCase):
     """Testes para AccountSerializer"""
 
     def setUp(self):
-        self.account_data = {"name": "NUB", "account_type": "CC", "is_active": True}
-        self.account = Account.objects.create(**self.account_data)
+        self.account = Account.objects.create(
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
+        )
 
     def test_serialize_account(self):
         """Testa serialização de Account"""
         serializer = AccountSerializer(self.account)
 
-        self.assertEqual(serializer.data["name"], "NUB")  # type: ignore
+        self.assertEqual(serializer.data["institution"], "NUB")  # type: ignore
         self.assertEqual(serializer.data["account_type"], "CC")  # type: ignore
         self.assertTrue(serializer.data["is_active"])  # type: ignore
 
     def test_deserialize_valid_data(self):
         """Testa deserialização com dados válidos"""
-        data = {"name": "SIC", "account_type": "CS", "is_active": True}
+        data = {
+            "institution": "SIC",
+            "account_name": "Conta Sicoob",
+            "account_type": "CS",
+            "is_active": True,
+        }
 
         serializer = AccountSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
         account = serializer.save()
-        self.assertEqual(account.name, "SIC")  # type: ignore
+        self.assertEqual(account.institution_name, "SIC")  # type: ignore
         self.assertEqual(account.account_type, "CS")  # type: ignore
 
     def test_deserialize_invalid_data(self):
-        """Testa deserialização com dados inválidos"""
+        """Testa deserialização com tipo de conta inválido"""
         data = {
-            "name": "INVALID_NAME",  # Nome não está nas choices
-            "account_type": "CC",
+            "institution": "NUB",
+            "account_type": "INVALID",  # Tipo não está nas choices
             "is_active": True,
         }
 
         serializer = AccountSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("name", serializer.errors)
+        self.assertIn("account_type", serializer.errors)
 
     def test_update_account(self):
         """Testa atualização de Account via serializer"""
-        data = {"name": "NUB", "account_type": "CC", "is_active": False}
+        data = {"institution": "NUB", "account_type": "CC", "is_active": False}
 
         serializer = AccountSerializer(self.account, data=data)
-        self.assertTrue(serializer.is_valid())
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
         updated_account = serializer.save()
         self.assertFalse(updated_account.is_active)  # type: ignore
@@ -81,7 +90,10 @@ class ExpenseSerializerTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.expense_data = {
             "description": "Compra supermercado",
@@ -160,7 +172,10 @@ class CreditCardSerializerTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.credit_card_data = {
             "name": "Cartão Principal",
@@ -236,7 +251,10 @@ class RevenueSerializerTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.revenue_data = {
             "description": "Salário",
@@ -292,7 +310,7 @@ class MemberSerializerTest(TestCase):
     def test_validate_email_format(self):
         """Testa validação do formato de email"""
         invalid_data = self.member_data.copy()
-        invalid_data["email"] = "email_inválido"
+        invalid_data["email"] = "email_invalido"
 
         serializer = MemberSerializer(data=invalid_data)
         self.assertFalse(serializer.is_valid())
@@ -322,7 +340,11 @@ class SerializerValidationTest(TestCase):
 
     def test_empty_string_validation(self):
         """Testa validação de strings vazias em campos obrigatórios"""
-        data = {"name": "", "account_type": "CC", "is_active": True}  # String vazia
+        data = {
+            "institution": "",
+            "account_type": "CC",
+            "is_active": True,
+        }  # String vazia para campo obrigatório
 
         serializer = AccountSerializer(data=data)
         self.assertFalse(serializer.is_valid())
@@ -330,15 +352,24 @@ class SerializerValidationTest(TestCase):
 
     def test_null_values_validation(self):
         """Testa validação de valores null em campos obrigatórios"""
-        data = {"name": None, "account_type": "CC", "is_active": True}  # Valor null
+        data = {
+            "institution": None,
+            "account_type": "CC",
+            "is_active": True,
+        }  # Valor null
 
         serializer = AccountSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("name", serializer.errors)
+        self.assertIn("institution", serializer.errors)
 
     def test_decimal_precision_validation(self):
         """Testa validação de precisão decimal"""
-        account = Account.objects.create(name="NUB", account_type="CC", is_active=True)
+        account = Account.objects.create(
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
+        )
 
         data = {
             "description": "Teste",

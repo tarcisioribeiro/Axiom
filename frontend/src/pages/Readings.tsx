@@ -139,7 +139,7 @@ export default function Readings() {
   const filteredReadings = readings.filter(
     (reading) =>
       reading.book_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (reading.notes?.toLowerCase().includes(searchTerm.toLowerCase()))
+      reading.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -207,7 +207,7 @@ export default function Readings() {
                       onClick={() => handleEdit(reading)}
                       aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" aria-hidden="true" />
+                      <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -216,7 +216,7 @@ export default function Readings() {
                       onClick={() => handleDelete(reading.id)}
                       aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

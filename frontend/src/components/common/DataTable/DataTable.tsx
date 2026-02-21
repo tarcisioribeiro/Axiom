@@ -141,7 +141,10 @@ export function DataTable<T>({
                   </th>
                 ))}
                 {actions && (
-                  <th scope="col" className="px-6 py-4 text-right text-sm font-semibold">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-right text-sm font-semibold"
+                  >
                     Ações
                   </th>
                 )}

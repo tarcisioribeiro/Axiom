@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.validators import validate_email
 from django.db import models
 
 from app.models import BaseModel
@@ -17,7 +18,11 @@ class Member(BaseModel):
         max_length=200, blank=False, null=False, verbose_name="Telefone"
     )
     email = models.CharField(
-        max_length=200, blank=True, null=True, verbose_name="Email"
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Email",
+        validators=[validate_email],
     )
     sex = models.CharField(max_length=200, choices=SEX_OPTION, verbose_name="Sexo")
     user = models.OneToOneField(

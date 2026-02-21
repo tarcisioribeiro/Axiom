@@ -128,7 +128,8 @@ export function PublisherForm({
             min="1000"
             max={new Date().getFullYear()}
             {...register('founded_year', {
-              setValueAs: (value: string) => (value === '' ? undefined : parseInt(value)),
+              setValueAs: (value: string) =>
+                value === '' ? undefined : parseInt(value),
             })}
           />
           {errors.founded_year && (

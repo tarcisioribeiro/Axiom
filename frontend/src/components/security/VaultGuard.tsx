@@ -1,4 +1,4 @@
-import { Lock, Shield, Eye, EyeOff } from 'lucide-react';
+import { Lock, Shield, Eye, EyeOff, KeyRound, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -73,9 +73,10 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
           </div>
           <CardTitle className="text-2xl">Proteja seu Cofre</CardTitle>
           <CardDescription>
-            Configure uma senha mestre para adicionar uma camada extra de segurança.
-            Seus dados serão re-criptografados com essa senha. Ela nunca é armazenada —
-            guarde-a em local seguro.
+            Configure uma senha mestre para proteger seus dados sensíveis. Senhas do
+            cofre, arquivos, números de conta bancária e CVV de cartões serão
+            re-criptografados com essa senha. Ela nunca é armazenada — guarde-a em local
+            seguro.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -212,6 +213,107 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
 }
 
 // ============================================================================
+// VaultMigrateScreen
+// ============================================================================
+
+interface VaultMigrateScreenProps {
+  onBack: () => void;
+}
+
+function VaultMigrateScreen({ onBack }: VaultMigrateScreenProps) {
+  const [oldKey, setOldKey] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+  const handleMigrate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const result = await vaultConfigService.migrateFromBackup({
+        old_encryption_key: oldKey.trim(),
+      });
+      toast({
+        title: 'Migração concluída',
+        description: result.message,
+        variant: 'success',
+      });
+      onBack();
+    } catch (err) {
+      toast({
+        title: 'Erro na migração',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
+            <KeyRound className="h-8 w-8 text-warning" />
+          </div>
+          <CardTitle className="text-2xl">Migrar Chave de Criptografia</CardTitle>
+          <CardDescription>
+            Use esta opção ao restaurar um backup de outro ambiente. Informe a chave de
+            criptografia original (ENCRYPTION_KEY) para re-criptografar seus dados para
+            a chave do cofre atual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-md">
+          <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-sm text-warning">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>
+              O cofre deve estar desbloqueado. Apenas campos criptografados com a chave
+              antiga serão migrados — os demais serão ignorados.
+            </p>
+          </div>
+          <form onSubmit={handleMigrate} className="space-y-md">
+            <div className="space-y-xs">
+              <Label htmlFor="old-key">
+                Chave de Criptografia Antiga (ENCRYPTION_KEY)
+              </Label>
+              <Input
+                id="old-key"
+                type="text"
+                value={oldKey}
+                onChange={(e) => setOldKey(e.target.value)}
+                placeholder="Ex: nw7c4XyMgeNSD1oTaVpq8GGLYa27a5OFaiWI2ws5mBc="
+                required
+                minLength={44}
+                maxLength={44}
+                className="font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Chave Fernet base64 de 44 caracteres do arquivo <code>.env</code>{' '}
+                original.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onBack}
+                disabled={isSubmitting}
+              >
+                Voltar
+              </Button>
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                {isSubmitting ? 'Migrando...' : 'Migrar Dados'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================================
 // VaultGuard
 // ============================================================================
 
@@ -238,8 +340,27 @@ export function VaultGuard({ children }: VaultGuardProps) {
   }
 
   if (!status.is_unlocked) {
-    return <VaultUnlockScreen onSuccess={refresh} />;
+    return (
+      <div>
+        <VaultUnlockScreen onSuccess={refresh} />
+        <div className="mt-3 text-center">
+          <p className="text-xs text-muted-foreground">
+            Restaurando de um backup? Desbloqueie o cofre e acesse{' '}
+            <a
+              href="/security/migrate-encryption"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              Migrar chave de criptografia
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    );
   }
 
+  // Vault desbloqueado
   return <>{children}</>;
 }
+
+export { VaultMigrateScreen };

@@ -195,7 +195,7 @@ export default function StoredCards() {
     (card) =>
       card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.cardholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (card.last_four_digits?.includes(searchTerm))
+      card.last_four_digits?.includes(searchTerm)
   );
 
   const getFinanceCardName = (id?: number) => {
@@ -297,89 +297,99 @@ export default function StoredCards() {
 
   return (
     <VaultGuard>
-    <PageContainer>
-      <PageHeader
-        title="Cartões Armazenados"
-        icon={<CreditCardIcon />}
-        action={{
-          label: 'Novo Cartão',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="flex gap-4">
-        <Input
-          placeholder="Buscar cartões..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+      <PageContainer>
+        <PageHeader
+          title="Cartões Armazenados"
+          icon={<CreditCardIcon />}
+          action={{
+            label: 'Novo Cartão',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleCreate,
+          }}
         />
-      </div>
 
-      <DataTable
-        data={filteredCards}
-        columns={columns}
-        keyExtractor={(card) => card.id}
-        isLoading={isLoading}
-        emptyState={{
-          message: 'Nenhum cartão armazenado encontrado.',
-        }}
-        actions={(card) => (
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleReveal(card.id)}
-              disabled={revealingId === card.id}
-            >
-              {revealingId === card.id ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : revealedData.has(card.id) ? (
-                <>
-                  <EyeOff className="mr-1 h-3 w-3" />
-                  Ocultar
-                </>
-              ) : (
-                <>
-                  <Eye className="mr-1 h-3 w-3" />
-                  Revelar
-                </>
-              )}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(card)} aria-label="Editar">
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(card.id)} aria-label="Excluir">
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-            </Button>
-          </div>
-        )}
-      />
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedCard ? 'Editar' : 'Novo'} Cartão Armazenado
-            </DialogTitle>
-            <DialogDescription>
-              {selectedCard
-                ? 'Atualize as informações do cartão armazenado'
-                : 'Adicione um novo cartão ao cofre seguro'}
-            </DialogDescription>
-          </DialogHeader>
-          <StoredCardForm
-            card={selectedCard}
-            creditCards={creditCards}
-            currentMember={currentUserMember}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsDialogOpen(false)}
-            isLoading={isSubmitting}
+        <div className="flex gap-4">
+          <Input
+            placeholder="Buscar cartões..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
           />
-        </DialogContent>
-      </Dialog>
-    </PageContainer>
+        </div>
+
+        <DataTable
+          data={filteredCards}
+          columns={columns}
+          keyExtractor={(card) => card.id}
+          isLoading={isLoading}
+          emptyState={{
+            message: 'Nenhum cartão armazenado encontrado.',
+          }}
+          actions={(card) => (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleReveal(card.id)}
+                disabled={revealingId === card.id}
+              >
+                {revealingId === card.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : revealedData.has(card.id) ? (
+                  <>
+                    <EyeOff className="mr-1 h-3 w-3" />
+                    Ocultar
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-1 h-3 w-3" />
+                    Revelar
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(card)}
+                aria-label="Editar"
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(card.id)}
+                aria-label="Excluir"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+        />
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedCard ? 'Editar' : 'Novo'} Cartão Armazenado
+              </DialogTitle>
+              <DialogDescription>
+                {selectedCard
+                  ? 'Atualize as informações do cartão armazenado'
+                  : 'Adicione um novo cartão ao cofre seguro'}
+              </DialogDescription>
+            </DialogHeader>
+            <StoredCardForm
+              card={selectedCard}
+              creditCards={creditCards}
+              currentMember={currentUserMember}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsDialogOpen(false)}
+              isLoading={isSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+      </PageContainer>
     </VaultGuard>
   );
 }

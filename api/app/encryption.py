@@ -12,6 +12,27 @@ logger = logging.getLogger("expenselit")
 # Thread-local storage para cache de decriptacao
 _decryption_cache = threading.local()
 
+# ---------------------------------------------------------------------------
+# Thread-local vault key context (shared with security.vault_crypto)
+# ---------------------------------------------------------------------------
+
+_vault_key_local = threading.local()
+
+
+def get_current_vault_key() -> Optional[bytes]:
+    """Retorna a vault_key da thread atual (None se cofre não desbloqueado)."""
+    return getattr(_vault_key_local, "vault_key", None)
+
+
+def set_vault_key(vault_key: Optional[bytes]) -> None:
+    """Define a vault_key para a thread atual."""
+    _vault_key_local.vault_key = vault_key
+
+
+def clear_vault_key() -> None:
+    """Remove a vault_key da thread atual (usada no final da request)."""
+    _vault_key_local.vault_key = None
+
 
 class EncryptionError(Exception):
     """Erro base para operacoes de criptografia."""
@@ -256,19 +277,35 @@ class EncryptedField:
         if obj is None:
             return self
         raw: Optional[str] = getattr(obj, self.storage_attr)
-        if raw:
+        if not raw:
+            return None
+
+        vault_key = get_current_vault_key()
+        if vault_key:
             try:
-                return FieldEncryption.decrypt_data(raw)
-            except (DecryptionError, ValidationError):
-                return None
-        return None
+                return FieldEncryption.decrypt_with_key(raw, vault_key)
+            except (DecryptionError, Exception):
+                pass  # Dado cifrado com app key (antes da configuração do cofre)
+
+        try:
+            return FieldEncryption.decrypt_data(raw)
+        except (DecryptionError, ValidationError):
+            return None
 
     def __set__(self, obj: Any, value: Any) -> None:
         if value:
             v: str = self.preprocessor(value) if self.preprocessor else str(value)
             if self.validator is not None:
                 self.validator(v)
-            setattr(obj, self.storage_attr, FieldEncryption.encrypt_data(v))
+            vault_key = get_current_vault_key()
+            if vault_key:
+                setattr(
+                    obj,
+                    self.storage_attr,
+                    FieldEncryption.encrypt_with_key(v, vault_key),
+                )
+            else:
+                setattr(obj, self.storage_attr, FieldEncryption.encrypt_data(v))
         else:
             setattr(obj, self.storage_attr, None)
 
@@ -314,15 +351,27 @@ class MaskedEncryptedField:
         if obj is None:
             return self
         raw: Optional[str] = getattr(obj, self.storage_attr)
-        if raw:
+        if not raw:
+            return self.fallback
+
+        full: Optional[str] = None
+
+        vault_key = get_current_vault_key()
+        if vault_key:
+            try:
+                full = FieldEncryption.decrypt_with_key(raw, vault_key)
+            except (DecryptionError, Exception):
+                pass
+
+        if full is None:
             try:
                 full = FieldEncryption.decrypt_data(raw)
-                if full and len(full) >= 4:
-                    return "*" * (len(full) - 4) + full[-4:]
-                return full
             except (DecryptionError, ValidationError):
                 return self.fallback
-        return self.fallback
+
+        if full and len(full) >= 4:
+            return "*" * (len(full) - 4) + full[-4:]
+        return full
 
     def __set__(self, obj: Any, value: Any) -> None:
         raise AttributeError(

@@ -319,89 +319,99 @@ export default function StoredAccounts() {
 
   return (
     <VaultGuard>
-    <PageContainer>
-      <PageHeader
-        title="Contas Bancárias"
-        icon={<Wallet />}
-        action={{
-          label: 'Nova Conta',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="flex gap-4">
-        <Input
-          placeholder="Buscar contas..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+      <PageContainer>
+        <PageHeader
+          title="Contas Bancárias"
+          icon={<Wallet />}
+          action={{
+            label: 'Nova Conta',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleCreate,
+          }}
         />
-      </div>
 
-      <DataTable
-        data={filteredAccounts}
-        columns={columns}
-        keyExtractor={(acc) => acc.id}
-        isLoading={isLoading}
-        emptyState={{
-          message: 'Nenhuma conta armazenada encontrada.',
-        }}
-        actions={(acc) => (
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleReveal(acc.id)}
-              disabled={revealingId === acc.id}
-            >
-              {revealingId === acc.id ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : revealedData.has(acc.id) ? (
-                <>
-                  <EyeOff className="mr-1 h-3 w-3" />
-                  Ocultar
-                </>
-              ) : (
-                <>
-                  <Eye className="mr-1 h-3 w-3" />
-                  Revelar
-                </>
-              )}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(acc)} aria-label="Editar">
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(acc.id)} aria-label="Excluir">
-              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-            </Button>
-          </div>
-        )}
-      />
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedAccount ? 'Editar' : 'Nova'} Conta Bancária
-            </DialogTitle>
-            <DialogDescription>
-              {selectedAccount
-                ? 'Atualize as informações da conta armazenada'
-                : 'Adicione uma nova conta ao cofre seguro'}
-            </DialogDescription>
-          </DialogHeader>
-          <StoredAccountForm
-            account={selectedAccount}
-            financeAccounts={financeAccounts}
-            currentMember={currentUserMember}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsDialogOpen(false)}
-            isLoading={isSubmitting}
+        <div className="flex gap-4">
+          <Input
+            placeholder="Buscar contas..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
           />
-        </DialogContent>
-      </Dialog>
-    </PageContainer>
+        </div>
+
+        <DataTable
+          data={filteredAccounts}
+          columns={columns}
+          keyExtractor={(acc) => acc.id}
+          isLoading={isLoading}
+          emptyState={{
+            message: 'Nenhuma conta armazenada encontrada.',
+          }}
+          actions={(acc) => (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleReveal(acc.id)}
+                disabled={revealingId === acc.id}
+              >
+                {revealingId === acc.id ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : revealedData.has(acc.id) ? (
+                  <>
+                    <EyeOff className="mr-1 h-3 w-3" />
+                    Ocultar
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-1 h-3 w-3" />
+                    Revelar
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(acc)}
+                aria-label="Editar"
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(acc.id)}
+                aria-label="Excluir"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
+        />
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedAccount ? 'Editar' : 'Nova'} Conta Bancária
+              </DialogTitle>
+              <DialogDescription>
+                {selectedAccount
+                  ? 'Atualize as informações da conta armazenada'
+                  : 'Adicione uma nova conta ao cofre seguro'}
+              </DialogDescription>
+            </DialogHeader>
+            <StoredAccountForm
+              account={selectedAccount}
+              financeAccounts={financeAccounts}
+              currentMember={currentUserMember}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsDialogOpen(false)}
+              isLoading={isSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+      </PageContainer>
     </VaultGuard>
   );
 }

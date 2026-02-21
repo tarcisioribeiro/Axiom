@@ -9,8 +9,6 @@ import { sectionLabels, type Command, type CommandSection } from '@/config/comma
 import { useCommandPalette } from '@/hooks/use-command-palette';
 import { cn } from '@/lib/utils';
 
-
-
 /**
  * Command Palette global acessível via Ctrl+K / Cmd+K.
  *

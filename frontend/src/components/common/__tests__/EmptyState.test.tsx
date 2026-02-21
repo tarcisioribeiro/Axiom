@@ -49,10 +49,7 @@ describe('EmptyState', () => {
   it('renders an action button when action prop is provided', () => {
     const onClick = vi.fn();
     render(
-      <EmptyState
-        message="Nenhum item"
-        action={{ label: 'Adicionar', onClick }}
-      />,
+      <EmptyState message="Nenhum item" action={{ label: 'Adicionar', onClick }} />
     );
     expect(screen.getByRole('button', { name: 'Adicionar' })).toBeInTheDocument();
   });
@@ -61,10 +58,7 @@ describe('EmptyState', () => {
     const onClick = vi.fn();
     const user = userEvent.setup();
     render(
-      <EmptyState
-        message="Nenhum item"
-        action={{ label: 'Adicionar', onClick }}
-      />,
+      <EmptyState message="Nenhum item" action={{ label: 'Adicionar', onClick }} />
     );
     await user.click(screen.getByRole('button', { name: 'Adicionar' }));
     expect(onClick).toHaveBeenCalledOnce();

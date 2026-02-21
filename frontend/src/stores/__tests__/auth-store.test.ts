@@ -86,7 +86,11 @@ describe('useAuthStore', () => {
     it('returns true when the matching permission exists', () => {
       useAuthStore.setState({
         permissions: [
-          { app_label: 'accounts', codename: 'view_accounts', name: 'Can view accounts' },
+          {
+            app_label: 'accounts',
+            codename: 'view_accounts',
+            name: 'Can view accounts',
+          },
         ],
       });
       const { result } = renderHook(() => useAuthStore());
@@ -96,7 +100,11 @@ describe('useAuthStore', () => {
     it('returns false when only a different permission exists', () => {
       useAuthStore.setState({
         permissions: [
-          { app_label: 'accounts', codename: 'view_accounts', name: 'Can view accounts' },
+          {
+            app_label: 'accounts',
+            codename: 'view_accounts',
+            name: 'Can view accounts',
+          },
         ],
       });
       const { result } = renderHook(() => useAuthStore());
@@ -275,7 +283,9 @@ describe('useAuthStore', () => {
     });
 
     it('sets error state and re-throws on failed login', async () => {
-      vi.mocked(authService.login).mockRejectedValue(new Error('Credenciais inválidas'));
+      vi.mocked(authService.login).mockRejectedValue(
+        new Error('Credenciais inválidas')
+      );
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -302,7 +312,9 @@ describe('useAuthStore', () => {
         user: { username: 'user' },
       });
       vi.mocked(authService.getUserPermissions).mockResolvedValue([]);
-      vi.mocked(membersService.getCurrentUserMember).mockRejectedValue(new Error('Not found'));
+      vi.mocked(membersService.getCurrentUserMember).mockRejectedValue(
+        new Error('Not found')
+      );
 
       const { result } = renderHook(() => useAuthStore());
 

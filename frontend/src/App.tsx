@@ -36,6 +36,7 @@ const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
 const PasswordGeneratorPage = lazy(() => import('./pages/PasswordGeneratorPage'));
+const VaultMigratePage = lazy(() => import('./pages/VaultMigratePage'));
 
 // Library Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
@@ -246,6 +247,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Archives />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/migrate-encryption"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <VaultMigratePage />
               </Suspense>
             }
           />

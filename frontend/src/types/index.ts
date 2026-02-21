@@ -680,6 +680,16 @@ export interface VaultChangePasswordData {
   confirm_new_master_password: string;
 }
 
+export interface VaultMigrateData {
+  old_encryption_key: string;
+}
+
+export interface VaultMigrateResult {
+  message: string;
+  migrated: number;
+  skipped: number;
+}
+
 // Password Types
 export interface Password {
   id: number;

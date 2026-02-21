@@ -3,7 +3,10 @@ import type { DailyReflection, DailyReflectionFormData } from '@/types';
 
 import { BaseService } from './base-service';
 
-class DailyReflectionsService extends BaseService<DailyReflection, DailyReflectionFormData> {
+class DailyReflectionsService extends BaseService<
+  DailyReflection,
+  DailyReflectionFormData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.REFLECTIONS);
   }

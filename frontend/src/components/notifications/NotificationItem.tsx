@@ -59,18 +59,21 @@ export function NotificationItem({
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2">
           <p
-            className={cn('truncate text-sm', !notification.is_read && 'font-semibold')}
+            className={cn(
+              'text-sm leading-snug',
+              !notification.is_read && 'font-semibold'
+            )}
           >
             {notification.title}
           </p>
           {!notification.is_read && (
-            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
           )}
         </div>
         {notification.message && (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="mt-1 text-xs leading-relaxed text-foreground/60">
             {notification.message}
           </p>
         )}

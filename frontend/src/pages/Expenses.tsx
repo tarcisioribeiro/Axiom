@@ -1,4 +1,4 @@
-import { Plus, Pencil, Trash2, Filter, TrendingDown , ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Filter, TrendingDown, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -414,11 +414,21 @@ export default function Expenses() {
               source={{ type: 'expense', data: expense }}
               memberName={getMemberDisplayName(expense.member_name, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(expense)} aria-label="Editar">
-              <Pencil className="w-4 h-4" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(expense)}
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(expense.id)} aria-label="Excluir">
-              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDelete(expense.id)}
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

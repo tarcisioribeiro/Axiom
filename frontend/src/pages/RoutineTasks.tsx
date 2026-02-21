@@ -21,7 +21,10 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { type routineTaskSchema } from '@/lib/validations';
 import { routineTasksService } from '@/services/routine-tasks-service';
-import type { RoutineTask, RoutineTaskFormData as RoutineTaskApiFormData } from '@/types';
+import type {
+  RoutineTask,
+  RoutineTaskFormData as RoutineTaskApiFormData,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
@@ -104,7 +107,10 @@ export default function RoutineTasks() {
       };
 
       if (selectedTask) {
-        await routineTasksService.update(selectedTask.id, apiData as RoutineTaskApiFormData);
+        await routineTasksService.update(
+          selectedTask.id,
+          apiData as RoutineTaskApiFormData
+        );
         toast({
           title: 'Tarefa atualizada',
           description: 'A tarefa foi atualizada com sucesso.',
@@ -229,7 +235,7 @@ export default function RoutineTasks() {
       label: 'Ações',
       align: 'center',
       render: (task) => (
-        <div className="flex gap-2 justify-center">
+        <div className="flex justify-center gap-2">
           <Button
             variant="ghost"
             size="icon"

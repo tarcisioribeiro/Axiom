@@ -29,7 +29,7 @@ export const TRANSLATIONS = {
   // Expense Categories
   expenseCategories: {
     'food and drink': 'Comida e Bebida',
-    'food': 'Alimentação',
+    food: 'Alimentação',
     'bills and services': 'Contas e Serviços',
     electronics: 'Eletrônicos',
     'family and friends': 'Amizades e Família',
@@ -553,11 +553,10 @@ export const REVERSE_TRANSLATIONS = {
 };
 
 // Helper function to translate
-export const translate = (
-  category: keyof typeof TRANSLATIONS,
-  key: string
-): string => {
-  return TRANSLATIONS[category][key as keyof (typeof TRANSLATIONS)[typeof category]] || key;
+export const translate = (category: keyof typeof TRANSLATIONS, key: string): string => {
+  return (
+    TRANSLATIONS[category][key as keyof (typeof TRANSLATIONS)[typeof category]] || key
+  );
 };
 
 // Helper function to reverse translate
@@ -565,7 +564,11 @@ export const reverseTranslate = (
   category: keyof typeof REVERSE_TRANSLATIONS,
   value: string
 ): string => {
-  return REVERSE_TRANSLATIONS[category][value as keyof (typeof REVERSE_TRANSLATIONS)[typeof category]] || value;
+  return (
+    REVERSE_TRANSLATIONS[category][
+      value as keyof (typeof REVERSE_TRANSLATIONS)[typeof category]
+    ] || value
+  );
 };
 
 /**
@@ -632,7 +635,10 @@ export const translateText = (text: string): string => {
   // Substitui os termos
   for (const [englishTerm, portugueseTerm] of allTerms) {
     // Cria regex case-insensitive para substituir
-    const regex = new RegExp(`\\b${englishTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    const regex = new RegExp(
+      `\\b${englishTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+      'gi'
+    );
     translatedText = translatedText.replace(regex, portugueseTerm);
   }
 

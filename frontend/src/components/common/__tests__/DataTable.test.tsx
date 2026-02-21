@@ -27,7 +27,7 @@ describe('DataTable', () => {
           columns={columns}
           keyExtractor={keyExtractor}
           isLoading
-        />,
+        />
       );
       // Real item text should not appear — only skeleton placeholders
       expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
@@ -36,12 +36,7 @@ describe('DataTable', () => {
 
     it('renders a loading indicator (aria-busy) when isLoading is true', () => {
       const { container } = render(
-        <DataTable
-          data={[]}
-          columns={columns}
-          keyExtractor={keyExtractor}
-          isLoading
-        />,
+        <DataTable data={[]} columns={columns} keyExtractor={keyExtractor} isLoading />
       );
       expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
     });
@@ -49,9 +44,7 @@ describe('DataTable', () => {
 
   describe('empty state', () => {
     it('renders default empty message when data is empty and no emptyState prop', () => {
-      render(
-        <DataTable data={[]} columns={columns} keyExtractor={keyExtractor} />,
-      );
+      render(<DataTable data={[]} columns={columns} keyExtractor={keyExtractor} />);
       expect(screen.getByText('Nenhum registro encontrado.')).toBeInTheDocument();
     });
 
@@ -62,7 +55,7 @@ describe('DataTable', () => {
           columns={columns}
           keyExtractor={keyExtractor}
           emptyState={{ message: 'Nenhuma conta cadastrada' }}
-        />,
+        />
       );
       expect(screen.getByText('Nenhuma conta cadastrada')).toBeInTheDocument();
     });
@@ -74,7 +67,7 @@ describe('DataTable', () => {
           columns={columns}
           keyExtractor={keyExtractor}
           emptyState={{ title: 'Vazio', message: 'Nenhum dado' }}
-        />,
+        />
       );
       expect(screen.getByText('Vazio')).toBeInTheDocument();
       expect(screen.getByText('Nenhum dado')).toBeInTheDocument();
@@ -91,7 +84,7 @@ describe('DataTable', () => {
             message: 'Nenhum dado',
             action: { label: 'Criar', onClick },
           }}
-        />,
+        />
       );
       expect(screen.getByRole('button', { name: 'Criar' })).toBeInTheDocument();
     });
@@ -99,24 +92,18 @@ describe('DataTable', () => {
 
   describe('table rendering', () => {
     it('renders a table when data is provided', () => {
-      render(
-        <DataTable data={items} columns={columns} keyExtractor={keyExtractor} />,
-      );
+      render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
       expect(screen.getByRole('table')).toBeInTheDocument();
     });
 
     it('renders column headers', () => {
-      render(
-        <DataTable data={items} columns={columns} keyExtractor={keyExtractor} />,
-      );
+      render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
       expect(screen.getByText('Nome')).toBeInTheDocument();
       expect(screen.getByText('Valor')).toBeInTheDocument();
     });
 
     it('renders a row for each data item', () => {
-      render(
-        <DataTable data={items} columns={columns} keyExtractor={keyExtractor} />,
-      );
+      render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
       expect(screen.getByText('Alpha')).toBeInTheDocument();
       expect(screen.getByText('Beta')).toBeInTheDocument();
       expect(screen.getAllByRole('row')).toHaveLength(items.length + 1); // +1 for header
@@ -127,11 +114,13 @@ describe('DataTable', () => {
         {
           key: 'name',
           label: 'Nome',
-          render: (item) => <span data-testid={`name-${item.id}`}>{item.name.toUpperCase()}</span>,
+          render: (item) => (
+            <span data-testid={`name-${item.id}`}>{item.name.toUpperCase()}</span>
+          ),
         },
       ];
       render(
-        <DataTable data={items} columns={customColumns} keyExtractor={keyExtractor} />,
+        <DataTable data={items} columns={customColumns} keyExtractor={keyExtractor} />
       );
       expect(screen.getByTestId('name-1')).toHaveTextContent('ALPHA');
     });
@@ -143,7 +132,7 @@ describe('DataTable', () => {
           columns={columns}
           keyExtractor={keyExtractor}
           actions={() => <button>Editar</button>}
-        />,
+        />
       );
       expect(screen.getByText('Ações')).toBeInTheDocument();
     });
@@ -155,16 +144,14 @@ describe('DataTable', () => {
           columns={columns}
           keyExtractor={keyExtractor}
           actions={(item) => <button data-testid={`action-${item.id}`}>Editar</button>}
-        />,
+        />
       );
       expect(screen.getByTestId('action-1')).toBeInTheDocument();
       expect(screen.getByTestId('action-2')).toBeInTheDocument();
     });
 
     it('does not render actions column when actions prop is not provided', () => {
-      render(
-        <DataTable data={items} columns={columns} keyExtractor={keyExtractor} />,
-      );
+      render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
       expect(screen.queryByText('Ações')).not.toBeInTheDocument();
     });
   });
@@ -182,7 +169,7 @@ describe('DataTable', () => {
             total: 25,
             onPageChange: vi.fn(),
           }}
-        />,
+        />
       );
       expect(screen.getByText(/25 registros/)).toBeInTheDocument();
     });

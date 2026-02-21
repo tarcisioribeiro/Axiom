@@ -870,7 +870,9 @@ export default function Vaults() {
                 value={transactionsFilter}
                 onValueChange={(value) => {
                   setTransactionsFilter(value);
-                  setTimeout(() => { void loadTransactions(); }, 0);
+                  setTimeout(() => {
+                    void loadTransactions();
+                  }, 0);
                 }}
               >
                 <SelectTrigger className="w-48">
@@ -1020,10 +1022,15 @@ export default function Vaults() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDeleteTransaction(transaction)}
+                                      onClick={() =>
+                                        handleDeleteTransaction(transaction)
+                                      }
                                       aria-label="Excluir"
                                     >
-                                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                                      <Trash2
+                                        className="h-4 w-4 text-destructive"
+                                        aria-hidden="true"
+                                      />
                                     </Button>
                                   </>
                                 )}

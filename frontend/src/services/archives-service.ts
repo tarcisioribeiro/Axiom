@@ -7,7 +7,11 @@ import { BaseService } from './base-service';
 type ArchiveCreateData = ArchiveFormData & { file?: File };
 type ArchiveUpdateData = Partial<ArchiveFormData> & { file?: File };
 
-class ArchivesService extends BaseService<Archive, ArchiveCreateData, ArchiveUpdateData> {
+class ArchivesService extends BaseService<
+  Archive,
+  ArchiveCreateData,
+  ArchiveUpdateData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.ARCHIVES);
   }

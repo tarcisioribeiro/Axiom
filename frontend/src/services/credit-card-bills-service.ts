@@ -1,10 +1,19 @@
 import { API_CONFIG } from '@/config/constants';
-import type { CreditCardBill, CreditCardBillFormData, BillPaymentFormData, BillPaymentResponse, BillItemsResponse } from '@/types';
+import type {
+  CreditCardBill,
+  CreditCardBillFormData,
+  BillPaymentFormData,
+  BillPaymentResponse,
+  BillItemsResponse,
+} from '@/types';
 
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
-class CreditCardBillsService extends BaseService<CreditCardBill, CreditCardBillFormData> {
+class CreditCardBillsService extends BaseService<
+  CreditCardBill,
+  CreditCardBillFormData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.CREDIT_CARD_BILLS);
   }
@@ -23,12 +32,18 @@ class CreditCardBillsService extends BaseService<CreditCardBill, CreditCardBillF
     return this.getAll({ year });
   }
 
-  async payBill(billId: number, data: BillPaymentFormData): Promise<BillPaymentResponse> {
+  async payBill(
+    billId: number,
+    data: BillPaymentFormData
+  ): Promise<BillPaymentResponse> {
     return apiClient.post<BillPaymentResponse>(`${this.endpoint}${billId}/pay/`, data);
   }
 
   async reopenBill(billId: number): Promise<{ message: string; bill: CreditCardBill }> {
-    return apiClient.post<{ message: string; bill: CreditCardBill }>(`${this.endpoint}${billId}/reopen/`, {});
+    return apiClient.post<{ message: string; bill: CreditCardBill }>(
+      `${this.endpoint}${billId}/reopen/`,
+      {}
+    );
   }
 
   /**

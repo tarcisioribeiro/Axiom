@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS , translate } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
@@ -417,11 +417,21 @@ export default function Revenues() {
               source={{ type: 'revenue', data: revenue }}
               memberName={getMemberDisplayName(revenue.member_name, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(revenue)} aria-label="Editar">
-              <Pencil className="w-4 h-4" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(revenue)}
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(revenue.id)} aria-label="Excluir">
-              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDelete(revenue.id)}
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

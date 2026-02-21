@@ -275,8 +275,8 @@ export default function Archives() {
   const filteredArchives = archives.filter(
     (arc) =>
       arc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (arc.tags?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (arc.file_name?.toLowerCase().includes(searchTerm.toLowerCase()))
+      arc.tags?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      arc.file_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatFileSize = (bytes?: number) => {
@@ -292,176 +292,199 @@ export default function Archives() {
 
   return (
     <VaultGuard>
-    <PageContainer>
-      <PageHeader
-        title="Arquivos Confidenciais"
-        icon={<ArchiveIcon />}
-        action={{
-          label: 'Novo Arquivo',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="flex gap-4">
-        <Input
-          placeholder="Buscar arquivos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
+      <PageContainer>
+        <PageHeader
+          title="Arquivos Confidenciais"
+          icon={<ArchiveIcon />}
+          action={{
+            label: 'Novo Arquivo',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: handleCreate,
+          }}
         />
-      </div>
 
-      {filteredArchives.length === 0 ? (
-        <EmptyState
-          icon={<ArchiveIcon className="h-12 w-12 text-muted-foreground" />}
-          message={
-            searchTerm
-              ? 'Nenhum arquivo encontrado para a pesquisa atual.'
-              : 'Nenhum arquivo cadastrado. Clique em "Novo Arquivo" para começar.'
-          }
-        />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredArchives.map((arc) => (
-            <Card key={arc.id}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      {arc.archive_type === 'text' ? (
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                      ) : (
-                        <File className="h-4 w-4 flex-shrink-0" />
-                      )}
-                      <CardTitle className="truncate text-base">{arc.title}</CardTitle>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge>{ARCHIVE_CATEGORIES[arc.category]}</Badge>
-                      <Badge variant="outline">{ARCHIVE_TYPES[arc.archive_type]}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex flex-shrink-0 gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() =>
-                        arc.archive_type === 'text'
-                          ? handleRevealContent(arc)
-                          : handleDownload(arc)
-                      }
-                      disabled={isRevealing}
-                      aria-label={arc.archive_type === 'text' ? 'Ver conteúdo' : 'Baixar arquivo'}
-                    >
-                      {arc.archive_type === 'text' ? (
-                        <Eye className="h-4 w-4" aria-hidden="true" />
-                      ) : (
-                        <Download className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(arc)} aria-label="Editar">
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(arc.id)} aria-label="Excluir">
-                      <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
-                  </div>
-                  <span>{formatFileSize(arc.file_size)}</span>
-                </div>
-                {arc.tags && (
-                  <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 flex-shrink-0" />
-                    <div className="flex flex-wrap gap-1">
-                      {arc.tags
-                        .split(',')
-                        .slice(0, 3)
-                        .map((tag, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            {tag.trim()}
-                          </Badge>
-                        ))}
-                      {arc.tags.split(',').length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{arc.tags.split(',').length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Dialog para criar/editar arquivo */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedArchive ? 'Editar' : 'Novo'} Arquivo Confidencial
-            </DialogTitle>
-            <DialogDescription>
-              {selectedArchive
-                ? 'Atualize as informações do arquivo'
-                : 'Adicione um novo arquivo ao cofre criptografado'}
-            </DialogDescription>
-          </DialogHeader>
-          <ArchiveForm
-            archive={selectedArchive}
-            members={members}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsDialogOpen(false)}
-            isLoading={isSubmitting}
+        <div className="flex gap-4">
+          <Input
+            placeholder="Buscar arquivos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-sm"
           />
-        </DialogContent>
-      </Dialog>
+        </div>
 
-      {/* Dialog para visualizar conteúdo de texto */}
-      <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedArchive?.title}</DialogTitle>
-            <DialogDescription>
-              Conteúdo descriptografado -{' '}
-              {ARCHIVE_CATEGORIES[selectedArchive?.category || 'other']}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              value={revealedContent}
-              readOnly
-              rows={20}
-              className="font-mono text-sm"
-            />
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  void navigator.clipboard.writeText(revealedContent);
-                  toast({
-                    title: 'Copiado!',
-                    description: 'Conteúdo copiado para a área de transferência.',
-                  });
-                }}
-              >
-                Copiar
-              </Button>
-              <Button onClick={() => setIsContentDialogOpen(false)}>Fechar</Button>
-            </div>
+        {filteredArchives.length === 0 ? (
+          <EmptyState
+            icon={<ArchiveIcon className="h-12 w-12 text-muted-foreground" />}
+            message={
+              searchTerm
+                ? 'Nenhum arquivo encontrado para a pesquisa atual.'
+                : 'Nenhum arquivo cadastrado. Clique em "Novo Arquivo" para começar.'
+            }
+          />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filteredArchives.map((arc) => (
+              <Card key={arc.id}>
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        {arc.archive_type === 'text' ? (
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <File className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        <CardTitle className="truncate text-base">
+                          {arc.title}
+                        </CardTitle>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>{ARCHIVE_CATEGORIES[arc.category]}</Badge>
+                        <Badge variant="outline">
+                          {ARCHIVE_TYPES[arc.archive_type]}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          arc.archive_type === 'text'
+                            ? handleRevealContent(arc)
+                            : handleDownload(arc)
+                        }
+                        disabled={isRevealing}
+                        aria-label={
+                          arc.archive_type === 'text'
+                            ? 'Ver conteúdo'
+                            : 'Baixar arquivo'
+                        }
+                      >
+                        {arc.archive_type === 'text' ? (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Download className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEdit(arc)}
+                        aria-label="Editar"
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleDelete(arc.id)}
+                        aria-label="Excluir"
+                      >
+                        <Trash2
+                          className="h-4 w-4 text-destructive"
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
+                    </div>
+                    <span>{formatFileSize(arc.file_size)}</span>
+                  </div>
+                  {arc.tags && (
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1">
+                        {arc.tags
+                          .split(',')
+                          .slice(0, 3)
+                          .map((tag, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {tag.trim()}
+                            </Badge>
+                          ))}
+                        {arc.tags.split(',').length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{arc.tags.split(',').length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
-    </PageContainer>
+        )}
+
+        {/* Dialog para criar/editar arquivo */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedArchive ? 'Editar' : 'Novo'} Arquivo Confidencial
+              </DialogTitle>
+              <DialogDescription>
+                {selectedArchive
+                  ? 'Atualize as informações do arquivo'
+                  : 'Adicione um novo arquivo ao cofre criptografado'}
+              </DialogDescription>
+            </DialogHeader>
+            <ArchiveForm
+              archive={selectedArchive}
+              members={members}
+              onSubmit={handleSubmit}
+              onCancel={() => setIsDialogOpen(false)}
+              isLoading={isSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para visualizar conteúdo de texto */}
+        <Dialog open={isContentDialogOpen} onOpenChange={setIsContentDialogOpen}>
+          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedArchive?.title}</DialogTitle>
+              <DialogDescription>
+                Conteúdo descriptografado -{' '}
+                {ARCHIVE_CATEGORIES[selectedArchive?.category || 'other']}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Textarea
+                value={revealedContent}
+                readOnly
+                rows={20}
+                className="font-mono text-sm"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(revealedContent);
+                    toast({
+                      title: 'Copiado!',
+                      description: 'Conteúdo copiado para a área de transferência.',
+                    });
+                  }}
+                >
+                  Copiar
+                </Button>
+                <Button onClick={() => setIsContentDialogOpen(false)}>Fechar</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </PageContainer>
     </VaultGuard>
   );
 }

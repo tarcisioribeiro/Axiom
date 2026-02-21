@@ -16,7 +16,6 @@ import { TRANSLATIONS } from '@/config/constants';
 import { formatLocalDate } from '@/lib/utils';
 import type { Transfer, TransferFormData, Account } from '@/types';
 
-
 interface TransferFormProps {
   transfer?: Transfer;
   accounts: Account[];

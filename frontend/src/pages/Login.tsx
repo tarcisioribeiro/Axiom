@@ -37,13 +37,19 @@ export default function Login() {
         variant="ghost"
         size="icon"
         onClick={toggleTheme}
-        className="absolute top-4 right-4 hover:bg-secondary transition-all"
+        className="absolute right-4 top-4 transition-all hover:bg-secondary"
         aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
       >
         {isDark ? (
-          <Sun className="w-5 h-5 text-warning transition-transform hover:rotate-180 duration-500" aria-hidden="true" />
+          <Sun
+            className="h-5 w-5 text-warning transition-transform duration-500 hover:rotate-180"
+            aria-hidden="true"
+          />
         ) : (
-          <Moon className="w-5 h-5 text-primary transition-transform hover:rotate-[-15deg] duration-300" aria-hidden="true" />
+          <Moon
+            className="h-5 w-5 text-primary transition-transform duration-300 hover:rotate-[-15deg]"
+            aria-hidden="true"
+          />
         )}
       </Button>
 

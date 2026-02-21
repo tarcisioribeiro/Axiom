@@ -25,31 +25,41 @@ class AccountModelTest(TestCase):
     """Testes para o modelo Account"""
 
     def setUp(self):
-        self.account_data = {"name": "NUB", "account_type": "CC", "is_active": True}
+        self.account_data = {
+            "institution_name": "NUB",
+            "account_name": "Conta Nubank",
+            "account_type": "CC",
+            "is_active": True,
+        }
 
     def test_create_account_success(self):
         """Testa criação de conta com dados válidos"""
         account = Account.objects.create(**self.account_data)
-        self.assertEqual(account.name, "NUB")
+        self.assertEqual(account.institution_name, "NUB")
         self.assertEqual(account.account_type, "CC")
         self.assertTrue(account.is_active)
 
     def test_account_str_method(self):
         """Testa o método __str__ do Account"""
         account = Account.objects.create(**self.account_data)
-        self.assertEqual(str(account), "NUB")
+        self.assertEqual(str(account), "Conta Nubank")
 
     def test_unique_account_name(self):
-        """Testa que o nome da conta deve ser único"""
+        """Testa que é possível criar contas com a mesma instituição"""
         Account.objects.create(**self.account_data)
-        with self.assertRaises(IntegrityError):
-            Account.objects.create(**self.account_data)
+        account2 = Account.objects.create(
+            institution_name="NUB",
+            account_name="Segunda Conta Nubank",
+            account_type="CS",
+            is_active=True,
+        )
+        self.assertEqual(Account.objects.filter(institution_name="NUB").count(), 2)
+        self.assertIsNotNone(account2.pk)
 
     def test_account_choices_validation(self):
-        """Testa validação de choices para nome e tipo de conta"""
-        # Nome inválido
+        """Testa validação de choices para institution_name"""
         invalid_data = self.account_data.copy()
-        invalid_data["name"] = "INVALID"
+        invalid_data["institution_name"] = "INVALID"
         account = Account(**invalid_data)
         with self.assertRaises(ValidationError):
             account.full_clean()
@@ -60,7 +70,10 @@ class ExpenseModelTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.expense_data = {
             "description": "Compra supermercado",
@@ -105,7 +118,10 @@ class CreditCardModelTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.credit_card_data = {
             "name": "Cartão Principal",
@@ -157,7 +173,10 @@ class RevenueModelTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.revenue_data = {
             "description": "Salário",
@@ -211,7 +230,7 @@ class MemberModelTest(TestCase):
 
     def test_member_email_validation(self):
         """Testa validação de email"""
-        self.member_data["email"] = "email_inválido"
+        self.member_data["email"] = "email_invalido"
         member = Member(**self.member_data)
         with self.assertRaises(ValidationError):
             member.full_clean()
@@ -222,17 +241,24 @@ class TransferModelTest(TestCase):
 
     def setUp(self):
         self.account_origin = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.account_destination = Account.objects.create(
-            name="SIC", account_type="CS", is_active=True
+            institution_name="SIC",
+            account_name="Conta Sicoob",
+            account_type="CS",
+            is_active=True,
         )
         self.transfer_data = {
             "value": Decimal("100.00"),
             "date": date.today(),
             "horary": time(10, 0),
             "origin_account": self.account_origin,
-            "destination_account": self.account_destination,
+            "destiny_account": self.account_destination,
+            "category": "pix",
             "description": "Transferência teste",
         }
 
@@ -245,11 +271,10 @@ class TransferModelTest(TestCase):
 
     def test_transfer_same_account_validation(self):
         """Testa que não permite transferência para a mesma conta"""
-        self.transfer_data["destination_account"] = self.account_origin
+        self.transfer_data["destiny_account"] = self.account_origin
         transfer = Transfer(**self.transfer_data)
-        print(transfer)
-        # Aqui você deveria adicionar uma validação customizada
-        # no modelo Transfer para evitar transferências para a mesma conta
+        with self.assertRaises(ValidationError):
+            transfer.full_clean()
 
 
 class LoanModelTest(TestCase):
@@ -257,7 +282,10 @@ class LoanModelTest(TestCase):
 
     def setUp(self):
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
         self.member = Member.objects.create(
             name="João Silva",

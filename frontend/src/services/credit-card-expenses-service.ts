@@ -3,7 +3,10 @@ import type { CreditCardExpense, CreditCardExpenseFormData } from '@/types';
 
 import { BaseService } from './base-service';
 
-class CreditCardExpensesService extends BaseService<CreditCardExpense, CreditCardExpenseFormData> {
+class CreditCardExpensesService extends BaseService<
+  CreditCardExpense,
+  CreditCardExpenseFormData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.CREDIT_CARD_EXPENSES);
   }

@@ -184,7 +184,7 @@ export default function Publishers() {
                       onClick={() => handleEdit(publisher)}
                       aria-label="Editar"
                     >
-                      <Edit className="w-4 h-4" aria-hidden="true" />
+                      <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -192,7 +192,7 @@ export default function Publishers() {
                       onClick={() => handleDelete(publisher.id)}
                       aria-label="Excluir"
                     >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

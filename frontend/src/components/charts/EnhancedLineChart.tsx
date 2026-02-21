@@ -217,10 +217,7 @@ export const EnhancedLineChart = ({
               />
             ))
           : lineConfigs.map((line, idx) => (
-              <Line
-                key={`line-${idx}`}
-                {...getSeriesProps(line)}
-              />
+              <Line key={`line-${idx}`} {...getSeriesProps(line)} />
             ))}
       </ChartComponent>
     </ResponsiveContainer>

@@ -1,9 +1,10 @@
 from accounts.models import Account
 from accounts.serializers import AccountSerializer
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from security.vault_config import VaultOptionalMixin
 
 
-class AccountCreateListView(BaseListCreateView):
+class AccountCreateListView(VaultOptionalMixin, BaseListCreateView):
     """
     ViewSet para listar e criar contas bancárias.
 
@@ -29,7 +30,9 @@ class AccountCreateListView(BaseListCreateView):
         return Account.objects.filter(is_deleted=False).defer("_account_number")
 
 
-class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class AccountRetrieveUpdateDestroyView(
+    VaultOptionalMixin, BaseRetrieveUpdateDestroyView
+):
     """
     ViewSet para operações individuais em contas bancárias.
 

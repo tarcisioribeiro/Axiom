@@ -113,7 +113,10 @@ export const StatCard: React.FC<StatCardProps> = ({
                 {trend.isPositive ? (
                   <TrendingUp className="h-4 w-4 text-success" aria-hidden="true" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  <TrendingDown
+                    className="h-4 w-4 text-destructive"
+                    aria-hidden="true"
+                  />
                 )}
               </motion.div>
               <span

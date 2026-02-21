@@ -721,54 +721,69 @@ export default function CreditCardExpenses() {
                       </div>
                     </div>
                   </CardHeader>
-                <CardContent className="pt-0">
-                  <DataTable
-                    data={billInstallments}
-                    columns={groupedColumns}
-                    keyExtractor={(installment) => installment.id}
-                    isLoading={false}
-                    emptyState={{ message: 'Nenhuma parcela.' }}
-                    actions={(installment) => {
-                      const purchase = purchases.find(p => p.id === installment.purchase);
-                      return (
-                        <div className="flex items-center justify-end gap-2">
-                          {purchase && (
-                            <ReceiptButton
-                              source={{ type: 'credit_card_purchase', data: purchase }}
-                              memberName={getMemberDisplayName(installment.member_name, user)}
-                            />
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditInstallment(installment)}
-                            aria-label="Editar valor da parcela"
-                          >
-                            <DollarSign className="w-4 h-4 text-primary" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditPurchase(installment.purchase)}
-                            aria-label="Editar compra"
-                          >
-                            <Pencil className="w-4 h-4" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeletePurchase(installment.purchase)}
-                            aria-label="Excluir compra"
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
-                          </Button>
-                        </div>
-                      );
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            ))
+                  <CardContent className="pt-0">
+                    <DataTable
+                      data={billInstallments}
+                      columns={groupedColumns}
+                      keyExtractor={(installment) => installment.id}
+                      isLoading={false}
+                      emptyState={{ message: 'Nenhuma parcela.' }}
+                      actions={(installment) => {
+                        const purchase = purchases.find(
+                          (p) => p.id === installment.purchase
+                        );
+                        return (
+                          <div className="flex items-center justify-end gap-2">
+                            {purchase && (
+                              <ReceiptButton
+                                source={{
+                                  type: 'credit_card_purchase',
+                                  data: purchase,
+                                }}
+                                memberName={getMemberDisplayName(
+                                  installment.member_name,
+                                  user
+                                )}
+                              />
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditInstallment(installment)}
+                              aria-label="Editar valor da parcela"
+                            >
+                              <DollarSign
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                              />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditPurchase(installment.purchase)}
+                              aria-label="Editar compra"
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeletePurchase(installment.purchase)}
+                              aria-label="Excluir compra"
+                            >
+                              <Trash2
+                                className="h-4 w-4 text-destructive"
+                                aria-hidden="true"
+                              />
+                            </Button>
+                          </div>
+                        );
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              )
+            )
           )}
         </div>
       ) : (
@@ -796,7 +811,7 @@ export default function CreditCardExpenses() {
                   onClick={() => handleEditInstallment(installment)}
                   aria-label="Editar valor da parcela"
                 >
-                  <DollarSign className="w-4 h-4 text-primary" aria-hidden="true" />
+                  <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -804,7 +819,7 @@ export default function CreditCardExpenses() {
                   onClick={() => handleEditPurchase(installment.purchase)}
                   aria-label="Editar compra"
                 >
-                  <Pencil className="w-4 h-4" aria-hidden="true" />
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -812,7 +827,7 @@ export default function CreditCardExpenses() {
                   onClick={() => handleDeletePurchase(installment.purchase)}
                   aria-label="Excluir compra"
                 >
-                  <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+                  <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>
               </div>
             );

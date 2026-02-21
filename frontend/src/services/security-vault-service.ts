@@ -1,6 +1,8 @@
 import { API_CONFIG } from '@/config/constants';
 import type {
   VaultChangePasswordData,
+  VaultMigrateData,
+  VaultMigrateResult,
   VaultSetupData,
   VaultStatus,
   VaultUnlockData,
@@ -20,7 +22,9 @@ class VaultConfigService {
     );
   }
 
-  async unlock(data: VaultUnlockData): Promise<{ message: string; expires_in: number }> {
+  async unlock(
+    data: VaultUnlockData
+  ): Promise<{ message: string; expires_in: number }> {
     return apiClient.post<{ message: string; expires_in: number }>(
       API_CONFIG.ENDPOINTS.SECURITY_VAULT_UNLOCK,
       data
@@ -28,12 +32,21 @@ class VaultConfigService {
   }
 
   async lock(): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.SECURITY_VAULT_LOCK);
+    return apiClient.post<{ message: string }>(
+      API_CONFIG.ENDPOINTS.SECURITY_VAULT_LOCK
+    );
   }
 
   async changePassword(data: VaultChangePasswordData): Promise<{ message: string }> {
     return apiClient.post<{ message: string }>(
       API_CONFIG.ENDPOINTS.SECURITY_VAULT_CHANGE_PASSWORD,
+      data
+    );
+  }
+
+  async migrateFromBackup(data: VaultMigrateData): Promise<VaultMigrateResult> {
+    return apiClient.post<VaultMigrateResult>(
+      API_CONFIG.ENDPOINTS.SECURITY_VAULT_MIGRATE,
       data
     );
   }

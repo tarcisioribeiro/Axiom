@@ -108,7 +108,8 @@ DATABASES = {
 }
 
 # Use SQLite for tests to avoid database connection issues
-if "test" in sys.argv:
+# Detects both `manage.py test` and direct `pytest` invocations
+if "test" in sys.argv or (sys.argv and "pytest" in sys.argv[0]):
     DATABASES["default"] = {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)

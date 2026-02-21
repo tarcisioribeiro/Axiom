@@ -77,9 +77,9 @@ export function ChatInput({ onSend, isLoading, disabled }: ChatInputProps) {
         aria-label="Enviar mensagem"
       >
         {isLoading ? (
-          <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+          <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
         ) : (
-          <Send className="w-5 h-5" aria-hidden="true" />
+          <Send className="h-5 w-5" aria-hidden="true" />
         )}
       </Button>
     </div>

@@ -98,7 +98,7 @@ export default {
         'dialog-content-show': {
           from: {
             opacity: '0',
-            transform: 'translate(-50%, -48%) scale(0.96)',
+            transform: 'translate(-50%, -45%) scale(0.92)',
           },
           to: {
             opacity: '1',
@@ -112,7 +112,7 @@ export default {
           },
           to: {
             opacity: '0',
-            transform: 'translate(-50%, -48%) scale(0.96)',
+            transform: 'translate(-50%, -47%) scale(0.94)',
           },
         },
         'slide-up-fade': {
@@ -158,10 +158,10 @@ export default {
         },
       },
       animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-overlay-hide': 'dialog-overlay-hide 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-show': 'dialog-content-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-hide': 'dialog-content-hide 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-overlay-show': 'dialog-overlay-show 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'dialog-overlay-hide': 'dialog-overlay-hide 180ms cubic-bezier(0.4, 0, 0.2, 1)',
+        'dialog-content-show': 'dialog-content-show 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'dialog-content-hide': 'dialog-content-hide 200ms cubic-bezier(0.4, 0, 0.2, 1)',
         'slide-up-fade': 'slide-up-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-down-fade': 'slide-down-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',

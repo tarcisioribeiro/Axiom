@@ -174,7 +174,8 @@ class ApiClient {
 
         return config;
       },
-      (error: unknown) => Promise.reject(error instanceof Error ? error : new Error(String(error)))
+      (error: unknown) =>
+        Promise.reject(error instanceof Error ? error : new Error(String(error)))
     );
 
     // Response interceptor - Handle token refresh

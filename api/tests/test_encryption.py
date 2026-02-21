@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from cryptography.fernet import Fernet
 
-from app.encryption import FieldEncryption
+from app.encryption import DecryptionError, EncryptionError, FieldEncryption
 
 
 class FieldEncryptionTest(TestCase):
@@ -25,7 +25,10 @@ class FieldEncryptionTest(TestCase):
             with self.assertRaises(ValidationError) as context:
                 FieldEncryption.get_encryption_key()
 
-            self.assertIn("ENCRYPTION_KEY não encontrada", str(context.exception))
+            self.assertIn(
+                "ENCRYPTION_KEY nao encontrada nas variaveis de ambiente",
+                str(context.exception),
+            )
 
     @patch.dict(os.environ)
     def test_get_encryption_key_success(self):
@@ -94,20 +97,22 @@ class FieldEncryptionTest(TestCase):
         os.environ["ENCRYPTION_KEY"] = self.test_key.decode()
 
         # Testa dados não criptografados
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(DecryptionError) as context:
             FieldEncryption.decrypt_data("dados_nao_criptografados")
 
-        self.assertIn("Erro ao descriptografar dados", str(context.exception))
+        self.assertIn(
+            "Dados criptografados invalidos ou chave incorreta", str(context.exception)
+        )
 
     @patch.dict(os.environ)
     def test_encrypt_with_wrong_key_format(self):
         """Testa criptografia com formato de chave inválido"""
         os.environ["ENCRYPTION_KEY"] = "chave_invalida"
 
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(EncryptionError) as context:
             FieldEncryption.encrypt_data(self.test_data)
 
-        self.assertIn("Erro ao criptografar dados", str(context.exception))
+        self.assertIn("Chave de criptografia invalida", str(context.exception))
 
     @patch.dict(os.environ)
     def test_encrypt_decrypt_cycle_with_numbers(self):

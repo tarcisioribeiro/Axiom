@@ -12,7 +12,6 @@ A vault_key em texto plano fica apenas em memória (Redis, TTL = 1h).
 
 import base64
 import os
-import threading
 from typing import Any, Callable, Optional, overload
 
 from rest_framework.exceptions import APIException
@@ -21,29 +20,12 @@ from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from app.encryption import DecryptionError, EncryptionError, FieldEncryption
-
-# ---------------------------------------------------------------------------
-# Thread-local vault key context
-# ---------------------------------------------------------------------------
-
-_vault_key_local = threading.local()
-
-
-def get_current_vault_key() -> Optional[bytes]:
-    """Retorna a vault_key da thread atual (None se cofre não desbloqueado)."""
-    return getattr(_vault_key_local, "vault_key", None)
-
-
-def set_vault_key(vault_key: Optional[bytes]) -> None:
-    """Define a vault_key para a thread atual."""
-    _vault_key_local.vault_key = vault_key
-
-
-def clear_vault_key() -> None:
-    """Remove a vault_key da thread atual (usada no final da request)."""
-    _vault_key_local.vault_key = None
-
+from app.encryption import (
+    DecryptionError,
+    EncryptionError,
+    FieldEncryption,
+    get_current_vault_key,
+)
 
 # ---------------------------------------------------------------------------
 # Exception

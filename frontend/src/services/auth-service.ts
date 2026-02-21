@@ -86,7 +86,12 @@ class AuthService {
       throw new Error(errorData.error ?? 'Erro ao cadastrar usuario');
     }
 
-    return response.json() as Promise<{ message: string; user_id: number; member_id: number; username: string }>;
+    return response.json() as Promise<{
+      message: string;
+      user_id: number;
+      member_id: number;
+      username: string;
+    }>;
   }
 
   /**

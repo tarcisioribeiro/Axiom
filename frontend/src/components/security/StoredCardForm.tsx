@@ -175,7 +175,9 @@ export function StoredCardForm({
           <Label htmlFor="flag">Bandeira *</Label>
           <Select
             value={watch('flag')}
-            onValueChange={(value) => setValue('flag', value as StoredCreditCardFormData['flag'])}
+            onValueChange={(value) =>
+              setValue('flag', value as StoredCreditCardFormData['flag'])
+            }
           >
             <SelectTrigger>
               <SelectValue />

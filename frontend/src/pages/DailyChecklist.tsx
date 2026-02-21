@@ -400,7 +400,10 @@ export default function DailyChecklist() {
             disabled={isSyncing || isLoading}
             aria-label="Sincronizar tarefas com dados atuais"
           >
-            <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <RefreshCw
+              className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
+              aria-hidden="true"
+            />
           </Button>
           <Dialog open={isReflectionOpen} onOpenChange={setIsReflectionOpen}>
             <DialogTrigger asChild>

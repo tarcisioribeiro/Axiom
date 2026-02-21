@@ -23,7 +23,7 @@ export const Header = () => {
           className="mr-2 lg:hidden"
           aria-label="Abrir menu"
         >
-          <Menu className="w-5 h-5" aria-hidden="true" />
+          <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
 
         {/* Breadcrumb Navigation */}
@@ -37,13 +37,19 @@ export const Header = () => {
             size="icon"
             onClick={toggleTheme}
             aria-label={isDark ? 'Mudar para Modo Claro' : 'Mudar para Modo Escuro'}
-            className="relative overflow-hidden hover:bg-secondary transition-all hover-lift"
+            className="hover-lift relative overflow-hidden transition-all hover:bg-secondary"
           >
             <div className="relative">
               {isDark ? (
-                <Sun className="w-5 h-5 text-warning transition-transform rotate-0 hover:rotate-180 duration-500" aria-hidden="true" />
+                <Sun
+                  className="h-5 w-5 rotate-0 text-warning transition-transform duration-500 hover:rotate-180"
+                  aria-hidden="true"
+                />
               ) : (
-                <Moon className="w-5 h-5 text-primary transition-transform rotate-0 hover:rotate-[-15deg] duration-300" aria-hidden="true" />
+                <Moon
+                  className="h-5 w-5 rotate-0 text-primary transition-transform duration-300 hover:rotate-[-15deg]"
+                  aria-hidden="true"
+                />
               )}
             </div>
           </Button>

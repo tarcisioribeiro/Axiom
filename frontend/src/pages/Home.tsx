@@ -20,7 +20,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
 
-
 interface ModuleCard {
   title: string;
   icon: React.ReactNode;

@@ -24,7 +24,11 @@ class BaseAPITestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", email="test@test.com", password="testpass123"
+            username="testuser",
+            email="test@test.com",
+            password="testpass123",
+            is_superuser=True,
+            is_staff=True,
         )
         self.client = APIClient()
 
@@ -37,7 +41,10 @@ class BaseAPITestCase(APITestCase):
 
         # Cria conta de teste
         self.account = Account.objects.create(
-            name="NUB", account_type="CC", is_active=True
+            institution_name="NUB",
+            account_name="Conta Nubank",
+            account_type="CC",
+            is_active=True,
         )
 
 
@@ -46,32 +53,39 @@ class AccountViewTest(BaseAPITestCase):
 
     def test_get_accounts_list(self):
         """Testa listagem de contas"""
-        url = reverse("account-list-create")
+        url = reverse("account-create-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)  # type: ignore
-        self.assertEqual(response.data[0]["name"], "NUB")  # type: ignore
+        self.assertEqual(response.data["count"], 1)  # type: ignore
+        self.assertEqual(
+            response.data["results"][0]["institution"], "NUB"
+        )  # type: ignore
 
     def test_create_account_success(self):
         """Testa criação de conta com dados válidos"""
-        url = reverse("account-list-create")
-        data = {"name": "SIC", "account_type": "CS", "is_active": True}
+        url = reverse("account-create-list")
+        data = {
+            "institution": "SIC",
+            "account_name": "Conta Sicoob",
+            "account_type": "CS",
+            "is_active": True,
+        }
 
         response = self.client.post(url, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["name"], "SIC")  # type: ignore
+        self.assertEqual(response.data["institution"], "SIC")  # type: ignore
 
         # Verifica se foi salvo no banco
-        account = Account.objects.get(name="SIC")
+        account = Account.objects.get(institution_name="SIC")
         self.assertEqual(account.account_type, "CS")
 
     def test_create_account_duplicate_name(self):
-        """Testa criação de conta com nome duplicado"""
-        url = reverse("account-list-create")
+        """Testa criação de conta sem campo obrigatório 'institution'"""
+        url = reverse("account-create-list")
         data = {
-            "name": "NUB",  # Nome já existe
+            "account_name": "Conta Teste",
             "account_type": "CS",
             "is_active": True,
         }
@@ -81,17 +95,17 @@ class AccountViewTest(BaseAPITestCase):
 
     def test_get_account_detail(self):
         """Testa recuperação de conta específica"""
-        url = reverse("account-detail", kwargs={"pk": self.account.pk})
+        url = reverse("account-detail-view", kwargs={"pk": self.account.pk})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["name"], "NUB")  # type: ignore
+        self.assertEqual(response.data["institution"], "NUB")  # type: ignore
 
     def test_update_account(self):
         """Testa atualização de conta"""
-        url = reverse("account-detail", kwargs={"pk": self.account.pk})
+        url = reverse("account-detail-view", kwargs={"pk": self.account.pk})
         data = {
-            "name": "NUB",
+            "institution": "NUB",
             "account_type": "CC",
             "is_active": False,  # Alterando status
         }
@@ -107,7 +121,7 @@ class AccountViewTest(BaseAPITestCase):
 
     def test_delete_account(self):
         """Testa exclusão de conta"""
-        url = reverse("account-detail", kwargs={"pk": self.account.pk})
+        url = reverse("account-detail-view", kwargs={"pk": self.account.pk})
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -134,18 +148,18 @@ class ExpenseViewTest(BaseAPITestCase):
 
     def test_get_expenses_list(self):
         """Testa listagem de despesas"""
-        url = reverse("expense-list-create")
+        url = reverse("expense-create-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)  # type: ignore
+        self.assertEqual(response.data["count"], 1)  # type: ignore
         self.assertEqual(
-            response.data[0]["description"], "Compra teste"  # type: ignore
+            response.data["results"][0]["description"], "Compra teste"  # type: ignore
         )
 
     def test_create_expense_success(self):
         """Testa criação de despesa com dados válidos"""
-        url = reverse("expense-list-create")
+        url = reverse("expense-create-list")
         data = {
             "description": "Nova despesa",
             "value": "250.75",
@@ -164,7 +178,7 @@ class ExpenseViewTest(BaseAPITestCase):
 
     def test_create_expense_invalid_data(self):
         """Testa criação de despesa com dados inválidos"""
-        url = reverse("expense-list-create")
+        url = reverse("expense-create-list")
         data = {
             "description": "",  # Descrição vazia
             "value": "invalid_value",  # Valor inválido
@@ -191,7 +205,7 @@ class ExpenseViewTest(BaseAPITestCase):
             payed=True,
         )
 
-        url = reverse("expense-list-create")
+        url = reverse("expense-create-list")
         response = self.client.get(url, {"category": "transport"})
         print(response)
         # Nota: Este teste assume que você implementará filtros
@@ -210,12 +224,12 @@ class ExpenseViewTest(BaseAPITestCase):
             payed=True,
         )
 
-        url = reverse("expense-list-create")
+        url = reverse("expense-create-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Verifica se está ordenado por data (mais recente primeiro)
-        dates = [item["date"] for item in response.data]  # type: ignore
+        dates = [item["date"] for item in response.data["results"]]  # type: ignore
         self.assertEqual(dates, sorted(dates, reverse=True))
 
 
@@ -228,15 +242,16 @@ class AuthenticationTest(APITestCase):
         )
 
     def test_get_token_success(self):
-        """Testa obtenção de token com credenciais válidas"""
+        """Testa login com credenciais válidas e tokens em cookies"""
         url = reverse("token_obtain_pair")
         data = {"username": "testuser", "password": "testpass123"}
 
         response = self.client.post(url, data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)  # type: ignore
-        self.assertIn("refresh", response.data)  # type: ignore
+        self.assertIn("message", response.data)  # type: ignore
+        self.assertIn("access_token", response.cookies)
+        self.assertIn("refresh_token", response.cookies)
 
     def test_get_token_invalid_credentials(self):
         """Testa obtenção de token com credenciais inválidas"""
@@ -249,22 +264,19 @@ class AuthenticationTest(APITestCase):
 
     def test_access_protected_endpoint_without_token(self):
         """Testa acesso a endpoint protegido sem token"""
-        url = reverse("account-list-create")
+        url = reverse("account-create-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_access_protected_endpoint_with_valid_token(self):
-        """Testa acesso a endpoint protegido com token válido"""
-        # Obter token
+        """Testa acesso a endpoint protegido com token válido via cookie"""
+        # Login define o access_token no cookie
         token_url = reverse("token_obtain_pair")
-        token_data = {"username": "testuser", "password": "testpass123"}
-        token_response = self.client.post(token_url, token_data)
-        token = token_response.data["access"]  # type: ignore
+        self.client.post(token_url, {"username": "testuser", "password": "testpass123"})
 
-        # Usar token para acessar endpoint protegido
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")  # type: ignore
-        url = reverse("account-list-create")
+        # O cookie é enviado automaticamente na próxima requisição
+        url = reverse("current-user")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -293,7 +305,7 @@ class CreditCardViewTest(BaseAPITestCase):
 
     def test_create_credit_card_with_encrypted_cvv(self):
         """Testa criação de cartão com CVV criptografado"""
-        url = reverse("creditcard-list-create")
+        url = reverse("credit_card-create-list")
         data = {
             "name": "Cartão Teste",
             "on_card_name": "JOHN DOE",
@@ -338,16 +350,18 @@ class MemberViewTest(BaseAPITestCase):
 
     def test_get_members_list(self):
         """Testa listagem de membros"""
-        url = reverse("member-list-create")
+        url = reverse("member-create-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)  # type: ignore
-        self.assertEqual(response.data[0]["name"], "João Silva")  # type: ignore
+        self.assertEqual(response.data["count"], 1)  # type: ignore
+        self.assertEqual(
+            response.data["results"][0]["name"], "João Silva"
+        )  # type: ignore
 
     def test_create_member_success(self):
         """Testa criação de membro com dados válidos"""
-        url = reverse("member-list-create")
+        url = reverse("member-create-list")
         data = {
             "name": "Maria Santos",
             "document": "98765432109",
@@ -364,7 +378,7 @@ class MemberViewTest(BaseAPITestCase):
 
     def test_create_member_duplicate_document(self):
         """Testa criação de membro com documento duplicado"""
-        url = reverse("member-list-create")
+        url = reverse("member-create-list")
         data = {
             "name": "José Silva",
             "document": "12345678901",  # Documento já existe

@@ -24,7 +24,6 @@ import type {
   CreditCard,
 } from '@/types';
 
-
 interface CreditCardPurchaseFormProps {
   purchase?: CreditCardPurchase;
   creditCards: CreditCard[];

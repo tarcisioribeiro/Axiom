@@ -180,9 +180,7 @@ export default function Books() {
           <Star
             key={star}
             className={`h-4 w-4 ${
-              star <= rating
-                ? 'fill-star text-star'
-                : 'fill-muted text-muted'
+              star <= rating ? 'fill-star text-star' : 'fill-muted text-muted'
             }`}
           />
         ))}

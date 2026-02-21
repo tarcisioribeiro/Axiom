@@ -478,7 +478,7 @@ export default function CreditCardBills() {
                 onClick={() => handleOpenPayment(bill)}
                 aria-label="Pagar fatura"
               >
-                <Wallet className="w-4 h-4 text-primary" aria-hidden="true" />
+                <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
               </Button>
             )}
             {(bill.closed || bill.status === 'paid' || bill.status === 'closed') && (
@@ -488,14 +488,24 @@ export default function CreditCardBills() {
                 onClick={() => handleReopenBill(bill)}
                 aria-label="Reabrir fatura"
               >
-                <RotateCcw className="w-4 h-4 text-warning" aria-hidden="true" />
+                <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(bill)} aria-label="Editar">
-              <Pencil className="w-4 h-4" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(bill)}
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(bill.id)} aria-label="Excluir">
-              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDelete(bill.id)}
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

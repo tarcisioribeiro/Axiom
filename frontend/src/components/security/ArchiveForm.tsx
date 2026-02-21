@@ -166,7 +166,9 @@ export function ArchiveForm({
           <Label htmlFor="category">Categoria *</Label>
           <Select
             value={watch('category')}
-            onValueChange={(value) => setValue('category', value as ArchiveFormData['category'])}
+            onValueChange={(value) =>
+              setValue('category', value as ArchiveFormData['category'])
+            }
           >
             <SelectTrigger>
               <SelectValue />
@@ -188,7 +190,9 @@ export function ArchiveForm({
           <Label htmlFor="archive_type">Tipo de Arquivo *</Label>
           <Select
             value={watch('archive_type')}
-            onValueChange={(value) => setValue('archive_type', value as ArchiveFormData['archive_type'])}
+            onValueChange={(value) =>
+              setValue('archive_type', value as ArchiveFormData['archive_type'])
+            }
           >
             <SelectTrigger>
               <SelectValue />

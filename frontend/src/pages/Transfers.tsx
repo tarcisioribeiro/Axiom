@@ -203,11 +203,21 @@ export default function Transfers() {
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}
             />
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(transfer)} aria-label="Editar">
-              <Pencil className="w-4 h-4" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEdit(transfer)}
+              aria-label="Editar"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => handleDelete(transfer.id)} aria-label="Excluir">
-              <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleDelete(transfer.id)}
+              aria-label="Excluir"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
           </div>
         )}

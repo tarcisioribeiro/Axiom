@@ -1,7 +1,10 @@
 import { API_CONFIG } from '@/config/constants';
 import type {
-  Password, PasswordFormData, PasswordReveal,
-  PasswordGenerateRequest, PasswordGenerateResponse,
+  Password,
+  PasswordFormData,
+  PasswordReveal,
+  PasswordGenerateRequest,
+  PasswordGenerateResponse,
 } from '@/types';
 
 import { apiClient } from './api-client';

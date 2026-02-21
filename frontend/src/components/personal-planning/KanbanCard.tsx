@@ -67,7 +67,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
           {/* Title and Category */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
-              <h4 className="font-semibold text-sm leading-tight flex items-center gap-1.5">
+              <h4 className="flex items-center gap-1.5 text-sm font-semibold leading-tight">
                 <TaskIconDisplay icon={card.icon} />
                 <span>
                   {card.task_name}

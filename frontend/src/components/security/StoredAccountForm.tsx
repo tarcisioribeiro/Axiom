@@ -66,7 +66,8 @@ export function StoredAccountForm({
       ? {
           name: account.name,
           institution_name: account.institution_name,
-          account_type: account.account_type as StoredBankAccountFormData['account_type'],
+          account_type:
+            account.account_type as StoredBankAccountFormData['account_type'],
           account_number: account.account_number || '',
           agency: account.agency || '',
           password: '', // Não carregar senha por segurança
@@ -128,7 +129,12 @@ export function StoredAccountForm({
           <Label htmlFor="account_type">Tipo de Conta *</Label>
           <Select
             value={watch('account_type')}
-            onValueChange={(value) => setValue('account_type', value as StoredBankAccountFormData['account_type'])}
+            onValueChange={(value) =>
+              setValue(
+                'account_type',
+                value as StoredBankAccountFormData['account_type']
+              )
+            }
           >
             <SelectTrigger>
               <SelectValue />

@@ -28,9 +28,10 @@ from credit_cards.serializers import (
     PayCreditCardBillSerializer,
 )
 from expenses.models import Expense
+from security.vault_config import VaultOptionalMixin
 
 
-class CreditCardCreateListView(BaseListCreateView):
+class CreditCardCreateListView(VaultOptionalMixin, BaseListCreateView):
     """
     ViewSet para listar e criar cartões de crédito.
 
@@ -60,7 +61,9 @@ class CreditCardCreateListView(BaseListCreateView):
         )
 
 
-class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class CreditCardRetrieveUpdateDestroyView(
+    VaultOptionalMixin, BaseRetrieveUpdateDestroyView
+):
     """
     ViewSet para operações individuais em cartões de crédito.
 

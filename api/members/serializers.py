@@ -5,6 +5,8 @@ from members.models import Member
 
 
 class MemberSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = Member
         fields = [

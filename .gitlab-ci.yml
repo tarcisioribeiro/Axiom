@@ -139,6 +139,12 @@ typecheck:backend:
   stage: typecheck
   needs:
     - lint:backend
+  variables:
+    # mypy-django-plugin initializes Django to resolve model types.
+    # SECRET_KEY must be non-empty or simplejwt raises ImproperlyConfigured
+    # on import. No real DB connection is made during static analysis.
+    SECRET_KEY: "ci-insecure-key-for-typecheck-only-000000000000000000000000000"
+    DJANGO_SETTINGS_MODULE: "app.settings"
   script:
     - cd api
     - mypy .
@@ -316,3 +322,4 @@ deploy:production:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
+      

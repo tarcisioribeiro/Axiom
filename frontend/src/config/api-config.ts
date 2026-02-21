@@ -3,7 +3,9 @@
 // Isso permite que o app funcione tanto em localhost quanto em IPs de rede
 const getApiBaseUrl = (): string => {
   // URL padrão da API (definida em build-time ou fallback)
-  const defaultApiUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://localhost:39100';
+  const defaultApiUrl =
+    (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
+    'http://localhost:39100';
 
   // Sempre usar o hostname do browser para evitar problemas de cross-site cookies
   // Ex: acessar via 127.0.0.1 mas API apontar para localhost causa SameSite cookie block
@@ -62,6 +64,7 @@ export const API_CONFIG = {
     SECURITY_VAULT_UNLOCK: '/api/v1/security/vault/unlock/',
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
+    SECURITY_VAULT_MIGRATE: '/api/v1/security/vault/migrate-from-backup/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',

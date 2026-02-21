@@ -31,19 +31,31 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
 
   // Vault Operations
   async deposit(id: number, data: VaultDepositData): Promise<VaultOperationResponse> {
-    return apiClient.post<VaultOperationResponse>(`${this.endpoint}${id}/deposit/`, data);
+    return apiClient.post<VaultOperationResponse>(
+      `${this.endpoint}${id}/deposit/`,
+      data
+    );
   }
 
   async withdraw(id: number, data: VaultWithdrawData): Promise<VaultOperationResponse> {
-    return apiClient.post<VaultOperationResponse>(`${this.endpoint}${id}/withdraw/`, data);
+    return apiClient.post<VaultOperationResponse>(
+      `${this.endpoint}${id}/withdraw/`,
+      data
+    );
   }
 
   async applyYield(id: number): Promise<VaultYieldResponse> {
     return apiClient.post<VaultYieldResponse>(`${this.endpoint}${id}/apply-yield/`, {});
   }
 
-  async updateYield(id: number, data: VaultYieldUpdateData): Promise<VaultYieldUpdateResponse> {
-    return apiClient.post<VaultYieldUpdateResponse>(`${this.endpoint}${id}/update-yield/`, data);
+  async updateYield(
+    id: number,
+    data: VaultYieldUpdateData
+  ): Promise<VaultYieldUpdateResponse> {
+    return apiClient.post<VaultYieldUpdateResponse>(
+      `${this.endpoint}${id}/update-yield/`,
+      data
+    );
   }
 
   // Vault Transactions
@@ -55,7 +67,10 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
     return response.results;
   }
 
-  async getAllTransactions(params?: { vault?: number; type?: string }): Promise<VaultTransaction[]> {
+  async getAllTransactions(params?: {
+    vault?: number;
+    type?: string;
+  }): Promise<VaultTransaction[]> {
     const response = await apiClient.get<PaginatedResponse<VaultTransaction>>(
       API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS,
       params as Record<string, unknown>
@@ -64,16 +79,27 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
   }
 
   // Transaction Update/Delete
-  async updateTransaction(id: number, data: VaultTransactionUpdateData): Promise<VaultTransactionUpdateResponse> {
-    return apiClient.patch<VaultTransactionUpdateResponse>(`${API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS}${id}/`, data);
+  async updateTransaction(
+    id: number,
+    data: VaultTransactionUpdateData
+  ): Promise<VaultTransactionUpdateResponse> {
+    return apiClient.patch<VaultTransactionUpdateResponse>(
+      `${API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS}${id}/`,
+      data
+    );
   }
 
   async deleteTransaction(id: number): Promise<VaultTransactionDeleteResponse> {
-    return apiClient.delete<VaultTransactionDeleteResponse>(`${API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS}${id}/`);
+    return apiClient.delete<VaultTransactionDeleteResponse>(
+      `${API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS}${id}/`
+    );
   }
 }
 
-class FinancialGoalsService extends BaseService<FinancialGoalListItem, FinancialGoalFormData> {
+class FinancialGoalsService extends BaseService<
+  FinancialGoalListItem,
+  FinancialGoalFormData
+> {
   constructor() {
     super(API_CONFIG.ENDPOINTS.FINANCIAL_GOALS);
   }
@@ -87,13 +113,19 @@ class FinancialGoalsService extends BaseService<FinancialGoalListItem, Financial
     return apiClient.post<FinancialGoal>(this.endpoint, data);
   }
 
-  async update(id: number, data: Partial<FinancialGoalFormData>): Promise<FinancialGoal> {
+  async update(
+    id: number,
+    data: Partial<FinancialGoalFormData>
+  ): Promise<FinancialGoal> {
     return apiClient.put<FinancialGoal>(`${this.endpoint}${id}/`, data);
   }
 
   // Goal Operations
   async checkCompletion(id: number): Promise<FinancialGoalCheckResponse> {
-    return apiClient.post<FinancialGoalCheckResponse>(`${this.endpoint}${id}/check-completion/`, {});
+    return apiClient.post<FinancialGoalCheckResponse>(
+      `${this.endpoint}${id}/check-completion/`,
+      {}
+    );
   }
 
   async addVaults(
@@ -101,7 +133,10 @@ class FinancialGoalsService extends BaseService<FinancialGoalListItem, Financial
     vaultIds: number[]
   ): Promise<FinancialGoalVaultsResponse> {
     const data: FinancialGoalVaultsRequest = { vault_ids: vaultIds };
-    return apiClient.post<FinancialGoalVaultsResponse>(`${this.endpoint}${id}/add-vaults/`, data);
+    return apiClient.post<FinancialGoalVaultsResponse>(
+      `${this.endpoint}${id}/add-vaults/`,
+      data
+    );
   }
 
   async removeVaults(
@@ -109,7 +144,10 @@ class FinancialGoalsService extends BaseService<FinancialGoalListItem, Financial
     vaultIds: number[]
   ): Promise<FinancialGoalVaultsResponse> {
     const data: FinancialGoalVaultsRequest = { vault_ids: vaultIds };
-    return apiClient.post<FinancialGoalVaultsResponse>(`${this.endpoint}${id}/remove-vaults/`, data);
+    return apiClient.post<FinancialGoalVaultsResponse>(
+      `${this.endpoint}${id}/remove-vaults/`,
+      data
+    );
   }
 }
 

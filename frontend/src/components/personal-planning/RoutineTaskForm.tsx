@@ -247,7 +247,8 @@ export function RoutineTaskForm({
               min="1"
               max="31"
               {...register('day_of_month', {
-                setValueAs: (value: string) => (value === '' ? undefined : parseInt(value)),
+                setValueAs: (value: string) =>
+                  value === '' ? undefined : parseInt(value),
               })}
               placeholder="1-31"
             />
@@ -333,7 +334,8 @@ export function RoutineTaskForm({
                   min="1"
                   max="7"
                   {...register('times_per_week', {
-                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) =>
+                      value === '' ? null : parseInt(value),
                   })}
                   placeholder="1-7"
                 />
@@ -348,7 +350,8 @@ export function RoutineTaskForm({
                   min="1"
                   max="31"
                   {...register('times_per_month', {
-                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) =>
+                      value === '' ? null : parseInt(value),
                   })}
                   placeholder="1-31"
                 />
@@ -366,7 +369,8 @@ export function RoutineTaskForm({
                   type="number"
                   min="1"
                   {...register('interval_days', {
-                    setValueAs: (value: string) => (value === '' ? null : parseInt(value)),
+                    setValueAs: (value: string) =>
+                      value === '' ? null : parseInt(value),
                   })}
                   placeholder="Ex: 3"
                 />

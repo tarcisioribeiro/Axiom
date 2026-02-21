@@ -521,7 +521,9 @@ function formatCellValue(column: string, value: unknown): React.ReactNode {
       inactive: 'bg-muted text-muted-foreground',
       inativo: 'bg-muted text-muted-foreground',
     };
-    const statusKey = String(value as string).toLowerCase().replace(/ /g, '_');
+    const statusKey = String(value as string)
+      .toLowerCase()
+      .replace(/ /g, '_');
     return (
       <Badge className={cn('font-normal', statusColors[statusKey] || '')}>
         {autoTranslate(String(value as string))}
