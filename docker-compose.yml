@@ -74,10 +74,10 @@ services:
       resources:
         limits:
           memory: 8g
-          cpus: '4'
+          cpus: '3'
         reservations:
           memory: 4g
-          cpus: '2'
+          cpus: '1'
           # GPU support - uncomment the following lines if you have NVIDIA GPU
           # devices:
           #   - driver: nvidia
