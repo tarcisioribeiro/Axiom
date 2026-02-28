@@ -27,6 +27,7 @@ import {
   Calculator,
   ArrowUpRight,
   ArrowDownRight,
+  PiggyBank,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -57,6 +58,7 @@ import { containerVariants, itemVariants } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { budgetsService } from '@/services/budgets-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { dashboardService } from '@/services/dashboard-service';
@@ -71,6 +73,7 @@ import type {
   CreditCardBill,
   CreditCardExpensesByCategory,
   BalanceForecast,
+  BudgetStatus,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -87,6 +90,7 @@ export default function Dashboard() {
     CreditCardExpensesByCategory[]
   >([]);
   const [balanceForecast, setBalanceForecast] = useState<BalanceForecast | null>(null);
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus[]>([]);
   const [selectedCard, setSelectedCard] = useState<string>('all');
   const [selectedBill, setSelectedBill] = useState<string>('all');
   const [evolutionPeriod, setEvolutionPeriod] = useState<
@@ -121,6 +125,7 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setIsLoading(true);
+      const now = new Date();
       const [
         statsData,
         expensesData,
@@ -130,6 +135,7 @@ export default function Dashboard() {
         billsData,
         ccExpensesByCategoryData,
         forecastData,
+        budgetStatusData,
       ] = await Promise.all([
         dashboardService.getStats(),
         expensesService.getAll(),
@@ -139,6 +145,10 @@ export default function Dashboard() {
         creditCardBillsService.getAll(),
         dashboardService.getCreditCardExpensesByCategory(),
         dashboardService.getBalanceForecast(),
+        budgetsService.getStatus({
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+        }),
       ]);
       setStats(statsData);
       setExpenses(expensesData);
@@ -148,6 +158,7 @@ export default function Dashboard() {
       setCreditCardBills(billsData);
       setCreditCardExpensesByCategory(ccExpensesByCategoryData);
       setBalanceForecast(forecastData);
+      setBudgetStatus(Array.isArray(budgetStatusData) ? budgetStatusData : []);
     } catch (error: unknown) {
       toast({
         title: 'Erro ao carregar dados',
@@ -863,6 +874,74 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Budget Status */}
+      {budgetStatus.length > 0 && (
+        <div>
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <PiggyBank className="h-5 w-5" />
+                  <CardTitle>Orçamentos do Mês</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Limite vs gasto real por categoria no mês atual
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {budgetStatus.map((item) => {
+                    const pct = Math.min(item.percentage, 100);
+                    const barColor =
+                      item.status === 'exceeded'
+                        ? 'bg-destructive'
+                        : item.status === 'warning'
+                          ? 'bg-yellow-500'
+                          : 'bg-success';
+                    return (
+                      <div key={item.id} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">
+                            {translate('expenseCategories', item.category)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">
+                              {formatCurrency(item.actual_spent)} /{' '}
+                              {formatCurrency(item.limit_amount)}
+                            </span>
+                            <span
+                              className={cn(
+                                'rounded px-1.5 py-0.5 text-xs font-semibold',
+                                item.status === 'exceeded'
+                                  ? 'bg-destructive/10 text-destructive'
+                                  : item.status === 'warning'
+                                    ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                    : 'bg-success/10 text-success'
+                              )}
+                            >
+                              {item.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              'h-full rounded-full transition-all',
+                              barColor
+                            )}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      )}
     </AnimatedPage>
   );
 }

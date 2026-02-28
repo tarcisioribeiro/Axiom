@@ -1819,3 +1819,38 @@ export interface Notification {
 export interface NotificationSummary {
   unread_count: number;
 }
+
+// Budget Types
+export interface Budget {
+  id: number;
+  uuid: string;
+  category: string;
+  limit_amount: string;
+  month: number;
+  year: number;
+  member: number | null;
+  member_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetFormData {
+  category: string;
+  limit_amount: number;
+  month: number;
+  year: number;
+  member?: number | null;
+}
+
+export interface BudgetStatus {
+  id: number;
+  category: string;
+  limit_amount: string;
+  actual_spent: string;
+  percentage: number;
+  status: 'ok' | 'warning' | 'exceeded';
+  member: number | null;
+  member_name: string | null;
+  month: number;
+  year: number;
+}

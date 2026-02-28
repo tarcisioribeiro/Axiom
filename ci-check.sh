@@ -197,7 +197,8 @@ check_node() {
 check_docker_devdeps() {
 	log "${YELLOW}Verificando ferramentas de dev no container api...${NC}"
 
-	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1; then
+	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1 || \
+		! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m pytest --version >/dev/null 2>&1; then
 		log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
 		if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
 			pip install --quiet --user \

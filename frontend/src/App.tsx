@@ -57,6 +57,9 @@ const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const Vaults = lazy(() => import('./pages/Vaults'));
 const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
 
+// Budgets Module
+const Budgets = lazy(() => import('./pages/Budgets'));
+
 // Loading component
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
@@ -327,6 +330,16 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <DailyChecklist />
+              </Suspense>
+            }
+          />
+
+          {/* Budgets Module routes */}
+          <Route
+            path="/budgets"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Budgets />
               </Suspense>
             }
           />

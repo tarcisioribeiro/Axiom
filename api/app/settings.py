@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     "vaults",
     # Notifications Module
     "notifications",
+    # Budgets Module
+    "budgets",
 ]
 
 MIDDLEWARE = [

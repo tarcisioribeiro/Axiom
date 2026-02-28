@@ -93,6 +93,10 @@ export const API_CONFIG = {
     NOTIFICATIONS_SUMMARY: '/api/v1/notifications/summary/',
     NOTIFICATIONS_MARK_ALL_READ: '/api/v1/notifications/mark-all-read/',
 
+    // Budgets Module
+    BUDGETS: '/api/v1/budgets/',
+    BUDGETS_STATUS: '/api/v1/budgets/status/',
+
     // Health
     HEALTH: '/api/v1/health/',
   },

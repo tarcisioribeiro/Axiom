@@ -37,6 +37,7 @@ apps = [
     "payables",
     "vaults",
     "notifications",
+    "budgets",
 ]
 
 # Buscar e adicionar permissões
