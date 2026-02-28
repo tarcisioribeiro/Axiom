@@ -1,7 +1,16 @@
-import { Plus, Pencil, Trash2, TrendingUp, Filter, ChevronDown } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  Filter,
+  ChevronDown,
+  Download,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ReceiptButton } from '@/components/receipts';
@@ -34,6 +43,7 @@ import { sumByProperty } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { accountsService } from '@/services/accounts-service';
 import { loansService } from '@/services/loans-service';
+import type { RevenueExportParams } from '@/services/revenues-service';
 import { revenuesService } from '@/services/revenues-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
@@ -54,6 +64,7 @@ export default function Revenues() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
@@ -212,6 +223,40 @@ export default function Revenues() {
     }
   };
 
+  const handleExport = async (modalParams: {
+    export_format: 'csv' | 'pdf';
+    date_from?: string;
+    date_to?: string;
+  }) => {
+    const params: RevenueExportParams = {
+      export_format: modalParams.export_format,
+      date_from: modalParams.date_from,
+      date_to: modalParams.date_to,
+      category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      received:
+        statusFilter !== 'all'
+          ? statusFilter === 'received'
+            ? 'true'
+            : 'false'
+          : undefined,
+      search: searchTerm || undefined,
+      account: selectedAccounts.length > 0 ? selectedAccounts : undefined,
+    };
+    try {
+      await revenuesService.exportRevenues(params);
+      toast({
+        title: 'Exportação concluída',
+        description: 'O arquivo foi baixado com sucesso.',
+      });
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao exportar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
   const totalRevenues = sumByProperty(
     filteredRevenues.map((r) => ({ value: parseFloat(r.value) })),
     'value'
@@ -285,15 +330,22 @@ export default function Revenues() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Receitas"
-        icon={<TrendingUp />}
-        action={{
-          label: 'Nova Receita',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title="Receitas" icon={<TrendingUp />}>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Receita
+          </Button>
+        </div>
+      </PageHeader>
 
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -435,6 +487,16 @@ export default function Revenues() {
             </Button>
           </div>
         )}
+      />
+
+      <ExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        title="Exportar Receitas"
+        description="Selecione o período e formato para exportar as receitas filtradas."
+        onExport={handleExport}
+        initialDateFrom={startDate}
+        initialDateTo={endDate}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

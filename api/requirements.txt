@@ -34,6 +34,9 @@ django-redis==5.4.0
 django-storages[s3]==1.14.4
 boto3>=1.35.0
 
+# Export (PDF/CSV)
+reportlab>=4.0.0
+
 # AI Assistant - NLP and text processing
 rapidfuzz>=3.6.0
 dateparser>=1.2.0

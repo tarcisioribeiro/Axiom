@@ -5,6 +5,11 @@ from . import views
 urlpatterns = [
     # Expense endpoints
     path(
+        "expenses/export/",
+        views.ExportExpensesView.as_view(),
+        name="expense-export",
+    ),
+    path(
         "expenses/", views.ExpenseCreateListView.as_view(), name="expense-create-list"
     ),
     path(

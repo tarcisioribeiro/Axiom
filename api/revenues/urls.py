@@ -4,6 +4,11 @@ from . import views
 
 urlpatterns = [
     path(
+        "revenues/export/",
+        views.ExportRevenuesView.as_view(),
+        name="revenue-export",
+    ),
+    path(
         "revenues/", views.RevenueCreateListView.as_view(), name="revenue-create-list"
     ),
     path(

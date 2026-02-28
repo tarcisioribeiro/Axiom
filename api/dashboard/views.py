@@ -8,6 +8,7 @@ PERF-02: Reduz de 6 requisições para 1 única requisição otimizada.
 PERF-03: Cache Redis para reduzir carga no banco de dados.
 """
 
+from datetime import date
 from decimal import Decimal
 from typing import Optional
 
@@ -425,5 +426,109 @@ class BalanceForecastView(APIView):
                     "total_outcome": float(total_outcome),
                     "net_change": float(net_change),
                 },
+            }
+        )
+
+
+class MonthlyStatementView(APIView):
+    """
+    GET /api/v1/dashboard/monthly-statement/
+
+    Returns consolidated monthly statement with revenues, expenses and balance.
+
+    Query Parameters
+    ----------------
+    year : int
+        Year (YYYY). Defaults to current year.
+    month : int
+        Month (1-12). Defaults to current month.
+
+    Response
+    --------
+    {
+        "period": "2026-02",
+        "total_revenues": "5000.00",
+        "total_expenses": "3200.00",
+        "balance": "1800.00",
+        "revenues_by_category": [
+            {"category": "salary", "total": "5000.00", "count": 1}
+        ],
+        "expenses_by_category": [
+            {"category": "food and drink", "total": "800.00", "count": 5}
+        ]
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = date.today()
+
+        try:
+            year = int(request.query_params.get("year", today.year))
+            month = int(request.query_params.get("month", today.month))
+        except (ValueError, TypeError):
+            year = today.year
+            month = today.month
+
+        # Clamp month to valid range
+        month = max(1, min(12, month))
+
+        expenses_qs = Expense.objects.filter(
+            is_deleted=False,
+            date__year=year,
+            date__month=month,
+        )
+        revenues_qs = Revenue.objects.filter(
+            is_deleted=False,
+            date__year=year,
+            date__month=month,
+        )
+
+        total_expenses = expenses_qs.aggregate(total=Sum("value"))["total"] or Decimal(
+            "0.00"
+        )
+        total_revenues = revenues_qs.aggregate(total=Sum("net_amount"))[
+            "total"
+        ] or Decimal("0.00")
+        balance = total_revenues - total_expenses
+
+        expenses_by_category = list(
+            expenses_qs.values("category")
+            .annotate(total=Sum("value"), count=Count("id"))
+            .order_by("-total")
+        )
+        revenues_by_category = list(
+            revenues_qs.values("category")
+            .annotate(total=Sum("net_amount"), count=Count("id"))
+            .order_by("-total")
+        )
+
+        return Response(
+            {
+                "period": f"{year:04d}-{month:02d}",
+                "total_revenues": str(total_revenues.quantize(Decimal("0.01"))),
+                "total_expenses": str(total_expenses.quantize(Decimal("0.01"))),
+                "balance": str(balance.quantize(Decimal("0.01"))),
+                "revenues_by_category": [
+                    {
+                        "category": item["category"],
+                        "total": str(
+                            (item["total"] or Decimal("0.00")).quantize(Decimal("0.01"))
+                        ),
+                        "count": item["count"],
+                    }
+                    for item in revenues_by_category
+                ],
+                "expenses_by_category": [
+                    {
+                        "category": item["category"],
+                        "total": str(
+                            (item["total"] or Decimal("0.00")).quantize(Decimal("0.01"))
+                        ),
+                        "count": item["count"],
+                    }
+                    for item in expenses_by_category
+                ],
             }
         )

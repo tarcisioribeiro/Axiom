@@ -5,6 +5,7 @@ from .views import (
     BalanceForecastView,
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
+    MonthlyStatementView,
 )
 
 urlpatterns = [
@@ -16,4 +17,9 @@ urlpatterns = [
         name="credit-card-expenses-by-category",
     ),
     path("balance-forecast/", BalanceForecastView.as_view(), name="balance-forecast"),
+    path(
+        "monthly-statement/",
+        MonthlyStatementView.as_view(),
+        name="monthly-statement",
+    ),
 ]

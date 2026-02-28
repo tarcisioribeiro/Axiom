@@ -97,6 +97,11 @@ export const API_CONFIG = {
     BUDGETS: '/api/v1/budgets/',
     BUDGETS_STATUS: '/api/v1/budgets/status/',
 
+    // Export
+    EXPENSES_EXPORT: '/api/v1/expenses/export/',
+    REVENUES_EXPORT: '/api/v1/revenues/export/',
+    DASHBOARD_MONTHLY_STATEMENT: '/api/v1/dashboard/monthly-statement/',
+
     // Health
     HEALTH: '/api/v1/health/',
   },
