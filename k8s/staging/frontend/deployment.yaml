@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: mindledger-staging
+  labels:
+    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/component: frontend
+    environment: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/component: frontend
+        environment: staging
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry-secret
+      initContainers:
+        - name: wait-for-api
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z api-service 8002; do
+                echo "Waiting for API..."
+                sleep 2
+              done
+              echo "API is ready!"
+      containers:
+        - name: frontend
+          # The CI pipeline updates this image on every deploy via:
+          #   kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:latest
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3

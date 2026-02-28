@@ -1,0 +1,22 @@
+# Development dependencies - not needed in production
+# Install with: pip install -r requirements-dev.txt
+
+# Include production dependencies
+-r requirements.txt
+
+# Testing dependencies
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+
+# Code quality dependencies
+black==24.10.0
+flake8==7.1.1
+isort==5.13.2
+bandit==1.8.3
+pre-commit==3.8.0
+
+# Type checking
+mypy==1.13.0
+django-stubs>=5.1.0
+djangorestframework-stubs>=3.15.0

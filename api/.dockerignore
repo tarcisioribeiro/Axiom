@@ -1,0 +1,50 @@
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Logs
+logs/
+*.log
+
+# Media / static (mounted as volumes)
+media/
+staticfiles/
+static/
+
+# Local DB
+*.sqlite
+*.sqlite3
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Backups
+backups/
+*.bak
+*.backup
+*.sql
+*.dump

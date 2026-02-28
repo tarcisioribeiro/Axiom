@@ -1,0 +1,232 @@
+# ==============================================================================
+# MindLedger — GitLab CI/CD Pipeline
+# ==============================================================================
+
+stages:
+  - lint
+  - typecheck
+  - test
+  - build
+  - deploy-staging
+  - deploy-production
+
+# ------------------------------------------------------------------------------
+# Global defaults
+# ------------------------------------------------------------------------------
+default:
+  interruptible: true
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: "1"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
+  npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  API_IMAGE: "$CI_REGISTRY_IMAGE/api"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# ==============================================================================
+# Base job templates
+# ==============================================================================
+
+.python_before_script: &python_before_script
+  - |
+    pip install --quiet --cache-dir "$PIP_CACHE_DIR" \
+      -r api/requirements.txt \
+      -r api/requirements-dev.txt
+
+.python_base:
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - api/requirements.txt
+        - api/requirements-dev.txt
+    paths:
+      - .pip_cache/
+  before_script: *python_before_script
+
+.node_base:
+  image: node:20-alpine
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - cd frontend && npm ci --prefer-offline
+
+.docker_base:
+  image: docker:26
+  services:
+    - name: docker:26-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+# ==============================================================================
+# STAGE: lint
+# ==============================================================================
+
+lint:backend:
+  extends: .python_base
+  stage: lint
+  script:
+    - cd api
+    - black --check --diff .
+    - isort --check-only --diff .
+    - flake8 .
+
+lint:frontend:
+  extends: .node_base
+  stage: lint
+  script:
+    - npm run lint
+    - npm run format:check
+
+# ==============================================================================
+# STAGE: typecheck
+# ==============================================================================
+
+typecheck:backend:
+  extends: .python_base
+  stage: typecheck
+  needs:
+    - lint:backend
+  variables:
+    SECRET_KEY: "ci-insecure-key-for-mypy-only"
+    DEBUG: "False"
+    DJANGO_SETTINGS_MODULE: "app.settings"
+  script:
+    - cd api
+    - mypy .
+
+typecheck:frontend:
+  extends: .node_base
+  stage: typecheck
+  needs:
+    - lint:frontend
+  script:
+    - npm run typecheck
+
+# ==============================================================================
+# STAGE: test
+# ==============================================================================
+
+test:backend:
+  extends: .python_base
+  stage: test
+
+  needs:
+    - typecheck:backend
+
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+
+  variables:
+    POSTGRES_DB: mindledger_test
+    POSTGRES_USER: mindledger
+    POSTGRES_PASSWORD: ci_test_password
+    POSTGRES_HOST_AUTH_METHOD: trust
+
+    SECRET_KEY: "ci-insecure-key-not-for-production-use"
+    DEBUG: "True"
+    DJANGO_SETTINGS_MODULE: app.settings
+    PYTHONPATH: $CI_PROJECT_DIR/api
+
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: mindledger_test
+    DB_USER: mindledger
+    DB_PASSWORD: ci_test_password
+
+  before_script:
+    # 🔁 reaproveita o pip install
+    - *python_before_script
+
+    # extras do job
+    - apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+    - until pg_isready -h postgres -p 5432; do sleep 1; done
+    - export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+    - cd api
+    - python manage.py migrate --noinput
+
+  script:
+    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+
+  artifacts:
+    when: always
+    paths:
+      - api/coverage.xml
+
+
+# ==============================================================================
+# STAGE: build
+# ==============================================================================
+
+build:api:
+  extends: .docker_base
+  stage: build
+  needs:
+    - typecheck:backend
+    - test:backend
+  script:
+    - docker pull "$API_IMAGE:latest" || true
+    - |
+      docker build \
+        --cache-from "$API_IMAGE:latest" \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        -t "$API_IMAGE:$CI_COMMIT_SHA" \
+        -t "$API_IMAGE:$CI_COMMIT_REF_SLUG" \
+        ./api
+    - docker push "$API_IMAGE:$CI_COMMIT_SHA"
+    - docker push "$API_IMAGE:$CI_COMMIT_REF_SLUG"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHA" "$API_IMAGE:latest"
+        docker push "$API_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+build:frontend:
+  extends: .docker_base
+  stage: build
+  needs:
+    - typecheck:frontend
+  script:
+    - docker pull "$FRONTEND_IMAGE:latest" || true
+    - |
+      docker build \
+        --cache-from "$FRONTEND_IMAGE:latest" \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --build-arg VITE_API_BASE_URL="${VITE_API_BASE_URL_STAGING}" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_SHA" \
+        -t "$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG" \
+        ./frontend
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_REF_SLUG"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHA" "$FRONTEND_IMAGE:latest"
+        docker push "$FRONTEND_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# ==============================================================================
+# STAGE: deploy-staging
+# ==============================================================================

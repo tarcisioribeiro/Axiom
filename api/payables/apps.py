@@ -1,0 +1,10 @@
+from django.apps import AppConfig
+
+
+class PayablesConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "payables"
+    verbose_name = "Valores a Pagar"
+
+    def ready(self):
+        import payables.signals  # noqa

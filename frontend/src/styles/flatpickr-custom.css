@@ -1,0 +1,348 @@
+/**
+ * Flatpickr Custom Styles
+ * Temas: Dracula (dark) e Alucard (light)
+ *
+ * Usa variáveis CSS definidas em index.css para adaptar automaticamente ao tema
+ */
+
+/* ========================================
+   CONTAINER PRINCIPAL DO CALENDÁRIO
+   ======================================== */
+
+.flatpickr-calendar {
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 10px 38px -10px rgba(0, 0, 0, 0.35),
+    0 10px 20px -15px rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  width: 280px;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+  transform: translateY(-4px);
+  /* Garante posicionamento acima de outros elementos */
+  z-index: 9999 !important;
+  margin-top: 4px;
+}
+
+/* Modo static - calendário posicionado inline abaixo do input */
+.flatpickr-calendar.static {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+}
+
+.flatpickr-calendar.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Quando o calendário abre para cima (espaço insuficiente embaixo) */
+.flatpickr-calendar.arrowBottom {
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
+.flatpickr-calendar.arrowTop::before,
+.flatpickr-calendar.arrowTop::after,
+.flatpickr-calendar.arrowBottom::before,
+.flatpickr-calendar.arrowBottom::after {
+  display: none;
+}
+
+/* ========================================
+   CABEÇALHO - NAVEGAÇÃO MÊS/ANO
+   ======================================== */
+
+.flatpickr-months {
+  display: flex;
+  align-items: center;
+  padding: 12px 8px 8px;
+}
+
+.flatpickr-months .flatpickr-month {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  color: hsl(var(--foreground));
+  overflow: visible;
+}
+
+.flatpickr-current-month {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  padding: 0;
+  width: auto;
+  height: auto;
+  position: relative;
+  left: 0;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: hsl(var(--foreground));
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 150ms ease;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+  background: hsl(var(--accent) / 0.15);
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months:focus {
+  outline: none;
+  background: hsl(var(--accent) / 0.2);
+}
+
+.flatpickr-current-month input.cur-year {
+  background: transparent;
+  border: none;
+  color: hsl(var(--foreground));
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  padding: 4px 8px;
+  width: 4.5em;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 150ms ease;
+}
+
+.flatpickr-current-month input.cur-year:hover {
+  background: hsl(var(--accent) / 0.15);
+}
+
+.flatpickr-current-month input.cur-year:focus {
+  outline: none;
+  background: hsl(var(--accent) / 0.2);
+}
+
+/* Setas de navegação */
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: calc(var(--radius) - 2px);
+  color: hsl(var(--muted-foreground));
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  background: hsl(var(--accent) / 0.15);
+  color: hsl(var(--foreground));
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* ========================================
+   DIAS DA SEMANA (CABEÇALHO)
+   ======================================== */
+
+.flatpickr-weekdays {
+  padding: 0 8px;
+  height: auto;
+  background: transparent;
+}
+
+.flatpickr-weekdaycontainer {
+  display: flex;
+}
+
+span.flatpickr-weekday {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: transparent;
+}
+
+/* ========================================
+   GRID DE DIAS
+   ======================================== */
+
+.flatpickr-innerContainer {
+  padding: 0 8px 8px;
+}
+
+.flatpickr-rContainer {
+  width: 100%;
+}
+
+.flatpickr-days {
+  width: 100%;
+}
+
+.dayContainer {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0;
+}
+
+/* Células de dia individuais */
+.flatpickr-day {
+  flex: 0 0 calc((100% - 12px) / 7);
+  max-width: calc((100% - 12px) / 7);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: hsl(var(--foreground));
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: all 150ms ease;
+  background: transparent;
+  line-height: 1;
+  margin: 0;
+}
+
+/* Hover state */
+.flatpickr-day:hover {
+  background: hsl(var(--accent) / 0.15);
+  color: hsl(var(--foreground));
+}
+
+/* Dia atual (hoje) */
+.flatpickr-day.today {
+  background: hsl(var(--accent) / 0.2);
+  color: hsl(var(--accent));
+  font-weight: 600;
+}
+
+.flatpickr-day.today:hover {
+  background: hsl(var(--accent) / 0.3);
+}
+
+/* Dia selecionado */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.selected:focus {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 500;
+}
+
+/* Dias do mês anterior/próximo (fora do mês atual) */
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+
+.flatpickr-day.prevMonthDay:hover,
+.flatpickr-day.nextMonthDay:hover {
+  background: hsl(var(--accent) / 0.1);
+  color: hsl(var(--muted-foreground));
+}
+
+/* Dias desabilitados */
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover {
+  color: hsl(var(--muted-foreground) / 0.3);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* ========================================
+   INPUT - ESTADOS
+   ======================================== */
+
+/* Estado de erro para data inválida */
+.flatpickr-input.flatpickr-invalid {
+  border-color: hsl(var(--destructive)) !important;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* ========================================
+   SCROLLBAR CUSTOMIZADA (para ano)
+   ======================================== */
+
+.flatpickr-calendar ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.flatpickr-calendar ::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.3);
+  border-radius: 3px;
+}
+
+.flatpickr-calendar ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+.flatpickr-calendar ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+
+@media (max-width: 640px) {
+  .flatpickr-calendar {
+    width: 260px;
+  }
+
+  .flatpickr-day {
+    height: 32px;
+    font-size: 0.8125rem;
+  }
+}

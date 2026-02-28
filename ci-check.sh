@@ -1,0 +1,459 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# ci-check.sh — MindLedger: Simulação do pipeline GitLab CI/CD
+# ==============================================================================
+#
+# Etapas cobertas (mesma ordem do .gitlab-ci.yml):
+#
+#   lint:backend       black · isort · flake8 · bandit · pip-audit
+#   lint:frontend      eslint · prettier · npm audit
+#   typecheck:backend  mypy
+#   typecheck:frontend tsc
+#   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40
+#   test:frontend      vitest --run --coverage
+#   secret-detection   gitleaks (opcional — só se instalado)
+#   build              docker build api + frontend (opcional: --with-build)
+#   scan               trivy HIGH/CRITICAL (opcional: --with-scan, requer --with-build)
+#
+# Pré-requisitos:
+#   - Docker + docker compose com o serviço 'api' rodando
+#   - Node.js 20+ com frontend/node_modules instalado no host
+#     (o container 'frontend' é nginx-only; npm roda direto no host)
+#
+# Uso:
+#   ./ci-check.sh [opções]
+#
+# Opções:
+#   --with-build      Inclui build das imagens Docker
+#   --with-scan       Inclui scan Trivy (requer --with-build)
+#   --backend-only    Executa apenas checks do backend
+#   --frontend-only   Executa apenas checks do frontend
+#   --help            Exibe esta ajuda
+#
+# Saída:
+#   Terminal   → progresso colorido em tempo real
+#   Arquivo    → ci-check-YYYYMMDD_HHMMSS.log (log completo, incluindo saída
+#                de cada ferramenta)
+# ==============================================================================
+
+# Não usar set -e: erros são tratados manualmente para coletar todos os falhos.
+# set -u garante que variáveis não definidas causem erro.
+set -uo pipefail
+
+# ── Diretório do script ────────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+LOG_FILE="$SCRIPT_DIR/ci-check-$TIMESTAMP.log"
+
+# ── Flags ──────────────────────────────────────────────────────────────────────
+WITH_BUILD=false
+WITH_SCAN=false
+BACKEND_ONLY=false
+FRONTEND_ONLY=false
+
+for arg in "$@"; do
+	case "$arg" in
+	--with-build) WITH_BUILD=true ;;
+	--with-scan) WITH_SCAN=true ;;
+	--backend-only) BACKEND_ONLY=true ;;
+	--frontend-only) FRONTEND_ONLY=true ;;
+	--help | -h)
+		# Exibe o bloco de comentário no topo
+		sed -n '2,/^# =\+$/{ /^# =\+$/q; p }' "$0" | sed 's/^# \?//'
+		exit 0
+		;;
+	*)
+		echo "Opção desconhecida: '$arg'. Use --help."
+		exit 1
+		;;
+	esac
+done
+
+# ── Venv Python (backend lint/typecheck local) ─────────────────────────────────
+VENV_DIR="$SCRIPT_DIR/.venv"
+VENV_BIN="$VENV_DIR/bin"
+
+# ── Cores (degrada graciosamente se terminal não suportar) ─────────────────────
+if [ -t 1 ] && command -v tput >/dev/null 2>&1 && tput colors >/dev/null 2>&1 && [ "$(tput colors)" -ge 8 ]; then
+	RED="$(tput setaf 1)"
+	GREEN="$(tput setaf 2)"
+	YELLOW="$(tput setaf 3)"
+	BLUE="$(tput setaf 4)"
+	CYAN="$(tput setaf 6)"
+	BOLD="$(tput bold)"
+	DIM="$(tput dim 2>/dev/null || echo '')"
+	NC="$(tput sgr0)"
+else
+	RED='' GREEN='' YELLOW='' BLUE='' CYAN='' BOLD='' DIM='' NC=''
+fi
+
+# ── Estado global ──────────────────────────────────────────────────────────────
+FAILURES=()
+TOTAL=0
+PASSED=0
+
+# ── Funções de log ─────────────────────────────────────────────────────────────
+# Escreve no terminal E no arquivo de log (sem processar escapes de cor no arquivo)
+log() {
+	local msg="$1"
+	# Terminal: interpreta \n e códigos de cor
+	echo -e "$msg"
+	# Arquivo: remove sequências ANSI antes de gravar
+	echo -e "$msg" | sed 's/\x1b\[[0-9;]*m//g' >>"$LOG_FILE"
+}
+
+section() {
+	log ""
+	log "${BLUE}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+	log "${BLUE}${BOLD}  STAGE: $1${NC}"
+	log "${BLUE}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
+# Executa um passo, exibe saída em tempo real (terminal + log) e registra result.
+# Uso: run_step "stage" "nome do passo" cmd [args...]
+run_step() {
+	local stage="$1"
+	local name="$2"
+	shift 2
+
+	log ""
+	log "${CYAN}▶ $stage › $name${NC}"
+	echo "  CMD: $*" >>"$LOG_FILE"
+	echo "  ────────────────────────────────────────────────────────────" >>"$LOG_FILE"
+
+	TOTAL=$((TOTAL + 1))
+
+	# Executa o comando:
+	#   - stdout + stderr vão para o terminal E para o log simultaneamente (tee)
+	#   - PIPESTATUS[0] captura o exit code do comando (não do tee)
+	local exit_code=0
+	set +o pipefail # Desativa pipefail pontualmente para usar PIPESTATUS manualmente
+	"$@" 2>&1 | tee -a "$LOG_FILE"
+	exit_code="${PIPESTATUS[0]}"
+	set -o pipefail
+
+	echo "" >>"$LOG_FILE"
+
+	if [ "$exit_code" -eq 0 ]; then
+		log "${GREEN}  ✓  PASSOU${NC}"
+		PASSED=$((PASSED + 1))
+		return 0
+	else
+		log "${RED}  ✗  FALHOU  (exit code: $exit_code)${NC}"
+		FAILURES+=("$stage › $name")
+		return 1
+	fi
+}
+
+# Versão que nunca interrompe o script (continue mesmo se falhar)
+run_step_safe() {
+	run_step "$@" || true
+}
+
+# ── Pré-requisitos ─────────────────────────────────────────────────────────────
+check_docker() {
+	log "${YELLOW}Verificando Docker...${NC}"
+
+	if ! docker info >/dev/null 2>&1; then
+		log "${RED}  ✗  Docker não está rodando. Inicie o Docker e tente novamente.${NC}"
+		exit 1
+	fi
+
+	# Verifica se o serviço 'api' está Up
+	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" ps api 2>/dev/null | grep -q "Up"; then
+		log "${YELLOW}  Serviço 'api' não está rodando. Subindo containers...${NC}"
+		docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d >>"$LOG_FILE" 2>&1
+		log "  Aguardando inicialização (20s)..."
+		sleep 20
+	fi
+
+	log "${GREEN}  ✓  Docker OK — serviço 'api' disponível${NC}"
+}
+
+check_node() {
+	log "${YELLOW}Verificando Node.js no host...${NC}"
+
+	if ! command -v node >/dev/null 2>&1; then
+		log "${RED}  ✗  Node.js não encontrado. Instale Node.js 20+ para rodar os checks do frontend.${NC}"
+		return 1
+	fi
+
+	local ver
+	ver="$(node --version)"
+	log "${GREEN}  ✓  Node.js $ver encontrado${NC}"
+
+	if [ ! -d "$SCRIPT_DIR/frontend/node_modules" ]; then
+		log "${YELLOW}  node_modules ausente — rodando npm ci...${NC}"
+		if ! (cd "$SCRIPT_DIR/frontend" && npm ci) >>"$LOG_FILE" 2>&1; then
+			log "${RED}  ✗  Falha ao instalar dependências do frontend.${NC}"
+			return 1
+		fi
+		log "${GREEN}  ✓  Dependências instaladas${NC}"
+	fi
+
+	return 0
+}
+
+check_docker_devdeps() {
+	log "${YELLOW}Verificando ferramentas de dev no container api...${NC}"
+
+	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1; then
+		log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
+		if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
+			pip install --quiet --user \
+			mypy pytest pytest-cov pytest-django \
+			django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1; then
+			log "${RED}  ✗  Falha ao instalar ferramentas de dev no container.${NC}"
+			return 1
+		fi
+	fi
+
+	log "${GREEN}  ✓  Ferramentas de dev disponíveis no container${NC}"
+	return 0
+}
+
+check_python_venv() {
+	log "${YELLOW}Verificando venv Python...${NC}"
+
+	local python_bin
+	if command -v python3 >/dev/null 2>&1; then
+		python_bin="python3"
+	else
+		log "${RED}  ✗  Python 3 não encontrado. Instale Python 3 para rodar os checks do backend.${NC}"
+		return 1
+	fi
+
+	if [ ! -d "$VENV_DIR" ]; then
+		log "${YELLOW}  venv ausente — criando em .venv ...${NC}"
+		if ! "$python_bin" -m venv "$VENV_DIR" >>"$LOG_FILE" 2>&1; then
+			log "${RED}  ✗  Falha ao criar venv.${NC}"
+			return 1
+		fi
+	fi
+
+	if [ ! -f "$VENV_BIN/black" ] || [ ! -f "$VENV_BIN/bandit" ]; then
+		log "${YELLOW}  Instalando dependências (api/requirements-dev.txt + pip-audit)...${NC}"
+		if ! "$VENV_BIN/pip" install --quiet --upgrade pip >>"$LOG_FILE" 2>&1; then
+			log "${RED}  ✗  Falha ao atualizar pip no venv.${NC}"
+			return 1
+		fi
+		if ! "$VENV_BIN/pip" install --quiet -r "$SCRIPT_DIR/api/requirements-dev.txt" pip-audit >>"$LOG_FILE" 2>&1; then
+			log "${RED}  ✗  Falha ao instalar dependências no venv.${NC}"
+			return 1
+		fi
+		log "${GREEN}  ✓  Dependências instaladas${NC}"
+	fi
+
+	log "${GREEN}  ✓  venv OK — $VENV_DIR${NC}"
+	return 0
+}
+
+# ── Cabeçalho / inicialização do log ──────────────────────────────────────────
+{
+	echo "=================================================================="
+	echo "  MindLedger — CI/CD Check Local"
+	echo "  Iniciado em : $(date)"
+	echo "  WITH_BUILD  : $WITH_BUILD"
+	echo "  WITH_SCAN   : $WITH_SCAN"
+	echo "  BACKEND_ONLY: $BACKEND_ONLY"
+	echo "  FRONTEND_ONLY: $FRONTEND_ONLY"
+	echo "=================================================================="
+	echo ""
+} >"$LOG_FILE"
+
+log ""
+log "${BOLD}╔══════════════════════════════════════════════════════════════════╗${NC}"
+log "${BOLD}║       MindLedger — Simulação do Pipeline GitLab CI/CD           ║${NC}"
+log "${BOLD}╚══════════════════════════════════════════════════════════════════╝${NC}"
+log "  Log completo: ${BOLD}$LOG_FILE${NC}"
+log ""
+
+# ── Pré-requisitos ─────────────────────────────────────────────────────────────
+$FRONTEND_ONLY || check_docker
+$FRONTEND_ONLY || check_docker_devdeps
+
+PYTHON_VENV_OK=true
+if ! $FRONTEND_ONLY; then
+	if ! check_python_venv; then
+		log "${YELLOW}  venv Python indisponível — checks locais do backend podem falhar.${NC}"
+		PYTHON_VENV_OK=false
+	fi
+fi
+
+NODE_OK=true
+if ! $BACKEND_ONLY; then
+	if ! check_node; then
+		log "${YELLOW}  Node.js indisponível — pulando todos os checks do frontend.${NC}"
+		NODE_OK=false
+		BACKEND_ONLY=true
+	fi
+fi
+
+# ==============================================================================
+# STAGE: lint
+# ==============================================================================
+section "LINT"
+
+if ! $FRONTEND_ONLY; then
+	run_step_safe "lint" "backend › black" \
+		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/black' --check --diff ."
+
+	run_step_safe "lint" "backend › isort" \
+		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/isort' --check-only --diff ."
+
+	run_step_safe "lint" "backend › flake8" \
+		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/flake8' ."
+
+	run_step_safe "lint" "backend › bandit" \
+		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/bandit' -r . -ll --exclude ./migrations,./venv,./staticfiles -c pyproject.toml"
+
+	run_step_safe "lint" "backend › pip-audit" \
+		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/pip-audit' -r requirements.txt --desc"
+fi
+
+if ! $BACKEND_ONLY; then
+	run_step_safe "lint" "frontend › eslint" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm run lint"
+
+	run_step_safe "lint" "frontend › prettier" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm run format:check"
+
+	# npm audit: falha em HIGH+CRITICAL em deps de produção (espelha CI)
+	run_step_safe "lint" "frontend › npm audit (prod, high+)" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high --omit=dev"
+fi
+
+# ==============================================================================
+# STAGE: typecheck
+# ==============================================================================
+section "TYPECHECK"
+
+if ! $FRONTEND_ONLY; then
+	# mypy precisa de SECRET_KEY não-vazio para inicializar o django-stubs
+	# pragma: allowlist secret
+	_MYPY_SECRET_KEY="ci-insecure-key-for-typecheck-only-000000000000000000000000000" # pragma: allowlist secret
+	run_step_safe "typecheck" "backend › mypy" \
+		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
+		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
+		-e DJANGO_SETTINGS_MODULE="app.settings" \
+		api python -m mypy .
+fi
+
+if ! $BACKEND_ONLY; then
+	run_step_safe "typecheck" "frontend › tsc" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm run typecheck"
+fi
+
+# ==============================================================================
+# STAGE: test
+# ==============================================================================
+section "TEST"
+
+if ! $FRONTEND_ONLY; then
+	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
+	run_step_safe "test" "backend › pytest" \
+		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
+		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40'
+fi
+
+if ! $BACKEND_ONLY; then
+	# vitest --run para modo não-interativo (igual ao CI)
+	run_step_safe "test" "frontend › vitest" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage -- --run"
+fi
+
+# ==============================================================================
+# STAGE: secret-detection (opcional — gitleaks, se disponível)
+# ==============================================================================
+section "SECRET DETECTION"
+
+if command -v gitleaks >/dev/null 2>&1; then
+	run_step_safe "secret-detection" "gitleaks" \
+		gitleaks detect --source "$SCRIPT_DIR" --no-git --redact
+else
+	log "${DIM}  (gitleaks não encontrado — pulando. Instale: https://github.com/gitleaks/gitleaks)${NC}"
+fi
+
+# ==============================================================================
+# STAGE: build (opcional)
+# ==============================================================================
+if $WITH_BUILD; then
+	section "BUILD (opcional)"
+
+	if ! $FRONTEND_ONLY; then
+		run_step_safe "build" "api › docker build" \
+			docker build \
+			-f "$SCRIPT_DIR/api/Dockerfile" \
+			-t mindledger/api:ci-local \
+			"$SCRIPT_DIR/api"
+	fi
+
+	if ! $BACKEND_ONLY; then
+		run_step_safe "build" "frontend › docker build (staging)" \
+			docker build \
+			-f "$SCRIPT_DIR/frontend/Dockerfile" \
+			--build-arg VITE_API_BASE_URL="http://localhost:39100" \
+			-t mindledger/frontend:ci-local \
+			"$SCRIPT_DIR/frontend"
+	fi
+fi
+
+# ==============================================================================
+# STAGE: scan (opcional — requer --with-build + trivy instalado)
+# ==============================================================================
+if $WITH_SCAN; then
+	section "SCAN — Trivy (opcional)"
+
+	if ! $WITH_BUILD; then
+		log "${YELLOW}  ⚠  --with-scan requer --with-build. Pulando scan.${NC}"
+	elif ! command -v trivy >/dev/null 2>&1; then
+		log "${YELLOW}  ⚠  trivy não encontrado.${NC}"
+		log "${DIM}     Instale: https://aquasecurity.github.io/trivy/latest/getting-started/installation/${NC}"
+	else
+		if ! $FRONTEND_ONLY; then
+			run_step_safe "scan" "api › trivy (HIGH,CRITICAL)" \
+				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
+				mindledger/api:ci-local
+		fi
+
+		if ! $BACKEND_ONLY; then
+			run_step_safe "scan" "frontend › trivy (HIGH,CRITICAL)" \
+				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
+				mindledger/frontend:ci-local
+		fi
+	fi
+fi
+
+# ==============================================================================
+# RELATÓRIO FINAL
+# ==============================================================================
+FAILED_COUNT=$((TOTAL - PASSED))
+
+log ""
+log "${BOLD}╔══════════════════════════════════════════════════════════════════╗${NC}"
+log "${BOLD}║                       RELATÓRIO FINAL                           ║${NC}"
+log "${BOLD}╚══════════════════════════════════════════════════════════════════╝${NC}"
+log ""
+log "  Total de verificações : ${BOLD}$TOTAL${NC}"
+log "  ${GREEN}Passaram${NC}               : ${GREEN}${BOLD}$PASSED${NC}"
+log "  ${RED}Falharam${NC}               : ${RED}${BOLD}$FAILED_COUNT${NC}"
+log ""
+
+if [ "${#FAILURES[@]}" -eq 0 ]; then
+	log "${GREEN}${BOLD}  ✓  TUDO OK — o pipeline deve passar no GitLab.${NC}"
+	EXIT_CODE=0
+else
+	log "${RED}${BOLD}  ✗  FALHAS DETECTADAS:${NC}"
+	for failure in "${FAILURES[@]}"; do
+		log "    ${RED}•${NC} $failure"
+	done
+	log ""
+	log "  Detalhes completos em: ${BOLD}$LOG_FILE${NC}"
+	EXIT_CODE=1
+fi
+
+log ""
+log "  Finalizado em: $(date)"
+log ""
+
+exit $EXIT_CODE

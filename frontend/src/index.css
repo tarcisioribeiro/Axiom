@@ -1,0 +1,455 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Tema Claro - Alucard Classic (Dracula Light Theme Oficial) */
+  :root {
+    color-scheme: light;
+
+    /* Backgrounds - Background (#FFFBEB) */
+    --background: 48 100% 96%;
+    --foreground: 0 0% 12%; /* Foreground (#1F1F1F) */
+
+    /* Cards - Ligeiramente mais escuro que o background */
+    --card: 48 100% 98%;
+    --card-foreground: 0 0% 12%;
+
+    /* Popovers */
+    --popover: 48 100% 98%;
+    --popover-foreground: 0 0% 12%;
+
+    /* Primary - Purple Alucard (#644AC9) */
+    --primary: 252 54% 54%;
+    --primary-foreground: 48 100% 96%;
+
+    /* Secondary - Current Line (#6C664B) */
+    --secondary: 49 18% 36%;
+    --secondary-foreground: 48 100% 96%;
+
+    /* Muted - Selection (#CFCFDE) */
+    --muted: 240 19% 84%;
+    --muted-foreground: 49 18% 28%; /* Mais escuro para melhor contraste */
+
+    /* Accent - Pink Alucard (#A3144D) */
+    --accent: 336 78% 36%;
+    --accent-foreground: 48 100% 96%;
+
+    /* Destructive - Red Alucard (#CB3A2A) */
+    --destructive: 6 66% 48%;
+    --destructive-foreground: 48 100% 96%;
+
+    /* Success - Green Alucard (#14710A) */
+    --success: 114 84% 24%;
+    --success-foreground: 48 100% 96%;
+
+    /* Warning - Orange Alucard (#A34D14) */
+    --warning: 24 78% 36%;
+    --warning-foreground: 48 100% 96%;
+
+    /* Info - Cyan Alucard (#036A96) */
+    --info: 198 96% 30%;
+    --info-foreground: 48 100% 96%;
+
+    /* Borders e Inputs - Selection suavizada */
+    --border: 240 19% 72%;
+    --input: 240 19% 72%;
+    --ring: 252 54% 54%;
+
+    /* Border radius */
+    --radius: 0.75rem;
+
+    /* Animation duration tokens */
+    --duration-fast: 200ms;
+    --duration-normal: 300ms;
+    --duration-slow: 600ms;
+
+    /* Animation easing tokens */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Animation delay tokens */
+    --delay-none: 0ms;
+    --delay-short: 150ms;
+    --delay-medium: 300ms;
+
+    /* Category colors - Alucard palette */
+    --category-finance: 114 84% 24%; /* verde Alucard */
+    --category-health: 198 96% 30%; /* cyan Alucard */
+    --category-studies: 252 54% 54%; /* purple Alucard */
+    --category-spiritual: 336 78% 36%; /* pink Alucard */
+    --category-exercise: 24 78% 36%; /* orange Alucard */
+    --category-nutrition: 48 73% 30%; /* yellow Alucard */
+    --category-work: 49 18% 36%; /* current line */
+    --category-leisure: 6 66% 48%; /* red Alucard */
+
+    /* Texto sobre superfícies coloridas (semantic on-colors) */
+    --on-primary: 48 100% 96%;
+    --on-secondary: 48 100% 96%;
+    --on-accent: 48 100% 96%;
+    --on-success: 48 100% 96%;
+    --on-warning: 48 100% 96%;
+    --on-destructive: 48 100% 96%;
+    --on-info: 48 100% 96%;
+
+    /* Borders sutis */
+    --border-subtle: 240 19% 90%;
+
+    /* Star rating color - golden yellow */
+    --star: 45 90% 48%;
+
+    /* Typography scale */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+
+    /* Line heights */
+    --leading-xs: 1rem;
+    --leading-sm: 1.25rem;
+    --leading-base: 1.5rem;
+    --leading-lg: 1.75rem;
+    --leading-xl: 1.75rem;
+    --leading-2xl: 2rem;
+
+    /* Font weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* Semantic spacing */
+    --spacing-xs: 0.25rem; /* 4px  */
+    --spacing-sm: 0.5rem; /* 8px  */
+    --spacing-md: 1rem; /* 16px */
+    --spacing-lg: 1.5rem; /* 24px */
+    --spacing-xl: 2rem; /* 32px */
+  }
+
+  /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
+  .dark {
+    color-scheme: dark;
+
+    /* Backgrounds - Background (#282A36) */
+    --background: 235 15% 18%;
+    --foreground: 60 30% 96%; /* Foreground (#F8F8F2) */
+
+    /* Cards - Selection (#44475A) */
+    --card: 232 14% 31%;
+    --card-foreground: 60 30% 96%;
+
+    /* Popovers - Selection (#44475A) */
+    --popover: 232 14% 31%;
+    --popover-foreground: 60 30% 96%;
+
+    /* Primary - Purple (#BD93F9) */
+    --primary: 265 89% 78%;
+    --primary-foreground: 235 15% 18%;
+
+    /* Secondary - Selection (#44475A) */
+    --secondary: 232 14% 31%;
+    --secondary-foreground: 60 30% 96%;
+
+    /* Muted - Background levemente mais claro */
+    --muted: 235 15% 23%;
+    --muted-foreground: 225 27% 51%; /* Comment (#6272A4) */
+
+    /* Accent - Pink (#FF79C6) */
+    --accent: 326 100% 74%;
+    --accent-foreground: 235 15% 18%;
+
+    /* Destructive - Red (#FF5555) */
+    --destructive: 0 100% 67%;
+    --destructive-foreground: 60 30% 96%;
+
+    /* Success - Green (#50FA7B) */
+    --success: 135 94% 65%;
+    --success-foreground: 235 15% 18%;
+
+    /* Warning - Yellow (#F1FA8C) */
+    --warning: 65 92% 76%;
+    --warning-foreground: 235 15% 18%;
+
+    /* Info - Cyan (#8BE9FD) */
+    --info: 191 97% 77%;
+    --info-foreground: 235 15% 18%;
+
+    /* Borders e Inputs - Selection (#44475A) */
+    --border: 232 14% 42%;
+    --input: 232 14% 42%;
+    --ring: 265 89% 78%; /* Purple (#BD93F9) */
+
+    /* Category colors - Dracula palette */
+    --category-finance: 135 94% 65%; /* green */
+    --category-health: 191 97% 77%; /* cyan */
+    --category-studies: 265 89% 78%; /* purple */
+    --category-spiritual: 326 100% 74%; /* pink */
+    --category-exercise: 31 100% 71%; /* orange */
+    --category-nutrition: 65 92% 76%; /* yellow */
+    --category-work: 225 27% 51%; /* comment */
+    --category-leisure: 0 100% 67%; /* red */
+
+    /* Texto sobre superfícies coloridas (semantic on-colors) */
+    --on-primary: 235 15% 18%;
+    --on-secondary: 60 30% 96%;
+    --on-accent: 235 15% 18%;
+    --on-success: 235 15% 18%;
+    --on-warning: 235 15% 18%;
+    --on-destructive: 60 30% 96%;
+    --on-info: 235 15% 18%;
+
+    /* Borders sutis */
+    --border-subtle: 232 14% 25%;
+
+    /* Star rating color - Dracula yellow (#F1FA8C) */
+    --star: 65 92% 76%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+}
+
+@layer utilities {
+  /* Gradientes adaptáveis */
+  .gradient-primary {
+    @apply bg-gradient-to-br from-primary to-accent;
+  }
+
+  .gradient-secondary {
+    @apply bg-gradient-to-br from-info to-success;
+  }
+
+  .gradient-warning {
+    @apply bg-gradient-to-br from-warning to-destructive;
+  }
+
+  /* Glass effect adaptável ao tema */
+  .glass-effect {
+    @apply border border-border/20 bg-card/30 backdrop-blur-md;
+  }
+
+  /* Sombras adaptáveis */
+  .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .shadow-soft {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .shadow-medium {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .shadow-medium {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .shadow-strong {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .dark .shadow-strong {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Status colors */
+  .text-success {
+    @apply text-[hsl(var(--success))];
+  }
+
+  .text-warning {
+    @apply text-[hsl(var(--warning))];
+  }
+
+  .text-info {
+    @apply text-[hsl(var(--info))];
+  }
+
+  .bg-success {
+    @apply bg-[hsl(var(--success))];
+  }
+
+  .bg-warning {
+    @apply bg-[hsl(var(--warning))];
+  }
+
+  .bg-info {
+    @apply bg-[hsl(var(--info))];
+  }
+
+  /* Validation border colors */
+  .border-success {
+    border-color: hsl(var(--success));
+  }
+
+  .ring-success {
+    --tw-ring-color: hsl(var(--success));
+  }
+
+  .ring-success\/50 {
+    --tw-ring-color: hsl(var(--success) / 0.5);
+  }
+
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-transform duration-fast hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply hover:shadow-medium transition-shadow duration-normal;
+  }
+
+  /* Focus rings com melhor contraste */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Sidebar text com contraste total */
+  .sidebar-text {
+    @apply text-foreground;
+  }
+
+  /* Custom scrollbar para browsers com suporte */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 5px;
+    transition: background var(--duration-fast);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Kanban scrollbar estilizado - Dracula/Alucard */
+  .kanban-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.4) transparent;
+  }
+
+  .kanban-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .kanban-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.3);
+    border-radius: 4px;
+    margin: 4px 0;
+  }
+
+  .kanban-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.5) 0%,
+      hsl(var(--accent) / 0.5) 100%
+    );
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .kanban-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary) / 0.8) 0%,
+      hsl(var(--accent) / 0.8) 100%
+    );
+    background-clip: padding-box;
+  }
+
+  .kanban-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 100%
+    );
+    background-clip: padding-box;
+  }
+
+  /* Page heights consistentes */
+  .page-height {
+    height: calc(100vh - 8rem);
+  }
+
+  .page-height-with-filters {
+    height: calc(100vh - 12rem);
+  }
+
+  .full-page-height {
+    height: calc(100vh - 4rem);
+  }
+
+  /* Text emphasis utilities */
+  .text-emphasis {
+    color: hsl(var(--foreground));
+    font-weight: 500;
+  }
+
+  .text-subtle {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Smooth theme transition - cascades to all children during theme switch */
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition:
+      background-color var(--duration-normal) ease,
+      border-color var(--duration-normal) ease,
+      color var(--duration-normal) ease,
+      fill var(--duration-normal) ease,
+      stroke var(--duration-normal) ease !important;
+  }
+}
+
+/* Acessibilidade: Respeita preferencia do usuario por menos animacoes */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Desabilita animacoes do Framer Motion via CSS */
+  [data-framer-motion],
+  [data-framer-component-type] {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Mantem funcionalidade de hover sem animacao */
+  .hover-lift:hover {
+    transform: none;
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-medium);
+  }
+
+  /* Remove spin animation de loading */
+  .animate-spin {
+    animation: none !important;
+  }
+}

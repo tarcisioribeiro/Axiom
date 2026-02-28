@@ -1,0 +1,15 @@
+# Documentation Directory
+
+This directory contains the complete official documentation for MindLedger.
+
+Structure:
+- overview/               - Project overview and features
+- architecture/           - System architecture and design decisions
+- backend/               - Django REST Framework documentation
+- frontend/              - React + TypeScript documentation
+- api/                   - API endpoints documentation
+- database/              - PostgreSQL and pgvector documentation
+- authentication-security/ - Security and authentication documentation
+- development/           - Development guides and workflows
+
+Start reading from: README.md
