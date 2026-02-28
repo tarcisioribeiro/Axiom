@@ -348,7 +348,6 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-
         </Route>
 
         {/* Fallback */}
