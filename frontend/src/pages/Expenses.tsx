@@ -1,7 +1,16 @@
-import { Plus, Pencil, Trash2, Filter, TrendingDown, ChevronDown } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Filter,
+  TrendingDown,
+  ChevronDown,
+  Download,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
@@ -34,6 +43,7 @@ import { sumByProperty } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { accountsService } from '@/services/accounts-service';
 import { expensesService } from '@/services/expenses-service';
+import type { ExpenseExportParams } from '@/services/expenses-service';
 import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import { useAuthStore } from '@/stores/auth-store';
@@ -56,6 +66,7 @@ export default function Expenses() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
@@ -212,6 +223,40 @@ export default function Expenses() {
     }
   };
 
+  const handleExport = async (modalParams: {
+    export_format: 'csv' | 'pdf';
+    date_from?: string;
+    date_to?: string;
+  }) => {
+    const params: ExpenseExportParams = {
+      export_format: modalParams.export_format,
+      date_from: modalParams.date_from,
+      date_to: modalParams.date_to,
+      category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      payed:
+        statusFilter !== 'all'
+          ? statusFilter === 'paid'
+            ? 'true'
+            : 'false'
+          : undefined,
+      search: searchTerm || undefined,
+      account: selectedAccounts.length > 0 ? selectedAccounts : undefined,
+    };
+    try {
+      await expensesService.exportExpenses(params);
+      toast({
+        title: 'Exportação concluída',
+        description: 'O arquivo foi baixado com sucesso.',
+      });
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao exportar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
   const totalExpenses = sumByProperty(
     filteredExpenses.map((e) => ({ value: parseFloat(e.value) })),
     'value'
@@ -282,15 +327,22 @@ export default function Expenses() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Despesas"
-        icon={<TrendingDown />}
-        action={{
-          label: 'Nova Despesa',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title="Despesas" icon={<TrendingDown />}>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar
+          </Button>
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nova Despesa
+          </Button>
+        </div>
+      </PageHeader>
 
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -432,6 +484,16 @@ export default function Expenses() {
             </Button>
           </div>
         )}
+      />
+
+      <ExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        title="Exportar Despesas"
+        description="Selecione o período e formato para exportar as despesas filtradas."
+        onExport={handleExport}
+        initialDateFrom={startDate}
+        initialDateTo={endDate}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

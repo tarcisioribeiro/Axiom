@@ -10,6 +10,7 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     InstancesForDateView,
     PersonalPlanningDashboardStatsView,
     RoutineTaskDetailView,
+    RoutineTaskHeatmapView,
     RoutineTaskListCreateView,
     TaskInstanceBulkUpdateView,
     TaskInstanceDetailView,
@@ -29,6 +30,11 @@ urlpatterns = [
         "routine-tasks/",
         RoutineTaskListCreateView.as_view(),
         name="routine-task-list-create",
+    ),
+    path(
+        "routine-tasks/heatmap/",
+        RoutineTaskHeatmapView.as_view(),
+        name="routine-task-heatmap",
     ),
     path(
         "routine-tasks/<int:pk>/",

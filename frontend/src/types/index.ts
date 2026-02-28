@@ -643,6 +643,25 @@ export interface BalanceForecast {
   };
 }
 
+export interface CashFlowForecastDay {
+  date: string;
+  revenues: number;
+  expenses: number;
+  balance: number;
+}
+
+export interface CashFlowForecast {
+  period_days: number;
+  start_balance: number;
+  end_balance: number;
+  total_revenues: number;
+  total_expenses: number;
+  net_change: number;
+  min_balance: number;
+  min_balance_date: string;
+  daily_breakdown: CashFlowForecastDay[];
+}
+
 export interface ChartData {
   name: string;
   value: number;
@@ -1280,6 +1299,21 @@ export interface RoutineTaskFormData {
   owner: number;
 }
 
+// Heatmap Types
+export interface HeatmapDay {
+  date: string;
+  completed: number;
+  expected: number;
+  is_scheduled: boolean;
+}
+
+export interface HeatmapData {
+  year: number;
+  task_id: string | null;
+  task_name: string | null;
+  data: HeatmapDay[];
+}
+
 // Kanban Types
 export type KanbanStatus = 'todo' | 'doing' | 'done';
 
@@ -1818,4 +1852,39 @@ export interface Notification {
 
 export interface NotificationSummary {
   unread_count: number;
+}
+
+// Budget Types
+export interface Budget {
+  id: number;
+  uuid: string;
+  category: string;
+  limit_amount: string;
+  month: number;
+  year: number;
+  member: number | null;
+  member_name?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetFormData {
+  category: string;
+  limit_amount: number;
+  month: number;
+  year: number;
+  member?: number | null;
+}
+
+export interface BudgetStatus {
+  id: number;
+  category: string;
+  limit_amount: string;
+  actual_spent: string;
+  percentage: number;
+  status: 'ok' | 'warning' | 'exceeded';
+  member: number | null;
+  member_name: string | null;
+  month: number;
+  year: number;
 }

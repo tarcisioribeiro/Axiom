@@ -1,4 +1,4 @@
-import { Plus, CheckSquare, Edit, Trash2 } from 'lucide-react';
+import { Plus, CheckSquare, Edit, Trash2, BarChart2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { type z } from 'zod';
 
@@ -6,6 +6,7 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { RoutineTaskForm } from '@/components/personal-planning/RoutineTaskForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ export default function RoutineTasks() {
   const [selectedTask, setSelectedTask] = useState<RoutineTask | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -239,6 +241,15 @@ export default function RoutineTasks() {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => setHeatmapTask(task)}
+            aria-label="Ver heatmap"
+            title="Ver consistência"
+          >
+            <BarChart2 className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => handleEdit(task)}
             aria-label="Editar"
           >
@@ -301,6 +312,27 @@ export default function RoutineTasks() {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Heatmap Dialog */}
+      <Dialog
+        open={!!heatmapTask}
+        onOpenChange={(open) => !open && setHeatmapTask(null)}
+      >
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart2 className="h-5 w-5" />
+              Consistência — {heatmapTask?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Histórico anual de execução desta tarefa rotineira.
+            </DialogDescription>
+          </DialogHeader>
+          {heatmapTask && (
+            <HabitHeatmap taskId={heatmapTask.id} taskName={heatmapTask.name} />
+          )}
         </DialogContent>
       </Dialog>
     </PageContainer>

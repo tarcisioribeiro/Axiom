@@ -75,6 +75,7 @@ export const API_CONFIG = {
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
     ROUTINE_TASKS: '/api/v1/personal-planning/routine-tasks/',
+    ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
 
@@ -92,6 +93,15 @@ export const API_CONFIG = {
     NOTIFICATIONS: '/api/v1/notifications/',
     NOTIFICATIONS_SUMMARY: '/api/v1/notifications/summary/',
     NOTIFICATIONS_MARK_ALL_READ: '/api/v1/notifications/mark-all-read/',
+
+    // Budgets Module
+    BUDGETS: '/api/v1/budgets/',
+    BUDGETS_STATUS: '/api/v1/budgets/status/',
+
+    // Export
+    EXPENSES_EXPORT: '/api/v1/expenses/export/',
+    REVENUES_EXPORT: '/api/v1/revenues/export/',
+    DASHBOARD_MONTHLY_STATEMENT: '/api/v1/dashboard/monthly-statement/',
 
     // Health
     HEALTH: '/api/v1/health/',

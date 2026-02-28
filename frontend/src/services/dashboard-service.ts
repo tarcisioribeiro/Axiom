@@ -3,6 +3,7 @@ import type {
   AccountBalance,
   CreditCardExpensesByCategory,
   BalanceForecast,
+  CashFlowForecast,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -34,6 +35,12 @@ class DashboardService {
 
   async getBalanceForecast(): Promise<BalanceForecast> {
     return apiClient.get<BalanceForecast>('/api/v1/dashboard/balance-forecast/');
+  }
+
+  async getCashFlowForecast(days: 30 | 60 | 90 = 30): Promise<CashFlowForecast> {
+    return apiClient.get<CashFlowForecast>('/api/v1/dashboard/cash-flow-forecast/', {
+      days,
+    } as Record<string, unknown>);
   }
 }
 

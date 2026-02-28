@@ -28,6 +28,7 @@ known_first_party = [
     "app",
     "authentication",
     "accounts",
+    "budgets",
     "credit_cards",
     "expenses",
     "revenues",
@@ -118,6 +119,8 @@ module = [
     "app.*",
     "authentication",
     "authentication.*",
+    "budgets",
+    "budgets.*",
     "credit_cards",
     "credit_cards.*",
     "dashboard",
@@ -147,6 +150,8 @@ module = [
     "transfers.*",
     "vaults",
     "vaults.*",
+    "reportlab",
+    "reportlab.*"
 ]
 disallow_untyped_defs = false
 warn_return_any = false

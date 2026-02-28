@@ -29,6 +29,7 @@ import {
   ClipboardList,
   Vault,
   Wand2,
+  PiggyBank,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -142,6 +143,11 @@ const navModules: NavModule[] = [
             title: 'Gastos Fixos',
             href: '/fixed-expenses',
             icon: <CalendarClock className="h-4 w-4" />,
+          },
+          {
+            title: 'Orçamentos',
+            href: '/budgets',
+            icon: <PiggyBank className="h-4 w-4" />,
           },
           {
             title: 'Valores a Pagar',

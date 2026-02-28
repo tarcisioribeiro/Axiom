@@ -487,10 +487,14 @@ class ApiClient {
    * Realiza uma requisicao GET que retorna um Blob (para download de arquivos).
    *
    * @param url - URL do endpoint (relativo ao BASE_URL)
+   * @param params - Parametros de query string opcionais
    * @returns Promise com o Blob da resposta
    */
-  async getBlob(url: string): Promise<Blob> {
-    const response = await this.client.get<Blob>(url, { responseType: 'blob' });
+  async getBlob(url: string, params?: QueryParams): Promise<Blob> {
+    const response = await this.client.get<Blob>(url, {
+      responseType: 'blob',
+      params,
+    });
     return response.data;
   }
 }
