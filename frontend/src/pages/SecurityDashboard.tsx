@@ -5,6 +5,7 @@ import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { VaultGuard } from '@/components/security/VaultGuard';
+import { VaultHealthSection } from '@/components/security/VaultHealthSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
@@ -136,6 +137,9 @@ export default function SecurityDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Vault Health Report */}
+        <VaultHealthSection />
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Distribuição de Itens */}
