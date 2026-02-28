@@ -255,6 +255,7 @@ CACHE_TTL_DASHBOARD_STATS = 60  # 1 minuto - dados mudam frequentemente
 CACHE_TTL_ACCOUNT_BALANCES = 30  # 30 segundos - saldos sao criticos
 CACHE_TTL_CATEGORY_BREAKDOWN = 300  # 5 minutos - agregacoes pesadas
 CACHE_TTL_BALANCE_FORECAST = 120  # 2 minutos - previsoes
+CACHE_TTL_CASH_FLOW_FORECAST = 300  # 5 minutos - projecao de fluxo de caixa
 
 # Structured Logging Configuration
 LOGGING = {

@@ -10,11 +10,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 # Models
 from accounts.models import Account
-from expenses.models import Expense
+from expenses.models import Expense, FixedExpense
 
-# from revenues.models import Revenue
 # from credit_cards.models import CreditCard
 from members.models import Member
+from revenues.models import Revenue
 
 # import json
 
@@ -395,3 +395,207 @@ class MemberViewTest(BaseAPITestCase):
 
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class CashFlowForecastViewTest(BaseAPITestCase):
+    """Testes para CashFlowForecastView"""
+
+    URL = "/api/v1/dashboard/cash-flow-forecast/"
+
+    def setUp(self):
+        super().setUp()
+        # Limpa o cache Redis entre testes para evitar interferencia
+        from django.core.cache import cache
+
+        cache.clear()
+        # Segunda conta para testes que precisam de contas diferentes
+        self.account2 = Account.objects.create(
+            account_name="SIC", account_type="CS", is_active=True
+        )
+
+    def _make_expense(self, delta_days, value, payed=False, **kwargs):
+        return Expense.objects.create(
+            description="Teste",
+            value=value,
+            date=date.today() + timedelta(days=delta_days),
+            horary=time(12, 0),
+            category="bills and services",
+            account=self.account,
+            payed=payed,
+            **kwargs,
+        )
+
+    def _make_revenue(self, delta_days, value, received=False):
+        return Revenue.objects.create(
+            description="Teste",
+            value=value,
+            date=date.today() + timedelta(days=delta_days),
+            horary=time(12, 0),
+            category="salary",
+            account=self.account,
+            received=received,
+        )
+
+    def test_unauthenticated_returns_401(self):
+        """Sem autenticacao deve retornar 401"""
+        self.client.credentials()
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_default_30_days(self):
+        """Sem parametro days retorna 31 pontos (dia 0 + 30 dias)"""
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["period_days"], 30)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 31)  # type: ignore
+
+    def test_60_days(self):
+        """days=60 retorna 61 pontos"""
+        response = self.client.get(self.URL, {"days": 60})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["period_days"], 60)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 61)  # type: ignore
+
+    def test_90_days(self):
+        """days=90 retorna 91 pontos"""
+        response = self.client.get(self.URL, {"days": 90})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["period_days"], 90)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 91)  # type: ignore
+
+    def test_invalid_days_defaults_to_30(self):
+        """days invalido (ex.: 999) deve usar 30 como default"""
+        response = self.client.get(self.URL, {"days": 999})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["period_days"], 30)  # type: ignore
+
+    def test_day_0_equals_current_balance(self):
+        """O primeiro ponto (dia 0) deve ser igual ao saldo atual das contas"""
+        self.account.current_balance = Decimal("3000.00")
+        self.account.save()
+
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[0]["balance"], 3000.00, places=2)
+        self.assertEqual(breakdown[0]["revenues"], 0.0)
+        self.assertEqual(breakdown[0]["expenses"], 0.0)
+
+    def test_pending_expense_reduces_balance(self):
+        """Despesa pendente no dia N deve reduzir o saldo daquele dia"""
+        self._make_expense(delta_days=1, value=Decimal("200.00"), payed=False)
+        # Usa update() para contornar signals que recalculam o saldo
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("1000.00")
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        day_1 = breakdown[1]
+        self.assertAlmostEqual(day_1["expenses"], 200.00, places=2)
+        self.assertAlmostEqual(day_1["balance"], 800.00, places=2)
+
+    def test_pending_revenue_increases_balance(self):
+        """Receita pendente no dia N deve aumentar o saldo daquele dia"""
+        self._make_revenue(delta_days=2, value=Decimal("300.00"), received=False)
+        # Usa update() para contornar signals que recalculam o saldo
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("500.00")
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        day_2 = breakdown[2]
+        self.assertAlmostEqual(day_2["revenues"], 300.00, places=2)
+        self.assertAlmostEqual(day_2["balance"], 800.00, places=2)
+
+    def test_paid_expense_excluded(self):
+        """Despesa ja paga nao deve afetar a projecao"""
+        self._make_expense(delta_days=1, value=Decimal("500.00"), payed=True)
+        # Usa update() para contornar signals que recalculam o saldo
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("1000.00")
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[1]["expenses"], 0.0, places=2)
+        self.assertAlmostEqual(breakdown[1]["balance"], 1000.00, places=2)
+
+    def test_transfer_expense_excluded(self):
+        """Despesa vinculada a transferencia nao deve entrar na projecao"""
+        from transfers.models import Transfer
+
+        transfer = Transfer.objects.create(
+            description="Transferência teste",
+            value=Decimal("100.00"),
+            date=date.today() + timedelta(days=1),
+            horary=time(10, 0),
+            category="pix",
+            origin_account=self.account,
+            destiny_account=self.account2,
+        )
+        self._make_expense(
+            delta_days=1,
+            value=Decimal("100.00"),
+            payed=False,
+            related_transfer=transfer,
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[1]["expenses"], 0.0, places=2)
+
+    def test_fixed_expense_not_generated_included(self):
+        """Despesa fixa ainda nao gerada deve aparecer na projecao"""
+        self.account.current_balance = Decimal("2000.00")
+        self.account.save()
+
+        # Due em 5 dias, sem last_generated_month setado
+        due_date = date.today() + timedelta(days=5)
+        FixedExpense.objects.create(
+            description="Aluguel",
+            default_value=Decimal("800.00"),
+            category="house",
+            account=self.account,
+            due_day=due_date.day,
+            is_active=True,
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        day_5 = breakdown[5]
+        self.assertAlmostEqual(day_5["expenses"], 800.00, places=2)
+        self.assertAlmostEqual(day_5["balance"], 1200.00, places=2)
+
+    def test_fixed_expense_already_generated_not_duplicated(self):
+        """Despesa fixa ja gerada nao deve aparecer duas vezes"""
+        self.account.current_balance = Decimal("2000.00")
+        self.account.save()
+
+        due_date = date.today() + timedelta(days=5)
+        fe = FixedExpense.objects.create(
+            description="Aluguel",
+            default_value=Decimal("800.00"),
+            category="house",
+            account=self.account,
+            due_day=due_date.day,
+            is_active=True,
+        )
+        # Lancamento avulso ja existente para este template neste mes
+        Expense.objects.create(
+            description="Aluguel",
+            value=Decimal("800.00"),
+            date=due_date,
+            horary=time(12, 0),
+            category="house",
+            account=self.account,
+            payed=False,
+            fixed_expense_template=fe,
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        day_5 = breakdown[5]
+        # Apenas o lancamento avulso (800), nao deve somar mais 800 do template
+        self.assertAlmostEqual(day_5["expenses"], 800.00, places=2)

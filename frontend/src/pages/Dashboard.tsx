@@ -14,6 +14,7 @@ import {
   eachWeekOfInterval,
   eachYearOfInterval,
   eachDayOfInterval,
+  parseISO,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
@@ -29,7 +30,7 @@ import {
   ArrowDownRight,
   PiggyBank,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -74,6 +75,7 @@ import type {
   CreditCardExpensesByCategory,
   BalanceForecast,
   BudgetStatus,
+  CashFlowForecast,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -97,6 +99,12 @@ export default function Dashboard() {
     'daily' | 'weekly' | 'monthly' | 'yearly'
   >('daily');
   const [isLoading, setIsLoading] = useState(true);
+  const [cashFlowForecast, setCashFlowForecast] = useState<CashFlowForecast | null>(
+    null
+  );
+  const [forecastDays, setForecastDays] = useState<30 | 60 | 90>(30);
+  const [isForecastLoading, setIsForecastLoading] = useState(false);
+  const forecastMounted = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -136,6 +144,7 @@ export default function Dashboard() {
         ccExpensesByCategoryData,
         forecastData,
         budgetStatusData,
+        cashFlowData,
       ] = await Promise.all([
         dashboardService.getStats(),
         expensesService.getAll(),
@@ -149,6 +158,7 @@ export default function Dashboard() {
           month: now.getMonth() + 1,
           year: now.getFullYear(),
         }),
+        dashboardService.getCashFlowForecast(30),
       ]);
       setStats(statsData);
       setExpenses(expensesData);
@@ -159,6 +169,8 @@ export default function Dashboard() {
       setCreditCardExpensesByCategory(ccExpensesByCategoryData);
       setBalanceForecast(forecastData);
       setBudgetStatus(Array.isArray(budgetStatusData) ? budgetStatusData : []);
+      setCashFlowForecast(cashFlowData);
+      forecastMounted.current = true;
     } catch (error: unknown) {
       toast({
         title: 'Erro ao carregar dados',
@@ -190,6 +202,28 @@ export default function Dashboard() {
       });
     }
   };
+
+  const loadForecast = async (days: 30 | 60 | 90) => {
+    setIsForecastLoading(true);
+    try {
+      const data = await dashboardService.getCashFlowForecast(days);
+      setCashFlowForecast(data);
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao carregar projeção de fluxo de caixa',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsForecastLoading(false);
+    }
+  };
+
+  // Reload forecast only when the period selector changes (skip initial mount)
+  useEffect(() => {
+    if (!forecastMounted.current) return;
+    void loadForecast(forecastDays);
+  }, [forecastDays]);
 
   // Reload credit card expenses when filters change
   useEffect(() => {
@@ -387,6 +421,16 @@ export default function Dashboard() {
   }, [expenses, revenues, evolutionPeriod]);
 
   const COLORS = useChartColors();
+
+  const cashFlowChartData = useMemo(() => {
+    if (!cashFlowForecast) return [];
+    return cashFlowForecast.daily_breakdown.map((day) => ({
+      date: day.date,
+      despesas: day.expenses,
+      receitas: day.revenues,
+      saldo: day.balance,
+    }));
+  }, [cashFlowForecast]);
 
   if (isLoading) {
     return <LoadingState fullScreen />;
@@ -630,6 +674,104 @@ export default function Dashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* Projeção de Fluxo de Caixa */}
+        <motion.div variants={itemVariants} initial="hidden" animate="visible">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  <CardTitle>Projeção de Fluxo de Caixa</CardTitle>
+                </div>
+                <Select
+                  value={String(forecastDays)}
+                  onValueChange={(v) => setForecastDays(Number(v) as 30 | 60 | 90)}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {cashFlowForecast && (
+                <div className="flex flex-wrap gap-4 pt-1 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Saldo Inicial: </span>
+                    <span className="font-semibold">
+                      {formatCurrency(cashFlowForecast.start_balance)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Saldo Final: </span>
+                    <span
+                      className={cn(
+                        'font-semibold',
+                        cashFlowForecast.net_change >= 0
+                          ? 'text-success'
+                          : 'text-destructive'
+                      )}
+                    >
+                      {formatCurrency(cashFlowForecast.end_balance)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Variação: </span>
+                    <span
+                      className={cn(
+                        'font-semibold',
+                        cashFlowForecast.net_change >= 0
+                          ? 'text-success'
+                          : 'text-destructive'
+                      )}
+                    >
+                      {cashFlowForecast.net_change >= 0 ? '+' : ''}
+                      {formatCurrency(cashFlowForecast.net_change)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Saldo Mínimo: </span>
+                    <span className="font-semibold text-destructive">
+                      {formatCurrency(cashFlowForecast.min_balance)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              {isForecastLoading ? (
+                <LoadingState />
+              ) : (
+                <ChartContainer
+                  chartId="cash-flow-forecast"
+                  data={cashFlowChartData}
+                  dataKey="saldo"
+                  nameKey="date"
+                  formatter={formatCurrency}
+                  colors={COLORS}
+                  lockChartType="line"
+                  lines={[
+                    { dataKey: 'despesas', stroke: COLORS[5], name: 'Despesas' },
+                    { dataKey: 'receitas', stroke: COLORS[3], name: 'Receitas' },
+                    { dataKey: 'saldo', stroke: COLORS[0], name: 'Saldo' },
+                  ]}
+                  xAxisTickFormatter={(d) =>
+                    format(parseISO(d), 'dd/MM', { locale: ptBR })
+                  }
+                  tooltipLabelFormatter={(d) =>
+                    format(parseISO(String(d)), "dd 'de' MMMM", { locale: ptBR })
+                  }
+                  emptyMessage="Nenhuma projeção disponível"
+                  height={350}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"

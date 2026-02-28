@@ -8,7 +8,8 @@ PERF-02: Reduz de 6 requisições para 1 única requisição otimizada.
 PERF-03: Cache Redis para reduzir carga no banco de dados.
 """
 
-from datetime import date
+import calendar
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
 
@@ -22,7 +23,7 @@ from rest_framework.views import APIView
 
 from accounts.models import Account
 from credit_cards.models import CreditCard, CreditCardBill, CreditCardInstallment
-from expenses.models import Expense
+from expenses.models import Expense, FixedExpense
 from loans.models import Loan
 from members.models import Member
 from payables.models import Payable
@@ -46,6 +47,9 @@ def invalidate_dashboard_cache():
         get_cache_key("stats"),
         get_cache_key("category_breakdown"),
         get_cache_key("balance_forecast"),
+        get_cache_key("cash_flow_forecast:days:30"),
+        get_cache_key("cash_flow_forecast:days:60"),
+        get_cache_key("cash_flow_forecast:days:90"),
     ]
     cache.delete_many(cache_keys)
 
@@ -532,3 +536,221 @@ class MonthlyStatementView(APIView):
                 ],
             }
         )
+
+
+class CashFlowForecastView(APIView):
+    """
+    GET /api/v1/dashboard/cash-flow-forecast/?days=30
+
+    Retorna projecao diaria do fluxo de caixa para os proximos
+    30, 60 ou 90 dias considerando todas as entradas e saidas
+    agendadas.
+
+    O dia 0 corresponde ao saldo real atual. Despesas fixas ainda
+    nao geradas como lancamentos avulsos tambem sao incluidas.
+
+    Query Parameters
+    ----------------
+    days : int
+        Periodo de projecao: 30, 60 ou 90 (default: 30).
+
+    Response
+    --------
+    {
+        "period_days": 30,
+        "start_balance": 5000.00,
+        "end_balance": 3200.00,
+        "total_revenues": 1500.00,
+        "total_expenses": 3300.00,
+        "net_change": -1800.00,
+        "min_balance": 2800.00,
+        "min_balance_date": "2026-03-15",
+        "daily_breakdown": [
+            {
+                "date": "2026-02-28",
+                "revenues": 0.0,
+                "expenses": 0.0,
+                "balance": 5000.00
+            },
+            ...
+        ]
+    }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    VALID_DAYS = {30, 60, 90}
+
+    def get(self, request):
+        try:
+            days = int(request.query_params.get("days", 30))
+        except (ValueError, TypeError):
+            days = 30
+        if days not in self.VALID_DAYS:
+            days = 30
+
+        cache_key = get_cache_key(f"cash_flow_forecast:days:{days}")
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        today = date.today()
+        end_date = today + timedelta(days=days)
+
+        # Saldo atual total de todas as contas
+        current_balance = Account.objects.filter(is_deleted=False).aggregate(
+            total=Sum("current_balance")
+        )["total"] or Decimal("0.00")
+
+        # Despesas pendentes no periodo (excluindo transferencias)
+        scheduled_expenses = (
+            Expense.objects.filter(
+                is_deleted=False,
+                payed=False,
+                related_transfer__isnull=True,
+                date__gte=today,
+                date__lte=end_date,
+            )
+            .values("date")
+            .annotate(total=Sum("value"))
+        )
+        expenses_by_date: dict = {
+            item["date"]: item["total"] for item in scheduled_expenses
+        }
+
+        # Receitas pendentes no periodo (excluindo transferencias)
+        scheduled_revenues = (
+            Revenue.objects.filter(
+                is_deleted=False,
+                received=False,
+                related_transfer__isnull=True,
+                date__gte=today,
+                date__lte=end_date,
+            )
+            .values("date")
+            .annotate(total=Sum("value"))
+        )
+        revenues_by_date: dict = {
+            item["date"]: item["total"] for item in scheduled_revenues
+        }
+
+        # Despesas fixas ainda nao geradas como lancamentos avulsos
+        self._add_ungenerated_fixed_expenses(today, end_date, expenses_by_date)
+
+        # Construir serie diaria (dia 0 = hoje com saldo atual)
+        running_balance = current_balance
+        daily_breakdown = [
+            {
+                "date": today.isoformat(),
+                "revenues": 0.0,
+                "expenses": 0.0,
+                "balance": float(running_balance),
+            }
+        ]
+
+        min_balance = running_balance
+        min_balance_date = today
+
+        for i in range(1, days + 1):
+            current_date = today + timedelta(days=i)
+            day_revenues = revenues_by_date.get(current_date, Decimal("0.00"))
+            day_expenses = expenses_by_date.get(current_date, Decimal("0.00"))
+            running_balance = running_balance + day_revenues - day_expenses
+            if running_balance < min_balance:
+                min_balance = running_balance
+                min_balance_date = current_date
+            daily_breakdown.append(
+                {
+                    "date": current_date.isoformat(),
+                    "revenues": float(day_revenues),
+                    "expenses": float(day_expenses),
+                    "balance": float(running_balance),
+                }
+            )
+
+        total_revenues = sum(revenues_by_date.values(), Decimal("0.00"))
+        total_expenses = sum(expenses_by_date.values(), Decimal("0.00"))
+
+        result = {
+            "period_days": days,
+            "start_balance": float(current_balance),
+            "end_balance": float(running_balance),
+            "total_revenues": float(total_revenues),
+            "total_expenses": float(total_expenses),
+            "net_change": float(running_balance - current_balance),
+            "min_balance": float(min_balance),
+            "min_balance_date": min_balance_date.isoformat(),
+            "daily_breakdown": daily_breakdown,
+        }
+
+        cache_ttl = getattr(settings, "CACHE_TTL_CASH_FLOW_FORECAST", 300)
+        cache.set(cache_key, result, cache_ttl)
+        return Response(result)
+
+    def _add_ungenerated_fixed_expenses(
+        self, today: date, end_date: date, expenses_by_date: dict
+    ) -> None:
+        """
+        Adiciona despesas fixas nao geradas ao dicionario de despesas.
+
+        Para cada template de despesa fixa com conta bancaria, verifica
+        quais meses dentro do janela de projecao ainda nao possuem
+        lancamento avulso gerado e adiciona uma entrada virtual.
+        """
+        fixed_expenses = FixedExpense.objects.filter(
+            is_deleted=False,
+            is_active=True,
+            account__isnull=False,
+        ).select_related("account")
+
+        if not fixed_expenses.exists():
+            return
+
+        # Pre-fetch lancamentos ja gerados no periodo para evitar N+1
+        existing = set(
+            Expense.objects.filter(
+                is_deleted=False,
+                fixed_expense_template__isnull=False,
+                date__gte=today,
+                date__lte=end_date,
+            ).values_list(
+                "fixed_expense_template_id",
+                "date__year",
+                "date__month",
+            )
+        )
+
+        # Itera pelos meses dentro da janela
+        months_in_range = []
+        month_iter = today.replace(day=1)
+        end_month = end_date.replace(day=1)
+        while month_iter <= end_month:
+            months_in_range.append(month_iter)
+            # Avanca para o proximo mes
+            if month_iter.month == 12:
+                month_iter = month_iter.replace(year=month_iter.year + 1, month=1)
+            else:
+                month_iter = month_iter.replace(month=month_iter.month + 1)
+
+        for fe in fixed_expenses:
+            for month_start in months_in_range:
+                year = month_start.year
+                month = month_start.month
+                month_key = f"{year:04d}-{month:02d}"
+
+                # Ja foi marcado como gerado pelo template
+                if fe.last_generated_month and fe.last_generated_month >= month_key:
+                    continue
+
+                # Ja existe lancamento avulso gerado para este mes
+                if (fe.pk, year, month) in existing:
+                    continue
+
+                # Calcula a data de vencimento respeitando o ultimo dia
+                max_day = calendar.monthrange(year, month)[1]
+                due_day = min(fe.due_day, max_day)
+                due_date = month_start.replace(day=due_day)
+
+                if today <= due_date <= end_date:
+                    prev = expenses_by_date.get(due_date, Decimal("0.00"))
+                    expenses_by_date[due_date] = prev + fe.default_value

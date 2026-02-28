@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     AccountBalancesView,
     BalanceForecastView,
+    CashFlowForecastView,
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
     MonthlyStatementView,
@@ -21,5 +22,10 @@ urlpatterns = [
         "monthly-statement/",
         MonthlyStatementView.as_view(),
         name="monthly-statement",
+    ),
+    path(
+        "cash-flow-forecast/",
+        CashFlowForecastView.as_view(),
+        name="cash-flow-forecast",
     ),
 ]

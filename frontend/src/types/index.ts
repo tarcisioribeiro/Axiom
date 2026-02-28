@@ -643,6 +643,25 @@ export interface BalanceForecast {
   };
 }
 
+export interface CashFlowForecastDay {
+  date: string;
+  revenues: number;
+  expenses: number;
+  balance: number;
+}
+
+export interface CashFlowForecast {
+  period_days: number;
+  start_balance: number;
+  end_balance: number;
+  total_revenues: number;
+  total_expenses: number;
+  net_change: number;
+  min_balance: number;
+  min_balance_date: string;
+  daily_breakdown: CashFlowForecastDay[];
+}
+
 export interface ChartData {
   name: string;
   value: number;
