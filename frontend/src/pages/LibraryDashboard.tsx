@@ -15,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
+import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
@@ -133,8 +134,8 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      {/* Progresso de Leitura - Grid 3 colunas */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Progresso de Leitura - Grid 4 colunas (status + meta anual) */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lendo</CardTitle>
@@ -181,6 +182,9 @@ export default function LibraryDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Meta Anual */}
+        <ReadingGoalCard onGoalChange={loadData} />
       </div>
 
       {/* Row 3: Novas Estatísticas - Grid 4 colunas */}

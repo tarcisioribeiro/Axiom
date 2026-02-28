@@ -71,6 +71,7 @@ export const API_CONFIG = {
     BOOKS: '/api/v1/library/books/',
     SUMMARIES: '/api/v1/library/summaries/',
     READINGS: '/api/v1/library/readings/',
+    READING_GOALS: '/api/v1/library/reading-goals/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',

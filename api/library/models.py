@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
 from django.utils import timezone
 
 from app.models import BaseModel
@@ -354,3 +355,62 @@ class Reading(BaseModel):
 
     def __str__(self):
         return f"Leitura da obra '{self.book}' - {self.reading_date}"
+
+
+# ============================================================================
+# READING GOAL MODEL
+# ============================================================================
+
+
+class ReadingGoal(BaseModel):
+    """Meta anual de leitura."""
+
+    year = models.PositiveIntegerField(verbose_name="Ano")
+    books_goal = models.PositiveIntegerField(verbose_name="Meta de Livros", default=12)
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="reading_goals",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Meta de Leitura"
+        verbose_name_plural = "Metas de Leitura"
+        unique_together = [("year", "owner")]
+        ordering = ["-year"]
+
+    def __str__(self):
+        return f"Meta {self.year}: {self.books_goal} livros"
+
+    @property
+    def books_read_this_year(self):
+        """Livros com read_status='read' com pelo menos uma sessão de leitura no ano."""
+        return (
+            Book.objects.filter(
+                owner=self.owner,
+                read_status="read",
+                deleted_at__isnull=True,
+                readings__deleted_at__isnull=True,
+                readings__reading_date__year=self.year,
+            )
+            .distinct()
+            .count()
+        )
+
+    @property
+    def pages_read_this_year(self):
+        """Total de páginas lidas no ano."""
+        result = Reading.objects.filter(
+            owner=self.owner,
+            deleted_at__isnull=True,
+            reading_date__year=self.year,
+        ).aggregate(total=Sum("pages_read"))
+        return result["total"] or 0
+
+    @property
+    def progress_percentage(self):
+        """Porcentagem de progresso em direção à meta."""
+        if self.books_goal == 0:
+            return 0.0
+        return round(min((self.books_read_this_year / self.books_goal) * 100, 100.0), 1)
