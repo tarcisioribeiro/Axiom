@@ -11,6 +11,7 @@ import {
   Meh,
   SmilePlus,
   Angry,
+  Activity,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 
@@ -18,6 +19,7 @@ import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -304,7 +306,20 @@ export default function PersonalPlanningDashboard() {
         </Card>
       )}
 
-      {/* Grid 4: Reflexões Recentes com Ícones de Mood */}
+      {/* Grid 4: Heatmap de Consistência */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Consistência de Hábitos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HabitHeatmap />
+        </CardContent>
+      </Card>
+
+      {/* Grid 5: Reflexões Recentes com Ícones de Mood */}
       {stats.recent_reflections && stats.recent_reflections.length > 0 && (
         <Card>
           <CardHeader>

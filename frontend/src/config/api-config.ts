@@ -75,6 +75,7 @@ export const API_CONFIG = {
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
     ROUTINE_TASKS: '/api/v1/personal-planning/routine-tasks/',
+    ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
 

@@ -824,6 +824,138 @@ class TaskInstanceStatusUpdateView(APIView):
         return Response(TaskInstanceSerializer(instance).data)
 
 
+class RoutineTaskHeatmapView(APIView):
+    """
+    GET /api/v1/personal-planning/routine-tasks/heatmap/
+
+    Retorna dados de consistencia diaria para o heatmap de habitos.
+
+    Query params:
+    - task_id: (opcional) ID da tarefa para filtrar. Se omitido, retorna dados globais.
+    - year:    (opcional) Ano a exibir. Default: ano atual.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        task_id = request.query_params.get("task_id")
+        year_param = request.query_params.get("year")
+        today = timezone.now().date()
+
+        try:
+            year = int(year_param) if year_param else today.year
+        except ValueError:
+            return Response(
+                {"error": "Parâmetro year inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        start_date = date(year, 1, 1)
+        end_date = min(date(year, 12, 31), today)
+
+        member = Member.objects.filter(user=request.user).first()
+        if not member:
+            return Response(
+                {"error": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if task_id:
+            try:
+                task = RoutineTask.objects.get(
+                    pk=task_id, owner=member, deleted_at__isnull=True
+                )
+            except RoutineTask.DoesNotExist:
+                return Response(
+                    {"error": "Tarefa não encontrada."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            data = self._build_task_heatmap(task, start_date, end_date)
+            return Response(
+                {
+                    "year": year,
+                    "task_id": str(task.id),
+                    "task_name": task.name,
+                    "data": data,
+                }
+            )
+
+        data = self._build_general_heatmap(member, start_date, end_date)
+        return Response(
+            {"year": year, "task_id": None, "task_name": None, "data": data}
+        )
+
+    def _build_task_heatmap(self, task, start_date, end_date):
+        completions_by_date = dict(
+            TaskInstance.objects.filter(
+                template=task,
+                scheduled_date__gte=start_date,
+                scheduled_date__lte=end_date,
+                status="completed",
+                deleted_at__isnull=True,
+            )
+            .values("scheduled_date")
+            .annotate(count=Count("id"))
+            .values_list("scheduled_date", "count")
+        )
+
+        data = []
+        current = start_date
+        while current <= end_date:
+            is_scheduled = task.should_appear_on_date(current)
+            completed = completions_by_date.get(current, 0)
+            data.append(
+                {
+                    "date": current.isoformat(),
+                    "completed": completed,
+                    "expected": task.daily_occurrences if is_scheduled else 0,
+                    "is_scheduled": is_scheduled,
+                }
+            )
+            current += timedelta(days=1)
+        return data
+
+    def _build_general_heatmap(self, member, start_date, end_date):
+        completions_by_date = dict(
+            TaskInstance.objects.filter(
+                owner=member,
+                scheduled_date__gte=start_date,
+                scheduled_date__lte=end_date,
+                status="completed",
+                deleted_at__isnull=True,
+            )
+            .values("scheduled_date")
+            .annotate(count=Count("id"))
+            .values_list("scheduled_date", "count")
+        )
+        totals_by_date = dict(
+            TaskInstance.objects.filter(
+                owner=member,
+                scheduled_date__gte=start_date,
+                scheduled_date__lte=end_date,
+                deleted_at__isnull=True,
+            )
+            .values("scheduled_date")
+            .annotate(count=Count("id"))
+            .values_list("scheduled_date", "count")
+        )
+
+        data = []
+        current = start_date
+        while current <= end_date:
+            expected = totals_by_date.get(current, 0)
+            completed = completions_by_date.get(current, 0)
+            data.append(
+                {
+                    "date": current.isoformat(),
+                    "completed": completed,
+                    "expected": expected,
+                    "is_scheduled": expected > 0,
+                }
+            )
+            current += timedelta(days=1)
+        return data
+
+
 class TaskInstanceBulkUpdateView(APIView):
     """
     POST /api/v1/personal-planning/instances/bulk-update/

@@ -1299,6 +1299,21 @@ export interface RoutineTaskFormData {
   owner: number;
 }
 
+// Heatmap Types
+export interface HeatmapDay {
+  date: string;
+  completed: number;
+  expected: number;
+  is_scheduled: boolean;
+}
+
+export interface HeatmapData {
+  year: number;
+  task_id: string | null;
+  task_name: string | null;
+  data: HeatmapDay[];
+}
+
 // Kanban Types
 export type KanbanStatus = 'todo' | 'doing' | 'done';
 
