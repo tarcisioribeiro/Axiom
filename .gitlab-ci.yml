@@ -254,7 +254,9 @@ build:frontend:
 # ==============================================================================
 
 .trivy_base:
-  image: aquasec/trivy:latest
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
   stage: scan
   interruptible: false
   variables:
