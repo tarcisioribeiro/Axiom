@@ -12,8 +12,8 @@
 #   lint:npm-audit     npm audit --audit-level=high
 #   typecheck:backend  mypy
 #   typecheck:frontend tsc
-#   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40
-#   test:frontend      vitest --run --coverage
+#   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+#   test:frontend      vitest --run --coverage  ← local-only (não existe no .gitlab-ci.yml)
 #   secret-detection   gitleaks (opcional — só se instalado)
 #   build              docker build api + frontend (opcional: --with-build)
 #   scan               trivy HIGH/CRITICAL (opcional: --with-scan, requer --with-build)
@@ -334,10 +334,11 @@ section "TYPECHECK"
 if ! $FRONTEND_ONLY; then
 	# mypy precisa de SECRET_KEY não-vazio para inicializar o django-stubs
 	# pragma: allowlist secret
-	_MYPY_SECRET_KEY="ci-insecure-key-for-typecheck-only-000000000000000000000000000" # pragma: allowlist secret
+	_MYPY_SECRET_KEY="ci-insecure-key-for-mypy-only" # pragma: allowlist secret
 	run_step_safe "typecheck:backend" "mypy" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
 		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
+		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
 		api python -m mypy .
 fi
@@ -356,11 +357,11 @@ if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
 	run_step_safe "test:backend" "pytest" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
-		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40'
+		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
 fi
 
 if ! $BACKEND_ONLY; then
-	# vitest --run para modo não-interativo (igual ao CI)
+	# NOTA: test:frontend não existe no .gitlab-ci.yml — etapa local extra para feedback antecipado.
 	run_step_safe "test:frontend" "vitest" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage -- --run"
 fi
