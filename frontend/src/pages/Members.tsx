@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import { Plus, Pencil, Trash2, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -23,6 +24,7 @@ import type { Member, MemberFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Members() {
+  const { t } = useTranslation();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function Members() {
       setMembers(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -57,21 +59,21 @@ export default function Members() {
       if (selectedMember) {
         await membersService.update(selectedMember.id, data);
         toast({
-          title: 'Membro atualizado',
-          description: 'O membro foi atualizado com sucesso.',
+          title: t('pages.members.updated'),
+          description: t('pages.members.updatedDesc'),
         });
       } else {
         await membersService.create(data);
         toast({
-          title: 'Membro criado',
-          description: 'O membro foi criado com sucesso.',
+          title: t('pages.members.created'),
+          description: t('pages.members.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -82,24 +84,23 @@ export default function Members() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir membro',
-      description:
-        'Tem certeza que deseja excluir este membro? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.members.deleteTitle'),
+      description: t('pages.members.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await membersService.delete(id);
       toast({
-        title: 'Membro excluído',
-        description: 'O membro foi excluído com sucesso.',
+        title: t('pages.members.deleted'),
+        description: t('pages.members.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -113,10 +114,10 @@ export default function Members() {
   return (
     <PageContainer>
       <PageHeader
-        title="Membros"
+        title={t('pages.members.title')}
         icon={<Users />}
         action={{
-          label: 'Novo Membro',
+          label: t('pages.members.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             setSelectedMember(undefined);
@@ -128,7 +129,7 @@ export default function Members() {
       {members.length === 0 ? (
         <EmptyState
           icon={<Users className="h-12 w-12 text-muted-foreground" />}
-          message='Nenhum membro cadastrado. Clique em "Novo Membro" para começar.'
+          message={t('pages.members.emptyState')}
         />
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
@@ -136,18 +137,24 @@ export default function Members() {
             <table className="w-full">
               <thead className="border-b bg-muted/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Nome</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Documento
+                    {t('pages.members.columns.name')}
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Telefone
+                    {t('pages.members.columns.document')}
                   </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">Papel</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">
-                    Criado em
+                    {t('pages.members.columns.phone')}
                   </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">Ações</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    {t('pages.members.columns.role')}
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">
+                    {t('pages.members.columns.createdAt')}
+                  </th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold">
+                    {t('common.table.actions')}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -213,12 +220,14 @@ export default function Members() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {selectedMember ? 'Editar Membro' : 'Novo Membro'}
+              {selectedMember
+                ? t('pages.members.editTitle')
+                : t('pages.members.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedMember
-                ? 'Atualize as informações do membro'
-                : 'Adicione um novo membro ao sistema'}
+                ? t('pages.members.editDesc')
+                : t('pages.members.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <MemberForm

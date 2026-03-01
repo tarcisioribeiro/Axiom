@@ -9,6 +9,7 @@ import {
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -54,6 +55,7 @@ export default function StoredCards() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -72,7 +74,7 @@ export default function StoredCards() {
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -93,11 +95,10 @@ export default function StoredCards() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir cartão',
-      description:
-        'Tem certeza que deseja excluir este cartão armazenado? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.storedCards.deleteTitle'),
+      description: t('pages.storedCards.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -106,13 +107,13 @@ export default function StoredCards() {
     try {
       await storedCardsService.delete(id);
       toast({
-        title: 'Cartão excluído',
-        description: 'O cartão foi excluído com sucesso.',
+        title: t('pages.storedCards.deleted'),
+        description: t('pages.storedCards.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -135,12 +136,12 @@ export default function StoredCards() {
       newMap.set(id, { number: data.card_number, cvv: data.security_code });
       setRevealedData(newMap);
       toast({
-        title: 'Dados revelados',
-        description: 'Os dados do cartão foram descriptografados com sucesso.',
+        title: t('pages.storedCards.revealed'),
+        description: t('pages.storedCards.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao revelar dados',
+        title: t('common.messages.revealError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -152,8 +153,8 @@ export default function StoredCards() {
   const handleCopy = async (text: string, label: string) => {
     await navigator.clipboard.writeText(text);
     toast({
-      title: 'Copiado!',
-      description: `${label} copiado para a área de transferência.`,
+      title: t('common.messages.copied'),
+      description: t('common.messages.copiedDesc', { label }),
     });
   };
 
@@ -168,21 +169,21 @@ export default function StoredCards() {
 
         await storedCardsService.update(selectedCard.id, updateData);
         toast({
-          title: 'Cartão atualizado',
-          description: 'O cartão foi atualizado com sucesso.',
+          title: t('pages.storedCards.updated'),
+          description: t('pages.storedCards.updatedDesc'),
         });
       } else {
         await storedCardsService.create(data);
         toast({
-          title: 'Cartão criado',
-          description: 'O cartão foi criado com sucesso.',
+          title: t('pages.storedCards.created'),
+          description: t('pages.storedCards.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -199,7 +200,7 @@ export default function StoredCards() {
   );
 
   const getFinanceCardName = (id?: number) => {
-    if (!id) return 'Nenhum';
+    if (!id) return t('pages.storedCards.noFinanceCard');
     const card = creditCards.find((c) => c.id === id);
     return card ? card.name : 'N/A';
   };
@@ -207,7 +208,7 @@ export default function StoredCards() {
   const columns: Column<StoredCreditCard>[] = [
     {
       key: 'name',
-      label: 'Nome',
+      label: t('pages.storedCards.columns.name'),
       render: (card) => (
         <div className="flex items-center gap-2">
           <CreditCardIcon className="h-4 w-4" />
@@ -217,12 +218,12 @@ export default function StoredCards() {
     },
     {
       key: 'cardholder',
-      label: 'Titular',
+      label: t('pages.storedCards.columns.holder'),
       render: (card) => <span className="text-sm">{card.cardholder_name}</span>,
     },
     {
       key: 'number',
-      label: 'Número',
+      label: t('pages.storedCards.columns.number'),
       render: (card) => {
         const revealed = revealedData.get(card.id);
         if (revealed) {
@@ -232,7 +233,9 @@ export default function StoredCards() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => handleCopy(revealed.number, 'Número do cartão')}
+                onClick={() =>
+                  handleCopy(revealed.number, t('pages.storedCards.cardNumberLabel'))
+                }
               >
                 <Copy className="h-3 w-3" />
               </Button>
@@ -248,7 +251,7 @@ export default function StoredCards() {
     },
     {
       key: 'cvv',
-      label: 'CVV',
+      label: t('pages.storedCards.columns.cvv'),
       align: 'center',
       render: (card) => {
         const revealed = revealedData.get(card.id);
@@ -271,12 +274,12 @@ export default function StoredCards() {
     },
     {
       key: 'flag',
-      label: 'Bandeira',
+      label: t('pages.storedCards.columns.brand'),
       render: (card) => <Badge>{translate('cardBrands', card.flag)}</Badge>,
     },
     {
       key: 'expiration',
-      label: 'Validade',
+      label: t('pages.storedCards.columns.expiry'),
       align: 'center',
       render: (card) => (
         <span className="text-sm">
@@ -286,7 +289,7 @@ export default function StoredCards() {
     },
     {
       key: 'finance_card',
-      label: 'Cartão Financeiro',
+      label: t('pages.storedCards.columns.isFinancial'),
       render: (card) => (
         <Badge variant="outline" className="text-xs">
           {getFinanceCardName(card.finance_card ?? undefined)}
@@ -299,10 +302,10 @@ export default function StoredCards() {
     <VaultGuard>
       <PageContainer>
         <PageHeader
-          title="Cartões Armazenados"
+          title={t('pages.storedCards.title')}
           icon={<CreditCardIcon />}
           action={{
-            label: 'Novo Cartão',
+            label: t('pages.storedCards.newBtn'),
             icon: <Plus className="h-4 w-4" />,
             onClick: handleCreate,
           }}
@@ -310,7 +313,7 @@ export default function StoredCards() {
 
         <div className="flex gap-4">
           <Input
-            placeholder="Buscar cartões..."
+            placeholder={t('pages.storedCards.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -323,7 +326,7 @@ export default function StoredCards() {
           keyExtractor={(card) => card.id}
           isLoading={isLoading}
           emptyState={{
-            message: 'Nenhum cartão armazenado encontrado.',
+            message: t('pages.storedCards.emptySearch'),
           }}
           actions={(card) => (
             <div className="flex items-center justify-end gap-2">
@@ -338,12 +341,12 @@ export default function StoredCards() {
                 ) : revealedData.has(card.id) ? (
                   <>
                     <EyeOff className="mr-1 h-3 w-3" />
-                    Ocultar
+                    {t('common.actions.hide')}
                   </>
                 ) : (
                   <>
                     <Eye className="mr-1 h-3 w-3" />
-                    Revelar
+                    {t('common.actions.reveal')}
                   </>
                 )}
               </Button>
@@ -351,7 +354,7 @@ export default function StoredCards() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleEdit(card)}
-                aria-label="Editar"
+                aria-label={t('common.actions.edit')}
               >
                 <Pencil className="h-4 w-4" aria-hidden="true" />
               </Button>
@@ -359,7 +362,7 @@ export default function StoredCards() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDelete(card.id)}
-                aria-label="Excluir"
+                aria-label={t('common.actions.delete')}
               >
                 <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
               </Button>
@@ -371,12 +374,14 @@ export default function StoredCards() {
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {selectedCard ? 'Editar' : 'Novo'} Cartão Armazenado
+                {selectedCard
+                  ? t('pages.storedCards.editTitle')
+                  : t('pages.storedCards.newTitle')}
               </DialogTitle>
               <DialogDescription>
                 {selectedCard
-                  ? 'Atualize as informações do cartão armazenado'
-                  : 'Adicione um novo cartão ao cofre seguro'}
+                  ? t('pages.storedCards.editDesc')
+                  : t('pages.storedCards.newDesc')}
               </DialogDescription>
             </DialogHeader>
             <StoredCardForm

@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -52,8 +54,8 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormData) => {
     if (data.password !== data.confirmPassword) {
       toast({
-        title: 'Erro',
-        description: 'As senhas não coincidem',
+        title: t('auth.register.errorTitle'),
+        description: t('auth.register.passwordsMismatch'),
         variant: 'destructive',
       });
       return;
@@ -71,18 +73,16 @@ export default function Register() {
       });
 
       toast({
-        title: 'Cadastro realizado!',
-        description: 'Você já pode fazer login com suas credenciais.',
+        title: t('auth.register.successTitle'),
+        description: t('auth.register.successDesc'),
       });
 
       void navigate('/login');
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Ocorreu um erro ao tentar cadastrar. Tente novamente.';
+        error instanceof Error ? error.message : t('auth.register.errorDesc');
       toast({
-        title: 'Erro ao cadastrar',
+        title: t('auth.register.errorTitle'),
         description: errorMessage,
         variant: 'destructive',
       });
@@ -99,27 +99,27 @@ export default function Register() {
             <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
               MindLedger
             </h1>
-            <p className="mt-2">Crie sua conta</p>
+            <p className="mt-2">{t('auth.register.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <FormField
               id="name"
-              label="Nome Completo"
+              label={t('auth.register.fullName')}
               error={errors.name?.message}
               required
             >
               <Input
                 type="text"
-                {...register('name', { required: 'Nome é obrigatório' })}
-                placeholder="Seu nome completo"
+                {...register('name', { required: t('auth.register.fullNameRequired') })}
+                placeholder={t('auth.register.fullNamePlaceholder')}
                 disabled={isLoading}
               />
             </FormField>
 
             <FormField
               id="document"
-              label="CPF"
+              label={t('auth.register.cpf')}
               error={errors.document?.message}
               required
             >
@@ -127,9 +127,9 @@ export default function Register() {
                 control={control}
                 name="document"
                 rules={{
-                  required: 'CPF é obrigatório',
+                  required: t('auth.register.cpfRequired'),
                   validate: (v) =>
-                    v.replace(/\D/g, '').length === 11 || 'CPF deve conter 11 dígitos',
+                    v.replace(/\D/g, '').length === 11 || t('auth.register.cpfDigits'),
                 }}
                 render={({ field }) => (
                   <Input
@@ -139,7 +139,7 @@ export default function Register() {
                     onChange={(e) => field.onChange(formatCpf(e.target.value))}
                     onBlur={field.onBlur}
                     ref={field.ref}
-                    placeholder="000.000.000-00"
+                    placeholder={t('auth.register.cpfPlaceholder')}
                     maxLength={14}
                     disabled={isLoading}
                   />
@@ -149,7 +149,7 @@ export default function Register() {
 
             <FormField
               id="phone"
-              label="Telefone"
+              label={t('auth.register.phone')}
               error={errors.phone?.message}
               required
             >
@@ -157,9 +157,10 @@ export default function Register() {
                 control={control}
                 name="phone"
                 rules={{
-                  required: 'Telefone é obrigatório',
+                  required: t('auth.register.phoneRequired'),
                   validate: (v) =>
-                    v.replace(/\D/g, '').length >= 10 || 'Telefone inválido',
+                    v.replace(/\D/g, '').length >= 10 ||
+                    t('auth.register.phoneInvalid'),
                 }}
                 render={({ field }) => (
                   <Input
@@ -169,7 +170,7 @@ export default function Register() {
                     onChange={(e) => field.onChange(formatPhone(e.target.value))}
                     onBlur={field.onBlur}
                     ref={field.ref}
-                    placeholder="(00) 00000-0000"
+                    placeholder={t('auth.register.phonePlaceholder')}
                     maxLength={15}
                     disabled={isLoading}
                   />
@@ -179,76 +180,77 @@ export default function Register() {
 
             <FormField
               id="email"
-              label="Email"
+              label={t('auth.register.email')}
               error={errors.email?.message}
-              description="Opcional, mas recomendado para recuperação de conta"
+              description={t('auth.register.emailHint')}
             >
               <Input
                 type="email"
                 {...register('email', {
                   pattern: {
                     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Email inválido',
+                    message: t('auth.register.emailInvalid'),
                   },
                 })}
-                placeholder="seu@email.com"
+                placeholder={t('auth.register.emailPlaceholder')}
                 disabled={isLoading}
               />
             </FormField>
 
             <FormField
               id="username"
-              label="Nome de Usuário"
+              label={t('auth.register.username')}
               error={errors.username?.message}
               required
             >
               <Input
                 type="text"
                 {...register('username', {
-                  required: 'Nome de usuário é obrigatório',
+                  required: t('auth.register.usernameRequired'),
                   minLength: {
                     value: 3,
-                    message: 'Mínimo de 3 caracteres',
+                    message: t('auth.register.usernameMinLength'),
                   },
                 })}
-                placeholder="usuario"
+                placeholder={t('auth.register.usernamePlaceholder')}
                 disabled={isLoading}
               />
             </FormField>
 
             <FormField
               id="password"
-              label="Senha"
+              label={t('auth.register.password')}
               error={errors.password?.message}
               required
             >
               <Input
                 type="password"
                 {...register('password', {
-                  required: 'Senha é obrigatória',
+                  required: t('auth.register.passwordRequired'),
                   minLength: {
                     value: 6,
-                    message: 'Mínimo de 6 caracteres',
+                    message: t('auth.register.passwordMinLength'),
                   },
                 })}
-                placeholder="••••••••"
+                placeholder={t('auth.register.passwordPlaceholder')}
                 disabled={isLoading}
               />
             </FormField>
 
             <FormField
               id="confirmPassword"
-              label="Confirmar Senha"
+              label={t('auth.register.confirmPassword')}
               error={errors.confirmPassword?.message}
               required
             >
               <Input
                 type="password"
                 {...register('confirmPassword', {
-                  required: 'Confirmação de senha é obrigatória',
-                  validate: (value) => value === password || 'As senhas não coincidem',
+                  required: t('auth.register.confirmPasswordRequired'),
+                  validate: (value) =>
+                    value === password || t('auth.register.passwordsMismatch'),
                 })}
-                placeholder="••••••••"
+                placeholder={t('auth.register.passwordPlaceholder')}
                 disabled={isLoading}
               />
             </FormField>
@@ -257,18 +259,18 @@ export default function Register() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cadastrando...
+                  {t('auth.register.loading')}
                 </>
               ) : (
-                'Cadastrar'
+                t('auth.register.submit')
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span>Já tem uma conta? </span>
+            <span>{t('auth.register.hasAccount')} </span>
             <Link to="/login" className="font-medium text-primary hover:underline">
-              Fazer login
+              {t('auth.register.login')}
             </Link>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
@@ -51,6 +52,7 @@ import type { Expense, ExpenseFormData, Account, Loan, Payable } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Expenses() {
+  const { t } = useTranslation();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -103,7 +105,7 @@ export default function Expenses() {
       setPayables(Array.isArray(payablesData) ? payablesData : []);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -160,21 +162,21 @@ export default function Expenses() {
       if (selectedExpense) {
         await expensesService.update(selectedExpense.id, data);
         toast({
-          title: 'Despesa atualizada',
-          description: 'A despesa foi atualizada com sucesso.',
+          title: t('pages.expenses.updated'),
+          description: t('pages.expenses.updatedDesc'),
         });
       } else {
         await expensesService.create(data);
         toast({
-          title: 'Despesa criada',
-          description: 'A despesa foi criada com sucesso.',
+          title: t('pages.expenses.created'),
+          description: t('pages.expenses.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -186,9 +188,8 @@ export default function Expenses() {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos uma conta cadastrada antes de criar uma despesa.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.expenses.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -199,24 +200,23 @@ export default function Expenses() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir despesa',
-      description:
-        'Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.expenses.deleteTitle'),
+      description: t('pages.expenses.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await expensesService.delete(id);
       toast({
-        title: 'Despesa excluída',
-        description: 'A despesa foi excluída com sucesso.',
+        title: t('pages.expenses.deleted'),
+        description: t('pages.expenses.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -245,12 +245,12 @@ export default function Expenses() {
     try {
       await expensesService.exportExpenses(params);
       toast({
-        title: 'Exportação concluída',
-        description: 'O arquivo foi baixado com sucesso.',
+        title: t('common.messages.exportSuccess'),
+        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
+        title: t('common.messages.exportError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -271,12 +271,12 @@ export default function Expenses() {
   const columns: Column<Expense>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.expenses.columns.description'),
       render: (expense) => <div className="font-medium">{expense.description}</div>,
     },
     {
       key: 'value',
-      label: 'Valor',
+      label: t('pages.expenses.columns.amount'),
       align: 'right',
       render: (expense) => (
         <span className="font-semibold text-destructive">
@@ -286,7 +286,7 @@ export default function Expenses() {
     },
     {
       key: 'account_name',
-      label: 'Conta',
+      label: t('pages.expenses.columns.account'),
       render: (expense) => (
         <Badge variant="outline" className="font-medium">
           {expense.account_name || 'N/A'}
@@ -295,7 +295,7 @@ export default function Expenses() {
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.expenses.columns.category'),
       render: (expense) => (
         <Badge variant="secondary">
           {translate('expenseCategories', expense.category)}
@@ -304,16 +304,16 @@ export default function Expenses() {
     },
     {
       key: 'payed',
-      label: 'Status',
+      label: t('pages.expenses.columns.status'),
       render: (expense) => (
         <Badge variant={expense.payed ? 'success' : 'destructive'}>
-          {expense.payed ? 'Pago' : 'Pendente'}
+          {expense.payed ? t('common.status.paid') : t('common.status.pending')}
         </Badge>
       ),
     },
     {
       key: 'date',
-      label: 'Data',
+      label: t('pages.expenses.columns.date'),
       render: (expense) => (
         <div>
           <div className="text-sm">{formatDateTime(expense.date, expense.horary)}</div>
@@ -327,7 +327,7 @@ export default function Expenses() {
 
   return (
     <PageContainer>
-      <PageHeader title="Despesas" icon={<TrendingDown />}>
+      <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -335,11 +335,11 @@ export default function Expenses() {
             className="gap-2"
           >
             <Download className="h-4 w-4" />
-            Exportar
+            {t('common.actions.export')}
           </Button>
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="h-4 w-4" />
-            Nova Despesa
+            {t('pages.expenses.newBtn')}
           </Button>
         </div>
       </PageHeader>
@@ -348,7 +348,7 @@ export default function Expenses() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
+            <span className="font-semibold">{t('common.actions.filter')}</span>
           </div>
           {(searchTerm ||
             categoryFilter !== 'all' ||
@@ -357,13 +357,13 @@ export default function Expenses() {
             endDate ||
             selectedAccounts.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar Filtros
+              {t('common.actions.clearFilters')}
             </Button>
           )}
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Input
-            placeholder="Buscar por descrição..."
+            placeholder={t('pages.expenses.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -372,7 +372,7 @@ export default function Expenses() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas Categorias</SelectItem>
+              <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
               {Object.entries(TRANSLATIONS.expenseCategories).map(([k, v]) => (
                 <SelectItem key={k} value={k}>
                   {v}
@@ -385,39 +385,41 @@ export default function Expenses() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <span className="text-sm">Data Inicial</span>
+            <span className="text-sm">{t('pages.expenses.dateFrom')}</span>
             <DatePicker
               value={startDate}
               onChange={setStartDate}
-              placeholder="De..."
+              placeholder={t('pages.expenses.dateFromPlaceholder')}
               clearable
             />
           </div>
           <div className="space-y-1">
-            <span className="text-sm">Data Final</span>
+            <span className="text-sm">{t('pages.expenses.dateTo')}</span>
             <DatePicker
               value={endDate}
               onChange={setEndDate}
-              placeholder="Até..."
+              placeholder={t('pages.expenses.datePlaceholder')}
               clearable
             />
           </div>
           <div className="space-y-1">
-            <span className="text-sm">Contas</span>
+            <span className="text-sm">{t('common.fields.account')}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
                   {selectedAccounts.length === 0
-                    ? 'Todas as Contas'
-                    : `${selectedAccounts.length} conta(s) selecionada(s)`}
+                    ? t('pages.expenses.allAccounts')
+                    : t('pages.expenses.selectedAccounts', {
+                        count: selectedAccounts.length,
+                      })}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </PopoverTrigger>
@@ -444,10 +446,10 @@ export default function Expenses() {
         </div>
         <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
-            {filteredExpenses.length} despesa(s) encontrada(s)
+            {t('pages.expenses.foundExpenses', { count: filteredExpenses.length })}
           </span>
           <span className="text-lg font-bold text-destructive">
-            Total: {formatCurrency(totalExpenses)}
+            {t('pages.expenses.total')} {formatCurrency(totalExpenses)}
           </span>
         </div>
       </div>
@@ -458,7 +460,7 @@ export default function Expenses() {
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma despesa encontrada.',
+          message: t('pages.expenses.emptyState'),
         }}
         actions={(expense) => (
           <div className="flex items-center justify-end gap-2">
@@ -470,7 +472,7 @@ export default function Expenses() {
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(expense)}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -478,7 +480,7 @@ export default function Expenses() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(expense.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -489,8 +491,8 @@ export default function Expenses() {
       <ExportModal
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
-        title="Exportar Despesas"
-        description="Selecione o período e formato para exportar as despesas filtradas."
+        title={t('pages.expenses.exportTitle')}
+        description={t('pages.expenses.exportDesc')}
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}
@@ -500,12 +502,14 @@ export default function Expenses() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedExpense ? 'Editar Despesa' : 'Nova Despesa'}
+              {selectedExpense
+                ? t('pages.expenses.editTitle')
+                : t('pages.expenses.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedExpense
-                ? 'Atualize as informações da despesa'
-                : 'Adicione uma nova despesa ao sistema'}
+                ? t('pages.expenses.editDesc')
+                : t('pages.expenses.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <ExpenseForm

@@ -1,5 +1,6 @@
 import { Plus, StickyNote } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -11,6 +12,7 @@ import type { DailyReflection } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function DailyReflections() {
+  const { t } = useTranslation();
   const [reflections, setReflections] = useState<DailyReflection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -26,7 +28,7 @@ export default function DailyReflections() {
       setReflections([]);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar reflexões',
+        title: t('pages.dailyReflections.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -41,17 +43,17 @@ export default function DailyReflections() {
 
   return (
     <PageContainer>
-      <PageHeader title="Reflexões Diárias">
+      <PageHeader title={t('pages.dailyReflections.title')}>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Nova Reflexão
+          {t('pages.dailyReflections.newBtn')}
         </Button>
       </PageHeader>
 
       {reflections.length === 0 ? (
         <EmptyState
           icon={<StickyNote className="h-12 w-12 text-muted-foreground" />}
-          message="Nenhuma reflexão registrada."
+          message={t('pages.dailyReflections.emptyState')}
         />
       ) : (
         <div className="space-y-4">
