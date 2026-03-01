@@ -1,5 +1,6 @@
 import { CheckCircle2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -14,6 +15,7 @@ import type { TaskInstance } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function TodayTasks() {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<TaskInstance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -37,7 +39,7 @@ export default function TodayTasks() {
       setTasks(response.instances);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar tarefas',
+        title: t('pages.todayTasks.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -65,12 +67,12 @@ export default function TodayTasks() {
 
   return (
     <PageContainer>
-      <PageHeader title="Tarefas de Hoje" icon={<CheckCircle2 />} />
+      <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />} />
 
       {tasks.length === 0 ? (
         <EmptyState
           icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
-          message="Nenhuma tarefa programada para hoje."
+          message={t('pages.todayTasks.emptyState')}
         />
       ) : (
         <div className="space-y-4">
@@ -92,7 +94,9 @@ export default function TodayTasks() {
                   </Badge>
                 </div>
                 {task.time_display && (
-                  <p className="text-sm">Horário: {task.time_display}</p>
+                  <p className="text-sm">
+                    {t('pages.todayTasks.timeLabel', { time: task.time_display })}
+                  </p>
                 )}
                 {task.notes && <p className="text-sm">{task.notes}</p>}
               </div>

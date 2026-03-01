@@ -11,6 +11,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -69,6 +70,7 @@ export default function Passwords() {
   const [showGenerator, setShowGenerator] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   // Form state
   const [formData, setFormData] = useState<PasswordFormData>({
@@ -96,7 +98,7 @@ export default function Passwords() {
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -108,8 +110,8 @@ export default function Passwords() {
   const handleCreate = () => {
     if (!currentUserMember) {
       toast({
-        title: 'Ação não permitida',
-        description: 'Não foi possível identificar o membro do usuário atual.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.passwords.noMemberMsg'),
         variant: 'destructive',
       });
       return;
@@ -143,11 +145,10 @@ export default function Passwords() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir senha',
-      description:
-        'Tem certeza que deseja excluir esta senha? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.passwords.deleteTitle'),
+      description: t('pages.passwords.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -156,13 +157,13 @@ export default function Passwords() {
     try {
       await passwordsService.delete(id);
       toast({
-        title: 'Senha excluída',
-        description: 'A senha foi excluída com sucesso.',
+        title: t('pages.passwords.deleted'),
+        description: t('pages.passwords.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -185,12 +186,12 @@ export default function Passwords() {
       newMap.set(id, revealData.password);
       setRevealedPasswords(newMap);
       toast({
-        title: 'Senha revelada',
-        description: 'A senha foi descriptografada com sucesso.',
+        title: t('pages.passwords.revealed'),
+        description: t('pages.passwords.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao revelar senha',
+        title: t('pages.passwords.revealError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -204,8 +205,8 @@ export default function Passwords() {
     if (password) {
       await navigator.clipboard.writeText(password);
       toast({
-        title: 'Copiado!',
-        description: 'Senha copiada para a área de transferência.',
+        title: t('common.messages.copied'),
+        description: t('pages.passwords.copiedDesc'),
       });
     }
   };
@@ -220,8 +221,8 @@ export default function Passwords() {
       (!selectedPassword && !formData.password)
     ) {
       toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos obrigatórios.',
+        title: t('pages.passwords.requiredFields'),
+        description: t('pages.passwords.requiredFieldsDesc'),
         variant: 'destructive',
       });
       return;
@@ -236,21 +237,21 @@ export default function Passwords() {
         }
         await passwordsService.update(selectedPassword.id, updateData);
         toast({
-          title: 'Senha atualizada',
-          description: 'A senha foi atualizada com sucesso.',
+          title: t('pages.passwords.updated'),
+          description: t('pages.passwords.updatedDesc'),
         });
       } else {
         await passwordsService.create(formData);
         toast({
-          title: 'Senha criada',
-          description: 'A senha foi criada com sucesso.',
+          title: t('pages.passwords.created'),
+          description: t('pages.passwords.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -274,10 +275,10 @@ export default function Passwords() {
     <VaultGuard>
       <PageContainer>
         <PageHeader
-          title="Senhas"
+          title={t('pages.passwords.title')}
           icon={<Key />}
           action={{
-            label: 'Nova Senha',
+            label: t('pages.passwords.newBtn'),
             icon: <Plus className="h-4 w-4" />,
             onClick: handleCreate,
           }}
@@ -285,7 +286,7 @@ export default function Passwords() {
 
         <div className="flex gap-4">
           <SearchInput
-            placeholder="Buscar senhas..."
+            placeholder={t('pages.passwords.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="max-w-sm"
@@ -348,12 +349,12 @@ export default function Passwords() {
                       ) : revealedPasswords.has(password.id) ? (
                         <>
                           <EyeOff className="mr-1 h-3 w-3" />
-                          Ocultar
+                          {t('common.actions.hide')}
                         </>
                       ) : (
                         <>
                           <Eye className="mr-1 h-3 w-3" />
-                          Revelar
+                          {t('common.actions.reveal')}
                         </>
                       )}
                     </Button>
@@ -374,7 +375,8 @@ export default function Passwords() {
                   </div>
 
                   <div className="text-xs">
-                    Atualizado em {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
+                    {t('common.fields.updatedAt')}{' '}
+                    {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
                   </div>
                 </div>
               </CardContent>
@@ -387,8 +389,8 @@ export default function Passwords() {
             icon={<Key className="h-12 w-12 text-muted-foreground" />}
             message={
               searchTerm
-                ? 'Nenhuma senha encontrada para a pesquisa atual.'
-                : 'Nenhuma senha cadastrada. Clique em "Nova Senha" para começar.'
+                ? t('pages.passwords.emptySearch')
+                : t('pages.passwords.emptyState')
             }
           />
         )}
@@ -397,51 +399,55 @@ export default function Passwords() {
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
-                {selectedPassword ? 'Editar Senha' : 'Nova Senha'}
+                {selectedPassword
+                  ? t('pages.passwords.editTitle')
+                  : t('pages.passwords.newTitle')}
               </DialogTitle>
               <DialogDescription>
                 {selectedPassword
-                  ? 'Atualize as informações da senha.'
-                  : 'Adicione uma nova senha ao gerenciador.'}
+                  ? t('pages.passwords.editDesc')
+                  : t('pages.passwords.newDesc')}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título *</Label>
+                <Label htmlFor="title">{t('common.fields.title')} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Ex: Gmail, Netflix, etc."
+                  placeholder={t('pages.passwords.titlePlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="site">Site</Label>
+                <Label htmlFor="site">{t('common.fields.site')}</Label>
                 <Input
                   id="site"
                   type="url"
                   value={formData.site}
                   onChange={(e) => setFormData({ ...formData, site: e.target.value })}
-                  placeholder="https://exemplo.com"
+                  placeholder={t('pages.passwords.sitePlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="username">Usuário/Email *</Label>
+                <Label htmlFor="username">{t('common.fields.username')} *</Label>
                 <Input
                   id="username"
                   value={formData.username}
                   onChange={(e) =>
                     setFormData({ ...formData, username: e.target.value })
                   }
-                  placeholder="usuario@email.com"
+                  placeholder={t('pages.passwords.usernamePlaceholder')}
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Senha {selectedPassword ? '' : '*'}</Label>
+                  <Label htmlFor="password">
+                    {t('auth.login.password')} {selectedPassword ? '' : '*'}
+                  </Label>
                   <Button
                     type="button"
                     variant="ghost"
@@ -450,7 +456,9 @@ export default function Passwords() {
                     className="h-auto px-2 py-1 text-xs"
                   >
                     <Wand2 className="mr-1 h-3 w-3" />
-                    {showGenerator ? 'Ocultar Gerador' : 'Gerar Senha'}
+                    {showGenerator
+                      ? t('pages.passwords.hideGenerator')
+                      : t('pages.passwords.generatePassword')}
                   </Button>
                 </div>
                 <Input
@@ -461,7 +469,7 @@ export default function Passwords() {
                     setFormData({ ...formData, password: e.target.value })
                   }
                   placeholder={
-                    selectedPassword ? 'Deixe vazio para manter a atual' : ''
+                    selectedPassword ? t('pages.passwords.keepCurrentPassword') : ''
                   }
                 />
                 {showGenerator && (
@@ -477,7 +485,7 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Categoria *</Label>
+                <Label htmlFor="category">{t('common.fields.category')} *</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) =>
@@ -498,12 +506,12 @@ export default function Passwords() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Observações</Label>
+                <Label htmlFor="notes">{t('common.fields.notes')}</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Notas adicionais..."
+                  placeholder={t('pages.passwords.notesSitePlaceholder')}
                   rows={3}
                 />
               </div>
@@ -514,16 +522,16 @@ export default function Passwords() {
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                 >
-                  Cancelar
+                  {t('common.actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
+                      {t('common.actions.saving')}
                     </>
                   ) : (
-                    'Salvar'
+                    t('common.actions.save')
                   )}
                 </Button>
               </div>

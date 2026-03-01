@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +18,7 @@ import { logger } from '@/lib/logger';
 export function Toaster() {
   const { toasts } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleCopy = async (
     id: string,
@@ -64,7 +66,7 @@ export function Toaster() {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleCopy(id, title, description)}
-                      aria-label="Copiar mensagem"
+                      aria-label={t('common.actions.copy')}
                     >
                       {copiedId === id ? (
                         <Check className="h-4 w-4" aria-hidden="true" />
@@ -75,7 +77,7 @@ export function Toaster() {
                   )}
                   {action}
                 </div>
-                <ToastClose aria-label="Fechar notificacao" />
+                <ToastClose aria-label={t('common.actions.close')} />
               </Toast>
             );
           })}

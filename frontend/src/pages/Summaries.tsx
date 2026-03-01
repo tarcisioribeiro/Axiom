@@ -8,6 +8,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -57,6 +58,7 @@ export default function Summaries() {
     owner: 0,
   });
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -73,7 +75,7 @@ export default function Summaries() {
       setBooks(booksData);
     } catch {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: 'Não foi possível carregar os resumos.',
         variant: 'destructive',
       });
@@ -87,8 +89,8 @@ export default function Summaries() {
     try {
       await summariesService.create(formData);
       toast({
-        title: 'Resumo criado',
-        description: 'O resumo foi criado com sucesso.',
+        title: t('pages.summaries.created'),
+        description: t('pages.summaries.createdDesc'),
       });
       setIsCreateDialogOpen(false);
       setFormData({
@@ -100,7 +102,7 @@ export default function Summaries() {
       void loadData();
     } catch {
       toast({
-        title: 'Erro ao criar resumo',
+        title: t('common.messages.createError'),
         description: 'Não foi possível criar o resumo.',
         variant: 'destructive',
       });
@@ -114,8 +116,8 @@ export default function Summaries() {
     try {
       await summariesService.update(selectedSummary.id, formData);
       toast({
-        title: 'Resumo atualizado',
-        description: 'O resumo foi atualizado com sucesso.',
+        title: t('pages.summaries.updated'),
+        description: t('pages.summaries.updatedDesc'),
       });
       setIsEditDialogOpen(false);
       setSelectedSummary(null);
@@ -128,7 +130,7 @@ export default function Summaries() {
       void loadData();
     } catch {
       toast({
-        title: 'Erro ao atualizar resumo',
+        title: t('common.messages.updateError'),
         description: 'Não foi possível atualizar o resumo.',
         variant: 'destructive',
       });
@@ -137,11 +139,10 @@ export default function Summaries() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir resumo',
-      description:
-        'Tem certeza que deseja excluir este resumo? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.summaries.deleteTitle'),
+      description: t('pages.summaries.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -150,13 +151,13 @@ export default function Summaries() {
     try {
       await summariesService.delete(id);
       toast({
-        title: 'Resumo excluído',
-        description: 'O resumo foi excluído com sucesso.',
+        title: t('pages.summaries.deleted'),
+        description: t('pages.summaries.deletedDesc'),
       });
       void loadData();
     } catch {
       toast({
-        title: 'Erro ao excluir resumo',
+        title: t('common.messages.deleteError'),
         description: 'Não foi possível excluir o resumo.',
         variant: 'destructive',
       });
@@ -184,9 +185,8 @@ export default function Summaries() {
     const readBooks = books.filter((book) => book.read_status === 'read');
     if (readBooks.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos um livro completamente lido antes de criar um resumo.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.summaries.noBookMsg'),
         variant: 'destructive',
       });
       return;
@@ -201,10 +201,10 @@ export default function Summaries() {
   return (
     <PageContainer>
       <PageHeader
-        title="Resumos"
+        title={t('pages.summaries.title')}
         icon={<FileText />}
         action={{
-          label: 'Novo Resumo',
+          label: t('pages.summaries.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreateClick,
         }}
@@ -214,12 +214,12 @@ export default function Summaries() {
         <DialogContent className="max-w-2xl">
           <form onSubmit={handleCreate}>
             <DialogHeader>
-              <DialogTitle>Criar Novo Resumo</DialogTitle>
-              <DialogDescription>Adicione um resumo para um livro.</DialogDescription>
+              <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
+              <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Título *</Label>
+                <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -228,7 +228,7 @@ export default function Summaries() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="book">Livro *</Label>
+                <Label htmlFor="book">{t('pages.summaries.bookField')}</Label>
                 <Select
                   value={formData.book.toString()}
                   onValueChange={(value) =>
@@ -236,7 +236,7 @@ export default function Summaries() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um livro" />
+                    <SelectValue placeholder={t('pages.summaries.bookPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {books
@@ -250,7 +250,7 @@ export default function Summaries() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="text">Conteúdo *</Label>
+                <Label htmlFor="text">{t('pages.summaries.contentField')}</Label>
                 <Textarea
                   id="text"
                   value={formData.text}
@@ -261,7 +261,7 @@ export default function Summaries() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Criar Resumo</Button>
+              <Button type="submit">{t('pages.summaries.createBtn')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -269,7 +269,7 @@ export default function Summaries() {
 
       <div className="flex items-center gap-4">
         <SearchInput
-          placeholder="Buscar resumos..."
+          placeholder={t('pages.summaries.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="flex-1"
@@ -281,8 +281,8 @@ export default function Summaries() {
           icon={<FileText className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhum resumo encontrado para a pesquisa atual.'
-              : 'Nenhum resumo cadastrado. Clique em "Novo Resumo" para começar.'
+              ? t('pages.summaries.emptySearch')
+              : t('pages.summaries.emptyState')
           }
         />
       ) : (
@@ -300,20 +300,21 @@ export default function Summaries() {
                       {summary.is_vectorized ? (
                         <Badge variant="default" className="gap-1">
                           <CheckCircle2 className="h-3 w-3" />
-                          Vetorizado
+                          {t('pages.summaries.vectorized')}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1">
                           <XCircle className="h-3 w-3" />
-                          Não Vetorizado
+                          {t('pages.summaries.notVectorized')}
                         </Badge>
                       )}
                       {summary.vectorization_date && (
                         <span className="text-xs">
-                          em{' '}
-                          {new Date(summary.vectorization_date).toLocaleDateString(
-                            'pt-BR'
-                          )}
+                          {t('pages.summaries.datePrefix', {
+                            date: new Date(
+                              summary.vectorization_date
+                            ).toLocaleDateString('pt-BR'),
+                          })}
                         </span>
                       )}
                     </div>
@@ -323,7 +324,7 @@ export default function Summaries() {
                       variant="ghost"
                       size="icon"
                       onClick={() => openEditDialog(summary)}
-                      aria-label="Editar"
+                      aria-label={t('common.actions.edit')}
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -331,7 +332,7 @@ export default function Summaries() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(summary.id)}
-                      aria-label="Excluir"
+                      aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -352,12 +353,12 @@ export default function Summaries() {
         <DialogContent className="max-w-2xl">
           <form onSubmit={handleEdit}>
             <DialogHeader>
-              <DialogTitle>Editar Resumo</DialogTitle>
-              <DialogDescription>Atualize as informações do resumo.</DialogDescription>
+              <DialogTitle>{t('pages.summaries.editTitle')}</DialogTitle>
+              <DialogDescription>{t('pages.summaries.editDesc')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-title">Título *</Label>
+                <Label htmlFor="edit-title">{t('pages.summaries.titleField')}</Label>
                 <Input
                   id="edit-title"
                   value={formData.title}
@@ -366,7 +367,7 @@ export default function Summaries() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-book">Livro *</Label>
+                <Label htmlFor="edit-book">{t('pages.summaries.bookField')}</Label>
                 <Select
                   value={formData.book.toString()}
                   onValueChange={(value) =>
@@ -388,7 +389,7 @@ export default function Summaries() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-text">Conteúdo *</Label>
+                <Label htmlFor="edit-text">{t('pages.summaries.contentField')}</Label>
                 <Textarea
                   id="edit-text"
                   value={formData.text}
@@ -399,7 +400,7 @@ export default function Summaries() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Salvar Alterações</Button>
+              <Button type="submit">{t('pages.summaries.saveBtn')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

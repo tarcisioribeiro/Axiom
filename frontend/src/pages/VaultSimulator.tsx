@@ -1,5 +1,6 @@
 import { TrendingUp, Plus, Trash2, Calculator } from 'lucide-react';
 import { useState, useId, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AreaChart,
   Area,
@@ -58,22 +59,26 @@ function ScenarioCard({
   onUpdate,
   onRemove,
   canRemove,
+  t,
 }: {
   scenario: ScenarioForm;
   index: number;
   onUpdate: (id: string, field: keyof ScenarioForm, value: string) => void;
   onRemove: (id: string) => void;
   canRemove: boolean;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Badge variant="secondary">Cenário {index + 1}</Badge>
+          <Badge variant="secondary">
+            {t('pages.vaultSimulator.scenarioLabel', { index: index + 1 })}
+          </Badge>
           <Input
             value={scenario.name}
             onChange={(e) => onUpdate(scenario.id, 'name', e.target.value)}
-            placeholder={`Cenário ${index + 1}`}
+            placeholder={t('pages.vaultSimulator.scenarioLabel', { index: index + 1 })}
             className="h-7 w-40 text-sm"
           />
         </CardTitle>
@@ -90,7 +95,7 @@ function ScenarioCard({
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label className="text-xs">Valor Inicial (R$)</Label>
+          <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
           <Input
             type="number"
             min="0"
@@ -101,7 +106,7 @@ function ScenarioCard({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Aporte Mensal (R$)</Label>
+          <Label className="text-xs">{t('pages.vaultSimulator.monthlyDeposit')}</Label>
           <Input
             type="number"
             min="0"
@@ -112,7 +117,7 @@ function ScenarioCard({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Taxa Anual (%)</Label>
+          <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
           <Input
             type="number"
             min="0"
@@ -124,7 +129,7 @@ function ScenarioCard({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Prazo (meses)</Label>
+          <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
           <Input
             type="number"
             min="1"
@@ -166,6 +171,7 @@ function SimulatorTooltip({ active, payload, label }: ChartTooltipProps) {
 }
 
 export default function VaultSimulator() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const chartColors = useChartColors();
   const gradientId = useChartGradientId('vault-sim');
@@ -192,7 +198,7 @@ export default function VaultSimulator() {
 
   const handleSimulate = async () => {
     const payload = scenarios.map((s, i) => ({
-      name: s.name.trim() || `Cenário ${i + 1}`,
+      name: s.name.trim() || t('pages.vaultSimulator.scenarioLabel', { index: i + 1 }),
       initial_amount: parseFloat(s.initial_amount) || 0,
       monthly_deposit: parseFloat(s.monthly_deposit) || 0,
       annual_rate: parseFloat(s.annual_rate) || 0,
@@ -205,7 +211,7 @@ export default function VaultSimulator() {
       setResults(data.scenarios);
     } catch (err) {
       toast({
-        title: 'Erro na simulação',
+        title: t('pages.vaultSimulator.simulationError'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -239,7 +245,7 @@ export default function VaultSimulator() {
 
   return (
     <PageContainer>
-      <PageHeader title="Simulador de Cofre" icon={<TrendingUp />} />
+      <PageHeader title={t('pages.vaultSimulator.title')} icon={<TrendingUp />} />
 
       {/* Scenario Forms */}
       <div className="space-y-4">
@@ -251,6 +257,7 @@ export default function VaultSimulator() {
             onUpdate={updateScenario}
             onRemove={removeScenario}
             canRemove={scenarios.length > 1}
+            t={t}
           />
         ))}
 
@@ -258,12 +265,14 @@ export default function VaultSimulator() {
           {scenarios.length < 3 && (
             <Button variant="outline" size="sm" onClick={addScenario}>
               <Plus className="mr-2 h-4 w-4" />
-              Adicionar Cenário
+              {t('pages.vaultSimulator.addScenario')}
             </Button>
           )}
           <Button onClick={() => void handleSimulate()} disabled={isLoading}>
             <Calculator className="mr-2 h-4 w-4" />
-            {isLoading ? 'Calculando...' : 'Simular'}
+            {isLoading
+              ? t('pages.vaultSimulator.calculating')
+              : t('pages.vaultSimulator.calculate')}
           </Button>
         </div>
       </div>
@@ -274,7 +283,9 @@ export default function VaultSimulator() {
           {/* Area Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Evolução do Saldo</CardTitle>
+              <CardTitle className="text-base">
+                {t('pages.vaultSimulator.evolutionChart')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={340}>
@@ -368,21 +379,39 @@ export default function VaultSimulator() {
           {/* Summary Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Resumo dos Cenários</CardTitle>
+              <CardTitle className="text-base">
+                {t('pages.vaultSimulator.scenarioSummary')}
+              </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Cenário</TableHead>
-                    <TableHead className="text-right">Valor Inicial</TableHead>
-                    <TableHead className="text-right">Aporte Mensal</TableHead>
-                    <TableHead className="text-right">Taxa Anual</TableHead>
-                    <TableHead className="text-right">Taxa Mensal</TableHead>
-                    <TableHead className="text-right">Prazo</TableHead>
-                    <TableHead className="text-right">Total Investido</TableHead>
-                    <TableHead className="text-right">Rendimento</TableHead>
-                    <TableHead className="text-right">Saldo Final</TableHead>
+                    <TableHead>{t('pages.vaultSimulator.columns.scenario')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.initialAmount')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.monthlyDeposit')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.annualRate')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.monthlyRate')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.term')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.totalInvested')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.yield')}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t('pages.vaultSimulator.columns.finalBalance')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -415,7 +444,9 @@ export default function VaultSimulator() {
                           {scenario.monthly_rate.toFixed(4).replace('.', ',')}%
                         </TableCell>
                         <TableCell className="text-right">
-                          {scenario.months} meses
+                          {t('pages.vaultSimulator.monthsValue', {
+                            count: scenario.months,
+                          })}
                         </TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(scenario.total_invested)}

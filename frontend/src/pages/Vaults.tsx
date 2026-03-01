@@ -9,6 +9,7 @@ import {
   History,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -60,6 +61,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Vaults() {
+  const { t, i18n } = useTranslation();
   const [vaults, setVaults] = useState<VaultType[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,7 +112,7 @@ export default function Vaults() {
       setAccounts(accountsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -122,9 +124,8 @@ export default function Vaults() {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos uma conta cadastrada antes de criar um cofre.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.vaults.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -156,31 +157,29 @@ export default function Vaults() {
     const vault = vaults.find((v) => v.id === id);
     if (vault && parseFloat(vault.current_balance) > 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'Não é possível excluir um cofre com saldo. Realize um saque completo primeiro.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.vaults.cannotDeleteWithBalance'),
         variant: 'destructive',
       });
       return;
     }
 
     const confirmed = await showConfirm({
-      title: 'Excluir cofre',
-      description:
-        'Tem certeza que deseja excluir este cofre? Esta ação não pode ser desfeita.',
+      title: t('pages.vaults.deleteTitle'),
+      description: t('pages.vaults.deleteDesc'),
     });
 
     if (confirmed) {
       try {
         await vaultsService.delete(id);
         toast({
-          title: 'Cofre excluído',
-          description: 'O cofre foi excluído com sucesso.',
+          title: t('pages.vaults.deleted'),
+          description: t('pages.vaults.deletedDesc'),
         });
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -199,21 +198,21 @@ export default function Vaults() {
       if (selectedVault) {
         await vaultsService.update(selectedVault.id, dataToSend);
         toast({
-          title: 'Cofre atualizado',
-          description: 'O cofre foi atualizado com sucesso.',
+          title: t('pages.vaults.updated'),
+          description: t('pages.vaults.updatedDesc'),
         });
       } else {
         await vaultsService.create(dataToSend);
         toast({
-          title: 'Cofre criado',
-          description: 'O cofre foi criado com sucesso.',
+          title: t('pages.vaults.created'),
+          description: t('pages.vaults.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -227,8 +226,8 @@ export default function Vaults() {
     const amount = parseFloat(operationAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: 'Valor inválido',
-        description: 'Informe um valor válido para o depósito.',
+        title: t('pages.vaults.invalidAmount'),
+        description: t('pages.vaults.invalidDepositDesc'),
         variant: 'destructive',
       });
       return;
@@ -241,8 +240,8 @@ export default function Vaults() {
         description: operationDescription || undefined,
       });
       toast({
-        title: 'Depósito realizado',
-        description: `Depósito de ${formatCurrency(amount)} realizado com sucesso.`,
+        title: t('pages.vaults.depositSuccess'),
+        description: `${t('pages.vaults.depositSuccess')}: ${formatCurrency(amount)}`,
       });
       setIsDepositDialogOpen(false);
       setOperationAmount('');
@@ -250,7 +249,7 @@ export default function Vaults() {
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro no depósito',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -264,8 +263,8 @@ export default function Vaults() {
     const amount = parseFloat(operationAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: 'Valor inválido',
-        description: 'Informe um valor válido para o saque.',
+        title: t('pages.vaults.invalidAmount'),
+        description: t('pages.vaults.invalidWithdrawDesc'),
         variant: 'destructive',
       });
       return;
@@ -278,8 +277,8 @@ export default function Vaults() {
         description: operationDescription || undefined,
       });
       toast({
-        title: 'Saque realizado',
-        description: `Saque de ${formatCurrency(amount)} realizado com sucesso.`,
+        title: t('pages.vaults.withdrawSuccess'),
+        description: `${t('pages.vaults.withdrawSuccess')}: ${formatCurrency(amount)}`,
       });
       setIsWithdrawDialogOpen(false);
       setOperationAmount('');
@@ -287,7 +286,7 @@ export default function Vaults() {
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro no saque',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -301,19 +300,19 @@ export default function Vaults() {
       const response = await vaultsService.applyYield(vault.id);
       if (response.yield_applied > 0) {
         toast({
-          title: 'Rendimento aplicado',
-          description: `Rendimento de ${formatCurrency(response.yield_applied)} aplicado ao cofre.`,
+          title: t('pages.vaults.yieldApplied'),
+          description: `${t('pages.vaults.yieldApplied')}: ${formatCurrency(response.yield_applied)}`,
         });
       } else {
         toast({
-          title: 'Sem rendimento',
-          description: 'Não há rendimento pendente para aplicar.',
+          title: t('pages.vaults.noYield'),
+          description: t('pages.vaults.noYieldDesc'),
         });
       }
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao aplicar rendimento',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -344,7 +343,7 @@ export default function Vaults() {
       setIsTransactionsDialogOpen(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar transações',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -359,7 +358,7 @@ export default function Vaults() {
       setTransactions(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar transações',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -383,8 +382,8 @@ export default function Vaults() {
     const amount = parseFloat(editTransactionAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: 'Valor inválido',
-        description: 'Informe um valor válido.',
+        title: t('pages.vaults.invalidAmount'),
+        description: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -397,15 +396,15 @@ export default function Vaults() {
         description: editTransactionDescription || undefined,
       });
       toast({
-        title: 'Transação atualizada',
-        description: 'A transação foi atualizada com sucesso.',
+        title: t('pages.vaults.transactionUpdated'),
+        description: t('pages.vaults.transactionUpdatedDesc'),
       });
       cancelEditTransaction();
       void loadTransactions();
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao atualizar',
+        title: t('common.messages.updateError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -416,22 +415,22 @@ export default function Vaults() {
 
   const handleDeleteTransaction = async (transaction: VaultTransaction) => {
     const confirmed = await showConfirm({
-      title: 'Excluir transação de rendimento',
-      description: `Tem certeza que deseja excluir esta transação de ${formatCurrency(parseFloat(transaction.amount))}? O valor será revertido do saldo do cofre.`,
+      title: t('pages.vaults.deleteTransactionTitle'),
+      description: `${t('pages.vaults.deleteTransactionTitle')}: ${formatCurrency(parseFloat(transaction.amount))}`,
     });
 
     if (confirmed) {
       try {
         await vaultsService.deleteTransaction(transaction.id);
         toast({
-          title: 'Transação excluída',
-          description: 'A transação foi excluída e o saldo revertido.',
+          title: t('pages.vaults.transactionDeleted'),
+          description: t('pages.vaults.transactionDeletedDesc'),
         });
         void loadTransactions();
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -453,7 +452,7 @@ export default function Vaults() {
   const columns: Column<VaultType>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.vaults.columns.description'),
       render: (vault) => (
         <div>
           <div className="font-medium">{vault.description}</div>
@@ -463,7 +462,7 @@ export default function Vaults() {
     },
     {
       key: 'current_balance',
-      label: 'Saldo Atual',
+      label: t('pages.vaults.columns.currentBalance'),
       render: (vault) => (
         <span
           className={cn(
@@ -477,7 +476,7 @@ export default function Vaults() {
     },
     {
       key: 'accumulated_yield',
-      label: 'Rendimentos',
+      label: t('pages.vaults.columns.yields'),
       render: (vault) => (
         <div>
           <div className="text-success">
@@ -485,7 +484,7 @@ export default function Vaults() {
           </div>
           {vault.pending_yield > 0 && (
             <div className="text-xs text-muted-foreground">
-              +{formatCurrency(vault.pending_yield)} pendente
+              +{formatCurrency(vault.pending_yield)} {t('pages.vaults.pending')}
             </div>
           )}
         </div>
@@ -493,37 +492,37 @@ export default function Vaults() {
     },
     {
       key: 'yield_rate',
-      label: 'Taxa',
+      label: t('pages.vaults.columns.rate'),
       render: (vault) => (
         <div>
           <div className="font-medium">
-            {vault.annual_yield_rate_percentage.toFixed(2)}% ao ano
+            {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
           </div>
           <div className="text-xs text-muted-foreground">
-            {vault.daily_yield_rate_percentage.toFixed(4)}% ao dia
+            {vault.daily_yield_rate_percentage.toFixed(4)}% {t('pages.vaults.perDay')}
           </div>
         </div>
       ),
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: t('pages.vaults.columns.status'),
       render: (vault) => (
         <Badge variant={vault.is_active ? 'default' : 'secondary'}>
-          {vault.is_active ? 'Ativo' : 'Inativo'}
+          {vault.is_active ? t('common.status.active') : t('common.status.inactive')}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('common.table.actions'),
       render: (vault) => (
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => openDepositDialog(vault)}
-            aria-label="Depositar"
+            aria-label={t('pages.vaults.depositBtn')}
             disabled={!vault.is_active}
           >
             <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
@@ -532,7 +531,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => openWithdrawDialog(vault)}
-            aria-label="Sacar"
+            aria-label={t('pages.vaults.withdrawBtn')}
             disabled={!vault.is_active || parseFloat(vault.current_balance) <= 0}
           >
             <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
@@ -541,7 +540,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => handleApplyYield(vault)}
-            aria-label="Aplicar Rendimento"
+            aria-label={t('pages.vaults.applyYieldBtn')}
             disabled={!vault.is_active || vault.pending_yield <= 0}
           >
             <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
@@ -550,7 +549,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => openTransactionsDialog(vault)}
-            aria-label="Ver Transações"
+            aria-label={t('pages.vaults.transactionsBtn')}
           >
             <History className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -558,7 +557,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => handleEdit(vault)}
-            aria-label="Editar"
+            aria-label={t('common.actions.edit')}
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -566,7 +565,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(vault.id)}
-            aria-label="Excluir"
+            aria-label={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>
@@ -578,10 +577,10 @@ export default function Vaults() {
   return (
     <PageContainer>
       <PageHeader
-        title="Cofres"
+        title={t('pages.vaults.title')}
         icon={<Vault />}
         action={{
-          label: 'Novo Cofre',
+          label: t('pages.vaults.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -591,7 +590,9 @@ export default function Vaults() {
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.vaults.totalBalance')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">
@@ -602,7 +603,7 @@ export default function Vaults() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Rendimentos Acumulados
+              {t('pages.vaults.totalYield')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -613,7 +614,9 @@ export default function Vaults() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Rendimentos Pendentes</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.vaults.pendingYield')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-info">
@@ -628,23 +631,23 @@ export default function Vaults() {
         columns={columns}
         keyExtractor={(vault) => vault.id}
         isLoading={isLoading}
-        emptyState={{ message: 'Nenhum cofre cadastrado' }}
+        emptyState={{ message: t('pages.vaults.emptyState') }}
       />
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedVault ? 'Editar Cofre' : 'Novo Cofre'}</DialogTitle>
+            <DialogTitle>
+              {selectedVault ? t('pages.vaults.editTitle') : t('pages.vaults.newTitle')}
+            </DialogTitle>
             <DialogDescription>
-              {selectedVault
-                ? 'Altere os dados do cofre abaixo.'
-                : 'Preencha os dados para criar um novo cofre.'}
+              {selectedVault ? t('pages.vaults.editDesc') : t('pages.vaults.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="description">Descrição *</Label>
+              <Label htmlFor="description">{t('common.fields.description')} *</Label>
               <Input
                 id="description"
                 value={formData.description}
@@ -655,7 +658,7 @@ export default function Vaults() {
               />
             </div>
             <div>
-              <Label htmlFor="account">Conta Associada *</Label>
+              <Label htmlFor="account">{t('common.fields.account')} *</Label>
               <Select
                 value={formData.account.toString()}
                 onValueChange={(value) =>
@@ -664,7 +667,7 @@ export default function Vaults() {
                 disabled={!!selectedVault}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma conta" />
+                  <SelectValue placeholder={t('common.fields.selectAccount')} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((account) => (
@@ -676,7 +679,9 @@ export default function Vaults() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="annual_yield_rate">Taxa de Rendimento (% ao ano)</Label>
+              <Label htmlFor="annual_yield_rate">
+                {t('pages.vaults.yieldRateLabel')}
+              </Label>
               <Input
                 id="annual_yield_rate"
                 type="number"
@@ -692,11 +697,11 @@ export default function Vaults() {
                 placeholder="Ex: 12.00"
               />
               <p className="mt-1 text-xs text-muted-foreground">
-                Deixe 0 para cofres sem rendimento. Ex: 12 = 12% ao ano
+                {t('pages.vaults.yieldRateHint')}
               </p>
             </div>
             <div>
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">{t('common.fields.notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes || ''}
@@ -713,18 +718,22 @@ export default function Vaults() {
                   setFormData({ ...formData, is_active: e.target.checked })
                 }
               />
-              <Label htmlFor="is_active">Cofre ativo</Label>
+              <Label htmlFor="is_active">{t('pages.vaults.activeVault')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !formData.description}
             >
-              {isSubmitting ? 'Salvando...' : selectedVault ? 'Salvar' : 'Criar'}
+              {isSubmitting
+                ? t('common.actions.saving')
+                : selectedVault
+                  ? t('common.actions.save')
+                  : t('common.actions.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -734,13 +743,15 @@ export default function Vaults() {
       <Dialog open={isDepositDialogOpen} onOpenChange={setIsDepositDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Depositar no Cofre</DialogTitle>
+            <DialogTitle>{t('pages.vaults.depositTitle')}</DialogTitle>
             <DialogDescription>
               {selectedVault && (
                 <>
-                  Depositar no cofre "{selectedVault.description}".
+                  {t('pages.vaults.depositVaultDesc', {
+                    name: selectedVault.description,
+                  })}
                   <br />
-                  Saldo disponível na conta:{' '}
+                  {t('pages.vaults.availableAccountBalance')}{' '}
                   {formatCurrency(parseFloat(selectedVault.account_balance))}
                 </>
               )}
@@ -748,7 +759,9 @@ export default function Vaults() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="deposit_amount">Valor do Depósito *</Label>
+              <Label htmlFor="deposit_amount">
+                {t('pages.vaults.depositAmountLabel')}
+              </Label>
               <Input
                 id="deposit_amount"
                 type="number"
@@ -763,7 +776,9 @@ export default function Vaults() {
               />
             </div>
             <div>
-              <Label htmlFor="deposit_description">Descrição</Label>
+              <Label htmlFor="deposit_description">
+                {t('common.fields.description')}
+              </Label>
               <Input
                 id="deposit_description"
                 value={operationDescription}
@@ -774,10 +789,12 @@ export default function Vaults() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDepositDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleDeposit} disabled={isSubmitting || !operationAmount}>
-              {isSubmitting ? 'Depositando...' : 'Depositar'}
+              {isSubmitting
+                ? t('pages.vaults.depositAction')
+                : t('pages.vaults.depositBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -787,13 +804,15 @@ export default function Vaults() {
       <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Sacar do Cofre</DialogTitle>
+            <DialogTitle>{t('pages.vaults.withdrawTitle')}</DialogTitle>
             <DialogDescription>
               {selectedVault && (
                 <>
-                  Sacar do cofre "{selectedVault.description}".
+                  {t('pages.vaults.withdrawVaultDesc', {
+                    name: selectedVault.description,
+                  })}
                   <br />
-                  Saldo disponível no cofre:{' '}
+                  {t('pages.vaults.availableVaultBalance')}{' '}
                   {formatCurrency(parseFloat(selectedVault.current_balance))}
                 </>
               )}
@@ -801,7 +820,9 @@ export default function Vaults() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="withdraw_amount">Valor do Saque *</Label>
+              <Label htmlFor="withdraw_amount">
+                {t('pages.vaults.withdrawAmountLabel')}
+              </Label>
               <Input
                 id="withdraw_amount"
                 type="number"
@@ -816,7 +837,9 @@ export default function Vaults() {
               />
             </div>
             <div>
-              <Label htmlFor="withdraw_description">Descrição</Label>
+              <Label htmlFor="withdraw_description">
+                {t('common.fields.description')}
+              </Label>
               <Input
                 id="withdraw_description"
                 value={operationDescription}
@@ -827,14 +850,16 @@ export default function Vaults() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsWithdrawDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleWithdraw}
               disabled={isSubmitting || !operationAmount}
             >
-              {isSubmitting ? 'Sacando...' : 'Sacar'}
+              {isSubmitting
+                ? t('pages.vaults.withdrawAction')
+                : t('pages.vaults.withdrawBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -847,15 +872,17 @@ export default function Vaults() {
       >
         <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Transações do Cofre</DialogTitle>
+            <DialogTitle>{t('pages.vaults.transactionsTitle')}</DialogTitle>
             <DialogDescription>
               {selectedVault && (
                 <>
-                  Histórico de transações do cofre "{selectedVault.description}".
+                  {t('pages.vaults.transactionHistoryDesc', {
+                    name: selectedVault.description,
+                  })}
                   <br />
-                  Saldo atual:{' '}
+                  {t('pages.vaults.columns.currentBalance')}:{' '}
                   {formatCurrency(parseFloat(selectedVault.current_balance))} |
-                  Rendimentos:{' '}
+                  {t('pages.vaults.columns.yields')}:{' '}
                   {formatCurrency(parseFloat(selectedVault.accumulated_yield))}
                 </>
               )}
@@ -865,7 +892,7 @@ export default function Vaults() {
           <div className="space-y-4">
             {/* Filter */}
             <div className="flex items-center gap-2">
-              <Label>Filtrar por tipo:</Label>
+              <Label>{t('pages.vaults.filterByType')}</Label>
               <Select
                 value={transactionsFilter}
                 onValueChange={(value) => {
@@ -879,10 +906,16 @@ export default function Vaults() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="deposit">Depósitos</SelectItem>
-                  <SelectItem value="withdrawal">Saques</SelectItem>
-                  <SelectItem value="yield">Rendimentos</SelectItem>
+                  <SelectItem value="all">{t('pages.vaults.filterAll')}</SelectItem>
+                  <SelectItem value="deposit">
+                    {t('pages.vaults.filterDeposits')}
+                  </SelectItem>
+                  <SelectItem value="withdrawal">
+                    {t('pages.vaults.filterWithdrawals')}
+                  </SelectItem>
+                  <SelectItem value="yield">
+                    {t('pages.vaults.filterYields')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -892,12 +925,14 @@ export default function Vaults() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Saldo Após</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead>{t('pages.vaults.columns.date')}</TableHead>
+                    <TableHead>{t('pages.vaults.columns.type')}</TableHead>
+                    <TableHead>{t('pages.vaults.columns.amount')}</TableHead>
+                    <TableHead>{t('common.fields.description')}</TableHead>
+                    <TableHead>{t('pages.vaults.columns.afterBalance')}</TableHead>
+                    <TableHead className="text-right">
+                      {t('common.table.actions')}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -907,7 +942,7 @@ export default function Vaults() {
                         colSpan={6}
                         className="py-8 text-center text-muted-foreground"
                       >
-                        Nenhuma transação encontrada
+                        {t('pages.vaults.noTransactions')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -915,7 +950,7 @@ export default function Vaults() {
                       <TableRow key={transaction.id}>
                         <TableCell>
                           {new Date(transaction.transaction_date).toLocaleDateString(
-                            'pt-BR'
+                            i18n.language
                           )}
                         </TableCell>
                         <TableCell>
@@ -999,14 +1034,14 @@ export default function Vaults() {
                                       onClick={handleUpdateTransaction}
                                       disabled={isSubmitting}
                                     >
-                                      Salvar
+                                      {t('common.actions.save')}
                                     </Button>
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={cancelEditTransaction}
                                     >
-                                      Cancelar
+                                      {t('common.actions.cancel')}
                                     </Button>
                                   </>
                                 ) : (
@@ -1015,7 +1050,7 @@ export default function Vaults() {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => startEditTransaction(transaction)}
-                                      aria-label="Editar"
+                                      aria-label={t('common.actions.edit')}
                                     >
                                       <Pencil className="h-4 w-4" aria-hidden="true" />
                                     </Button>
@@ -1025,7 +1060,7 @@ export default function Vaults() {
                                       onClick={() =>
                                         handleDeleteTransaction(transaction)
                                       }
-                                      aria-label="Excluir"
+                                      aria-label={t('common.actions.delete')}
                                     >
                                       <Trash2
                                         className="h-4 w-4 text-destructive"
@@ -1051,7 +1086,7 @@ export default function Vaults() {
               variant="outline"
               onClick={() => setIsTransactionsDialogOpen(false)}
             >
-              Fechar
+              {t('common.actions.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

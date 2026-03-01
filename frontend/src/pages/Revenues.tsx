@@ -8,6 +8,7 @@ import {
   Download,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
@@ -50,6 +51,7 @@ import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Revenues() {
+  const { t } = useTranslation();
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -145,7 +147,7 @@ export default function Revenues() {
       setLoans(Array.isArray(loansData) ? loansData : []);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -160,21 +162,21 @@ export default function Revenues() {
       if (selectedRevenue) {
         await revenuesService.update(selectedRevenue.id, data);
         toast({
-          title: 'Receita atualizada',
-          description: 'A receita foi atualizada com sucesso.',
+          title: t('pages.revenues.updated'),
+          description: t('pages.revenues.updatedDesc'),
         });
       } else {
         await revenuesService.create(data);
         toast({
-          title: 'Receita criada',
-          description: 'A receita foi criada com sucesso.',
+          title: t('pages.revenues.created'),
+          description: t('pages.revenues.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -186,9 +188,8 @@ export default function Revenues() {
   const handleCreate = () => {
     if (accounts.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos uma conta cadastrada antes de criar uma receita.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.revenues.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -199,24 +200,23 @@ export default function Revenues() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir receita',
-      description:
-        'Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.revenues.deleteTitle'),
+      description: t('pages.revenues.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await revenuesService.delete(id);
       toast({
-        title: 'Receita excluída',
-        description: 'A receita foi excluída com sucesso.',
+        title: t('pages.revenues.deleted'),
+        description: t('pages.revenues.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -245,12 +245,12 @@ export default function Revenues() {
     try {
       await revenuesService.exportRevenues(params);
       toast({
-        title: 'Exportação concluída',
-        description: 'O arquivo foi baixado com sucesso.',
+        title: t('common.messages.exportSuccess'),
+        description: t('common.messages.exportSuccessDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
+        title: t('common.messages.exportError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -271,7 +271,7 @@ export default function Revenues() {
   const columns: Column<Revenue>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.revenues.columns.description'),
       render: (revenue) => (
         <div>
           <div className="font-medium">{revenue.description}</div>
@@ -281,7 +281,7 @@ export default function Revenues() {
     },
     {
       key: 'value',
-      label: 'Valor',
+      label: t('pages.revenues.columns.amount'),
       align: 'right',
       render: (revenue) => (
         <span className="font-semibold text-success">
@@ -291,14 +291,14 @@ export default function Revenues() {
     },
     {
       key: 'account',
-      label: 'Conta',
+      label: t('pages.revenues.columns.account'),
       render: (revenue) => (
         <span className="text-sm">{revenue.account_name || 'N/A'}</span>
       ),
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.revenues.columns.category'),
       render: (revenue) => (
         <Badge variant="success">
           {translate('revenueCategories', revenue.category)}
@@ -307,16 +307,16 @@ export default function Revenues() {
     },
     {
       key: 'received',
-      label: 'Status',
+      label: t('pages.revenues.columns.status'),
       render: (revenue) => (
         <Badge variant={revenue.received ? 'success' : 'destructive'}>
-          {revenue.received ? 'Recebido' : 'Pendente'}
+          {revenue.received ? 'Recebido' : t('common.status.pending')}
         </Badge>
       ),
     },
     {
       key: 'date',
-      label: 'Data',
+      label: t('pages.revenues.columns.date'),
       render: (revenue) => (
         <div>
           <div className="text-sm">{formatDateTime(revenue.date, revenue.horary)}</div>
@@ -330,7 +330,7 @@ export default function Revenues() {
 
   return (
     <PageContainer>
-      <PageHeader title="Receitas" icon={<TrendingUp />}>
+      <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -338,11 +338,11 @@ export default function Revenues() {
             className="gap-2"
           >
             <Download className="h-4 w-4" />
-            Exportar
+            {t('common.actions.export')}
           </Button>
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="h-4 w-4" />
-            Nova Receita
+            {t('pages.revenues.newBtn')}
           </Button>
         </div>
       </PageHeader>
@@ -351,7 +351,7 @@ export default function Revenues() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
+            <span className="font-semibold">{t('common.actions.filter')}</span>
           </div>
           {(searchTerm ||
             categoryFilter !== 'all' ||
@@ -360,13 +360,13 @@ export default function Revenues() {
             endDate ||
             selectedAccounts.length > 0) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar Filtros
+              {t('common.actions.clearFilters')}
             </Button>
           )}
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Input
-            placeholder="Buscar por descrição ou origem..."
+            placeholder={t('pages.revenues.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -375,7 +375,7 @@ export default function Revenues() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas Categorias</SelectItem>
+              <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
               {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
                 <SelectItem key={k} value={k}>
                   {v}
@@ -388,15 +388,15 @@ export default function Revenues() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
+              <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
               <SelectItem value="received">Recebido</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1">
-            <span className="text-sm">Data Inicial</span>
+            <span className="text-sm">{t('pages.revenues.dateFrom')}</span>
             <DatePicker
               value={startDate}
               onChange={setStartDate}
@@ -405,7 +405,7 @@ export default function Revenues() {
             />
           </div>
           <div className="space-y-1">
-            <span className="text-sm">Data Final</span>
+            <span className="text-sm">{t('pages.revenues.dateTo')}</span>
             <DatePicker
               value={endDate}
               onChange={setEndDate}
@@ -414,13 +414,15 @@ export default function Revenues() {
             />
           </div>
           <div className="space-y-1">
-            <span className="text-sm">Contas</span>
+            <span className="text-sm">{t('common.fields.account')}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
                   {selectedAccounts.length === 0
-                    ? 'Todas as Contas'
-                    : `${selectedAccounts.length} conta(s) selecionada(s)`}
+                    ? t('pages.revenues.allAccounts')
+                    : t('pages.revenues.selectedAccounts', {
+                        count: selectedAccounts.length,
+                      })}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </PopoverTrigger>
@@ -447,10 +449,10 @@ export default function Revenues() {
         </div>
         <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
-            {filteredRevenues.length} receita(s) encontrada(s)
+            {t('pages.revenues.foundRevenues', { count: filteredRevenues.length })}
           </span>
           <span className="text-lg font-bold text-success">
-            Total: {formatCurrency(totalRevenues)}
+            {t('pages.revenues.total')} {formatCurrency(totalRevenues)}
           </span>
         </div>
       </div>
@@ -461,7 +463,7 @@ export default function Revenues() {
         keyExtractor={(revenue) => revenue.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma receita cadastrada.',
+          message: t('pages.revenues.emptyState'),
         }}
         actions={(revenue) => (
           <div className="flex items-center justify-end gap-2">
@@ -473,7 +475,7 @@ export default function Revenues() {
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(revenue)}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -481,7 +483,7 @@ export default function Revenues() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(revenue.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -492,8 +494,8 @@ export default function Revenues() {
       <ExportModal
         open={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
-        title="Exportar Receitas"
-        description="Selecione o período e formato para exportar as receitas filtradas."
+        title={t('pages.revenues.exportTitle')}
+        description={t('pages.revenues.exportDesc')}
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}
@@ -503,12 +505,14 @@ export default function Revenues() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedRevenue ? 'Editar Receita' : 'Nova Receita'}
+              {selectedRevenue
+                ? t('pages.revenues.editTitle')
+                : t('pages.revenues.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedRevenue
-                ? 'Atualize as informações da receita'
-                : 'Adicione uma nova receita ao sistema'}
+                ? t('pages.revenues.editDesc')
+                : t('pages.revenues.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <RevenueForm
