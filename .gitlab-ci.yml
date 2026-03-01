@@ -7,6 +7,7 @@ stages:
   - typecheck
   - test
   - build
+  - scan
   - deploy-staging
   - deploy-production
 
@@ -93,6 +94,24 @@ lint:frontend:
   script:
     - npm run lint
     - npm run format:check
+
+lint:bandit:
+  extends: .python_base
+  stage: lint
+  script:
+    - bandit -r api/ -x api/tests,api/migrations -ll
+
+lint:pip-audit:
+  extends: .python_base
+  stage: lint
+  script:
+    - pip-audit -r api/requirements.txt --desc
+
+lint:npm-audit:
+  extends: .node_base
+  stage: lint
+  script:
+    - npm audit --audit-level=high
 
 # ==============================================================================
 # STAGE: typecheck
@@ -231,6 +250,39 @@ build:frontend:
       dotenv: frontend.env
 
 # ==============================================================================
+# STAGE: scan
+# ==============================================================================
+
+.trivy_base:
+  image: aquasec/trivy:latest
+  stage: scan
+  interruptible: false
+  variables:
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_NO_PROGRESS: "true"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+scan:api:
+  extends: .trivy_base
+  needs:
+    - job: build:api
+      artifacts: true
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+scan:frontend:
+  extends: .trivy_base
+  needs:
+    - job: build:frontend
+      artifacts: true
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+# ==============================================================================
 # STAGE: deploy-staging
 # ==============================================================================
 
@@ -243,6 +295,8 @@ deploy:staging:
       artifacts: true
     - job: build:frontend
       artifacts: true
+    - job: scan:api
+    - job: scan:frontend
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
   environment:
@@ -272,6 +326,8 @@ deploy:production:
       artifacts: true
     - job: build:frontend
       artifacts: true
+    - job: scan:api
+    - job: scan:frontend
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual

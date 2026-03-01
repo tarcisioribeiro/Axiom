@@ -5,8 +5,11 @@
 #
 # Etapas cobertas (mesma ordem do .gitlab-ci.yml):
 #
-#   lint:backend       black · isort · flake8 · bandit · pip-audit
-#   lint:frontend      eslint · prettier · npm audit
+#   lint:backend       black · isort · flake8
+#   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
+#   lint:pip-audit     pip-audit -r api/requirements.txt --desc
+#   lint:frontend      eslint · prettier
+#   lint:npm-audit     npm audit --audit-level=high
 #   typecheck:backend  mypy
 #   typecheck:frontend tsc
 #   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40
@@ -296,32 +299,31 @@ fi
 section "LINT"
 
 if ! $FRONTEND_ONLY; then
-	run_step_safe "lint" "backend › black" \
+	run_step_safe "lint:backend" "black" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/black' --check --diff ."
 
-	run_step_safe "lint" "backend › isort" \
+	run_step_safe "lint:backend" "isort" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/isort' --check-only --diff ."
 
-	run_step_safe "lint" "backend › flake8" \
+	run_step_safe "lint:backend" "flake8" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/flake8' ."
 
-	run_step_safe "lint" "backend › bandit" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/bandit' -r . -ll --exclude ./migrations,./venv,./staticfiles -c pyproject.toml"
+	run_step_safe "lint:bandit" "bandit -r api/ -x api/tests,api/migrations -ll" \
+		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r api/ -x api/tests,api/migrations -ll"
 
-	run_step_safe "lint" "backend › pip-audit" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/pip-audit' -r requirements.txt --desc"
+	run_step_safe "lint:pip-audit" "pip-audit -r api/requirements.txt --desc" \
+		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/api/requirements.txt' --desc"
 fi
 
 if ! $BACKEND_ONLY; then
-	run_step_safe "lint" "frontend › eslint" \
+	run_step_safe "lint:frontend" "eslint" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run lint"
 
-	run_step_safe "lint" "frontend › prettier" \
+	run_step_safe "lint:frontend" "prettier" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run format:check"
 
-	# npm audit: falha em HIGH+CRITICAL em deps de produção (espelha CI)
-	run_step_safe "lint" "frontend › npm audit (prod, high+)" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high --omit=dev"
+	run_step_safe "lint:npm-audit" "npm audit --audit-level=high" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high"
 fi
 
 # ==============================================================================
@@ -333,7 +335,7 @@ if ! $FRONTEND_ONLY; then
 	# mypy precisa de SECRET_KEY não-vazio para inicializar o django-stubs
 	# pragma: allowlist secret
 	_MYPY_SECRET_KEY="ci-insecure-key-for-typecheck-only-000000000000000000000000000" # pragma: allowlist secret
-	run_step_safe "typecheck" "backend › mypy" \
+	run_step_safe "typecheck:backend" "mypy" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
 		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
@@ -341,7 +343,7 @@ if ! $FRONTEND_ONLY; then
 fi
 
 if ! $BACKEND_ONLY; then
-	run_step_safe "typecheck" "frontend › tsc" \
+	run_step_safe "typecheck:frontend" "tsc" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run typecheck"
 fi
 
@@ -352,14 +354,14 @@ section "TEST"
 
 if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
-	run_step_safe "test" "backend › pytest" \
+	run_step_safe "test:backend" "pytest" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
 		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40'
 fi
 
 if ! $BACKEND_ONLY; then
 	# vitest --run para modo não-interativo (igual ao CI)
-	run_step_safe "test" "frontend › vitest" \
+	run_step_safe "test:frontend" "vitest" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage -- --run"
 fi
 
@@ -403,7 +405,7 @@ fi
 # STAGE: scan (opcional — requer --with-build + trivy instalado)
 # ==============================================================================
 if $WITH_SCAN; then
-	section "SCAN — Trivy (opcional)"
+	section "SCAN (opcional — requer --with-build + trivy)"
 
 	if ! $WITH_BUILD; then
 		log "${YELLOW}  ⚠  --with-scan requer --with-build. Pulando scan.${NC}"
@@ -412,13 +414,13 @@ if $WITH_SCAN; then
 		log "${DIM}     Instale: https://aquasecurity.github.io/trivy/latest/getting-started/installation/${NC}"
 	else
 		if ! $FRONTEND_ONLY; then
-			run_step_safe "scan" "api › trivy (HIGH,CRITICAL)" \
+			run_step_safe "scan:api" "trivy HIGH,CRITICAL" \
 				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
 				mindledger/api:ci-local
 		fi
 
 		if ! $BACKEND_ONLY; then
-			run_step_safe "scan" "frontend › trivy (HIGH,CRITICAL)" \
+			run_step_safe "scan:frontend" "trivy HIGH,CRITICAL" \
 				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
 				mindledger/frontend:ci-local
 		fi
