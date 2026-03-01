@@ -45,10 +45,9 @@ spec:
         - name: gitlab-registry-secret
       containers:
         - name: api
-          # TODO: replace with your actual GitLab registry path
-          # Format: registry.gitlab.com/GITLAB_USER/MindLedger/api:latest
-          # The CI pipeline will update this image on every deploy via kubectl set image
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/api:latest
+          # Image tag is pinned to the build digest on every deploy by CI/CD.
+          # See deploy:production job in .gitlab-ci.yml.
+          image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
           ports:
             - containerPort: 8002
               name: http
