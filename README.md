@@ -33,6 +33,23 @@ MindLedger/
 
 - Docker e Docker Compose
 
+## Requisitos de Hardware Recomendados
+
+Os limites de recursos definidos no `docker-compose.yml` totalizam aproximadamente **4.75 GB de RAM** e **4 CPUs** nos picos máximos. A tabela abaixo detalha os limites por serviço:
+
+| Serviço      | Memória (limite) | Memória (reserva) | CPU (limite) | CPU (reserva) |
+|-------------|-----------------|-------------------|-------------|---------------|
+| api         | 1 GB            | 256 MB            | 1.0         | 0.25          |
+| frontend    | 256 MB          | 64 MB             | 0.5         | 0.1           |
+| db          | 2 GB            | 512 MB            | 1.0         | 0.5           |
+| redis       | 512 MB          | 128 MB            | 0.5         | 0.1           |
+| minio       | 1 GB            | 256 MB            | 1.0         | 0.25          |
+
+**Especificação mínima recomendada para o host:**
+- **RAM**: 8 GB (folga para o sistema operacional e processos de build)
+- **CPU**: 4 núcleos
+- **Disco**: 20 GB livres (banco de dados, logs, objetos MinIO e imagens Docker)
+
 ## Configuração
 
 ### 1. Clone o repositório
