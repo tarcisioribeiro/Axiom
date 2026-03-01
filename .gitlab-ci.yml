@@ -99,7 +99,7 @@ lint:bandit:
   extends: .python_base
   stage: lint
   script:
-    - bandit -r api/ -x api/tests,api/migrations -ll
+    - bandit -r api/ -x api/tests,api/\*/migrations -ll
 
 lint:pip-audit:
   extends: .python_base
