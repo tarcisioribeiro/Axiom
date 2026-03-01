@@ -7,6 +7,7 @@
 # - minio: Object storage para arquivos
 # - api: Django REST Framework backend
 # - frontend: React frontend
+# - db-backup: Scheduled daily pg_dump → encrypt → MinIO upload
 # =============================================================================
 
 services:
@@ -202,6 +203,60 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
+    networks:
+      - network
+
+  # Database Backup — daily pg_dump + AES-256 encryption + MinIO upload
+  # Schedule is controlled by BACKUP_CRON (default: 02:00 BRT daily).
+  # Run a manual backup:  docker compose exec db-backup /scripts/backup.sh
+  # Run verification:     docker compose exec db-backup /scripts/verify-backup.sh
+  # Check health:         docker compose exec api python manage.py check_backup_health
+  db-backup:
+    build:
+      context: ./docker/backup
+      dockerfile: Dockerfile
+    container_name: mindledger-db-backup
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      TZ: America/Sao_Paulo
+      # PostgreSQL connection — point to the compose db service
+      PGHOST: db
+      PGPORT: "5432"
+      DB_NAME: ${DB_NAME:-mindledger_db}
+      DB_USER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      # MinIO — reuse same instance used by the API
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${BACKUP_MINIO_BUCKET:-mindledger-backups}
+      MC_BIN: /usr/local/bin/mc
+      # Backup encryption — NEVER change after first backup
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      # Cron schedule (default: 02:00 BRT daily)
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      # GFS retention policy
+      KEEP_DAILY: ${KEEP_DAILY:-7}
+      KEEP_WEEKLY: ${KEEP_WEEKLY:-4}
+      KEEP_MONTHLY: ${KEEP_MONTHLY:-3}
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups
+      - ./api/scripts:/scripts:ro
+      - ./api/media:/app/media:ro
+    restart: unless-stopped
+    healthcheck:
+      # Verify crond is alive. Backup staleness is monitored separately
+      # via `python manage.py check_backup_health`.
+      test: ["CMD-SHELL", "pgrep crond || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - network
 
