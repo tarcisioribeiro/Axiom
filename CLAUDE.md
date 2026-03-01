@@ -298,6 +298,27 @@ pre-commit install --hook-type commit-msg
 
 Config is at `commitlint.config.js` (project root). Packages are in `frontend/devDependencies`.
 
+## Dependency Management
+
+All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) to prevent unexpected breaking changes and supply-chain attacks via minor/patch updates.
+
+### Files
+| File | Purpose |
+|------|---------|
+| `api/requirements.txt` | Production Python deps — pinned to exact versions |
+| `api/requirements-dev.txt` | Dev/test Python deps — also pinned exactly |
+| `frontend/package.json` | npm deps — exact versions, enforced by `package-lock.json` |
+
+### Updating dependencies
+1. Create a dedicated PR for dependency updates (do not bundle with feature work).
+2. Review the changelog/release notes for each package being upgraded.
+3. **Backend**: run `pip install -r requirements.txt` in a clean virtualenv, verify tests pass (`docker compose exec api python -m pytest tests/`), then update the pin in the file.
+4. **Frontend**: run `npm install <pkg>@<version>` to update `package-lock.json` as well, verify tests pass (`npm run test -- --run`), then commit both files.
+5. Use commit type `chore(deps):` per the commit convention.
+
+### Automated updates (Dependabot)
+`.github/dependabot.yml` is configured to open monthly PRs for pip, npm, and GitHub Actions dependencies. Each PR must pass CI and receive a manual changelog review before merging.
+
 ## Tool Configuration
 
 Backend tools configured in `api/pyproject.toml`: Black (line-length 88, excludes migrations), isort (black profile), pytest (DJANGO_SETTINGS_MODULE=app.settings), coverage, mypy, flake8.
