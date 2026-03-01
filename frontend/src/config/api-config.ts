@@ -83,6 +83,7 @@ export const API_CONFIG = {
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',
+    VAULT_SIMULATOR: '/api/v1/vaults/simulate/',
     VAULT_TRANSACTIONS: '/api/v1/vault-transactions/',
     FINANCIAL_GOALS: '/api/v1/financial-goals/',
 

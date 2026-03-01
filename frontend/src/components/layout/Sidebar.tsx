@@ -30,6 +30,7 @@ import {
   Vault,
   Wand2,
   PiggyBank,
+  LineChart,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -197,6 +198,11 @@ const navModules: NavModule[] = [
             icon: <HandCoins className="h-4 w-4" />,
           },
           { title: 'Cofres', href: '/vaults', icon: <Vault className="h-4 w-4" /> },
+          {
+            title: 'Simulador de Cofre',
+            href: '/vaults/simulator',
+            icon: <LineChart className="h-4 w-4" />,
+          },
         ],
       },
     ],

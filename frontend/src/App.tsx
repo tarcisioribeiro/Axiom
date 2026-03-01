@@ -56,6 +56,7 @@ const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
 const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
+const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
@@ -358,6 +359,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <FinancialGoals />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/vaults/simulator"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <VaultSimulator />
               </Suspense>
             }
           />
