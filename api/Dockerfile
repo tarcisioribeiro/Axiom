@@ -44,8 +44,14 @@ COPY . .
 
 RUN black --check . && isort --check . && flake8 .
 
-# Stage 5: Production image
-FROM base AS production
+# Stage 5: Production image — starts fresh to exclude build-only packages
+# (build-essential brings linux-libc-dev with kernel CVEs not needed at runtime)
+FROM python:3.12-slim AS production
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    netcat-openbsd \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

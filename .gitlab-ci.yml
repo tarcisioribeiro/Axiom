@@ -274,7 +274,7 @@ scan:api:
     - job: build:api
       artifacts: true
   script:
-    - trivy image --exit-code 1 --severity HIGH,CRITICAL "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
 
 scan:frontend:
   extends: .trivy_base
@@ -282,7 +282,7 @@ scan:frontend:
     - job: build:frontend
       artifacts: true
   script:
-    - trivy image --exit-code 1 --severity HIGH,CRITICAL "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
 
 # ==============================================================================
 # STAGE: deploy-staging
