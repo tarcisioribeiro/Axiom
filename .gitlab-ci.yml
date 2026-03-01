@@ -169,3 +169,123 @@ test:backend:
     when: always
     paths:
       - api/coverage.xml
+
+# ==============================================================================
+# STAGE: build
+# ==============================================================================
+
+# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   KUBE_CONFIG       — base64-encoded kubeconfig for the staging cluster
+#   KUBE_CONFIG_PROD  — base64-encoded kubeconfig for the production cluster
+#                       (can be the same value if staging & production share one cluster)
+#   STAGING_URL       — public URL of the staging environment (e.g. https://staging.example.com)
+#   PRODUCTION_URL    — public URL of the production environment (e.g. https://example.com)
+
+.build_base:
+  extends: .docker_base
+  stage: build
+  interruptible: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+build:api:
+  extends: .build_base
+  needs:
+    - job: test:backend
+    - job: typecheck:frontend
+  script:
+    - docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+    - docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
+        docker push "$API_IMAGE:$CI_COMMIT_TAG"
+      fi
+    - |
+      API_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$API_IMAGE:$CI_COMMIT_SHORT_SHA")
+      echo "API_IMAGE_DIGEST=$API_DIGEST" > api.env
+  artifacts:
+    reports:
+      dotenv: api.env
+
+build:frontend:
+  extends: .build_base
+  needs:
+    - job: test:backend
+    - job: typecheck:frontend
+  script:
+    - docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+      fi
+    - |
+      FRONTEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA")
+      echo "FRONTEND_IMAGE_DIGEST=$FRONTEND_DIGEST" > frontend.env
+  artifacts:
+    reports:
+      dotenv: frontend.env
+
+# ==============================================================================
+# STAGE: deploy-staging
+# ==============================================================================
+
+deploy:staging:
+  image: bitnami/kubectl:1.30
+  stage: deploy-staging
+  interruptible: false
+  needs:
+    - job: build:api
+      artifacts: true
+    - job: build:frontend
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  environment:
+    name: staging
+    url: $STAGING_URL
+  before_script:
+    - echo "$KUBE_CONFIG" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE_DIGEST"
+    - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE_DIGEST"
+    - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
+  after_script:
+    - rm -f /tmp/kubeconfig
+
+# ==============================================================================
+# STAGE: deploy-production
+# ==============================================================================
+
+deploy:production:
+  image: bitnami/kubectl:1.30
+  stage: deploy-production
+  interruptible: false
+  needs:
+    - job: build:api
+      artifacts: true
+    - job: build:frontend
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: false
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  before_script:
+    - echo "$KUBE_CONFIG_PROD" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - kubectl -n mindledger set image deployment/api api="$API_IMAGE_DIGEST"
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE_DIGEST"
+    - kubectl -n mindledger rollout status deployment/api --timeout=300s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
+  after_script:
+    - rm -f /tmp/kubeconfig
