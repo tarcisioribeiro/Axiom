@@ -40,6 +40,9 @@ RUN npm run build
 # Stage 2: Production with nginx
 FROM nginx:alpine
 
+# Upgrade OS packages to pick up latest security patches (e.g. libpng CVE-2026-25646)
+RUN apk upgrade --no-cache
+
 # Create non-root user for nginx
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
