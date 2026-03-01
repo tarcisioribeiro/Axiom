@@ -289,7 +289,7 @@ scan:frontend:
 # ==============================================================================
 
 deploy:staging:
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   stage: deploy-staging
   interruptible: false
   needs:
@@ -320,7 +320,7 @@ deploy:staging:
 # ==============================================================================
 
 deploy:production:
-  image: bitnami/kubectl:1.30
+  image: bitnami/kubectl:latest
   stage: deploy-production
   interruptible: false
   needs:
