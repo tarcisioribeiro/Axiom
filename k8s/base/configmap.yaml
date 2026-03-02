@@ -18,8 +18,8 @@ data:
   API_PORT: "8002"
   DEBUG: "0"
   # Include the ingress hostname so Django accepts requests forwarded by nginx.
-  # TODO: replace "mindledger.example.com" with your actual domain.
   ALLOWED_HOSTS: "localhost,127.0.0.1,api-service,mindledger-api,mindledger.tjtux.duckdns.org"
+  # Include both http (local Kind dev) and https (production via ingress TLS).
   CORS_ALLOWED_ORIGINS: "http://localhost:39101,http://127.0.0.1:39101,http://frontend-service,https://mindledger.tjtux.duckdns.org"
 
   # MinIO object storage

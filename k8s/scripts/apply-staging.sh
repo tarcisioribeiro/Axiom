@@ -26,7 +26,8 @@
 #          --docker-password=YOUR_PERSONAL_ACCESS_TOKEN \
 #          --namespace mindledger-staging
 #
-#   5. Secrets file populated with real values and applied:
+#   5. Required environment variables — set ALL before running:
+#        export MINDLEDGER_STAGING_DOMAIN=staging.mindledger.example.com
 #        export STAGING_DB_NAME=mindledger_staging
 #        export STAGING_DB_USER=mindledger_staging
 #        export STAGING_DB_PASSWORD=$(openssl rand -base64 24)
@@ -45,13 +46,18 @@ set -euo pipefail
 
 NAMESPACE="mindledger-staging"
 
-echo "==> [1/7] Namespace"
+echo "==> [1/8] Namespace"
 kubectl apply -f k8s/staging/namespace.yaml
 
-echo "==> [2/7] ConfigMap"
-kubectl apply -f k8s/staging/configmap.yaml
+echo "==> [2/8] ServiceAccounts + ResourceQuota + NetworkPolicies"
+kubectl apply -f k8s/staging/serviceaccounts.yaml
+kubectl apply -f k8s/staging/resource-quota.yaml
+kubectl apply -f k8s/staging/network-policy.yaml
 
-echo "==> [3/7] PostgreSQL"
+echo "==> [3/8] ConfigMap"
+envsubst < k8s/staging/configmap.yaml | kubectl apply -f -
+
+echo "==> [4/8] PostgreSQL"
 kubectl apply -f k8s/staging/postgres/configmap.yaml
 kubectl apply -f k8s/staging/postgres/pvc.yaml
 kubectl apply -f k8s/staging/postgres/deployment.yaml
@@ -59,21 +65,21 @@ kubectl apply -f k8s/staging/postgres/service.yaml
 echo "    Waiting for PostgreSQL to be ready..."
 kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout=120s
 
-echo "==> [4/7] Redis"
+echo "==> [5/8] Redis"
 kubectl apply -f k8s/staging/redis/pvc.yaml
 kubectl apply -f k8s/staging/redis/deployment.yaml
 kubectl apply -f k8s/staging/redis/service.yaml
 echo "    Waiting for Redis to be ready..."
 kubectl rollout status deployment/redis -n "$NAMESPACE" --timeout=60s
 
-echo "==> [5/7] MinIO"
+echo "==> [6/8] MinIO"
 kubectl apply -f k8s/staging/minio/pvc.yaml
 kubectl apply -f k8s/staging/minio/deployment.yaml
 kubectl apply -f k8s/staging/minio/service.yaml
 echo "    Waiting for MinIO to be ready..."
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
-echo "==> [6/7] API + Frontend"
+echo "==> [7/8] API + Frontend"
 kubectl apply -f k8s/staging/api/pvc.yaml
 kubectl apply -f k8s/staging/api/deployment.yaml
 kubectl apply -f k8s/staging/api/service.yaml
@@ -84,10 +90,9 @@ kubectl rollout status deployment/api -n "$NAMESPACE" --timeout=180s
 echo "    Waiting for Frontend to be ready..."
 kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
 
-echo "==> [7/7] Ingress"
-echo "    NOTE: Update staging domain in k8s/staging/ingress.yaml before applying."
-echo "    Apply with: kubectl apply -f k8s/staging/ingress.yaml"
-# kubectl apply -f k8s/staging/ingress.yaml
+echo "==> [8/8] Ingress"
+echo "    Applying ingress (MINDLEDGER_STAGING_DOMAIN=${MINDLEDGER_STAGING_DOMAIN})..."
+envsubst < k8s/staging/ingress.yaml | kubectl apply -f -
 
 echo ""
 echo "Staging deployed successfully!"

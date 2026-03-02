@@ -37,7 +37,7 @@
 #     --timeout=120s
 #
 # Then update the `email` field in both ClusterIssuers below and replace
-# every occurrence of "mindledger.example.com" with your real domain.
+# every occurrence of "${MINDLEDGER_DOMAIN}" with your real domain.
 #
 # Workflow:
 #   1. Apply with letsencrypt-staging to verify HTTP-01 challenges work.

@@ -41,6 +41,8 @@ spec:
                 sleep 2
               done
               echo "Redis is ready!"
+      serviceAccountName: sa-api
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: gitlab-registry-secret
       containers:

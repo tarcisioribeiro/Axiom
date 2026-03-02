@@ -20,9 +20,11 @@ spec:
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: minio
     spec:
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
       containers:
         - name: minio
-          image: minio/minio:latest
+          image: minio/minio:RELEASE.2024-11-07T00-52-20Z
           command:
             - minio
             - server
@@ -92,8 +94,15 @@ metadata:
     app.kubernetes.io/component: minio
 spec:
   template:
+    metadata:
+      labels:
+        app: minio-init
+        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/component: minio
     spec:
       restartPolicy: OnFailure
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
       initContainers:
         - name: wait-for-minio
           image: busybox:1.36
@@ -108,7 +117,7 @@ spec:
               echo "MinIO is ready!"
       containers:
         - name: mc
-          image: minio/mc:latest
+          image: minio/mc:RELEASE.2024-11-21T17-21-54Z
           env:
             - name: MINIO_ROOT_USER
               valueFrom:
