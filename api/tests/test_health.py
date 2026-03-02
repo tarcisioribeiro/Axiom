@@ -9,11 +9,19 @@ class HealthCheckViewTest(TestCase):
 
     def test_health_check_returns_200_when_all_healthy(self):
         url = reverse("health-check")
+        # Switch to in-memory cache so the set/get round-trip succeeds without Redis.
+        locmem_caches = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "test-health",
+            }
+        }
         with patch(
             "app.health.check_storage",
             return_value={"status": "healthy", "message": "ok"},
         ):
-            response = self.client.get(url)
+            with override_settings(CACHES=locmem_caches):
+                response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "healthy")
 
