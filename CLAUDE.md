@@ -103,6 +103,9 @@ docker-compose exec api python -m pytest tests/ --cov                         # 
 cd api && black . && isort . && flake8 .                      # Format + lint
 
 # Migrations
+# IMPORTANT: always run makemigrations locally and commit the generated files
+# before pushing. The container entrypoint runs --check --dry-run and will
+# refuse to start if there are uncommitted schema changes.
 docker-compose exec api python manage.py makemigrations
 docker-compose exec api python manage.py migrate
 

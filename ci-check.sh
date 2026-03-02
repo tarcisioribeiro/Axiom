@@ -6,6 +6,7 @@
 # Etapas cobertas (mesma ordem do .gitlab-ci.yml):
 #
 #   lint:backend       black · isort · flake8
+#   lint:migrations    makemigrations --check --dry-run
 #   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
 #   lint:pip-audit     pip-audit -r api/requirements.txt --desc
 #   lint:frontend      eslint · prettier
@@ -303,6 +304,13 @@ if ! $FRONTEND_ONLY; then
 
 	run_step_safe "lint:backend" "flake8" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/flake8' ."
+
+	run_step_safe "lint:migrations" "makemigrations --check --dry-run" \
+		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
+		-e SECRET_KEY="ci-insecure-key-for-migrations-check-only" \
+		-e DEBUG="False" \
+		-e DJANGO_SETTINGS_MODULE="app.settings" \
+		api python manage.py makemigrations --check --dry-run
 
 	run_step_safe "lint:bandit" "bandit -r api/ -x api/tests,api/migrations -ll" \
 		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r api/ -x api/tests,api/migrations -ll"

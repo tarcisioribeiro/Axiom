@@ -95,6 +95,25 @@ lint:frontend:
     - npm run lint
     - npm run format:check
 
+lint:migrations:
+  extends: .python_base
+  stage: lint
+  needs:
+    - lint:backend
+  variables:
+    SECRET_KEY: "ci-insecure-key-for-migrations-check-only"
+    DEBUG: "False"
+    DJANGO_SETTINGS_MODULE: "app.settings"
+    ENCRYPTION_KEY: "Y2ktaW5zZWN1cmUta2V5LWZvci1taWdyYXRpb25zLWNoZWNr"  # gitleaks:allow
+    DB_HOST: "localhost"
+    DB_PORT: "5432"
+    DB_NAME: "mindledger"
+    DB_USER: "mindledger"
+    DB_PASSWORD: "ci"
+  script:
+    - cd api
+    - python manage.py makemigrations --check --dry-run
+
 lint:bandit:
   extends: .python_base
   stage: lint

@@ -54,7 +54,8 @@ END
 \$\$;
 EOF
 
-python manage.py makemigrations
+echo "🔍 Verificando migrações pendentes (schema drift check)..."
+python manage.py makemigrations --check --dry-run
 python manage.py migrate --fake-initial
 
 # Collectstatic - tenta com --clear primeiro para evitar problemas de permissão
