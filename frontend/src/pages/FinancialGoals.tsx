@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, Target, CheckCircle2, Link } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -41,6 +42,7 @@ import { FINANCIAL_GOAL_CATEGORIES as CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function FinancialGoals() {
+  const { t } = useTranslation();
   const [goals, setGoals] = useState<FinancialGoalListItem[]>([]);
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +84,7 @@ export default function FinancialGoals() {
       setVaults(vaultsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -121,7 +123,7 @@ export default function FinancialGoals() {
       setIsDialogOpen(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar meta',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -130,22 +132,21 @@ export default function FinancialGoals() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir meta',
-      description:
-        'Tem certeza que deseja excluir esta meta? Esta ação não pode ser desfeita.',
+      title: t('pages.financialGoals.deleteTitle'),
+      description: t('pages.financialGoals.deleteDesc'),
     });
 
     if (confirmed) {
       try {
         await financialGoalsService.delete(id);
         toast({
-          title: 'Meta excluída',
-          description: 'A meta foi excluída com sucesso.',
+          title: t('pages.financialGoals.deleted'),
+          description: t('pages.financialGoals.deletedDesc'),
         });
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -156,8 +157,8 @@ export default function FinancialGoals() {
   const handleSubmit = async () => {
     if (!formData.description || formData.target_value <= 0) {
       toast({
-        title: 'Dados inválidos',
-        description: 'Preencha todos os campos obrigatórios.',
+        title: t('common.messages.invalidData'),
+        description: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -169,18 +170,21 @@ export default function FinancialGoals() {
       if (selectedGoal) {
         await financialGoalsService.update(selectedGoal.id, formData);
         toast({
-          title: 'Meta atualizada',
-          description: 'A meta foi atualizada com sucesso.',
+          title: t('pages.financialGoals.updated'),
+          description: t('pages.financialGoals.updatedDesc'),
         });
       } else {
         await financialGoalsService.create(formData);
-        toast({ title: 'Meta criada', description: 'A meta foi criada com sucesso.' });
+        toast({
+          title: t('pages.financialGoals.created'),
+          description: t('pages.financialGoals.createdDesc'),
+        });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -197,7 +201,7 @@ export default function FinancialGoals() {
       setIsVaultsDialogOpen(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar meta',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -228,14 +232,14 @@ export default function FinancialGoals() {
       }
 
       toast({
-        title: 'Cofres atualizados',
-        description: 'Os cofres da meta foram atualizados.',
+        title: t('pages.financialGoals.vaultsUpdated'),
+        description: t('pages.financialGoals.vaultsUpdatedDesc'),
       });
       setIsVaultsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao atualizar cofres',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -249,19 +253,19 @@ export default function FinancialGoals() {
       const response = await financialGoalsService.checkCompletion(goal.id);
       if (response.is_completed) {
         toast({
-          title: 'Meta concluída!',
-          description: 'Parabéns! Você atingiu sua meta.',
+          title: t('pages.financialGoals.goalCompleted'),
+          description: t('pages.financialGoals.goalCompletedDesc'),
         });
       } else {
         toast({
-          title: 'Meta em andamento',
-          description: `Progresso: ${response.progress_percentage.toFixed(1)}% (${formatCurrency(response.current_value)} / ${formatCurrency(response.target_value)})`,
+          title: t('pages.financialGoals.goalInProgress'),
+          description: `${response.progress_percentage.toFixed(1)}% (${formatCurrency(response.current_value)} / ${formatCurrency(response.target_value)})`,
         });
       }
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -289,7 +293,7 @@ export default function FinancialGoals() {
   const columns: Column<FinancialGoalListItem>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.financialGoals.columns.description'),
       render: (goal) => (
         <div>
           <div className="font-medium">{goal.description}</div>
@@ -299,7 +303,7 @@ export default function FinancialGoals() {
     },
     {
       key: 'progress',
-      label: 'Progresso',
+      label: t('pages.financialGoals.columns.progress'),
       render: (goal) => (
         <div className="min-w-[200px]">
           <div className="mb-1 flex justify-between text-sm">
@@ -317,37 +321,45 @@ export default function FinancialGoals() {
     },
     {
       key: 'vaults_count',
-      label: 'Cofres',
-      render: (goal) => <Badge variant="outline">{goal.vaults_count} cofre(s)</Badge>,
+      label: t('pages.financialGoals.columns.vaults'),
+      render: (goal) => (
+        <Badge variant="outline">
+          {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
+        </Badge>
+      ),
     },
     {
       key: 'target_date',
-      label: 'Data Alvo',
+      label: t('pages.financialGoals.columns.targetDate'),
       render: (goal) => (goal.target_date ? formatDate(goal.target_date) : '-'),
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('pages.financialGoals.columns.status'),
       render: (goal) => (
         <Badge
           variant={
             goal.is_completed ? 'default' : goal.is_active ? 'secondary' : 'outline'
           }
         >
-          {goal.is_completed ? 'Concluída' : goal.is_active ? 'Ativa' : 'Inativa'}
+          {goal.is_completed
+            ? t('common.status.paid')
+            : goal.is_active
+              ? t('common.status.active')
+              : t('common.status.inactive')}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('common.table.actions'),
       render: (goal) => (
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleManageVaults(goal)}
-            aria-label="Gerenciar Cofres"
+            aria-label={t('pages.financialGoals.manageVaults')}
           >
             <Link className="h-4 w-4 text-info" aria-hidden="true" />
           </Button>
@@ -355,7 +367,7 @@ export default function FinancialGoals() {
             variant="ghost"
             size="icon"
             onClick={() => handleCheckCompletion(goal)}
-            aria-label="Verificar Conclusão"
+            aria-label={t('pages.financialGoals.checkCompletion')}
             disabled={goal.is_completed}
           >
             <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
@@ -364,7 +376,7 @@ export default function FinancialGoals() {
             variant="ghost"
             size="icon"
             onClick={() => handleEdit(goal)}
-            aria-label="Editar"
+            aria-label={t('common.actions.edit')}
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -372,7 +384,7 @@ export default function FinancialGoals() {
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(goal.id)}
-            aria-label="Excluir"
+            aria-label={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>
@@ -384,10 +396,10 @@ export default function FinancialGoals() {
   return (
     <PageContainer>
       <PageHeader
-        title="Metas Financeiras"
+        title={t('pages.financialGoals.title')}
         icon={<Target />}
         action={{
-          label: 'Nova Meta',
+          label: t('pages.financialGoals.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -397,7 +409,9 @@ export default function FinancialGoals() {
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Metas Ativas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.financialGoals.activeGoals')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{activeGoals.length}</div>
@@ -405,7 +419,9 @@ export default function FinancialGoals() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Metas Concluídas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.financialGoals.completedGoals')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">
@@ -415,7 +431,9 @@ export default function FinancialGoals() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Valor Acumulado</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.financialGoals.accumulatedAmount')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">
@@ -425,7 +443,9 @@ export default function FinancialGoals() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Valor Total das Metas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.financialGoals.totalAmount')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalTargetValue)}</div>
@@ -438,23 +458,27 @@ export default function FinancialGoals() {
         columns={columns}
         keyExtractor={(goal) => goal.id}
         isLoading={isLoading}
-        emptyState={{ message: 'Nenhuma meta cadastrada' }}
+        emptyState={{ message: t('pages.financialGoals.emptyState') }}
       />
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle>
+            <DialogTitle>
+              {selectedGoal
+                ? t('pages.financialGoals.editTitle')
+                : t('pages.financialGoals.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedGoal
-                ? 'Altere os dados da meta abaixo.'
-                : 'Preencha os dados para criar uma nova meta financeira.'}
+                ? t('pages.financialGoals.editDesc')
+                : t('pages.financialGoals.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="description">Descrição *</Label>
+              <Label htmlFor="description">{t('common.fields.description')} *</Label>
               <Input
                 id="description"
                 value={formData.description}
@@ -465,13 +489,13 @@ export default function FinancialGoals() {
               />
             </div>
             <div>
-              <Label htmlFor="category">Categoria *</Label>
+              <Label htmlFor="category">{t('common.fields.category')} *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma categoria" />
+                  <SelectValue placeholder={t('common.fields.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((cat) => (
@@ -483,7 +507,9 @@ export default function FinancialGoals() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="target_value">Valor Alvo *</Label>
+              <Label htmlFor="target_value">
+                {t('pages.financialGoals.targetValueLabel')}
+              </Label>
               <Input
                 id="target_value"
                 type="number"
@@ -500,7 +526,9 @@ export default function FinancialGoals() {
               />
             </div>
             <div>
-              <Label htmlFor="target_date">Data Alvo</Label>
+              <Label htmlFor="target_date">
+                {t('pages.financialGoals.targetDateLabel')}
+              </Label>
               <Input
                 id="target_date"
                 type="date"
@@ -511,11 +539,11 @@ export default function FinancialGoals() {
               />
             </div>
             <div>
-              <Label>Cofres Associados</Label>
+              <Label>{t('pages.financialGoals.associatedVaults')}</Label>
               <div className="mt-1 max-h-[150px] space-y-2 overflow-y-auto rounded-md border p-3">
                 {vaults.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Nenhum cofre disponível
+                    {t('pages.financialGoals.noVaults')}
                   </p>
                 ) : (
                   vaults.map((vault) => (
@@ -552,7 +580,7 @@ export default function FinancialGoals() {
               </div>
             </div>
             <div>
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">{t('common.fields.notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes || ''}
@@ -568,12 +596,12 @@ export default function FinancialGoals() {
                   setFormData({ ...formData, is_active: !!checked })
                 }
               />
-              <Label htmlFor="is_active">Meta ativa</Label>
+              <Label htmlFor="is_active">{t('pages.financialGoals.activeGoal')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -581,7 +609,11 @@ export default function FinancialGoals() {
                 isSubmitting || !formData.description || formData.target_value <= 0
               }
             >
-              {isSubmitting ? 'Salvando...' : selectedGoal ? 'Salvar' : 'Criar'}
+              {isSubmitting
+                ? t('common.actions.saving')
+                : selectedGoal
+                  ? t('common.actions.save')
+                  : t('common.actions.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -591,19 +623,19 @@ export default function FinancialGoals() {
       <Dialog open={isVaultsDialogOpen} onOpenChange={setIsVaultsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerenciar Cofres</DialogTitle>
+            <DialogTitle>{t('pages.financialGoals.manageVaults')}</DialogTitle>
             <DialogDescription>
-              {selectedGoalForVaults && (
-                <>
-                  Selecione os cofres que contribuem para a meta "
-                  {selectedGoalForVaults.description}".
-                </>
-              )}
+              {selectedGoalForVaults &&
+                t('pages.financialGoals.manageVaultsDesc', {
+                  name: selectedGoalForVaults.description,
+                })}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[300px] space-y-2 overflow-y-auto rounded-md border p-3">
             {vaults.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum cofre disponível</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.financialGoals.noVaults')}
+              </p>
             ) : (
               vaults.map((vault) => (
                 <div
@@ -632,7 +664,7 @@ export default function FinancialGoals() {
                         </div>
                         <div className="text-xs text-muted-foreground">
                           +{formatCurrency(parseFloat(vault.accumulated_yield))}{' '}
-                          rendimentos
+                          {t('pages.financialGoals.yields')}
                         </div>
                       </div>
                     </div>
@@ -643,10 +675,10 @@ export default function FinancialGoals() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsVaultsDialogOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button onClick={handleSaveVaults} disabled={isSubmitting}>
-              {isSubmitting ? 'Salvando...' : 'Salvar'}
+              {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

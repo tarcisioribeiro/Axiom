@@ -19,9 +19,9 @@ MindLedger/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets
 
-**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has an `instance_generator.py` service for task instance logic.
+**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances.
 
 **Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`.
 
@@ -57,21 +57,27 @@ MindLedger/
 
 **Stack**: React 19, Vite 7, TypeScript 5.9, TailwindCSS 3, Radix UI, Zustand, React Router v7, Recharts, Framer Motion, React Hook Form + Zod
 
-**Service Pattern**: Services extend `BaseService<T, CreateData, UpdateData>` from `services/base-service.ts` for CRUD. Endpoints defined in `config/constants.ts:API_CONFIG.ENDPOINTS`. All services are class singletons exported as `const fooService = new FooService()`.
+**Service Pattern**: Services extend `BaseService<T, CreateData, UpdateData>` from `services/base-service.ts` for CRUD. Methods: `getAll()`, `getAllPaginated()`, `getById()`, `create()`, `update()`, `patch()`, `delete()`. All return `PaginatedResponse<T>` (with `results` and `count`) for list endpoints. Endpoints defined in `config/api-config.ts:API_CONFIG.ENDPOINTS`. All services are class singletons exported as `const fooService = new FooService()`.
 
-**API Client**: `services/api-client.ts` wraps axios. Cookies sent automatically (`withCredentials: true`). Auto-refresh on 401 except auth endpoints. Custom error classes: `AuthenticationError`, `ValidationError`, `NotFoundError`, `PermissionError`.
+**API Client**: `services/api-client.ts` wraps axios. Cookies sent automatically (`withCredentials: true`). Base URL resolved dynamically at runtime from `window.location.hostname` (matching browser host to avoid SameSite cookie issues), falling back to `VITE_API_BASE_URL`. Auto-refresh on 401 except auth endpoints. Custom error classes: `AuthenticationError`, `ValidationError` (exposes `.errors` field map), `NotFoundError`, `PermissionError`.
 
-**State**: Zustand for auth (`stores/auth-store.ts`) and notifications (`stores/notifications-store.ts`). React Hook Form + Zod for forms. Local state for component data.
+**State**: Zustand for auth (`stores/auth-store.ts` — manages user, permissions, `hasPermission()`, `hasSystemAccess()`) and toast notifications (via `hooks/use-toast.ts`). React Hook Form + Zod for forms. Local state for component data.
 
-**Translation System**: `config/constants.ts` contains `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for all domain terms. `autoTranslate()` searches all sections. Use these translations for UI display.
+**Translation System**: `config/translations.ts` contains `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for all domain terms. `autoTranslate()` searches all sections. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before.
 
 **CRUD Hook**: `hooks/use-crud-page.ts` encapsulates load/create/update/delete with loading states and toast notifications.
+
+**Other Key Hooks**: `use-theme.ts` (dark/light Dracula/Alucard themes with localStorage), `use-toast.ts` (max 3 visible, 5s auto-dismiss), `use-alert-dialog.tsx` (confirmation dialogs), `use-vault-status.ts` (vault lock/unlock state), `use-sidebar.ts`, `use-breadcrumb.ts`, `use-command-palette.ts`.
+
+**Utility Library** (`lib/`): `utils.ts` — `cn()` (Tailwind merge), date/timezone helpers; `formatters.ts` — `formatCurrency()` (BRL), `formatDate()`, percentage/number formatting; `validations.ts` — shared Zod schemas; `logger.ts` — dev-only console logger (silent in production); `chart-colors.ts` / `chart-formatters.ts` — theme-aware chart utilities.
+
+**Routing**: `ProtectedRoute` HOC wraps authenticated pages. All protected pages are lazy-loaded (`React.lazy()` + `Suspense`). Public routes (/login, /register) redirect to home if already authenticated.
 
 **Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`.
 
 **Import alias**: `@/` → `frontend/src/`
 
-**Pre-commit**: Husky + lint-staged runs ESLint + Prettier on staged files. Commit messages are enforced via commitlint (see [Commit Convention](#commit-convention) below).
+**Pre-commit**: Two hook systems: `pre-commit` (Python) runs black/isort/flake8/mypy on backend staged files; `husky` + `lint-staged` runs ESLint + Prettier on frontend staged files. Commitlint enforces conventional commits at the commit-msg stage (see [Commit Convention](#commit-convention)).
 
 ## Development Commands
 
@@ -83,14 +89,15 @@ docker-compose exec api python manage.py <command>      # Run management command
 docker-compose up -d --build                            # Rebuild after dependency changes
 ```
 
+> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> mindledger-api:/app/<path>`) for a quick test, or rebuild with `docker-compose up -d --build` to make changes permanent.
+
 ### Backend
 ```bash
-# Testing
-docker-compose exec api python manage.py test                 # All tests (SQLite in-memory)
-docker-compose exec api python manage.py test accounts        # Single app
-docker-compose exec api pytest                                # With pytest
-docker-compose exec api pytest --cov                          # With coverage
-docker-compose exec api pytest api/accounts/tests/test_views.py -k test_name  # Single test
+# Testing (tests live in api/tests/)
+docker-compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
+docker-compose exec api python -m pytest tests/test_views.py                  # Single file
+docker-compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
+docker-compose exec api python -m pytest tests/ --cov                         # With coverage
 
 # Code quality
 cd api && black . && isort . && flake8 .                      # Format + lint
@@ -100,14 +107,14 @@ docker-compose exec api python manage.py makemigrations
 docker-compose exec api python manage.py migrate
 
 # Custom management commands
-docker-compose exec api python manage.py update_balances
-docker-compose exec api python manage.py setup_permissions
+docker-compose exec api python manage.py update_balances             # Recalculate account balances from transactions
+docker-compose exec api python manage.py setup_permissions           # Create Members group with full CRUD on all user-facing apps
 docker-compose exec api python manage.py fix_installments_paid_status
-docker-compose exec api python manage.py close_overdue_bills
+docker-compose exec api python manage.py close_overdue_bills         # Mark overdue credit card bills
 docker-compose exec api python manage.py process_existing_transfers
-docker-compose exec api python manage.py purge_deleted_records   # Hard-delete soft-deleted records older than N days
-docker-compose exec api python manage.py vault_recovery          # Snapshot-based vault recovery
-docker-compose exec api python manage.py migrate_media_to_minio  # Move local media files to MinIO
+docker-compose exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
+docker-compose exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
+docker-compose exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
 ```
 
 ### Frontend
@@ -198,11 +205,11 @@ Each `fontSize` entry includes a companion `lineHeight` via `--leading-{size}`.
 6. For encrypted fields: use `FieldEncryption.encrypt_data()` in `save()` and property for decryption
 
 ### Adding a New Frontend Service
-1. Define types in the service or types file
+1. Define types in `types/index.ts` or the service file
 2. Extend `BaseService<T, CreateData>` from `services/base-service.ts`
-3. Add endpoint to `config/constants.ts:API_CONFIG.ENDPOINTS`
+3. Add endpoint to `config/api-config.ts:API_CONFIG.ENDPOINTS`
 4. Export singleton instance
-5. Add translations to `TRANSLATIONS` in `config/constants.ts`
+5. Add translations to `TRANSLATIONS` in `config/translations.ts`
 
 ### Encrypted Fields Pattern
 ```python
@@ -216,6 +223,24 @@ return FieldEncryption.decrypt_data(self._account_number)   # in property
 def get_queryset(self):
     return Model.objects.filter(is_deleted=False).defer('_encrypted_field')
 ```
+
+### Backend Testing Patterns
+
+Tests live in `api/tests/`. All test classes extend `BaseAPITestCase(APITestCase)` which creates a superuser and JWT-authenticated client in `setUp()`.
+
+```python
+class BaseAPITestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_superuser(...)
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+```
+
+Key testing conventions:
+- **List responses are paginated**: always use `response.data["results"]` (list) and `response.data["count"]` (total)
+- **Permissions**: use `is_superuser=True` to bypass `GlobalDefaultPermission`, or explicitly assign model permissions for non-superuser tests
+- **Encrypted field models** (CreditCard, Transfer, Loan): set all required fields before calling `save()` since `full_clean()` runs in `save()`
+- **`/api/v1/user/permissions/` endpoint** blocks superusers — tests for it need a non-superuser
 
 ## Environment Variables (Critical)
 
@@ -272,6 +297,27 @@ pre-commit install --hook-type commit-msg
 ```
 
 Config is at `commitlint.config.js` (project root). Packages are in `frontend/devDependencies`.
+
+## Dependency Management
+
+All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) to prevent unexpected breaking changes and supply-chain attacks via minor/patch updates.
+
+### Files
+| File | Purpose |
+|------|---------|
+| `api/requirements.txt` | Production Python deps — pinned to exact versions |
+| `api/requirements-dev.txt` | Dev/test Python deps — also pinned exactly |
+| `frontend/package.json` | npm deps — exact versions, enforced by `package-lock.json` |
+
+### Updating dependencies
+1. Create a dedicated PR for dependency updates (do not bundle with feature work).
+2. Review the changelog/release notes for each package being upgraded.
+3. **Backend**: run `pip install -r requirements.txt` in a clean virtualenv, verify tests pass (`docker compose exec api python -m pytest tests/`), then update the pin in the file.
+4. **Frontend**: run `npm install <pkg>@<version>` to update `package-lock.json` as well, verify tests pass (`npm run test -- --run`), then commit both files.
+5. Use commit type `chore(deps):` per the commit convention.
+
+### Automated updates (Dependabot)
+`.github/dependabot.yml` is configured to open monthly PRs for pip, npm, and GitHub Actions dependencies. Each PR must pass CI and receive a manual changelog review before merging.
 
 ## Tool Configuration
 

@@ -1,4 +1,10 @@
 repos:
+  # Secret detection — must run before everything else
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.27.2
+    hooks:
+      - id: gitleaks
+
   # General file hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -7,6 +13,7 @@ repos:
         args: [--allow-multiple-documents]
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: detect-private-key
 
   # Python formatting — config in api/pyproject.toml [tool.black]
   - repo: https://github.com/psf/black

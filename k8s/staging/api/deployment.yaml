@@ -47,9 +47,9 @@ spec:
               echo "Redis is ready!"
       containers:
         - name: api
-          # The CI pipeline updates this image on every deploy via:
-          #   kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHA"
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/api:latest
+          # Image tag is pinned to the build digest on every deploy by CI/CD.
+          # See deploy:staging job in .gitlab-ci.yml.
+          image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
           ports:
             - containerPort: 8002
               name: http

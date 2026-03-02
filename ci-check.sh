@@ -5,15 +5,22 @@
 #
 # Etapas cobertas (mesma ordem do .gitlab-ci.yml):
 #
-#   lint:backend       black · isort · flake8 · bandit · pip-audit
-#   lint:frontend      eslint · prettier · npm audit
+#   lint:backend       black · isort · flake8
+#   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
+#   lint:pip-audit     pip-audit -r api/requirements.txt --desc
+#   lint:frontend      eslint · prettier
+#   lint:npm-audit     npm audit --audit-level=high
 #   typecheck:backend  mypy
 #   typecheck:frontend tsc
-#   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40
-#   test:frontend      vitest --run --coverage
+#   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+#   test:frontend      vitest --run --coverage  ← local-only (não existe no .gitlab-ci.yml)
 #   secret-detection   gitleaks (opcional — só se instalado)
-#   build              docker build api + frontend (opcional: --with-build)
-#   scan               trivy HIGH/CRITICAL (opcional: --with-scan, requer --with-build)
+#
+# Etapas não cobertas (requerem registry ou infraestrutura de deploy):
+#   build              docker build + push para o registry GitLab
+#   scan               trivy sobre imagens do registry (requer build)
+#   deploy-staging     kubectl (requer kubeconfig de staging)
+#   deploy-production  kubectl (requer kubeconfig de produção)
 #
 # Pré-requisitos:
 #   - Docker + docker compose com o serviço 'api' rodando
@@ -24,8 +31,6 @@
 #   ./ci-check.sh [opções]
 #
 # Opções:
-#   --with-build      Inclui build das imagens Docker
-#   --with-scan       Inclui scan Trivy (requer --with-build)
 #   --backend-only    Executa apenas checks do backend
 #   --frontend-only   Executa apenas checks do frontend
 #   --help            Exibe esta ajuda
@@ -46,15 +51,11 @@ TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="$SCRIPT_DIR/ci-check-$TIMESTAMP.log"
 
 # ── Flags ──────────────────────────────────────────────────────────────────────
-WITH_BUILD=false
-WITH_SCAN=false
 BACKEND_ONLY=false
 FRONTEND_ONLY=false
 
 for arg in "$@"; do
 	case "$arg" in
-	--with-build) WITH_BUILD=true ;;
-	--with-scan) WITH_SCAN=true ;;
 	--backend-only) BACKEND_ONLY=true ;;
 	--frontend-only) FRONTEND_ONLY=true ;;
 	--help | -h)
@@ -253,10 +254,8 @@ check_python_venv() {
 {
 	echo "=================================================================="
 	echo "  MindLedger — CI/CD Check Local"
-	echo "  Iniciado em : $(date)"
-	echo "  WITH_BUILD  : $WITH_BUILD"
-	echo "  WITH_SCAN   : $WITH_SCAN"
-	echo "  BACKEND_ONLY: $BACKEND_ONLY"
+	echo "  Iniciado em  : $(date)"
+	echo "  BACKEND_ONLY : $BACKEND_ONLY"
 	echo "  FRONTEND_ONLY: $FRONTEND_ONLY"
 	echo "=================================================================="
 	echo ""
@@ -296,32 +295,31 @@ fi
 section "LINT"
 
 if ! $FRONTEND_ONLY; then
-	run_step_safe "lint" "backend › black" \
+	run_step_safe "lint:backend" "black" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/black' --check --diff ."
 
-	run_step_safe "lint" "backend › isort" \
+	run_step_safe "lint:backend" "isort" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/isort' --check-only --diff ."
 
-	run_step_safe "lint" "backend › flake8" \
+	run_step_safe "lint:backend" "flake8" \
 		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/flake8' ."
 
-	run_step_safe "lint" "backend › bandit" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/bandit' -r . -ll --exclude ./migrations,./venv,./staticfiles -c pyproject.toml"
+	run_step_safe "lint:bandit" "bandit -r api/ -x api/tests,api/migrations -ll" \
+		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r api/ -x api/tests,api/migrations -ll"
 
-	run_step_safe "lint" "backend › pip-audit" \
-		sh -c "cd '$SCRIPT_DIR/api' && '$VENV_BIN/pip-audit' -r requirements.txt --desc"
+	run_step_safe "lint:pip-audit" "pip-audit -r api/requirements.txt --desc" \
+		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/api/requirements.txt' --desc"
 fi
 
 if ! $BACKEND_ONLY; then
-	run_step_safe "lint" "frontend › eslint" \
+	run_step_safe "lint:frontend" "eslint" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run lint"
 
-	run_step_safe "lint" "frontend › prettier" \
+	run_step_safe "lint:frontend" "prettier" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run format:check"
 
-	# npm audit: falha em HIGH+CRITICAL em deps de produção (espelha CI)
-	run_step_safe "lint" "frontend › npm audit (prod, high+)" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high --omit=dev"
+	run_step_safe "lint:npm-audit" "npm audit --audit-level=high" \
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high"
 fi
 
 # ==============================================================================
@@ -332,16 +330,17 @@ section "TYPECHECK"
 if ! $FRONTEND_ONLY; then
 	# mypy precisa de SECRET_KEY não-vazio para inicializar o django-stubs
 	# pragma: allowlist secret
-	_MYPY_SECRET_KEY="ci-insecure-key-for-typecheck-only-000000000000000000000000000" # pragma: allowlist secret
-	run_step_safe "typecheck" "backend › mypy" \
+	_MYPY_SECRET_KEY="ci-insecure-key-for-mypy-only" # pragma: allowlist secret
+	run_step_safe "typecheck:backend" "mypy" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T \
 		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
+		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
 		api python -m mypy .
 fi
 
 if ! $BACKEND_ONLY; then
-	run_step_safe "typecheck" "frontend › tsc" \
+	run_step_safe "typecheck:frontend" "tsc" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run typecheck"
 fi
 
@@ -352,14 +351,14 @@ section "TEST"
 
 if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
-	run_step_safe "test" "backend › pytest" \
+	run_step_safe "test:backend" "pytest" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
-		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=40'
+		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
 fi
 
 if ! $BACKEND_ONLY; then
-	# vitest --run para modo não-interativo (igual ao CI)
-	run_step_safe "test" "frontend › vitest" \
+	# NOTA: test:frontend não existe no .gitlab-ci.yml — etapa local extra para feedback antecipado.
+	run_step_safe "test:frontend" "vitest" \
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage -- --run"
 fi
 
@@ -373,56 +372,6 @@ if command -v gitleaks >/dev/null 2>&1; then
 		gitleaks detect --source "$SCRIPT_DIR" --no-git --redact
 else
 	log "${DIM}  (gitleaks não encontrado — pulando. Instale: https://github.com/gitleaks/gitleaks)${NC}"
-fi
-
-# ==============================================================================
-# STAGE: build (opcional)
-# ==============================================================================
-if $WITH_BUILD; then
-	section "BUILD (opcional)"
-
-	if ! $FRONTEND_ONLY; then
-		run_step_safe "build" "api › docker build" \
-			docker build \
-			-f "$SCRIPT_DIR/api/Dockerfile" \
-			-t mindledger/api:ci-local \
-			"$SCRIPT_DIR/api"
-	fi
-
-	if ! $BACKEND_ONLY; then
-		run_step_safe "build" "frontend › docker build (staging)" \
-			docker build \
-			-f "$SCRIPT_DIR/frontend/Dockerfile" \
-			--build-arg VITE_API_BASE_URL="http://localhost:39100" \
-			-t mindledger/frontend:ci-local \
-			"$SCRIPT_DIR/frontend"
-	fi
-fi
-
-# ==============================================================================
-# STAGE: scan (opcional — requer --with-build + trivy instalado)
-# ==============================================================================
-if $WITH_SCAN; then
-	section "SCAN — Trivy (opcional)"
-
-	if ! $WITH_BUILD; then
-		log "${YELLOW}  ⚠  --with-scan requer --with-build. Pulando scan.${NC}"
-	elif ! command -v trivy >/dev/null 2>&1; then
-		log "${YELLOW}  ⚠  trivy não encontrado.${NC}"
-		log "${DIM}     Instale: https://aquasecurity.github.io/trivy/latest/getting-started/installation/${NC}"
-	else
-		if ! $FRONTEND_ONLY; then
-			run_step_safe "scan" "api › trivy (HIGH,CRITICAL)" \
-				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
-				mindledger/api:ci-local
-		fi
-
-		if ! $BACKEND_ONLY; then
-			run_step_safe "scan" "frontend › trivy (HIGH,CRITICAL)" \
-				trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress \
-				mindledger/frontend:ci-local
-		fi
-	fi
 fi
 
 # ==============================================================================

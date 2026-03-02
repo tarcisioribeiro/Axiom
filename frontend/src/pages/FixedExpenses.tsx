@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, Calendar, TrendingDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -27,6 +28,7 @@ import type { FixedExpense, FixedExpenseFormData, Account, CreditCard } from '@/
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function FixedExpenses() {
+  const { t } = useTranslation();
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -55,7 +57,7 @@ export default function FixedExpenses() {
       setCreditCards(cardsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -70,21 +72,21 @@ export default function FixedExpenses() {
       if (selectedExpense) {
         await fixedExpensesService.update(selectedExpense.id, data);
         toast({
-          title: 'Despesa fixa atualizada',
-          description: 'A despesa fixa foi atualizada com sucesso.',
+          title: t('pages.fixedExpenses.updated'),
+          description: t('pages.fixedExpenses.updatedDesc'),
         });
       } else {
         await fixedExpensesService.create(data);
         toast({
-          title: 'Despesa fixa criada',
-          description: 'A despesa fixa foi criada com sucesso.',
+          title: t('pages.fixedExpenses.created'),
+          description: t('pages.fixedExpenses.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -95,11 +97,10 @@ export default function FixedExpenses() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir despesa fixa',
-      description:
-        'Tem certeza que deseja excluir esta despesa fixa? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.fixedExpenses.deleteTitle'),
+      description: t('pages.fixedExpenses.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
@@ -107,13 +108,13 @@ export default function FixedExpenses() {
     try {
       await fixedExpensesService.delete(id);
       toast({
-        title: 'Despesa fixa excluída',
-        description: 'A despesa fixa foi excluída com sucesso.',
+        title: t('pages.fixedExpenses.deleted'),
+        description: t('pages.fixedExpenses.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -123,12 +124,12 @@ export default function FixedExpenses() {
   const columns: Column<FixedExpense>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.fixedExpenses.columns.description'),
       render: (item) => <div className="font-medium">{item.description}</div>,
     },
     {
       key: 'default_value',
-      label: 'Valor Padrão',
+      label: t('pages.fixedExpenses.columns.defaultAmount'),
       align: 'right',
       render: (item) => (
         <span className="font-semibold text-destructive">
@@ -138,18 +139,18 @@ export default function FixedExpenses() {
     },
     {
       key: 'due_day',
-      label: 'Dia Vencimento',
+      label: t('pages.fixedExpenses.columns.dueDay'),
       align: 'center',
       render: (item) => <Badge variant="outline">Dia {item.due_day}</Badge>,
     },
     {
       key: 'account_name',
-      label: 'Conta',
+      label: t('pages.fixedExpenses.columns.account'),
       render: (item) => <Badge variant="outline">{item.account_name || 'N/A'}</Badge>,
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.fixedExpenses.columns.category'),
       render: (item) => (
         <Badge variant="secondary">
           {TRANSLATIONS.expenseCategories[
@@ -160,7 +161,7 @@ export default function FixedExpenses() {
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: t('pages.fixedExpenses.columns.status'),
       render: (item) => (
         <Badge variant={item.is_active ? 'default' : 'secondary'}>
           {item.is_active ? 'Ativa' : 'Inativa'}
@@ -169,7 +170,7 @@ export default function FixedExpenses() {
     },
     {
       key: 'total_generated',
-      label: 'Geradas',
+      label: t('pages.fixedExpenses.columns.generated'),
       align: 'center',
       render: (item) => <span className="text-sm">{item.total_generated}x</span>,
     },
@@ -178,10 +179,10 @@ export default function FixedExpenses() {
   return (
     <PageContainer>
       <PageHeader
-        title="Gastos Fixos Mensais"
+        title={t('pages.fixedExpenses.title')}
         icon={<Calendar className="h-6 w-6" />}
         action={{
-          label: 'Nova Despesa Fixa',
+          label: t('pages.fixedExpenses.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             setSelectedExpense(undefined);
@@ -197,14 +198,14 @@ export default function FixedExpenses() {
       <div className="rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Lançar Despesas do Mês</h3>
-            <p className="text-sm">
-              Gere todas as despesas fixas para o mês selecionado
-            </p>
+            <h3 className="text-lg font-semibold">
+              {t('pages.fixedExpenses.launchSection')}
+            </h3>
+            <p className="text-sm">{t('pages.fixedExpenses.launchDesc')}</p>
           </div>
           <Button onClick={() => setIsLaunchDialogOpen(true)} size="lg">
             <TrendingDown className="mr-2 h-4 w-4" />
-            Lançar Despesas
+            {t('pages.fixedExpenses.launchBtn')}
           </Button>
         </div>
       </div>
@@ -215,7 +216,7 @@ export default function FixedExpenses() {
         columns={columns}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
-        emptyState={{ message: 'Nenhuma despesa fixa encontrada.' }}
+        emptyState={{ message: t('pages.fixedExpenses.emptyState') }}
         actions={(item) => (
           <div className="flex items-center justify-end gap-2">
             <Button
@@ -225,7 +226,7 @@ export default function FixedExpenses() {
                 setSelectedExpense(item);
                 setIsDialogOpen(true);
               }}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -233,7 +234,7 @@ export default function FixedExpenses() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(item.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -246,12 +247,14 @@ export default function FixedExpenses() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedExpense ? 'Editar Despesa Fixa' : 'Nova Despesa Fixa'}
+              {selectedExpense
+                ? t('pages.fixedExpenses.editTitle')
+                : t('pages.fixedExpenses.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedExpense
-                ? 'Atualize as informações da despesa fixa'
-                : 'Crie um modelo de despesa fixa mensal'}
+                ? t('pages.fixedExpenses.editDesc')
+                : t('pages.fixedExpenses.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <FixedExpenseForm

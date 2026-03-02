@@ -1,4 +1,5 @@
 import { Wand2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -12,18 +13,16 @@ import {
 } from '@/components/ui/card';
 
 export default function PasswordGeneratorPage() {
+  const { t } = useTranslation();
   return (
     <PageContainer>
-      <PageHeader title="Gerador de Senhas" icon={<Wand2 />} />
+      <PageHeader title={t('pages.passwordGenerator.title')} icon={<Wand2 />} />
 
       <div className="mx-auto max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>Gerar Senha Segura</CardTitle>
-            <CardDescription>
-              Crie senhas criptograficamente seguras com opções configuráveis. As senhas
-              são geradas no servidor usando algoritmos seguros.
-            </CardDescription>
+            <CardTitle>{t('pages.passwordGenerator.subtitle')}</CardTitle>
+            <CardDescription>{t('pages.passwordGenerator.desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <PasswordGenerator />

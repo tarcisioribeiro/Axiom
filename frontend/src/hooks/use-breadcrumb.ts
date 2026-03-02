@@ -29,6 +29,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
 interface BreadcrumbItem {
@@ -38,222 +39,279 @@ interface BreadcrumbItem {
 }
 
 interface RouteConfig {
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
-  parent?: string;
-  module?: string;
-  subModule?: string;
+  moduleKey?: string;
+  moduleIcon?: LucideIcon;
+  subModuleKey?: string;
+  subModuleIcon?: LucideIcon;
 }
 
 const routeConfigs: Record<string, RouteConfig> = {
-  '/': { label: 'Início', icon: Home },
+  '/': { labelKey: 'breadcrumb.home', icon: Home },
 
   // Personal Planning Module
   '/planning/dashboard': {
-    label: 'Dashboard',
+    labelKey: 'breadcrumb.dashboard',
     icon: LayoutDashboard,
-    module: 'Planejamento Pessoal',
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
   },
   '/planning/daily': {
-    label: 'Checklist Diário',
+    labelKey: 'breadcrumb.dailyChecklist',
     icon: CheckCircle2,
-    module: 'Planejamento Pessoal',
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
   },
   '/planning/routine-tasks': {
-    label: 'Tarefas Rotineiras',
+    labelKey: 'breadcrumb.routineTasks',
     icon: Calendar,
-    module: 'Planejamento Pessoal',
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
   },
   '/planning/goals': {
-    label: 'Objetivos',
+    labelKey: 'breadcrumb.goals',
     icon: Target,
-    module: 'Planejamento Pessoal',
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
   },
 
   // Financial Control Module
   '/dashboard': {
-    label: 'Dashboard',
+    labelKey: 'breadcrumb.dashboard',
     icon: LayoutDashboard,
-    module: 'Controle Financeiro',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
   },
   '/accounts': {
-    label: 'Contas',
+    labelKey: 'breadcrumb.accounts',
     icon: Wallet,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/credit-cards': {
-    label: 'Cartões de Crédito',
+    labelKey: 'breadcrumb.creditCards',
     icon: CreditCard,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/credit-card-bills': {
-    label: 'Faturas',
+    labelKey: 'breadcrumb.creditCardBills',
     icon: Receipt,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/fixed-expenses': {
-    label: 'Gastos Fixos',
+    labelKey: 'breadcrumb.fixedExpenses',
     icon: CalendarClock,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/payables': {
-    label: 'Valores a Pagar',
+    labelKey: 'breadcrumb.payables',
     icon: Receipt,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/financial-goals': {
-    label: 'Metas Financeiras',
+    labelKey: 'breadcrumb.financialGoals',
     icon: Target,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/members': {
-    label: 'Beneficiários/Credores',
+    labelKey: 'breadcrumb.members',
     icon: Users,
-    module: 'Controle Financeiro',
-    subModule: 'Cadastros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
   },
   '/expenses': {
-    label: 'Despesas',
+    labelKey: 'breadcrumb.expenses',
     icon: TrendingDown,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
   '/revenues': {
-    label: 'Receitas',
+    labelKey: 'breadcrumb.revenues',
     icon: TrendingUp,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
   '/credit-card-expenses': {
-    label: 'Gastos do Cartão',
+    labelKey: 'breadcrumb.creditCardExpenses',
     icon: ShoppingCart,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
   '/transfers': {
-    label: 'Transferências',
+    labelKey: 'breadcrumb.transfers',
     icon: ArrowLeftRight,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
   '/loans': {
-    label: 'Empréstimos',
+    labelKey: 'breadcrumb.loans',
     icon: HandCoins,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
   '/vaults': {
-    label: 'Cofres',
+    labelKey: 'breadcrumb.vaults',
     icon: Vault,
-    module: 'Controle Financeiro',
-    subModule: 'Registros',
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.records',
+    subModuleIcon: ClipboardList,
   },
 
   // Security Module
   '/security/dashboard': {
-    label: 'Dashboard',
+    labelKey: 'breadcrumb.dashboard',
     icon: LayoutDashboard,
-    module: 'Segurança',
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
   },
-  '/security/passwords': { label: 'Senhas', icon: Key, module: 'Segurança' },
+  '/security/passwords': {
+    labelKey: 'breadcrumb.passwords',
+    icon: Key,
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
+  },
   '/security/stored-cards': {
-    label: 'Cartões Armazenados',
+    labelKey: 'breadcrumb.storedCards',
     icon: CreditCard,
-    module: 'Segurança',
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
   },
   '/security/stored-accounts': {
-    label: 'Contas Armazenadas',
+    labelKey: 'breadcrumb.storedAccounts',
     icon: Wallet,
-    module: 'Segurança',
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
   },
-  '/security/archives': { label: 'Arquivos', icon: Archive, module: 'Segurança' },
+  '/security/archives': {
+    labelKey: 'breadcrumb.archives',
+    icon: Archive,
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
+  },
 
   // Library Module
   '/library/dashboard': {
-    label: 'Dashboard',
+    labelKey: 'breadcrumb.dashboard',
     icon: LayoutDashboard,
-    module: 'Leitura',
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
   },
-  '/library/books': { label: 'Livros', icon: BookOpen, module: 'Leitura' },
-  '/library/authors': { label: 'Autores', icon: UserPen, module: 'Leitura' },
-  '/library/publishers': { label: 'Editoras', icon: Building2, module: 'Leitura' },
-  '/library/summaries': { label: 'Resumos', icon: FileText, module: 'Leitura' },
-  '/library/readings': { label: 'Leituras', icon: BookMarked, module: 'Leitura' },
-};
-
-const moduleIcons: Record<string, LucideIcon> = {
-  'Planejamento Pessoal': Calendar,
-  'Controle Financeiro': Wallet,
-  Segurança: Shield,
-  Leitura: Library,
-};
-
-const subModuleIcons: Record<string, LucideIcon> = {
-  Cadastros: FolderOpen,
-  Registros: ClipboardList,
+  '/library/books': {
+    labelKey: 'breadcrumb.books',
+    icon: BookOpen,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/authors': {
+    labelKey: 'breadcrumb.authors',
+    icon: UserPen,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/publishers': {
+    labelKey: 'breadcrumb.publishers',
+    icon: Building2,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/summaries': {
+    labelKey: 'breadcrumb.summaries',
+    icon: FileText,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/readings': {
+    labelKey: 'breadcrumb.readings',
+    icon: BookMarked,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
 };
 
 /**
  * Hook para gerar breadcrumbs de navegação baseado na rota atual.
- *
- * @returns Array de items de breadcrumb com label, href e icon
- *
- * @example
- * ```tsx
- * const { breadcrumbs, currentPage } = useBreadcrumb();
- * // Para /accounts: [{ label: 'Início', href: '/' }, { label: 'Controle Financeiro' }, { label: 'Cadastros' }, { label: 'Contas' }]
- * ```
+ * Suporta i18n — recalcula automaticamente quando o idioma muda.
  */
 export function useBreadcrumb() {
   const location = useLocation();
+  const { t, i18n } = useTranslation();
 
   const breadcrumbs = useMemo((): BreadcrumbItem[] => {
     const pathname = location.pathname;
     const config = routeConfigs[pathname];
 
     if (!config) {
-      return [{ label: 'Início', href: '/', icon: Home }];
+      return [{ label: t('breadcrumb.home'), href: '/', icon: Home }];
     }
 
-    const items: BreadcrumbItem[] = [{ label: 'Início', href: '/', icon: Home }];
+    const items: BreadcrumbItem[] = [
+      { label: t('breadcrumb.home'), href: '/', icon: Home },
+    ];
 
     // Adiciona módulo se existir
-    if (config.module) {
+    if (config.moduleKey) {
       items.push({
-        label: config.module,
-        icon: moduleIcons[config.module],
+        label: t(config.moduleKey),
+        icon: config.moduleIcon,
       });
     }
 
     // Adiciona submódulo se existir
-    if (config.subModule) {
+    if (config.subModuleKey) {
       items.push({
-        label: config.subModule,
-        icon: subModuleIcons[config.subModule],
+        label: t(config.subModuleKey),
+        icon: config.subModuleIcon,
       });
     }
 
     // Adiciona página atual (sem link)
     if (pathname !== '/') {
       items.push({
-        label: config.label,
+        label: t(config.labelKey),
         icon: config.icon,
       });
     }
 
     return items;
-  }, [location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, i18n.language, t]);
 
   const currentPage = useMemo(() => {
     const config = routeConfigs[location.pathname];
-    return config?.label || 'Página';
-  }, [location.pathname]);
+    return config ? t(config.labelKey) : t('breadcrumb.home');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, i18n.language, t]);
 
   return { breadcrumbs, currentPage };
 }
