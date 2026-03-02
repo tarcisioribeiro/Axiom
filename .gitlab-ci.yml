@@ -152,9 +152,12 @@ lint:k8s:
     # Validate all manifest YAML files with client-side dry-run.
     # --validate=false skips CRD schema checks (cert-manager ClusterIssuer, etc.)
     # that are not available without a live API server.
+    # kustomization.yaml files are Kustomize configs (kind: Kustomization), not
+    # regular manifests, so they are excluded from -f validation.
+    # sed prepends '-f ' to each path so xargs builds: kubectl apply -f a.yaml -f b.yaml ...
     - |
-      find k8s/ -name "*.yaml" -not -path "*/scripts/*" | sort | \
-        xargs kubectl apply --dry-run=client --validate=false -f
+      find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
+        sed 's/^/-f /' | xargs kubectl apply --dry-run=client --validate=false
   rules:
     - changes:
         - k8s/**/*.yaml
