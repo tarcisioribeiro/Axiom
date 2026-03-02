@@ -12,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from .throttles import LoginRateThrottle
+
 
 class CookieTokenObtainPairView(TokenObtainPairView):
     """
@@ -20,6 +22,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     Em vez de retornar tokens no body da resposta (localStorage),
     armazena em cookies seguros e httpOnly.
     """
+
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
