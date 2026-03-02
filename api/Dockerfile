@@ -86,4 +86,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=app.settings
 ENV TZ=America/Sao_Paulo
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${API_PORT:-39100}/live/ || exit 1
+
 ENTRYPOINT ["/app/entrypoint.sh"]
