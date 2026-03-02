@@ -40,16 +40,10 @@ RUN npm run build
 # Stage 2: Production with nginx
 FROM nginx:alpine
 
-<<<<<<< HEAD
-# Upgrade OS packages to pick up latest security patches (e.g. libpng CVE-2026-25646)
-RUN apk upgrade --no-cache
+# Upgrade OS packages and install curl for healthcheck
+RUN apk upgrade --no-cache && apk add --no-cache curl
 
-||||||| 69712b9
-=======
-# Install curl for healthcheck
-RUN apk add --no-cache curl
 
->>>>>>> 38-fix/add-healthcheck-instruction-to-both-dockerfiles
 # Create non-root user for nginx
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \

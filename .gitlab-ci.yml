@@ -140,24 +140,22 @@ lint:k8s:
     name: bitnami/kubectl:latest
     entrypoint: [""]
   before_script:
-    # Create a minimal kubeconfig so kubectl can run without a real cluster.
-    # --dry-run=client is fully client-side and never contacts the API server.
-    - |
-      kubectl config set-cluster ci --server=https://127.0.0.1:6443 \
-        --insecure-skip-tls-verify=true
-      kubectl config set-credentials ci --token=ci-dummy-token
-      kubectl config set-context ci --cluster=ci --user=ci
-      kubectl config use-context ci
+    # Use the real cluster kubeconfig so kubectl can discover API groups.
+    # --dry-run=client never applies changes but requires API group discovery,
+    # which needs a reachable server even in client mode.
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
   script:
     # Validate all manifest YAML files with client-side dry-run.
-    # --validate=false skips CRD schema checks (cert-manager ClusterIssuer, etc.)
-    # that are not available without a live API server.
+    # --validate=false skips CRD schema checks (cert-manager ClusterIssuer, etc.).
     # kustomization.yaml files are Kustomize configs (kind: Kustomization), not
     # regular manifests, so they are excluded from -f validation.
     # sed prepends '-f ' to each path so xargs builds: kubectl apply -f a.yaml -f b.yaml ...
     - |
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
         sed 's/^/-f /' | xargs kubectl apply --dry-run=client --validate=false
+  after_script:
+    - rm -f /tmp/kubeconfig
   rules:
     - changes:
         - k8s/**/*.yaml
