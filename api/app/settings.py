@@ -304,7 +304,7 @@ LOGGING = {
         "audit_file": {
             "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": "/app/logs/audit.log",
+            "filename": os.path.join(BASE_DIR, "logs", "audit.log"),
             "maxBytes": 10 * 1024 * 1024,  # 10 MB
             "backupCount": 10,
             "formatter": "json",
