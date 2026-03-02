@@ -13,7 +13,7 @@
 #   typecheck:backend  mypy
 #   typecheck:frontend tsc
 #   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
-#   test:frontend      vitest --run --coverage  ← local-only (não existe no .gitlab-ci.yml)
+#   test:frontend      vitest --run --coverage
 #   secret-detection   gitleaks (opcional — só se instalado)
 #
 # Etapas não cobertas (requerem registry ou infraestrutura de deploy):
@@ -357,9 +357,8 @@ if ! $FRONTEND_ONLY; then
 fi
 
 if ! $BACKEND_ONLY; then
-	# NOTA: test:frontend não existe no .gitlab-ci.yml — etapa local extra para feedback antecipado.
 	run_step_safe "test:frontend" "vitest" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage -- --run"
+		sh -c "cd '$SCRIPT_DIR/frontend' && npm run test:coverage"
 fi
 
 # ==============================================================================
