@@ -96,9 +96,8 @@ data:
     alerting:
       alertmanagers:
         - static_configs:
+            # Add Alertmanager address here when deployed, e.g. ['alertmanager:9093']
             - targets: []
-          # TODO: add Alertmanager address when deployed
-          # - targets: ['alertmanager:9093']
 
     rule_files:
       - /etc/prometheus/rules.yaml

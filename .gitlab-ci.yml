@@ -94,6 +94,30 @@ lint:frontend:
     - npm run lint
     - npm run format:check
 
+lint:k8s:
+  stage: lint
+  image: bitnami/kubectl:1.30
+  before_script:
+    # Create a minimal kubeconfig so kubectl can run without a real cluster.
+    # --dry-run=client is fully client-side and never contacts the API server.
+    - |
+      kubectl config set-cluster ci --server=https://127.0.0.1:6443 \
+        --insecure-skip-tls-verify=true
+      kubectl config set-credentials ci --token=ci-dummy-token
+      kubectl config set-context ci --cluster=ci --user=ci
+      kubectl config use-context ci
+  script:
+    # Validate all manifest YAML files with client-side dry-run.
+    # --validate=false skips CRD schema checks (cert-manager ClusterIssuer, etc.)
+    # that are not available without a live API server.
+    - |
+      find k8s/ -name "*.yaml" -not -path "*/scripts/*" | sort | \
+        xargs kubectl apply --dry-run=client --validate=false -f
+  rules:
+    - changes:
+        - k8s/**/*.yaml
+        - .gitlab-ci.yml
+
 # ==============================================================================
 # STAGE: typecheck
 # ==============================================================================
