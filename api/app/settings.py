@@ -197,6 +197,9 @@ if MINIO_ENDPOINT:
     AWS_QUERYSTRING_AUTH = True
     AWS_S3_ADDRESSING_STYLE = "path"
 
+# Health check configuration
+DISK_SPACE_WARN_THRESHOLD = float(os.getenv("DISK_SPACE_WARN_THRESHOLD", "10"))
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
