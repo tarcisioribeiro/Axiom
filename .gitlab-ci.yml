@@ -137,25 +137,15 @@ lint:npm-audit:
 lint:k8s:
   stage: lint
   image:
-    name: bitnami/kubectl:latest
+    name: ghcr.io/yannh/kubeconform:latest
     entrypoint: [""]
-  before_script:
-    # Use the real cluster kubeconfig so kubectl can discover API groups.
-    # --dry-run=client never applies changes but requires API group discovery,
-    # which needs a reachable server even in client mode.
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
   script:
-    # Validate all manifest YAML files with client-side dry-run.
-    # --validate=false skips CRD schema checks (cert-manager ClusterIssuer, etc.).
-    # kustomization.yaml files are Kustomize configs (kind: Kustomization), not
-    # regular manifests, so they are excluded from -f validation.
-    # sed prepends '-f ' to each path so xargs builds: kubectl apply -f a.yaml -f b.yaml ...
+    # kubeconform validates manifests against official Kubernetes schemas
+    # without requiring a live cluster. kustomization.yaml files are excluded
+    # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
     - |
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
-        sed 's/^/-f /' | xargs kubectl apply --dry-run=client --validate=false
-  after_script:
-    - rm -f /tmp/kubeconfig
+        xargs kubeconform -strict -summary -kubernetes-version 1.29.0
   rules:
     - changes:
         - k8s/**/*.yaml
