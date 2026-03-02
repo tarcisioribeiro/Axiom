@@ -189,6 +189,21 @@ test:backend:
     paths:
       - api/coverage.xml
 
+test:frontend:
+  extends: .node_base
+  stage: test
+  needs:
+    - typecheck:frontend
+  script:
+    - npm run test:coverage
+  coverage: '/Statements\s*:\s*(\d+(?:\.\d+)?%)/'
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+
 # ==============================================================================
 # STAGE: build
 # ==============================================================================
@@ -211,7 +226,7 @@ build:api:
   extends: .build_base
   needs:
     - job: test:backend
-    - job: typecheck:frontend
+    - job: test:frontend
   script:
     - docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
     - docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
@@ -230,7 +245,7 @@ build:frontend:
   extends: .build_base
   needs:
     - job: test:backend
-    - job: typecheck:frontend
+    - job: test:frontend
   script:
     - docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
     - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
