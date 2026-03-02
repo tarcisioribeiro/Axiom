@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
 
-logger = logging.getLogger("expenselit.audit")
+logger = logging.getLogger("mindledger.audit")
 
 
 class AuditLoggingMiddleware(MiddlewareMixin):
@@ -26,6 +26,11 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         "security_code",
         "_security_code",
         "csrf_token",
+        "document",
+        "cpf",
+        "pin",
+        "encryption_key",
+        "pvt",
     ]
 
     # Paths to exclude from logging
