@@ -296,6 +296,14 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": ("json" if os.getenv("LOG_FORMAT") == "json" else "verbose"),
         },
+        "audit_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/app/logs/audit.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 10,
+            "formatter": "json",
+        },
     },
     "loggers": {
         "django": {
@@ -303,13 +311,13 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
-        "expenselit": {
+        "mindledger": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
-        "expenselit.audit": {
-            "handlers": ["console"],
+        "mindledger.audit": {
+            "handlers": ["console", "audit_file"],
             "level": "INFO",
             "propagate": False,
         },
