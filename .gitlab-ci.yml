@@ -137,7 +137,7 @@ lint:npm-audit:
 lint:k8s:
   stage: lint
   image:
-    name: ghcr.io/yannh/kubeconform:latest
+    name: ghcr.io/yannh/kubeconform:latest-alpine
     entrypoint: [""]
   script:
     # kubeconform validates manifests against official Kubernetes schemas
