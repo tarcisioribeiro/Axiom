@@ -24,6 +24,8 @@ variables:
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   API_IMAGE: "$CI_REGISTRY_IMAGE/api"
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
+  CI_COVERAGE_THRESHOLD: "60"
 
 workflow:
   rules:
@@ -134,7 +136,9 @@ lint:npm-audit:
 
 lint:k8s:
   stage: lint
-  image: bitnami/kubectl:1.30
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
   before_script:
     # Create a minimal kubeconfig so kubectl can run without a real cluster.
     # --dry-run=client is fully client-side and never contacts the API server.
@@ -225,13 +229,17 @@ test:backend:
     - cd api
     - python manage.py migrate --noinput
 
+  coverage: '/(?i)total.*\s+(\d+(?:\.\d+)?%)$/'
+
   script:
-    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$CI_COVERAGE_THRESHOLD
 
   artifacts:
     when: always
-    paths:
-      - api/coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: api/coverage.xml
 
 test:frontend:
   extends: .node_base
