@@ -1,259 +1,274 @@
 # MindLedger
 
-Sistema completo de gestão pessoal com funcionalidades para controle de planejamento pessoal, finanças, dados pessoais e leituras.
+Sistema completo de gestão pessoal com módulos para finanças, segurança, biblioteca e planejamento pessoal. Interface em português brasileiro.
 
 ## Estrutura do Projeto
 
 ```
 MindLedger/
-├── api/              # Backend Django REST Framework
-├── frontend/         # Frontend React + Vite + TypeScript
+├── api/              # Backend Django REST Framework (porta 39100)
+├── frontend/         # Frontend React + Vite + TypeScript (porta 39101)
 ├── docker-compose.yml
-└── .env
+└── .env              # Variáveis de ambiente (criado via setup-env.sh)
 ```
 
 ## Tecnologias
 
-### Backend (API)
-- Python 3.12
-- Django 5.x
-- Django REST Framework
+### Backend
+- Python 3.12 + Django 5.x + Django REST Framework
 - PostgreSQL 16
-- JWT Authentication
+- Redis 7 (cache)
+- MinIO (armazenamento de objetos)
+- JWT em cookies HttpOnly
 
 ### Frontend
-- React 19
-- TypeScript
-- Vite
-- TailwindCSS
-- Radix UI
-- Axios
-- Zustand (State Management)
-- React Router Dom
+- React 19 + TypeScript 5.9 + Vite 7
+- TailwindCSS 3 + Radix UI
+- Zustand (estado global)
+- React Router v7
+- React Hook Form + Zod
+- Recharts + Framer Motion
 
 ## Pré-requisitos
 
-- Docker
-- Docker Compose
-- (Opcional) Node.js 18+ e Python 3.12+ para desenvolvimento local
+- Docker e Docker Compose
 
-## Configuração Rápida
+## Requisitos de Hardware Recomendados
+
+Os limites de recursos definidos no `docker-compose.yml` totalizam aproximadamente **4.75 GB de RAM** e **4 CPUs** nos picos máximos. A tabela abaixo detalha os limites por serviço:
+
+| Serviço      | Memória (limite) | Memória (reserva) | CPU (limite) | CPU (reserva) |
+|-------------|-----------------|-------------------|-------------|---------------|
+| api         | 1 GB            | 256 MB            | 1.0         | 0.25          |
+| frontend    | 256 MB          | 64 MB             | 0.5         | 0.1           |
+| db          | 2 GB            | 512 MB            | 1.0         | 0.5           |
+| redis       | 512 MB          | 128 MB            | 0.5         | 0.1           |
+| minio       | 1 GB            | 256 MB            | 1.0         | 0.25          |
+
+**Especificação mínima recomendada para o host:**
+- **RAM**: 8 GB (folga para o sistema operacional e processos de build)
+- **CPU**: 4 núcleos
+- **Disco**: 20 GB livres (banco de dados, logs, objetos MinIO e imagens Docker)
+
+## Configuração
 
 ### 1. Clone o repositório
 
 ```bash
-git clone <seu-repositorio>
+git clone <repositorio>
 cd MindLedger
 ```
 
 ### 2. Configure as variáveis de ambiente
-
-Execute o script de configuração:
 
 ```bash
 chmod +x setup-env.sh
 ./setup-env.sh
 ```
 
-Ou crie manualmente o arquivo `.env` baseado no `.env.example`:
+Ou copie manualmente:
 
 ```bash
 cp .env.example .env
 # Edite o .env com suas configurações
 ```
 
-### 3. Inicie os containers
+> **Atenção**: `ENCRYPTION_KEY` é uma chave Fernet de 44 caracteres. **Nunca a altere após criptografar dados.** Para gerar uma nova: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+
+### 3. Inicie os serviços
 
 ```bash
 docker-compose up -d
 ```
 
-### 4. Execute as migrações do banco de dados
+### 4. Execute as migrações e configure permissões
 
 ```bash
 docker-compose exec api python manage.py migrate
+docker-compose exec api python manage.py setup_permissions
 ```
 
-### 5. Crie um superusuário (opcional)
+### 5. Crie um superusuário (primeiro acesso)
 
 ```bash
 docker-compose exec api python manage.py createsuperuser
 ```
 
-### 6. Acesse a aplicação
+## Acessando a Aplicação
 
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:8002
-- **Admin Django**: http://localhost:8002/admin
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:39101 |
+| Backend API | http://localhost:39100 |
+| Swagger Docs | http://localhost:39100/api/docs/ |
+| Django Admin | http://localhost:39100/admin |
+| PostgreSQL | localhost:39102 |
+| Redis | localhost:39103 |
+| MinIO API | localhost:39105 |
+| MinIO Console | http://localhost:39106 |
 
-## Desenvolvimento Local
+## Funcionalidades
 
-### Backend
+### Finanças
+- **Dashboard** — visão geral com gráficos, saldos e projeções
+- **Contas Bancárias** — cadastro e acompanhamento de saldos
+- **Despesas** — registro, categorização e filtros avançados
+- **Despesas Fixas** — controle de despesas recorrentes
+- **Receitas** — controle de entradas e categorização
+- **Cartões de Crédito** — faturas, compras e parcelamentos (dados criptografados)
+- **Transferências** — movimentações entre contas
+- **Empréstimos** — controle de parcelas e pagamentos
+- **A Pagar** — obrigações financeiras pendentes
+- **Orçamentos** — limites mensais por categoria de despesa
+- **Cofres** — poupanças com simulação de rendimento (CDI/taxa anual)
+- **Metas Financeiras** — acompanhamento de objetivos
 
-```bash
-cd api
-python -m venv venv
-source venv/bin/activate  # No Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8002
-```
+### Segurança
+- **Senhas** — cofre criptografado com auditoria de saúde
+- **Cartões Armazenados** — dados de cartão criptografados
+- **Contas Armazenadas** — credenciais de acesso criptografadas
+- **Arquivos** — armazenamento seguro de documentos (MinIO)
+- **Logs de Atividade** — rastreamento de acessos ao cofre
 
-### Frontend
+### Biblioteca
+- **Livros, Autores e Editoras** — catálogo pessoal
+- **Leituras** — acompanhamento com metas anuais e heatmap de hábito
+- **Resumos** — notas e resenhas de leitura
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### Planejamento Pessoal
+- **Tarefas de Rotina** — templates com geração automática de instâncias diárias
+- **Checklist Diário** — execução das tarefas do dia
+- **Metas** — objetivos com acompanhamento de progresso
+- **Reflexões Diárias** — registro de journaling
+
+### Outros
+- **Membros** — gerenciamento de membros da família/grupo (CPF criptografado)
+- **Notificações** — central de avisos do sistema
+- **Permissões** — controle de acesso por perfil
 
 ## Comandos Úteis
 
 ### Docker
 
 ```bash
-# Iniciar todos os serviços
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Ver logs de um serviço específico
-docker-compose logs -f api
-docker-compose logs -f frontend
-
-# Parar todos os serviços
-docker-compose down
-
-# Reconstruir as imagens
-docker-compose build
-
-# Executar comandos no container da API
-docker-compose exec api python manage.py <comando>
-
-# Acessar shell do container
-docker-compose exec api bash
-docker-compose exec frontend sh
+docker-compose up -d                           # Iniciar serviços
+docker-compose down                            # Parar serviços
+docker-compose logs -f api                     # Logs da API
+docker-compose up -d --build                   # Reconstruir após mudanças de dependências
+docker-compose exec api bash                   # Shell do container da API
 ```
 
-### Django Management Commands
+> **Atenção**: O container da API não monta o código-fonte como volume — o código é copiado no build. Para aplicar alterações em arquivos host, copie-os manualmente (`docker cp`) ou faça rebuild.
+
+### Migrations
 
 ```bash
-# Criar migrações
 docker-compose exec api python manage.py makemigrations
-
-# Aplicar migrações
 docker-compose exec api python manage.py migrate
-
-# Criar superusuário
-docker-compose exec api python manage.py createsuperuser
-
-# Coletar arquivos estáticos
-docker-compose exec api python manage.py collectstatic --noinput
-
-# Atualizar balanços
-docker-compose exec api python manage.py update_balances
-
-# Configurar permissões
-docker-compose exec api python manage.py setup_permissions
 ```
 
-## Funcionalidades
+### Comandos de Manutenção
 
-### Módulos do Sistema
+```bash
+docker-compose exec api python manage.py setup_permissions       # Recria grupo Members e permissões
+docker-compose exec api python manage.py update_balances         # Recalcula saldos das contas
+docker-compose exec api python manage.py close_overdue_bills     # Fecha faturas vencidas
+docker-compose exec api python manage.py purge_deleted_records   # Remove permanentemente registros deletados há >90 dias (LGPD)
+docker-compose exec api python manage.py vault_recovery          # Diagnóstico e recuperação de cofres
+docker-compose exec api python manage.py migrate_media_to_minio  # Migra arquivos locais para MinIO (--dry-run disponível)
+```
 
-1. **Autenticação**
-   - Login/Logout
-   - JWT + Cookie-based authentication
-   - Gerenciamento de sessões
+### Testes
 
-2. **Contas Bancárias**
-   - Cadastro de instituições financeiras
-   - Gerenciamento de contas
-   - Acompanhamento de saldos
+```bash
+# Backend (dentro do container)
+docker-compose exec api python -m pytest tests/
+docker-compose exec api python -m pytest tests/ --cov
 
-3. **Cartões de Crédito**
-   - Cadastro de cartões
-   - Dados criptografados
-   - Controle de limites e fechamento
+# Frontend (na máquina host — container frontend é nginx-only)
+cd frontend
+npm run test -- --run
+npm run test:coverage
+```
 
-4. **Despesas**
-   - Registro de despesas
-   - Categorização
-   - Filtros avançados
-   - Status de pagamento
+### Qualidade de Código
 
-5. **Receitas**
-   - Controle de entradas
-   - Categorização
-   - Visualização consolidada
+```bash
+# Backend
+cd api && black . && isort . && flake8 .
 
-6. **Empréstimos**
-   - Registro de empréstimos
-   - Controle de parcelas
-   - Acompanhamento de pagamentos
+# Frontend
+cd frontend
+npm run lint:fix
+npm run format
+npm run typecheck
+```
 
-7. **Dashboard**
-   - Visão geral financeira
-   - Gráficos e estatísticas
-   - Resumos por período
+## Banco de Dados
 
-8. **Membros**
-   - Gerenciamento de membros da família/grupo
-   - Associação de transações
+```bash
+# Backup
+docker-compose exec db pg_dump -U $DB_USER mindledger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Restauração
+docker-compose exec -T db psql -U $DB_USER mindledger_db < backups/seu_backup.sql
+
+# Shell PostgreSQL
+docker-compose exec db psql -U $DB_USER -d mindledger_db
+```
 
 ## Segurança
 
-- Dados sensíveis criptografados com Fernet
-- Autenticação JWT
-- Cookies HttpOnly e Secure
-- CORS configurado
-- Validação de dados no backend e frontend
-- Senhas com hash bcrypt
-
-## Backup
-
-Backups do banco de dados podem ser salvos em `./backups/`:
-
-```bash
-docker-compose exec db pg_dump -U $DB_USER MindLedger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
-```
-
-## Restauração
-
-```bash
-docker-compose exec -T db psql -U $DB_USER MindLedger_db < backups/seu_backup.sql
-```
+- Dados sensíveis criptografados com Fernet (CPF, senhas do cofre, números de conta/cartão)
+- JWT em cookies HttpOnly com refresh automático
+- Soft delete para todos os registros; purge com retenção de 90 dias (LGPD)
+- Auditoria de todas as operações de escrita via `AuditLoggingMiddleware`
+- Permissões granulares por módulo via `GlobalDefaultPermission`
 
 ## Health Check
 
-A API possui um endpoint de health check:
+```bash
+curl http://localhost:39100/health/
+```
+
+## Desenvolvimento Local (sem Docker)
 
 ```bash
-curl http://localhost:8002/health/
+# Backend
+cd api
+python -m venv venv && source venv/bin/activate
+pip install -r requirements-dev.txt
+python manage.py migrate
+python manage.py runserver 0.0.0.0:39100
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+### Configuração de hooks de commit (primeira vez)
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 ## Troubleshooting
 
-### Problema: Containers não iniciam
-
+**Containers não iniciam:**
 ```bash
-# Verificar logs
 docker-compose logs
-
-# Limpar volumes e reconstruir
-docker-compose down -v
-docker-compose up -d --build
+docker-compose down -v && docker-compose up -d --build
 ```
 
-### Problema: Banco de dados não conecta
+**Banco de dados não conecta:**
+- Verifique as variáveis no `.env` (DB_USER, DB_PASSWORD, DB_HOST)
+- Confirme que a porta 39102 não está em uso
+- Aguarde o healthcheck do PostgreSQL completar
 
-- Verifique as variáveis de ambiente no `.env`
-- Confirme que a porta 5435 não está em uso
-- Aguarde o healthcheck do banco de dados completar
-
-### Problema: Migrations não aplicadas
-
+**Migrations com conflito:**
 ```bash
 docker-compose exec api python manage.py migrate --fake-initial
 ```
@@ -261,13 +276,3 @@ docker-compose exec api python manage.py migrate --fake-initial
 ## Licença
 
 Este projeto é privado e proprietário.
-
-## Contribuindo
-
-1. Crie uma branch para sua feature
-2. Faça commit das mudanças
-3. Abra um Pull Request
-
-## Contato
-
-Para dúvidas ou suporte, entre em contato com a equipe de desenvolvimento.

@@ -1,5 +1,6 @@
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -37,6 +38,7 @@ export default function Publishers() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadPublishers();
@@ -49,7 +51,7 @@ export default function Publishers() {
       setPublishers(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar editoras',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -70,11 +72,10 @@ export default function Publishers() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir editora',
-      description:
-        'Tem certeza que deseja excluir esta editora? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.publishers.deleteTitle'),
+      description: t('pages.publishers.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -83,13 +84,13 @@ export default function Publishers() {
     try {
       await publishersService.delete(id);
       toast({
-        title: 'Editora excluída',
-        description: 'A editora foi excluída com sucesso.',
+        title: t('pages.publishers.deleted'),
+        description: t('pages.publishers.deletedDesc'),
       });
       void loadPublishers();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir editora',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -102,21 +103,21 @@ export default function Publishers() {
       if (selectedPublisher) {
         await publishersService.update(selectedPublisher.id, data);
         toast({
-          title: 'Editora atualizada',
-          description: 'A editora foi atualizada com sucesso.',
+          title: t('pages.publishers.updated'),
+          description: t('pages.publishers.updatedDesc'),
         });
       } else {
         await publishersService.create(data);
         toast({
-          title: 'Editora criada',
-          description: 'A editora foi criada com sucesso.',
+          title: t('pages.publishers.created'),
+          description: t('pages.publishers.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadPublishers();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -138,10 +139,10 @@ export default function Publishers() {
   return (
     <PageContainer>
       <PageHeader
-        title="Editoras"
+        title={t('pages.publishers.title')}
         icon={<Building2 />}
         action={{
-          label: 'Nova Editora',
+          label: t('pages.publishers.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -149,7 +150,7 @@ export default function Publishers() {
 
       <div className="flex items-center gap-4">
         <SearchInput
-          placeholder="Buscar editoras..."
+          placeholder={t('pages.publishers.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="flex-1"
@@ -161,8 +162,8 @@ export default function Publishers() {
           icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhuma editora encontrada para a pesquisa atual.'
-              : 'Nenhuma editora cadastrada. Clique em "Nova Editora" para começar.'
+              ? t('pages.publishers.emptySearch')
+              : t('pages.publishers.emptyState')
           }
         />
       ) : (
@@ -182,7 +183,7 @@ export default function Publishers() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(publisher)}
-                      aria-label="Editar"
+                      aria-label={t('common.actions.edit')}
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -190,7 +191,7 @@ export default function Publishers() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(publisher.id)}
-                      aria-label="Excluir"
+                      aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -201,7 +202,11 @@ export default function Publishers() {
                 {publisher.founded_year && (
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    <span className="text-sm">Fundada em {publisher.founded_year}</span>
+                    <span className="text-sm">
+                      {t('pages.publishers.foundedYear', {
+                        year: publisher.founded_year,
+                      })}
+                    </span>
                   </div>
                 )}
                 {publisher.website && (
@@ -233,11 +238,15 @@ export default function Publishers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedPublisher ? 'Editar' : 'Nova'} Editora</DialogTitle>
+            <DialogTitle>
+              {selectedPublisher
+                ? t('pages.publishers.editTitle')
+                : t('pages.publishers.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedPublisher
-                ? 'Atualize as informações da editora'
-                : 'Adicione uma nova editora à sua biblioteca'}
+                ? t('pages.publishers.editDesc')
+                : t('pages.publishers.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <PublisherForm

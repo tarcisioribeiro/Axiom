@@ -1,5 +1,6 @@
 import { Plus, Trophy, Edit, Trash2, RefreshCw, RotateCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -28,6 +29,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 type GoalFormData = z.infer<typeof goalSchema>;
 
 export default function Goals() {
+  const { t } = useTranslation();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<RoutineTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +54,7 @@ export default function Goals() {
       setTasks(tasksData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('pages.goals.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -73,11 +75,10 @@ export default function Goals() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir objetivo',
-      description:
-        'Tem certeza que deseja excluir este objetivo? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.goals.deleteTitle'),
+      description: t('pages.goals.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -86,13 +87,13 @@ export default function Goals() {
     try {
       await goalsService.delete(id);
       toast({
-        title: 'Objetivo excluído',
-        description: 'O objetivo foi excluído com sucesso.',
+        title: t('pages.goals.deleted'),
+        description: t('pages.goals.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir objetivo',
+        title: t('pages.goals.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -102,9 +103,8 @@ export default function Goals() {
   const handleRecalculate = async (goal: Goal) => {
     if (goal.goal_type !== 'consecutive_days') {
       toast({
-        title: 'Ação não disponível',
-        description:
-          'Recálculo automático só está disponível para objetivos de dias consecutivos.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.goals.recalculateNotAvailable'),
         variant: 'destructive',
       });
       return;
@@ -113,13 +113,13 @@ export default function Goals() {
     try {
       await goalsService.recalculate(goal.id);
       toast({
-        title: 'Progresso recalculado',
-        description: `Progresso atualizado para ${goal.days_active} dias.`,
+        title: t('pages.goals.recalculated'),
+        description: t('pages.goals.recalculatedDesc', { days: goal.days_active }),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao recalcular',
+        title: t('pages.goals.recalculateError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -128,10 +128,10 @@ export default function Goals() {
 
   const handleReset = async (goal: Goal) => {
     const confirmed = await showConfirm({
-      title: 'Resetar progresso',
-      description: `Tem certeza que deseja resetar o progresso do objetivo "${goal.title}"? O contador será zerado e a data de início será atualizada para hoje.`,
-      confirmText: 'Resetar',
-      cancelText: 'Cancelar',
+      title: t('pages.goals.resetTitle'),
+      description: t('pages.goals.resetDesc', { name: goal.title }),
+      confirmText: t('pages.goals.resetBtn'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -140,13 +140,13 @@ export default function Goals() {
     try {
       await goalsService.reset(goal.id);
       toast({
-        title: 'Progresso resetado',
-        description: 'O progresso foi resetado. Comece novamente!',
+        title: t('pages.goals.resetSuccess'),
+        description: t('pages.goals.resetSuccessDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao resetar',
+        title: t('pages.goals.resetError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -165,21 +165,21 @@ export default function Goals() {
       if (selectedGoal) {
         await goalsService.update(selectedGoal.id, apiData as GoalApiFormData);
         toast({
-          title: 'Objetivo atualizado',
-          description: 'O objetivo foi atualizado com sucesso.',
+          title: t('pages.goals.updated'),
+          description: t('pages.goals.updatedDesc'),
         });
       } else {
         await goalsService.create(apiData as GoalApiFormData);
         toast({
-          title: 'Objetivo criado',
-          description: 'O objetivo foi criado com sucesso.',
+          title: t('pages.goals.created'),
+          description: t('pages.goals.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.goals.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -207,24 +207,24 @@ export default function Goals() {
   const columns: Column<Goal>[] = [
     {
       key: 'title',
-      label: 'Título',
+      label: t('pages.goals.columns.title'),
       render: (goal) => <div className="font-medium">{goal.title}</div>,
     },
     {
       key: 'goal_type',
-      label: 'Tipo',
+      label: t('pages.goals.columns.type'),
       render: (goal) => <Badge variant="secondary">{goal.goal_type_display}</Badge>,
     },
     {
       key: 'related_task',
-      label: 'Tarefa Relacionada',
+      label: t('pages.goals.columns.relatedTask'),
       render: (goal) => (
         <span className="text-sm">{goal.related_task_name || '-'}</span>
       ),
     },
     {
       key: 'progress',
-      label: 'Progresso',
+      label: t('pages.goals.columns.progress'),
       render: (goal) => {
         // Usar calculated_current_value quando disponível (para objetivos com tarefa relacionada)
         const displayValue =
@@ -248,20 +248,20 @@ export default function Goals() {
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('pages.goals.columns.status'),
       render: (goal) => (
         <Badge className={getStatusColor(goal.status)}>{goal.status_display}</Badge>
       ),
     },
     {
       key: 'days_active',
-      label: 'Dias Ativos',
+      label: t('pages.goals.columns.activeDays'),
       align: 'center',
       render: (goal) => <span className="text-sm font-medium">{goal.days_active}</span>,
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('common.table.actions'),
       align: 'center',
       render: (goal) => (
         <div className="flex justify-center gap-1">
@@ -270,7 +270,7 @@ export default function Goals() {
               variant="ghost"
               size="icon"
               onClick={() => handleRecalculate(goal)}
-              aria-label="Recalcular progresso"
+              aria-label={t('pages.goals.recalculateBtn')}
             >
               <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
             </Button>
@@ -280,7 +280,7 @@ export default function Goals() {
               variant="ghost"
               size="icon"
               onClick={() => handleReset(goal)}
-              aria-label="Resetar progresso"
+              aria-label={t('pages.goals.resetBtn2')}
             >
               <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
             </Button>
@@ -289,7 +289,7 @@ export default function Goals() {
             variant="ghost"
             size="icon"
             onClick={() => handleEdit(goal)}
-            aria-label="Editar"
+            aria-label={t('common.actions.edit')}
           >
             <Edit className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -297,7 +297,7 @@ export default function Goals() {
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(goal.id)}
-            aria-label="Excluir"
+            aria-label={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>
@@ -313,10 +313,10 @@ export default function Goals() {
   return (
     <PageContainer>
       <PageHeader
-        title="Objetivos"
+        title={t('pages.goals.title')}
         icon={<Trophy />}
         action={{
-          label: 'Novo Objetivo',
+          label: t('pages.goals.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -329,8 +329,8 @@ export default function Goals() {
         isLoading={isLoading}
         emptyState={{
           icon: <Trophy className="h-12 w-12" />,
-          title: 'Nenhum objetivo encontrado',
-          message: 'Comece criando seu primeiro objetivo.',
+          title: t('pages.goals.emptyState'),
+          message: t('pages.goals.emptyStateDesc'),
         }}
       />
 
@@ -338,12 +338,10 @@ export default function Goals() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedGoal ? 'Editar Objetivo' : 'Novo Objetivo'}
+              {selectedGoal ? t('pages.goals.editTitle') : t('pages.goals.newTitle')}
             </DialogTitle>
             <DialogDescription>
-              {selectedGoal
-                ? 'Atualize as informações do objetivo.'
-                : 'Crie um novo objetivo para acompanhar seu progresso.'}
+              {selectedGoal ? t('pages.goals.editDesc') : t('pages.goals.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <GoalForm

@@ -1,5 +1,6 @@
 import { Plus, CheckSquare, Edit, Trash2, BarChart2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -31,6 +32,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
 export default function RoutineTasks() {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState<RoutineTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<RoutineTask | undefined>();
@@ -51,7 +53,7 @@ export default function RoutineTasks() {
       setTasks(tasksData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('pages.routineTasks.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -72,11 +74,10 @@ export default function RoutineTasks() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir tarefa',
-      description:
-        'Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.routineTasks.deleteTitle'),
+      description: t('pages.routineTasks.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -85,13 +86,13 @@ export default function RoutineTasks() {
     try {
       await routineTasksService.delete(id);
       toast({
-        title: 'Tarefa excluída',
-        description: 'A tarefa foi excluída com sucesso.',
+        title: t('pages.routineTasks.deleted'),
+        description: t('pages.routineTasks.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir tarefa',
+        title: t('pages.routineTasks.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -114,21 +115,21 @@ export default function RoutineTasks() {
           apiData as RoutineTaskApiFormData
         );
         toast({
-          title: 'Tarefa atualizada',
-          description: 'A tarefa foi atualizada com sucesso.',
+          title: t('pages.routineTasks.updated'),
+          description: t('pages.routineTasks.updatedDesc'),
         });
       } else {
         await routineTasksService.create(apiData as RoutineTaskApiFormData);
         toast({
-          title: 'Tarefa criada',
-          description: 'A tarefa foi criada com sucesso.',
+          title: t('pages.routineTasks.created'),
+          description: t('pages.routineTasks.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.routineTasks.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -169,7 +170,7 @@ export default function RoutineTasks() {
   const columns: Column<RoutineTask>[] = [
     {
       key: 'name',
-      label: 'Nome',
+      label: t('pages.routineTasks.columns.name'),
       render: (task) => {
         const TaskIcon = getIconByName(task.icon);
         return (
@@ -184,7 +185,7 @@ export default function RoutineTasks() {
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.routineTasks.columns.category'),
       render: (task) => (
         <Badge className={getCategoryColor(task.category)}>
           {task.category_display}
@@ -193,20 +194,24 @@ export default function RoutineTasks() {
     },
     {
       key: 'periodicity',
-      label: 'Periodicidade',
+      label: t('pages.routineTasks.columns.frequency'),
       render: (task) => (
         <div className="text-sm">
           <div>{task.periodicity_display}</div>
           {task.weekday_display && (
             <div className="text-xs">{task.weekday_display}</div>
           )}
-          {task.day_of_month && <div className="text-xs">Dia {task.day_of_month}</div>}
+          {task.day_of_month && (
+            <div className="text-xs">
+              {t('pages.routineTasks.dayLabel', { day: task.day_of_month })}
+            </div>
+          )}
         </div>
       ),
     },
     {
       key: 'target',
-      label: 'Meta',
+      label: t('pages.routineTasks.columns.goal'),
       render: (task) => (
         <span className="text-sm">
           {task.target_quantity} {task.unit}
@@ -215,7 +220,7 @@ export default function RoutineTasks() {
     },
     {
       key: 'completion_rate',
-      label: 'Taxa de Cumprimento',
+      label: t('pages.routineTasks.columns.completionRate'),
       align: 'center',
       render: (task) => (
         <Badge className={getCompletionRateColor(task.completion_rate)}>
@@ -225,16 +230,18 @@ export default function RoutineTasks() {
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: t('pages.routineTasks.columns.status'),
       render: (task) => (
         <Badge variant={task.is_active ? 'success' : 'secondary'}>
-          {task.is_active ? 'Ativa' : 'Inativa'}
+          {task.is_active
+            ? t('pages.routineTasks.statusActive')
+            : t('pages.routineTasks.statusInactive')}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('common.table.actions'),
       align: 'center',
       render: (task) => (
         <div className="flex justify-center gap-2">
@@ -242,8 +249,8 @@ export default function RoutineTasks() {
             variant="ghost"
             size="icon"
             onClick={() => setHeatmapTask(task)}
-            aria-label="Ver heatmap"
-            title="Ver consistência"
+            aria-label={t('pages.routineTasks.viewHeatmap')}
+            title={t('pages.routineTasks.viewConsistency')}
           >
             <BarChart2 className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -251,7 +258,7 @@ export default function RoutineTasks() {
             variant="ghost"
             size="icon"
             onClick={() => handleEdit(task)}
-            aria-label="Editar"
+            aria-label={t('common.actions.edit')}
           >
             <Edit className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -259,7 +266,7 @@ export default function RoutineTasks() {
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(task.id)}
-            aria-label="Excluir"
+            aria-label={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>
@@ -275,10 +282,10 @@ export default function RoutineTasks() {
   return (
     <PageContainer>
       <PageHeader
-        title="Tarefas Rotineiras"
+        title={t('pages.routineTasks.title')}
         icon={<CheckSquare />}
         action={{
-          label: 'Nova Tarefa',
+          label: t('pages.routineTasks.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -291,19 +298,23 @@ export default function RoutineTasks() {
         isLoading={isLoading}
         emptyState={{
           icon: <CheckSquare className="h-12 w-12" />,
-          title: 'Nenhuma tarefa encontrada',
-          message: 'Comece criando sua primeira tarefa rotineira.',
+          title: t('pages.routineTasks.emptyState'),
+          message: t('pages.routineTasks.emptyStateDesc'),
         }}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedTask ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
+            <DialogTitle>
+              {selectedTask
+                ? t('pages.routineTasks.editTitle')
+                : t('pages.routineTasks.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedTask
-                ? 'Atualize as informações da tarefa rotineira.'
-                : 'Crie uma nova tarefa para acompanhar seus hábitos diários.'}
+                ? t('pages.routineTasks.editDesc')
+                : t('pages.routineTasks.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <RoutineTaskForm
@@ -324,11 +335,9 @@ export default function RoutineTasks() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BarChart2 className="h-5 w-5" />
-              Consistência — {heatmapTask?.name}
+              {t('pages.routineTasks.heatmapConsistency')} — {heatmapTask?.name}
             </DialogTitle>
-            <DialogDescription>
-              Histórico anual de execução desta tarefa rotineira.
-            </DialogDescription>
+            <DialogDescription>{t('pages.routineTasks.heatmapDesc')}</DialogDescription>
           </DialogHeader>
           {heatmapTask && (
             <HabitHeatmap taskId={heatmapTask.id} taskName={heatmapTask.name} />

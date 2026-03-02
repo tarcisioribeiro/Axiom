@@ -16,7 +16,8 @@ import {
   eachDayOfInterval,
   parseISO,
 } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
   Wallet,
@@ -31,6 +32,7 @@ import {
   PiggyBank,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -82,6 +84,8 @@ import { getErrorMessage } from '@/utils/error-utils';
 type CategoryStat = { category: string; name: string; value: number };
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [revenues, setRevenues] = useState<Revenue[]>([]);
@@ -173,7 +177,7 @@ export default function Dashboard() {
       forecastMounted.current = true;
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -196,7 +200,7 @@ export default function Dashboard() {
       setCreditCardExpensesByCategory(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar despesas por categoria',
+        title: t('pages.dashboard.loadCategoryError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -210,7 +214,7 @@ export default function Dashboard() {
       setCashFlowForecast(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar projeção de fluxo de caixa',
+        title: t('pages.dashboard.cashFlowProjection'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -337,7 +341,7 @@ export default function Dashboard() {
           )
           .reduce((sum, r) => sum + parseFloat(r.value), 0);
         return {
-          month: format(day, 'dd/MM', { locale: ptBR }),
+          month: format(day, 'dd/MM', { locale: dateFnsLocale }),
           despesas: dayExpenses,
           receitas: dayRevenues,
           saldo: dayRevenues - dayExpenses,
@@ -363,7 +367,7 @@ export default function Dashboard() {
           )
           .reduce((sum, r) => sum + parseFloat(r.value), 0);
         return {
-          month: format(weekStart, 'dd/MM', { locale: ptBR }),
+          month: format(weekStart, 'dd/MM', { locale: dateFnsLocale }),
           despesas: weekExpenses,
           receitas: weekRevenues,
           saldo: weekRevenues - weekExpenses,
@@ -386,7 +390,7 @@ export default function Dashboard() {
           )
           .reduce((sum, r) => sum + parseFloat(r.value), 0);
         return {
-          month: format(year, 'yyyy', { locale: ptBR }),
+          month: format(year, 'yyyy', { locale: dateFnsLocale }),
           despesas: yearExpenses,
           receitas: yearRevenues,
           saldo: yearRevenues - yearExpenses,
@@ -410,7 +414,7 @@ export default function Dashboard() {
             )
             .reduce((sum, r) => sum + parseFloat(r.value), 0);
           return {
-            month: format(month, 'MMM/yy', { locale: ptBR }),
+            month: format(month, 'MMM/yy', { locale: dateFnsLocale }),
             despesas: monthExpenses,
             receitas: monthRevenues,
             saldo: monthRevenues - monthExpenses,
@@ -439,10 +443,7 @@ export default function Dashboard() {
   return (
     <AnimatedPage>
       <div className="space-y-6 px-4 py-8">
-        <PageHeader
-          title="Dashboard de Controle Financeiro"
-          icon={<LayoutDashboard />}
-        />
+        <PageHeader title={t('pages.dashboard.title')} icon={<LayoutDashboard />} />
 
         {/* Balanço de Contas */}
         <motion.div variants={itemVariants} initial="hidden" animate="visible">
@@ -450,18 +451,22 @@ export default function Dashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                <CardTitle>Balanço de Contas</CardTitle>
+                <CardTitle>{t('pages.dashboard.accountBalance')}</CardTitle>
               </div>
-              <p className="text-sm">Saldo atual e projeção futura por conta</p>
+              <p className="text-sm">{t('pages.dashboard.accountBalanceDesc')}</p>
             </CardHeader>
             <CardContent>
               {accountBalances.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Conta</TableHead>
-                      <TableHead className="text-right">Saldo Atual</TableHead>
-                      <TableHead className="text-right">Saldo Futuro</TableHead>
+                      <TableHead>{t('pages.dashboard.columns.account')}</TableHead>
+                      <TableHead className="text-right">
+                        {t('pages.dashboard.columns.currentBalance')}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t('pages.dashboard.columns.futureBalance')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -524,7 +529,9 @@ export default function Dashboard() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="py-8 text-center">Nenhuma conta cadastrada</div>
+                <div className="py-8 text-center">
+                  {t('pages.dashboard.noAccounts')}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -537,16 +544,16 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>Previsão de Saldo</CardTitle>
+                  <CardTitle>{t('pages.dashboard.balanceForecast')}</CardTitle>
                 </div>
-                <p className="text-sm">
-                  Projeção considerando todas as pendências financeiras
-                </p>
+                <p className="text-sm">{t('pages.dashboard.balanceForecastDesc')}</p>
               </CardHeader>
               <CardContent>
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div className="rounded-lg bg-muted/50 p-4 text-center">
-                    <p className="mb-1 text-xs text-muted-foreground">Saldo Atual</p>
+                    <p className="mb-1 text-xs text-muted-foreground">
+                      {t('pages.dashboard.currentBalance')}
+                    </p>
                     <p
                       className={cn(
                         'text-xl font-bold',
@@ -560,7 +567,7 @@ export default function Dashboard() {
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4 text-center">
                     <p className="mb-1 text-xs text-muted-foreground">
-                      Variação Prevista
+                      {t('pages.dashboard.expectedChange')}
                     </p>
                     <p
                       className={cn(
@@ -579,7 +586,9 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <div className="col-span-1 rounded-lg bg-muted/50 p-4 text-center md:col-span-2">
-                    <p className="mb-1 text-xs text-muted-foreground">Saldo Previsto</p>
+                    <p className="mb-1 text-xs text-muted-foreground">
+                      {t('pages.dashboard.expectedBalance')}
+                    </p>
                     <p
                       className={cn(
                         'text-2xl font-bold',
@@ -598,12 +607,12 @@ export default function Dashboard() {
                   <div className="space-y-3">
                     <h4 className="flex items-center gap-2 text-sm font-semibold text-success">
                       <ArrowUpRight className="h-4 w-4" />
-                      Entradas Previstas
+                      {t('pages.dashboard.inflows')}
                     </h4>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Receitas Pendentes
+                          {t('pages.dashboard.pendingRevenues')}
                         </span>
                         <span className="font-medium text-success">
                           +{formatCurrency(balanceForecast.pending_revenues)}
@@ -611,14 +620,16 @@ export default function Dashboard() {
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Empréstimos a Receber
+                          {t('pages.dashboard.loansReceivable')}
                         </span>
                         <span className="font-medium text-success">
                           +{formatCurrency(balanceForecast.loans_to_receive)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-t pt-2 text-sm">
-                        <span className="font-semibold">Total Entradas</span>
+                        <span className="font-semibold">
+                          {t('pages.dashboard.totalInflows')}
+                        </span>
                         <span className="font-bold text-success">
                           +{formatCurrency(balanceForecast.summary.total_income)}
                         </span>
@@ -630,39 +641,45 @@ export default function Dashboard() {
                   <div className="space-y-3">
                     <h4 className="flex items-center gap-2 text-sm font-semibold text-destructive">
                       <ArrowDownRight className="h-4 w-4" />
-                      Saídas Previstas
+                      {t('pages.dashboard.outflows')}
                     </h4>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Despesas Pendentes
+                          {t('pages.dashboard.pendingExpenses')}
                         </span>
                         <span className="font-medium text-destructive">
                           -{formatCurrency(balanceForecast.pending_expenses)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Faturas de Cartão</span>
+                        <span className="text-muted-foreground">
+                          {t('pages.dashboard.creditCardBills')}
+                        </span>
                         <span className="font-medium text-destructive">
                           -{formatCurrency(balanceForecast.pending_card_bills)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
-                          Empréstimos a Pagar
+                          {t('pages.dashboard.loansToPay')}
                         </span>
                         <span className="font-medium text-destructive">
                           -{formatCurrency(balanceForecast.loans_to_pay)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Valores a Pagar</span>
+                        <span className="text-muted-foreground">
+                          {t('pages.dashboard.valuesToPay')}
+                        </span>
                         <span className="font-medium text-destructive">
                           -{formatCurrency(balanceForecast.pending_payables)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between border-t pt-2 text-sm">
-                        <span className="font-semibold">Total Saídas</span>
+                        <span className="font-semibold">
+                          {t('pages.dashboard.totalOutflows')}
+                        </span>
                         <span className="font-bold text-destructive">
                           -{formatCurrency(balanceForecast.summary.total_outcome)}
                         </span>
@@ -682,7 +699,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>Projeção de Fluxo de Caixa</CardTitle>
+                  <CardTitle>{t('pages.dashboard.cashFlowProjection')}</CardTitle>
                 </div>
                 <Select
                   value={String(forecastDays)}
@@ -692,22 +709,26 @@ export default function Dashboard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="30">30 dias</SelectItem>
-                    <SelectItem value="60">60 dias</SelectItem>
-                    <SelectItem value="90">90 dias</SelectItem>
+                    <SelectItem value="30">{t('pages.dashboard.period30')}</SelectItem>
+                    <SelectItem value="60">{t('pages.dashboard.period60')}</SelectItem>
+                    <SelectItem value="90">{t('pages.dashboard.period90')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {cashFlowForecast && (
                 <div className="flex flex-wrap gap-4 pt-1 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Saldo Inicial: </span>
+                    <span className="text-muted-foreground">
+                      {t('pages.dashboard.startBalance')}:{' '}
+                    </span>
                     <span className="font-semibold">
                       {formatCurrency(cashFlowForecast.start_balance)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Saldo Final: </span>
+                    <span className="text-muted-foreground">
+                      {t('pages.dashboard.endBalance')}:{' '}
+                    </span>
                     <span
                       className={cn(
                         'font-semibold',
@@ -720,7 +741,9 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Variação: </span>
+                    <span className="text-muted-foreground">
+                      {t('pages.dashboard.variation')}:{' '}
+                    </span>
                     <span
                       className={cn(
                         'font-semibold',
@@ -734,7 +757,9 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Saldo Mínimo: </span>
+                    <span className="text-muted-foreground">
+                      {t('pages.dashboard.minBalance')}:{' '}
+                    </span>
                     <span className="font-semibold text-destructive">
                       {formatCurrency(cashFlowForecast.min_balance)}
                     </span>
@@ -755,17 +780,31 @@ export default function Dashboard() {
                   colors={COLORS}
                   lockChartType="line"
                   lines={[
-                    { dataKey: 'despesas', stroke: COLORS[5], name: 'Despesas' },
-                    { dataKey: 'receitas', stroke: COLORS[3], name: 'Receitas' },
-                    { dataKey: 'saldo', stroke: COLORS[0], name: 'Saldo' },
+                    {
+                      dataKey: 'despesas',
+                      stroke: COLORS[5],
+                      name: t('pages.dashboard.expenses'),
+                    },
+                    {
+                      dataKey: 'receitas',
+                      stroke: COLORS[3],
+                      name: t('pages.dashboard.revenues'),
+                    },
+                    {
+                      dataKey: 'saldo',
+                      stroke: COLORS[0],
+                      name: t('pages.dashboard.balance'),
+                    },
                   ]}
                   xAxisTickFormatter={(d) =>
-                    format(parseISO(d), 'dd/MM', { locale: ptBR })
+                    format(parseISO(d), 'dd/MM', { locale: dateFnsLocale })
                   }
                   tooltipLabelFormatter={(d) =>
-                    format(parseISO(String(d)), "dd 'de' MMMM", { locale: ptBR })
+                    format(parseISO(String(d)), "dd 'de' MMMM", {
+                      locale: dateFnsLocale,
+                    })
                   }
-                  emptyMessage="Nenhuma projeção disponível"
+                  emptyMessage={t('pages.dashboard.noProjection')}
                   height={350}
                 />
               )}
@@ -781,7 +820,7 @@ export default function Dashboard() {
         >
           <motion.div variants={itemVariants}>
             <StatCard
-              title="Saldo Total"
+              title={t('pages.dashboard.totalBalance')}
               value={formatCurrency(stats?.total_balance || 0)}
               icon={<Wallet className="h-4 w-4" />}
             />
@@ -789,7 +828,7 @@ export default function Dashboard() {
 
           <motion.div variants={itemVariants}>
             <StatCard
-              title="Despesas do Mês"
+              title={t('pages.dashboard.monthExpenses')}
               value={formatCurrency(stats?.total_expenses || 0)}
               icon={<TrendingDown className="h-4 w-4" />}
               variant="danger"
@@ -798,7 +837,7 @@ export default function Dashboard() {
 
           <motion.div variants={itemVariants}>
             <StatCard
-              title="Receitas do Mês"
+              title={t('pages.dashboard.monthRevenues')}
               value={formatCurrency(stats?.total_revenues || 0)}
               icon={<TrendingUp className="h-4 w-4" />}
               variant="success"
@@ -807,7 +846,7 @@ export default function Dashboard() {
 
           <motion.div variants={itemVariants}>
             <StatCard
-              title="Limite de Crédito"
+              title={t('pages.dashboard.creditLimit')}
               value={`${formatCurrency(stats?.available_credit_limit || 0)} / ${formatCurrency(stats?.total_credit_limit || 0)}`}
               icon={<CreditCard className="h-4 w-4" />}
             />
@@ -817,8 +856,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Despesas por Categoria (Top 5)</CardTitle>
-              <p className="text-sm">Distribuição das maiores categorias de gastos</p>
+              <CardTitle>{t('pages.dashboard.expensesByCategory')}</CardTitle>
+              <p className="text-sm">{t('pages.dashboard.expensesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -828,7 +867,7 @@ export default function Dashboard() {
                 nameKey="name"
                 formatter={formatCurrency}
                 colors={COLORS}
-                emptyMessage="Nenhuma despesa cadastrada"
+                emptyMessage={t('pages.dashboard.noExpenses')}
                 lockChartType="pie"
                 height={350}
               />
@@ -837,8 +876,8 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Receitas por Categoria (Top 5)</CardTitle>
-              <p className="text-sm">Distribuição das fontes de receita</p>
+              <CardTitle>{t('pages.dashboard.revenuesByCategory')}</CardTitle>
+              <p className="text-sm">{t('pages.dashboard.revenuesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
               <ChartContainer
@@ -848,7 +887,7 @@ export default function Dashboard() {
                 nameKey="name"
                 formatter={formatCurrency}
                 colors={COLORS}
-                emptyMessage="Nenhuma receita cadastrada"
+                emptyMessage={t('pages.dashboard.noRevenues')}
                 lockChartType="pie"
                 height={350}
               />
@@ -860,14 +899,13 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <CardTitle>
-                Evolução{' '}
                 {evolutionPeriod === 'daily'
-                  ? 'Diária (Últimos 30 Dias)'
+                  ? t('pages.dashboard.evolutionDaily')
                   : evolutionPeriod === 'weekly'
-                    ? 'Semanal (Últimas 8 Semanas)'
+                    ? t('pages.dashboard.evolutionWeekly')
                     : evolutionPeriod === 'yearly'
-                      ? 'Anual (Últimos 5 Anos)'
-                      : 'Mensal (Últimos 6 Meses)'}
+                      ? t('pages.dashboard.evolutionYearly')
+                      : t('pages.dashboard.evolutionMonthly')}
               </CardTitle>
               <Select
                 value={evolutionPeriod}
@@ -879,10 +917,12 @@ export default function Dashboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Diário</SelectItem>
-                  <SelectItem value="weekly">Semanal</SelectItem>
-                  <SelectItem value="monthly">Mensal</SelectItem>
-                  <SelectItem value="yearly">Anual</SelectItem>
+                  <SelectItem value="daily">{t('pages.dashboard.daily')}</SelectItem>
+                  <SelectItem value="weekly">{t('pages.dashboard.weekly')}</SelectItem>
+                  <SelectItem value="monthly">
+                    {t('pages.dashboard.monthly')}
+                  </SelectItem>
+                  <SelectItem value="yearly">{t('pages.dashboard.annual')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -895,12 +935,24 @@ export default function Dashboard() {
               nameKey="month"
               formatter={formatCurrency}
               colors={COLORS}
-              emptyMessage="Nenhum dado disponível"
+              emptyMessage={t('pages.dashboard.noData')}
               lockChartType="line"
               lines={[
-                { dataKey: 'despesas', stroke: COLORS[5], name: 'Despesas' },
-                { dataKey: 'receitas', stroke: COLORS[3], name: 'Receitas' },
-                { dataKey: 'saldo', stroke: COLORS[0], name: 'Saldo' },
+                {
+                  dataKey: 'despesas',
+                  stroke: COLORS[5],
+                  name: t('pages.dashboard.expenses'),
+                },
+                {
+                  dataKey: 'receitas',
+                  stroke: COLORS[3],
+                  name: t('pages.dashboard.revenues'),
+                },
+                {
+                  dataKey: 'saldo',
+                  stroke: COLORS[0],
+                  name: t('pages.dashboard.balance'),
+                },
               ]}
               height={400}
             />
@@ -914,19 +966,19 @@ export default function Dashboard() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Despesas de Cartão por Categoria
+                  {t('pages.dashboard.cardExpensesByCategory')}
                 </CardTitle>
                 <p className="mt-1 text-sm">
-                  Distribuição das despesas de cartão de crédito
+                  {t('pages.dashboard.cardExpensesByCategoryDesc')}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Select value={selectedCard} onValueChange={setSelectedCard}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Todos os Cartões" />
+                    <SelectValue placeholder={t('pages.dashboard.allCards')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os Cartões</SelectItem>
+                    <SelectItem value="all">{t('pages.dashboard.allCards')}</SelectItem>
                     {creditCards.map((card) => (
                       <SelectItem key={card.id} value={card.id.toString()}>
                         {card.name}
@@ -942,12 +994,14 @@ export default function Dashboard() {
                   <SelectTrigger className="w-[180px]">
                     <SelectValue
                       placeholder={
-                        filteredBills.length === 0 ? 'Sem faturas' : 'Todas as Faturas'
+                        filteredBills.length === 0
+                          ? t('pages.dashboard.noBills')
+                          : t('pages.dashboard.allBills')
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Faturas</SelectItem>
+                    <SelectItem value="all">{t('pages.dashboard.allBills')}</SelectItem>
                     {filteredBills.map((bill) => (
                       <SelectItem key={bill.id} value={bill.id.toString()}>
                         {
@@ -973,7 +1027,7 @@ export default function Dashboard() {
                   nameKey="name"
                   formatter={formatCurrency}
                   colors={COLORS}
-                  emptyMessage="Nenhuma despesa de cartão encontrada"
+                  emptyMessage={t('pages.dashboard.noCardExpenses')}
                   lockChartType="pie"
                   height={350}
                 />
@@ -982,7 +1036,9 @@ export default function Dashboard() {
                 {creditCardExpensesChartData.length > 0 ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between border-b pb-2">
-                      <span className="font-semibold">Total</span>
+                      <span className="font-semibold">
+                        {t('pages.dashboard.total')}
+                      </span>
                       <span className="text-lg font-bold text-destructive">
                         {formatCurrency(creditCardExpensesTotal)}
                       </span>
@@ -1008,7 +1064,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center">
-                    <p className="text-sm">Nenhuma despesa de cartão encontrada</p>
+                    <p className="text-sm">{t('pages.dashboard.noCardExpenses')}</p>
                   </div>
                 )}
               </div>
@@ -1025,10 +1081,10 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <PiggyBank className="h-5 w-5" />
-                  <CardTitle>Orçamentos do Mês</CardTitle>
+                  <CardTitle>{t('pages.dashboard.monthBudgets')}</CardTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Limite vs gasto real por categoria no mês atual
+                  {t('pages.dashboard.monthBudgetsDesc')}
                 </p>
               </CardHeader>
               <CardContent>

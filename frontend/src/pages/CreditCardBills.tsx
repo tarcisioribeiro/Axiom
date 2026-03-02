@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -49,6 +50,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function CreditCardBills() {
+  const { t } = useTranslation();
   const [bills, setBills] = useState<CreditCardBill[]>([]);
   const [filteredBills, setFilteredBills] = useState<CreditCardBill[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -85,7 +87,7 @@ export default function CreditCardBills() {
       setCreditCards(cardsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -166,21 +168,21 @@ export default function CreditCardBills() {
       if (selectedBill) {
         await creditCardBillsService.update(selectedBill.id, data);
         toast({
-          title: 'Fatura atualizada',
-          description: 'A fatura foi atualizada com sucesso.',
+          title: t('pages.creditCardBills.updated'),
+          description: t('pages.creditCardBills.updatedDesc'),
         });
       } else {
         await creditCardBillsService.create(data);
         toast({
-          title: 'Fatura criada',
-          description: 'A fatura foi criada com sucesso.',
+          title: t('pages.creditCardBills.created'),
+          description: t('pages.creditCardBills.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -192,9 +194,8 @@ export default function CreditCardBills() {
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos um cartão de crédito cadastrado antes de criar uma fatura.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.creditCardBills.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -205,24 +206,23 @@ export default function CreditCardBills() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir fatura',
-      description:
-        'Tem certeza que deseja excluir esta fatura? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.creditCardBills.deleteTitle'),
+      description: t('pages.creditCardBills.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await creditCardBillsService.delete(id);
       toast({
-        title: 'Fatura excluída',
-        description: 'A fatura foi excluída com sucesso.',
+        title: t('pages.creditCardBills.deleted'),
+        description: t('pages.creditCardBills.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -240,14 +240,14 @@ export default function CreditCardBills() {
       setIsPaymentSubmitting(true);
       const response = await creditCardBillsService.payBill(selectedBill.id, data);
       toast({
-        title: 'Pagamento realizado',
+        title: t('pages.creditCardBills.paySuccess'),
         description: `Pagamento de ${formatCurrency(response.payment.amount)} processado com sucesso. Novo limite: ${formatCurrency(response.card.credit_limit)}`,
       });
       setIsPaymentDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao processar pagamento',
+        title: t('pages.creditCardBills.payError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -258,22 +258,22 @@ export default function CreditCardBills() {
 
   const handleReopenBill = async (bill: CreditCardBill) => {
     const confirmed = await showConfirm({
-      title: 'Reabrir fatura',
+      title: t('pages.creditCardBills.reopenTitle'),
       description: `Deseja reabrir a fatura de ${translate('months', bill.month)}/${bill.year}? Isso permitirá adicionar ou remover lançamentos.`,
-      confirmText: 'Reabrir',
-      cancelText: 'Cancelar',
+      confirmText: t('pages.creditCardBills.reopenBtn'),
+      cancelText: t('common.actions.cancel'),
     });
     if (!confirmed) return;
     try {
       await creditCardBillsService.reopenBill(bill.id);
       toast({
-        title: 'Fatura reaberta',
-        description: 'A fatura foi reaberta com sucesso.',
+        title: t('pages.creditCardBills.reopened'),
+        description: t('pages.creditCardBills.reopenedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao reabrir fatura',
+        title: t('pages.creditCardBills.reopenError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -313,7 +313,7 @@ export default function CreditCardBills() {
   const columns: Column<CreditCardBill>[] = [
     {
       key: 'credit_card',
-      label: 'Cartão',
+      label: t('pages.creditCardBills.columns.card'),
       render: (bill) => (
         <div className="flex items-center gap-2">
           <CreditCardIcon className="h-4 w-4" />
@@ -323,12 +323,12 @@ export default function CreditCardBills() {
     },
     {
       key: 'period',
-      label: 'Período',
+      label: t('pages.creditCardBills.columns.period'),
       render: (bill) => `${translate('months', bill.month)}/${bill.year}`,
     },
     {
       key: 'total_amount',
-      label: 'Valor Total',
+      label: t('pages.creditCardBills.columns.totalAmount'),
       align: 'right',
       render: (bill) => (
         <span className="font-semibold">{formatCurrency(bill.total_amount)}</span>
@@ -336,7 +336,7 @@ export default function CreditCardBills() {
     },
     {
       key: 'minimum_payment',
-      label: 'Pag. Mínimo',
+      label: t('pages.creditCardBills.columns.minPayment'),
       align: 'right',
       render: (bill) => (
         <span className="text-sm font-medium text-warning">
@@ -346,7 +346,7 @@ export default function CreditCardBills() {
     },
     {
       key: 'paid_amount',
-      label: 'Pago',
+      label: t('pages.creditCardBills.columns.paid'),
       align: 'right',
       render: (bill) => (
         <span className="font-semibold text-success">
@@ -356,7 +356,7 @@ export default function CreditCardBills() {
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('pages.creditCardBills.columns.status'),
       render: (bill) => (
         <Badge
           variant={
@@ -375,7 +375,7 @@ export default function CreditCardBills() {
     },
     {
       key: 'due_date',
-      label: 'Vencimento',
+      label: t('pages.creditCardBills.columns.dueDate'),
       render: (bill) => (
         <span className="text-sm">
           {bill.due_date ? formatDate(bill.due_date) : 'N/A'}
@@ -387,10 +387,10 @@ export default function CreditCardBills() {
   return (
     <PageContainer>
       <PageHeader
-        title="Faturas de Cartão"
+        title={t('pages.creditCardBills.title')}
         icon={<Receipt />}
         action={{
-          label: 'Nova Fatura',
+          label: t('pages.creditCardBills.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -399,15 +399,15 @@ export default function CreditCardBills() {
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4" />
-          <span className="font-semibold">Filtros</span>
+          <span className="font-semibold">{t('common.actions.filter')}</span>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Cartões" />
+              <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Cartões</SelectItem>
+              <SelectItem value="all">{t('pages.creditCardBills.allCards')}</SelectItem>
               {creditCards.map((c) => {
                 const masked = c.card_number_masked || '****';
                 const digitsOnly = masked.replace(/[^\d]/g, '');
@@ -425,10 +425,12 @@ export default function CreditCardBills() {
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Status" />
+              <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardBills.allStatus')}
+              </SelectItem>
               {Object.entries(TRANSLATIONS.billStatus).map(([k, v]) => (
                 <SelectItem key={k} value={k}>
                   {v}
@@ -438,10 +440,10 @@ export default function CreditCardBills() {
           </Select>
           <Select value={yearFilter} onValueChange={setYearFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Anos" />
+              <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Anos</SelectItem>
+              <SelectItem value="all">{t('pages.creditCardBills.allYears')}</SelectItem>
               {years.map((y) => (
                 <SelectItem key={y} value={y}>
                   {y}
@@ -452,7 +454,7 @@ export default function CreditCardBills() {
         </div>
         <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
-            {filteredBills.length} fatura(s) encontrada(s)
+            {t('pages.creditCardBills.foundBills', { count: filteredBills.length })}
           </span>
         </div>
       </div>
@@ -463,7 +465,7 @@ export default function CreditCardBills() {
         keyExtractor={(bill) => bill.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma fatura encontrada.',
+          message: t('pages.creditCardBills.emptyState'),
         }}
         actions={(bill) => (
           <div className="flex items-center justify-end gap-2">
@@ -476,7 +478,7 @@ export default function CreditCardBills() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleOpenPayment(bill)}
-                aria-label="Pagar fatura"
+                aria-label={t('pages.creditCardBills.payBillLabel')}
               >
                 <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
               </Button>
@@ -486,7 +488,7 @@ export default function CreditCardBills() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleReopenBill(bill)}
-                aria-label="Reabrir fatura"
+                aria-label={t('pages.creditCardBills.reopenBillLabel')}
               >
                 <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
               </Button>
@@ -495,7 +497,7 @@ export default function CreditCardBills() {
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(bill)}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -503,7 +505,7 @@ export default function CreditCardBills() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(bill.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -515,11 +517,11 @@ export default function CreditCardBills() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedBill ? 'Editar' : 'Nova'} Fatura de Cartão
+              {selectedBill
+                ? t('pages.creditCardBills.editTitle')
+                : t('pages.creditCardBills.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              Preencha os dados da fatura de cartão de crédito
-            </DialogDescription>
+            <DialogDescription>{t('pages.creditCardBills.editDesc')}</DialogDescription>
           </DialogHeader>
           <CreditCardBillForm
             bill={selectedBill}
@@ -534,10 +536,8 @@ export default function CreditCardBills() {
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pagar Fatura</DialogTitle>
-            <DialogDescription>
-              Realize o pagamento da fatura de cartão de crédito
-            </DialogDescription>
+            <DialogTitle>{t('pages.creditCardBills.payTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.creditCardBills.payDesc')}</DialogDescription>
           </DialogHeader>
           {selectedBill && (
             <BillPaymentForm

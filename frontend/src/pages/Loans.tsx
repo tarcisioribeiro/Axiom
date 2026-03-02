@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, Loader2, Download, HandCoins } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -77,6 +78,7 @@ const PAYMENT_FREQUENCIES = [
 const LOAN_STATUSES = ['active', 'paid', 'defaulted', 'cancelled'];
 
 export default function Loans() {
+  const { t } = useTranslation();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -123,7 +125,7 @@ export default function Loans() {
       setMembers(Array.isArray(membersData) ? membersData : []);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -142,8 +144,10 @@ export default function Loans() {
       if (members.length === 0) missing.push('membros');
 
       toast({
-        title: 'Ação não permitida',
-        description: `É necessário ter ${missing.join(' e ')} cadastrados antes de criar um empréstimo.`,
+        title: t('common.messages.actionDenied'),
+        description: t('pages.loans.noPrerequisitesMsg', {
+          missing: missing.join(' e '),
+        }),
         variant: 'destructive',
       });
       return;
@@ -195,21 +199,21 @@ export default function Loans() {
 
   const handleDelete = async (loan: Loan) => {
     const confirmed = await showConfirm({
-      title: 'Confirmar exclusão',
-      description: `Tem certeza que deseja excluir o empréstimo "${loan.description}"?`,
+      title: t('pages.loans.deleteTitle'),
+      description: t('pages.loans.deleteDesc', { name: loan.description }),
     });
 
     if (confirmed) {
       try {
         await loansService.delete(loan.id);
         toast({
-          title: 'Empréstimo excluído',
-          description: 'O empréstimo foi excluído com sucesso.',
+          title: t('pages.loans.deleted'),
+          description: t('pages.loans.deletedDesc'),
         });
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -227,13 +231,13 @@ export default function Loans() {
         const { payed_value: _payed_value, ...updateData } = formData;
         await loansService.update(selectedLoan.id, updateData);
         toast({
-          title: 'Empréstimo atualizado',
+          title: t('pages.loans.updated'),
           description: 'O empréstimo foi atualizado com sucesso.',
         });
       } else {
         await loansService.create(formData);
         toast({
-          title: 'Empréstimo criado',
+          title: t('pages.loans.created'),
           description: 'O empréstimo foi criado com sucesso.',
         });
       }
@@ -241,7 +245,7 @@ export default function Loans() {
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -281,10 +285,10 @@ export default function Loans() {
   return (
     <PageContainer>
       <PageHeader
-        title="Empréstimos"
+        title={t('pages.loans.title')}
         icon={<HandCoins />}
         action={{
-          label: 'Novo Empréstimo',
+          label: t('pages.loans.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -292,7 +296,7 @@ export default function Loans() {
 
       <div className="flex gap-4">
         <SearchInput
-          placeholder="Buscar empréstimos..."
+          placeholder={t('pages.loans.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="max-w-sm"
@@ -303,9 +307,7 @@ export default function Loans() {
         <EmptyState
           icon={<HandCoins className="h-12 w-12 text-muted-foreground" />}
           message={
-            searchTerm
-              ? 'Nenhum empréstimo encontrado para a pesquisa atual.'
-              : 'Nenhum empréstimo cadastrado. Clique em "Novo Empréstimo" para começar.'
+            searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')
           }
         />
       ) : (
@@ -380,7 +382,7 @@ export default function Loans() {
                   className="flex-1"
                 >
                   <Pencil className="mr-1 h-3 w-3" />
-                  Editar
+                  {t('common.actions.edit')}
                 </Button>
                 <Button
                   variant="outline"
@@ -389,7 +391,7 @@ export default function Loans() {
                   className="flex-1"
                 >
                   <Trash2 className="mr-1 h-3 w-3" />
-                  Excluir
+                  {t('common.actions.delete')}
                 </Button>
                 {loan.contract_document && (
                   <Button variant="outline" size="sm" asChild>
@@ -408,12 +410,10 @@ export default function Loans() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedLoan ? 'Editar Empréstimo' : 'Novo Empréstimo'}
+              {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
             </DialogTitle>
             <DialogDescription>
-              {selectedLoan
-                ? 'Atualize as informações do empréstimo'
-                : 'Preencha as informações do novo empréstimo'}
+              {selectedLoan ? t('pages.loans.editDesc') : t('pages.loans.newDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -746,16 +746,16 @@ export default function Loans() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancelar
+                {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
+                    {t('common.actions.saving')}
                   </>
                 ) : (
-                  'Salvar'
+                  t('common.actions.save')
                 )}
               </Button>
             </div>

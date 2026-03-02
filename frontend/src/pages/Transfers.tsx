@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, ArrowLeftRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -27,6 +28,7 @@ import type { Transfer, TransferFormData, Account } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Transfers() {
+  const { t } = useTranslation();
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +54,7 @@ export default function Transfers() {
       setAccounts(accountsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -67,21 +69,21 @@ export default function Transfers() {
       if (selectedTransfer) {
         await transfersService.update(selectedTransfer.id, data);
         toast({
-          title: 'Transferência atualizada',
-          description: 'A transferência foi atualizada com sucesso.',
+          title: t('pages.transfers.updated'),
+          description: t('pages.transfers.updatedDesc'),
         });
       } else {
         await transfersService.create(data);
         toast({
-          title: 'Transferência criada',
-          description: 'A transferência foi criada com sucesso.',
+          title: t('pages.transfers.created'),
+          description: t('pages.transfers.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -93,9 +95,8 @@ export default function Transfers() {
   const handleCreate = () => {
     if (accounts.length < 2) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos duas contas cadastradas antes de criar uma transferência.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.transfers.noAccountMsg'),
         variant: 'destructive',
       });
       return;
@@ -106,24 +107,23 @@ export default function Transfers() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir transferência',
-      description:
-        'Tem certeza que deseja excluir esta transferência? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.transfers.deleteTitle'),
+      description: t('pages.transfers.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await transfersService.delete(id);
       toast({
-        title: 'Transferência excluída',
-        description: 'A transferência foi excluída com sucesso.',
+        title: t('pages.transfers.deleted'),
+        description: t('pages.transfers.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -139,12 +139,12 @@ export default function Transfers() {
   const columns: Column<Transfer>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.transfers.columns.description'),
       render: (transfer) => <div className="font-medium">{transfer.description}</div>,
     },
     {
       key: 'value',
-      label: 'Valor',
+      label: t('pages.transfers.columns.amount'),
       align: 'right',
       render: (transfer) => (
         <span className="font-semibold">{formatCurrency(transfer.value)}</span>
@@ -152,14 +152,14 @@ export default function Transfers() {
     },
     {
       key: 'category',
-      label: 'Tipo',
+      label: t('pages.transfers.columns.type'),
       render: (transfer) => (
         <Badge>{translate('transferTypes', transfer.category)}</Badge>
       ),
     },
     {
       key: 'accounts',
-      label: 'Origem → Destino',
+      label: t('pages.transfers.columns.route'),
       render: (transfer) => (
         <span className="text-sm">
           {transfer.origin_account_name} → {transfer.destiny_account_name}
@@ -168,7 +168,7 @@ export default function Transfers() {
     },
     {
       key: 'date',
-      label: 'Data',
+      label: t('pages.transfers.columns.date'),
       render: (transfer) => (
         <span className="text-sm">
           {formatDate(transfer.date)} às {transfer.horary}
@@ -180,10 +180,10 @@ export default function Transfers() {
   return (
     <PageContainer>
       <PageHeader
-        title="Transferências"
+        title={t('pages.transfers.title')}
         icon={<ArrowLeftRight />}
         action={{
-          label: 'Nova Transferência',
+          label: t('pages.transfers.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -195,7 +195,7 @@ export default function Transfers() {
         keyExtractor={(transfer) => transfer.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma transferência cadastrada.',
+          message: t('pages.transfers.emptyState'),
         }}
         actions={(transfer) => (
           <div className="flex items-center justify-end gap-2">
@@ -227,12 +227,14 @@ export default function Transfers() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedTransfer ? 'Editar Transferência' : 'Nova Transferência'}
+              {selectedTransfer
+                ? t('pages.transfers.editTitle')
+                : t('pages.transfers.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedTransfer
-                ? 'Atualize as informações da transferência'
-                : 'Adicione uma nova transferência ao sistema'}
+                ? t('pages.transfers.editDesc')
+                : t('pages.transfers.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <TransferForm

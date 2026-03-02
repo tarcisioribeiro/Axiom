@@ -74,5 +74,10 @@ python createsuperuser.py
 echo "🔧 Configurando grupos e permissões do sistema..."
 python setup_members.py
 
-echo "🚀 Iniciando servidor Django..."
-python manage.py runserver 0.0.0.0:${API_PORT:-39100}
+echo "🚀 Iniciando servidor com Gunicorn..."
+exec gunicorn app.wsgi:application \
+  --bind 0.0.0.0:${API_PORT:-39100} \
+  --workers ${GUNICORN_WORKERS:-4} \
+  --timeout ${GUNICORN_TIMEOUT:-120} \
+  --access-logfile - \
+  --error-logfile -

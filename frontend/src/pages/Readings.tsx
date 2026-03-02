@@ -1,5 +1,6 @@
 import { Plus, Edit, Trash2, BookMarked, BookOpen, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -35,6 +36,7 @@ export default function Readings() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -51,7 +53,7 @@ export default function Readings() {
       setBooks(booksData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -63,9 +65,8 @@ export default function Readings() {
   const handleCreate = () => {
     if (books.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos um livro cadastrado antes de registrar uma leitura.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.readings.noBookMsg'),
         variant: 'destructive',
       });
       return;
@@ -81,11 +82,10 @@ export default function Readings() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir leitura',
-      description:
-        'Tem certeza que deseja excluir esta leitura? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.readings.deleteTitle'),
+      description: t('pages.readings.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -94,13 +94,13 @@ export default function Readings() {
     try {
       await readingsService.delete(id);
       toast({
-        title: 'Leitura excluída',
-        description: 'A leitura foi excluída com sucesso.',
+        title: t('pages.readings.deleted'),
+        description: t('pages.readings.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir leitura',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -113,21 +113,21 @@ export default function Readings() {
       if (selectedReading) {
         await readingsService.update(selectedReading.id, data);
         toast({
-          title: 'Leitura atualizada',
-          description: 'A leitura foi atualizada com sucesso.',
+          title: t('pages.readings.updated'),
+          description: t('pages.readings.updatedDesc'),
         });
       } else {
         await readingsService.create(data);
         toast({
-          title: 'Leitura registrada',
-          description: 'A leitura foi registrada com sucesso.',
+          title: t('pages.readings.created'),
+          description: t('pages.readings.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -149,10 +149,10 @@ export default function Readings() {
   return (
     <PageContainer>
       <PageHeader
-        title="Leituras"
+        title={t('pages.readings.title')}
         icon={<BookMarked />}
         action={{
-          label: 'Nova Leitura',
+          label: t('pages.readings.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -160,7 +160,7 @@ export default function Readings() {
 
       <div className="flex items-center gap-4">
         <SearchInput
-          placeholder="Buscar leituras..."
+          placeholder={t('pages.readings.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="flex-1"
@@ -172,8 +172,8 @@ export default function Readings() {
           icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhuma leitura encontrada para a pesquisa atual.'
-              : 'Nenhuma leitura registrada. Clique em "Nova Leitura" para começar.'
+              ? t('pages.readings.emptySearch')
+              : t('pages.readings.emptyState')
           }
         />
       ) : (
@@ -195,7 +195,7 @@ export default function Readings() {
                         {formatDate(reading.reading_date, 'dd/MM/yyyy')}
                       </div>
                       <Badge variant="secondary" className="text-xs">
-                        {reading.pages_read} pág.
+                        {t('pages.readings.pagesRead', { count: reading.pages_read })}
                       </Badge>
                     </div>
                   </div>
@@ -205,7 +205,7 @@ export default function Readings() {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleEdit(reading)}
-                      aria-label="Editar"
+                      aria-label={t('common.actions.edit')}
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -214,7 +214,7 @@ export default function Readings() {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleDelete(reading.id)}
-                      aria-label="Excluir"
+                      aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -235,12 +235,14 @@ export default function Readings() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {selectedReading ? 'Editar' : 'Registrar'} Leitura
+              {selectedReading
+                ? t('pages.readings.editTitle')
+                : t('pages.readings.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedReading
-                ? 'Atualize as informações da leitura'
-                : 'Registre o progresso de leitura de um livro'}
+                ? t('pages.readings.editDesc')
+                : t('pages.readings.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <ReadingForm

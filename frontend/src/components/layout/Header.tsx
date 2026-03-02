@@ -1,5 +1,7 @@
 import { LogOut, Menu } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -10,6 +12,7 @@ import { useAuthStore } from '@/stores/auth-store';
 export const Header = () => {
   const { logout } = useAuthStore();
   const { toggle: toggleSidebar } = useSidebar();
+  const { t } = useTranslation();
 
   return (
     <header className="border-b bg-card px-4 py-4 lg:px-6">
@@ -20,7 +23,7 @@ export const Header = () => {
           size="icon"
           onClick={toggleSidebar}
           className="mr-2 lg:hidden"
-          aria-label="Abrir menu"
+          aria-label={t('layout.openMenu')}
         >
           <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -33,6 +36,8 @@ export const Header = () => {
         <div className="flex items-center gap-4">
           <ThemeToggle className="hover-lift" />
 
+          <LanguageSelector />
+
           <NotificationBell />
 
           <Button
@@ -40,8 +45,8 @@ export const Header = () => {
             size="icon"
             onClick={logout}
             className="hover-lift"
-            aria-label="Sair"
-            title="Sair"
+            aria-label={t('layout.logout')}
+            title={t('layout.logout')}
           >
             <LogOut className="h-4 w-4" />
           </Button>
