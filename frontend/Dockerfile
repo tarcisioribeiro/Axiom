@@ -40,6 +40,9 @@ RUN npm run build
 # Stage 2: Production with nginx
 FROM nginx:alpine
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 # Create non-root user for nginx
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
@@ -61,6 +64,9 @@ USER appuser
 
 # Expose port 80
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${NGINX_PORT:-80}/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
