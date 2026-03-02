@@ -322,6 +322,13 @@ All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) 
 ### Automated updates (Dependabot)
 `.github/dependabot.yml` is configured to open monthly PRs for pip, npm, and GitHub Actions dependencies. Each PR must pass CI and receive a manual changelog review before merging.
 
+### Monthly maintenance checklist
+When processing Dependabot PRs or doing routine maintenance, also run:
+```bash
+pre-commit autoupdate   # bump hook revs in .pre-commit-config.yaml
+```
+Commit the result with `chore(ci): pre-commit autoupdate` and verify all hooks still pass before merging.
+
 ## Tool Configuration
 
 Backend tools configured in `api/pyproject.toml`: Black (line-length 88, excludes migrations), isort (black profile), pytest (DJANGO_SETTINGS_MODULE=app.settings), coverage, mypy, flake8.
