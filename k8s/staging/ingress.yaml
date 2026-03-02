@@ -10,7 +10,7 @@
 #
 # Note: The ClusterIssuers (letsencrypt-staging / letsencrypt-prod) are cluster-scoped
 # and are already defined in k8s/ingress.yaml (production). You only need to apply them once.
-# If they already exist, skip applying the ClusterIssuer sections here.
+# If they already exist, skip applying the ClusterIssuer sections there.
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/component: frontend
         environment: staging
     spec:
+      serviceAccountName: sa-frontend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: gitlab-registry-secret
       initContainers:

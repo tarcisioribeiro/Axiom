@@ -22,9 +22,11 @@ spec:
         app.kubernetes.io/component: minio
         environment: staging
     spec:
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
       containers:
         - name: minio
-          image: minio/minio:latest
+          image: minio/minio:RELEASE.2024-11-07T00-52-20Z
           command:
             - minio
             - server

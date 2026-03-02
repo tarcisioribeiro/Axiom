@@ -30,6 +30,8 @@ spec:
                 sleep 2
               done
               echo "API is ready!"
+      serviceAccountName: sa-frontend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: gitlab-registry-secret
       containers:

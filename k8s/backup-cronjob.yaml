@@ -382,13 +382,13 @@ spec:
             app.kubernetes.io/component: backup
         spec:
           restartPolicy: OnFailure
+          serviceAccountName: sa-backup
+          automountServiceAccountToken: false
 
           # ── initContainer: supply the mc binary ─────────────────────────────
           initContainers:
             - name: install-mc
-              # Pin to a specific release tag in production, e.g.:
-              # minio/mc:RELEASE.2024-11-21T17-21-54Z
-              image: minio/mc:latest
+              image: minio/mc:RELEASE.2024-11-21T17-21-54Z
               command: ["cp", "/usr/bin/mc", "/tools/mc"]
               resources:
                 requests:
