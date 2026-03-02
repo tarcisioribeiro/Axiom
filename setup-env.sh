@@ -167,6 +167,7 @@ if [ "$MODE" == "auto" ]; then
     CSRF_COOKIE_SECURE="False"
 
     BACKUP_DIR="./backups"
+    BACKUP_ENCRYPTION_KEY="$(openssl rand -base64 48 | tr -d /=+ | cut -c1-40)"
     ENABLE_DEBUG_TOOLBAR="False"
     SHOW_SQL_QUERIES="False"
 
@@ -250,6 +251,8 @@ else
     SESSION_COOKIE_SECURE="False"
     CSRF_COOKIE_SECURE="False"
     BACKUP_DIR="./backups"
+    BACKUP_ENCRYPTION_KEY="$(openssl rand -base64 48 | tr -d /=+ | cut -c1-40)"
+    print_info "BACKUP_ENCRYPTION_KEY gerada automaticamente (salve em local seguro!)"
     ENABLE_DEBUG_TOOLBAR="False"
     SHOW_SQL_QUERIES="False"
 
@@ -346,6 +349,8 @@ CSRF_COOKIE_SECURE=$CSRF_COOKIE_SECURE
 # BACKUP CONFIGURATION
 # ============================================================================
 BACKUP_DIR=$BACKUP_DIR
+# AES-256 passphrase para criptografia dos backups — NUNCA altere após o primeiro backup
+BACKUP_ENCRYPTION_KEY=$BACKUP_ENCRYPTION_KEY
 
 # ============================================================================
 # MinIO / S3 Object Storage
@@ -412,9 +417,13 @@ if [ "$MODE" == "auto" ]; then
     echo "  Username: $DJANGO_SUPERUSER_USERNAME"
     echo "  Email: $DJANGO_SUPERUSER_EMAIL"
     echo "  Senha: $DJANGO_SUPERUSER_PASSWORD"
+    echo ""
+    echo -e "${CYAN}Backup Encryption:${NC}"
+    echo "  BACKUP_ENCRYPTION_KEY: $BACKUP_ENCRYPTION_KEY"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     print_warning "IMPORTANTE: Salve essas credenciais em um local seguro!"
+    print_warning "BACKUP_ENCRYPTION_KEY: nunca altere após o primeiro backup (dados inacessíveis)!"
 fi
 
 echo ""
