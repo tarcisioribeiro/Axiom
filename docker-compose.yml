@@ -177,7 +177,7 @@ services:
         condition: service_healthy
     volumes:
       - ./api/media:/app/media
-      - ./api/logs:/app/logs
+      - logs_data:/app/logs  # Volume nomeado evita problemas de permissão de owner (UID 1000)
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
     restart: unless-stopped
     healthcheck:
@@ -304,6 +304,8 @@ volumes:
   redis_data:
     driver: local
   staticfiles_data:
+    driver: local
+  logs_data:
     driver: local
   minio_data:
     driver: local
