@@ -37,7 +37,7 @@
 #     --timeout=120s
 #
 # Then update the `email` field in both ClusterIssuers below and replace
-# every occurrence of "mindledger.example.com" with your real domain.
+# every occurrence of "${MINDLEDGER_DOMAIN}" with your real domain.
 #
 # Workflow:
 #   1. Apply with letsencrypt-staging to verify HTTP-01 challenges work.
@@ -62,7 +62,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: admin@example.com  # TODO: replace with your email address
+    email: ${LETSENCRYPT_EMAIL}
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:
@@ -81,7 +81,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@example.com  # TODO: replace with your email address
+    email: ${LETSENCRYPT_EMAIL}
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
@@ -98,7 +98,8 @@ spec:
 #   /media/**  → api-service:8002   (user-uploaded media)
 #   /**        → frontend-service:80 (React SPA — catch-all, must be last)
 #
-# TODO: replace every occurrence of "mindledger.example.com" with your domain.
+# Apply with: envsubst < k8s/ingress.yaml | kubectl apply -f -
+# Required env vars: MINDLEDGER_DOMAIN, LETSENCRYPT_EMAIL
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -120,10 +121,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - mindledger.example.com  # TODO: replace with your domain
+        - ${MINDLEDGER_DOMAIN}
       secretName: mindledger-tls
   rules:
-    - host: mindledger.example.com  # TODO: replace with your domain
+    - host: ${MINDLEDGER_DOMAIN}
       http:
         paths:
           - path: /api

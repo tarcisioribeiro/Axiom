@@ -22,6 +22,8 @@ spec:
         app.kubernetes.io/component: redis
         environment: staging
     spec:
+      serviceAccountName: sa-redis
+      automountServiceAccountToken: false
       containers:
         - name: redis
           image: redis:7-alpine
