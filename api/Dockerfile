@@ -51,6 +51,7 @@ FROM python:3.12-slim AS production
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     netcat-openbsd \
+    curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
