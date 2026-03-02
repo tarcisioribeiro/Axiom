@@ -7,6 +7,54 @@ from django.http import JsonResponse
 from django.utils.timezone import now
 
 
+def check_storage():
+    """
+    Lightweight MinIO/S3 connectivity check.
+    Uses a HEAD bucket request with a 2-second timeout.
+    Returns not_configured when MINIO_ENDPOINT is not set.
+    """
+    minio_endpoint = getattr(settings, "MINIO_ENDPOINT", "") or os.getenv(
+        "MINIO_ENDPOINT", ""
+    )
+    if not minio_endpoint:
+        return {"status": "not_configured", "message": "Storage not configured"}
+
+    try:
+        import boto3
+        from botocore.config import Config
+        from botocore.exceptions import EndpointConnectionError
+    except ImportError:
+        return {"status": "unknown", "message": "boto3 not available"}
+
+    try:
+        use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+        protocol = "https" if use_ssl else "http"
+        endpoint_url = f"{protocol}://{minio_endpoint}"
+        bucket_name = getattr(
+            settings,
+            "AWS_STORAGE_BUCKET_NAME",
+            os.getenv("MINIO_BUCKET_NAME", "mindledger"),
+        )
+        client = boto3.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            aws_access_key_id=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+            aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
+            region_name=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
+            config=Config(
+                connect_timeout=2,
+                read_timeout=2,
+                retries={"max_attempts": 0},
+            ),
+        )
+        client.head_bucket(Bucket=bucket_name)
+        return {"status": "healthy", "message": "Storage connection successful"}
+    except EndpointConnectionError:
+        return {"status": "unhealthy", "message": "Storage endpoint unreachable"}
+    except Exception as e:
+        return {"status": "unhealthy", "message": f"Storage error: {str(e)}"}
+
+
 def health_check(request):
     """
     Health check endpoint for monitoring system status.
@@ -80,13 +128,19 @@ def health_check(request):
             "status": "healthy",
             "message": "All required environment variables are set",
         }
+    # Storage (MinIO/S3) check
+    storage_result = check_storage()
+    health["checks"]["storage"] = storage_result
+    if storage_result["status"] == "unhealthy":
+        health["status"] = "unhealthy"
     # Disk space check (optional)
     try:
         import shutil
 
         total, used, free = shutil.disk_usage("/")
         free_percentage = (free / total) * 100
-        if free_percentage < 10:  # Less than 10% free space
+        threshold = getattr(settings, "DISK_SPACE_WARN_THRESHOLD", 10)
+        if free_percentage < threshold:
             health["checks"]["disk_space"] = {
                 "status": "warning",
                 "message": f"Low disk space: {free_percentage:.1f}% free",
