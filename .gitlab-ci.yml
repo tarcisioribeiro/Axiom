@@ -152,7 +152,7 @@ test:backend:
     DB_PASSWORD: ci_test_password
 
   before_script:
-    # 🔁 reaproveita o pip install
+    # reaproveita o pip install
     - *python_before_script
 
     # extras do job
@@ -169,3 +169,103 @@ test:backend:
     when: always
     paths:
       - api/coverage.xml
+
+# ==============================================================================
+# STAGE: build
+# ==============================================================================
+
+# Pré-requisito: crie a variável KUBECONFIG_CONTENT no GitLab
+# (Settings → CI/CD → Variables) com o conteúdo do kubeconfig em base64:
+#   base64 -w0 ~/.kube/config
+# Também crie VITE_API_BASE_URL com a URL pública da API (ex: https://api.tjtux.duckdns.org).
+
+build:api:
+  extends: .docker_base
+  stage: build
+  needs:
+    - test:backend
+  script:
+    - >
+      docker build
+      -t "$API_IMAGE:$CI_COMMIT_SHA"
+      -f api/Dockerfile
+      api/
+    - docker push "$API_IMAGE:$CI_COMMIT_SHA"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHA" "$API_IMAGE:latest"
+        docker push "$API_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+build:frontend:
+  extends: .docker_base
+  stage: build
+  needs:
+    - typecheck:frontend
+  script:
+    - >
+      docker build
+      --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL"
+      -t "$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+      -f frontend/Dockerfile
+      frontend/
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHA" "$FRONTEND_IMAGE:latest"
+        docker push "$FRONTEND_IMAGE:latest"
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+# ==============================================================================
+# STAGE: deploy-staging
+# ==============================================================================
+
+.kubectl_base: &kubectl_before_script
+  - mkdir -p ~/.kube
+  - echo "$KUBECONFIG_CONTENT" | base64 -d > ~/.kube/config
+  - chmod 600 ~/.kube/config
+
+deploy:staging:
+  stage: deploy-staging
+  image: bitnami/kubectl:latest
+  needs:
+    - build:api
+    - build:frontend
+  environment:
+    name: staging
+  before_script:
+    - *kubectl_before_script
+  script:
+    - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHA"
+    - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ==============================================================================
+# STAGE: deploy-production
+# ==============================================================================
+
+deploy:production:
+  stage: deploy-production
+  image: bitnami/kubectl:latest
+  needs:
+    - build:api
+    - build:frontend
+  environment:
+    name: production
+  before_script:
+    - *kubectl_before_script
+  script:
+    - kubectl -n mindledger set image deployment/api api="$API_IMAGE:latest"
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:latest"
+    - kubectl -n mindledger rollout status deployment/api --timeout=120s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
