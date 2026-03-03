@@ -41,6 +41,10 @@ spec:
                 sleep 2
               done
               echo "Redis is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-api
       automountServiceAccountToken: false
       imagePullSecrets:
