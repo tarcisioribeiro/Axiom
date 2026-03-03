@@ -80,7 +80,7 @@ RUN echo '#!/bin/bash\nmkdir -p /app/media/security/archives/$(date +%Y)/$(date 
 USER appuser
 
 # Expose API port
-EXPOSE 8002
+EXPOSE 39100
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1

@@ -15,7 +15,7 @@ data:
   REDIS_URL: "redis://redis-service:6379/0"
 
   # API settings
-  API_PORT: "8002"
+  API_PORT: "39100"
   DEBUG: "0"
   # Include the ingress hostname so Django accepts requests forwarded by nginx.
   ALLOWED_HOSTS: "localhost,127.0.0.1,api-service,mindledger-api,mindledger.tjtux.duckdns.org"
@@ -37,7 +37,8 @@ data:
   SENTRY_ENVIRONMENT: "production"
 
   # Production security settings
-  SECURE_SSL_REDIRECT: "True"
+  # NPM faz SSL termination — Django não precisa redirecionar para HTTPS
+  SECURE_SSL_REDIRECT: "False"
   SESSION_COOKIE_SECURE: "True"
   CSRF_COOKIE_SECURE: "True"
   SECURE_HSTS_SECONDS: "31536000"

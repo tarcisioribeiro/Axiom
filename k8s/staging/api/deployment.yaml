@@ -9,6 +9,8 @@ metadata:
     environment: staging
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: api
@@ -53,7 +55,7 @@ spec:
           # See deploy:staging job in .gitlab-ci.yml.
           image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
           ports:
-            - containerPort: 8002
+            - containerPort: 39100
               name: http
           envFrom:
             - configMapRef:
@@ -77,7 +79,10 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/
-              port: 8002
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -85,7 +90,10 @@ spec:
           livenessProbe:
             httpGet:
               path: /live/
-              port: 8002
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
             initialDelaySeconds: 40
             periodSeconds: 30
             timeoutSeconds: 10

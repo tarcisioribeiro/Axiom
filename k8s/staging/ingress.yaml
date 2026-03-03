@@ -23,7 +23,7 @@ metadata:
     environment: staging
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
@@ -32,10 +32,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - staging.mindledger.tjtux.duckdns.org
+        - mindledger-staging.tjtux.duckdns.org
       secretName: mindledger-staging-tls
   rules:
-    - host: staging.mindledger.tjtux.duckdns.org
+    - host: mindledger-staging.tjtux.duckdns.org
       http:
         paths:
           - path: /api

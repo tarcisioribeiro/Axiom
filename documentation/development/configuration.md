@@ -248,7 +248,7 @@ Edite o `.env`:
 # Exemplo: mudando para portas alternativas
 API_PORT=8000
 FRONTEND_PORT=3000
-DB_PORT=5435
+DB_PORT=39102
 REDIS_PORT=6380
 ```
 
