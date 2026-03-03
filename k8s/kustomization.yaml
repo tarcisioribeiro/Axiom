@@ -42,6 +42,7 @@ resources:
   - api/pvc.yaml
   - api/deployment.yaml
   - api/service.yaml
+  - frontend/configmap-nginx.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
   - hpa.yaml

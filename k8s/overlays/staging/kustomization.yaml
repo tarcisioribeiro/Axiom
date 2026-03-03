@@ -36,6 +36,7 @@ resources:
   - ../../staging/api/pvc.yaml
   - ../../staging/api/deployment.yaml
   - ../../staging/api/service.yaml
+  - ../../staging/frontend/configmap-nginx.yaml
   - ../../staging/frontend/deployment.yaml
   - ../../staging/frontend/service.yaml
   - ../../staging/serviceaccounts.yaml
