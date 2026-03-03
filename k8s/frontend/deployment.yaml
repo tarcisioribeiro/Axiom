@@ -30,6 +30,10 @@ spec:
                 sleep 2
               done
               echo "API is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-frontend
       automountServiceAccountToken: false
       imagePullSecrets:
