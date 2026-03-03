@@ -8,6 +8,8 @@ metadata:
     app.kubernetes.io/component: api
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: api
@@ -41,6 +43,10 @@ spec:
                 sleep 2
               done
               echo "Redis is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-api
       automountServiceAccountToken: false
       imagePullSecrets:
@@ -51,7 +57,7 @@ spec:
           # See deploy:production job in .gitlab-ci.yml.
           image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
           ports:
-            - containerPort: 8002
+            - containerPort: 39100
               name: http
           envFrom:
             - configMapRef:
@@ -75,7 +81,10 @@ spec:
           readinessProbe:
             httpGet:
               path: /health/
-              port: 8002
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 5
@@ -83,7 +92,10 @@ spec:
           livenessProbe:
             httpGet:
               path: /live/
-              port: 8002
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
             initialDelaySeconds: 40
             periodSeconds: 30
             timeoutSeconds: 10

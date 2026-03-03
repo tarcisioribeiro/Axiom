@@ -680,7 +680,7 @@ CORS_ALLOW_CREDENTIALS = True  # CRÍTICO para cookies
 #### Frontend (axios)
 ```typescript
 const client = axios.create({
-  baseURL: 'http://localhost:8002',
+  baseURL: 'http://localhost:39100',
   withCredentials: true,  // CRÍTICO para enviar cookies
 });
 ```
@@ -835,7 +835,7 @@ X_FRAME_OPTIONS = 'DENY'
 
 ```typescript
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
   ENDPOINTS: {
     LOGIN: '/api/v1/authentication/login/',
     LOGOUT: '/api/v1/authentication/logout/',
@@ -878,7 +878,7 @@ catch (refreshError) {
 **Solução**: Verificar configurações CORS
 
 ```
-Access to XMLHttpRequest at 'http://localhost:8002/api/v1/accounts/'
+Access to XMLHttpRequest at 'http://localhost:39100/api/v1/accounts/'
 from origin 'http://localhost:3000' has been blocked by CORS policy:
 The value of the 'Access-Control-Allow-Credentials' header in the response
 is '' which must be 'true' when the request's credentials mode is 'include'.

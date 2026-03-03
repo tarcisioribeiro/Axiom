@@ -158,13 +158,13 @@ npm run lint
 ## Variáveis de Ambiente
 
 ```env
-VITE_API_BASE_URL=http://localhost:8002
+VITE_API_BASE_URL=http://localhost:39100
 ```
 
 ## Portas
 
 - **Dev Server:** http://localhost:3000
-- **Backend API:** http://localhost:8002
+- **Backend API:** http://localhost:39100
 
 ## Recursos Externos
 

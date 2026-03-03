@@ -18,18 +18,10 @@ spec:
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: frontend
     spec:
-      initContainers:
-        - name: wait-for-api
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z api-service 8002; do
-                echo "Waiting for API..."
-                sleep 2
-              done
-              echo "API is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-frontend
       automountServiceAccountToken: false
       imagePullSecrets:
@@ -68,3 +60,11 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: frontend-nginx-config

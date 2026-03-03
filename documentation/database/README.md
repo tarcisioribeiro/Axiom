@@ -190,7 +190,7 @@ graph TB
 docker-compose exec db psql -U mindledger_user -d mindledger_db
 
 # Local
-psql -h localhost -p 5435 -U mindledger_user -d mindledger_db
+psql -h localhost -p 39102 -U mindledger_user -d mindledger_db
 ```
 
 ### Inspeção do Schema

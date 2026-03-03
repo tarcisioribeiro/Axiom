@@ -16,6 +16,6 @@ spec:
     app: api
   ports:
     - port: 8002
-      targetPort: 8002
+      targetPort: 39100
       protocol: TCP
       name: http

@@ -84,7 +84,7 @@ no_implicit_optional = true
 exclude = ["migrations", "tests", "scripts"]
 
 [tool.django-stubs]
-django_settings_module = "app.settings"
+django_settings_module = "app.settings_mypy"
 
 [[tool.mypy.overrides]]
 module = [
