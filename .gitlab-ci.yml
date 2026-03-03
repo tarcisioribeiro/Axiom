@@ -143,9 +143,13 @@ lint:k8s:
     # kubeconform validates manifests against official Kubernetes schemas
     # without requiring a live cluster. kustomization.yaml files are excluded
     # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
+    # Third-party CRD schemas (e.g. cert-manager ClusterIssuer) are fetched from
+    # the community CRDs catalog so they are validated rather than skipped.
     - |
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
-        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0
+        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 \
+          -schema-location default \
+          -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
   rules:
     - changes:
         - k8s/**/*.yaml
