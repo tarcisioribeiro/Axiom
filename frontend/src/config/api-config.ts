@@ -101,6 +101,10 @@ export const API_CONFIG = {
     BUDGETS: '/api/v1/budgets/',
     BUDGETS_STATUS: '/api/v1/budgets/status/',
 
+    // Categorization Rules
+    CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
+    CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',
+
     // Export
     EXPENSES_EXPORT: '/api/v1/expenses/export/',
     REVENUES_EXPORT: '/api/v1/revenues/export/',

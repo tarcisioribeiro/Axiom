@@ -14,11 +14,17 @@ from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response, format_decimal
 from app.permissions import GlobalDefaultPermission
 from expenses.filters import ExpenseFilter
-from expenses.models import EXPENSES_CATEGORIES, Expense, FixedExpense
+from expenses.models import (
+    EXPENSES_CATEGORIES,
+    CategorizationRule,
+    Expense,
+    FixedExpense,
+)
 from expenses.serializers import (
     BulkGenerateRequestSerializer,
     BulkGenerateResponseSerializer,
     BulkMarkPaidSerializer,
+    CategorizationRuleSerializer,
     ExpenseSerializer,
     FixedExpenseCreateUpdateSerializer,
     FixedExpenseSerializer,
@@ -143,6 +149,90 @@ class FixedExpensesStatsView(APIView):
 
     def get(self, request):
         return Response(get_fixed_expenses_stats(), status=status.HTTP_200_OK)
+
+
+class CategorizationRuleListCreateView(BaseListCreateView):
+    queryset = CategorizationRule.objects.filter(is_deleted=False)
+    serializer_class = CategorizationRuleSerializer
+
+    def get_queryset(self):
+        return CategorizationRule.objects.filter(
+            is_deleted=False, owner=self.request.user
+        ).order_by("created_at")
+
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=self.request.user,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+
+class CategorizationRuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    queryset = CategorizationRule.objects.filter(is_deleted=False)
+    serializer_class = CategorizationRuleSerializer
+
+    def get_queryset(self):
+        return CategorizationRule.objects.filter(
+            is_deleted=False, owner=self.request.user
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+class ApplyCategorizationRulesView(APIView):
+    """
+    Reaplica as regras de categorização em despesas elegíveis do usuário.
+
+    POST /api/v1/categorization-rules/apply/
+
+    Despesas elegíveis: auto_categorized=True ou category='others'.
+    Retorna o número de despesas atualizadas e o total processado.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = CategorizationRule.objects.none()
+
+    def post(self, request):
+        from django.db import models as db_models
+
+        rules = list(
+            CategorizationRule.objects.filter(
+                owner=request.user, is_active=True, is_deleted=False
+            ).order_by("created_at")
+        )
+
+        if not rules:
+            return Response({"updated": 0, "total_processed": 0})
+
+        expenses = Expense.objects.filter(
+            is_deleted=False,
+            created_by=request.user,
+        ).filter(db_models.Q(auto_categorized=True) | db_models.Q(category="others"))
+
+        total_processed = expenses.count()
+        updated = 0
+
+        for expense in expenses:
+            if not expense.merchant:
+                continue
+            merchant_lower = expense.merchant.lower()
+            for rule in rules:
+                if rule.merchant_contains.lower() in merchant_lower:
+                    expense.category = rule.category
+                    expense.auto_categorized = True
+                    expense.save(update_fields=["category", "auto_categorized"])
+                    updated += 1
+                    break
+
+        return Response({"updated": updated, "total_processed": total_processed})
 
 
 # Build a lookup dict for category display names
