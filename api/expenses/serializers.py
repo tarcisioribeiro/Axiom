@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from expenses.models import Expense, FixedExpense
+from expenses.models import CategorizationRule, Expense, FixedExpense
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
@@ -179,3 +179,22 @@ class BulkMarkPaidSerializer(serializers.Serializer):
     expense_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
+
+
+class CategorizationRuleSerializer(serializers.ModelSerializer):
+    """Serializer para regras de categorização automática"""
+
+    class Meta:
+        model = CategorizationRule
+        fields = "__all__"
+        read_only_fields = [
+            "owner",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "updated_by",
+            "deleted_by",
+            "is_deleted",
+            "deleted_at",
+        ]

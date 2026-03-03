@@ -85,6 +85,7 @@ export interface Expense {
   loan_description?: string;
   related_payable?: number | null;
   payable_description?: string;
+  auto_categorized: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -1907,4 +1908,22 @@ export interface BudgetStatus {
   member_name: string | null;
   month: number;
   year: number;
+}
+
+// Categorization Rule Types
+export interface CategorizationRule {
+  id: number;
+  uuid: string;
+  merchant_contains: string;
+  category: string;
+  is_active: boolean;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategorizationRuleFormData {
+  merchant_contains: string;
+  category: string;
+  is_active: boolean;
 }

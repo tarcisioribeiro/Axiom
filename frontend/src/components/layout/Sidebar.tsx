@@ -31,6 +31,7 @@ import {
   Wand2,
   PiggyBank,
   LineChart,
+  Tag,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -149,6 +150,11 @@ const navModules: NavModule[] = [
             titleKey: 'nav.items.fixedExpenses',
             href: '/fixed-expenses',
             icon: <CalendarClock className="h-4 w-4" />,
+          },
+          {
+            titleKey: 'nav.items.categorizationRules',
+            href: '/categorization-rules',
+            icon: <Tag className="h-4 w-4" />,
           },
           {
             titleKey: 'nav.items.budgets',
