@@ -14,6 +14,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -32,6 +33,7 @@ export default function PersonalPlanningDashboard() {
   const [stats, setStats] = useState<PersonalPlanningDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
 
@@ -65,7 +67,7 @@ export default function PersonalPlanningDashboard() {
       setStats(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -133,62 +135,62 @@ export default function PersonalPlanningDashboard() {
   if (!stats) {
     return (
       <div className="space-y-6 px-4 py-8">
-        <PageHeader title="Dashboard de Planejamento Pessoal" icon={<Calendar />} />
-        <p className="text-center">Nenhum dado disponível</p>
+        <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
+        <p className="text-center">{t('pages.planningDashboard.noData')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 px-4 py-8">
-      <PageHeader title="Dashboard de Planejamento Pessoal" icon={<Calendar />} />
+      <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* Grid 1: 8 Cards de Métricas Principais */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Tarefas de Hoje"
+          title={t('pages.planningDashboard.todayTasks')}
           value={`${stats.completed_tasks_today} / ${stats.total_tasks_today}`}
           icon={<Calendar className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Taxa Cumprimento 7d"
+          title={t('pages.planningDashboard.completionRate7d')}
           value={`${stats.completion_rate_7d.toFixed(1)}%`}
           icon={<TrendingUp className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Tarefas Ativas"
+          title={t('pages.planningDashboard.activeTasks')}
           value={stats.active_tasks}
           icon={<ListTodo className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Taxa Cumprimento 30d"
+          title={t('pages.planningDashboard.completionRate30d')}
           value={`${stats.completion_rate_30d.toFixed(1)}%`}
           icon={<Calendar className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Objetivos Ativos"
+          title={t('pages.planningDashboard.activeGoals')}
           value={stats.active_goals}
           icon={<Target className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Melhor Sequência"
-          value={`${stats.best_streak} dias`}
+          title={t('pages.planningDashboard.bestStreak')}
+          value={`${stats.best_streak} ${t('pages.planningDashboard.days')}`}
           icon={<Award className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Sequência Atual"
-          value={`${stats.current_streak} dias`}
+          title={t('pages.planningDashboard.currentStreak')}
+          value={`${stats.current_streak} ${t('pages.planningDashboard.days')}`}
           icon={<TrendingUp className="h-4 w-4" />}
         />
 
         <StatCard
-          title="Objetivos Completados"
+          title={t('pages.planningDashboard.completedGoals')}
           value={stats.completed_goals}
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
@@ -202,7 +204,7 @@ export default function PersonalPlanningDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Progresso Semanal
+                {t('pages.planningDashboard.weeklyProgress')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -213,30 +215,38 @@ export default function PersonalPlanningDashboard() {
                 nameKey="date"
                 formatter={(value) => value.toString()}
                 colors={COLORS}
-                emptyMessage="Nenhum dado de progresso"
+                emptyMessage={t('pages.planningDashboard.noProgressData')}
                 lockChartType="line"
                 dualYAxis={{
-                  left: { dataKey: 'total', label: 'Tarefas', color: COLORS[0] },
-                  right: { dataKey: 'taxa', label: 'Taxa %', color: COLORS[1] },
+                  left: {
+                    dataKey: 'total',
+                    label: t('pages.planningDashboard.total'),
+                    color: COLORS[0],
+                  },
+                  right: {
+                    dataKey: 'taxa',
+                    label: t('pages.planningDashboard.rate'),
+                    color: COLORS[1],
+                  },
                 }}
                 lines={[
                   {
                     dataKey: 'total',
                     stroke: COLORS[0],
                     yAxisId: 'left',
-                    name: 'Total',
+                    name: t('pages.planningDashboard.total'),
                   },
                   {
                     dataKey: 'completadas',
                     stroke: COLORS[3],
                     yAxisId: 'left',
-                    name: 'Completadas',
+                    name: t('pages.planningDashboard.completed'),
                   },
                   {
                     dataKey: 'taxa',
                     stroke: COLORS[1],
                     yAxisId: 'right',
-                    name: 'Taxa %',
+                    name: t('pages.planningDashboard.rate'),
                   },
                 ]}
                 height={350}
@@ -251,7 +261,7 @@ export default function PersonalPlanningDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ListTodo className="h-5 w-5" />
-                Tarefas por Categoria
+                {t('pages.planningDashboard.tasksByCategory')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -265,7 +275,7 @@ export default function PersonalPlanningDashboard() {
                 customColors={(entry) =>
                   getCategoryColor(String(entry.category || 'other'))
                 }
-                emptyMessage="Nenhuma tarefa cadastrada"
+                emptyMessage={t('pages.planningDashboard.noTasks')}
                 lockChartType="pie"
                 layout="horizontal"
                 height={350}
@@ -281,7 +291,7 @@ export default function PersonalPlanningDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Flag className="h-5 w-5" />
-              Progresso de Objetivos Ativos
+              {t('pages.planningDashboard.activeGoalsProgress')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -297,7 +307,9 @@ export default function PersonalPlanningDashboard() {
                     <span>
                       {goal.current_value}/{goal.target_value}
                     </span>
-                    <span>{goal.days_active} dias ativos</span>
+                    <span>
+                      {goal.days_active} {t('pages.planningDashboard.activeDays')}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -311,7 +323,7 @@ export default function PersonalPlanningDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Consistência de Hábitos
+            {t('pages.planningDashboard.habitConsistency')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -325,7 +337,7 @@ export default function PersonalPlanningDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smile className="h-5 w-5" />
-              Reflexões Recentes
+              {t('pages.planningDashboard.recentReflections')}
             </CardTitle>
           </CardHeader>
           <CardContent>

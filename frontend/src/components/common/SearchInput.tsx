@@ -7,6 +7,7 @@
 
 import { Search } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -19,16 +20,18 @@ interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const SearchInput: React.FC<SearchInputProps> = ({
   value,
   onValueChange,
-  placeholder = 'Buscar...',
+  placeholder,
   className,
   ...props
 }) => {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('common.actions.search');
   return (
     <div className={cn('relative flex-1', className)}>
       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform" />
       <Input
         type="text"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
         className="pl-10"

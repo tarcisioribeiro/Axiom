@@ -82,4 +82,12 @@ export default defineConfig([
       'import/no-duplicates': 'error',
     },
   },
+  {
+    files: [
+      'src/**/__tests__/**/*.{ts,tsx}',
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'src/test/**/*.ts',
+    ],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
 ])

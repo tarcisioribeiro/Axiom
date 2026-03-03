@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: redis
     spec:
+      serviceAccountName: sa-redis
+      automountServiceAccountToken: false
       containers:
         - name: redis
           image: redis:7-alpine

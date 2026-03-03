@@ -14,6 +14,7 @@ import {
   Library,
   Calendar,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { PageContainer } from '@/components/common/PageContainer';
@@ -29,58 +30,36 @@ interface ModuleCard {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+
   const modules: ModuleCard[] = [
     {
-      title: 'Planejamento Pessoal',
+      title: t('pages.home.planning.title'),
       icon: <Calendar className="h-8 w-8" />,
       href: '/planning/dashboard',
       color: 'from-warning to-warning/70',
-      features: [
-        'Checklist Diário',
-        'Tarefas Rotineiras',
-        'Objetivos e Metas',
-        'Acompanhamento de Progresso',
-        'Organização Pessoal',
-      ],
+      features: t('pages.home.planning.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Controle Financeiro',
+      title: t('pages.home.finance.title'),
       icon: <Wallet className="h-8 w-8" />,
       href: '/dashboard',
       color: 'from-success to-success/70',
-      features: [
-        'Controle de Contas Bancárias',
-        'Gestão de Despesas e Receitas',
-        'Cartões de Crédito e Faturas',
-        'Empréstimos e Transferências',
-        'Dashboard com Gráficos',
-      ],
+      features: t('pages.home.finance.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Segurança',
+      title: t('pages.home.security.title'),
       icon: <Shield className="h-8 w-8" />,
       href: '/security/passwords',
       color: 'from-info to-primary',
-      features: [
-        'Armazenamento Seguro de Senhas',
-        'Cartões e Contas Bancárias',
-        'Arquivos Criptografados',
-        'Logs de Atividade',
-        'Criptografia de Ponta',
-      ],
+      features: t('pages.home.security.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Leitura',
+      title: t('pages.home.library.title'),
       icon: <Library className="h-8 w-8" />,
       href: '/library/books',
       color: 'from-primary to-accent',
-      features: [
-        'Catálogo de Livros',
-        'Autores e Editoras',
-        'Resumos e Anotações',
-        'Controle de Leituras',
-        'Estatísticas de Leitura',
-      ],
+      features: t('pages.home.library.features', { returnObjects: true }) as string[],
     },
   ];
 

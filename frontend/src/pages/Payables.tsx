@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, Loader2, Receipt } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -67,6 +68,7 @@ const EXPENSE_CATEGORIES = [
 const PAYABLE_STATUSES = ['active', 'paid', 'overdue', 'cancelled'];
 
 export default function Payables() {
+  const { t } = useTranslation();
   const [payables, setPayables] = useState<Payable[]>([]);
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +104,7 @@ export default function Payables() {
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -143,21 +145,21 @@ export default function Payables() {
 
   const handleDelete = async (payable: Payable) => {
     const confirmed = await showConfirm({
-      title: 'Confirmar exclusão',
-      description: `Tem certeza que deseja excluir o valor a pagar "${payable.description}"?`,
+      title: t('pages.payables.deleteTitle'),
+      description: t('pages.payables.deleteDesc', { name: payable.description }),
     });
 
     if (confirmed) {
       try {
         await payablesService.delete(payable.id);
         toast({
-          title: 'Valor a pagar excluído',
-          description: 'O valor a pagar foi excluído com sucesso.',
+          title: t('pages.payables.deleted'),
+          description: t('pages.payables.deletedDesc'),
         });
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -178,21 +180,21 @@ export default function Payables() {
       if (selectedPayable) {
         await payablesService.update(selectedPayable.id, dataToSend);
         toast({
-          title: 'Valor a pagar atualizado',
-          description: 'O valor a pagar foi atualizado com sucesso.',
+          title: t('pages.payables.updated'),
+          description: t('pages.payables.updatedDesc'),
         });
       } else {
         await payablesService.create(dataToSend);
         toast({
-          title: 'Valor a pagar criado',
-          description: 'O valor a pagar foi criado com sucesso.',
+          title: t('pages.payables.created'),
+          description: t('pages.payables.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -231,10 +233,10 @@ export default function Payables() {
   return (
     <PageContainer>
       <PageHeader
-        title="Valores a Pagar"
+        title={t('pages.payables.title')}
         icon={<Receipt />}
         action={{
-          label: 'Novo Valor a Pagar',
+          label: t('pages.payables.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -242,7 +244,7 @@ export default function Payables() {
 
       <div className="flex gap-4">
         <SearchInput
-          placeholder="Buscar valores a pagar..."
+          placeholder={t('pages.payables.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="max-w-sm"
@@ -254,8 +256,8 @@ export default function Payables() {
           icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhum valor a pagar encontrado para a pesquisa atual.'
-              : 'Nenhum valor a pagar cadastrado. Clique em "Novo Pagamento" para começar.'
+              ? t('pages.payables.emptySearch')
+              : t('pages.payables.emptyState')
           }
         />
       ) : (
@@ -330,7 +332,7 @@ export default function Payables() {
                   className="flex-1"
                 >
                   <Pencil className="mr-1 h-3 w-3" />
-                  Editar
+                  {t('common.actions.edit')}
                 </Button>
                 <Button
                   variant="outline"
@@ -339,7 +341,7 @@ export default function Payables() {
                   className="flex-1"
                 >
                   <Trash2 className="mr-1 h-3 w-3" />
-                  Excluir
+                  {t('common.actions.delete')}
                 </Button>
               </div>
             </div>
@@ -351,12 +353,14 @@ export default function Payables() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedPayable ? 'Editar Valor a Pagar' : 'Novo Valor a Pagar'}
+              {selectedPayable
+                ? t('pages.payables.editTitle')
+                : t('pages.payables.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedPayable
-                ? 'Atualize as informações do valor a pagar'
-                : 'Preencha as informações do novo valor a pagar'}
+                ? t('pages.payables.editDesc')
+                : t('pages.payables.newDesc')}
             </DialogDescription>
           </DialogHeader>
 
@@ -490,16 +494,16 @@ export default function Payables() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancelar
+                {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
+                    {t('common.actions.saving')}
                   </>
                 ) : (
-                  'Salvar'
+                  t('common.actions.save')
                 )}
               </Button>
             </div>

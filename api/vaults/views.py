@@ -672,3 +672,131 @@ class FinancialGoalRemoveVaultsView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+# ============== Vault Simulator View ==============
+
+MONTH_NAMES_PT = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+]
+
+
+class VaultSimulatorView(APIView):
+    """
+    Simulador de rendimento de cofre (sem persistência).
+
+    POST: Recebe até 3 cenários e retorna projeções mensais com juros compostos.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        scenarios_data = request.data.get("scenarios", [])
+
+        if not scenarios_data:
+            return Response(
+                {"error": "Pelo menos um cenário é necessário."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if len(scenarios_data) > 3:
+            return Response(
+                {"error": "Máximo de 3 cenários permitido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from django.utils import timezone
+
+        today = timezone.localdate()
+        results = []
+
+        for i, scenario in enumerate(scenarios_data):
+            try:
+                name = scenario.get("name") or f"Cenário {i + 1}"
+                initial_amount = float(scenario.get("initial_amount", 0))
+                monthly_deposit = float(scenario.get("monthly_deposit", 0))
+                annual_rate = float(scenario.get("annual_rate", 0))
+                months = int(scenario.get("months", 12))
+            except (ValueError, TypeError):
+                return Response(
+                    {"error": f"Dados inválidos no cenário {i + 1}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if initial_amount < 0 or monthly_deposit < 0:
+                return Response(
+                    {"error": "Valores não podem ser negativos."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if annual_rate < 0 or annual_rate > 10000:
+                return Response(
+                    {"error": "Taxa anual inválida."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if months < 1 or months > 600:
+                return Response(
+                    {"error": "Prazo inválido (1–600 meses)."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Taxa mensal equivalente à taxa anual
+            monthly_rate = (1 + annual_rate / 100) ** (1 / 12) - 1
+
+            data_points = []
+            balance = initial_amount
+
+            year = today.year
+            month = today.month
+
+            # Ponto 0: saldo inicial
+            data_points.append(
+                {
+                    "month": 0,
+                    "balance": round(balance, 2),
+                    "label": f"{MONTH_NAMES_PT[month - 1]}/{year}",
+                }
+            )
+
+            for m in range(1, months + 1):
+                balance = balance * (1 + monthly_rate) + monthly_deposit
+                next_month = month + m
+                next_year = year + (next_month - 1) // 12
+                next_month_idx = (next_month - 1) % 12
+                data_points.append(
+                    {
+                        "month": m,
+                        "balance": round(balance, 2),
+                        "label": f"{MONTH_NAMES_PT[next_month_idx]}/{next_year}",
+                    }
+                )
+
+            total_invested = initial_amount + monthly_deposit * months
+            total_yield = round(balance - total_invested, 2)
+
+            results.append(
+                {
+                    "name": name,
+                    "initial_amount": initial_amount,
+                    "monthly_deposit": monthly_deposit,
+                    "annual_rate": annual_rate,
+                    "monthly_rate": round(monthly_rate * 100, 6),
+                    "months": months,
+                    "final_balance": round(balance, 2),
+                    "total_invested": round(total_invested, 2),
+                    "total_yield": total_yield,
+                    "data_points": data_points,
+                }
+            )
+
+        return Response({"scenarios": results}, status=status.HTTP_200_OK)

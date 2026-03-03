@@ -4,11 +4,28 @@
 #   - Prometheus datasource pointing to prometheus:9090
 #   - MindLedger Django dashboard (request rate, error rate, DB queries, cache hit ratio)
 #
-# Access Grafana UI (default credentials: admin / mindledger-grafana):
-#   kubectl port-forward -n monitoring svc/grafana 3000:3000
+# Apply with:
+#   export GRAFANA_ADMIN_USER=admin
+#   export GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 24)
+#   envsubst < k8s/monitoring/grafana.yaml | kubectl apply -f -
 #
-# To change the admin password, update the GF_SECURITY_ADMIN_PASSWORD env var
-# and store it in a Kubernetes secret.
+# Access Grafana UI:
+#   kubectl port-forward -n monitoring svc/grafana 3000:3000
+---
+# Grafana admin credentials — set GRAFANA_ADMIN_USER and GRAFANA_ADMIN_PASSWORD
+# before applying via: envsubst < k8s/monitoring/grafana.yaml | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-secrets
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: monitoring
+type: Opaque
+stringData:
+  GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER}"
+  GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD}"
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -294,9 +311,15 @@ spec:
               name: http
           env:
             - name: GF_SECURITY_ADMIN_USER
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: GF_SECURITY_ADMIN_USER
             - name: GF_SECURITY_ADMIN_PASSWORD
-              value: mindledger-grafana  # TODO: move to a Secret before production
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: GF_SECURITY_ADMIN_PASSWORD
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "false"
             - name: GF_ANALYTICS_REPORTING_ENABLED

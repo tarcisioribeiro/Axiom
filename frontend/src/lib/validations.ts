@@ -882,3 +882,26 @@ export type AuthorFormData = z.infer<typeof authorSchema>;
 export type PublisherFormData = z.infer<typeof publisherSchema>;
 export type BookFormData = z.infer<typeof bookSchema>;
 export type ReadingFormData = z.infer<typeof readingSchema>;
+
+// ============================================================================
+// READING GOAL SCHEMA
+// ============================================================================
+
+export const readingGoalSchema = z.object({
+  year: z
+    .number({ message: numberError('Ano') })
+    .int('Ano deve ser um número inteiro')
+    .min(2000, 'Ano deve ser maior ou igual a 2000')
+    .max(2100, 'Ano inválido'),
+  books_goal: z
+    .number({ message: numberError('Meta de livros') })
+    .int('Meta deve ser um número inteiro')
+    .min(1, 'Meta deve ser pelo menos 1 livro')
+    .max(365, 'Meta não pode exceder 365 livros'),
+  owner: z
+    .number({ message: 'Proprietário inválido' })
+    .int()
+    .positive('Selecione um proprietário'),
+});
+
+export type ReadingGoalFormData = z.infer<typeof readingGoalSchema>;

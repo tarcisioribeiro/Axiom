@@ -1,7 +1,9 @@
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { ptBR, enUS } from 'date-fns/locale';
 import { ScrollText } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -25,6 +27,8 @@ export default function ActivityLogs() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
 
   useEffect(() => {
     void loadData();
@@ -37,7 +41,7 @@ export default function ActivityLogs() {
       setLogs(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -52,22 +56,22 @@ export default function ActivityLogs() {
 
   return (
     <PageContainer>
-      <PageHeader title="Logs de Atividade" icon={<ScrollText />} />
+      <PageHeader title={t('pages.activityLogs.title')} icon={<ScrollText />} />
 
       {logs.length === 0 ? (
         <EmptyState
           icon={<ScrollText className="h-12 w-12 text-muted-foreground" />}
-          message="Nenhum log de atividade encontrado."
+          message={t('pages.activityLogs.emptyState')}
         />
       ) : (
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data/Hora</TableHead>
-                <TableHead>Ação</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>IP</TableHead>
+                <TableHead>{t('pages.activityLogs.columns.dateTime')}</TableHead>
+                <TableHead>{t('pages.activityLogs.columns.action')}</TableHead>
+                <TableHead>{t('pages.activityLogs.columns.description')}</TableHead>
+                <TableHead>{t('pages.activityLogs.columns.ip')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,7 +79,7 @@ export default function ActivityLogs() {
                 <TableRow key={log.id}>
                   <TableCell className="font-medium">
                     {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', {
-                      locale: ptBR,
+                      locale: dateFnsLocale,
                     })}
                   </TableCell>
                   <TableCell>

@@ -19,8 +19,7 @@ class HabitHeatmapService {
     }
     const query = searchParams.toString();
     const url = `${API_CONFIG.ENDPOINTS.ROUTINE_TASK_HEATMAP}${query ? `?${query}` : ''}`;
-    const response = await apiClient.get<HeatmapData>(url);
-    return response.data;
+    return apiClient.get<HeatmapData>(url);
   }
 }
 

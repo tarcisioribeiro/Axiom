@@ -1,5 +1,6 @@
 import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,18 +17,6 @@ import { permissionsService, type Permission } from '@/services/permissions-serv
 import type { Member } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-// Mapeamento de apps para nomes amigáveis
-const APP_DISPLAY_NAMES: { [key: string]: string } = {
-  accounts: 'Controle Financeiro - Contas',
-  expenses: 'Controle Financeiro - Despesas',
-  revenues: 'Controle Financeiro - Receitas',
-  credit_cards: 'Controle Financeiro - Cartões',
-  loans: 'Controle Financeiro - Empréstimos',
-  transfers: 'Controle Financeiro - Transferências',
-  security: 'Segurança',
-  library: 'Leitura',
-};
-
 interface AppPermissions {
   name: string;
   code: string;
@@ -35,6 +24,7 @@ interface AppPermissions {
 }
 
 export default function Permissions() {
+  const { t } = useTranslation();
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [memberPermissions, setMemberPermissions] = useState<Set<string>>(new Set());
@@ -63,7 +53,7 @@ export default function Permissions() {
       // Organizar permissões por app
       const apps: AppPermissions[] = Object.entries(permissionsData).map(
         ([appCode, permissions]) => ({
-          name: APP_DISPLAY_NAMES[appCode] || appCode,
+          name: t(`pages.permissions.apps.${appCode}`, { defaultValue: appCode }),
           code: appCode,
           permissions: permissions,
         })
@@ -72,7 +62,7 @@ export default function Permissions() {
       setAvailableApps(apps);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('pages.permissions.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -88,9 +78,8 @@ export default function Permissions() {
     // Se o membro não tem usuário associado, não pode ter permissões
     if (!member.user) {
       toast({
-        title: 'Aviso',
-        description:
-          'Este membro não possui usuário associado e não pode ter permissões.',
+        title: t('pages.permissions.noUserWarning'),
+        description: t('pages.permissions.noUserDesc'),
         variant: 'default',
       });
       return;
@@ -102,7 +91,7 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar permissões',
+        title: t('pages.permissions.loadPermissionsError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -126,9 +115,8 @@ export default function Permissions() {
 
     if (!selectedMember.user) {
       toast({
-        title: 'Erro',
-        description:
-          'Este membro não possui usuário associado e não pode ter permissões.',
+        title: t('pages.permissions.saveErrorTitle'),
+        description: t('pages.permissions.noUserDesc'),
         variant: 'destructive',
       });
       return;
@@ -149,12 +137,12 @@ export default function Permissions() {
       setMemberPermissions(new Set(response.permissions));
 
       toast({
-        title: 'Permissões atualizadas',
-        description: `Permissões do membro ${selectedMember.name} foram atualizadas com sucesso.`,
+        title: t('pages.permissions.saved'),
+        description: t('pages.permissions.savedDesc', { name: selectedMember.name }),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar permissões',
+        title: t('pages.permissions.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -176,11 +164,9 @@ export default function Permissions() {
       <div>
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Shield className="h-8 w-8" />
-          Gerenciamento de Permissões
+          {t('pages.permissions.title')}
         </h1>
-        <p className="mt-2">
-          Controle o acesso dos membros aos diferentes módulos do MindLedger
-        </p>
+        <p className="mt-2">{t('pages.permissions.subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -189,11 +175,9 @@ export default function Permissions() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Membros
+              {t('pages.permissions.membersTitle')}
             </CardTitle>
-            <CardDescription>
-              Selecione um membro para gerenciar suas permissões
-            </CardDescription>
+            <CardDescription>{t('pages.permissions.membersDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -212,8 +196,8 @@ export default function Permissions() {
                       <div className="font-medium">{member.name}</div>
                       <div className="text-xs">
                         {[
-                          member.is_creditor && 'Credor',
-                          member.is_benefited && 'Beneficiário',
+                          member.is_creditor && t('pages.permissions.creditor'),
+                          member.is_benefited && t('pages.permissions.beneficiary'),
                         ]
                           .filter(Boolean)
                           .join(', ')}
@@ -223,7 +207,9 @@ export default function Permissions() {
                 </Button>
               ))}
               {members.length === 0 && (
-                <p className="py-4 text-center text-sm">Nenhum membro cadastrado</p>
+                <p className="py-4 text-center text-sm">
+                  {t('pages.permissions.noMembers')}
+                </p>
               )}
             </div>
           </CardContent>
@@ -234,13 +220,13 @@ export default function Permissions() {
           <CardHeader>
             <CardTitle>
               {selectedMember
-                ? `Permissões de ${selectedMember.name}`
-                : 'Selecione um membro'}
+                ? t('pages.permissions.permissionsOf', { name: selectedMember.name })
+                : t('pages.permissions.selectMember')}
             </CardTitle>
             <CardDescription>
               {selectedMember
-                ? 'Marque ou desmarque as permissões que este membro terá acesso'
-                : 'Escolha um membro da lista para gerenciar suas permissões'}
+                ? t('pages.permissions.checkPermissions')
+                : t('pages.permissions.selectMemberDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -256,7 +242,9 @@ export default function Permissions() {
                       <div className="flex items-center gap-2 border-b pb-2">
                         <h3 className="text-lg font-semibold">{app.name}</h3>
                         <Badge variant="secondary">
-                          {app.permissions.length} permissões
+                          {t('pages.permissions.permissionsCount', {
+                            count: app.permissions.length,
+                          })}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
@@ -286,7 +274,7 @@ export default function Permissions() {
 
                   <div className="flex justify-end gap-2 border-t pt-4">
                     <Button variant="outline" onClick={() => setSelectedMember(null)}>
-                      Cancelar
+                      {t('common.actions.cancel')}
                     </Button>
                     <Button
                       onClick={savePermissions}
@@ -295,12 +283,12 @@ export default function Permissions() {
                       {isSaving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Salvando...
+                          {t('common.actions.saving')}
                         </>
                       ) : (
                         <>
                           <Check className="mr-2 h-4 w-4" />
-                          Salvar Permissões
+                          {t('pages.permissions.savePermissions')}
                         </>
                       )}
                     </Button>
@@ -310,7 +298,7 @@ export default function Permissions() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <Shield className="mb-4 h-16 w-16 opacity-20" />
-                <p className="text-lg">Selecione um membro para começar</p>
+                <p className="text-lg">{t('pages.permissions.selectMemberStart')}</p>
               </div>
             )}
           </CardContent>
@@ -320,29 +308,33 @@ export default function Permissions() {
       {/* Legenda */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">Como funciona</CardTitle>
+          <CardTitle className="text-sm">{t('pages.permissions.howItWorks')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
             <div className="flex items-start gap-2">
               <div className="mt-1.5 h-2 w-2 rounded-full bg-success" />
               <div>
-                <p className="font-medium">Permissões Ativas</p>
-                <p>Permissões marcadas estão ativas para o membro</p>
+                <p className="font-medium">
+                  {t('pages.permissions.activePermissions')}
+                </p>
+                <p>{t('pages.permissions.activePermissionsDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground" />
               <div>
-                <p className="font-medium">Permissões Inativas</p>
-                <p>Permissões desmarcadas não estão disponíveis</p>
+                <p className="font-medium">
+                  {t('pages.permissions.inactivePermissions')}
+                </p>
+                <p>{t('pages.permissions.inactivePermissionsDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <div className="mt-1.5 h-2 w-2 rounded-full bg-info" />
               <div>
-                <p className="font-medium">Granularidade</p>
-                <p>Controle fino de visualização e adição</p>
+                <p className="font-medium">{t('pages.permissions.granularity')}</p>
+                <p>{t('pages.permissions.granularityDesc')}</p>
               </div>
             </div>
           </div>

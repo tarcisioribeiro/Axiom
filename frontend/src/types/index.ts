@@ -1114,6 +1114,26 @@ export interface ReadingFormData {
   owner: number;
 }
 
+export interface ReadingGoal {
+  id: number;
+  uuid: string;
+  year: number;
+  books_goal: number;
+  books_read_this_year: number;
+  pages_read_this_year: number;
+  progress_percentage: number;
+  owner: number;
+  owner_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReadingGoalFormData {
+  year: number;
+  books_goal: number;
+  owner: number;
+}
+
 // Library Module Constants
 export const NATIONALITIES = [
   { value: 'USA', label: 'Americana' },

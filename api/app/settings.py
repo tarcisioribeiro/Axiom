@@ -3,13 +3,22 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+_TESTING = "test" in sys.argv
+
 SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY and not _TESTING:
+    raise ImproperlyConfigured(
+        "SECRET_KEY environment variable is not set. "
+        "Copy .env.example to .env and set a unique value."
+    )
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
@@ -174,8 +183,12 @@ if MINIO_ENDPOINT:
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
-    AWS_ACCESS_KEY_ID = os.getenv("MINIO_ROOT_USER", "mindledger")
-    AWS_SECRET_ACCESS_KEY = os.getenv("MINIO_ROOT_PASSWORD", "mindledger_secret")
+    AWS_ACCESS_KEY_ID = os.getenv("MINIO_ROOT_USER")
+    AWS_SECRET_ACCESS_KEY = os.getenv("MINIO_ROOT_PASSWORD")
+    if not AWS_ACCESS_KEY_ID or not AWS_SECRET_ACCESS_KEY:
+        raise ImproperlyConfigured(
+            "MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set."
+        )
     AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "mindledger")
     AWS_S3_ENDPOINT_URL = f"http://{MINIO_ENDPOINT}"
     AWS_S3_REGION_NAME = "us-east-1"
@@ -183,6 +196,9 @@ if MINIO_ENDPOINT:
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = True
     AWS_S3_ADDRESSING_STYLE = "path"
+
+# Health check configuration
+DISK_SPACE_WARN_THRESHOLD = float(os.getenv("DISK_SPACE_WARN_THRESHOLD", "10"))
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
@@ -201,6 +217,8 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "300/minute",
+        "login": "5/minute",
+        "register": "3/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -283,6 +301,14 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": ("json" if os.getenv("LOG_FORMAT") == "json" else "verbose"),
         },
+        "audit_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "audit.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 10,
+            "formatter": "json",
+        },
     },
     "loggers": {
         "django": {
@@ -290,13 +316,13 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
-        "expenselit": {
+        "mindledger": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
-        "expenselit.audit": {
-            "handlers": ["console"],
+        "mindledger.audit": {
+            "handlers": ["console", "audit_file"],
             "level": "INFO",
             "propagate": False,
         },

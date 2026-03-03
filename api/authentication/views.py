@@ -6,10 +6,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .throttles import RegisterRateThrottle
 
 
 def validate_cpf(cpf: str) -> bool:
@@ -210,6 +212,7 @@ def get_available_users(request):
 
 
 @api_view(["POST"])
+@throttle_classes([RegisterRateThrottle])
 def create_user_with_member(request):
     """
     Cria um novo usuário e o vincula a um membro.

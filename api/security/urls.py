@@ -24,6 +24,7 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
+    VaultHealthReportView,
 )
 
 urlpatterns = [
@@ -47,6 +48,11 @@ urlpatterns = [
     path("passwords/", PasswordListCreateView.as_view(), name="password-list-create"),
     path(
         "passwords/generate/", PasswordGenerateView.as_view(), name="password-generate"
+    ),
+    path(
+        "passwords/health/",
+        VaultHealthReportView.as_view(),
+        name="password-health-report",
     ),
     path("passwords/<int:pk>/", PasswordDetailView.as_view(), name="password-detail"),
     path(

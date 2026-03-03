@@ -1,5 +1,6 @@
 import { Plus, Edit, Trash2, BookOpen, User, UserPen, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -37,6 +38,7 @@ export default function Authors() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadAuthors();
@@ -49,7 +51,7 @@ export default function Authors() {
       setAuthors(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar autores',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -70,11 +72,10 @@ export default function Authors() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir autor',
-      description:
-        'Tem certeza que deseja excluir este autor? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.authors.deleteTitle'),
+      description: t('pages.authors.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -83,13 +84,13 @@ export default function Authors() {
     try {
       await authorsService.delete(id);
       toast({
-        title: 'Autor excluído',
-        description: 'O autor foi excluído com sucesso.',
+        title: t('pages.authors.deleted'),
+        description: t('pages.authors.deletedDesc'),
       });
       void loadAuthors();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir autor',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -102,21 +103,21 @@ export default function Authors() {
       if (selectedAuthor) {
         await authorsService.update(selectedAuthor.id, data);
         toast({
-          title: 'Autor atualizado',
-          description: 'O autor foi atualizado com sucesso.',
+          title: t('pages.authors.updated'),
+          description: t('pages.authors.updatedDesc'),
         });
       } else {
         await authorsService.create(data);
         toast({
-          title: 'Autor criado',
-          description: 'O autor foi criado com sucesso.',
+          title: t('pages.authors.created'),
+          description: t('pages.authors.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadAuthors();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -138,10 +139,10 @@ export default function Authors() {
   return (
     <PageContainer>
       <PageHeader
-        title="Autores"
+        title={t('pages.authors.title')}
         icon={<UserPen />}
         action={{
-          label: 'Novo Autor',
+          label: t('pages.authors.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -149,7 +150,7 @@ export default function Authors() {
 
       <div className="flex items-center gap-4">
         <SearchInput
-          placeholder="Buscar autores..."
+          placeholder={t('pages.authors.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="flex-1"
@@ -160,9 +161,7 @@ export default function Authors() {
         <EmptyState
           icon={<User className="h-12 w-12 text-muted-foreground" />}
           message={
-            searchTerm
-              ? 'Nenhum autor encontrado para a pesquisa atual.'
-              : 'Nenhum autor cadastrado. Clique em "Novo Autor" para começar.'
+            searchTerm ? t('pages.authors.emptySearch') : t('pages.authors.emptyState')
           }
         />
       ) : (
@@ -182,7 +181,7 @@ export default function Authors() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(author)}
-                      aria-label="Editar"
+                      aria-label={t('common.actions.edit')}
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -190,7 +189,7 @@ export default function Authors() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(author.id)}
-                      aria-label="Excluir"
+                      aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -234,11 +233,15 @@ export default function Authors() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedAuthor ? 'Editar' : 'Novo'} Autor</DialogTitle>
+            <DialogTitle>
+              {selectedAuthor
+                ? t('pages.authors.editTitle')
+                : t('pages.authors.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedAuthor
-                ? 'Atualize as informações do autor'
-                : 'Adicione um novo autor à sua biblioteca'}
+                ? t('pages.authors.editDesc')
+                : t('pages.authors.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <AuthorForm

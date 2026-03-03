@@ -37,7 +37,7 @@
 #     --timeout=120s
 #
 # Then update the `email` field in both ClusterIssuers below and replace
-# every occurrence of "mindledger.example.com" with your real domain.
+# every occurrence of "${MINDLEDGER_DOMAIN}" with your real domain.
 #
 # Workflow:
 #   1. Apply with letsencrypt-staging to verify HTTP-01 challenges work.
@@ -62,7 +62,7 @@ metadata:
 spec:
   acme:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
-    email: admin@example.com  # TODO: replace with your email address
+    email: tarcisio.ribeiro.1840@hotmail.com
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:
@@ -81,7 +81,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: admin@example.com  # TODO: replace with your email address
+    email: tarcisio.ribeiro.1840@hotmail.com
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
@@ -98,7 +98,6 @@ spec:
 #   /media/**  → api-service:8002   (user-uploaded media)
 #   /**        → frontend-service:80 (React SPA — catch-all, must be last)
 #
-# TODO: replace every occurrence of "mindledger.example.com" with your domain.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -108,22 +107,20 @@ metadata:
     app.kubernetes.io/name: mindledger
     app.kubernetes.io/component: ingress
   annotations:
-    # Switch to "letsencrypt-prod" once staging certificates are issued cleanly.
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
-    # Forward real client IP to Django
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - mindledger.example.com  # TODO: replace with your domain
+        - mindledger.tjtux.duckdns.org
       secretName: mindledger-tls
   rules:
-    - host: mindledger.example.com  # TODO: replace with your domain
+    - host: mindledger.tjtux.duckdns.org
       http:
         paths:
           - path: /api

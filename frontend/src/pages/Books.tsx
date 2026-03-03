@@ -1,5 +1,6 @@
 import { BookOpen, Plus, Star, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -68,6 +69,7 @@ export default function Books() {
 
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -86,7 +88,7 @@ export default function Books() {
       setPublishers(publishersData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -97,12 +99,9 @@ export default function Books() {
 
   const handleCreate = () => {
     if (authors.length === 0 || publishers.length === 0) {
-      const missing = [];
-      if (authors.length === 0) missing.push('autores');
-      if (publishers.length === 0) missing.push('editoras');
       toast({
-        title: 'Ação não permitida',
-        description: `É necessário ter ${missing.join(' e ')} cadastrados antes de criar um livro.`,
+        title: t('common.messages.actionDenied'),
+        description: t('pages.books.noPrerequisitesMsg'),
         variant: 'destructive',
       });
       return;
@@ -118,11 +117,10 @@ export default function Books() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir livro',
-      description:
-        'Tem certeza que deseja excluir este livro? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.books.deleteTitle'),
+      description: t('pages.books.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
@@ -130,13 +128,13 @@ export default function Books() {
     try {
       await booksService.delete(id);
       toast({
-        title: 'Livro excluído',
-        description: 'O livro foi excluído com sucesso.',
+        title: t('pages.books.deleted'),
+        description: t('pages.books.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir livro',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -150,14 +148,14 @@ export default function Books() {
       if (editingBook) {
         saved = await booksService.update(editingBook.id, data);
         toast({
-          title: 'Livro atualizado',
-          description: 'O livro foi atualizado com sucesso.',
+          title: t('pages.books.updated'),
+          description: t('pages.books.updatedDesc'),
         });
       } else {
         saved = await booksService.create(data);
         toast({
-          title: 'Livro criado',
-          description: 'O livro foi criado com sucesso.',
+          title: t('pages.books.created'),
+          description: t('pages.books.createdDesc'),
         });
       }
       if (coverFile) {
@@ -167,7 +165,7 @@ export default function Books() {
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -190,17 +188,17 @@ export default function Books() {
   return (
     <PageContainer>
       <PageHeader
-        title="Lista de Leitura"
+        title={t('pages.books.title')}
         icon={<BookOpen />}
         action={{
-          label: 'Novo Livro',
+          label: t('pages.books.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
 
       <SearchInput
-        placeholder="Buscar livros, autores ou editoras..."
+        placeholder={t('pages.books.searchPlaceholder')}
         value={searchTerm}
         onValueChange={setSearchTerm}
         className="max-w-sm"
@@ -210,9 +208,7 @@ export default function Books() {
         <EmptyState
           icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
           message={
-            searchTerm
-              ? 'Nenhum livro encontrado para a pesquisa atual.'
-              : 'Nenhum livro cadastrado. Clique em "Novo Livro" para começar.'
+            searchTerm ? t('pages.books.emptySearch') : t('pages.books.emptyState')
           }
         />
       ) : (
@@ -303,11 +299,11 @@ export default function Books() {
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingBook ? 'Editar' : 'Novo'} Livro</DialogTitle>
+            <DialogTitle>
+              {editingBook ? t('pages.books.editTitle') : t('pages.books.newTitle')}
+            </DialogTitle>
             <DialogDescription>
-              {editingBook
-                ? 'Atualize as informações do livro'
-                : 'Adicione um novo livro à sua biblioteca'}
+              {editingBook ? t('pages.books.editDesc') : t('pages.books.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <BookForm

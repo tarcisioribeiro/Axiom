@@ -8,12 +8,9 @@
 #   # Install cert-manager (for TLS certificates via Let's Encrypt)
 #   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
 #
-# TODO: replace every "staging.mindledger.example.com" with your actual staging domain.
-# TODO: replace "admin@example.com" with your email in the ClusterIssuers.
-#
 # Note: The ClusterIssuers (letsencrypt-staging / letsencrypt-prod) are cluster-scoped
 # and are already defined in k8s/ingress.yaml (production). You only need to apply them once.
-# If they already exist, skip applying the ClusterIssuer sections here.
+# If they already exist, skip applying the ClusterIssuer sections there.
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -35,10 +32,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - staging.mindledger.example.com  # TODO: replace with your staging domain
+        - staging.mindledger.tjtux.duckdns.org
       secretName: mindledger-staging-tls
   rules:
-    - host: staging.mindledger.example.com  # TODO: replace with your staging domain
+    - host: staging.mindledger.tjtux.duckdns.org
       http:
         paths:
           - path: /api

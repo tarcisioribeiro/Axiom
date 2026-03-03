@@ -1,5 +1,6 @@
 import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -63,6 +64,7 @@ function getDefaultFormData(): BudgetFormData {
 }
 
 export default function Budgets() {
+  const { t } = useTranslation();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function Budgets() {
       setBudgets(Array.isArray(data) ? data : []);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar orçamentos',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -123,7 +125,7 @@ export default function Budgets() {
       MONTHS.find((m) => m.value === budget.month)?.label ?? budget.month;
 
     const confirmed = await showConfirm({
-      title: 'Confirmar exclusão',
+      title: t('pages.budgets.deleteTitle'),
       description: `Tem certeza que deseja excluir o orçamento de "${categoryLabel}" para ${monthLabel}/${budget.year}?`,
     });
 
@@ -131,13 +133,13 @@ export default function Budgets() {
       try {
         await budgetsService.delete(budget.id);
         toast({
-          title: 'Orçamento excluído',
-          description: 'O orçamento foi excluído com sucesso.',
+          title: t('pages.budgets.deleted'),
+          description: t('pages.budgets.deletedDesc'),
         });
         void loadData();
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao excluir',
+          title: t('common.messages.deleteError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -153,21 +155,21 @@ export default function Budgets() {
       if (selectedBudget) {
         await budgetsService.update(selectedBudget.id, formData);
         toast({
-          title: 'Orçamento atualizado',
-          description: 'O orçamento foi atualizado com sucesso.',
+          title: t('pages.budgets.updated'),
+          description: t('pages.budgets.updatedDesc'),
         });
       } else {
         await budgetsService.create(formData);
         toast({
-          title: 'Orçamento criado',
-          description: 'O orçamento foi criado com sucesso.',
+          title: t('pages.budgets.created'),
+          description: t('pages.budgets.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -194,10 +196,10 @@ export default function Budgets() {
   return (
     <PageContainer>
       <PageHeader
-        title="Orçamentos"
+        title={t('pages.budgets.title')}
         icon={<PiggyBank />}
         action={{
-          label: 'Novo Orçamento',
+          label: t('pages.budgets.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -205,14 +207,14 @@ export default function Budgets() {
 
       <div className="flex flex-wrap gap-4">
         <SearchInput
-          placeholder="Buscar categoria..."
+          placeholder={t('pages.budgets.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="max-w-xs"
         />
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Mês" />
+            <SelectValue placeholder={t('pages.budgets.month')} />
           </SelectTrigger>
           <SelectContent>
             {MONTHS.map((m) => (
@@ -224,7 +226,7 @@ export default function Budgets() {
         </Select>
         <Select value={filterYear} onValueChange={setFilterYear}>
           <SelectTrigger className="w-28">
-            <SelectValue placeholder="Ano" />
+            <SelectValue placeholder={t('pages.budgets.year')} />
           </SelectTrigger>
           <SelectContent>
             {YEARS.map((y) => (
@@ -240,9 +242,7 @@ export default function Budgets() {
         <EmptyState
           icon={<PiggyBank className="h-12 w-12 text-muted-foreground" />}
           message={
-            searchTerm
-              ? 'Nenhum orçamento encontrado para a pesquisa atual.'
-              : 'Nenhum orçamento cadastrado para este período. Clique em "Novo Orçamento" para começar.'
+            searchTerm ? t('pages.budgets.emptySearch') : t('pages.budgets.emptyState')
           }
         />
       ) : (
@@ -262,15 +262,15 @@ export default function Budgets() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {selectedBudget ? 'Editar Orçamento' : 'Novo Orçamento'}
+              {selectedBudget
+                ? t('pages.budgets.editTitle')
+                : t('pages.budgets.newTitle')}
             </DialogTitle>
-            <DialogDescription>
-              Defina o limite de gasto mensal por categoria.
-            </DialogDescription>
+            <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Categoria</Label>
+              <Label htmlFor="category">{t('common.fields.category')}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) =>
@@ -291,7 +291,9 @@ export default function Budgets() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="limit_amount">Valor Limite (R$)</Label>
+              <Label htmlFor="limit_amount">
+                {t('pages.budgets.columns.limitAmount')}
+              </Label>
               <Input
                 id="limit_amount"
                 type="number"
@@ -310,7 +312,7 @@ export default function Budgets() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="month">Mês</Label>
+                <Label htmlFor="month">{t('pages.budgets.month')}</Label>
                 <Select
                   value={String(formData.month)}
                   onValueChange={(value) =>
@@ -331,7 +333,7 @@ export default function Budgets() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="year">Ano</Label>
+                <Label htmlFor="year">{t('pages.budgets.year')}</Label>
                 <Select
                   value={String(formData.year)}
                   onValueChange={(value) =>
@@ -358,10 +360,14 @@ export default function Budgets() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancelar
+                {t('common.actions.cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Salvando...' : selectedBudget ? 'Salvar' : 'Criar'}
+                {isSubmitting
+                  ? t('common.actions.saving')
+                  : selectedBudget
+                    ? t('common.actions.save')
+                    : t('common.actions.create')}
               </Button>
             </div>
           </form>
@@ -380,6 +386,7 @@ function BudgetCard({
   onEdit: (b: Budget) => void;
   onDelete: (b: Budget) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const monthLabel =
     MONTHS.find((m) => m.value === budget.month)?.label ?? String(budget.month);
   const categoryLabel = translate('expenseCategories', budget.category);
@@ -398,12 +405,12 @@ function BudgetCard({
 
       <div className="space-y-1 text-sm">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Limite:</span>
+          <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
           <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
         </div>
         {budget.member_name && (
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Membro:</span>
+            <span className="text-muted-foreground">{t('pages.budgets.member')}</span>
             <span className="font-medium">{budget.member_name}</span>
           </div>
         )}
@@ -417,7 +424,7 @@ function BudgetCard({
           onClick={() => onEdit(budget)}
         >
           <Pencil className="mr-1 h-3 w-3" />
-          Editar
+          {t('common.actions.edit')}
         </Button>
         <Button
           variant="outline"
@@ -426,7 +433,7 @@ function BudgetCard({
           onClick={() => void onDelete(budget)}
         >
           <Trash2 className="mr-1 h-3 w-3" />
-          Excluir
+          {t('common.actions.delete')}
         </Button>
       </div>
     </div>
