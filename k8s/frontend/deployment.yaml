@@ -18,18 +18,6 @@ spec:
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: frontend
     spec:
-      initContainers:
-        - name: wait-for-api
-          image: busybox:1.36
-          command:
-            - sh
-            - -c
-            - |
-              until nc -z api-service 8002; do
-                echo "Waiting for API..."
-                sleep 2
-              done
-              echo "API is ready!"
       hostAliases:
         - ip: "84.247.184.151"
           hostnames:

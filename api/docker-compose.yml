@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8002:8002"
+      - "39100:39100"
     env_file:
       - .env
     depends_on:
@@ -17,7 +17,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -f http://localhost:8002/health/ || wget -q --spider http://localhost:8002/health/",
+          "curl -f http://localhost:39100/health/ || wget -q --spider http://localhost:39100/health/",
         ]
       interval: 30s
       timeout: 10s
@@ -39,7 +39,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
     ports:
-      - "5435:5432"
+      - "39102:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d mindledger_db"]

@@ -292,7 +292,7 @@ A API retorna resultados paginados automaticamente.
 ```json
 {
   "count": 100,
-  "next": "http://localhost:8002/api/v1/expenses/?page=2",
+  "next": "http://localhost:39100/api/v1/expenses/?page=2",
   "previous": null,
   "results": [
     // ... itens da página

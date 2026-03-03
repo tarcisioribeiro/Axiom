@@ -93,7 +93,7 @@ netstat -ano | findstr :39100
    # .env
    API_PORT=8000  # Em vez de 39100
    FRONTEND_PORT=3000
-   DB_PORT=5435
+   DB_PORT=39102
    ```
 
 3. **Parar todos os containers e tentar novamente**

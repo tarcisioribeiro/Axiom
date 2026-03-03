@@ -133,7 +133,7 @@ DB_NAME=mindledger_db
 DB_USER=postgres
 DB_PASSWORD=your-secure-password
 DB_HOST=db
-DB_PORT=5435
+DB_PORT=39102
 ```
 
 ### Gerando Chaves Seguras
