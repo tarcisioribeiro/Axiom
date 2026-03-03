@@ -64,6 +64,7 @@ export const API_CONFIG = {
     SECURITY_VAULT_UNLOCK: '/api/v1/security/vault/unlock/',
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
+    SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',
@@ -71,6 +72,7 @@ export const API_CONFIG = {
     BOOKS: '/api/v1/library/books/',
     SUMMARIES: '/api/v1/library/summaries/',
     READINGS: '/api/v1/library/readings/',
+    READING_GOALS: '/api/v1/library/reading-goals/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
@@ -81,6 +83,7 @@ export const API_CONFIG = {
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',
+    VAULT_SIMULATOR: '/api/v1/vaults/simulate/',
     VAULT_TRANSACTIONS: '/api/v1/vault-transactions/',
     FINANCIAL_GOALS: '/api/v1/financial-goals/',
 

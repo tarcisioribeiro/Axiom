@@ -1,8 +1,22 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import type { Column } from '@/components/common/DataTable/DataTable';
+import ptBR from '@/i18n/locales/pt-BR.json';
+
+beforeAll(async () => {
+  if (!i18next.isInitialized) {
+    await i18next.use(initReactI18next).init({
+      lng: 'pt-BR',
+      fallbackLng: 'pt-BR',
+      resources: { 'pt-BR': { translation: ptBR } },
+      interpolation: { escapeValue: false },
+    });
+  }
+});
 
 type Item = { id: number; name: string; value: number };
 

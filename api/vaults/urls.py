@@ -3,6 +3,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Simulador de cofre (sem persistência)
+    path(
+        "vaults/simulate/",
+        views.VaultSimulatorView.as_view(),
+        name="vault-simulate",
+    ),
     # Cofres CRUD
     path("vaults/", views.VaultListCreateView.as_view(), name="vault-list-create"),
     path("vaults/<int:pk>/", views.VaultDetailView.as_view(), name="vault-detail"),

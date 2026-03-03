@@ -30,8 +30,10 @@ import {
   Vault,
   Wand2,
   PiggyBank,
+  LineChart,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 
 import { useSidebar } from '@/hooks/use-sidebar';
@@ -40,7 +42,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
 interface NavSubItem {
-  title: string;
+  titleKey: string;
   href: string;
   icon: React.ReactNode;
   permission?: {
@@ -51,22 +53,22 @@ interface NavSubItem {
 
 interface NavSubModule {
   id: string;
-  title: string;
+  titleKey: string;
   icon: React.ReactNode;
   items: NavSubItem[];
 }
 
 interface NavModule {
   id: string;
-  title: string;
+  titleKey: string;
   icon: React.ReactNode;
   items?: NavSubItem[];
   subModules?: NavSubModule[];
-  topItems?: NavSubItem[]; // Items that appear at top without submodule
+  topItems?: NavSubItem[];
 }
 
 interface NavItem {
-  title: string;
+  titleKey: string;
   href: string;
   icon: React.ReactNode;
   permission?: {
@@ -77,7 +79,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    title: 'Início',
+    titleKey: 'nav.home',
     href: '/',
     icon: <Home className="h-5 w-5" />,
   },
@@ -86,26 +88,26 @@ const navItems: NavItem[] = [
 const navModules: NavModule[] = [
   {
     id: 'planning',
-    title: 'Planejamento Pessoal',
+    titleKey: 'nav.modules.planning',
     icon: <Calendar className="h-5 w-5" />,
     items: [
       {
-        title: 'Dashboard',
+        titleKey: 'nav.dashboard',
         href: '/planning/dashboard',
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
       {
-        title: 'Checklist Diário',
+        titleKey: 'nav.items.dailyChecklist',
         href: '/planning/daily',
         icon: <CheckCircle2 className="h-4 w-4" />,
       },
       {
-        title: 'Tarefas Rotineiras',
+        titleKey: 'nav.items.routineTasks',
         href: '/planning/routine-tasks',
         icon: <Calendar className="h-4 w-4" />,
       },
       {
-        title: 'Objetivos',
+        titleKey: 'nav.items.goals',
         href: '/planning/goals',
         icon: <Target className="h-4 w-4" />,
       },
@@ -113,11 +115,11 @@ const navModules: NavModule[] = [
   },
   {
     id: 'finance',
-    title: 'Controle Financeiro',
+    titleKey: 'nav.modules.finance',
     icon: <Wallet className="h-5 w-5" />,
     topItems: [
       {
-        title: 'Dashboard',
+        titleKey: 'nav.dashboard',
         href: '/dashboard',
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
@@ -125,42 +127,46 @@ const navModules: NavModule[] = [
     subModules: [
       {
         id: 'finance-registrations',
-        title: 'Cadastros',
+        titleKey: 'nav.submodules.registrations',
         icon: <FolderOpen className="h-4 w-4" />,
         items: [
-          { title: 'Contas', href: '/accounts', icon: <Wallet className="h-4 w-4" /> },
           {
-            title: 'Cartões de Crédito',
+            titleKey: 'nav.items.accounts',
+            href: '/accounts',
+            icon: <Wallet className="h-4 w-4" />,
+          },
+          {
+            titleKey: 'nav.items.creditCards',
             href: '/credit-cards',
             icon: <CreditCard className="h-4 w-4" />,
           },
           {
-            title: 'Faturas',
+            titleKey: 'nav.items.bills',
             href: '/credit-card-bills',
             icon: <Receipt className="h-4 w-4" />,
           },
           {
-            title: 'Gastos Fixos',
+            titleKey: 'nav.items.fixedExpenses',
             href: '/fixed-expenses',
             icon: <CalendarClock className="h-4 w-4" />,
           },
           {
-            title: 'Orçamentos',
+            titleKey: 'nav.items.budgets',
             href: '/budgets',
             icon: <PiggyBank className="h-4 w-4" />,
           },
           {
-            title: 'Valores a Pagar',
+            titleKey: 'nav.items.payables',
             href: '/payables',
             icon: <Receipt className="h-4 w-4" />,
           },
           {
-            title: 'Metas Financeiras',
+            titleKey: 'nav.items.financialGoals',
             href: '/financial-goals',
             icon: <Target className="h-4 w-4" />,
           },
           {
-            title: 'Beneficiários/Credores',
+            titleKey: 'nav.items.members',
             href: '/members',
             icon: <Users className="h-4 w-4" />,
           },
@@ -168,71 +174,80 @@ const navModules: NavModule[] = [
       },
       {
         id: 'finance-records',
-        title: 'Registros',
+        titleKey: 'nav.submodules.records',
         icon: <ClipboardList className="h-4 w-4" />,
         items: [
           {
-            title: 'Despesas',
+            titleKey: 'nav.items.expenses',
             href: '/expenses',
             icon: <TrendingDown className="h-4 w-4" />,
           },
           {
-            title: 'Receitas',
+            titleKey: 'nav.items.revenues',
             href: '/revenues',
             icon: <TrendingUp className="h-4 w-4" />,
           },
           {
-            title: 'Gastos do Cartão',
+            titleKey: 'nav.items.creditCardExpenses',
             href: '/credit-card-expenses',
             icon: <ShoppingCart className="h-4 w-4" />,
           },
           {
-            title: 'Transferências',
+            titleKey: 'nav.items.transfers',
             href: '/transfers',
             icon: <ArrowLeftRight className="h-4 w-4" />,
           },
           {
-            title: 'Empréstimos',
+            titleKey: 'nav.items.loans',
             href: '/loans',
             icon: <HandCoins className="h-4 w-4" />,
           },
-          { title: 'Cofres', href: '/vaults', icon: <Vault className="h-4 w-4" /> },
+          {
+            titleKey: 'nav.items.vaults',
+            href: '/vaults',
+            icon: <Vault className="h-4 w-4" />,
+          },
+          {
+            titleKey: 'nav.items.vaultSimulator',
+            href: '/vaults/simulator',
+            icon: <LineChart className="h-4 w-4" />,
+          },
         ],
       },
     ],
   },
   {
     id: 'security',
-    title: 'Segurança',
+    titleKey: 'nav.modules.security',
     icon: <Shield className="h-5 w-5" />,
     items: [
       {
-        title: 'Dashboard',
+        titleKey: 'nav.dashboard',
         href: '/security/dashboard',
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
       {
-        title: 'Senhas',
+        titleKey: 'nav.items.passwords',
         href: '/security/passwords',
         icon: <Key className="h-4 w-4" />,
       },
       {
-        title: 'Cartões Armazenados',
+        titleKey: 'nav.items.storedCards',
         href: '/security/stored-cards',
         icon: <CreditCard className="h-4 w-4" />,
       },
       {
-        title: 'Contas Armazenadas',
+        titleKey: 'nav.items.storedAccounts',
         href: '/security/stored-accounts',
         icon: <Wallet className="h-4 w-4" />,
       },
       {
-        title: 'Gerador de Senhas',
+        titleKey: 'nav.items.passwordGenerator',
         href: '/security/password-generator',
         icon: <Wand2 className="h-4 w-4" />,
       },
       {
-        title: 'Arquivos',
+        titleKey: 'nav.items.archives',
         href: '/security/archives',
         icon: <Archive className="h-4 w-4" />,
       },
@@ -240,36 +255,36 @@ const navModules: NavModule[] = [
   },
   {
     id: 'library',
-    title: 'Leitura',
+    titleKey: 'nav.modules.library',
     icon: <Library className="h-5 w-5" />,
     items: [
       {
-        title: 'Dashboard',
+        titleKey: 'nav.dashboard',
         href: '/library/dashboard',
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
       {
-        title: 'Livros',
+        titleKey: 'nav.items.books',
         href: '/library/books',
         icon: <BookOpen className="h-4 w-4" />,
       },
       {
-        title: 'Autores',
+        titleKey: 'nav.items.authors',
         href: '/library/authors',
         icon: <UserPen className="h-4 w-4" />,
       },
       {
-        title: 'Editoras',
+        titleKey: 'nav.items.publishers',
         href: '/library/publishers',
         icon: <Building2 className="h-4 w-4" />,
       },
       {
-        title: 'Resumos',
+        titleKey: 'nav.items.summaries',
         href: '/library/summaries',
         icon: <FileText className="h-4 w-4" />,
       },
       {
-        title: 'Leituras',
+        titleKey: 'nav.items.readings',
         href: '/library/readings',
         icon: <BookMarked className="h-4 w-4" />,
       },
@@ -293,6 +308,7 @@ export const Sidebar = () => {
   const { hasPermission } = useAuthStore();
   const { isOpen, close } = useSidebar();
   const { icon } = useThemeAssets();
+  const { t } = useTranslation();
   // Accordion: apenas um módulo expandido por vez
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   // Accordion para submódulos: apenas um submódulo expandido por vez dentro de cada módulo
@@ -304,23 +320,23 @@ export const Sidebar = () => {
   });
 
   // Toggle módulo com comportamento accordion (fecha os outros)
-  const toggleModule = (moduleTitle: string) => {
-    setExpandedModule((prev) => (prev === moduleTitle ? null : moduleTitle));
+  const toggleModule = (moduleId: string) => {
+    setExpandedModule((prev) => (prev === moduleId ? null : moduleId));
     // Ao trocar de módulo, fecha o submódulo expandido
     setExpandedSubModule(null);
   };
 
-  const isModuleExpanded = (moduleTitle: string) => {
-    return expandedModule === moduleTitle;
+  const isModuleExpanded = (moduleId: string) => {
+    return expandedModule === moduleId;
   };
 
   // Toggle submódulo com comportamento accordion (fecha os outros)
-  const toggleSubModule = (subModuleTitle: string) => {
-    setExpandedSubModule((prev) => (prev === subModuleTitle ? null : subModuleTitle));
+  const toggleSubModule = (subModuleId: string) => {
+    setExpandedSubModule((prev) => (prev === subModuleId ? null : subModuleId));
   };
 
-  const isSubModuleExpanded = (subModuleTitle: string) => {
-    return expandedSubModule === subModuleTitle;
+  const isSubModuleExpanded = (subModuleId: string) => {
+    return expandedSubModule === subModuleId;
   };
 
   // Auto-expand module and submodule if current route is within it
@@ -329,7 +345,7 @@ export const Sidebar = () => {
       const allItems = getAllModuleItems(module);
       const isActive = allItems.some((item) => location.pathname === item.href);
       if (isActive) {
-        setExpandedModule(module.title);
+        setExpandedModule(module.id);
         // Verificar se está em um submódulo
         if (module.subModules) {
           module.subModules.forEach((sub) => {
@@ -337,7 +353,7 @@ export const Sidebar = () => {
               (item) => location.pathname === item.href
             );
             if (isSubActive) {
-              setExpandedSubModule(sub.title);
+              setExpandedSubModule(sub.id);
             }
           });
         }
@@ -398,7 +414,7 @@ export const Sidebar = () => {
             <button
               onClick={close}
               className="rounded-lg p-2 transition-colors hover:bg-accent lg:hidden"
-              aria-label="Fechar menu"
+              aria-label={t('layout.closeMenu')}
             >
               <X className="h-5 w-5" />
             </button>
@@ -407,7 +423,7 @@ export const Sidebar = () => {
 
         <nav
           className="custom-scrollbar flex-1 space-y-2 overflow-y-auto"
-          aria-label="Menu principal"
+          aria-label={t('layout.mainMenu')}
         >
           {/* Items principais */}
           {filteredNavItems.map((item) => {
@@ -425,7 +441,7 @@ export const Sidebar = () => {
                 )}
               >
                 {item.icon}
-                <span>{item.title}</span>
+                <span>{t(item.titleKey)}</span>
               </Link>
             );
           })}
@@ -435,17 +451,17 @@ export const Sidebar = () => {
 
           {/* Módulos com submenus */}
           {navModules.map((module) => {
-            const isExpanded = isModuleExpanded(module.title);
+            const isExpanded = isModuleExpanded(module.id);
             const allItems = getAllModuleItems(module);
             const hasActiveItem = allItems.some(
               (item) => location.pathname === item.href
             );
 
             return (
-              <div key={module.title} className="space-y-1">
+              <div key={module.id} className="space-y-1">
                 {/* Cabeçalho do módulo */}
                 <button
-                  onClick={() => toggleModule(module.title)}
+                  onClick={() => toggleModule(module.id)}
                   aria-expanded={isExpanded}
                   aria-controls={`module-${module.id}`}
                   className={cn(
@@ -456,7 +472,7 @@ export const Sidebar = () => {
                   )}
                 >
                   {module.icon}
-                  <span className="flex-1 text-left">{module.title}</span>
+                  <span className="flex-1 text-left">{t(module.titleKey)}</span>
                   <ChevronDown
                     className={cn(
                       'h-4 w-4 transition-transform duration-200',
@@ -492,23 +508,23 @@ export const Sidebar = () => {
                             )}
                           >
                             {item.icon}
-                            <span>{item.title}</span>
+                            <span>{t(item.titleKey)}</span>
                           </Link>
                         );
                       })}
 
                       {/* Submódulos */}
                       {module.subModules?.map((subModule) => {
-                        const isSubExpanded = isSubModuleExpanded(subModule.title);
+                        const isSubExpanded = isSubModuleExpanded(subModule.id);
                         const hasSubActiveItem = subModule.items.some(
                           (item) => location.pathname === item.href
                         );
 
                         return (
-                          <div key={subModule.title} className="space-y-1">
+                          <div key={subModule.id} className="space-y-1">
                             {/* Cabeçalho do submódulo */}
                             <button
-                              onClick={() => toggleSubModule(subModule.title)}
+                              onClick={() => toggleSubModule(subModule.id)}
                               aria-expanded={isSubExpanded}
                               aria-controls={`submodule-${subModule.id}`}
                               className={cn(
@@ -529,7 +545,7 @@ export const Sidebar = () => {
                                 {subModule.icon}
                               </span>
                               <span className="flex-1 text-left">
-                                {subModule.title}
+                                {t(subModule.titleKey)}
                               </span>
                               <ChevronDown
                                 className={cn(
@@ -565,7 +581,7 @@ export const Sidebar = () => {
                                         )}
                                       >
                                         {item.icon}
-                                        <span>{item.title}</span>
+                                        <span>{t(item.titleKey)}</span>
                                       </Link>
                                     );
                                   })}
@@ -591,7 +607,7 @@ export const Sidebar = () => {
                             )}
                           >
                             {item.icon}
-                            <span>{item.title}</span>
+                            <span>{t(item.titleKey)}</span>
                           </Link>
                         );
                       })}

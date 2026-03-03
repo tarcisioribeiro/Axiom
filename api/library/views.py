@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
-from library.models import Author, Book, Publisher, Reading, Summary
+from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
 from library.serializers import (
     AuthorCreateUpdateSerializer,
     AuthorSerializer,
@@ -15,6 +15,8 @@ from library.serializers import (
     PublisherCreateUpdateSerializer,
     PublisherSerializer,
     ReadingCreateUpdateSerializer,
+    ReadingGoalCreateUpdateSerializer,
+    ReadingGoalSerializer,
     ReadingSerializer,
     SummaryCreateUpdateSerializer,
     SummarySerializer,
@@ -411,6 +413,77 @@ class ReadingDetailView(BaseRetrieveUpdateDestroyView):
             "Reading",
             instance.id,
             f"Deletou leitura de: {instance.book.title}",
+        )
+
+
+# ============================================================================
+# READING GOAL VIEWS
+# ============================================================================
+
+
+class ReadingGoalListCreateView(BaseListCreateView):
+    """Lista todas as metas de leitura ou cria uma nova."""
+
+    queryset = ReadingGoal.objects.all()
+
+    def get_queryset(self):
+        return ReadingGoal.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return ReadingGoalCreateUpdateSerializer
+        return ReadingGoalSerializer
+
+    def perform_create(self, serializer):
+        goal = serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+        log_activity(
+            self.request,
+            "create",
+            "ReadingGoal",
+            goal.id,
+            f"Criou meta de leitura para {goal.year}: {goal.books_goal} livros",
+        )
+
+
+class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta uma meta de leitura."""
+
+    queryset = ReadingGoal.objects.all()
+
+    def get_queryset(self):
+        return ReadingGoal.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return ReadingGoalCreateUpdateSerializer
+        return ReadingGoalSerializer
+
+    def perform_update(self, serializer):
+        goal = serializer.save(updated_by=self.request.user)
+        log_activity(
+            self.request,
+            "update",
+            "ReadingGoal",
+            goal.id,
+            f"Atualizou meta de leitura para {goal.year}: {goal.books_goal} livros",
+        )
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = instance.updated_at
+        instance.deleted_by = self.request.user
+        instance.save()
+        log_activity(
+            self.request,
+            "delete",
+            "ReadingGoal",
+            instance.id,
+            f"Deletou meta de leitura para {instance.year}",
         )
 
 

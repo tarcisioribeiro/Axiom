@@ -10,6 +10,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -40,14 +41,6 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const ACCOUNT_TYPES: Record<string, string> = {
-  CC: 'Conta Corrente',
-  CS: 'Conta Salário',
-  CP: 'Conta Poupança',
-  CI: 'Conta Investimento',
-  OTHER: 'Outro',
-};
-
 export default function StoredAccounts() {
   const [accounts, setAccounts] = useState<StoredBankAccount[]>([]);
   const [financeAccounts, setFinanceAccounts] = useState<Account[]>([]);
@@ -65,6 +58,7 @@ export default function StoredAccounts() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -83,7 +77,7 @@ export default function StoredAccounts() {
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -104,11 +98,10 @@ export default function StoredAccounts() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir conta',
-      description:
-        'Tem certeza que deseja excluir esta conta armazenada? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.storedAccounts.deleteTitle'),
+      description: t('pages.storedAccounts.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -117,13 +110,13 @@ export default function StoredAccounts() {
     try {
       await storedAccountsService.delete(id);
       toast({
-        title: 'Conta excluída',
-        description: 'A conta foi excluída com sucesso.',
+        title: t('pages.storedAccounts.deleted'),
+        description: t('pages.storedAccounts.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -141,11 +134,10 @@ export default function StoredAccounts() {
 
     // Confirmação extra para revelar senhas
     const confirmed = await showConfirm({
-      title: 'Revelar senhas',
-      description:
-        'Tem certeza que deseja revelar as senhas desta conta? Certifique-se de que ninguém está olhando.',
-      confirmText: 'Revelar',
-      cancelText: 'Cancelar',
+      title: t('pages.storedAccounts.revealTitle'),
+      description: t('pages.storedAccounts.revealDesc'),
+      confirmText: t('pages.storedAccounts.revealBtn'),
+      cancelText: t('common.actions.cancel'),
     });
 
     if (!confirmed) return;
@@ -157,12 +149,12 @@ export default function StoredAccounts() {
       newMap.set(id, { password: data.password, password2: data.password2 });
       setRevealedData(newMap);
       toast({
-        title: 'Senhas reveladas',
-        description: 'As senhas da conta foram descriptografadas com sucesso.',
+        title: t('pages.storedAccounts.revealed'),
+        description: t('pages.storedAccounts.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao revelar senhas',
+        title: t('pages.storedAccounts.revealError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -174,8 +166,8 @@ export default function StoredAccounts() {
   const handleCopy = async (text: string, label: string) => {
     await navigator.clipboard.writeText(text);
     toast({
-      title: 'Copiado!',
-      description: `${label} copiado para a área de transferência.`,
+      title: t('common.messages.copied'),
+      description: t('common.messages.copiedDesc', { label }),
     });
   };
 
@@ -190,21 +182,21 @@ export default function StoredAccounts() {
 
         await storedAccountsService.update(selectedAccount.id, updateData);
         toast({
-          title: 'Conta atualizada',
-          description: 'A conta foi atualizada com sucesso.',
+          title: t('pages.storedAccounts.updated'),
+          description: t('pages.storedAccounts.updatedDesc'),
         });
       } else {
         await storedAccountsService.create(data);
         toast({
-          title: 'Conta criada',
-          description: 'A conta foi criada com sucesso.',
+          title: t('pages.storedAccounts.created'),
+          description: t('pages.storedAccounts.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -221,7 +213,7 @@ export default function StoredAccounts() {
   );
 
   const getFinanceAccountName = (id?: number) => {
-    if (!id) return 'Nenhuma';
+    if (!id) return t('pages.storedAccounts.noFinanceAccount');
     const account = financeAccounts.find((a) => a.id === id);
     return account ? account.account_name : 'N/A';
   };
@@ -229,7 +221,7 @@ export default function StoredAccounts() {
   const columns: Column<StoredBankAccount>[] = [
     {
       key: 'name',
-      label: 'Nome',
+      label: t('pages.storedAccounts.columns.name'),
       render: (acc) => (
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4" />
@@ -239,7 +231,7 @@ export default function StoredAccounts() {
     },
     {
       key: 'institution',
-      label: 'Instituição',
+      label: t('pages.storedAccounts.columns.institution'),
       render: (acc) => (
         <span className="text-sm">
           {translate('institutions', acc.institution_name)}
@@ -248,27 +240,31 @@ export default function StoredAccounts() {
     },
     {
       key: 'type',
-      label: 'Tipo',
+      label: t('pages.storedAccounts.columns.type'),
       render: (acc) => (
-        <Badge variant="outline">{ACCOUNT_TYPES[acc.account_type]}</Badge>
+        <Badge variant="outline">
+          {t(`pages.storedAccounts.accountTypes.${acc.account_type}`, {
+            defaultValue: acc.account_type,
+          })}
+        </Badge>
       ),
     },
     {
       key: 'account_number',
-      label: 'Número',
+      label: t('pages.storedAccounts.columns.number'),
       render: (acc) => (
         <span className="font-mono text-sm">{acc.account_number_masked}</span>
       ),
     },
     {
       key: 'agency',
-      label: 'Agência',
+      label: t('pages.storedAccounts.columns.agency'),
       align: 'center',
       render: (acc) => <span className="font-mono text-sm">{acc.agency || '-'}</span>,
     },
     {
       key: 'passwords',
-      label: 'Senhas',
+      label: t('pages.storedAccounts.columns.passwords'),
       render: (acc) => {
         const revealed = revealedData.get(acc.id);
         if (revealed) {
@@ -276,12 +272,17 @@ export default function StoredAccounts() {
             <div className="space-y-1 text-xs">
               {revealed.password && (
                 <div className="flex items-center gap-2 font-mono">
-                  <span>Senha 1:</span>
+                  <span>{t('pages.storedAccounts.password1')}:</span>
                   <span>{revealed.password}</span>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleCopy(revealed.password!, 'Senha 1')}
+                    onClick={() =>
+                      handleCopy(
+                        revealed.password!,
+                        t('pages.storedAccounts.password1')
+                      )
+                    }
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -289,12 +290,17 @@ export default function StoredAccounts() {
               )}
               {revealed.password2 && (
                 <div className="flex items-center gap-2 font-mono">
-                  <span>Senha 2:</span>
+                  <span>{t('pages.storedAccounts.password2')}:</span>
                   <span>{revealed.password2}</span>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleCopy(revealed.password2!, 'Senha 2')}
+                    onClick={() =>
+                      handleCopy(
+                        revealed.password2!,
+                        t('pages.storedAccounts.password2')
+                      )
+                    }
                   >
                     <Copy className="h-3 w-3" />
                   </Button>
@@ -308,7 +314,7 @@ export default function StoredAccounts() {
     },
     {
       key: 'finance_account',
-      label: 'Conta Financeira',
+      label: t('pages.storedAccounts.columns.isFinancial'),
       render: (acc) => (
         <Badge variant="outline" className="text-xs">
           {getFinanceAccountName(acc.finance_account ?? undefined)}
@@ -321,10 +327,10 @@ export default function StoredAccounts() {
     <VaultGuard>
       <PageContainer>
         <PageHeader
-          title="Contas Bancárias"
+          title={t('pages.storedAccounts.title')}
           icon={<Wallet />}
           action={{
-            label: 'Nova Conta',
+            label: t('pages.storedAccounts.newBtn'),
             icon: <Plus className="h-4 w-4" />,
             onClick: handleCreate,
           }}
@@ -332,7 +338,7 @@ export default function StoredAccounts() {
 
         <div className="flex gap-4">
           <Input
-            placeholder="Buscar contas..."
+            placeholder={t('pages.storedAccounts.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -345,7 +351,7 @@ export default function StoredAccounts() {
           keyExtractor={(acc) => acc.id}
           isLoading={isLoading}
           emptyState={{
-            message: 'Nenhuma conta armazenada encontrada.',
+            message: t('pages.storedAccounts.emptySearch'),
           }}
           actions={(acc) => (
             <div className="flex items-center justify-end gap-2">
@@ -360,12 +366,12 @@ export default function StoredAccounts() {
                 ) : revealedData.has(acc.id) ? (
                   <>
                     <EyeOff className="mr-1 h-3 w-3" />
-                    Ocultar
+                    {t('common.actions.hide')}
                   </>
                 ) : (
                   <>
                     <Eye className="mr-1 h-3 w-3" />
-                    Revelar
+                    {t('common.actions.reveal')}
                   </>
                 )}
               </Button>
@@ -373,7 +379,7 @@ export default function StoredAccounts() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleEdit(acc)}
-                aria-label="Editar"
+                aria-label={t('common.actions.edit')}
               >
                 <Pencil className="h-4 w-4" aria-hidden="true" />
               </Button>
@@ -381,7 +387,7 @@ export default function StoredAccounts() {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDelete(acc.id)}
-                aria-label="Excluir"
+                aria-label={t('common.actions.delete')}
               >
                 <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
               </Button>
@@ -393,12 +399,14 @@ export default function StoredAccounts() {
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {selectedAccount ? 'Editar' : 'Nova'} Conta Bancária
+                {selectedAccount
+                  ? t('pages.storedAccounts.editTitle')
+                  : t('pages.storedAccounts.newTitle')}
               </DialogTitle>
               <DialogDescription>
                 {selectedAccount
-                  ? 'Atualize as informações da conta armazenada'
-                  : 'Adicione uma nova conta ao cofre seguro'}
+                  ? t('pages.storedAccounts.editDesc')
+                  : t('pages.storedAccounts.newDesc')}
               </DialogDescription>
             </DialogHeader>
             <StoredAccountForm

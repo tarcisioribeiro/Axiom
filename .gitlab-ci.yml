@@ -7,6 +7,7 @@ stages:
   - typecheck
   - test
   - build
+  - scan
   - deploy-staging
   - deploy-production
 
@@ -23,6 +24,8 @@ variables:
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
   API_IMAGE: "$CI_REGISTRY_IMAGE/api"
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
+  CI_COVERAGE_THRESHOLD: "45"
 
 workflow:
   rules:
@@ -94,6 +97,65 @@ lint:frontend:
     - npm run lint
     - npm run format:check
 
+lint:migrations:
+  extends: .python_base
+  stage: lint
+  needs:
+    - lint:backend
+  variables:
+    SECRET_KEY: "ci-insecure-key-for-migrations-check-only"
+    DEBUG: "False"
+    DJANGO_SETTINGS_MODULE: "app.settings"
+    ENCRYPTION_KEY: "Y2ktaW5zZWN1cmUta2V5LWZvci1taWdyYXRpb25zLWNoZWNr"  # gitleaks:allow
+    DB_HOST: "localhost"
+    DB_PORT: "5432"
+    DB_NAME: "mindledger"
+    DB_USER: "mindledger"
+    DB_PASSWORD: "ci"
+  script:
+    - cd api
+    - python manage.py makemigrations --check --dry-run
+
+lint:bandit:
+  extends: .python_base
+  stage: lint
+  script:
+    - bandit -r api/ -x api/tests,api/\*/migrations -ll
+
+lint:pip-audit:
+  extends: .python_base
+  stage: lint
+  script:
+    - pip-audit -r api/requirements.txt --desc
+
+lint:npm-audit:
+  extends: .node_base
+  stage: lint
+  script:
+    - npm audit --audit-level=high
+
+lint:k8s:
+  stage: lint
+  image:
+    name: ghcr.io/yannh/kubeconform:latest-alpine
+    entrypoint: [""]
+  script:
+    # kubeconform validates manifests against official Kubernetes schemas
+    # without requiring a live cluster. kustomization.yaml files are excluded
+    # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
+    # Third-party CRD schemas (e.g. cert-manager ClusterIssuer) are fetched from
+    # the community CRDs catalog so they are validated rather than skipped.
+    - |
+      find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
+        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0 \
+          -schema-location default \
+          -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
+  rules:
+    - changes:
+        - k8s/**/*.yaml
+        - .gitlab-ci.yml
+
+
 # ==============================================================================
 # STAGE: typecheck
 # ==============================================================================
@@ -152,7 +214,7 @@ test:backend:
     DB_PASSWORD: ci_test_password
 
   before_script:
-    # 🔁 reaproveita o pip install
+    # reaproveita o pip install
     - *python_before_script
 
     # extras do job
@@ -162,10 +224,184 @@ test:backend:
     - cd api
     - python manage.py migrate --noinput
 
+  coverage: '/(?i)total.*\s+(\d+(?:\.\d+)?%)$/'
+
   script:
-    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
+    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$CI_COVERAGE_THRESHOLD
 
   artifacts:
     when: always
-    paths:
-      - api/coverage.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: api/coverage.xml
+
+test:frontend:
+  extends: .node_base
+  stage: test
+  needs:
+    - typecheck:frontend
+  script:
+    - npm run test:coverage
+  coverage: '/Statements\s*:\s*(\d+(?:\.\d+)?%)/'
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+
+# ==============================================================================
+# STAGE: build
+# ==============================================================================
+
+# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   KUBECONFIG_CONTENT — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
+#   STAGING_URL        — public URL of the staging environment (e.g. https://staging.example.com)
+#   PRODUCTION_URL     — public URL of the production environment (e.g. https://example.com)
+
+.build_base:
+  extends: .docker_base
+  stage: build
+  interruptible: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+build:api:
+  extends: .build_base
+  needs:
+    - job: test:backend
+    - job: test:frontend
+  script:
+    - docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+    - docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
+        docker push "$API_IMAGE:$CI_COMMIT_TAG"
+      fi
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
+        docker push "$API_IMAGE:main"
+      fi
+
+build:frontend:
+  extends: .build_base
+  needs:
+    - job: test:backend
+    - job: test:frontend
+  script:
+    - docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+      fi
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
+        docker push "$FRONTEND_IMAGE:main"
+      fi
+
+# ==============================================================================
+# STAGE: scan
+# ==============================================================================
+
+.trivy_base:
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  stage: scan
+  interruptible: false
+  variables:
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_NO_PROGRESS: "true"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+/
+
+scan:api:
+  extends: .trivy_base
+  needs:
+    - job: build:api
+      artifacts: true
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+scan:frontend:
+  extends: .trivy_base
+  needs:
+    - job: build:frontend
+      artifacts: true
+  script:
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+# ==============================================================================
+# STAGE: deploy-staging
+# ==============================================================================
+
+deploy:staging:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: deploy-staging
+  interruptible: false
+  needs:
+    - job: build:api
+    - job: build:frontend
+    - job: scan:api
+    - job: scan:frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  environment:
+    name: staging
+    url: $STAGING_URL
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
+  after_script:
+    - rm -f /tmp/kubeconfig
+
+# ==============================================================================
+# STAGE: deploy-production
+# ==============================================================================
+
+deploy:production:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: deploy-production
+  interruptible: false
+  needs:
+    - job: build:api
+    - job: build:frontend
+    - job: scan:api
+    - job: scan:frontend
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: false
+  environment:
+    name: production
+    url: $PRODUCTION_URL
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - kubectl -n mindledger set image deployment/api api="$API_IMAGE:main"
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:main"
+    - kubectl -n mindledger rollout status deployment/api --timeout=300s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
+  after_script:
+    - rm -f /tmp/kubeconfig

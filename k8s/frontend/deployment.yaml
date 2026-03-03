@@ -30,13 +30,15 @@ spec:
                 sleep 2
               done
               echo "API is ready!"
+      serviceAccountName: sa-frontend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: gitlab-registry-secret
       containers:
         - name: frontend
-          # TODO: replace with your actual GitLab registry path
-          # The CI pipeline will update this image on every deploy via kubectl set image
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:latest
+          # Image tag is pinned to the build digest on every deploy by CI/CD.
+          # See deploy:production job in .gitlab-ci.yml.
+          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:0.0.0
           ports:
             - containerPort: 80
               name: http

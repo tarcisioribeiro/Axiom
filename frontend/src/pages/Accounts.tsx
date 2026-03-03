@@ -1,5 +1,6 @@
 import { Plus, Pencil, Trash2, Wallet } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -23,6 +24,7 @@ import { accountsService } from '@/services/accounts-service';
 import type { Account, AccountFormData } from '@/types';
 
 export default function Accounts() {
+  const { t } = useTranslation();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function Accounts() {
       setAccounts(accountsData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -63,11 +65,10 @@ export default function Accounts() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir conta',
-      description:
-        'Tem certeza que deseja excluir esta conta? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.accounts.deleteTitle'),
+      description: t('pages.accounts.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -76,13 +77,13 @@ export default function Accounts() {
     try {
       await accountsService.delete(id);
       toast({
-        title: 'Conta excluída',
-        description: 'A conta foi excluída com sucesso.',
+        title: t('pages.accounts.deleted'),
+        description: t('pages.accounts.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -95,21 +96,21 @@ export default function Accounts() {
       if (selectedAccount) {
         await accountsService.update(selectedAccount.id, data);
         toast({
-          title: 'Conta atualizada',
-          description: 'A conta foi atualizada com sucesso.',
+          title: t('pages.accounts.updated'),
+          description: t('pages.accounts.updatedDesc'),
         });
       } else {
         await accountsService.create(data);
         toast({
-          title: 'Conta criada',
-          description: 'A conta foi criada com sucesso.',
+          title: t('pages.accounts.created'),
+          description: t('pages.accounts.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -122,12 +123,12 @@ export default function Accounts() {
   const columns: Column<Account>[] = [
     {
       key: 'account_name',
-      label: 'Conta',
+      label: t('pages.accounts.columns.name'),
       render: (account) => <div className="font-medium">{account.account_name}</div>,
     },
     {
       key: 'account_type',
-      label: 'Tipo',
+      label: t('pages.accounts.columns.type'),
       render: (account) => (
         <Badge variant="secondary">
           {translate('accountTypes', account.account_type)}
@@ -136,19 +137,19 @@ export default function Accounts() {
     },
     {
       key: 'institution',
-      label: 'Instituição',
+      label: t('pages.accounts.columns.institution'),
       render: (account) => translate('institutions', account.institution),
     },
     {
       key: 'account_number_masked',
-      label: 'Número',
+      label: t('pages.accounts.columns.number'),
       render: (account) => (
         <span className="font-mono text-sm">{account.account_number_masked}</span>
       ),
     },
     {
       key: 'balance',
-      label: 'Saldo',
+      label: t('pages.accounts.columns.balance'),
       align: 'right',
       render: (account) => (
         <span
@@ -162,7 +163,7 @@ export default function Accounts() {
     },
     {
       key: 'created_at',
-      label: 'Criada em',
+      label: t('pages.accounts.columns.createdAt'),
       render: (account) => (
         <span className="text-sm">{formatDate(account.created_at)}</span>
       ),
@@ -172,10 +173,10 @@ export default function Accounts() {
   return (
     <PageContainer>
       <PageHeader
-        title="Contas Bancárias"
+        title={t('pages.accounts.title')}
         icon={<Wallet />}
         action={{
-          label: 'Nova Conta',
+          label: t('pages.accounts.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -187,7 +188,7 @@ export default function Accounts() {
         keyExtractor={(account) => account.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma conta cadastrada. Clique em "Nova Conta" para começar.',
+          message: t('pages.accounts.emptyState'),
         }}
         actions={(account) => (
           <div className="flex items-center justify-end gap-2">
@@ -214,11 +215,15 @@ export default function Accounts() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedAccount ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
+            <DialogTitle>
+              {selectedAccount
+                ? t('pages.accounts.editTitle')
+                : t('pages.accounts.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedAccount
-                ? 'Atualize as informações da conta bancária'
-                : 'Adicione uma nova conta bancária ao sistema'}
+                ? t('pages.accounts.editDesc')
+                : t('pages.accounts.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <AccountForm

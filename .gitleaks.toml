@@ -1,0 +1,20 @@
+# Gitleaks configuration — https://github.com/gitleaks/gitleaks
+# Extends the default ruleset; allowlists suppress known false positives.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Suppress false positives from example files and templates"
+paths = [
+  # .env.example files contain placeholder values, not real secrets
+  '''.env\.example$''',
+  '''api/\.env\.example$''',
+  # setup-env.sh generates keys at runtime using os commands, not hardcoded values
+  '''setup-env\.sh$''',
+]
+# Plain strings required by gitleaks (not TOML tables)
+# Django/Fernet key placeholders in documentation
+regexes = [
+  '''your[-_](secure|44|50|fernet|django)[-_\w]*[-_](key|password|here)[=\s]''',
+]

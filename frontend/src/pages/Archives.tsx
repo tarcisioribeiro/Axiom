@@ -11,6 +11,7 @@ import {
   Tag,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -38,25 +39,8 @@ import { membersService } from '@/services/members-service';
 import type { Archive, ArchiveFormData, Member } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const ARCHIVE_CATEGORIES: Record<string, string> = {
-  personal: 'Pessoal',
-  financial: 'Financeiro',
-  legal: 'Jurídico',
-  medical: 'Médico',
-  tax: 'Fiscal',
-  work: 'Trabalho',
-  other: 'Outro',
-};
-
-const ARCHIVE_TYPES: Record<string, string> = {
-  text: 'Texto',
-  pdf: 'PDF',
-  image: 'Imagem',
-  document: 'Documento',
-  other: 'Outro',
-};
-
 export default function Archives() {
+  const { t } = useTranslation();
   const [archives, setArchives] = useState<Archive[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,7 +69,7 @@ export default function Archives() {
       setMembers(membersData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -106,7 +90,7 @@ export default function Archives() {
         const data = await archivesService.reveal(archive.id);
         if (data.error) {
           toast({
-            title: 'Erro ao carregar conteúdo',
+            title: t('pages.archives.loadContentError'),
             description: data.error,
             variant: 'destructive',
           });
@@ -119,7 +103,7 @@ export default function Archives() {
         }
       } catch (error: unknown) {
         toast({
-          title: 'Erro ao carregar conteúdo',
+          title: t('pages.archives.loadContentError'),
           description: getErrorMessage(error),
           variant: 'destructive',
         });
@@ -133,11 +117,10 @@ export default function Archives() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir arquivo',
-      description:
-        'Tem certeza que deseja excluir este arquivo confidencial? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.archives.deleteTitle'),
+      description: t('pages.archives.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -146,13 +129,13 @@ export default function Archives() {
     try {
       await archivesService.delete(id);
       toast({
-        title: 'Arquivo excluído',
-        description: 'O arquivo foi excluído com sucesso.',
+        title: t('pages.archives.deleted'),
+        description: t('pages.archives.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -162,8 +145,8 @@ export default function Archives() {
   const handleRevealContent = async (archive: Archive) => {
     if (archive.archive_type !== 'text') {
       toast({
-        title: 'Ação não disponível',
-        description: 'Apenas arquivos de texto podem ser visualizados diretamente.',
+        title: t('pages.archives.actionNotAvailable'),
+        description: t('pages.archives.onlyTextViewable'),
         variant: 'destructive',
       });
       return;
@@ -177,8 +160,8 @@ export default function Archives() {
       if (data.error) {
         const title =
           data.error_type === 'decryption_failed'
-            ? 'Erro de descriptografia'
-            : 'Conteúdo indisponível';
+            ? t('pages.archives.decryptionError')
+            : t('pages.archives.contentUnavailable');
         toast({
           title,
           description: data.error,
@@ -189,8 +172,8 @@ export default function Archives() {
 
       if (data.text_content == null) {
         toast({
-          title: 'Conteúdo vazio',
-          description: 'Este arquivo não possui conteúdo de texto armazenado.',
+          title: t('pages.archives.emptyContentTitle'),
+          description: t('pages.archives.emptyContent'),
           variant: 'destructive',
         });
         return;
@@ -199,12 +182,12 @@ export default function Archives() {
       setRevealedContent(data.text_content);
       setIsContentDialogOpen(true);
       toast({
-        title: 'Conteúdo revelado',
-        description: 'O conteúdo do arquivo foi descriptografado com sucesso.',
+        title: t('pages.archives.contentRevealed'),
+        description: t('pages.archives.contentRevealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao revelar conteúdo',
+        title: t('pages.archives.revealContentError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -231,12 +214,12 @@ export default function Archives() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       toast({
-        title: 'Download iniciado',
-        description: 'O arquivo está sendo baixado.',
+        title: t('pages.archives.downloadStarted'),
+        description: t('pages.archives.downloadDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao baixar arquivo',
+        title: t('pages.archives.downloadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -249,21 +232,21 @@ export default function Archives() {
       if (selectedArchive) {
         await archivesService.update(selectedArchive.id, data);
         toast({
-          title: 'Arquivo atualizado',
-          description: 'O arquivo foi atualizado com sucesso.',
+          title: t('pages.archives.updated'),
+          description: t('pages.archives.updatedDesc'),
         });
       } else {
         await archivesService.create(data);
         toast({
-          title: 'Arquivo criado',
-          description: 'O arquivo foi criado e criptografado com sucesso.',
+          title: t('pages.archives.created'),
+          description: t('pages.archives.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -294,10 +277,10 @@ export default function Archives() {
     <VaultGuard>
       <PageContainer>
         <PageHeader
-          title="Arquivos Confidenciais"
+          title={t('pages.archives.title')}
           icon={<ArchiveIcon />}
           action={{
-            label: 'Novo Arquivo',
+            label: t('pages.archives.newBtn'),
             icon: <Plus className="h-4 w-4" />,
             onClick: handleCreate,
           }}
@@ -305,7 +288,7 @@ export default function Archives() {
 
         <div className="flex gap-4">
           <Input
-            placeholder="Buscar arquivos..."
+            placeholder={t('pages.archives.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
@@ -317,8 +300,8 @@ export default function Archives() {
             icon={<ArchiveIcon className="h-12 w-12 text-muted-foreground" />}
             message={
               searchTerm
-                ? 'Nenhum arquivo encontrado para a pesquisa atual.'
-                : 'Nenhum arquivo cadastrado. Clique em "Novo Arquivo" para começar.'
+                ? t('pages.archives.emptySearch')
+                : t('pages.archives.emptyState')
             }
           />
         ) : (
@@ -339,9 +322,9 @@ export default function Archives() {
                         </CardTitle>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge>{ARCHIVE_CATEGORIES[arc.category]}</Badge>
+                        <Badge>{t(`pages.archives.categories.${arc.category}`)}</Badge>
                         <Badge variant="outline">
-                          {ARCHIVE_TYPES[arc.archive_type]}
+                          {t(`pages.archives.types.${arc.archive_type}`)}
                         </Badge>
                       </div>
                     </div>
@@ -358,8 +341,8 @@ export default function Archives() {
                         disabled={isRevealing}
                         aria-label={
                           arc.archive_type === 'text'
-                            ? 'Ver conteúdo'
-                            : 'Baixar arquivo'
+                            ? t('pages.archives.viewContent')
+                            : t('pages.archives.downloadFile')
                         }
                       >
                         {arc.archive_type === 'text' ? (
@@ -373,7 +356,7 @@ export default function Archives() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleEdit(arc)}
-                        aria-label="Editar"
+                        aria-label={t('common.actions.edit')}
                       >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -382,7 +365,7 @@ export default function Archives() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleDelete(arc.id)}
-                        aria-label="Excluir"
+                        aria-label={t('common.actions.delete')}
                       >
                         <Trash2
                           className="h-4 w-4 text-destructive"
@@ -431,12 +414,14 @@ export default function Archives() {
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {selectedArchive ? 'Editar' : 'Novo'} Arquivo Confidencial
+                {selectedArchive
+                  ? t('pages.archives.editTitle')
+                  : t('pages.archives.newTitle')}
               </DialogTitle>
               <DialogDescription>
                 {selectedArchive
-                  ? 'Atualize as informações do arquivo'
-                  : 'Adicione um novo arquivo ao cofre criptografado'}
+                  ? t('pages.archives.editDesc')
+                  : t('pages.archives.newDesc')}
               </DialogDescription>
             </DialogHeader>
             <ArchiveForm
@@ -455,8 +440,10 @@ export default function Archives() {
             <DialogHeader>
               <DialogTitle>{selectedArchive?.title}</DialogTitle>
               <DialogDescription>
-                Conteúdo descriptografado -{' '}
-                {ARCHIVE_CATEGORIES[selectedArchive?.category || 'other']}
+                {t('pages.archives.decryptedContentDesc')} -{' '}
+                {selectedArchive?.category
+                  ? t(`pages.archives.categories.${selectedArchive.category}`)
+                  : ''}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -472,14 +459,16 @@ export default function Archives() {
                   onClick={() => {
                     void navigator.clipboard.writeText(revealedContent);
                     toast({
-                      title: 'Copiado!',
-                      description: 'Conteúdo copiado para a área de transferência.',
+                      title: t('common.messages.copied'),
+                      description: t('pages.archives.copiedDesc'),
                     });
                   }}
                 >
-                  Copiar
+                  {t('common.actions.copy')}
                 </Button>
-                <Button onClick={() => setIsContentDialogOpen(false)}>Fechar</Button>
+                <Button onClick={() => setIsContentDialogOpen(false)}>
+                  {t('common.actions.close')}
+                </Button>
               </div>
             </div>
           </DialogContent>

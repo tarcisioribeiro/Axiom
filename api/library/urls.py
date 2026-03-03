@@ -1,6 +1,6 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/Dashboard views
+from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Dashboard views
     AuthorDetailView,
     AuthorListCreateView,
     BookDetailView,
@@ -9,6 +9,8 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     PublisherDetailView,
     PublisherListCreateView,
     ReadingDetailView,
+    ReadingGoalDetailView,
+    ReadingGoalListCreateView,
     ReadingListCreateView,
     SummaryDetailView,
     SummaryListCreateView,
@@ -40,4 +42,15 @@ urlpatterns = [
     # Readings
     path("readings/", ReadingListCreateView.as_view(), name="reading-list-create"),
     path("readings/<int:pk>/", ReadingDetailView.as_view(), name="reading-detail"),
+    # Reading Goals
+    path(
+        "reading-goals/",
+        ReadingGoalListCreateView.as_view(),
+        name="reading-goal-list-create",
+    ),
+    path(
+        "reading-goals/<int:pk>/",
+        ReadingGoalDetailView.as_view(),
+        name="reading-goal-detail",
+    ),
 ]

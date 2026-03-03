@@ -11,10 +11,12 @@ import {
   Clock,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
+import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
@@ -28,6 +30,7 @@ export default function LibraryDashboard() {
   const [stats, setStats] = useState<LibraryDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
@@ -59,7 +62,7 @@ export default function LibraryDashboard() {
       setStats(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -76,13 +79,15 @@ export default function LibraryDashboard() {
 
   return (
     <div className="space-y-6 px-4 py-8">
-      <PageHeader title="Dashboard de Leitura" icon={<Library />} />
+      <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
 
       {/* Métricas Principais - Grid 4 colunas */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Livros</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.books')}
+            </CardTitle>
             <BookOpen className="h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -95,7 +100,9 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Autores</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.authors')}
+            </CardTitle>
             <User className="h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -108,7 +115,9 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Editoras</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.publishers')}
+            </CardTitle>
             <Building2 className="h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -121,23 +130,28 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Páginas Lidas</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.pagesRead')}
+            </CardTitle>
             <FileText className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_pages_read || 0}</div>
             <p className="mt-1 text-xs">
-              Média: {stats?.average_rating?.toFixed(1) || 0} ★
+              {t('pages.libraryDashboard.average')}{' '}
+              {stats?.average_rating?.toFixed(1) || 0} ★
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Progresso de Leitura - Grid 3 colunas */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Progresso de Leitura - Grid 4 colunas (status + meta anual) */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lendo</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.reading')}
+            </CardTitle>
             <BookMarked className="h-4 w-4 text-info" />
           </CardHeader>
           <CardContent>
@@ -154,7 +168,9 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Para Ler</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.toRead')}
+            </CardTitle>
             <BookOpen className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
@@ -169,7 +185,9 @@ export default function LibraryDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Lidos</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.read')}
+            </CardTitle>
             <BookCheck className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
@@ -181,6 +199,9 @@ export default function LibraryDashboard() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Meta Anual */}
+        <ReadingGoalCard onGoalChange={loadData} />
       </div>
 
       {/* Row 3: Novas Estatísticas - Grid 4 colunas */}
@@ -188,35 +209,43 @@ export default function LibraryDashboard() {
         {/* Card 1: Tempo Total de Leitura */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tempo de Leitura</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.readingTime')}
+            </CardTitle>
             <Clock className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats?.total_reading_time_hours || 0}h
             </div>
-            <p className="mt-1 text-xs">Tempo total registrado</p>
+            <p className="mt-1 text-xs">
+              {t('pages.libraryDashboard.readingTimeTotal')}
+            </p>
           </CardContent>
         </Card>
 
         {/* Card 2: Média de Páginas por Livro */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Média por Livro</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.avgPerBook')}
+            </CardTitle>
             <FileText className="h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats?.average_pages_per_book?.toFixed(0) || 0}
             </div>
-            <p className="mt-1 text-xs">Páginas por livro</p>
+            <p className="mt-1 text-xs">{t('pages.libraryDashboard.pagesPerBook')}</p>
           </CardContent>
         </Card>
 
         {/* Card 3: Autor Mais Lido */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Autor Mais Lido</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.mostReadAuthor')}
+            </CardTitle>
             <User className="h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -236,7 +265,7 @@ export default function LibraryDashboard() {
                 </p>
               </>
             ) : (
-              <div className="text-sm">Nenhum livro lido</div>
+              <div className="text-sm">{t('pages.libraryDashboard.noAuthor')}</div>
             )}
           </CardContent>
         </Card>
@@ -244,7 +273,9 @@ export default function LibraryDashboard() {
         {/* Card 4: Editora Mais Lida */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Editora Mais Lida</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.mostReadPublisher')}
+            </CardTitle>
             <Building2 className="h-4 w-4" />
           </CardHeader>
           <CardContent>
@@ -264,7 +295,7 @@ export default function LibraryDashboard() {
                 </p>
               </>
             ) : (
-              <div className="text-sm">Nenhum livro lido</div>
+              <div className="text-sm">{t('pages.libraryDashboard.noAuthor')}</div>
             )}
           </CardContent>
         </Card>
@@ -274,8 +305,10 @@ export default function LibraryDashboard() {
         {/* Livros por Gênero */}
         <Card>
           <CardHeader>
-            <CardTitle>Livros por Gênero (Top 5)</CardTitle>
-            <p className="text-sm">Distribuição por gênero literário</p>
+            <CardTitle>{t('pages.libraryDashboard.genreDistribution')}</CardTitle>
+            <p className="text-sm">
+              {t('pages.libraryDashboard.genreDistributionDesc')}
+            </p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -285,7 +318,7 @@ export default function LibraryDashboard() {
               nameKey="genre_display"
               formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
               colors={COLORS}
-              emptyMessage="Nenhum livro cadastrado"
+              emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
               height={350}
             />
@@ -295,8 +328,8 @@ export default function LibraryDashboard() {
         {/* Gráfico: Status de Leitura (Donut/Pie) */}
         <Card>
           <CardHeader>
-            <CardTitle>Status de Leitura</CardTitle>
-            <p className="text-sm">Distribuição por status</p>
+            <CardTitle>{t('pages.libraryDashboard.readingStatus')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.readingStatusDesc')}</p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -306,7 +339,7 @@ export default function LibraryDashboard() {
               nameKey="status_display"
               formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
               colors={COLORS}
-              emptyMessage="Nenhum livro cadastrado"
+              emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
               height={350}
             />
@@ -319,8 +352,8 @@ export default function LibraryDashboard() {
         {/* Gráfico: Timeline de Leituras (Line) */}
         <Card>
           <CardHeader>
-            <CardTitle>Linha do Tempo de Leitura</CardTitle>
-            <p className="text-sm">Páginas lidas por dia (últimos 6 meses)</p>
+            <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.readingTimelineDesc')}</p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -330,7 +363,7 @@ export default function LibraryDashboard() {
               nameKey="date"
               formatter={(value) => value.toString()}
               colors={COLORS}
-              emptyMessage="Nenhuma leitura registrada"
+              emptyMessage={t('pages.libraryDashboard.noReadings')}
               lockChartType="line"
               xAxisTickFormatter={(value: string) => {
                 try {
@@ -351,10 +384,14 @@ export default function LibraryDashboard() {
                 }
               }}
               dualYAxis={{
-                left: { dataKey: 'pages_read', label: 'Páginas', color: COLORS[0] },
+                left: {
+                  dataKey: 'pages_read',
+                  label: t('pages.libraryDashboard.pages'),
+                  color: COLORS[0],
+                },
                 right: {
                   dataKey: 'reading_time_hours',
-                  label: 'Horas',
+                  label: t('pages.libraryDashboard.hours'),
                   color: COLORS[1],
                 },
               }}
@@ -363,13 +400,13 @@ export default function LibraryDashboard() {
                   dataKey: 'pages_read',
                   stroke: COLORS[0],
                   yAxisId: 'left',
-                  name: 'Páginas Lidas',
+                  name: t('pages.libraryDashboard.pagesReadLabel'),
                 },
                 {
                   dataKey: 'reading_time_hours',
                   stroke: COLORS[1],
                   yAxisId: 'right',
-                  name: 'Tempo (horas)',
+                  name: t('pages.libraryDashboard.timeLabel'),
                 },
               ]}
             />
@@ -379,8 +416,8 @@ export default function LibraryDashboard() {
         {/* Gráfico: Top 5 Autores (Horizontal Bar) */}
         <Card>
           <CardHeader>
-            <CardTitle>Top 5 Autores</CardTitle>
-            <p className="text-sm">Autores com mais livros</p>
+            <CardTitle>{t('pages.libraryDashboard.topAuthors')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.topAuthorsDesc')}</p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -390,7 +427,7 @@ export default function LibraryDashboard() {
               nameKey="name"
               formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
               colors={COLORS}
-              emptyMessage="Nenhum autor cadastrado"
+              emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
               height={350}
             />
@@ -403,8 +440,10 @@ export default function LibraryDashboard() {
         {/* Gráfico: Distribuição de Ratings (Vertical Bar) */}
         <Card>
           <CardHeader>
-            <CardTitle>Distribuição de Avaliações</CardTitle>
-            <p className="text-sm">Livros por avaliação em estrelas</p>
+            <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
+            <p className="text-sm">
+              {t('pages.libraryDashboard.ratingDistributionDesc')}
+            </p>
           </CardHeader>
           <CardContent>
             <ChartContainer
@@ -414,7 +453,7 @@ export default function LibraryDashboard() {
               nameKey="rating_range"
               formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
               colors={COLORS}
-              emptyMessage="Nenhum livro avaliado"
+              emptyMessage={t('pages.libraryDashboard.noRatings')}
               lockChartType="pie"
               height={350}
             />
@@ -424,14 +463,16 @@ export default function LibraryDashboard() {
         {/* Card: Distribuições (Idioma e Mídia) */}
         <Card>
           <CardHeader>
-            <CardTitle>Distribuições</CardTitle>
-            <p className="text-sm">Por idioma e tipo de mídia</p>
+            <CardTitle>{t('pages.libraryDashboard.distributions')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.distributionsDesc')}</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Seção: Por Idioma */}
               <div>
-                <h4 className="mb-3 text-sm font-semibold">Por Idioma</h4>
+                <h4 className="mb-3 text-sm font-semibold">
+                  {t('pages.libraryDashboard.byLanguage')}
+                </h4>
                 <ChartContainer
                   chartId="library-language-distribution"
                   data={stats?.books_by_language || []}
@@ -439,7 +480,7 @@ export default function LibraryDashboard() {
                   nameKey="language_display"
                   formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
                   colors={COLORS}
-                  emptyMessage="Nenhum livro cadastrado"
+                  emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
                   height={200}
                 />
@@ -447,7 +488,9 @@ export default function LibraryDashboard() {
 
               {/* Seção: Por Tipo de Mídia */}
               <div>
-                <h4 className="mb-3 text-sm font-semibold">Por Tipo de Mídia</h4>
+                <h4 className="mb-3 text-sm font-semibold">
+                  {t('pages.libraryDashboard.byMediaType')}
+                </h4>
                 <ChartContainer
                   chartId="library-media-type-distribution"
                   data={stats?.books_by_media_type || []}
@@ -455,7 +498,7 @@ export default function LibraryDashboard() {
                   nameKey="media_type_display"
                   formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
                   colors={COLORS.slice(3)}
-                  emptyMessage="Nenhum livro com mídia definida"
+                  emptyMessage={t('pages.libraryDashboard.noMediaDefined')}
                   lockChartType="pie"
                   height={200}
                 />
@@ -468,13 +511,13 @@ export default function LibraryDashboard() {
       {/* Leituras Recentes */}
       <Card>
         <CardHeader>
-          <CardTitle>Leituras Recentes</CardTitle>
-          <p className="text-sm">Últimas 5 sessões de leitura</p>
+          <CardTitle>{t('pages.libraryDashboard.recentReadings')}</CardTitle>
+          <p className="text-sm">{t('pages.libraryDashboard.recentReadingsDesc')}</p>
         </CardHeader>
         <CardContent>
           {!stats || stats.recent_readings.length === 0 ? (
             <div className="flex h-32 items-center justify-center">
-              Nenhuma leitura registrada
+              {t('pages.libraryDashboard.noReadings')}
             </div>
           ) : (
             <div className="space-y-3">

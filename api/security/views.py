@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import re
 import secrets
@@ -889,6 +890,192 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             return "medium"
         else:
             return "weak"
+
+
+# ============================================================================
+# VAULT HEALTH REPORT VIEW
+# ============================================================================
+
+OUTDATED_DAYS_THRESHOLD = 90
+
+
+class VaultHealthReportView(VaultLockedMixin, APIView):
+    """
+    GET /api/v1/security/passwords/health/
+
+    Analisa as senhas do cofre e retorna um relatório de saúde com:
+    - Pontuação geral (0–100)
+    - Senhas fracas
+    - Senhas duplicadas (por hash SHA-256, sem expor o valor)
+    - Senhas desatualizadas (> 90 dias sem troca)
+    - Lista de senhas problemáticas
+
+    Requer cofre desbloqueado (VaultLockedMixin).
+    Valores descriptografados NUNCA são registrados em log.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(self._empty_report())
+
+        passwords_qs = Password.objects.filter(owner=member, is_deleted=False).only(
+            "id",
+            "title",
+            "username",
+            "category",
+            "last_password_change",
+            "_password",
+        )
+
+        passwords = list(passwords_qs)
+        total = len(passwords)
+
+        if total == 0:
+            return Response(self._empty_report())
+
+        cutoff = timezone.now() - timedelta(days=OUTDATED_DAYS_THRESHOLD)
+        category_dict = dict(PASSWORD_CATEGORIES)
+
+        # Analyse each password — decrypted value used only in memory, never logged.
+        hash_to_ids: dict[str, list[int]] = {}
+        per_password: list[dict] = []
+
+        for pw in passwords:
+            decrypted = pw.password  # VaultEncryptedField property
+            strength = get_password_strength(decrypted) if decrypted else "weak"
+            is_outdated = pw.last_password_change < cutoff
+
+            if decrypted:
+                pw_hash = hashlib.sha256(decrypted.encode()).hexdigest()
+            else:
+                # Treat missing/empty passwords as unique weak entries
+                pw_hash = f"empty:{pw.id}"
+
+            hash_to_ids.setdefault(pw_hash, []).append(pw.id)
+
+            per_password.append(
+                {
+                    "id": pw.id,
+                    "title": pw.title,
+                    "username": pw.username,
+                    "category": pw.category,
+                    "category_display": category_dict.get(pw.category, pw.category),
+                    "last_password_change": pw.last_password_change.isoformat(),
+                    "strength": strength,
+                    "is_outdated": is_outdated,
+                    "_hash": pw_hash,
+                }
+            )
+
+        # Determine duplicate groups (only hashes shared by ≥2 passwords)
+        duplicate_hashes = {h for h, ids in hash_to_ids.items() if len(ids) > 1}
+        # Assign stable group numbers for the response
+        dup_group_map: dict[str, int] = {
+            h: i + 1 for i, h in enumerate(sorted(duplicate_hashes))
+        }
+
+        # Build problematic list and count issues
+        weak_count = 0
+        medium_count = 0
+        duplicate_count = 0
+        outdated_count = 0
+        problematic: list[dict] = []
+
+        for entry in per_password:
+            issues: list[str] = []
+            strength = entry["strength"]
+
+            if strength == "weak":
+                weak_count += 1
+                issues.append("weak")
+            elif strength == "medium":
+                medium_count += 1
+                issues.append("medium")
+
+            pw_hash = entry["_hash"]
+            dup_group = dup_group_map.get(pw_hash)
+            if dup_group is not None:
+                duplicate_count += 1
+                issues.append("duplicate")
+
+            if entry["is_outdated"]:
+                outdated_count += 1
+                issues.append("outdated")
+
+            if issues:
+                problematic.append(
+                    {
+                        "id": entry["id"],
+                        "title": entry["title"],
+                        "username": entry["username"],
+                        "category": entry["category"],
+                        "category_display": entry["category_display"],
+                        "last_password_change": entry["last_password_change"],
+                        "issues": issues,
+                        "duplicate_group": dup_group,
+                    }
+                )
+
+        score = self._calculate_score(
+            total, weak_count, medium_count, duplicate_count, outdated_count
+        )
+
+        log_activity(
+            request,
+            "view",
+            "Password",
+            None,
+            "Consultou relatório de saúde do cofre",
+        )
+
+        return Response(
+            {
+                "score": score,
+                "total_passwords": total,
+                "issues_summary": {
+                    "weak": weak_count,
+                    "medium": medium_count,
+                    "duplicate": duplicate_count,
+                    "outdated": outdated_count,
+                },
+                "problematic_passwords": problematic,
+            }
+        )
+
+    def _calculate_score(self, total, weak, medium, duplicates, outdated):
+        """
+        Calcula pontuação de saúde (0–100).
+
+        Cada senha contribui com pontos base:
+          strong = 100  medium = 60  weak = 20
+
+        Penalidades adicionais (acumulativas):
+          duplicada  → -20 pts
+          desatualizada → -10 pts
+        """
+        if total == 0:
+            return 100
+
+        strong = total - weak - medium
+        base_points = strong * 100 + medium * 60 + weak * 20
+        penalty = duplicates * 20 + outdated * 10
+        total_points = max(0, base_points - penalty)
+        max_points = total * 100
+        return round(total_points * 100 / max_points)
+
+    def _empty_report(self):
+        return {
+            "score": 100,
+            "total_passwords": 0,
+            "issues_summary": {"weak": 0, "medium": 0, "duplicate": 0, "outdated": 0},
+            "problematic_passwords": [],
+        }
 
 
 def get_password_strength(password):

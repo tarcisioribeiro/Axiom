@@ -76,7 +76,7 @@ function buildGrid(data: HeatmapDay[], year: number) {
 }
 
 /** Find which column each month label should start at. */
-function monthLabels(data: HeatmapDay[], year: number, jan1Weekday: number) {
+function monthLabels(data: HeatmapDay[], jan1Weekday: number) {
   const labels: { month: string; col: number }[] = [];
   let lastMonth = -1;
   data.forEach((day, i) => {
@@ -128,7 +128,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
   }, [loadData]);
 
   const { grid, jan1Weekday, numCols } = buildGrid(data, year);
-  const mLabels = monthLabels(data, year, jan1Weekday);
+  const mLabels = monthLabels(data, jan1Weekday);
 
   // Summary stats
   const scheduledDays = data.filter((d) => d.is_scheduled).length;

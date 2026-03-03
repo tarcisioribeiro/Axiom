@@ -30,6 +30,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
@@ -80,6 +81,7 @@ export function DataTable<T>({
   pagination,
   actions,
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   // Loading state - usa skeleton para melhor perceived performance
   if (isLoading) {
     return (
@@ -97,7 +99,7 @@ export function DataTable<T>({
     }
     return (
       <div className="rounded-lg border bg-card p-12 text-center">
-        <p>Nenhum registro encontrado.</p>
+        <p>{t('common.table.noData')}</p>
       </div>
     );
   }
@@ -145,7 +147,7 @@ export function DataTable<T>({
                     scope="col"
                     className="px-6 py-4 text-right text-sm font-semibold"
                   >
-                    Ações
+                    {t('common.table.actions')}
                   </th>
                 )}
               </tr>
@@ -178,8 +180,10 @@ export function DataTable<T>({
       {pagination && (
         <div className="flex items-center justify-between">
           <p className="text-sm">
-            Mostrando {Math.min(pagination.pageSize, pagination.total)} de{' '}
-            {pagination.total} registros
+            {t('common.table.showing', {
+              count: Math.min(pagination.pageSize, pagination.total),
+              total: pagination.total,
+            })}
           </p>
           <div className="flex gap-2">{/* Pagination controls aqui */}</div>
         </div>

@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: postgres
     spec:
+      serviceAccountName: sa-postgres
+      automountServiceAccountToken: false
       containers:
         - name: postgres
           image: pgvector/pgvector:pg16

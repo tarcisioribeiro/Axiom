@@ -8,6 +8,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -57,6 +58,7 @@ import type {
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function CreditCardExpenses() {
+  const { t } = useTranslation();
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -239,7 +241,7 @@ export default function CreditCardExpenses() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -334,17 +336,19 @@ export default function CreditCardExpenses() {
       if (selectedPurchase) {
         await creditCardPurchasesService.update(selectedPurchase.id, data);
         toast({
-          title: 'Compra atualizada',
-          description: 'A compra foi atualizada com sucesso.',
+          title: t('pages.creditCardExpenses.updated'),
+          description: t('pages.creditCardExpenses.updatedDesc'),
         });
       } else {
         await creditCardPurchasesService.create(data);
         toast({
-          title: 'Compra criada',
+          title: t('pages.creditCardExpenses.created'),
           description:
             data.total_installments > 1
-              ? `Compra criada com ${data.total_installments} parcelas.`
-              : 'Compra criada com sucesso.',
+              ? t('pages.creditCardExpenses.createdWithInstallments', {
+                  count: data.total_installments,
+                })
+              : t('pages.creditCardExpenses.createdDesc'),
         });
       }
 
@@ -352,7 +356,7 @@ export default function CreditCardExpenses() {
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -364,9 +368,8 @@ export default function CreditCardExpenses() {
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos um cartão de crédito cadastrado antes de criar uma compra.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.creditCardExpenses.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -388,23 +391,26 @@ export default function CreditCardExpenses() {
     if (!purchase) return;
 
     const confirmed = await showConfirm({
-      title: 'Excluir compra',
-      description: `Tem certeza que deseja excluir a compra "${purchase.description}" e todas as suas ${purchase.total_installments} parcela(s)? Esta ação não pode ser desfeita.`,
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.creditCardExpenses.deleteTitle'),
+      description: t('pages.creditCardExpenses.deleteDesc', {
+        name: purchase.description,
+        count: purchase.total_installments,
+      }),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await creditCardPurchasesService.delete(purchaseId);
       toast({
-        title: 'Compra excluída',
-        description: 'A compra e suas parcelas foram excluídas com sucesso.',
+        title: t('pages.creditCardExpenses.deleted'),
+        description: t('pages.creditCardExpenses.deletedDesc'),
       });
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -417,13 +423,15 @@ export default function CreditCardExpenses() {
         payed: !installment.payed,
       });
       toast({
-        title: installment.payed ? 'Parcela desmarcada' : 'Parcela paga',
-        description: `Status da parcela atualizado com sucesso.`,
+        title: installment.payed
+          ? t('pages.creditCardExpenses.installmentUnpaid')
+          : t('pages.creditCardExpenses.installmentPaid'),
+        description: t('pages.creditCardExpenses.installmentStatusDesc'),
       });
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao atualizar',
+        title: t('common.messages.updateError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -442,14 +450,14 @@ export default function CreditCardExpenses() {
       setIsSubmitting(true);
       await creditCardInstallmentsService.update(selectedInstallment.id, data);
       toast({
-        title: 'Parcela atualizada',
-        description: 'A parcela foi atualizada com sucesso.',
+        title: t('pages.creditCardExpenses.installmentUpdated'),
+        description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -469,7 +477,7 @@ export default function CreditCardExpenses() {
   const columns: Column<CreditCardInstallment>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.creditCardExpenses.columns.description'),
       render: (installment) => (
         <div>
           <div className="font-medium">{installment.description}</div>
@@ -481,7 +489,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'card',
-      label: 'Cartão',
+      label: t('pages.creditCardExpenses.columns.card'),
       render: (installment) => (
         <span className="text-sm">
           {installment.card_name || getCardName(installment.card_id || 0)}
@@ -490,7 +498,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'value',
-      label: 'Valor',
+      label: t('pages.creditCardExpenses.columns.amount'),
       align: 'right',
       render: (installment) => (
         <span className="font-semibold text-destructive">
@@ -500,7 +508,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.creditCardExpenses.columns.category'),
       render: (installment) => (
         <Badge variant="secondary">
           {translate('expenseCategories', installment.category || '')}
@@ -509,7 +517,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'installment',
-      label: 'Parcela',
+      label: t('pages.creditCardExpenses.columns.installment'),
       align: 'center',
       render: (installment) => (
         <span className="text-sm">
@@ -519,7 +527,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'payed',
-      label: 'Status',
+      label: t('pages.creditCardExpenses.columns.status'),
       render: (installment) => (
         <Badge
           variant={installment.payed ? 'success' : 'destructive'}
@@ -532,7 +540,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'due_date',
-      label: 'Vencimento',
+      label: t('pages.creditCardExpenses.columns.dueDate'),
       render: (installment) => (
         <span className="text-sm">
           {formatDate(installment.due_date, 'dd/MM/yyyy')}
@@ -549,10 +557,10 @@ export default function CreditCardExpenses() {
   return (
     <PageContainer>
       <PageHeader
-        title="Despesas de Cartão"
+        title={t('pages.creditCardExpenses.title')}
         icon={<ShoppingCart />}
         action={{
-          label: 'Nova Compra',
+          label: t('pages.creditCardExpenses.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -562,10 +570,10 @@ export default function CreditCardExpenses() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
+            <span className="font-semibold">{t('common.actions.filter')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm">Visualização:</span>
+            <span className="text-sm">{t('pages.creditCardExpenses.viewMode')}</span>
             <Select
               value={viewMode}
               onValueChange={(v) => setViewMode(v as 'list' | 'grouped')}
@@ -574,8 +582,12 @@ export default function CreditCardExpenses() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="grouped">Por Fatura</SelectItem>
-                <SelectItem value="list">Lista</SelectItem>
+                <SelectItem value="grouped">
+                  {t('pages.creditCardExpenses.byBill')}
+                </SelectItem>
+                <SelectItem value="list">
+                  {t('pages.creditCardExpenses.list')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -583,10 +595,12 @@ export default function CreditCardExpenses() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Cartões" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Cartões</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCards')}
+              </SelectItem>
               {creditCards.map((c) => (
                 <SelectItem key={c.id} value={c.id.toString()}>
                   {getCardDisplayName(c.id)}
@@ -602,12 +616,16 @@ export default function CreditCardExpenses() {
             <SelectTrigger>
               <SelectValue
                 placeholder={
-                  availableBills.length === 0 ? 'Nenhuma fatura' : 'Todas as Faturas'
+                  availableBills.length === 0
+                    ? t('pages.creditCardExpenses.noBills')
+                    : t('pages.creditCardExpenses.allBills')
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as Faturas</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allBills')}
+              </SelectItem>
               {availableBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
                   {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
@@ -618,10 +636,12 @@ export default function CreditCardExpenses() {
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todas as Categorias" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCategories')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as Categorias</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCategories')}
+              </SelectItem>
               {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
                 <SelectItem key={key} value={key}>
                   {label}
@@ -631,10 +651,12 @@ export default function CreditCardExpenses() {
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Status" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allStatus')}
+              </SelectItem>
               <SelectItem value="paid">Pago</SelectItem>
               <SelectItem value="pending">Pendente</SelectItem>
             </SelectContent>
@@ -642,23 +664,30 @@ export default function CreditCardExpenses() {
         </div>
         <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
-            {filteredInstallments.length} parcela(s) encontrada(s)
+            {t('pages.creditCardExpenses.foundInstallments', {
+              count: filteredInstallments.length,
+            })}
           </span>
           <div className="flex items-center gap-4">
             <span className="text-sm">
-              <span className="text-muted-foreground">Pago:</span>{' '}
+              <span className="text-muted-foreground">
+                {t('pages.creditCardExpenses.totalPaid')}
+              </span>{' '}
               <span className="font-semibold text-success">
                 {formatCurrency(totalPaid)}
               </span>
             </span>
             <span className="text-sm">
-              <span className="text-muted-foreground">Restante:</span>{' '}
+              <span className="text-muted-foreground">
+                {t('pages.creditCardExpenses.totalPending')}
+              </span>{' '}
               <span className="font-semibold text-warning">
                 {formatCurrency(totalPending)}
               </span>
             </span>
             <span className="text-lg font-bold text-destructive">
-              Total: {formatCurrency(totalInstallments)}
+              {t('pages.creditCardExpenses.totalAmount')}{' '}
+              {formatCurrency(totalInstallments)}
             </span>
           </div>
         </div>
@@ -669,7 +698,7 @@ export default function CreditCardExpenses() {
           {installmentsByBill.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center">
-                Nenhuma parcela encontrada.
+                {t('pages.creditCardExpenses.emptyState')}
               </CardContent>
             </Card>
           ) : (
@@ -690,7 +719,7 @@ export default function CreditCardExpenses() {
                       <div>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Calendar className="h-5 w-5 text-primary" />
-                          Fatura {label}
+                          {t('pages.creditCardExpenses.billLabel', { label })}
                         </CardTitle>
                         {period && (
                           <p className="mt-1 text-sm">
@@ -704,13 +733,17 @@ export default function CreditCardExpenses() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-sm">
-                          <span className="text-muted-foreground">Pago:</span>{' '}
+                          <span className="text-muted-foreground">
+                            {t('pages.creditCardExpenses.totalPaid')}
+                          </span>{' '}
                           <span className="font-semibold text-success">
                             {formatCurrency(paid)}
                           </span>
                         </span>
                         <span className="text-sm">
-                          <span className="text-muted-foreground">Restante:</span>{' '}
+                          <span className="text-muted-foreground">
+                            {t('pages.creditCardExpenses.totalPending')}
+                          </span>{' '}
                           <span className="font-semibold text-warning">
                             {formatCurrency(pending)}
                           </span>
@@ -727,7 +760,9 @@ export default function CreditCardExpenses() {
                       columns={groupedColumns}
                       keyExtractor={(installment) => installment.id}
                       isLoading={false}
-                      emptyState={{ message: 'Nenhuma parcela.' }}
+                      emptyState={{
+                        message: t('pages.creditCardExpenses.noInstallments'),
+                      }}
                       actions={(installment) => {
                         const purchase = purchases.find(
                           (p) => p.id === installment.purchase
@@ -750,7 +785,9 @@ export default function CreditCardExpenses() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditInstallment(installment)}
-                              aria-label="Editar valor da parcela"
+                              aria-label={t(
+                                'pages.creditCardExpenses.editInstallmentLabel'
+                              )}
                             >
                               <DollarSign
                                 className="h-4 w-4 text-primary"
@@ -761,7 +798,9 @@ export default function CreditCardExpenses() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditPurchase(installment.purchase)}
-                              aria-label="Editar compra"
+                              aria-label={t(
+                                'pages.creditCardExpenses.editPurchaseLabel'
+                              )}
                             >
                               <Pencil className="h-4 w-4" aria-hidden="true" />
                             </Button>
@@ -769,7 +808,9 @@ export default function CreditCardExpenses() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeletePurchase(installment.purchase)}
-                              aria-label="Excluir compra"
+                              aria-label={t(
+                                'pages.creditCardExpenses.deletePurchaseLabel'
+                              )}
                             >
                               <Trash2
                                 className="h-4 w-4 text-destructive"
@@ -793,7 +834,7 @@ export default function CreditCardExpenses() {
           keyExtractor={(installment) => installment.id}
           isLoading={isLoading}
           emptyState={{
-            message: 'Nenhuma parcela encontrada.',
+            message: t('pages.creditCardExpenses.emptyState'),
           }}
           actions={(installment) => {
             const purchase = purchases.find((p) => p.id === installment.purchase);
@@ -809,7 +850,7 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleEditInstallment(installment)}
-                  aria-label="Editar valor da parcela"
+                  aria-label={t('pages.creditCardExpenses.editInstallmentLabel')}
                 >
                   <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
                 </Button>
@@ -817,7 +858,7 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleEditPurchase(installment.purchase)}
-                  aria-label="Editar compra"
+                  aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -825,7 +866,7 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeletePurchase(installment.purchase)}
-                  aria-label="Excluir compra"
+                  aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>
@@ -839,12 +880,14 @@ export default function CreditCardExpenses() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedPurchase ? 'Editar' : 'Nova'} Compra de Cartão
+              {selectedPurchase
+                ? t('pages.creditCardExpenses.editPurchaseTitle')
+                : t('pages.creditCardExpenses.newPurchaseTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedPurchase
-                ? 'Edite os dados da compra. Valor total e parcelas não podem ser alterados.'
-                : 'Preencha os dados da compra. As parcelas serão geradas automaticamente.'}
+                ? t('pages.creditCardExpenses.editPurchaseDesc')
+                : t('pages.creditCardExpenses.newPurchaseDesc')}
             </DialogDescription>
           </DialogHeader>
           <CreditCardPurchaseForm
@@ -860,9 +903,11 @@ export default function CreditCardExpenses() {
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Parcela</DialogTitle>
+            <DialogTitle>
+              {t('pages.creditCardExpenses.editInstallmentTitle')}
+            </DialogTitle>
             <DialogDescription>
-              Ajuste o valor, status ou fatura desta parcela específica.
+              {t('pages.creditCardExpenses.editInstallmentDesc')}
             </DialogDescription>
           </DialogHeader>
           {selectedInstallment && (

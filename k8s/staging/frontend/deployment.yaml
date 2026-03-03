@@ -20,6 +20,8 @@ spec:
         app.kubernetes.io/component: frontend
         environment: staging
     spec:
+      serviceAccountName: sa-frontend
+      automountServiceAccountToken: false
       imagePullSecrets:
         - name: gitlab-registry-secret
       initContainers:
@@ -36,9 +38,9 @@ spec:
               echo "API is ready!"
       containers:
         - name: frontend
-          # The CI pipeline updates this image on every deploy via:
-          #   kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHA"
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:latest
+          # Image tag is pinned to the build digest on every deploy by CI/CD.
+          # See deploy:staging job in .gitlab-ci.yml.
+          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:0.0.0
           ports:
             - containerPort: 80
               name: http

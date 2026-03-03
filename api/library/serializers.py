@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from library.models import Author, Book, Publisher, Reading, Summary
+from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
 
 # ============================================================================
 # AUTHOR SERIALIZERS
@@ -396,3 +396,69 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
         elif book.read_status == "to_read" and total_pages_read > 0:
             book.read_status = "reading"
             book.save(update_fields=["read_status", "updated_at"])
+
+
+# ============================================================================
+# READING GOAL SERIALIZERS
+# ============================================================================
+
+
+class ReadingGoalSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de metas de leitura."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    books_read_this_year = serializers.SerializerMethodField()
+    pages_read_this_year = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingGoal
+        fields = [
+            "id",
+            "uuid",
+            "year",
+            "books_goal",
+            "books_read_this_year",
+            "pages_read_this_year",
+            "progress_percentage",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_books_read_this_year(self, obj):
+        return obj.books_read_this_year
+
+    def get_pages_read_this_year(self, obj):
+        return obj.pages_read_this_year
+
+    def get_progress_percentage(self, obj):
+        return obj.progress_percentage
+
+
+class ReadingGoalCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de metas de leitura."""
+
+    class Meta:
+        model = ReadingGoal
+        fields = ["id", "year", "books_goal", "owner"]
+
+    def validate(self, data):
+        """Garante uma única meta ativa por ano por usuário."""
+        owner = data.get("owner")
+        year = data.get("year")
+        instance = self.instance
+
+        if owner and year:
+            qs = ReadingGoal.objects.filter(
+                owner=owner, year=year, deleted_at__isnull=True
+            )
+            if instance:
+                qs = qs.exclude(pk=instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {"year": f"Já existe uma meta de leitura para o ano {year}."}
+                )
+        return data
