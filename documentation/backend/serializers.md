@@ -618,13 +618,13 @@ class BookHyperlinkedSerializer(serializers.HyperlinkedModelSerializer):
 **Resposta**:
 ```json
 {
-  "url": "http://localhost:8002/api/v1/books/1/",
+  "url": "http://localhost:39100/api/v1/books/1/",
   "id": 1,
   "title": "Clean Code",
   "authors": [
-    "http://localhost:8002/api/v1/authors/1/"
+    "http://localhost:39100/api/v1/authors/1/"
   ],
-  "publisher": "http://localhost:8002/api/v1/publishers/1/",
+  "publisher": "http://localhost:39100/api/v1/publishers/1/",
   "pages": 464
 }
 ```
