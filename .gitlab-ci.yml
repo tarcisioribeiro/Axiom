@@ -145,7 +145,7 @@ lint:k8s:
     # because they use the Kustomize-specific schema, not a Kubernetes resource kind.
     - |
       find k8s/ -name "*.yaml" -not -path "*/scripts/*" -not -name "kustomization.yaml" | sort | \
-        xargs kubeconform -strict -summary -kubernetes-version 1.29.0
+        xargs /kubeconform -strict -summary -kubernetes-version 1.29.0
   rules:
     - changes:
         - k8s/**/*.yaml
