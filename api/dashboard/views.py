@@ -11,17 +11,19 @@ PERF-03: Cache Redis para reduzir carga no banco de dados.
 import calendar
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
+from typing import Any, Optional
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, DecimalField, OuterRef, Subquery, Sum, Value
+from django.db.models import Count, DecimalField, F, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import Account
+from budgets.models import Budget
 from credit_cards.models import CreditCard, CreditCardBill, CreditCardInstallment
 from expenses.models import Expense, FixedExpense
 from loans.models import Loan
@@ -754,3 +756,309 @@ class CashFlowForecastView(APIView):
                 if today <= due_date <= end_date:
                     prev = expenses_by_date.get(due_date, Decimal("0.00"))
                     expenses_by_date[due_date] = prev + fe.default_value
+
+
+class FinancialAlertsView(APIView):
+    """
+    GET /api/v1/dashboard/financial-alerts/
+
+    Retorna lista de alertas financeiros ativos ordenados por urgência.
+
+    Verifica:
+    - Orçamento acima de 80% do limite no mês atual
+    - Fatura de cartão com vencimento em ≤ 3 dias
+    - Saldo de conta abaixo do saldo mínimo configurado
+    - Valor a pagar com vencimento em ≤ 5 dias
+    - Empréstimo com vencimento em ≤ 7 dias
+
+    Severidade: "danger" > "warning"
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    # Mapeamento de categorias para exibição em português
+    CATEGORY_LABELS = {
+        "food and drink": "Comida e Bebida",
+        "bills and services": "Contas e Serviços",
+        "entertainment": "Entretenimento",
+        "transport": "Transporte",
+        "health and care": "Saúde e Cuidados",
+        "housing": "Moradia",
+        "education": "Educação",
+        "clothing": "Vestuário",
+        "travel": "Viagem",
+        "investments": "Investimentos",
+        "gifts and donations": "Presentes e Doações",
+        "taxes and fees": "Impostos e Taxas",
+        "insurance": "Seguros",
+        "pet": "Pet",
+        "electronics": "Eletrônicos",
+        "sports and hobbies": "Esportes e Hobbies",
+        "beauty and personal care": "Beleza e Cuidados Pessoais",
+        "childcare": "Cuidados Infantis",
+        "maintenance and repairs": "Manutenção e Reparos",
+        "others": "Outros",
+    }
+
+    def _category_label(self, category: str) -> str:
+        return self.CATEGORY_LABELS.get(category, category)
+
+    def get(self, request):
+        today = timezone.now().date()
+        alerts = []
+
+        # 1. Orçamentos acima de 80% do limite
+        alerts.extend(self._check_budgets(today))
+
+        # 2. Faturas de cartão com vencimento em ≤ 3 dias
+        alerts.extend(self._check_credit_card_bills(today))
+
+        # 3. Contas com saldo abaixo do mínimo
+        alerts.extend(self._check_account_balances())
+
+        # 4. Valores a pagar com vencimento em ≤ 5 dias
+        alerts.extend(self._check_payables(today))
+
+        # 5. Empréstimos com vencimento em ≤ 7 dias
+        alerts.extend(self._check_loans(today))
+
+        # Ordenar: danger primeiro, depois warning
+        severity_order = {"danger": 0, "warning": 1, "info": 2}
+        alerts.sort(key=lambda a: severity_order.get(a["severity"], 9))
+
+        return Response(alerts)
+
+    def _check_budgets(self, today: date) -> list:
+        alerts: list[Any] = []
+        month = today.month
+        year = today.year
+
+        budgets = Budget.objects.filter(
+            month=month, year=year, is_deleted=False
+        ).select_related("member")
+
+        if not budgets.exists():
+            return alerts
+
+        expense_totals = (
+            Expense.objects.filter(
+                date__month=month,
+                date__year=year,
+                is_deleted=False,
+                payed=True,
+            )
+            .values("category")
+            .annotate(total=Sum("value"))
+        )
+        totals_map = {row["category"]: row["total"] for row in expense_totals}
+
+        for budget in budgets:
+            limit = budget.limit_amount or Decimal("0.00")
+            if limit <= 0:
+                continue
+            spent = totals_map.get(budget.category, Decimal("0.00"))
+            percentage = int((spent / limit) * 100)
+
+            if percentage >= 80:
+                severity = "danger" if percentage >= 100 else "warning"
+                label = self._category_label(budget.category)
+                alerts.append(
+                    {
+                        "type": "budget_limit",
+                        "severity": severity,
+                        "message": (
+                            f"Orçamento de {label} atingiu {percentage}% do limite"
+                        ),
+                        "link": "/budgets",
+                        "metadata": {
+                            "budget_id": str(budget.id),
+                            "category": budget.category,
+                            "percentage": percentage,
+                            "limit_amount": float(limit),
+                            "spent_amount": float(spent),
+                        },
+                    }
+                )
+        return alerts
+
+    def _check_credit_card_bills(self, today: date) -> list:
+        alerts = []
+        deadline = today + timedelta(days=3)
+
+        bills = CreditCardBill.objects.filter(
+            due_date__isnull=False,
+            due_date__lte=deadline,
+            status__in=["open", "closed", "overdue"],
+            is_deleted=False,
+        ).select_related("credit_card")
+
+        for bill in bills:
+            if bill.due_date is None:
+                continue
+            days_left = (bill.due_date - today).days
+            name = bill.credit_card.name
+            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            if days_left < 0:
+                severity = "danger"
+                msg = f"Fatura do cartão {name} está vencida" f" (venceu há {days_str})"
+            elif days_left == 0:
+                severity = "danger"
+                msg = f"Fatura do cartão {name} vence hoje"
+            elif days_left == 1:
+                severity = "danger"
+                msg = f"Fatura do cartão {name} vence amanhã"
+            else:
+                severity = "warning"
+                msg = f"Fatura do cartão {name} vence em {days_left} dias"
+
+            alerts.append(
+                {
+                    "type": "credit_card_bill_due",
+                    "severity": severity,
+                    "message": msg,
+                    "link": "/credit-cards",
+                    "metadata": {
+                        "bill_id": str(bill.id),
+                        "card_id": str(bill.credit_card.id),
+                        "card_name": bill.credit_card.name,
+                        "due_date": bill.due_date.isoformat(),
+                        "days_left": days_left,
+                        "total_amount": float(bill.total_amount or 0),
+                    },
+                }
+            )
+        return alerts
+
+    def _check_account_balances(self) -> list:
+        alerts = []
+
+        accounts = Account.objects.filter(
+            is_deleted=False,
+            is_active=True,
+            minimum_balance__gt=0,
+            current_balance__lt=F("minimum_balance"),
+        )
+
+        for account in accounts:
+            current = account.current_balance or Decimal("0.00")
+            minimum = account.minimum_balance or Decimal("0.00")
+            severity = "danger" if current < 0 else "warning"
+            alerts.append(
+                {
+                    "type": "low_balance",
+                    "severity": severity,
+                    "message": (
+                        f"Saldo da conta {account.account_name} está abaixo do mínimo"
+                        f" (R$ {float(current):,.2f} / mín R$ {float(minimum):,.2f})"
+                    ),
+                    "link": "/accounts",
+                    "metadata": {
+                        "account_id": str(account.id),
+                        "account_name": account.account_name,
+                        "current_balance": float(current),
+                        "minimum_balance": float(minimum),
+                    },
+                }
+            )
+        return alerts
+
+    def _check_payables(self, today: date) -> list:
+        alerts = []
+        deadline = today + timedelta(days=5)
+
+        payables = Payable.objects.filter(
+            due_date__isnull=False,
+            due_date__lte=deadline,
+            status__in=["active", "overdue"],
+            is_deleted=False,
+        )
+
+        for payable in payables:
+            if payable.due_date is None:
+                continue
+            days_left = (payable.due_date - today).days
+            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            desc = payable.description
+            if days_left < 0:
+                severity = "danger"
+                msg = f"{desc} está vencido (venceu há {days_str})"
+            elif days_left == 0:
+                severity = "danger"
+                msg = f"{desc} vence hoje"
+            elif days_left <= 2:
+                severity = "danger"
+                msg = (
+                    f"{desc} vence em"
+                    f" {days_left} dia{'s' if days_left != 1 else ''}"
+                )
+            else:
+                severity = "warning"
+                msg = f"{desc} vence em {days_left} dias"
+
+            alerts.append(
+                {
+                    "type": "payable_due",
+                    "severity": severity,
+                    "message": msg,
+                    "link": "/payables",
+                    "metadata": {
+                        "payable_id": str(payable.id),
+                        "description": payable.description,
+                        "due_date": payable.due_date.isoformat(),
+                        "days_left": days_left,
+                        "value": float(payable.value or 0),
+                    },
+                }
+            )
+        return alerts
+
+    def _check_loans(self, today: date) -> list:
+        alerts = []
+        deadline = today + timedelta(days=7)
+
+        loans = Loan.objects.filter(
+            due_date__isnull=False,
+            due_date__lte=deadline,
+            payed=False,
+            status__in=["active", "in_progress", "pending", "overdue"],
+            is_deleted=False,
+        )
+
+        for loan in loans:
+            if loan.due_date is None:
+                continue
+            days_left = (loan.due_date - today).days
+            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            desc = loan.description
+            if days_left < 0:
+                severity = "danger"
+                msg = f"Empréstimo '{desc}' está vencido" f" (venceu há {days_str})"
+            elif days_left == 0:
+                severity = "danger"
+                msg = f"Empréstimo '{desc}' vence hoje"
+            elif days_left <= 3:
+                severity = "danger"
+                msg = (
+                    f"Empréstimo '{desc}' vence em"
+                    f" {days_left} dia{'s' if days_left != 1 else ''}"
+                )
+            else:
+                severity = "warning"
+                msg = f"Empréstimo '{desc}' vence em {days_left} dias"
+
+            alerts.append(
+                {
+                    "type": "loan_due",
+                    "severity": severity,
+                    "message": msg,
+                    "link": "/loans",
+                    "metadata": {
+                        "loan_id": str(loan.id),
+                        "description": loan.description,
+                        "due_date": loan.due_date.isoformat(),
+                        "days_left": days_left,
+                        "value": float(loan.value or 0),
+                    },
+                }
+            )
+        return alerts

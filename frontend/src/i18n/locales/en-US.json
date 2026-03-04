@@ -837,7 +837,19 @@
       "evolutionYearly": "Annual Evolution (Last 5 Years)",
       "evolutionMonthly": "Monthly Evolution (Last 6 Months)",
       "loadCategoryError": "Error loading expenses by category",
-      "loadForecastError": "Error loading cash flow projection"
+      "loadForecastError": "Error loading cash flow projection",
+      "financialAlerts": {
+        "title": "Financial Alerts",
+        "dismiss": "Dismiss",
+        "loadError": "Error loading financial alerts",
+        "types": {
+          "budget_limit": "Budget",
+          "credit_card_bill_due": "Bill",
+          "low_balance": "Balance",
+          "payable_due": "Payable",
+          "loan_due": "Loan"
+        }
+      }
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
