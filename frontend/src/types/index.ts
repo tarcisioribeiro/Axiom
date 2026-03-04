@@ -85,6 +85,7 @@ export interface Expense {
   loan_description?: string;
   related_payable?: number | null;
   payable_description?: string;
+  auto_categorized: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -1907,4 +1908,64 @@ export interface BudgetStatus {
   member_name: string | null;
   month: number;
   year: number;
+}
+
+// Categorization Rule Types
+export interface CategorizationRule {
+  id: number;
+  uuid: string;
+  merchant_contains: string;
+  category: string;
+  is_active: boolean;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategorizationRuleFormData {
+  merchant_contains: string;
+  category: string;
+  is_active: boolean;
+}
+
+// Bank Reconciliation Types
+export interface BankStatementEntry {
+  id: number;
+  uuid: string;
+  transaction_id: string;
+  date: string;
+  amount: string;
+  description: string;
+  transaction_type: 'debit' | 'credit';
+  status: 'pending' | 'matched' | 'unmatched' | 'ignored';
+  matched_expense?: {
+    id: number;
+    description: string;
+    value: string;
+    date: string;
+  } | null;
+  matched_revenue?: {
+    id: number;
+    description: string;
+    value: string;
+    date: string;
+  } | null;
+  match_confidence?: 'high' | 'medium' | 'low' | null;
+}
+
+export interface BankStatementImport {
+  id: number;
+  uuid: string;
+  original_filename: string;
+  file_format: 'ofx' | 'csv';
+  status: 'processing' | 'completed' | 'failed';
+  account: number;
+  account_name?: string;
+  total_entries: number;
+  matched_count: number;
+  unmatched_count: number;
+  ignored_count: number;
+  error_message?: string | null;
+  entries?: BankStatementEntry[];
+  created_at: string;
 }

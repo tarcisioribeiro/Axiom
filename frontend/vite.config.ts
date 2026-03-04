@@ -42,11 +42,34 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Divide chunks por vendor para melhor cache
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react', 'recharts'],
-          'form-vendor': ['react-hook-form', 'zod', '@hookform/resolvers'],
+        // Divide chunks por vendor para melhor cache.
+        // Usa formato função para capturar sub-pacotes internos (react/jsx-runtime,
+        // scheduler, etc.) e garantir a ordem correta de inicialização entre chunks.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (
+            id.includes('/react/') ||
+            id.includes('/react-dom/') ||
+            id.includes('/react-router/') ||
+            id.includes('/react-router-dom/') ||
+            id.includes('/scheduler/')
+          ) {
+            return 'react-vendor';
+          }
+          if (
+            id.includes('/framer-motion/') ||
+            id.includes('/lucide-react/') ||
+            id.includes('/recharts/')
+          ) {
+            return 'ui-vendor';
+          }
+          if (
+            id.includes('/react-hook-form/') ||
+            id.includes('/zod/') ||
+            id.includes('/@hookform/')
+          ) {
+            return 'form-vendor';
+          }
         },
       },
     },
