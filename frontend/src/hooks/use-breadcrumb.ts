@@ -70,6 +70,12 @@ const routeConfigs: Record<string, RouteConfig> = {
     moduleKey: 'breadcrumb.planning',
     moduleIcon: Calendar,
   },
+  '/planning/today-tasks': {
+    labelKey: 'breadcrumb.todayTasks',
+    icon: CheckCircle2,
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
+  },
   '/planning/goals': {
     labelKey: 'breadcrumb.goals',
     icon: Target,

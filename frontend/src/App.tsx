@@ -53,6 +53,7 @@ const PersonalPlanningDashboard = lazy(
 const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
 const Goals = lazy(() => import('./pages/Goals'));
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
+const TodayTasks = lazy(() => import('./pages/TodayTasks'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
@@ -344,6 +345,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <DailyChecklist />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/planning/today-tasks"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <TodayTasks />
               </Suspense>
             }
           />
