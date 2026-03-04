@@ -1375,7 +1375,42 @@
       "title": "Daily Reflections",
       "newBtn": "New Reflection",
       "loadError": "Error loading reflections",
-      "emptyState": "No reflections recorded."
+      "emptyState": "No reflections recorded.",
+      "newTitle": "New Reflection",
+      "newDesc": "Record your daily reflection and mood.",
+      "editTitle": "Edit Reflection",
+      "editDesc": "Update your daily reflection.",
+      "created": "Reflection created",
+      "createdDesc": "Your reflection was saved successfully.",
+      "updated": "Reflection updated",
+      "updatedDesc": "Your reflection was updated successfully.",
+      "deleted": "Reflection deleted",
+      "deletedDesc": "The reflection has been removed.",
+      "saveError": "Error saving reflection",
+      "deleteError": "Error deleting reflection",
+      "deleteTitle": "Delete Reflection",
+      "deleteDesc": "Are you sure you want to delete this reflection? This action cannot be undone.",
+      "filters": {
+        "mood": "Mood",
+        "allMoods": "All moods",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
+      "columns": {
+        "date": "Date",
+        "mood": "Mood",
+        "reflection": "Reflection",
+        "actions": "Actions"
+      },
+      "form": {
+        "date": "Date *",
+        "reflection": "Reflection *",
+        "mood": "Mood",
+        "moodPlaceholder": "Select mood",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      }
     },
     "todayTasks": {
       "title": "Today's Tasks",

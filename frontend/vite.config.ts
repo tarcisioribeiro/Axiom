@@ -40,16 +40,7 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-    rollupOptions: {
-      output: {
-        // Divide chunks por vendor para melhor cache
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react', 'recharts'],
-          'form-vendor': ['react-hook-form', 'zod', '@hookform/resolvers'],
-        },
-      },
-    },
+    rollupOptions: {},
     // Aumenta limite de aviso de chunk
     chunkSizeWarningLimit: 1000,
   },
