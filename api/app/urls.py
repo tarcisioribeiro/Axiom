@@ -51,6 +51,8 @@ urlpatterns = [
     path("api/v1/", include("notifications.urls")),
     # Budgets Module
     path("api/v1/", include("budgets.urls")),
+    # Bank Reconciliation Module
+    path("api/v1/", include("bank_reconciliation.urls")),
     # API Documentation (OpenAPI/Swagger)
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

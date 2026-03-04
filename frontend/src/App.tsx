@@ -62,6 +62,10 @@ const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
+// Bank Reconciliation Module
+const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
+const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
+
 // Loading component
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
@@ -350,6 +354,24 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Budgets />
+              </Suspense>
+            }
+          />
+
+          {/* Bank Reconciliation Module routes */}
+          <Route
+            path="/bank-reconciliation"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <BankReconciliation />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/bank-reconciliation/:importId"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <BankReconciliationDetail />
               </Suspense>
             }
           />
