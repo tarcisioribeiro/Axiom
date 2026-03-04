@@ -38,6 +38,7 @@ apps = [
     "vaults",
     "notifications",
     "budgets",
+    "bank_reconciliation",
 ]
 
 # Buscar e adicionar permissões

@@ -105,6 +105,11 @@ export const API_CONFIG = {
     CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
     CATEGORIZATION_RULES_APPLY: '/api/v1/categorization-rules/apply/',
 
+    // Bank Reconciliation
+    BANK_RECONCILIATION_IMPORTS: '/api/v1/bank-reconciliation/imports/',
+    BANK_RECONCILIATION_IMPORTS_LIST: '/api/v1/bank-reconciliation/imports/list/',
+    BANK_RECONCILIATION_ENTRIES: '/api/v1/bank-reconciliation/entries/',
+
     // Export
     EXPENSES_EXPORT: '/api/v1/expenses/export/',
     REVENUES_EXPORT: '/api/v1/revenues/export/',

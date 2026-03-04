@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "vaults",
     "notifications",
     "budgets",
+    "bank_reconciliation",
 ]
 
 DATABASES = {

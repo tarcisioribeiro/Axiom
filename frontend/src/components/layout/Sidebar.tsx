@@ -162,6 +162,11 @@ const navModules: NavModule[] = [
             icon: <PiggyBank className="h-4 w-4" />,
           },
           {
+            titleKey: 'nav.items.bankReconciliation',
+            href: '/bank-reconciliation',
+            icon: <ArrowLeftRight className="h-4 w-4" />,
+          },
+          {
             titleKey: 'nav.items.payables',
             href: '/payables',
             icon: <Receipt className="h-4 w-4" />,
