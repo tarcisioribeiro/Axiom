@@ -110,6 +110,9 @@ export const API_CONFIG = {
     BANK_RECONCILIATION_IMPORTS_LIST: '/api/v1/bank-reconciliation/imports/list/',
     BANK_RECONCILIATION_ENTRIES: '/api/v1/bank-reconciliation/entries/',
 
+    // Dashboard
+    FINANCIAL_ALERTS: '/api/v1/dashboard/financial-alerts/',
+
     // Export
     EXPENSES_EXPORT: '/api/v1/expenses/export/',
     REVENUES_EXPORT: '/api/v1/revenues/export/',

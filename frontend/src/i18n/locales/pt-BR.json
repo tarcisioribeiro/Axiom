@@ -837,7 +837,19 @@
       "evolutionYearly": "Evolução Anual (Últimos 5 Anos)",
       "evolutionMonthly": "Evolução Mensal (Últimos 6 Meses)",
       "loadCategoryError": "Erro ao carregar despesas por categoria",
-      "loadForecastError": "Erro ao carregar projeção de fluxo de caixa"
+      "loadForecastError": "Erro ao carregar projeção de fluxo de caixa",
+      "financialAlerts": {
+        "title": "Alertas Financeiros",
+        "dismiss": "Dispensar",
+        "loadError": "Erro ao carregar alertas financeiros",
+        "types": {
+          "budget_limit": "Orçamento",
+          "credit_card_bill_due": "Fatura",
+          "low_balance": "Saldo",
+          "payable_due": "A Pagar",
+          "loan_due": "Empréstimo"
+        }
+      }
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",

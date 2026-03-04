@@ -606,6 +606,20 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
+// Financial Alerts Types
+export interface FinancialAlert {
+  type:
+    | 'budget_limit'
+    | 'credit_card_bill_due'
+    | 'low_balance'
+    | 'payable_due'
+    | 'loan_due';
+  severity: 'info' | 'warning' | 'danger';
+  message: string;
+  link: string;
+  metadata: Record<string, unknown>;
+}
+
 // Dashboard/Analytics Types
 export interface DashboardStats {
   total_balance: number;

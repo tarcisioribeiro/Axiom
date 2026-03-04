@@ -6,6 +6,7 @@ from .views import (
     CashFlowForecastView,
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
+    FinancialAlertsView,
     MonthlyStatementView,
 )
 
@@ -27,5 +28,10 @@ urlpatterns = [
         "cash-flow-forecast/",
         CashFlowForecastView.as_view(),
         name="cash-flow-forecast",
+    ),
+    path(
+        "financial-alerts/",
+        FinancialAlertsView.as_view(),
+        name="financial-alerts",
     ),
 ]
