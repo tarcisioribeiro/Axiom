@@ -20,6 +20,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
+const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
 const Revenues = lazy(() => import('./pages/Revenues'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
 const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
@@ -60,6 +61,10 @@ const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
+
+// Bank Reconciliation Module
+const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
+const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -133,6 +138,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <FixedExpenses />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/categorization-rules"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CategorizationRules />
               </Suspense>
             }
           />
@@ -341,6 +354,24 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Budgets />
+              </Suspense>
+            }
+          />
+
+          {/* Bank Reconciliation Module routes */}
+          <Route
+            path="/bank-reconciliation"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <BankReconciliation />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/bank-reconciliation/:importId"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <BankReconciliationDetail />
               </Suspense>
             }
           />

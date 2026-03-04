@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     "notifications",
     # Budgets Module
     "budgets",
+    # Bank Reconciliation Module
+    "bank_reconciliation",
 ]
 
 MIDDLEWARE = [

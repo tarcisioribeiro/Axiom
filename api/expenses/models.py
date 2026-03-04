@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -139,6 +140,11 @@ class Expense(BaseModel):
         related_name="payment_expenses",
         verbose_name="Valor a Pagar Relacionado",
         help_text="Valor a pagar que esta despesa está abatendo",
+    )
+    auto_categorized = models.BooleanField(
+        default=False,
+        verbose_name="Categorizado Automaticamente",
+        help_text="Categoria preenchida automaticamente por uma regra de categorização",
     )
 
     class Meta:
@@ -330,3 +336,53 @@ class FixedExpenseGenerationLog(BaseModel):
 
     def __str__(self):
         return f"Geração {self.month} - {self.total_generated} despesas"
+
+
+class CategorizationRule(BaseModel):
+    """
+    Regra para categorização automática de despesas com base no estabelecimento.
+
+    Quando uma despesa é criada com categoria 'others' e merchant preenchido,
+    a primeira regra ativa cujo merchant_contains esteja contido no merchant
+    da despesa (case-insensitive) é aplicada automaticamente.
+    """
+
+    merchant_contains = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        verbose_name="Estabelecimento contém",
+        help_text=(
+            "Texto a ser buscado no campo 'estabelecimento' da despesa"
+            " (case-insensitive)"
+        ),
+    )
+    category = models.CharField(
+        max_length=200,
+        choices=EXPENSES_CATEGORIES,
+        null=False,
+        blank=False,
+        verbose_name="Categoria",
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Ativa",
+        help_text="Desmarque para desativar sem excluir a regra",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="categorization_rules",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        ordering = ["created_at"]
+        verbose_name = "Regra de Categorização"
+        verbose_name_plural = "Regras de Categorização"
+        indexes = [
+            models.Index(fields=["owner", "is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.merchant_contains} → {self.category}"

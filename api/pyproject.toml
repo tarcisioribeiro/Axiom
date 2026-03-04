@@ -42,6 +42,7 @@ known_first_party = [
     "payables",
     "vaults",
     "ai_assistant",
+    "bank_reconciliation",
 ]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
@@ -151,6 +152,8 @@ module = [
     "transfers.*",
     "vaults",
     "vaults.*",
+    "bank_reconciliation",
+    "bank_reconciliation.*",
     "reportlab",
     "reportlab.*"
 ]

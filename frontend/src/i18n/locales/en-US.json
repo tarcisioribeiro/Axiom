@@ -92,6 +92,7 @@
       "creditCards": "Credit Cards",
       "bills": "Bills",
       "fixedExpenses": "Fixed Expenses",
+      "categorizationRules": "Categorization Rules",
       "budgets": "Budgets",
       "payables": "Payables",
       "financialGoals": "Financial Goals",
@@ -115,7 +116,8 @@
       "readings": "Readings",
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
-      "goals": "Goals"
+      "goals": "Goals",
+      "bankReconciliation": "Bank Reconciliation"
     }
   },
   "layout": {
@@ -139,6 +141,7 @@
     "creditCards": "Credit Cards",
     "creditCardBills": "Bills",
     "fixedExpenses": "Fixed Expenses",
+    "categorizationRules": "Categorization Rules",
     "payables": "Payables",
     "financialGoals": "Financial Goals",
     "members": "Beneficiaries/Creditors",
@@ -164,7 +167,8 @@
     "planning": "Personal Planning",
     "finance": "Financial Control",
     "security": "Security",
-    "library": "Reading"
+    "library": "Reading",
+    "bankReconciliation": "Bank Reconciliation"
   },
   "auth": {
     "login": {

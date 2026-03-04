@@ -27,6 +27,7 @@ import {
   FolderOpen,
   ClipboardList,
   ShoppingCart,
+  Tag,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -110,6 +111,14 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/fixed-expenses': {
     labelKey: 'breadcrumb.fixedExpenses',
     icon: CalendarClock,
+    moduleKey: 'breadcrumb.finance',
+    moduleIcon: Wallet,
+    subModuleKey: 'breadcrumb.registrations',
+    subModuleIcon: FolderOpen,
+  },
+  '/categorization-rules': {
+    labelKey: 'breadcrumb.categorizationRules',
+    icon: Tag,
     moduleKey: 'breadcrumb.finance',
     moduleIcon: Wallet,
     subModuleKey: 'breadcrumb.registrations',

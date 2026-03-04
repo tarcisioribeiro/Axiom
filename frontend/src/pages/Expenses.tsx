@@ -297,9 +297,19 @@ export default function Expenses() {
       key: 'category',
       label: t('pages.expenses.columns.category'),
       render: (expense) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', expense.category)}
-        </Badge>
+        <div className="flex items-center gap-1">
+          <Badge variant="secondary">
+            {translate('expenseCategories', expense.category)}
+          </Badge>
+          {expense.auto_categorized && (
+            <Badge
+              variant="outline"
+              className="px-1 py-0 text-xs text-muted-foreground"
+            >
+              Auto
+            </Badge>
+          )}
+        </div>
       ),
     },
     {
