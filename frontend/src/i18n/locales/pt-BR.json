@@ -1410,7 +1410,42 @@
       "title": "Reflexões Diárias",
       "newBtn": "Nova Reflexão",
       "loadError": "Erro ao carregar reflexões",
-      "emptyState": "Nenhuma reflexão registrada."
+      "emptyState": "Nenhuma reflexão registrada.",
+      "newTitle": "Nova Reflexão",
+      "newDesc": "Registre sua reflexão e humor do dia.",
+      "editTitle": "Editar Reflexão",
+      "editDesc": "Atualize sua reflexão diária.",
+      "created": "Reflexão criada",
+      "createdDesc": "Sua reflexão foi registrada com sucesso.",
+      "updated": "Reflexão atualizada",
+      "updatedDesc": "Sua reflexão foi atualizada com sucesso.",
+      "deleted": "Reflexão excluída",
+      "deletedDesc": "A reflexão foi removida.",
+      "saveError": "Erro ao salvar reflexão",
+      "deleteError": "Erro ao excluir reflexão",
+      "deleteTitle": "Excluir Reflexão",
+      "deleteDesc": "Tem certeza que deseja excluir esta reflexão? Esta ação não pode ser desfeita.",
+      "filters": {
+        "mood": "Humor",
+        "allMoods": "Todos os humores",
+        "startDate": "Data inicial",
+        "endDate": "Data final"
+      },
+      "columns": {
+        "date": "Data",
+        "mood": "Humor",
+        "reflection": "Reflexão",
+        "actions": "Ações"
+      },
+      "form": {
+        "date": "Data *",
+        "reflection": "Reflexão *",
+        "mood": "Humor",
+        "moodPlaceholder": "Selecione o humor",
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "saving": "Salvando..."
+      }
     },
     "todayTasks": {
       "title": "Tarefas de Hoje",
