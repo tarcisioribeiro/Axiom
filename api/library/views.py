@@ -11,11 +11,21 @@ from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
-from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
+from library.models import (
+    Author,
+    Book,
+    BookHighlight,
+    Publisher,
+    Reading,
+    ReadingGoal,
+    Summary,
+)
 from library.serializers import (
     AuthorCreateUpdateSerializer,
     AuthorSerializer,
     BookCreateUpdateSerializer,
+    BookHighlightCreateUpdateSerializer,
+    BookHighlightSerializer,
     BookReorderItemSerializer,
     BookSerializer,
     PublisherCreateUpdateSerializer,
@@ -994,3 +1004,145 @@ class LibraryDashboardStatsView(APIView):
         }
 
         return Response(stats)
+
+
+# ============================================================================
+# BOOK HIGHLIGHT VIEWS
+# ============================================================================
+
+
+class BookHighlightListCreateView(BaseListCreateView):
+    """Lista todos os destaques ou cria um novo."""
+
+    queryset = BookHighlight.objects.all()
+
+    def get_queryset(self):
+        qs = BookHighlight.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "book", "summary")
+
+        book_id = self.request.query_params.get("book")
+        if book_id:
+            qs = qs.filter(book_id=book_id)
+
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(text__icontains=search)
+
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return BookHighlightCreateUpdateSerializer
+        return BookHighlightSerializer
+
+    def perform_create(self, serializer):
+        highlight = serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+        log_activity(
+            self.request,
+            "create",
+            "BookHighlight",
+            highlight.id,
+            f"Criou destaque no livro: {highlight.book.title}",
+        )
+
+
+class BookHighlightDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um destaque."""
+
+    queryset = BookHighlight.objects.all()
+
+    def get_queryset(self):
+        return BookHighlight.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "book", "summary")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return BookHighlightCreateUpdateSerializer
+        return BookHighlightSerializer
+
+    def perform_update(self, serializer):
+        highlight = serializer.save(updated_by=self.request.user)
+        log_activity(
+            self.request,
+            "update",
+            "BookHighlight",
+            highlight.id,
+            f"Atualizou destaque no livro: {highlight.book.title}",
+        )
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = instance.updated_at
+        instance.deleted_by = self.request.user
+        instance.save()
+        log_activity(
+            self.request,
+            "delete",
+            "BookHighlight",
+            instance.id,
+            f"Deletou destaque no livro: {instance.book.title}",
+        )
+
+
+class BookHighlightExportView(APIView):
+    """
+    GET /api/v1/library/highlights/export/?book=<id>
+
+    Exporta destaques de um livro (ou todos) em formato Markdown.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = BookHighlight.objects.all()
+
+    def get(self, request):
+        from django.http import HttpResponse
+
+        qs = BookHighlight.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        ).select_related("book", "summary")
+
+        book_id = request.query_params.get("book")
+        if book_id:
+            qs = qs.filter(book_id=book_id)
+
+        qs = qs.order_by("book__title", "page_number", "created_at")
+
+        lines = []
+        current_book_id = None
+        for h in qs:
+            if h.book_id != current_book_id:
+                if current_book_id is not None:
+                    lines.append("")
+                lines.append(f"# {h.book.title}")
+                lines.append("")
+                current_book_id = h.book_id
+
+            type_label = h.get_highlight_type_display()
+            location_parts = []
+            if h.chapter:
+                location_parts.append(h.chapter)
+            if h.page_number:
+                location_parts.append(f"p. {h.page_number}")
+            location = f" — {', '.join(location_parts)}" if location_parts else ""
+
+            lines.append(f"**[{type_label}{location}]**")
+            lines.append("")
+            lines.append(f"> {h.text}")
+            lines.append("")
+
+        content = "\n".join(lines)
+        filename = "destaques.md"
+        if book_id:
+            try:
+                book = Book.objects.get(pk=book_id, owner__user=request.user)
+                safe_title = book.title[:40].replace(" ", "_").replace("/", "-")
+                filename = f"destaques_{safe_title}.md"
+            except Book.DoesNotExist:
+                pass
+
+        response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response

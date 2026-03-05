@@ -29,6 +29,7 @@ import {
   ShoppingCart,
   Tag,
   ListOrdered,
+  Highlighter,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -276,6 +277,12 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/library/reading-queue': {
     labelKey: 'breadcrumb.readingQueue',
     icon: ListOrdered,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/highlights': {
+    labelKey: 'breadcrumb.highlights',
+    icon: Highlighter,
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },

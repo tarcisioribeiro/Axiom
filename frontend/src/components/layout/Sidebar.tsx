@@ -33,6 +33,7 @@ import {
   LineChart,
   Tag,
   ListOrdered,
+  Highlighter,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -309,6 +310,11 @@ const navModules: NavModule[] = [
         titleKey: 'nav.items.readingQueue',
         href: '/library/reading-queue',
         icon: <ListOrdered className="h-4 w-4" />,
+      },
+      {
+        titleKey: 'nav.items.highlights',
+        href: '/library/highlights',
+        icon: <Highlighter className="h-4 w-4" />,
       },
     ],
   },

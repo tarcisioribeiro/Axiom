@@ -1150,6 +1150,38 @@ export interface ReadingGoalFormData {
   owner: number;
 }
 
+// Book Highlight Types
+export interface BookHighlight {
+  id: number;
+  uuid: string;
+  book: number;
+  book_title: string;
+  text: string;
+  page_number?: number | null;
+  chapter?: string | null;
+  highlight_type: 'quote' | 'note' | 'idea';
+  highlight_type_display: string;
+  color: 'yellow' | 'green' | 'blue' | 'pink' | 'orange';
+  color_display: string;
+  summary?: number | null;
+  summary_title?: string | null;
+  owner: number;
+  owner_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookHighlightFormData {
+  book: number;
+  text: string;
+  page_number?: number | null;
+  chapter?: string | null;
+  highlight_type: string;
+  color: string;
+  summary?: number | null;
+  owner: number;
+}
+
 // Library Module Constants
 export const NATIONALITIES = [
   { value: 'USA', label: 'Americana' },

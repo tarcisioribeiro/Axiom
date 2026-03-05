@@ -115,6 +115,7 @@
       "summaries": "Resumos",
       "readings": "Leituras",
       "readingQueue": "Fila de Leitura",
+      "highlights": "Destaques",
       "todayTasks": "Tarefas de Hoje",
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
@@ -166,6 +167,7 @@
     "summaries": "Resumos",
     "readings": "Leituras",
     "readingQueue": "Fila de Leitura",
+    "highlights": "Destaques",
     "registrations": "Cadastros",
     "records": "Registros",
     "planning": "Planejamento Pessoal",
@@ -1247,6 +1249,20 @@
       "emptyDesc": "Adicione livros com status \"Para Ler\" para montar sua fila de leitura.",
       "errorLoad": "Erro ao carregar a fila",
       "errorSave": "Erro ao salvar a ordem"
+    },
+    "highlights": {
+      "title": "Destaques",
+      "newBtn": "Novo Destaque",
+      "emptyState": "Nenhum destaque registrado. Clique em \"Novo Destaque\" para começar.",
+      "emptySearch": "Nenhum destaque encontrado para a pesquisa atual.",
+      "searchPlaceholder": "Buscar destaques...",
+      "newTitle": "Novo Destaque",
+      "editTitle": "Editar Destaque",
+      "newDesc": "Adicione uma citação, nota ou ideia de um livro.",
+      "editDesc": "Edite os dados do destaque.",
+      "deleted": "Destaque excluído",
+      "deleteTitle": "Excluir destaque",
+      "deleteDesc": "Tem certeza que deseja excluir este destaque?"
     },
     "planningDashboard": {
       "title": "Dashboard de Planejamento Pessoal",
