@@ -77,7 +77,9 @@ function HighlightInlineForm({
     highlight?.page_number ? String(highlight.page_number) : ''
   );
   const [chapter, setChapter] = useState(highlight?.chapter ?? '');
-  const [highlightType, setHighlightType] = useState(highlight?.highlight_type ?? 'quote');
+  const [highlightType, setHighlightType] = useState(
+    highlight?.highlight_type ?? 'quote'
+  );
   const [color, setColor] = useState(highlight?.color ?? 'yellow');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -114,7 +116,10 @@ function HighlightInlineForm({
   };
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-3 rounded-lg border p-3">
+    <form
+      onSubmit={(e) => void handleSubmit(e)}
+      className="space-y-3 rounded-lg border p-3"
+    >
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -125,7 +130,10 @@ function HighlightInlineForm({
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Tipo</Label>
-          <Select value={highlightType} onValueChange={(v) => setHighlightType(v as typeof highlightType)}>
+          <Select
+            value={highlightType}
+            onValueChange={(v) => setHighlightType(v as typeof highlightType)}
+          >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
@@ -327,7 +335,9 @@ export function BookDetailModal({
       <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">{book.title}</DialogTitle>
-          <DialogDescription className="sr-only">Detalhes do livro {book.title}</DialogDescription>
+          <DialogDescription className="sr-only">
+            Detalhes do livro {book.title}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Tab navigation */}
@@ -359,154 +369,152 @@ export function BookDetailModal({
 
         {/* Info tab */}
         {activeTab === 'info' && (
-        <>
-
-        {/* Top section: cover + main info */}
-        <div className="flex gap-6">
-          {/* Cover */}
-          <div className="shrink-0">
-            {book.cover ? (
-              <img
-                src={book.cover}
-                alt={`Capa de ${book.title}`}
-                className="h-48 w-32 rounded-md object-cover shadow-md"
-              />
-            ) : (
-              <div className="flex h-48 w-32 items-center justify-center rounded-md border bg-muted shadow-sm">
-                <BookOpen className="h-10 w-10 text-muted-foreground" />
-              </div>
-            )}
-          </div>
-
-          {/* Main info */}
-          <div className="min-w-0 flex-1 space-y-3">
-            <div>
-              <h2 className="text-xl font-semibold leading-tight">{book.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {book.authors_names.join(', ')}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Badge variant={statusVariant(book.read_status)}>
-                {book.read_status_display}
-              </Badge>
-              <Badge variant="secondary">{book.genre_display}</Badge>
-              {book.media_type_display && (
-                <Badge variant="outline">{book.media_type_display}</Badge>
-              )}
-              {book.has_summary && <Badge variant="outline">✓ Possui resumo</Badge>}
-            </div>
-
-            {book.rating !== null && book.rating > 0 && (
-              <StarRow rating={book.rating} />
-            )}
-
-            <div className="space-y-1.5">
-              <MetaRow
-                icon={<User className="h-4 w-4" />}
-                label="Editora"
-                value={book.publisher_name}
-              />
-              <MetaRow
-                icon={<BookOpen className="h-4 w-4" />}
-                label="Páginas"
-                value={`${book.pages} páginas`}
-              />
-              <MetaRow
-                icon={<Globe className="h-4 w-4" />}
-                label="Idioma"
-                value={book.language_display}
-              />
-              <MetaRow
-                icon={<Library className="h-4 w-4" />}
-                label="Tipo"
-                value={book.literarytype_display}
-              />
-              <MetaRow
-                icon={<Hash className="h-4 w-4" />}
-                label="Edição"
-                value={book.edition}
-              />
-              {book.publish_date && (
-                <MetaRow
-                  icon={<Calendar className="h-4 w-4" />}
-                  label="Publicação"
-                  value={formatDate(book.publish_date, 'dd/MM/yyyy')}
-                />
-              )}
-              {book.genre_display && (
-                <MetaRow
-                  icon={<Tag className="h-4 w-4" />}
-                  label="Gênero"
-                  value={book.genre_display}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Reading progress */}
-        {book.reading_progress > 0 && (
           <>
-            <div className="border-t" />
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-1 font-medium">
-                  <TrendingUp className="h-4 w-4" />
-                  Progresso de Leitura
-                </span>
-                <span className="font-semibold">{book.reading_progress}%</span>
+            {/* Top section: cover + main info */}
+            <div className="flex gap-6">
+              {/* Cover */}
+              <div className="shrink-0">
+                {book.cover ? (
+                  <img
+                    src={book.cover}
+                    alt={`Capa de ${book.title}`}
+                    className="h-48 w-32 rounded-md object-cover shadow-md"
+                  />
+                ) : (
+                  <div className="flex h-48 w-32 items-center justify-center rounded-md border bg-muted shadow-sm">
+                    <BookOpen className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                )}
               </div>
-              <Progress value={book.reading_progress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {book.total_pages_read} de {book.pages} páginas lidas
-              </p>
-            </div>
-          </>
-        )}
 
-        {/* Synopsis */}
-        {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
-          <>
+              {/* Main info */}
+              <div className="min-w-0 flex-1 space-y-3">
+                <div>
+                  <h2 className="text-xl font-semibold leading-tight">{book.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {book.authors_names.join(', ')}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={statusVariant(book.read_status)}>
+                    {book.read_status_display}
+                  </Badge>
+                  <Badge variant="secondary">{book.genre_display}</Badge>
+                  {book.media_type_display && (
+                    <Badge variant="outline">{book.media_type_display}</Badge>
+                  )}
+                  {book.has_summary && <Badge variant="outline">✓ Possui resumo</Badge>}
+                </div>
+
+                {book.rating !== null && book.rating > 0 && (
+                  <StarRow rating={book.rating} />
+                )}
+
+                <div className="space-y-1.5">
+                  <MetaRow
+                    icon={<User className="h-4 w-4" />}
+                    label="Editora"
+                    value={book.publisher_name}
+                  />
+                  <MetaRow
+                    icon={<BookOpen className="h-4 w-4" />}
+                    label="Páginas"
+                    value={`${book.pages} páginas`}
+                  />
+                  <MetaRow
+                    icon={<Globe className="h-4 w-4" />}
+                    label="Idioma"
+                    value={book.language_display}
+                  />
+                  <MetaRow
+                    icon={<Library className="h-4 w-4" />}
+                    label="Tipo"
+                    value={book.literarytype_display}
+                  />
+                  <MetaRow
+                    icon={<Hash className="h-4 w-4" />}
+                    label="Edição"
+                    value={book.edition}
+                  />
+                  {book.publish_date && (
+                    <MetaRow
+                      icon={<Calendar className="h-4 w-4" />}
+                      label="Publicação"
+                      value={formatDate(book.publish_date, 'dd/MM/yyyy')}
+                    />
+                  )}
+                  {book.genre_display && (
+                    <MetaRow
+                      icon={<Tag className="h-4 w-4" />}
+                      label="Gênero"
+                      value={book.genre_display}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Reading progress */}
+            {book.reading_progress > 0 && (
+              <>
+                <div className="border-t" />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1 font-medium">
+                      <TrendingUp className="h-4 w-4" />
+                      Progresso de Leitura
+                    </span>
+                    <span className="font-semibold">{book.reading_progress}%</span>
+                  </div>
+                  <Progress value={book.reading_progress} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    {book.total_pages_read} de {book.pages} páginas lidas
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Synopsis */}
+            {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
+              <>
+                <div className="border-t" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Sinopse</p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {book.synopsis}
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Actions */}
             <div className="border-t" />
-            <div className="space-y-1">
-              <p className="text-sm font-medium">Sinopse</p>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {book.synopsis}
-              </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onDelete(book.id);
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false);
+                  onEdit(book);
+                }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
             </div>
-          </>
-        )}
-
-        {/* Actions */}
-        <div className="border-t" />
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              onOpenChange(false);
-              onDelete(book.id);
-            }}
-            className="text-destructive hover:text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Excluir
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              onOpenChange(false);
-              onEdit(book);
-            }}
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Editar
-          </Button>
-        </div>
-
-        </> /* end info tab */
+          </> /* end info tab */
         )}
 
         {/* Highlights tab */}
@@ -595,7 +603,9 @@ export function BookDetailModal({
                             </span>
                           )}
                           {h.chapter && (
-                            <span className="text-xs text-muted-foreground">{h.chapter}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {h.chapter}
+                            </span>
                           )}
                         </div>
                         <div className="flex shrink-0 gap-0.5">
