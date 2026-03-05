@@ -70,6 +70,7 @@ export interface DataTableProps<T> {
     onSort: (column: string) => void;
   };
   actions?: (item: T) => React.ReactNode;
+  rowClassName?: (item: T) => string;
 }
 
 export function DataTable<T>({
@@ -80,6 +81,7 @@ export function DataTable<T>({
   emptyState,
   pagination,
   actions,
+  rowClassName,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
   // Loading state - usa skeleton para melhor perceived performance
@@ -156,7 +158,7 @@ export function DataTable<T>({
               {data.map((item) => (
                 <tr
                   key={keyExtractor(item)}
-                  className="transition-colors hover:bg-muted/30"
+                  className={`transition-colors hover:bg-muted/30 ${rowClassName ? rowClassName(item) : ''}`}
                 >
                   {columns.map((column) => (
                     <td

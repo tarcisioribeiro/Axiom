@@ -93,14 +93,15 @@ docker-compose up -d --build                            # Rebuild after dependen
 
 ### Backend
 ```bash
-# Testing (tests live in api/tests/)
+# Testing (tests live in api/tests/) — pytest is a dev dep; install in container first if missing:
+# docker exec mindledger-api pip install --user pytest pytest-django pytest-cov
 docker-compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
 docker-compose exec api python -m pytest tests/test_views.py                  # Single file
 docker-compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
 docker-compose exec api python -m pytest tests/ --cov                         # With coverage
 
-# Code quality
-cd api && black . && isort . && flake8 .                      # Format + lint
+# Code quality (uses root .venv)
+source .venv/bin/activate && cd api && black . && isort . && flake8 .   # Format + lint
 
 # Migrations
 # IMPORTANT: always run makemigrations locally and commit the generated files
@@ -138,12 +139,40 @@ npm run test:coverage                  # With coverage report
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. Config in `vitest.config.ts`. Setup file: `src/test/setup.ts`. `globals: false` — test files must explicitly import `{ describe, it, expect, vi }` from `'vitest'`. Pre-push hook runs `npm run test:coverage` automatically.
 
+### CI/CD Validation (run before every push)
+
+A `ci-check.sh` script at the repo root simulates the full GitLab pipeline locally. **Run this after any change.**
+
+```bash
+# Setup (one-time): create root .venv with dev dependencies
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r api/requirements-dev.txt pip-audit
+
+# Run full pipeline simulation (lint → typecheck → test → secret-detection)
+source .venv/bin/activate && ./ci-check.sh
+
+# Scope options
+./ci-check.sh --backend-only
+./ci-check.sh --frontend-only
+```
+
+The script requires:
+- Docker Compose running with the `api` service up
+- Node.js 20+ on the host with `frontend/node_modules` present
+- `.venv` at the repo root (auto-created if missing)
+
+Stages covered: `lint:backend` (black/isort/flake8), `lint:migrations`, `lint:bandit`, `lint:pip-audit`, `lint:frontend` (eslint/prettier), `lint:npm-audit`, `typecheck:backend` (mypy via Docker), `typecheck:frontend` (tsc), `test:backend` (pytest via Docker), `test:frontend` (vitest).
+
+After any change, also verify the Docker build passes:
+```bash
+docker compose up --build -d
+```
+
 ### Local Development (without Docker)
 ```bash
-# Backend
-cd api && python -m venv venv && source venv/bin/activate
-pip install -r requirements-dev.txt
-python manage.py migrate && python manage.py runserver 0.0.0.0:39100
+# Backend — uses the root .venv (same as ci-check.sh)
+source .venv/bin/activate
+cd api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
 
 # Frontend
 cd frontend && npm install && npm run dev
@@ -151,8 +180,9 @@ cd frontend && npm install && npm run dev
 
 ### Git Hooks (one-time setup, run from repo root)
 ```bash
-pip install pre-commit   # if not already installed via requirements-dev.txt
-pre-commit install       # installs hooks into .git/hooks/pre-commit
+# Requires .venv active or pre-commit installed globally
+pre-commit install                        # pre-commit hook (black/isort/flake8/mypy)
+pre-commit install --hook-type commit-msg # commitlint hook
 ```
 
 ### Database
@@ -334,3 +364,9 @@ Commit the result with `chore(ci): pre-commit autoupdate` and verify all hooks s
 Backend tools configured in `api/pyproject.toml`: Black (line-length 88, excludes migrations), isort (black profile), pytest (DJANGO_SETTINGS_MODULE=app.settings), coverage, mypy, flake8.
 
 Frontend: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc` with tailwindcss plugin).
+
+## Development Checklist
+
+After any change:
+1. Run `source .venv/bin/activate && ./ci-check.sh` (see [CI/CD Validation](#cicd-validation-run-before-every-push))
+2. Verify the Docker build still passes: `docker compose up --build -d`

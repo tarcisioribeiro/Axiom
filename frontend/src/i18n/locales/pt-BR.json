@@ -114,6 +114,7 @@
       "publishers": "Editoras",
       "summaries": "Resumos",
       "readings": "Leituras",
+      "todayTasks": "Tarefas de Hoje",
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
       "goals": "Objetivos",
@@ -133,6 +134,7 @@
     "home": "Início",
     "dashboard": "Dashboard",
     "planningDashboard": "Planejamento Pessoal",
+    "todayTasks": "Tarefas de Hoje",
     "dailyChecklist": "Checklist Diário",
     "routineTasks": "Tarefas Rotineiras",
     "goals": "Objetivos",
@@ -837,7 +839,19 @@
       "evolutionYearly": "Evolução Anual (Últimos 5 Anos)",
       "evolutionMonthly": "Evolução Mensal (Últimos 6 Meses)",
       "loadCategoryError": "Erro ao carregar despesas por categoria",
-      "loadForecastError": "Erro ao carregar projeção de fluxo de caixa"
+      "loadForecastError": "Erro ao carregar projeção de fluxo de caixa",
+      "financialAlerts": {
+        "title": "Alertas Financeiros",
+        "dismiss": "Dispensar",
+        "loadError": "Erro ao carregar alertas financeiros",
+        "types": {
+          "budget_limit": "Orçamento",
+          "credit_card_bill_due": "Fatura",
+          "low_balance": "Saldo",
+          "payable_due": "A Pagar",
+          "loan_due": "Empréstimo"
+        }
+      }
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -1266,7 +1280,20 @@
       "heatmapConsistency": "Consistência",
       "statusActive": "Ativa",
       "statusInactive": "Inativa",
-      "dayLabel": "Dia {{day}}"
+      "dayLabel": "Dia {{day}}",
+      "templates": {
+        "title": "Importar Template de Rotina",
+        "description": "Escolha um template pré-configurado para começar rapidamente. Você pode editar as tarefas após importar.",
+        "importBtn": "Importar Template",
+        "showTasks": "Ver {{count}} tarefas",
+        "hideTasks": "Ocultar tarefas",
+        "loadError": "Erro ao carregar templates",
+        "importError": "Erro ao importar template",
+        "importSuccess": "Template importado",
+        "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
+        "alreadyImported": "Nada a importar",
+        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+      }
     },
     "goals": {
       "title": "Objetivos",
@@ -1398,7 +1425,42 @@
       "title": "Reflexões Diárias",
       "newBtn": "Nova Reflexão",
       "loadError": "Erro ao carregar reflexões",
-      "emptyState": "Nenhuma reflexão registrada."
+      "emptyState": "Nenhuma reflexão registrada.",
+      "newTitle": "Nova Reflexão",
+      "newDesc": "Registre sua reflexão e humor do dia.",
+      "editTitle": "Editar Reflexão",
+      "editDesc": "Atualize sua reflexão diária.",
+      "created": "Reflexão criada",
+      "createdDesc": "Sua reflexão foi registrada com sucesso.",
+      "updated": "Reflexão atualizada",
+      "updatedDesc": "Sua reflexão foi atualizada com sucesso.",
+      "deleted": "Reflexão excluída",
+      "deletedDesc": "A reflexão foi removida.",
+      "saveError": "Erro ao salvar reflexão",
+      "deleteError": "Erro ao excluir reflexão",
+      "deleteTitle": "Excluir Reflexão",
+      "deleteDesc": "Tem certeza que deseja excluir esta reflexão? Esta ação não pode ser desfeita.",
+      "filters": {
+        "mood": "Humor",
+        "allMoods": "Todos os humores",
+        "startDate": "Data inicial",
+        "endDate": "Data final"
+      },
+      "columns": {
+        "date": "Data",
+        "mood": "Humor",
+        "reflection": "Reflexão",
+        "actions": "Ações"
+      },
+      "form": {
+        "date": "Data *",
+        "reflection": "Reflexão *",
+        "mood": "Humor",
+        "moodPlaceholder": "Selecione o humor",
+        "cancel": "Cancelar",
+        "save": "Salvar",
+        "saving": "Salvando..."
+      }
     },
     "todayTasks": {
       "title": "Tarefas de Hoje",
