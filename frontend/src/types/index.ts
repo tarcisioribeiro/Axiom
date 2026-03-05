@@ -1055,6 +1055,7 @@ export interface Book {
   rating: number | null;
   read_status: string;
   read_status_display: string;
+  reading_priority: number | null;
   has_summary: boolean;
   total_pages_read: number;
   reading_progress: number;

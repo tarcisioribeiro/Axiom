@@ -3,6 +3,18 @@ from rest_framework import serializers
 from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
 
 # ============================================================================
+# BOOK REORDER SERIALIZER
+# ============================================================================
+
+
+class BookReorderItemSerializer(serializers.Serializer):
+    """Item de reordenação da fila de leitura."""
+
+    id = serializers.IntegerField()
+    priority = serializers.IntegerField(min_value=1)
+
+
+# ============================================================================
 # AUTHOR SERIALIZERS
 # ============================================================================
 
@@ -192,6 +204,7 @@ class BookSerializer(serializers.ModelSerializer):
             "rating",
             "read_status",
             "read_status_display",
+            "reading_priority",
             "has_summary",
             "total_pages_read",
             "reading_progress",
@@ -248,6 +261,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             "media_type",
             "rating",
             "read_status",
+            "reading_priority",
             "owner",
         ]
 
