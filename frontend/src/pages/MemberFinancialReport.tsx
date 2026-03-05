@@ -10,9 +10,9 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState, useEffect, useCallback } from 'react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -236,25 +236,25 @@ export default function MemberFinancialReport() {
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Receitas"
-          value={`R$ ${summary.total_revenues}`}
+          value={formatCurrency(summary.total_revenues)}
           icon={<TrendingUp className="h-5 w-5 text-success" />}
           variant="success"
         />
         <StatCard
           title="Despesas"
-          value={`R$ ${summary.total_expenses}`}
+          value={formatCurrency(summary.total_expenses)}
           icon={<TrendingDown className="h-5 w-5 text-destructive" />}
           variant="danger"
         />
         <StatCard
           title="Valores a Pagar"
-          value={`R$ ${summary.total_payables}`}
+          value={formatCurrency(summary.total_payables)}
           icon={<Receipt className="h-5 w-5 text-warning" />}
           variant="warning"
         />
         <StatCard
           title="Saldo Líquido"
-          value={`R$ ${summary.net_balance}`}
+          value={formatCurrency(summary.net_balance)}
           icon={
             isNetPositive ? (
               <TrendingUp className="h-5 w-5 text-success" />
@@ -269,17 +269,17 @@ export default function MemberFinancialReport() {
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
         <StatCard
           title="Empréstimos Recebidos"
-          value={`R$ ${summary.total_loans_as_benefited}`}
+          value={formatCurrency(summary.total_loans_as_benefited)}
           icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
         />
         <StatCard
           title="Empréstimos Concedidos"
-          value={`R$ ${summary.total_loans_as_creditor}`}
+          value={formatCurrency(summary.total_loans_as_creditor)}
           icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
         />
         <StatCard
           title="Transferências"
-          value={`R$ ${summary.total_transfers}`}
+          value={formatCurrency(summary.total_transfers)}
           icon={<ArrowLeftRight className="h-5 w-5 text-muted-foreground" />}
         />
       </div>
