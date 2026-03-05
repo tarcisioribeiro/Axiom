@@ -174,7 +174,8 @@
     "finance": "Controle Financeiro",
     "security": "Segurança",
     "library": "Leitura",
-    "bankReconciliation": "Conciliação Bancária"
+    "bankReconciliation": "Conciliação Bancária",
+    "memberFinancialReport": "Relatório Financeiro"
   },
   "auth": {
     "login": {
@@ -452,7 +453,8 @@
         "phone": "Telefone",
         "role": "Papel",
         "createdAt": "Criado em"
-      }
+      },
+      "viewReport": "Ver relatório financeiro"
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",

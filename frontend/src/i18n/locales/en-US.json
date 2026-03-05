@@ -174,7 +174,8 @@
     "finance": "Financial Control",
     "security": "Security",
     "library": "Reading",
-    "bankReconciliation": "Bank Reconciliation"
+    "bankReconciliation": "Bank Reconciliation",
+    "memberFinancialReport": "Financial Report"
   },
   "auth": {
     "login": {
@@ -452,7 +453,8 @@
         "phone": "Phone",
         "role": "Role",
         "createdAt": "Created at"
-      }
+      },
+      "viewReport": "View financial report"
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",

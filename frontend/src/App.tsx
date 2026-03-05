@@ -29,6 +29,7 @@ const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Payables = lazy(() => import('./pages/Payables'));
 const Members = lazy(() => import('./pages/Members'));
+const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
 // Security Module
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
@@ -213,6 +214,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Members />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/members/:id/report"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <MemberFinancialReport />
               </Suspense>
             }
           />

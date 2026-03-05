@@ -599,6 +599,79 @@ export interface MemberFormData {
   notes?: string;
 }
 
+// Member Financial Report Types
+export interface MemberReportExpense {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  payed: boolean;
+  merchant: string;
+}
+
+export interface MemberReportRevenue {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  received: boolean;
+  source: string;
+}
+
+export interface MemberReportLoan {
+  id: number;
+  description: string;
+  value: string;
+  payed_value: string;
+  date: string;
+  status: string;
+  creditor?: string;
+  benefited?: string;
+}
+
+export interface MemberReportPayable {
+  id: number;
+  description: string;
+  value: string;
+  paid_value: string;
+  date: string;
+  due_date: string | null;
+  status: string;
+  category: string;
+}
+
+export interface MemberReportTransfer {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  transfered: boolean;
+}
+
+export interface MemberFinancialReport {
+  member: { id: number; name: string };
+  period: { start_date: string | null; end_date: string | null };
+  summary: {
+    total_revenues: string;
+    total_expenses: string;
+    total_payables: string;
+    total_loans_as_benefited: string;
+    total_loans_as_creditor: string;
+    total_transfers: string;
+    net_balance: string;
+  };
+  expenses_by_category: { category: string; total: string }[];
+  expenses: MemberReportExpense[];
+  revenues: MemberReportRevenue[];
+  loans_as_benefited: MemberReportLoan[];
+  loans_as_creditor: MemberReportLoan[];
+  payables: MemberReportPayable[];
+  transfers: MemberReportTransfer[];
+}
+
 // API Error Types
 export interface ApiError {
   message: string;
