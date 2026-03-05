@@ -27,9 +27,10 @@ import { booksService } from '@/services/books-service';
 import type { Book } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-function getPriorityBadge(
-  rank: number
-): { label: string; variant: 'destructive' | 'warning' | 'secondary' } {
+function getPriorityBadge(rank: number): {
+  label: string;
+  variant: 'destructive' | 'warning' | 'secondary';
+} {
   if (rank === 1) return { label: 'Alta', variant: 'destructive' };
   if (rank <= 3) return { label: 'Média', variant: 'warning' };
   return { label: 'Baixa', variant: 'secondary' };
@@ -158,9 +159,7 @@ export default function ReadingQueue() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.readingQueue.title')}
-      />
+      <PageHeader title={t('pages.readingQueue.title')} />
 
       {books.length === 0 ? (
         <EmptyState

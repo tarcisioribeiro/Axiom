@@ -23,10 +23,7 @@ class BooksService extends BaseService<Book, BookFormData> {
   }
 
   async reorderQueue(items: { id: number; priority: number }[]): Promise<void> {
-    await apiClient.patch<{ detail: string }>(
-      API_CONFIG.ENDPOINTS.BOOK_REORDER,
-      items
-    );
+    await apiClient.patch<{ detail: string }>(API_CONFIG.ENDPOINTS.BOOK_REORDER, items);
   }
 }
 
