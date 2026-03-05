@@ -39,6 +39,7 @@ import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -78,6 +79,7 @@ import type {
   BalanceForecast,
   BudgetStatus,
   CashFlowForecast,
+  FinancialAlert,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -102,6 +104,7 @@ export default function Dashboard() {
   const [evolutionPeriod, setEvolutionPeriod] = useState<
     'daily' | 'weekly' | 'monthly' | 'yearly'
   >('daily');
+  const [financialAlerts, setFinancialAlerts] = useState<FinancialAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cashFlowForecast, setCashFlowForecast] = useState<CashFlowForecast | null>(
     null
@@ -149,6 +152,7 @@ export default function Dashboard() {
         forecastData,
         budgetStatusData,
         cashFlowData,
+        alertsData,
       ] = await Promise.all([
         dashboardService.getStats(),
         expensesService.getAll(),
@@ -163,6 +167,7 @@ export default function Dashboard() {
           year: now.getFullYear(),
         }),
         dashboardService.getCashFlowForecast(30),
+        dashboardService.getFinancialAlerts(),
       ]);
       setStats(statsData);
       setExpenses(expensesData);
@@ -174,6 +179,7 @@ export default function Dashboard() {
       setBalanceForecast(forecastData);
       setBudgetStatus(Array.isArray(budgetStatusData) ? budgetStatusData : []);
       setCashFlowForecast(cashFlowData);
+      setFinancialAlerts(Array.isArray(alertsData) ? alertsData : []);
       forecastMounted.current = true;
     } catch (error: unknown) {
       toast({
@@ -444,6 +450,13 @@ export default function Dashboard() {
     <AnimatedPage>
       <div className="space-y-6 px-4 py-8">
         <PageHeader title={t('pages.dashboard.title')} icon={<LayoutDashboard />} />
+
+        {/* Alertas Financeiros */}
+        {financialAlerts.length > 0 && (
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <AlertsPanel alerts={financialAlerts} />
+          </motion.div>
+        )}
 
         {/* Balanço de Contas */}
         <motion.div variants={itemVariants} initial="hidden" animate="visible">

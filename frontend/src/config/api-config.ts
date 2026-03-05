@@ -78,6 +78,8 @@ export const API_CONFIG = {
     GOALS: '/api/v1/personal-planning/goals/',
     ROUTINE_TASKS: '/api/v1/personal-planning/routine-tasks/',
     ROUTINE_TASK_HEATMAP: '/api/v1/personal-planning/routine-tasks/heatmap/',
+    ROUTINE_TEMPLATES: '/api/v1/personal-planning/routine-templates/',
+    ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
 
@@ -109,6 +111,9 @@ export const API_CONFIG = {
     BANK_RECONCILIATION_IMPORTS: '/api/v1/bank-reconciliation/imports/',
     BANK_RECONCILIATION_IMPORTS_LIST: '/api/v1/bank-reconciliation/imports/list/',
     BANK_RECONCILIATION_ENTRIES: '/api/v1/bank-reconciliation/entries/',
+
+    // Dashboard
+    FINANCIAL_ALERTS: '/api/v1/dashboard/financial-alerts/',
 
     // Export
     EXPENSES_EXPORT: '/api/v1/expenses/export/',

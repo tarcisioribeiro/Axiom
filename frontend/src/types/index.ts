@@ -606,6 +606,20 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
+// Financial Alerts Types
+export interface FinancialAlert {
+  type:
+    | 'budget_limit'
+    | 'credit_card_bill_due'
+    | 'low_balance'
+    | 'payable_due'
+    | 'loan_due';
+  severity: 'info' | 'warning' | 'danger';
+  message: string;
+  link: string;
+  metadata: Record<string, unknown>;
+}
+
 // Dashboard/Analytics Types
 export interface DashboardStats {
   total_balance: number;
@@ -1318,6 +1332,38 @@ export interface RoutineTaskFormData {
   target_quantity: number;
   unit: string;
   owner: number;
+}
+
+// Routine Template Types
+export interface RoutineTemplateTask {
+  name: string;
+  description?: string;
+  category: string;
+  icon?: string | null;
+  periodicity: string;
+  weekday?: number;
+  day_of_month?: number;
+  custom_weekdays?: number[] | null;
+  target_quantity: number;
+  unit: string;
+  default_time?: string | null;
+  daily_occurrences?: number;
+  is_active?: boolean;
+}
+
+export interface RoutineTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  task_count: number;
+  tasks: RoutineTemplateTask[];
+}
+
+export interface RoutineTemplateImportResult {
+  created_ids: number[];
+  skipped_names: string[];
+  template_name: string;
 }
 
 // Heatmap Types
