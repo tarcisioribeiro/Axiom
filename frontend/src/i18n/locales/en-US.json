@@ -1245,7 +1245,20 @@
       "heatmapConsistency": "Consistency",
       "statusActive": "Active",
       "statusInactive": "Inactive",
-      "dayLabel": "Day {{day}}"
+      "dayLabel": "Day {{day}}",
+      "templates": {
+        "title": "Import Routine Template",
+        "description": "Choose a pre-configured template to get started quickly. You can edit the tasks after importing.",
+        "importBtn": "Import Template",
+        "showTasks": "View {{count}} tasks",
+        "hideTasks": "Hide tasks",
+        "loadError": "Error loading templates",
+        "importError": "Error importing template",
+        "importSuccess": "Template imported",
+        "importSuccessDesc": "{{count}} task(s) created from template \"{{name}}\".",
+        "alreadyImported": "Nothing to import",
+        "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list."
+      }
     },
     "goals": {
       "title": "Goals",

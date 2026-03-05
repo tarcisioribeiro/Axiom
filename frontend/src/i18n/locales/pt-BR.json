@@ -1264,7 +1264,20 @@
       "heatmapConsistency": "Consistência",
       "statusActive": "Ativa",
       "statusInactive": "Inativa",
-      "dayLabel": "Dia {{day}}"
+      "dayLabel": "Dia {{day}}",
+      "templates": {
+        "title": "Importar Template de Rotina",
+        "description": "Escolha um template pré-configurado para começar rapidamente. Você pode editar as tarefas após importar.",
+        "importBtn": "Importar Template",
+        "showTasks": "Ver {{count}} tarefas",
+        "hideTasks": "Ocultar tarefas",
+        "loadError": "Erro ao carregar templates",
+        "importError": "Erro ao importar template",
+        "importSuccess": "Template importado",
+        "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
+        "alreadyImported": "Nada a importar",
+        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+      }
     },
     "goals": {
       "title": "Objetivos",

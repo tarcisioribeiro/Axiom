@@ -1320,6 +1320,38 @@ export interface RoutineTaskFormData {
   owner: number;
 }
 
+// Routine Template Types
+export interface RoutineTemplateTask {
+  name: string;
+  description?: string;
+  category: string;
+  icon?: string | null;
+  periodicity: string;
+  weekday?: number;
+  day_of_month?: number;
+  custom_weekdays?: number[] | null;
+  target_quantity: number;
+  unit: string;
+  default_time?: string | null;
+  daily_occurrences?: number;
+  is_active?: boolean;
+}
+
+export interface RoutineTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  task_count: number;
+  tasks: RoutineTemplateTask[];
+}
+
+export interface RoutineTemplateImportResult {
+  created_ids: number[];
+  skipped_names: string[];
+  template_name: string;
+}
+
 // Heatmap Types
 export interface HeatmapDay {
   date: string;

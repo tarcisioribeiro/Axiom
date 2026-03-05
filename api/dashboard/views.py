@@ -581,7 +581,7 @@ class CashFlowForecastView(APIView):
 
     VALID_DAYS = {30, 60, 90}
 
-    def get(self, request):
+    def get(self, request) -> Response:
         try:
             days = int(request.query_params.get("days", 30))
         except (ValueError, TypeError):
