@@ -50,6 +50,7 @@ export const API_CONFIG = {
     PAYABLES: '/api/v1/payables/',
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
+    MEMBER_FINANCIAL_REPORT: '/api/v1/members/:id/financial-report/',
     AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
     // Security Module
