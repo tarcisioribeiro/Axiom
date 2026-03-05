@@ -1,11 +1,4 @@
-import {
-  BookMarked,
-  Download,
-  Edit,
-  Highlighter,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { BookMarked, Download, Edit, Highlighter, Plus, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -74,7 +67,9 @@ function HighlightCard({
             {highlight.highlight_type_display}
           </Badge>
           {highlight.page_number && (
-            <span className="text-xs text-muted-foreground">p. {highlight.page_number}</span>
+            <span className="text-xs text-muted-foreground">
+              p. {highlight.page_number}
+            </span>
           )}
           {highlight.chapter && (
             <span className="text-xs text-muted-foreground">{highlight.chapter}</span>
@@ -130,7 +125,9 @@ function HighlightForm({
     highlight?.page_number ? String(highlight.page_number) : ''
   );
   const [chapter, setChapter] = useState(highlight?.chapter ?? '');
-  const [highlightType, setHighlightType] = useState(highlight?.highlight_type ?? 'quote');
+  const [highlightType, setHighlightType] = useState(
+    highlight?.highlight_type ?? 'quote'
+  );
   const [color, setColor] = useState(highlight?.color ?? 'yellow');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -180,7 +177,10 @@ function HighlightForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="hl-type">Tipo</Label>
-          <Select value={highlightType} onValueChange={(v) => setHighlightType(v as typeof highlightType)}>
+          <Select
+            value={highlightType}
+            onValueChange={(v) => setHighlightType(v as typeof highlightType)}
+          >
             <SelectTrigger id="hl-type">
               <SelectValue />
             </SelectTrigger>
