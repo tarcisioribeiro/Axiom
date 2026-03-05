@@ -1,5 +1,7 @@
+from datetime import timedelta
+
 from django.db import transaction
-from django.db.models import Avg, Count, Q, Sum
+from django.db.models import Avg, Count, F, Q, Sum
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -237,7 +239,12 @@ class BookListCreateView(BaseListCreateView):
             created_by=self.request.user, updated_by=self.request.user
         )
         log_activity(
-            self.request, "create", "Book", book.id, f"Criou livro: {book.title}"
+            self.request,
+            "create",
+            "Book",
+            book.id,
+            f"Criou livro: {
+                book.title}",
         )
 
 
@@ -449,7 +456,11 @@ class ReadingGoalListCreateView(BaseListCreateView):
             "create",
             "ReadingGoal",
             goal.id,
-            f"Criou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            f"""Criou meta de leitura para {
+                goal.year
+            }: {
+                goal.books_goal
+            } livros""",
         )
 
 
@@ -475,7 +486,11 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
             "update",
             "ReadingGoal",
             goal.id,
-            f"Atualizou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            f"""Atualizou meta de leitura para {
+                goal.year
+            }: {
+                goal.books_goal
+            } livros""",
         )
 
     def perform_destroy(self, instance):
@@ -653,6 +668,102 @@ class LibraryDashboardStatsView(APIView):
         avg_pages = books_qs.aggregate(avg=Avg("pages"))["avg"] or 0.0
         average_pages_per_book = round(float(avg_pages), 1)
 
+        # Velocidade média de leitura (páginas/hora)
+        speed_agg = readings_qs.filter(reading_time__gt=0).aggregate(
+            total_pages=Sum("pages_read"), total_time=Sum("reading_time")
+        )
+        if speed_agg["total_time"]:
+            avg_speed_pages_per_hour = round(
+                (speed_agg["total_pages"] / speed_agg["total_time"]) * 60, 1
+            )
+        else:
+            avg_speed_pages_per_hour = 0.0
+
+        # Livro atual em leitura + estimativa de conclusão
+        current_reading_book = None
+        current_book_qs = books_qs.filter(read_status="reading").order_by("-updated_at")
+        if current_book_qs.exists():
+            book = current_book_qs.first()
+            pages_read_so_far = (
+                readings_qs.filter(book=book).aggregate(total=Sum("pages_read"))[
+                    "total"
+                ]
+                or 0
+            )
+            remaining_pages = max(0, book.pages - pages_read_so_far)
+            current_reading_book = {
+                "title": book.title,
+                "total_pages": book.pages,
+                "pages_read": pages_read_so_far,
+                "remaining_pages": remaining_pages,
+                "estimated_days_to_finish": None,
+            }
+            # Ritmo dos últimos 30 dias (todas as sessões do usuário)
+            thirty_days_ago = (timezone.now() - timedelta(days=30)).date()
+            last_30_pages = (
+                readings_qs.filter(reading_date__gte=thirty_days_ago).aggregate(
+                    total=Sum("pages_read")
+                )["total"]
+                or 0
+            )
+            avg_pages_per_day = last_30_pages / 30
+            if avg_pages_per_day > 0 and remaining_pages > 0:
+                current_reading_book["estimated_days_to_finish"] = max(
+                    1, round(remaining_pages / avg_pages_per_day)
+                )
+
+        # Comparação mensal: mês atual vs mês anterior
+        now = timezone.now()
+        curr_year, curr_month = now.year, now.month
+        prev_month = curr_month - 1 if curr_month > 1 else 12
+        prev_year = curr_year if curr_month > 1 else curr_year - 1
+
+        def _month_stats(year, month):
+            qs = readings_qs.filter(reading_date__year=year, reading_date__month=month)
+            agg = qs.aggregate(pages=Sum("pages_read"), minutes=Sum("reading_time"))
+            pages = agg["pages"] or 0
+            hours = round((agg["minutes"] or 0) / 60, 1)
+            completed = (
+                books_qs.filter(
+                    read_status="read",
+                    readings__deleted_at__isnull=True,
+                    readings__reading_date__year=year,
+                    readings__reading_date__month=month,
+                )
+                .distinct()
+                .count()
+            )
+            return {
+                "year": year,
+                "month": month,
+                "pages_read": pages,
+                "reading_time_hours": hours,
+                "books_completed": completed,
+            }
+
+        def _pct_change(curr, prev):
+            if prev == 0:
+                return None
+            return round(((curr - prev) / prev) * 100, 1)
+
+        curr_stats = _month_stats(curr_year, curr_month)
+        prev_stats = _month_stats(prev_year, prev_month)
+        monthly_comparison = {
+            "current_month": curr_stats,
+            "previous_month": prev_stats,
+            "changes": {
+                "pages_read": _pct_change(
+                    curr_stats["pages_read"], prev_stats["pages_read"]
+                ),
+                "reading_time_hours": _pct_change(
+                    curr_stats["reading_time_hours"], prev_stats["reading_time_hours"]
+                ),
+                "books_completed": _pct_change(
+                    curr_stats["books_completed"], prev_stats["books_completed"]
+                ),
+            },
+        }
+
         # Livros por gênero (Top 5)
         books_by_genre = list(
             books_qs.values("genre").annotate(count=Count("id")).order_by("-count")[:5]
@@ -664,6 +775,24 @@ class LibraryDashboardStatsView(APIView):
         genre_dict = dict(GENRES)
         for item in books_by_genre:
             item["genre_display"] = genre_dict.get(item["genre"], item["genre"])
+
+        # Top 3 gêneros por tempo de leitura (ano atual)
+        top_genres_by_time_raw = list(
+            readings_qs.filter(reading_date__year=curr_year, reading_time__gt=0)
+            .values(genre=F("book__genre"))
+            .annotate(total_time=Sum("reading_time"), total_pages=Sum("pages_read"))
+            .order_by("-total_time")[:3]
+        )
+        top_genres_by_time = []
+        for item in top_genres_by_time_raw:
+            top_genres_by_time.append(
+                {
+                    "genre": item["genre"],
+                    "genre_display": genre_dict.get(item["genre"], item["genre"]),
+                    "total_time_hours": round(item["total_time"] / 60, 1),
+                    "total_pages": item["total_pages"],
+                }
+            )
 
         # Livros por idioma
         books_by_language = list(
@@ -787,8 +916,6 @@ class LibraryDashboardStatsView(APIView):
                 )
 
         # Timeline diária (últimos 6 meses)
-        from datetime import timedelta
-
         six_months_ago = timezone.now() - timedelta(days=180)
 
         reading_timeline = list(
@@ -859,6 +986,11 @@ class LibraryDashboardStatsView(APIView):
             "reading_timeline": reading_timeline,
             "top_authors": top_authors,
             "rating_distribution": rating_distribution,
+            # Novos campos — Issue #18
+            "avg_speed_pages_per_hour": avg_speed_pages_per_hour,
+            "current_reading_book": current_reading_book,
+            "monthly_comparison": monthly_comparison,
+            "top_genres_by_time": top_genres_by_time,
         }
 
         return Response(stats)
