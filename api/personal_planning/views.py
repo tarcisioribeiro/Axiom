@@ -1,4 +1,6 @@
+import json
 from datetime import date, timedelta
+from pathlib import Path
 
 from django.db.models import Count
 from django.utils import timezone
@@ -127,6 +129,135 @@ class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
             "RoutineTask",
             instance.id,
             f"Deletou tarefa rotineira: {instance.name}",
+        )
+
+
+# ============================================================================
+# ROUTINE TEMPLATE VIEWS
+# ============================================================================
+
+_TEMPLATES_FIXTURE = (
+    Path(__file__).resolve().parent / "fixtures" / "routine_templates.json"
+)
+
+
+def _load_templates():
+    """Carrega os templates de rotina do arquivo JSON."""
+    with open(_TEMPLATES_FIXTURE, encoding="utf-8") as f:
+        return json.load(f)
+
+
+class RoutineTemplateListView(APIView):
+    """Retorna a lista de templates de rotina disponíveis (somente leitura)."""
+
+    permission_classes = (IsAuthenticated,)
+    queryset = RoutineTask.objects.none()
+
+    def get(self, request):
+        templates = _load_templates()
+        # Retorna somente metadados (sem tarefas internas para a listagem)
+        result = [
+            {
+                "id": t["id"],
+                "name": t["name"],
+                "description": t["description"],
+                "icon": t["icon"],
+                "task_count": len(t["tasks"]),
+                "tasks": t["tasks"],
+            }
+            for t in templates
+        ]
+        return Response(result)
+
+
+class RoutineTemplateImportView(APIView):
+    """Importa um template de rotina criando RoutineTasks para o usuário autenticado."""
+
+    permission_classes = (IsAuthenticated,)
+    queryset = RoutineTask.objects.none()
+
+    def post(self, request):
+        template_id = request.data.get("template_id")
+        if not template_id:
+            return Response(
+                {"detail": "O campo 'template_id' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        templates = _load_templates()
+        template = next((t for t in templates if t["id"] == template_id), None)
+        if template is None:
+            return Response(
+                {"detail": "Template não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            owner = Member.objects.get(user=request.user)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing_names = set(
+            RoutineTask.objects.filter(
+                owner=owner, deleted_at__isnull=True
+            ).values_list("name", flat=True)
+        )
+
+        created_ids = []
+        skipped_names = []
+
+        for task_data in template["tasks"]:
+            task_name = task_data["name"]
+            if task_name in existing_names:
+                skipped_names.append(task_name)
+                continue
+
+            task = RoutineTask(
+                name=task_name,
+                description=task_data.get("description", ""),
+                category=task_data.get("category", "other"),
+                icon=task_data.get("icon"),
+                periodicity=task_data.get("periodicity", "daily"),
+                weekday=task_data.get("weekday"),
+                day_of_month=task_data.get("day_of_month"),
+                custom_weekdays=task_data.get("custom_weekdays"),
+                custom_month_days=task_data.get("custom_month_days"),
+                times_per_week=task_data.get("times_per_week"),
+                times_per_month=task_data.get("times_per_month"),
+                interval_days=task_data.get("interval_days"),
+                interval_start_date=task_data.get("interval_start_date"),
+                target_quantity=task_data.get("target_quantity", 1),
+                unit=task_data.get("unit", "vez"),
+                default_time=task_data.get("default_time"),
+                daily_occurrences=task_data.get("daily_occurrences", 1),
+                interval_hours=task_data.get("interval_hours"),
+                scheduled_times=task_data.get("scheduled_times"),
+                is_active=task_data.get("is_active", True),
+                owner=owner,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+            task.full_clean()
+            task.save()
+            created_ids.append(task.id)
+            log_activity(
+                request,
+                "create",
+                "RoutineTask",
+                task.id,
+                f"Importou tarefa do template '{template['name']}': {task.name}",
+            )
+
+        return Response(
+            {
+                "created_ids": created_ids,
+                "skipped_names": skipped_names,
+                "template_name": template["name"],
+            },
+            status=status.HTTP_201_CREATED,
         )
 
 
