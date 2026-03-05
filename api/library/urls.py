@@ -1,9 +1,12 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Dashboard views
+from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Highlight/Dashboard views
     AuthorDetailView,
     AuthorListCreateView,
     BookDetailView,
+    BookHighlightDetailView,
+    BookHighlightExportView,
+    BookHighlightListCreateView,
     BookListCreateView,
     BookReadingQueueView,
     BookReorderView,
@@ -61,5 +64,21 @@ urlpatterns = [
         "reading-goals/<int:pk>/",
         ReadingGoalDetailView.as_view(),
         name="reading-goal-detail",
+    ),
+    # Book Highlights
+    path(
+        "highlights/",
+        BookHighlightListCreateView.as_view(),
+        name="highlight-list-create",
+    ),
+    path(
+        "highlights/export/",
+        BookHighlightExportView.as_view(),
+        name="highlight-export",
+    ),
+    path(
+        "highlights/<int:pk>/",
+        BookHighlightDetailView.as_view(),
+        name="highlight-detail",
     ),
 ]

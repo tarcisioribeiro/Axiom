@@ -61,6 +61,20 @@ LITERARY_TYPES = (
 
 MEDIA_TYPE = (("Dig", "Digital"), ("Phi", "Física"))
 
+HIGHLIGHT_TYPE_CHOICES = (
+    ("quote", "Citação"),
+    ("note", "Nota"),
+    ("idea", "Ideia"),
+)
+
+HIGHLIGHT_COLOR_CHOICES = (
+    ("yellow", "Amarelo"),
+    ("green", "Verde"),
+    ("blue", "Azul"),
+    ("pink", "Rosa"),
+    ("orange", "Laranja"),
+)
+
 
 # ============================================================================
 # AUTHOR MODEL
@@ -419,3 +433,61 @@ class ReadingGoal(BaseModel):
         if self.books_goal == 0:
             return 0.0
         return round(min((self.books_read_this_year / self.books_goal) * 100, 100.0), 1)
+
+
+# ============================================================================
+# BOOK HIGHLIGHT MODEL
+# ============================================================================
+
+
+class BookHighlight(BaseModel):
+    """Modelo para destaques, citações e notas de livros."""
+
+    book = models.ForeignKey(
+        Book,
+        on_delete=models.PROTECT,
+        related_name="highlights",
+        verbose_name="Livro",
+    )
+    text = models.TextField(verbose_name="Texto")
+    page_number = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Página"
+    )
+    chapter = models.CharField(
+        max_length=200, null=True, blank=True, verbose_name="Capítulo"
+    )
+    highlight_type = models.CharField(
+        max_length=10,
+        choices=HIGHLIGHT_TYPE_CHOICES,
+        default="quote",
+        verbose_name="Tipo",
+    )
+    color = models.CharField(
+        max_length=10,
+        choices=HIGHLIGHT_COLOR_CHOICES,
+        default="yellow",
+        verbose_name="Cor",
+    )
+    summary = models.ForeignKey(
+        Summary,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="highlights",
+        verbose_name="Resumo",
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="book_highlights",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Destaque"
+        verbose_name_plural = "Destaques"
+        ordering = ["page_number", "created_at"]
+
+    def __str__(self):
+        page = f" (p. {self.page_number})" if self.page_number else ""
+        return f"{self.get_highlight_type_display()} de '{self.book}'{page}"

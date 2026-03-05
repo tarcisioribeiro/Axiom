@@ -115,6 +115,7 @@
       "summaries": "Summaries",
       "readings": "Readings",
       "readingQueue": "Reading Queue",
+      "highlights": "Highlights",
       "todayTasks": "Today's Tasks",
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
@@ -166,6 +167,7 @@
     "summaries": "Summaries",
     "readings": "Readings",
     "readingQueue": "Reading Queue",
+    "highlights": "Highlights",
     "registrations": "Registrations",
     "records": "Records",
     "planning": "Personal Planning",
@@ -1228,6 +1230,20 @@
       "emptyDesc": "Add books with \"To Read\" status to build your reading queue.",
       "errorLoad": "Error loading queue",
       "errorSave": "Error saving order"
+    },
+    "highlights": {
+      "title": "Highlights",
+      "newBtn": "New Highlight",
+      "emptyState": "No highlights yet. Click \"New Highlight\" to get started.",
+      "emptySearch": "No highlights found for the current search.",
+      "searchPlaceholder": "Search highlights...",
+      "newTitle": "New Highlight",
+      "editTitle": "Edit Highlight",
+      "newDesc": "Add a quote, note, or idea from a book.",
+      "editDesc": "Edit the highlight details.",
+      "deleted": "Highlight deleted",
+      "deleteTitle": "Delete highlight",
+      "deleteDesc": "Are you sure you want to delete this highlight?"
     },
     "planningDashboard": {
       "title": "Personal Planning Dashboard",
