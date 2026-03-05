@@ -220,6 +220,11 @@ class Book(BaseModel):
         default="to_read",
         verbose_name="Status de Leitura",
     )
+    reading_priority = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Prioridade de Leitura",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

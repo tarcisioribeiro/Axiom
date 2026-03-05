@@ -32,6 +32,7 @@ import {
   PiggyBank,
   LineChart,
   Tag,
+  ListOrdered,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -303,6 +304,11 @@ const navModules: NavModule[] = [
         titleKey: 'nav.items.readings',
         href: '/library/readings',
         icon: <BookMarked className="h-4 w-4" />,
+      },
+      {
+        titleKey: 'nav.items.readingQueue',
+        href: '/library/reading-queue',
+        icon: <ListOrdered className="h-4 w-4" />,
       },
     ],
   },

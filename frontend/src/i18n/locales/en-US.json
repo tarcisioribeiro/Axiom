@@ -114,6 +114,7 @@
       "publishers": "Publishers",
       "summaries": "Summaries",
       "readings": "Readings",
+      "readingQueue": "Reading Queue",
       "todayTasks": "Today's Tasks",
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
@@ -164,6 +165,7 @@
     "publishers": "Publishers",
     "summaries": "Summaries",
     "readings": "Readings",
+    "readingQueue": "Reading Queue",
     "registrations": "Registrations",
     "records": "Records",
     "planning": "Personal Planning",
@@ -1201,6 +1203,14 @@
       "emptyState": "No readings recorded. Click \"New Reading\" to get started.",
       "searchPlaceholder": "Search readings...",
       "pagesRead": "{{count}} p."
+    },
+    "readingQueue": {
+      "title": "Reading Queue",
+      "description": "Drag and drop to reorder the books you plan to read.",
+      "emptyTitle": "No books in queue",
+      "emptyDesc": "Add books with \"To Read\" status to build your reading queue.",
+      "errorLoad": "Error loading queue",
+      "errorSave": "Error saving order"
     },
     "planningDashboard": {
       "title": "Personal Planning Dashboard",

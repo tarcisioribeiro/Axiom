@@ -114,6 +114,7 @@
       "publishers": "Editoras",
       "summaries": "Resumos",
       "readings": "Leituras",
+      "readingQueue": "Fila de Leitura",
       "todayTasks": "Tarefas de Hoje",
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
@@ -164,6 +165,7 @@
     "publishers": "Editoras",
     "summaries": "Resumos",
     "readings": "Leituras",
+    "readingQueue": "Fila de Leitura",
     "registrations": "Cadastros",
     "records": "Registros",
     "planning": "Planejamento Pessoal",
@@ -1220,6 +1222,14 @@
       "emptyState": "Nenhuma leitura registrada. Clique em \"Nova Leitura\" para começar.",
       "searchPlaceholder": "Buscar leituras...",
       "pagesRead": "{{count}} pág."
+    },
+    "readingQueue": {
+      "title": "Fila de Leitura",
+      "description": "Arraste e solte para reordenar os livros que você pretende ler.",
+      "emptyTitle": "Nenhum livro na fila",
+      "emptyDesc": "Adicione livros com status \"Para Ler\" para montar sua fila de leitura.",
+      "errorLoad": "Erro ao carregar a fila",
+      "errorSave": "Erro ao salvar a ordem"
     },
     "planningDashboard": {
       "title": "Dashboard de Planejamento Pessoal",

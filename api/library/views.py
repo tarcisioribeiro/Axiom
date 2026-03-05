@@ -1,16 +1,20 @@
+from django.db import transaction
 from django.db.models import Avg, Count, Q, Sum
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from app.permissions import GlobalDefaultPermission
 from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
 from library.serializers import (
     AuthorCreateUpdateSerializer,
     AuthorSerializer,
     BookCreateUpdateSerializer,
+    BookReorderItemSerializer,
     BookSerializer,
     PublisherCreateUpdateSerializer,
     PublisherSerializer,
@@ -485,6 +489,86 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
             instance.id,
             f"Deletou meta de leitura para {instance.year}",
         )
+
+
+# ============================================================================
+# READING QUEUE VIEWS
+# ============================================================================
+
+
+class BookReadingQueueView(APIView):
+    """
+    GET /api/v1/library/reading-queue/
+
+    Retorna os livros com status 'to_read' ordenados por reading_priority ASC
+    (nulos no final).
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
+
+    def get(self, request):
+        books = (
+            Book.objects.filter(
+                owner__user=request.user,
+                deleted_at__isnull=True,
+                read_status="to_read",
+            )
+            .select_related("owner", "publisher")
+            .prefetch_related("authors", "readings")
+            .order_by("reading_priority", "created_at")
+        )
+
+        # Colocar livros sem prioridade no final
+        with_priority = [b for b in books if b.reading_priority is not None]
+        without_priority = [b for b in books if b.reading_priority is None]
+        ordered = with_priority + without_priority
+
+        serializer = BookSerializer(ordered, many=True)
+        return Response({"results": serializer.data, "count": len(ordered)})
+
+
+class BookReorderView(APIView):
+    """
+    PATCH /api/v1/library/reading-queue/reorder/
+
+    Recebe uma lista de {id, priority} e atualiza em lote as prioridades.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
+
+    def patch(self, request):
+        serializer = BookReorderItemSerializer(data=request.data, many=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        items = serializer.validated_data
+        ids = [item["id"] for item in items]
+
+        # Verifica que todos os livros pertencem ao usuário
+        user_books = set(
+            Book.objects.filter(
+                id__in=ids,
+                owner__user=request.user,
+                deleted_at__isnull=True,
+            ).values_list("id", flat=True)
+        )
+
+        invalid_ids = [id for id in ids if id not in user_books]
+        if invalid_ids:
+            return Response(
+                {"detail": "Alguns livros não foram encontrados."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            for item in items:
+                Book.objects.filter(id=item["id"]).update(
+                    reading_priority=item["priority"]
+                )
+
+        return Response({"detail": "Fila atualizada com sucesso."})
 
 
 # ============================================================================

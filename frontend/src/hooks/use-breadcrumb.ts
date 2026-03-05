@@ -28,6 +28,7 @@ import {
   ClipboardList,
   ShoppingCart,
   Tag,
+  ListOrdered,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -269,6 +270,12 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/library/readings': {
     labelKey: 'breadcrumb.readings',
     icon: BookMarked,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/reading-queue': {
+    labelKey: 'breadcrumb.readingQueue',
+    icon: ListOrdered,
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },

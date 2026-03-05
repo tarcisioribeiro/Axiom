@@ -45,6 +45,7 @@ const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
 const Summaries = lazy(() => import('./pages/Summaries'));
 const Readings = lazy(() => import('./pages/Readings'));
+const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -311,6 +312,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Readings />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/reading-queue"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ReadingQueue />
               </Suspense>
             }
           />
