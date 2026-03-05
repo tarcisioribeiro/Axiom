@@ -12,6 +12,8 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     RoutineTaskDetailView,
     RoutineTaskHeatmapView,
     RoutineTaskListCreateView,
+    RoutineTemplateImportView,
+    RoutineTemplateListView,
     TaskInstanceBulkUpdateView,
     TaskInstanceDetailView,
     TaskInstanceListCreateView,
@@ -40,6 +42,17 @@ urlpatterns = [
         "routine-tasks/<int:pk>/",
         RoutineTaskDetailView.as_view(),
         name="routine-task-detail",
+    ),
+    # Routine Templates (read-only seed data)
+    path(
+        "routine-templates/",
+        RoutineTemplateListView.as_view(),
+        name="routine-template-list",
+    ),
+    path(
+        "routine-templates/import/",
+        RoutineTemplateImportView.as_view(),
+        name="routine-template-import",
     ),
     # Goals
     path("goals/", GoalListCreateView.as_view(), name="goal-list-create"),

@@ -105,6 +105,8 @@ module = [
     "psycopg2.*",
     "mysql",
     "mysql.*",
+    "bank_reconciliation",
+    "bank_reconciliation.*",
 ]
 ignore_missing_imports = true
 

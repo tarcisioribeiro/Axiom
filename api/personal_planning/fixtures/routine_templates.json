@@ -1,0 +1,209 @@
+[
+  {
+    "id": "morning_routine",
+    "name": "Rotina Matinal",
+    "description": "Uma rotina matinal completa para começar o dia com energia, foco e bem-estar.",
+    "icon": "Sunrise",
+    "tasks": [
+      {
+        "name": "Meditação Matinal",
+        "description": "Medite por 10 minutos para começar o dia com clareza mental e paz interior.",
+        "category": "meditation",
+        "icon": "Brain",
+        "periodicity": "daily",
+        "target_quantity": 10,
+        "unit": "minutos",
+        "default_time": "06:30",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Exercícios Matinais",
+        "description": "30 minutos de exercícios físicos para ativar o corpo e aumentar a disposição.",
+        "category": "exercise",
+        "icon": "Dumbbell",
+        "periodicity": "weekdays",
+        "target_quantity": 30,
+        "unit": "minutos",
+        "default_time": "07:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Leitura Matinal",
+        "description": "Leia pelo menos 20 páginas de um livro para estimular a mente.",
+        "category": "reading",
+        "icon": "BookOpen",
+        "periodicity": "daily",
+        "target_quantity": 20,
+        "unit": "páginas",
+        "default_time": "07:45",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Café da Manhã Saudável",
+        "description": "Faça uma refeição nutritiva para começar o dia com energia.",
+        "category": "nutrition",
+        "icon": "Apple",
+        "periodicity": "daily",
+        "target_quantity": 1,
+        "unit": "vez",
+        "default_time": "08:15",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Planejamento do Dia",
+        "description": "Reserve 10 minutos para organizar as tarefas e prioridades do dia.",
+        "category": "work",
+        "icon": "ClipboardList",
+        "periodicity": "weekdays",
+        "target_quantity": 10,
+        "unit": "minutos",
+        "default_time": "08:30",
+        "is_active": true,
+        "daily_occurrences": 1
+      }
+    ]
+  },
+  {
+    "id": "study_routine",
+    "name": "Rotina de Estudos",
+    "description": "Rotina estruturada para maximizar o aprendizado e a retenção de conhecimento.",
+    "icon": "GraduationCap",
+    "tasks": [
+      {
+        "name": "Revisão de Anotações",
+        "description": "Revise as anotações do dia anterior para consolidar o aprendizado.",
+        "category": "studies",
+        "icon": "NotebookPen",
+        "periodicity": "weekdays",
+        "target_quantity": 30,
+        "unit": "minutos",
+        "default_time": "08:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Leitura Técnica",
+        "description": "Leia 30 páginas de material técnico ou didático.",
+        "category": "reading",
+        "icon": "BookMarked",
+        "periodicity": "weekdays",
+        "target_quantity": 30,
+        "unit": "páginas",
+        "default_time": "09:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Exercícios Práticos",
+        "description": "Pratique exercícios e resolva problemas para fixar o conteúdo estudado.",
+        "category": "studies",
+        "icon": "PenTool",
+        "periodicity": "weekly",
+        "weekday": 1,
+        "target_quantity": 60,
+        "unit": "minutos",
+        "default_time": "14:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Planejamento Semanal de Estudos",
+        "description": "Defina os tópicos e metas de estudo para a semana seguinte.",
+        "category": "studies",
+        "icon": "CalendarCheck",
+        "periodicity": "weekly",
+        "weekday": 0,
+        "target_quantity": 1,
+        "unit": "vez",
+        "default_time": "10:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Escrita Reflexiva",
+        "description": "Escreva um resumo do que aprendeu para fortalecer a memória de longo prazo.",
+        "category": "writing",
+        "icon": "PenLine",
+        "periodicity": "daily",
+        "target_quantity": 15,
+        "unit": "minutos",
+        "default_time": "21:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      }
+    ]
+  },
+  {
+    "id": "health_and_exercise",
+    "name": "Saúde e Exercícios",
+    "description": "Rotina focada em saúde física e bem-estar com exercícios variados e hábitos saudáveis.",
+    "icon": "HeartPulse",
+    "tasks": [
+      {
+        "name": "Musculação",
+        "description": "Treino de força com foco em hipertrofia e condicionamento muscular.",
+        "category": "exercise",
+        "icon": "Dumbbell",
+        "periodicity": "custom",
+        "custom_weekdays": [1, 3, 5],
+        "target_quantity": 60,
+        "unit": "minutos",
+        "default_time": "07:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Cardio",
+        "description": "Corrida, caminhada ou bicicleta para melhorar o condicionamento cardiovascular.",
+        "category": "exercise",
+        "icon": "Activity",
+        "periodicity": "weekly",
+        "weekday": 6,
+        "target_quantity": 30,
+        "unit": "minutos",
+        "default_time": "08:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Beber Água",
+        "description": "Mantenha-se hidratado bebendo pelo menos 8 copos de água por dia.",
+        "category": "nutrition",
+        "icon": "Droplets",
+        "periodicity": "daily",
+        "target_quantity": 8,
+        "unit": "copos",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Alongamento",
+        "description": "10 minutos de alongamento para melhorar a flexibilidade e prevenir lesões.",
+        "category": "health",
+        "icon": "PersonStanding",
+        "periodicity": "daily",
+        "target_quantity": 10,
+        "unit": "minutos",
+        "default_time": "20:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      },
+      {
+        "name": "Sono de Qualidade",
+        "description": "Durma pelo menos 7 horas para garantir recuperação e desempenho.",
+        "category": "health",
+        "icon": "Moon",
+        "periodicity": "daily",
+        "target_quantity": 7,
+        "unit": "horas",
+        "default_time": "23:00",
+        "is_active": true,
+        "daily_occurrences": 1
+      }
+    ]
+  }
+]
