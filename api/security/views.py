@@ -916,7 +916,7 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request) -> Response:
         from members.models import Member
 
         try:

@@ -98,6 +98,11 @@ const navModules: NavModule[] = [
         icon: <LayoutDashboard className="h-4 w-4" />,
       },
       {
+        titleKey: 'nav.items.todayTasks',
+        href: '/planning/today-tasks',
+        icon: <CheckCircle2 className="h-4 w-4" />,
+      },
+      {
         titleKey: 'nav.items.dailyChecklist',
         href: '/planning/daily',
         icon: <CheckCircle2 className="h-4 w-4" />,

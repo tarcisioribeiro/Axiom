@@ -4,6 +4,7 @@ import type {
   CreditCardExpensesByCategory,
   BalanceForecast,
   CashFlowForecast,
+  FinancialAlert,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -41,6 +42,10 @@ class DashboardService {
     return apiClient.get<CashFlowForecast>('/api/v1/dashboard/cash-flow-forecast/', {
       days,
     } as Record<string, unknown>);
+  }
+
+  async getFinancialAlerts(): Promise<FinancialAlert[]> {
+    return apiClient.get<FinancialAlert[]>('/api/v1/dashboard/financial-alerts/');
   }
 }
 

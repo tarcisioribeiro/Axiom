@@ -1,4 +1,4 @@
-import { Plus, CheckSquare, Edit, Trash2, BarChart2 } from 'lucide-react';
+import { Plus, CheckSquare, Edit, Trash2, BarChart2, Library } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -9,6 +9,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { RoutineTaskForm } from '@/components/personal-planning/RoutineTaskForm';
+import { RoutineTemplateModal } from '@/components/personal-planning/RoutineTemplateModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,8 @@ export default function RoutineTasks() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [heatmapTask, setHeatmapTask] = useState<RoutineTask | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -136,6 +139,13 @@ export default function RoutineTasks() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleImported = async (createdIds: number[]) => {
+    await loadData();
+    const idSet = new Set(createdIds);
+    setHighlightedIds(idSet);
+    setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
 
   const getCompletionRateColor = (rate: number) => {
@@ -281,15 +291,22 @@ export default function RoutineTasks() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.routineTasks.title')}
-        icon={<CheckSquare />}
-        action={{
-          label: t('pages.routineTasks.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTemplateModalOpen(true)}
+          >
+            <Library className="mr-2 h-4 w-4" />
+            {t('pages.routineTasks.templates.importBtn')}
+          </Button>
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {t('pages.routineTasks.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       <DataTable
         data={tasks}
@@ -301,6 +318,11 @@ export default function RoutineTasks() {
           title: t('pages.routineTasks.emptyState'),
           message: t('pages.routineTasks.emptyStateDesc'),
         }}
+        rowClassName={(task) =>
+          highlightedIds.has(task.id)
+            ? 'animate-pulse bg-primary/10 transition-colors duration-1000'
+            : ''
+        }
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -325,6 +347,12 @@ export default function RoutineTasks() {
           />
         </DialogContent>
       </Dialog>
+
+      <RoutineTemplateModal
+        open={isTemplateModalOpen}
+        onOpenChange={setIsTemplateModalOpen}
+        onImported={(ids) => void handleImported(ids)}
+      />
 
       {/* Heatmap Dialog */}
       <Dialog
