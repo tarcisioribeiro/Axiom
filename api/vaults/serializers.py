@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import models
 from rest_framework import serializers
 
-from .models import FinancialGoal, Vault, VaultTransaction
+from .models import FinancialGoal, Vault, VaultRecurringContribution, VaultTransaction
 
 
 class VaultTransactionSerializer(serializers.ModelSerializer):
@@ -212,6 +212,75 @@ class VaultTransactionUpdateSerializer(serializers.ModelSerializer):
                 "Apenas transações de rendimento podem ser editadas."
             )
         return data
+
+
+class VaultRecurringContributionSerializer(serializers.ModelSerializer):
+    """Serializer para contribuições recorrentes de cofre."""
+
+    vault_description = serializers.CharField(
+        source="vault.description", read_only=True
+    )
+    account_name = serializers.CharField(
+        source="vault.account.account_name", read_only=True
+    )
+    next_contribution_date = serializers.DateField(read_only=True)
+    fixed_expense_id = serializers.IntegerField(
+        source="fixed_expense.id", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = VaultRecurringContribution
+        fields = [
+            "id",
+            "uuid",
+            "vault",
+            "vault_description",
+            "account_name",
+            "amount",
+            "day_of_month",
+            "is_active",
+            "start_date",
+            "end_date",
+            "description",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "uuid",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate(self, data):
+        end_date = data.get("end_date") or (self.instance and self.instance.end_date)
+        start_date = data.get("start_date") or (
+            self.instance and self.instance.start_date
+        )
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError(
+                {"end_date": "A data de término deve ser posterior à data de início."}
+            )
+        return data
+
+
+class VaultRecurringContributionCreateSerializer(VaultRecurringContributionSerializer):
+    """Serializer para criação de contribuições recorrentes (vault é obrigatório)."""
+
+    class Meta(VaultRecurringContributionSerializer.Meta):
+        read_only_fields = [
+            "uuid",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class VaultSummarySerializer(serializers.Serializer):

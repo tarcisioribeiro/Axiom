@@ -7,6 +7,8 @@ import {
   ArrowUpFromLine,
   RefreshCcw,
   History,
+  CalendarClock,
+  Zap,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +59,8 @@ import type {
   VaultFormData,
   Account,
   VaultTransaction,
+  VaultRecurringContribution,
+  VaultRecurringContributionFormData,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -83,6 +87,28 @@ export default function Vaults() {
   const [editTransactionAmount, setEditTransactionAmount] = useState<string>('');
   const [editTransactionDescription, setEditTransactionDescription] =
     useState<string>('');
+
+  // Recurring contributions state
+  const [isContributionsDialogOpen, setIsContributionsDialogOpen] = useState(false);
+  const [contributions, setContributions] = useState<VaultRecurringContribution[]>([]);
+  const [isContributionsLoading, setIsContributionsLoading] = useState(false);
+  const [isContributionFormOpen, setIsContributionFormOpen] = useState(false);
+  const [editingContribution, setEditingContribution] =
+    useState<VaultRecurringContribution | null>(null);
+  const [contributionFormData, setContributionFormData] =
+    useState<VaultRecurringContributionFormData>({
+      amount: 0,
+      day_of_month: 1,
+      is_active: true,
+      start_date: new Date().toISOString().slice(0, 10),
+      end_date: undefined,
+      description: '',
+    });
+  const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
+  const [generateMonth, setGenerateMonth] = useState<string>(
+    new Date().toISOString().slice(0, 7)
+  );
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<VaultFormData>({
@@ -438,6 +464,130 @@ export default function Vaults() {
     }
   };
 
+  // Recurring Contributions handlers
+  const openContributionsDialog = async (vault: VaultType) => {
+    setSelectedVault(vault);
+    setIsContributionFormOpen(false);
+    setEditingContribution(null);
+    setIsContributionsLoading(true);
+    setIsContributionsDialogOpen(true);
+    try {
+      const data = await vaultsService.getContributions(vault.id);
+      setContributions(data);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsContributionsLoading(false);
+    }
+  };
+
+  const openContributionForm = (contribution?: VaultRecurringContribution) => {
+    if (contribution) {
+      setEditingContribution(contribution);
+      setContributionFormData({
+        amount: parseFloat(contribution.amount),
+        day_of_month: contribution.day_of_month,
+        is_active: contribution.is_active,
+        start_date: contribution.start_date,
+        end_date: contribution.end_date,
+        description: contribution.description,
+      });
+    } else {
+      setEditingContribution(null);
+      setContributionFormData({
+        amount: 0,
+        day_of_month: 10,
+        is_active: true,
+        start_date: new Date().toISOString().slice(0, 10),
+        end_date: undefined,
+        description: '',
+      });
+    }
+    setIsContributionFormOpen(true);
+  };
+
+  const handleSaveContribution = async () => {
+    if (!selectedVault) return;
+    try {
+      setIsSubmitting(true);
+      if (editingContribution) {
+        await vaultsService.updateContribution(editingContribution.id, contributionFormData);
+        toast({
+          title: t('pages.vaults.recurringContributions.updated'),
+          description: t('pages.vaults.recurringContributions.updatedDesc'),
+        });
+      } else {
+        await vaultsService.createContribution(selectedVault.id, contributionFormData);
+        toast({
+          title: t('pages.vaults.recurringContributions.created'),
+          description: t('pages.vaults.recurringContributions.createdDesc'),
+        });
+      }
+      setIsContributionFormOpen(false);
+      setEditingContribution(null);
+      const data = await vaultsService.getContributions(selectedVault.id);
+      setContributions(data);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteContribution = async (contribution: VaultRecurringContribution) => {
+    const confirmed = await showConfirm({
+      title: t('pages.vaults.recurringContributions.deleteTitle'),
+      description: t('pages.vaults.recurringContributions.deleteDesc'),
+    });
+    if (!confirmed || !selectedVault) return;
+    try {
+      await vaultsService.deleteContribution(contribution.id);
+      toast({
+        title: t('pages.vaults.recurringContributions.deleted'),
+        description: t('pages.vaults.recurringContributions.deletedDesc'),
+      });
+      const data = await vaultsService.getContributions(selectedVault.id);
+      setContributions(data);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleGenerateContributions = async () => {
+    try {
+      setIsGenerating(true);
+      const result = await vaultsService.generateContributions(generateMonth);
+      toast({
+        title: t('pages.vaults.recurringContributions.generateSuccess'),
+        description: t('pages.vaults.recurringContributions.generateSuccessDesc', {
+          count: result.generated_count,
+        }),
+      });
+      setIsGenerateDialogOpen(false);
+      void loadData();
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.vaults.recurringContributions.generateError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Calculate totals
   const totalBalance = vaults.reduce(
     (sum, v) => sum + parseFloat(v.current_balance),
@@ -556,6 +706,14 @@ export default function Vaults() {
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => openContributionsDialog(vault)}
+            aria-label={t('pages.vaults.recurringContributions.btn')}
+          >
+            <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => handleEdit(vault)}
             aria-label={t('common.actions.edit')}
           >
@@ -585,6 +743,13 @@ export default function Vaults() {
           onClick: handleCreate,
         }}
       />
+
+      <div className="mb-4 flex justify-end">
+        <Button variant="outline" onClick={() => setIsGenerateDialogOpen(true)}>
+          <Zap className="mr-2 h-4 w-4" />
+          {t('pages.vaults.recurringContributions.generateBtn')}
+        </Button>
+      </div>
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -1085,6 +1250,296 @@ export default function Vaults() {
             <Button
               variant="outline"
               onClick={() => setIsTransactionsDialogOpen(false)}
+            >
+              {t('common.actions.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Generate Contributions Dialog */}
+      <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {t('pages.vaults.recurringContributions.generateTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('pages.vaults.recurringContributions.generateDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="generate_month">
+                {t('pages.vaults.recurringContributions.generateMonth')}
+              </Label>
+              <Input
+                id="generate_month"
+                type="month"
+                value={generateMonth}
+                onChange={(e) => setGenerateMonth(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGenerateDialogOpen(false)}>
+              {t('common.actions.cancel')}
+            </Button>
+            <Button onClick={handleGenerateContributions} disabled={isGenerating}>
+              {isGenerating
+                ? t('common.actions.saving')
+                : t('pages.vaults.recurringContributions.generateConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Recurring Contributions Dialog */}
+      <Dialog open={isContributionsDialogOpen} onOpenChange={setIsContributionsDialogOpen}>
+        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {t('pages.vaults.recurringContributions.title')}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedVault &&
+                t('pages.vaults.recurringContributions.desc', {
+                  name: selectedVault.description,
+                })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* New contribution button */}
+            {!isContributionFormOpen && (
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => openContributionForm()}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  {t('pages.vaults.recurringContributions.newBtn')}
+                </Button>
+              </div>
+            )}
+
+            {/* Inline form */}
+            {isContributionFormOpen && (
+              <div className="rounded-md border p-4 space-y-3">
+                <h4 className="font-medium text-sm">
+                  {editingContribution
+                    ? t('common.actions.edit')
+                    : t('pages.vaults.recurringContributions.newBtn')}
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <Label htmlFor="contrib_description">
+                      {t('pages.vaults.recurringContributions.fields.description')}
+                    </Label>
+                    <Input
+                      id="contrib_description"
+                      value={contributionFormData.description}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          description: e.target.value,
+                        })
+                      }
+                      placeholder="Ex: Poupança mensal"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contrib_amount">
+                      {t('pages.vaults.recurringContributions.fields.amount')}
+                    </Label>
+                    <Input
+                      id="contrib_amount"
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={contributionFormData.amount}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          amount: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contrib_day">
+                      {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
+                    </Label>
+                    <Input
+                      id="contrib_day"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={contributionFormData.day_of_month}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          day_of_month: parseInt(e.target.value) || 1,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contrib_start">
+                      {t('pages.vaults.recurringContributions.fields.startDate')}
+                    </Label>
+                    <Input
+                      id="contrib_start"
+                      type="date"
+                      value={contributionFormData.start_date}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          start_date: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="contrib_end">
+                      {t('pages.vaults.recurringContributions.fields.endDate')}
+                    </Label>
+                    <Input
+                      id="contrib_end"
+                      type="date"
+                      value={contributionFormData.end_date || ''}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          end_date: e.target.value || undefined,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="contrib_active"
+                      checked={contributionFormData.is_active}
+                      onChange={(e) =>
+                        setContributionFormData({
+                          ...contributionFormData,
+                          is_active: e.target.checked,
+                        })
+                      }
+                    />
+                    <Label htmlFor="contrib_active">
+                      {t('pages.vaults.recurringContributions.fields.isActive')}
+                    </Label>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsContributionFormOpen(false);
+                      setEditingContribution(null);
+                    }}
+                  >
+                    {t('common.actions.cancel')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveContribution}
+                    disabled={
+                      isSubmitting ||
+                      !contributionFormData.description ||
+                      contributionFormData.amount <= 0
+                    }
+                  >
+                    {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Contributions list */}
+            {isContributionsLoading ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">
+                {t('common.messages.loading')}
+              </div>
+            ) : contributions.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">
+                {t('pages.vaults.recurringContributions.emptyState')}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {contributions.map((contribution) => (
+                  <div
+                    key={contribution.id}
+                    className="flex items-start justify-between rounded-md border p-3 gap-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm truncate">
+                          {contribution.description}
+                        </span>
+                        <Badge
+                          variant={contribution.is_active ? 'default' : 'secondary'}
+                          className="text-xs shrink-0"
+                        >
+                          {contribution.is_active
+                            ? t('pages.vaults.recurringContributions.active')
+                            : t('pages.vaults.recurringContributions.inactive')}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-success font-semibold mt-0.5">
+                        {formatCurrency(parseFloat(contribution.amount))}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                        <div>
+                          {t('pages.vaults.columns.date')}:{' '}
+                          {contribution.day_of_month} &bull;{' '}
+                          {contribution.start_date}
+                          {contribution.end_date && ` → ${contribution.end_date}`}
+                        </div>
+                        {contribution.next_contribution_date && contribution.is_active && (
+                          <div>
+                            {t('pages.vaults.recurringContributions.nextDate')}{' '}
+                            {new Date(contribution.next_contribution_date).toLocaleDateString(
+                              i18n.language
+                            )}
+                          </div>
+                        )}
+                        {contribution.last_generated_month && (
+                          <div>
+                            {t('pages.vaults.recurringContributions.lastGenerated')}{' '}
+                            {contribution.last_generated_month}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openContributionForm(contribution)}
+                        aria-label={t('common.actions.edit')}
+                      >
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteContribution(contribution)}
+                        aria-label={t('common.actions.delete')}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsContributionsDialogOpen(false)}
             >
               {t('common.actions.close')}
             </Button>
