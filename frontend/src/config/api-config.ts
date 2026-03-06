@@ -66,6 +66,8 @@ export const API_CONFIG = {
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
+    PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
+    PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',
