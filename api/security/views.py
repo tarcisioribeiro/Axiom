@@ -24,6 +24,12 @@ from security.models import (
     StoredBankAccount,
     StoredCreditCard,
 )
+from security.passwords.importers import (
+    SUPPORTED_FORMATS,
+    ImportParseError,
+    parse_bitwarden_json,
+    parse_lastpass_csv,
+)
 from security.serializers import (
     ActivityLogSerializer,
     ArchiveCreateUpdateSerializer,
@@ -1096,6 +1102,245 @@ def get_password_strength(password):
         return "medium"
     else:
         return "weak"
+
+
+# ============================================================================
+# PASSWORD IMPORT VIEWS
+# ============================================================================
+
+
+class PasswordImportPreviewView(VaultLockedMixin, APIView):
+    """
+    POST /api/v1/security/passwords/import/preview/
+
+    Parses an export file (Bitwarden JSON or LastPass CSV) in-memory and
+    returns a list of entries for the user to review before importing.
+    The file is NEVER persisted to disk.
+
+    Request (multipart/form-data):
+      file   — the export file
+      format — "bitwarden_json" or "lastpass_csv"
+
+    Response:
+    {
+        "format": "bitwarden_json",
+        "total": 50,
+        "duplicates_count": 3,
+        "entries": [
+            {
+                "index": 0,
+                "title": "Gmail",
+                "username": "user@gmail.com",
+                "password": "secret",
+                "site": "https://gmail.com",
+                "category": "other",
+                "notes": "",
+                "is_duplicate": false
+            }
+        ]
+    }
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Password.objects.all()  # required by GlobalDefaultPermission
+
+    def post(self, request):
+        file = request.FILES.get("file")
+        format_name = request.data.get("format", "").strip()
+
+        if not file:
+            return Response(
+                {"error": "Nenhum arquivo enviado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if format_name not in SUPPORTED_FORMATS:
+            return Response(
+                {
+                    "error": (
+                        f"Formato '{format_name}' não suportado. "
+                        f"Formatos aceitos: {', '.join(SUPPORTED_FORMATS)}."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        content = file.read()
+
+        try:
+            if format_name == "bitwarden_json":
+                entries = parse_bitwarden_json(content)
+            else:
+                entries = parse_lastpass_csv(content)
+        except ImportParseError as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
+
+        # Duplicate detection against existing passwords for this user
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = set(
+            Password.objects.filter(owner=member, is_deleted=False).values_list(
+                "title", "username"
+            )
+        )
+
+        tagged_entries = []
+        for i, entry in enumerate(entries):
+            key = (entry["title"], entry["username"])
+            tagged_entries.append(
+                {
+                    "index": i,
+                    "title": entry["title"],
+                    "username": entry["username"],
+                    "password": entry["password"],
+                    "site": entry["site"],
+                    "category": entry["category"],
+                    "notes": entry["notes"],
+                    "is_duplicate": key in existing,
+                }
+            )
+
+        duplicates_count = sum(1 for e in tagged_entries if e["is_duplicate"])
+
+        return Response(
+            {
+                "format": format_name,
+                "total": len(tagged_entries),
+                "duplicates_count": duplicates_count,
+                "entries": tagged_entries,
+            }
+        )
+
+
+class PasswordImportConfirmView(VaultLockedMixin, APIView):
+    """
+    POST /api/v1/security/passwords/import/confirm/
+
+    Persists the selected entries, encrypting each password with the
+    vault key. Duplicate entries (same title + username) are skipped
+    automatically.
+
+    Request (JSON):
+    {
+        "entries": [
+            {
+                "title": "Gmail",
+                "username": "user@gmail.com",
+                "password": "secret",
+                "site": "https://gmail.com",
+                "category": "other",
+                "notes": ""
+            }
+        ]
+    }
+
+    Response:
+    { "imported": 47, "duplicates_skipped": 3, "errors": 0 }
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Password.objects.all()  # required by GlobalDefaultPermission
+
+    def post(self, request):
+        entries = request.data.get("entries", [])
+
+        if not isinstance(entries, list) or not entries:
+            return Response(
+                {"error": "Nenhuma entrada selecionada para importar."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing = set(
+            Password.objects.filter(owner=member, is_deleted=False).values_list(
+                "title", "username"
+            )
+        )
+
+        imported = 0
+        duplicates_skipped = 0
+        errors = 0
+
+        for entry in entries:
+            title = str(entry.get("title", "")).strip()
+            username = str(entry.get("username", "")).strip()
+            password_text = str(entry.get("password", ""))
+
+            if not title or not password_text:
+                errors += 1
+                continue
+
+            if (title, username) in existing:
+                duplicates_skipped += 1
+                continue
+
+            try:
+                pw = Password(
+                    title=title,
+                    username=username,
+                    site=entry.get("site", "").strip() or None,
+                    category=entry.get("category", "other"),
+                    notes=entry.get("notes", "").strip() or None,
+                    owner=member,
+                    created_by=request.user,
+                    updated_by=request.user,
+                )
+                pw.password = password_text  # VaultEncryptedField setter encrypts
+                pw.save()
+
+                # Track within-batch duplicates
+                existing.add((title, username))
+                imported += 1
+
+                log_activity(
+                    request,
+                    "create",
+                    "Password",
+                    pw.id,
+                    f"Importou senha: {title}",
+                )
+            except Exception as e:
+                logger.error(f"Erro ao importar senha '{title}': {e}")
+                errors += 1
+
+        log_activity(
+            request,
+            "create",
+            "Password",
+            None,
+            (
+                f"Importação concluída: {imported} importadas, "
+                f"{duplicates_skipped} duplicatas ignoradas, {errors} erros."
+            ),
+        )
+
+        return Response(
+            {
+                "imported": imported,
+                "duplicates_skipped": duplicates_skipped,
+                "errors": errors,
+            }
+        )
 
 
 class PasswordGenerateSerializer(serializers.Serializer):
