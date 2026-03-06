@@ -1,6 +1,8 @@
 import datetime
+from calendar import monthrange
 from decimal import Decimal
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -393,6 +395,15 @@ class VaultTransaction(BaseModel):
     transaction_date = models.DateField(
         verbose_name="Data da Transação", default=timezone.now
     )
+    recurring_contribution = models.ForeignKey(
+        "VaultRecurringContribution",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_transactions",
+        verbose_name="Contribuição Recorrente",
+        help_text="Contribuição recorrente que gerou esta transação",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -408,6 +419,122 @@ class VaultTransaction(BaseModel):
             f"{self.get_transaction_type_display()}"
             f" - {self.amount} - {self.vault.description}"
         )
+
+
+class VaultRecurringContribution(BaseModel):
+    """
+    Contribuição recorrente mensal a um cofre.
+
+    Gera automaticamente uma FixedExpense na conta associada ao cofre
+    e processa o depósito no mês programado via comando de gestão.
+    """
+
+    vault = models.ForeignKey(
+        Vault,
+        on_delete=models.CASCADE,
+        verbose_name="Cofre",
+        related_name="recurring_contributions",
+    )
+    amount = models.DecimalField(
+        verbose_name="Valor",
+        max_digits=15,
+        decimal_places=2,
+        help_text="Valor a ser depositado mensalmente",
+    )
+    day_of_month = models.PositiveIntegerField(
+        verbose_name="Dia do Mês",
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+        help_text="Dia do mês em que o depósito será realizado (1-31)",
+    )
+    is_active = models.BooleanField(
+        verbose_name="Ativa",
+        default=True,
+        help_text="Desmarque para suspender sem excluir",
+    )
+    start_date = models.DateField(
+        verbose_name="Data de Início",
+        help_text="Mês a partir do qual as contribuições serão geradas",
+    )
+    end_date = models.DateField(
+        verbose_name="Data de Término",
+        null=True,
+        blank=True,
+        help_text="Mês até o qual as contribuições serão geradas (opcional)",
+    )
+    description = models.CharField(
+        max_length=200,
+        verbose_name="Descrição",
+        help_text="Descrição da contribuição (ex: Poupança mensal)",
+    )
+    fixed_expense = models.OneToOneField(
+        "expenses.FixedExpense",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="vault_contribution",
+        verbose_name="Despesa Fixa Associada",
+        help_text="Template de despesa fixa gerado automaticamente",
+    )
+    last_generated_month = models.CharField(
+        max_length=7,
+        null=True,
+        blank=True,
+        verbose_name="Último Mês Gerado",
+        help_text="Formato: YYYY-MM",
+    )
+
+    class Meta:
+        ordering = ["day_of_month", "description"]
+        verbose_name = "Contribuição Recorrente"
+        verbose_name_plural = "Contribuições Recorrentes"
+        indexes = [
+            models.Index(fields=["vault", "is_active"]),
+            models.Index(fields=["is_active", "is_deleted"]),
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.description} - Dia {self.day_of_month} - {self.vault.description}"
+        )
+
+    @property
+    def next_contribution_date(self):
+        """Retorna a data da próxima contribuição agendada."""
+        today = timezone.now().date()
+        year, month = today.year, today.month
+
+        last_day = monthrange(year, month)[1]
+        day = min(self.day_of_month, last_day)
+        candidate = datetime.date(year, month, day)
+
+        if candidate < today:
+            if month == 12:
+                year += 1
+                month = 1
+            else:
+                month += 1
+            last_day = monthrange(year, month)[1]
+            day = min(self.day_of_month, last_day)
+            candidate = datetime.date(year, month, day)
+
+        # Check if within active date range
+        if self.end_date and candidate > self.end_date:
+            return None
+        return candidate
+
+    def is_in_scope_for_month(self, year: int, month: int) -> bool:
+        """Verifica se esta contribuição deve ser gerada para o mês dado."""
+        if not self.is_active or self.is_deleted:
+            return False
+        month_str = f"{year:04d}-{month:02d}"
+        start_month = self.start_date.strftime("%Y-%m")
+        if month_str < start_month:
+            return False
+        if self.end_date:
+            end_month = self.end_date.strftime("%Y-%m")
+            if month_str > end_month:
+                return False
+        return True
 
 
 GOAL_CATEGORIES = (

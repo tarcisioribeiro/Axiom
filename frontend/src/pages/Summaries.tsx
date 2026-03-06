@@ -6,6 +6,7 @@ import {
   BookOpen,
   CheckCircle2,
   XCircle,
+  Highlighter,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,13 +39,15 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { bookHighlightsService } from '@/services/book-highlights-service';
 import { booksService } from '@/services/books-service';
 import { summariesService } from '@/services/summaries-service';
-import type { Summary, SummaryFormData, Book } from '@/types';
+import type { BookHighlight, Summary, SummaryFormData, Book } from '@/types';
 
 export default function Summaries() {
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
+  const [highlights, setHighlights] = useState<BookHighlight[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -67,12 +70,14 @@ export default function Summaries() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [summariesData, booksData] = await Promise.all([
+      const [summariesData, booksData, highlightsData] = await Promise.all([
         summariesService.getAll(),
         booksService.getAll(),
+        bookHighlightsService.getAll(),
       ]);
       setSummaries(summariesData);
       setBooks(booksData);
+      setHighlights(highlightsData);
     } catch {
       toast({
         title: t('common.messages.loadError'),
@@ -339,10 +344,41 @@ export default function Summaries() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <p className="line-clamp-6 whitespace-pre-wrap text-sm">
                   {summary.text}
                 </p>
+                {(() => {
+                  const bookHighlights = highlights.filter(
+                    (h) => h.book === summary.book
+                  );
+                  if (bookHighlights.length === 0) return null;
+                  return (
+                    <div className="border-t pt-3">
+                      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                        <Highlighter className="h-3.5 w-3.5" />
+                        {bookHighlights.length} destaque
+                        {bookHighlights.length !== 1 ? 's' : ''} relacionado
+                        {bookHighlights.length !== 1 ? 's' : ''}
+                      </p>
+                      <div className="space-y-1.5">
+                        {bookHighlights.slice(0, 3).map((h) => (
+                          <p
+                            key={h.id}
+                            className="line-clamp-2 border-l-2 border-primary/40 pl-2 text-xs text-muted-foreground"
+                          >
+                            {h.text}
+                          </p>
+                        ))}
+                        {bookHighlights.length > 3 && (
+                          <p className="text-xs text-muted-foreground">
+                            +{bookHighlights.length - 3} mais
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           ))}

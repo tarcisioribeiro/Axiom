@@ -50,6 +50,7 @@ export const API_CONFIG = {
     PAYABLES: '/api/v1/payables/',
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
+    MEMBER_FINANCIAL_REPORT: '/api/v1/members/:id/financial-report/',
     AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
     // Security Module
@@ -65,6 +66,11 @@ export const API_CONFIG = {
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
+    PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
+    PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
+    PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',
+    SHARE_TOKEN_REVOKE: '/api/v1/security/share-tokens/:id/revoke/',
+    SHARE_TOKEN_REDEEM: '/api/v1/security/share/:token/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',
@@ -73,6 +79,10 @@ export const API_CONFIG = {
     SUMMARIES: '/api/v1/library/summaries/',
     READINGS: '/api/v1/library/readings/',
     READING_GOALS: '/api/v1/library/reading-goals/',
+    READING_QUEUE: '/api/v1/library/reading-queue/',
+    BOOK_REORDER: '/api/v1/library/reading-queue/reorder/',
+    BOOK_HIGHLIGHTS: '/api/v1/library/highlights/',
+    BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
@@ -87,6 +97,8 @@ export const API_CONFIG = {
     VAULTS: '/api/v1/vaults/',
     VAULT_SIMULATOR: '/api/v1/vaults/simulate/',
     VAULT_TRANSACTIONS: '/api/v1/vault-transactions/',
+    VAULT_RECURRING_CONTRIBUTIONS: '/api/v1/vault-recurring-contributions/',
+    VAULT_GENERATE_CONTRIBUTIONS: '/api/v1/vaults/generate-contributions/',
     FINANCIAL_GOALS: '/api/v1/financial-goals/',
 
     // AI Assistant Module

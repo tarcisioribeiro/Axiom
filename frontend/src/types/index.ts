@@ -599,6 +599,79 @@ export interface MemberFormData {
   notes?: string;
 }
 
+// Member Financial Report Types
+export interface MemberReportExpense {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  payed: boolean;
+  merchant: string;
+}
+
+export interface MemberReportRevenue {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  received: boolean;
+  source: string;
+}
+
+export interface MemberReportLoan {
+  id: number;
+  description: string;
+  value: string;
+  payed_value: string;
+  date: string;
+  status: string;
+  creditor?: string;
+  benefited?: string;
+}
+
+export interface MemberReportPayable {
+  id: number;
+  description: string;
+  value: string;
+  paid_value: string;
+  date: string;
+  due_date: string | null;
+  status: string;
+  category: string;
+}
+
+export interface MemberReportTransfer {
+  id: number;
+  description: string;
+  value: string;
+  date: string;
+  category: string;
+  transfered: boolean;
+}
+
+export interface MemberFinancialReport {
+  member: { id: number; name: string };
+  period: { start_date: string | null; end_date: string | null };
+  summary: {
+    total_revenues: string;
+    total_expenses: string;
+    total_payables: string;
+    total_loans_as_benefited: string;
+    total_loans_as_creditor: string;
+    total_transfers: string;
+    net_balance: string;
+  };
+  expenses_by_category: { category: string; total: string }[];
+  expenses: MemberReportExpense[];
+  revenues: MemberReportRevenue[];
+  loans_as_benefited: MemberReportLoan[];
+  loans_as_creditor: MemberReportLoan[];
+  payables: MemberReportPayable[];
+  transfers: MemberReportTransfer[];
+}
+
 // API Error Types
 export interface ApiError {
   message: string;
@@ -746,6 +819,38 @@ export interface PasswordReveal {
   title: string;
   username: string;
   password: string;
+}
+
+// Credential Share Token Types
+export interface CredentialShareToken {
+  id: number;
+  token: string;
+  password: number;
+  password_title: string;
+  expires_at: string;
+  used_at: string | null;
+  use_count: number;
+  max_uses: number;
+  is_revoked: boolean;
+  is_token_valid: boolean;
+  is_expired: boolean;
+  is_exhausted: boolean;
+  created_at: string;
+}
+
+export interface CreateShareTokenData {
+  ttl_hours: number;
+  max_uses: number;
+}
+
+export interface SharedCredential {
+  title: string;
+  username: string;
+  password: string;
+  site?: string;
+  category: string;
+  expires_at: string;
+  uses_remaining: number;
 }
 
 // Stored Credit Card Types
@@ -1055,6 +1160,7 @@ export interface Book {
   rating: number | null;
   read_status: string;
   read_status_display: string;
+  reading_priority: number | null;
   has_summary: boolean;
   total_pages_read: number;
   reading_progress: number;
@@ -1146,6 +1252,38 @@ export interface ReadingGoal {
 export interface ReadingGoalFormData {
   year: number;
   books_goal: number;
+  owner: number;
+}
+
+// Book Highlight Types
+export interface BookHighlight {
+  id: number;
+  uuid: string;
+  book: number;
+  book_title: string;
+  text: string;
+  page_number?: number | null;
+  chapter?: string | null;
+  highlight_type: 'quote' | 'note' | 'idea';
+  highlight_type_display: string;
+  color: 'yellow' | 'green' | 'blue' | 'pink' | 'orange';
+  color_display: string;
+  summary?: number | null;
+  summary_title?: string | null;
+  owner: number;
+  owner_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BookHighlightFormData {
+  book: number;
+  text: string;
+  page_number?: number | null;
+  chapter?: string | null;
+  highlight_type: string;
+  color: string;
+  summary?: number | null;
   owner: number;
 }
 
@@ -1735,6 +1873,54 @@ export interface VaultFormData {
   annual_yield_rate: number;
   is_active: boolean;
   notes?: string;
+}
+
+export interface VaultRecurringContribution {
+  id: number;
+  uuid: string;
+  vault: number;
+  vault_description: string;
+  account_name: string;
+  amount: string;
+  day_of_month: number;
+  is_active: boolean;
+  start_date: string;
+  end_date?: string;
+  description: string;
+  fixed_expense_id?: number;
+  last_generated_month?: string;
+  next_contribution_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VaultRecurringContributionFormData {
+  vault?: number;
+  amount: number;
+  day_of_month: number;
+  is_active: boolean;
+  start_date: string;
+  end_date?: string;
+  description: string;
+}
+
+export interface GenerateContributionsResponse {
+  month: string;
+  generated_count: number;
+  skipped_count: number;
+  error_count: number;
+  generated: {
+    contribution_id: number;
+    vault: string;
+    amount: number;
+    transaction_id: number;
+    deposit_date: string;
+  }[];
+  errors: {
+    contribution_id: number;
+    vault: string;
+    error: string;
+  }[];
 }
 
 export interface VaultTransactionUpdateData {

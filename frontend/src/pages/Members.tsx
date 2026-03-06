@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
-import { Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -25,6 +26,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 export default function Members() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -184,6 +186,15 @@ export default function Members() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => navigate(`/members/${member.id}/report`)}
+                          aria-label={t('pages.members.viewReport')}
+                          title={t('pages.members.viewReport')}
+                        >
+                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

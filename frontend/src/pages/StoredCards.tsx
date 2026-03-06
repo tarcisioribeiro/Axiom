@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { copyToClipboard } from '@/lib/utils';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { membersService } from '@/services/members-service';
 import { storedCardsService } from '@/services/stored-cards-service';
@@ -151,7 +152,7 @@ export default function StoredCards() {
   };
 
   const handleCopy = async (text: string, label: string) => {
-    await navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     toast({
       title: t('common.messages.copied'),
       description: t('common.messages.copiedDesc', { label }),
