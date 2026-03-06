@@ -15,6 +15,8 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     ArchiveRevealView,
     PasswordDetailView,
     PasswordGenerateView,
+    PasswordImportConfirmView,
+    PasswordImportPreviewView,
     PasswordListCreateView,
     PasswordRevealView,
     SecurityDashboardStatsView,
@@ -53,6 +55,16 @@ urlpatterns = [
         "passwords/health/",
         VaultHealthReportView.as_view(),
         name="password-health-report",
+    ),
+    path(
+        "passwords/import/preview/",
+        PasswordImportPreviewView.as_view(),
+        name="password-import-preview",
+    ),
+    path(
+        "passwords/import/confirm/",
+        PasswordImportConfirmView.as_view(),
+        name="password-import-confirm",
     ),
     path("passwords/<int:pk>/", PasswordDetailView.as_view(), name="password-detail"),
     path(
