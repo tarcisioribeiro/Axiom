@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   Key,
+  Share2,
   Wand2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -19,6 +20,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PasswordGenerator } from '@/components/security/PasswordGenerator';
+import { SharePasswordModal } from '@/components/security/SharePasswordModal';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,6 +51,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
+import { copyToClipboard } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
 import type { Password, PasswordFormData, Member } from '@/types';
@@ -68,6 +71,7 @@ export default function Passwords() {
   const [revealingId, setRevealingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showGenerator, setShowGenerator] = useState(false);
+  const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -92,7 +96,7 @@ export default function Passwords() {
       setIsLoading(true);
       const [passwordsData, memberData] = await Promise.all([
         passwordsService.getAll(),
-        membersService.getCurrentUserMember(),
+        membersService.getCurrentUserMember().catch(() => null),
       ]);
       setPasswords(passwordsData);
       setCurrentUserMember(memberData);
@@ -203,7 +207,7 @@ export default function Passwords() {
   const handleCopyPassword = async (id: number) => {
     const password = revealedPasswords.get(id);
     if (password) {
-      await navigator.clipboard.writeText(password);
+      await copyToClipboard(password);
       toast({
         title: t('common.messages.copied'),
         description: t('pages.passwords.copiedDesc'),
@@ -361,6 +365,14 @@ export default function Passwords() {
                     <Button
                       size="sm"
                       variant="ghost"
+                      onClick={() => setSharingPassword(password)}
+                      title={t('pages.sharePassword.title')}
+                    >
+                      <Share2 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
                       onClick={() => handleEdit(password)}
                     >
                       <Pencil className="h-3 w-3" />
@@ -394,6 +406,14 @@ export default function Passwords() {
             }
           />
         )}
+
+        <SharePasswordModal
+          password={sharingPassword}
+          open={!!sharingPassword}
+          onOpenChange={(open) => {
+            if (!open) setSharingPassword(null);
+          }}
+        />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">

@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, serializers, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -15,11 +16,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from app.encryption import FieldEncryption
 from app.permissions import GlobalDefaultPermission
 from security.activity_logs.models import ACTION_TYPES, ActivityLog
 from security.models import (
     PASSWORD_CATEGORIES,
     Archive,
+    CredentialShareToken,
     Password,
     StoredBankAccount,
     StoredCreditCard,
@@ -35,6 +38,8 @@ from security.serializers import (
     ArchiveCreateUpdateSerializer,
     ArchiveRevealSerializer,
     ArchiveSerializer,
+    CreateShareTokenSerializer,
+    CredentialShareTokenSerializer,
     PasswordCreateUpdateSerializer,
     PasswordRevealSerializer,
     PasswordSerializer,
@@ -1453,5 +1458,177 @@ class PasswordGenerateView(APIView):
                 "password": generated_password,
                 "length": len(generated_password),
                 "strength": strength,
+            }
+        )
+
+
+# ============================================================================
+# CREDENTIAL SHARE TOKEN VIEWS
+# ============================================================================
+
+
+class ShareTokenListCreateView(VaultLockedMixin, APIView):
+    """
+    GET  /api/v1/security/passwords/<pk>/share-tokens/  — lista tokens da senha
+    POST /api/v1/security/passwords/<pk>/share-tokens/  — cria novo token
+
+    Requer cofre desbloqueado (VaultLockedMixin) para descriptografar a senha
+    e re-criptografá-la com a app key no snapshot do token.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Password.objects.all()
+
+    def get(self, request, pk):
+        password_obj = get_object_or_404(
+            Password, pk=pk, owner__user=request.user, is_deleted=False
+        )
+        tokens = CredentialShareToken.objects.filter(password=password_obj)
+        serializer = CredentialShareTokenSerializer(tokens, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, pk):
+        password_obj = get_object_or_404(
+            Password, pk=pk, owner__user=request.user, is_deleted=False
+        )
+
+        # Decrypt with vault key (already set by VaultLockedMixin)
+        plaintext = password_obj.password
+        if plaintext is None:
+            return Response(
+                {"error": "Não foi possível descriptografar a senha."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = CreateShareTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        ttl_hours = serializer.validated_data["ttl_hours"]
+        max_uses = serializer.validated_data["max_uses"]
+
+        # Re-encrypt with app key as a snapshot (vault-key-independent)
+        encrypted_snapshot = FieldEncryption.encrypt_data(plaintext)
+
+        token_obj = CredentialShareToken.objects.create(
+            password=password_obj,
+            _encrypted_password=encrypted_snapshot,
+            expires_at=timezone.now() + timedelta(hours=ttl_hours),
+            max_uses=max_uses,
+            created_by=request.user,
+        )
+
+        log_activity(
+            request,
+            "create",
+            "CredentialShareToken",
+            token_obj.id,
+            f"Criou link de compartilhamento para senha: {password_obj.title}",
+        )
+
+        return Response(
+            CredentialShareTokenSerializer(token_obj).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class RevokeShareTokenView(APIView):
+    """
+    DELETE /api/v1/security/share-tokens/<token_id>/revoke/
+
+    Revoga um token de compartilhamento antes de expirar.
+    Apenas o criador do token pode revogá-lo.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+    queryset = Password.objects.all()
+
+    def delete(self, request, token_id):
+        token_obj = get_object_or_404(
+            CredentialShareToken, id=token_id, created_by=request.user
+        )
+        token_obj.is_revoked = True
+        token_obj.save(update_fields=["is_revoked"])
+
+        log_activity(
+            request,
+            "other",
+            "CredentialShareToken",
+            token_obj.id,
+            f"Revogou link de compartilhamento: {token_obj.password.title}",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RedeemShareTokenView(APIView):
+    """
+    GET /api/v1/security/share/<token>/
+
+    Endpoint público (sem autenticação). Descriptografa e retorna a
+    credencial se o token for válido. Registra acesso no ActivityLog.
+
+    Retorna 410 Gone se o token estiver expirado, revogado ou esgotado.
+    """
+
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request, token):
+        try:
+            token_obj = CredentialShareToken.objects.select_related("password").get(
+                token=token
+            )
+        except CredentialShareToken.DoesNotExist:
+            return Response(
+                {"error": "Token inválido."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not token_obj.is_valid:
+            if token_obj.is_revoked:
+                reason = "revogado pelo criador"
+            elif token_obj.is_expired:
+                reason = "expirado"
+            else:
+                reason = "limite de usos atingido"
+            return Response(
+                {"error": f"Este link de compartilhamento foi {reason}."},
+                status=status.HTTP_410_GONE,
+            )
+
+        # Decrypt with app key (snapshot stored at token creation)
+        try:
+            plaintext = FieldEncryption.decrypt_data(token_obj._encrypted_password)
+        except Exception:
+            logger.error(
+                "Failed to decrypt share token snapshot (token_id=%s)", token_obj.id
+            )
+            return Response(
+                {"error": "Erro ao descriptografar a senha."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        # Update usage tracking before returning (prevents race condition double-use)
+        token_obj.use_count += 1
+        token_obj.used_at = timezone.now()
+        token_obj.save(update_fields=["use_count", "used_at"])
+
+        ActivityLog.log_action(
+            user=None,
+            action="shared_reveal",
+            description=f"Acesso via link compartilhado: {token_obj.password.title}",
+            model_name="CredentialShareToken",
+            object_id=token_obj.id,
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+        )
+
+        pw = token_obj.password
+        return Response(
+            {
+                "title": pw.title,
+                "username": pw.username,
+                "password": plaintext,
+                "site": pw.site,
+                "category": pw.category,
+                "expires_at": token_obj.expires_at,
+                "uses_remaining": token_obj.max_uses - token_obj.use_count,
             }
         )

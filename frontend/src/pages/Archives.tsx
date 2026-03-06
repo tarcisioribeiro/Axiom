@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
+import { copyToClipboard } from '@/lib/utils';
 import { archivesService } from '@/services/archives-service';
 import { membersService } from '@/services/members-service';
 import type { Archive, ArchiveFormData, Member } from '@/types';
@@ -457,7 +458,7 @@ export default function Archives() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    void navigator.clipboard.writeText(revealedContent);
+                    void copyToClipboard(revealedContent);
                     toast({
                       title: t('common.messages.copied'),
                       description: t('pages.archives.copiedDesc'),

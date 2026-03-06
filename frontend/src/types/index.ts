@@ -821,6 +821,38 @@ export interface PasswordReveal {
   password: string;
 }
 
+// Credential Share Token Types
+export interface CredentialShareToken {
+  id: number;
+  token: string;
+  password: number;
+  password_title: string;
+  expires_at: string;
+  used_at: string | null;
+  use_count: number;
+  max_uses: number;
+  is_revoked: boolean;
+  is_token_valid: boolean;
+  is_expired: boolean;
+  is_exhausted: boolean;
+  created_at: string;
+}
+
+export interface CreateShareTokenData {
+  ttl_hours: number;
+  max_uses: number;
+}
+
+export interface SharedCredential {
+  title: string;
+  username: string;
+  password: string;
+  site?: string;
+  category: string;
+  expires_at: string;
+  uses_remaining: number;
+}
+
 // Stored Credit Card Types
 export interface StoredCreditCard {
   id: number;

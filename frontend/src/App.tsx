@@ -11,6 +11,7 @@ import { Toaster } from './components/ui/toaster';
 // Eager load (páginas públicas carregadas imediatamente)
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ShareCredential from './pages/ShareCredential';
 import Unauthorized from './pages/Unauthorized';
 import { useAuthStore } from './stores/auth-store';
 
@@ -95,6 +96,7 @@ function AnimatedRoutes() {
           element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
         />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/share/:token" element={<ShareCredential />} />
 
         {/* Protected routes */}
         <Route
