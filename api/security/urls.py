@@ -19,7 +19,10 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     PasswordImportPreviewView,
     PasswordListCreateView,
     PasswordRevealView,
+    RedeemShareTokenView,
+    RevokeShareTokenView,
     SecurityDashboardStatsView,
+    ShareTokenListCreateView,
     StoredBankAccountDetailView,
     StoredBankAccountListCreateView,
     StoredBankAccountRevealView,
@@ -117,4 +120,21 @@ urlpatterns = [
     ),
     # Activity Logs
     path("activity-logs/", ActivityLogListView.as_view(), name="activity-log-list"),
+    # Credential Share Tokens
+    path(
+        "passwords/<int:pk>/share-tokens/",
+        ShareTokenListCreateView.as_view(),
+        name="password-share-token-list-create",
+    ),
+    path(
+        "share-tokens/<int:token_id>/revoke/",
+        RevokeShareTokenView.as_view(),
+        name="share-token-revoke",
+    ),
+    # Public endpoint — no authentication required
+    path(
+        "share/<uuid:token>/",
+        RedeemShareTokenView.as_view(),
+        name="share-token-redeem",
+    ),
 ]

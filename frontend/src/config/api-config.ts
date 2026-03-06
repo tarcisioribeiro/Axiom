@@ -68,6 +68,9 @@ export const API_CONFIG = {
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
     PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
     PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
+    PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',
+    SHARE_TOKEN_REVOKE: '/api/v1/security/share-tokens/:id/revoke/',
+    SHARE_TOKEN_REDEEM: '/api/v1/security/share/:token/',
 
     // Library Module
     AUTHORS: '/api/v1/library/authors/',

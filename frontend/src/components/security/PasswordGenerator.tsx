@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordsService } from '@/services/passwords-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -89,7 +89,7 @@ export function PasswordGenerator({
 
   const handleCopy = async () => {
     if (!generatedPassword) return;
-    await navigator.clipboard.writeText(generatedPassword);
+    await copyToClipboard(generatedPassword);
     setCopied(true);
     toast({
       title: 'Copiado!',
