@@ -515,7 +515,10 @@ export default function Vaults() {
     try {
       setIsSubmitting(true);
       if (editingContribution) {
-        await vaultsService.updateContribution(editingContribution.id, contributionFormData);
+        await vaultsService.updateContribution(
+          editingContribution.id,
+          contributionFormData
+        );
         toast({
           title: t('pages.vaults.recurringContributions.updated'),
           description: t('pages.vaults.recurringContributions.updatedDesc'),
@@ -1294,12 +1297,13 @@ export default function Vaults() {
       </Dialog>
 
       {/* Recurring Contributions Dialog */}
-      <Dialog open={isContributionsDialogOpen} onOpenChange={setIsContributionsDialogOpen}>
+      <Dialog
+        open={isContributionsDialogOpen}
+        onOpenChange={setIsContributionsDialogOpen}
+      >
         <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {t('pages.vaults.recurringContributions.title')}
-            </DialogTitle>
+            <DialogTitle>{t('pages.vaults.recurringContributions.title')}</DialogTitle>
             <DialogDescription>
               {selectedVault &&
                 t('pages.vaults.recurringContributions.desc', {
@@ -1321,8 +1325,8 @@ export default function Vaults() {
 
             {/* Inline form */}
             {isContributionFormOpen && (
-              <div className="rounded-md border p-4 space-y-3">
-                <h4 className="font-medium text-sm">
+              <div className="space-y-3 rounded-md border p-4">
+                <h4 className="text-sm font-medium">
                   {editingContribution
                     ? t('common.actions.edit')
                     : t('pages.vaults.recurringContributions.newBtn')}
@@ -1430,7 +1434,7 @@ export default function Vaults() {
                     </Label>
                   </div>
                 </div>
-                <div className="flex gap-2 justify-end">
+                <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1450,7 +1454,9 @@ export default function Vaults() {
                       contributionFormData.amount <= 0
                     }
                   >
-                    {isSubmitting ? t('common.actions.saving') : t('common.actions.save')}
+                    {isSubmitting
+                      ? t('common.actions.saving')
+                      : t('common.actions.save')}
                   </Button>
                 </div>
               </div>
@@ -1458,11 +1464,11 @@ export default function Vaults() {
 
             {/* Contributions list */}
             {isContributionsLoading ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">
+              <div className="py-8 text-center text-sm text-muted-foreground">
                 {t('common.messages.loading')}
               </div>
             ) : contributions.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground text-sm">
+              <div className="py-8 text-center text-sm text-muted-foreground">
                 {t('pages.vaults.recurringContributions.emptyState')}
               </div>
             ) : (
@@ -1470,40 +1476,40 @@ export default function Vaults() {
                 {contributions.map((contribution) => (
                   <div
                     key={contribution.id}
-                    className="flex items-start justify-between rounded-md border p-3 gap-3"
+                    className="flex items-start justify-between gap-3 rounded-md border p-3"
                   >
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm truncate">
+                        <span className="truncate text-sm font-medium">
                           {contribution.description}
                         </span>
                         <Badge
                           variant={contribution.is_active ? 'default' : 'secondary'}
-                          className="text-xs shrink-0"
+                          className="shrink-0 text-xs"
                         >
                           {contribution.is_active
                             ? t('pages.vaults.recurringContributions.active')
                             : t('pages.vaults.recurringContributions.inactive')}
                         </Badge>
                       </div>
-                      <div className="text-sm text-success font-semibold mt-0.5">
+                      <div className="mt-0.5 text-sm font-semibold text-success">
                         {formatCurrency(parseFloat(contribution.amount))}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                      <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
                         <div>
-                          {t('pages.vaults.columns.date')}:{' '}
-                          {contribution.day_of_month} &bull;{' '}
-                          {contribution.start_date}
+                          {t('pages.vaults.columns.date')}: {contribution.day_of_month}{' '}
+                          &bull; {contribution.start_date}
                           {contribution.end_date && ` → ${contribution.end_date}`}
                         </div>
-                        {contribution.next_contribution_date && contribution.is_active && (
-                          <div>
-                            {t('pages.vaults.recurringContributions.nextDate')}{' '}
-                            {new Date(contribution.next_contribution_date).toLocaleDateString(
-                              i18n.language
-                            )}
-                          </div>
-                        )}
+                        {contribution.next_contribution_date &&
+                          contribution.is_active && (
+                            <div>
+                              {t('pages.vaults.recurringContributions.nextDate')}{' '}
+                              {new Date(
+                                contribution.next_contribution_date
+                              ).toLocaleDateString(i18n.language)}
+                            </div>
+                          )}
                         {contribution.last_generated_month && (
                           <div>
                             {t('pages.vaults.recurringContributions.lastGenerated')}{' '}
@@ -1512,7 +1518,7 @@ export default function Vaults() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex shrink-0 gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1527,7 +1533,10 @@ export default function Vaults() {
                         onClick={() => handleDeleteContribution(contribution)}
                         aria-label={t('common.actions.delete')}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                        <Trash2
+                          className="h-4 w-4 text-destructive"
+                          aria-hidden="true"
+                        />
                       </Button>
                     </div>
                   </div>
