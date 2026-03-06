@@ -1875,6 +1875,54 @@ export interface VaultFormData {
   notes?: string;
 }
 
+export interface VaultRecurringContribution {
+  id: number;
+  uuid: string;
+  vault: number;
+  vault_description: string;
+  account_name: string;
+  amount: string;
+  day_of_month: number;
+  is_active: boolean;
+  start_date: string;
+  end_date?: string;
+  description: string;
+  fixed_expense_id?: number;
+  last_generated_month?: string;
+  next_contribution_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VaultRecurringContributionFormData {
+  vault?: number;
+  amount: number;
+  day_of_month: number;
+  is_active: boolean;
+  start_date: string;
+  end_date?: string;
+  description: string;
+}
+
+export interface GenerateContributionsResponse {
+  month: string;
+  generated_count: number;
+  skipped_count: number;
+  error_count: number;
+  generated: {
+    contribution_id: number;
+    vault: string;
+    amount: number;
+    transaction_id: number;
+    deposit_date: string;
+  }[];
+  errors: {
+    contribution_id: number;
+    vault: string;
+    error: string;
+  }[];
+}
+
 export interface VaultTransactionUpdateData {
   amount?: number;
   description?: string;

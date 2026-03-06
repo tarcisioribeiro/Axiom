@@ -1,6 +1,7 @@
 import logging
 
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,11 +11,13 @@ from accounts.models import Account
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
 
-from .models import FinancialGoal, Vault, VaultTransaction
+from .models import FinancialGoal, Vault, VaultRecurringContribution, VaultTransaction
 from .serializers import (
     FinancialGoalListSerializer,
     FinancialGoalSerializer,
     VaultDepositSerializer,
+    VaultRecurringContributionCreateSerializer,
+    VaultRecurringContributionSerializer,
     VaultSerializer,
     VaultTransactionSerializer,
     VaultTransactionUpdateSerializer,
@@ -671,6 +674,231 @@ class FinancialGoalRemoveVaultsView(APIView):
                 "goal": FinancialGoalSerializer(goal).data,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+# ============== Vault Recurring Contributions Views ==============
+
+
+class VaultRecurringContributionListCreateView(BaseListCreateView):
+    """Lista e cria contribuições recorrentes de um cofre específico."""
+
+    queryset = VaultRecurringContribution.objects.filter(is_deleted=False)
+    serializer_class = VaultRecurringContributionSerializer
+
+    def get_queryset(self):
+        vault_id = self.kwargs.get("vault_pk")
+        qs = VaultRecurringContribution.objects.filter(
+            is_deleted=False, vault_id=vault_id
+        ).select_related("vault", "vault__account", "fixed_expense")
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return VaultRecurringContributionCreateSerializer
+        return VaultRecurringContributionSerializer
+
+    def perform_create(self, serializer):
+        from expenses.models import FixedExpense
+
+        vault_id = self.kwargs.get("vault_pk")
+        vault = Vault.objects.select_related("account").get(
+            pk=vault_id, is_deleted=False
+        )
+
+        contribution = serializer.save(
+            vault=vault,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+        # Auto-create the corresponding FixedExpense template
+        fixed_expense = FixedExpense(
+            description=contribution.description,
+            default_value=contribution.amount,
+            category="investments",
+            account=vault.account,
+            due_day=contribution.day_of_month,
+            is_active=contribution.is_active,
+            notes=(
+                "Contribuição recorrente automática"
+                f" para o cofre: {vault.description}"
+            ),
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+        fixed_expense.save()
+
+        contribution.fixed_expense = fixed_expense
+        contribution.save(update_fields=["fixed_expense"])
+
+
+class VaultRecurringContributionDetailView(BaseRetrieveUpdateDestroyView):
+    """Detalhe, atualização e exclusão de contribuição recorrente."""
+
+    queryset = VaultRecurringContribution.objects.filter(is_deleted=False)
+    serializer_class = VaultRecurringContributionSerializer
+
+    def get_queryset(self):
+        return VaultRecurringContribution.objects.filter(
+            is_deleted=False
+        ).select_related("vault", "vault__account", "fixed_expense")
+
+    def perform_update(self, serializer):
+        contribution = serializer.save(updated_by=self.request.user)
+
+        # Sync the linked FixedExpense
+        if contribution.fixed_expense:
+            fe = contribution.fixed_expense
+            fe.description = contribution.description
+            fe.default_value = contribution.amount
+            fe.due_day = contribution.day_of_month
+            fe.is_active = contribution.is_active
+            fe.updated_by = self.request.user
+            fe.save()
+
+    def perform_destroy(self, instance):
+        # Deactivate the linked FixedExpense instead of deleting it
+        if instance.fixed_expense:
+            fe = instance.fixed_expense
+            fe.is_active = False
+            fe.updated_by = self.request.user
+            fe.save()
+
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.save()
+
+
+class GenerateVaultContributionsView(APIView):
+    """
+    Processa contribuições recorrentes para um mês específico.
+
+    POST: Executa os depósitos programados e cria VaultTransactions.
+
+    Body: { "month": "YYYY-MM" }  (default: mês atual)
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = VaultRecurringContribution.objects.none()
+
+    @transaction.atomic
+    def post(self, request):
+        from calendar import monthrange
+        from datetime import datetime
+
+        month_str = request.data.get("month")
+        if month_str:
+            try:
+                year_int, month_int = [int(x) for x in month_str.split("-")]
+                if not (1 <= month_int <= 12):
+                    raise ValueError
+            except (ValueError, AttributeError):
+                return Response(
+                    {"error": "Formato de mês inválido. Use YYYY-MM."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            today = timezone.localdate()
+            year_int, month_int = today.year, today.month
+            month_str = f"{year_int:04d}-{month_int:02d}"
+
+        contributions = VaultRecurringContribution.objects.filter(
+            is_deleted=False, is_active=True
+        ).select_related("vault", "vault__account")
+
+        generated = []
+        skipped = []
+        errors = []
+
+        for contrib in contributions:
+            if not contrib.is_in_scope_for_month(year_int, month_int):
+                skipped.append({"id": contrib.id, "reason": "Fora do período ativo"})
+                continue
+
+            if contrib.last_generated_month == month_str:
+                skipped.append({"id": contrib.id, "reason": "Já gerado para este mês"})
+                continue
+
+            vault = Vault.objects.select_for_update().get(pk=contrib.vault_id)
+            account = Account.objects.select_for_update().get(pk=vault.account_id)
+            vault.account = account
+
+            last_day = monthrange(year_int, month_int)[1]
+            day = min(contrib.day_of_month, last_day)
+            try:
+                deposit_date = datetime(year_int, month_int, day).date()
+            except ValueError:
+                deposit_date = datetime(year_int, month_int, last_day).date()
+
+            try:
+                vault_tx = vault.deposit(
+                    amount=contrib.amount,
+                    description=contrib.description,
+                    user=request.user,
+                )
+                vault_tx.recurring_contribution = contrib
+                vault_tx.transaction_date = deposit_date
+                vault_tx.save(
+                    update_fields=["recurring_contribution", "transaction_date"]
+                )
+
+                contrib.last_generated_month = month_str
+                contrib.save(update_fields=["last_generated_month"])
+
+                generated.append(
+                    {
+                        "contribution_id": contrib.id,
+                        "vault": contrib.vault.description,
+                        "amount": float(contrib.amount),
+                        "transaction_id": vault_tx.id,
+                        "deposit_date": deposit_date.isoformat(),
+                    }
+                )
+            except ValueError as e:
+                errors.append(
+                    {
+                        "contribution_id": contrib.id,
+                        "vault": contrib.vault.description,
+                        "error": str(e),
+                    }
+                )
+
+        return Response(
+            {
+                "month": month_str,
+                "generated_count": len(generated),
+                "skipped_count": len(skipped),
+                "error_count": len(errors),
+                "generated": generated,
+                "errors": errors,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class VaultContributionHistoryView(generics.ListAPIView):
+    """
+    Histórico de contribuições recorrentes geradas para um cofre.
+
+    Retorna VaultTransactions do tipo 'deposit' geradas por contribuições recorrentes.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = VaultTransactionSerializer
+    queryset = VaultTransaction.objects.filter(is_deleted=False)
+
+    def get_queryset(self):
+        vault_id = self.kwargs.get("vault_pk")
+        return (
+            VaultTransaction.objects.filter(
+                vault_id=vault_id,
+                is_deleted=False,
+                recurring_contribution__isnull=False,
+            )
+            .select_related("vault", "recurring_contribution")
+            .order_by("-transaction_date")
         )
 
 

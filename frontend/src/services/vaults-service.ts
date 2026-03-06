@@ -12,6 +12,9 @@ import type {
   VaultTransactionUpdateData,
   VaultTransactionUpdateResponse,
   VaultTransactionDeleteResponse,
+  VaultRecurringContribution,
+  VaultRecurringContributionFormData,
+  GenerateContributionsResponse,
   FinancialGoal,
   FinancialGoalListItem,
   FinancialGoalFormData,
@@ -92,6 +95,54 @@ class VaultsService extends BaseService<Vault, VaultFormData> {
   async deleteTransaction(id: number): Promise<VaultTransactionDeleteResponse> {
     return apiClient.delete<VaultTransactionDeleteResponse>(
       `${API_CONFIG.ENDPOINTS.VAULT_TRANSACTIONS}${id}/`
+    );
+  }
+
+  // Recurring Contributions
+  async getContributions(vaultId: number): Promise<VaultRecurringContribution[]> {
+    const response = await apiClient.get<PaginatedResponse<VaultRecurringContribution>>(
+      `${this.endpoint}${vaultId}/recurring-contributions/`
+    );
+    return response.results;
+  }
+
+  async createContribution(
+    vaultId: number,
+    data: VaultRecurringContributionFormData
+  ): Promise<VaultRecurringContribution> {
+    return apiClient.post<VaultRecurringContribution>(
+      `${this.endpoint}${vaultId}/recurring-contributions/`,
+      data
+    );
+  }
+
+  async updateContribution(
+    id: number,
+    data: Partial<VaultRecurringContributionFormData>
+  ): Promise<VaultRecurringContribution> {
+    return apiClient.patch<VaultRecurringContribution>(
+      `${API_CONFIG.ENDPOINTS.VAULT_RECURRING_CONTRIBUTIONS}${id}/`,
+      data
+    );
+  }
+
+  async deleteContribution(id: number): Promise<void> {
+    return apiClient.delete<void>(
+      `${API_CONFIG.ENDPOINTS.VAULT_RECURRING_CONTRIBUTIONS}${id}/`
+    );
+  }
+
+  async getContributionHistory(vaultId: number): Promise<VaultTransaction[]> {
+    const response = await apiClient.get<PaginatedResponse<VaultTransaction>>(
+      `${this.endpoint}${vaultId}/contribution-history/`
+    );
+    return response.results;
+  }
+
+  async generateContributions(month?: string): Promise<GenerateContributionsResponse> {
+    return apiClient.post<GenerateContributionsResponse>(
+      API_CONFIG.ENDPOINTS.VAULT_GENERATE_CONTRIBUTIONS,
+      month ? { month } : {}
     );
   }
 }

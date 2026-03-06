@@ -97,6 +97,8 @@ export const API_CONFIG = {
     VAULTS: '/api/v1/vaults/',
     VAULT_SIMULATOR: '/api/v1/vaults/simulate/',
     VAULT_TRANSACTIONS: '/api/v1/vault-transactions/',
+    VAULT_RECURRING_CONTRIBUTIONS: '/api/v1/vault-recurring-contributions/',
+    VAULT_GENERATE_CONTRIBUTIONS: '/api/v1/vaults/generate-contributions/',
     FINANCIAL_GOALS: '/api/v1/financial-goals/',
 
     // AI Assistant Module
