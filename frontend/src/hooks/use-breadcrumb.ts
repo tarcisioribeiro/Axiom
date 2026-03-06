@@ -31,6 +31,7 @@ import {
   ListOrdered,
   Highlighter,
   BarChart3,
+  FileInput,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -234,6 +235,12 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/security/archives': {
     labelKey: 'breadcrumb.archives',
     icon: Archive,
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
+  },
+  '/security/import': {
+    labelKey: 'breadcrumb.passwordImport',
+    icon: FileInput,
     moduleKey: 'breadcrumb.security',
     moduleIcon: Shield,
   },
