@@ -1,7 +1,13 @@
 from rest_framework import serializers
 
 from security.activity_logs.models import ActivityLog
-from security.models import Archive, Password, StoredBankAccount, StoredCreditCard
+from security.models import (
+    Archive,
+    CredentialShareToken,
+    Password,
+    StoredBankAccount,
+    StoredCreditCard,
+)
 
 # ============================================================================
 # PASSWORD SERIALIZERS
@@ -439,6 +445,56 @@ class ArchiveRevealSerializer(serializers.Serializer):
     text_content = serializers.CharField(read_only=True, allow_null=True, default=None)
     error = serializers.CharField(read_only=True, allow_null=True, default=None)
     error_type = serializers.CharField(read_only=True, allow_null=True, default=None)
+
+
+# ============================================================================
+# CREDENTIAL SHARE TOKEN SERIALIZERS
+# ============================================================================
+
+
+class CreateShareTokenSerializer(serializers.Serializer):
+    """Serializer para criação de tokens de compartilhamento."""
+
+    ttl_hours = serializers.IntegerField(
+        min_value=1,
+        max_value=168,  # 7 days max
+        default=24,
+        help_text="Tempo de vida em horas (1-168)",
+    )
+    max_uses = serializers.IntegerField(
+        min_value=1,
+        max_value=5,
+        default=1,
+        help_text="Número máximo de usos (1-5)",
+    )
+
+
+class CredentialShareTokenSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de tokens de compartilhamento."""
+
+    is_token_valid = serializers.BooleanField(source="is_valid", read_only=True)
+    is_expired = serializers.BooleanField(read_only=True)
+    is_exhausted = serializers.BooleanField(read_only=True)
+    password_title = serializers.CharField(source="password.title", read_only=True)
+
+    class Meta:
+        model = CredentialShareToken
+        fields = [
+            "id",
+            "token",
+            "password",
+            "password_title",
+            "expires_at",
+            "used_at",
+            "use_count",
+            "max_uses",
+            "is_revoked",
+            "is_token_valid",
+            "is_expired",
+            "is_exhausted",
+            "created_at",
+        ]
+        read_only_fields = fields
 
 
 # ============================================================================

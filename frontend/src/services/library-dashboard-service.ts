@@ -65,6 +65,42 @@ export interface LibraryDashboardStats {
     rating_range: string;
     count: number;
   }>;
+  // Issue #18 — advanced reading statistics
+  avg_speed_pages_per_hour: number;
+  current_reading_book: {
+    title: string;
+    total_pages: number;
+    pages_read: number;
+    remaining_pages: number;
+    estimated_days_to_finish: number | null;
+  } | null;
+  monthly_comparison: {
+    current_month: {
+      year: number;
+      month: number;
+      pages_read: number;
+      reading_time_hours: number;
+      books_completed: number;
+    };
+    previous_month: {
+      year: number;
+      month: number;
+      pages_read: number;
+      reading_time_hours: number;
+      books_completed: number;
+    };
+    changes: {
+      pages_read: number | null;
+      reading_time_hours: number | null;
+      books_completed: number | null;
+    };
+  };
+  top_genres_by_time: Array<{
+    genre: string;
+    genre_display: string;
+    total_time_hours: number;
+    total_pages: number;
+  }>;
 }
 
 class LibraryDashboardService {

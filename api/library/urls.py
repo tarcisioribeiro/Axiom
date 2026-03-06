@@ -1,10 +1,15 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Dashboard views
+from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Highlight/Dashboard views
     AuthorDetailView,
     AuthorListCreateView,
     BookDetailView,
+    BookHighlightDetailView,
+    BookHighlightExportView,
+    BookHighlightListCreateView,
     BookListCreateView,
+    BookReadingQueueView,
+    BookReorderView,
     LibraryDashboardStatsView,
     PublisherDetailView,
     PublisherListCreateView,
@@ -36,6 +41,13 @@ urlpatterns = [
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    # Reading Queue
+    path("reading-queue/", BookReadingQueueView.as_view(), name="reading-queue"),
+    path(
+        "reading-queue/reorder/",
+        BookReorderView.as_view(),
+        name="reading-queue-reorder",
+    ),
     # Summaries
     path("summaries/", SummaryListCreateView.as_view(), name="summary-list-create"),
     path("summaries/<int:pk>/", SummaryDetailView.as_view(), name="summary-detail"),
@@ -52,5 +64,21 @@ urlpatterns = [
         "reading-goals/<int:pk>/",
         ReadingGoalDetailView.as_view(),
         name="reading-goal-detail",
+    ),
+    # Book Highlights
+    path(
+        "highlights/",
+        BookHighlightListCreateView.as_view(),
+        name="highlight-list-create",
+    ),
+    path(
+        "highlights/export/",
+        BookHighlightExportView.as_view(),
+        name="highlight-export",
+    ),
+    path(
+        "highlights/<int:pk>/",
+        BookHighlightDetailView.as_view(),
+        name="highlight-detail",
     ),
 ]
