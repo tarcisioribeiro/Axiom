@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
+import { copyToClipboard } from '@/lib/utils';
 
 export function Toaster() {
   const { toasts } = useToast();
@@ -30,7 +31,7 @@ export function Toaster() {
     const textToCopy = `${titleText}\n${descriptionText}`.trim();
 
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      await copyToClipboard(textToCopy);
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {

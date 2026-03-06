@@ -9,9 +9,24 @@ import {
   BookMarked,
   BookCheck,
   Clock,
+  Zap,
+  CalendarClock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -296,6 +311,235 @@ export default function LibraryDashboard() {
               </>
             ) : (
               <div className="text-sm">{t('pages.libraryDashboard.noAuthor')}</div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 4: Velocidade de leitura + Previsão de conclusão */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Velocidade média */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.avgSpeed')}
+            </CardTitle>
+            <Zap className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            {stats?.avg_speed_pages_per_hour && stats.avg_speed_pages_per_hour > 0 ? (
+              <>
+                <div className="text-2xl font-bold">
+                  {stats.avg_speed_pages_per_hour}
+                </div>
+                <p className="mt-1 text-xs">
+                  {t('pages.libraryDashboard.avgSpeedDesc')}
+                </p>
+              </>
+            ) : (
+              <div className="mt-1 text-sm">
+                {t('pages.libraryDashboard.avgSpeedNoData')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Previsão de conclusão */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.completionEstimate')}
+            </CardTitle>
+            <CalendarClock className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            {!stats?.current_reading_book ? (
+              <div className="mt-1 text-sm">
+                {t('pages.libraryDashboard.completionNoBook')}
+              </div>
+            ) : stats.current_reading_book.estimated_days_to_finish === null ? (
+              <>
+                <div
+                  className="truncate text-sm font-medium"
+                  title={stats.current_reading_book.title}
+                >
+                  {t('pages.libraryDashboard.currentBook', {
+                    title: stats.current_reading_book.title,
+                  })}
+                </div>
+                <p className="mt-1 text-xs">
+                  {t('pages.libraryDashboard.completionNoPace')}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {t('pages.libraryDashboard.completionDays', {
+                    days: stats.current_reading_book.estimated_days_to_finish,
+                  })}
+                </div>
+                <p
+                  className="mt-1 truncate text-xs"
+                  title={stats.current_reading_book.title}
+                >
+                  {t('pages.libraryDashboard.currentBook', {
+                    title: stats.current_reading_book.title,
+                  })}
+                </p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 5: Comparativo mensal + Top 3 gêneros por tempo */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Comparativo mensal */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
+            <p className="text-sm">
+              {t('pages.libraryDashboard.monthlyComparisonDesc')}
+            </p>
+          </CardHeader>
+          <CardContent>
+            {stats?.monthly_comparison &&
+              (() => {
+                const mc = stats.monthly_comparison;
+                const chartData = [
+                  {
+                    name: t('pages.libraryDashboard.monthlyPages'),
+                    [t('pages.libraryDashboard.currentMonth')]:
+                      mc.current_month.pages_read,
+                    [t('pages.libraryDashboard.previousMonth')]:
+                      mc.previous_month.pages_read,
+                  },
+                  {
+                    name: t('pages.libraryDashboard.monthlyHours'),
+                    [t('pages.libraryDashboard.currentMonth')]:
+                      mc.current_month.reading_time_hours,
+                    [t('pages.libraryDashboard.previousMonth')]:
+                      mc.previous_month.reading_time_hours,
+                  },
+                  {
+                    name: t('pages.libraryDashboard.monthlyBooks'),
+                    [t('pages.libraryDashboard.currentMonth')]:
+                      mc.current_month.books_completed,
+                    [t('pages.libraryDashboard.previousMonth')]:
+                      mc.previous_month.books_completed,
+                  },
+                ];
+                const currKey = t('pages.libraryDashboard.currentMonth');
+                const prevKey = t('pages.libraryDashboard.previousMonth');
+                return (
+                  <div className="space-y-4">
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart
+                        data={chartData}
+                        margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar dataKey={currKey} fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey={prevKey} fill={COLORS[2]} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    {/* Variações percentuais */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {(
+                        [
+                          {
+                            label: t('pages.libraryDashboard.monthlyPages'),
+                            change: mc.changes.pages_read,
+                          },
+                          {
+                            label: t('pages.libraryDashboard.monthlyHours'),
+                            change: mc.changes.reading_time_hours,
+                          },
+                          {
+                            label: t('pages.libraryDashboard.monthlyBooks'),
+                            change: mc.changes.books_completed,
+                          },
+                        ] as { label: string; change: number | null }[]
+                      ).map(({ label, change }) => (
+                        <div key={label} className="rounded-md bg-muted/50 p-2">
+                          <p className="text-xs font-medium">{label}</p>
+                          {change === null ? (
+                            <div className="flex items-center justify-center gap-1 text-xs">
+                              <Minus className="h-3 w-3" />
+                              <span>—</span>
+                            </div>
+                          ) : change > 0 ? (
+                            <div className="flex items-center justify-center gap-1 text-xs text-success">
+                              <TrendingUp className="h-3 w-3" />
+                              <span>+{change}%</span>
+                            </div>
+                          ) : change < 0 ? (
+                            <div className="flex items-center justify-center gap-1 text-xs text-destructive">
+                              <TrendingDown className="h-3 w-3" />
+                              <span>{change}%</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-1 text-xs">
+                              <Minus className="h-3 w-3" />
+                              <span>0%</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+          </CardContent>
+        </Card>
+
+        {/* Top 3 gêneros por tempo de leitura */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('pages.libraryDashboard.topGenresByTime')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.topGenresByTimeDesc')}</p>
+          </CardHeader>
+          <CardContent>
+            {!stats?.top_genres_by_time || stats.top_genres_by_time.length === 0 ? (
+              <div className="flex h-32 items-center justify-center text-sm">
+                {t('pages.libraryDashboard.noReadings')}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.top_genres_by_time.map((item, index) => {
+                  const maxHours = stats.top_genres_by_time[0].total_time_hours;
+                  const pct =
+                    maxHours > 0
+                      ? Math.round((item.total_time_hours / maxHours) * 100)
+                      : 0;
+                  return (
+                    <div key={item.genre} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
+                            style={{ backgroundColor: COLORS[index] }}
+                          >
+                            {index + 1}
+                          </span>
+                          <span className="font-medium">{item.genre_display}</span>
+                        </div>
+                        <span className="text-xs">{item.total_time_hours}h</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: COLORS[index] }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>

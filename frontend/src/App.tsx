@@ -11,6 +11,7 @@ import { Toaster } from './components/ui/toaster';
 // Eager load (páginas públicas carregadas imediatamente)
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ShareCredential from './pages/ShareCredential';
 import Unauthorized from './pages/Unauthorized';
 import { useAuthStore } from './stores/auth-store';
 
@@ -29,6 +30,7 @@ const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Payables = lazy(() => import('./pages/Payables'));
 const Members = lazy(() => import('./pages/Members'));
+const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
 // Security Module
 const SecurityDashboard = lazy(() => import('./pages/SecurityDashboard'));
@@ -37,6 +39,7 @@ const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
 const PasswordGeneratorPage = lazy(() => import('./pages/PasswordGeneratorPage'));
+const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 
 // Library Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
@@ -45,6 +48,8 @@ const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
 const Summaries = lazy(() => import('./pages/Summaries'));
 const Readings = lazy(() => import('./pages/Readings'));
+const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
+const Highlights = lazy(() => import('./pages/Highlights'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -91,6 +96,7 @@ function AnimatedRoutes() {
           element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
         />
         <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/share/:token" element={<ShareCredential />} />
 
         {/* Protected routes */}
         <Route
@@ -214,6 +220,14 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/members/:id/report"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <MemberFinancialReport />
+              </Suspense>
+            }
+          />
 
           {/* Security Module routes */}
           <Route
@@ -264,6 +278,14 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/security/import"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PasswordImport />
+              </Suspense>
+            }
+          />
 
           {/* Library Module routes */}
           <Route
@@ -311,6 +333,22 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Readings />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/reading-queue"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ReadingQueue />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/highlights"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Highlights />
               </Suspense>
             }
           />

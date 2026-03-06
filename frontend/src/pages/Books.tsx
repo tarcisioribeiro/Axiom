@@ -37,6 +37,15 @@ const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
   }
 };
 
+const priorityBadge = (
+  priority: number | null
+): { label: string; variant: 'destructive' | 'warning' | 'secondary' } | null => {
+  if (priority === null) return null;
+  if (priority === 1) return { label: 'Alta', variant: 'destructive' };
+  if (priority <= 3) return { label: 'Média', variant: 'warning' };
+  return { label: 'Baixa', variant: 'secondary' };
+};
+
 function StarRow({ rating }: { rating: number | null }) {
   if (!rating) return null;
   return (
@@ -259,7 +268,7 @@ export default function Books() {
                 )}
               </div>
 
-              {/* Status + Genre + Rating */}
+              {/* Status + Genre + Priority + Rating */}
               <div className="hidden shrink-0 flex-col items-end gap-1.5 sm:flex">
                 <Badge variant={statusVariant(book.read_status)} className="text-xs">
                   {book.read_status_display}
@@ -267,6 +276,14 @@ export default function Books() {
                 <Badge variant="secondary" className="text-xs">
                   {book.genre_display}
                 </Badge>
+                {(() => {
+                  const pb = priorityBadge(book.reading_priority);
+                  return pb ? (
+                    <Badge variant={pb.variant} className="text-xs">
+                      {pb.label}
+                    </Badge>
+                  ) : null;
+                })()}
                 <StarRow rating={book.rating} />
               </div>
 
