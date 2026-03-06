@@ -49,6 +49,27 @@ urlpatterns = [
         views.VaultTransactionUpdateView.as_view(),
         name="vault-transaction-update",
     ),
+    # Contribuições Recorrentes
+    path(
+        "vaults/<int:vault_pk>/recurring-contributions/",
+        views.VaultRecurringContributionListCreateView.as_view(),
+        name="vault-recurring-contributions",
+    ),
+    path(
+        "vault-recurring-contributions/<int:pk>/",
+        views.VaultRecurringContributionDetailView.as_view(),
+        name="vault-recurring-contribution-detail",
+    ),
+    path(
+        "vaults/<int:vault_pk>/contribution-history/",
+        views.VaultContributionHistoryView.as_view(),
+        name="vault-contribution-history",
+    ),
+    path(
+        "vaults/generate-contributions/",
+        views.GenerateVaultContributionsView.as_view(),
+        name="vault-generate-contributions",
+    ),
     # Metas Financeiras CRUD
     path(
         "financial-goals/",

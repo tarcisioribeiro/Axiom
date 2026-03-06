@@ -28,6 +28,10 @@ import {
   ClipboardList,
   ShoppingCart,
   Tag,
+  ListOrdered,
+  Highlighter,
+  BarChart3,
+  FileInput,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -234,6 +238,12 @@ const routeConfigs: Record<string, RouteConfig> = {
     moduleKey: 'breadcrumb.security',
     moduleIcon: Shield,
   },
+  '/security/import': {
+    labelKey: 'breadcrumb.passwordImport',
+    icon: FileInput,
+    moduleKey: 'breadcrumb.security',
+    moduleIcon: Shield,
+  },
 
   // Library Module
   '/library/dashboard': {
@@ -272,7 +282,38 @@ const routeConfigs: Record<string, RouteConfig> = {
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },
+  '/library/reading-queue': {
+    labelKey: 'breadcrumb.readingQueue',
+    icon: ListOrdered,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/highlights': {
+    labelKey: 'breadcrumb.highlights',
+    icon: Highlighter,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
 };
+
+interface RoutePattern {
+  pattern: RegExp;
+  config: RouteConfig;
+}
+
+const routePatterns: RoutePattern[] = [
+  {
+    pattern: /^\/members\/\d+\/report$/,
+    config: {
+      labelKey: 'breadcrumb.memberFinancialReport',
+      icon: BarChart3,
+      moduleKey: 'breadcrumb.finance',
+      moduleIcon: Wallet,
+      subModuleKey: 'breadcrumb.members',
+      subModuleIcon: Users,
+    },
+  },
+];
 
 /**
  * Hook para gerar breadcrumbs de navegação baseado na rota atual.
@@ -284,7 +325,9 @@ export function useBreadcrumb() {
 
   const breadcrumbs = useMemo((): BreadcrumbItem[] => {
     const pathname = location.pathname;
-    const config = routeConfigs[pathname];
+    const config =
+      routeConfigs[pathname] ??
+      routePatterns.find((p) => p.pattern.test(pathname))?.config;
 
     if (!config) {
       return [{ label: t('breadcrumb.home'), href: '/', icon: Home }];
@@ -323,7 +366,10 @@ export function useBreadcrumb() {
   }, [location.pathname, i18n.language, t]);
 
   const currentPage = useMemo(() => {
-    const config = routeConfigs[location.pathname];
+    const pathname = location.pathname;
+    const config =
+      routeConfigs[pathname] ??
+      routePatterns.find((p) => p.pattern.test(pathname))?.config;
     return config ? t(config.labelKey) : t('breadcrumb.home');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, i18n.language, t]);

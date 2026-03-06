@@ -13,6 +13,7 @@ ACTION_TYPES = (
     ("failed_login", "Tentativa de Login Falha"),
     ("other", "Outro"),
     ("purge", "Purga de Dados (LGPD/GDPR)"),
+    ("shared_reveal", "Acesso via Link Compartilhado"),
 )
 
 

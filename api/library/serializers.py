@@ -1,6 +1,26 @@
 from rest_framework import serializers
 
-from library.models import Author, Book, Publisher, Reading, ReadingGoal, Summary
+from library.models import (
+    Author,
+    Book,
+    BookHighlight,
+    Publisher,
+    Reading,
+    ReadingGoal,
+    Summary,
+)
+
+# ============================================================================
+# BOOK REORDER SERIALIZER
+# ============================================================================
+
+
+class BookReorderItemSerializer(serializers.Serializer):
+    """Item de reordenação da fila de leitura."""
+
+    id = serializers.IntegerField()
+    priority = serializers.IntegerField(min_value=1)
+
 
 # ============================================================================
 # AUTHOR SERIALIZERS
@@ -192,6 +212,7 @@ class BookSerializer(serializers.ModelSerializer):
             "rating",
             "read_status",
             "read_status_display",
+            "reading_priority",
             "has_summary",
             "total_pages_read",
             "reading_progress",
@@ -248,6 +269,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             "media_type",
             "rating",
             "read_status",
+            "reading_priority",
             "owner",
         ]
 
@@ -462,3 +484,64 @@ class ReadingGoalCreateUpdateSerializer(serializers.ModelSerializer):
                     {"year": f"Já existe uma meta de leitura para o ano {year}."}
                 )
         return data
+
+
+# ============================================================================
+# BOOK HIGHLIGHT SERIALIZERS
+# ============================================================================
+
+
+class BookHighlightSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de destaques de livros."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    book_title = serializers.CharField(source="book.title", read_only=True)
+    summary_title = serializers.SerializerMethodField()
+    highlight_type_display = serializers.CharField(
+        source="get_highlight_type_display", read_only=True
+    )
+    color_display = serializers.CharField(source="get_color_display", read_only=True)
+
+    class Meta:
+        model = BookHighlight
+        fields = [
+            "id",
+            "uuid",
+            "book",
+            "book_title",
+            "text",
+            "page_number",
+            "chapter",
+            "highlight_type",
+            "highlight_type_display",
+            "color",
+            "color_display",
+            "summary",
+            "summary_title",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_summary_title(self, obj):
+        return obj.summary.title if obj.summary else None
+
+
+class BookHighlightCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de destaques."""
+
+    class Meta:
+        model = BookHighlight
+        fields = [
+            "id",
+            "book",
+            "text",
+            "page_number",
+            "chapter",
+            "highlight_type",
+            "color",
+            "summary",
+            "owner",
+        ]

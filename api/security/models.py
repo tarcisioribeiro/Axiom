@@ -1,5 +1,8 @@
+import uuid as _uuid
+
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from app.models import BaseModel
 from security.vault_crypto import VaultEncryptedField, VaultMaskedEncryptedField
@@ -294,3 +297,68 @@ class VaultConfig(models.Model):
 
     def __str__(self):
         return f"VaultConfig({self.owner})"
+
+
+# ============================================================================
+# CREDENTIAL SHARE TOKEN MODEL
+# ============================================================================
+
+
+class CredentialShareToken(models.Model):
+    """
+    Token temporário para compartilhar uma credencial com outro membro do sistema.
+
+    Ao criar o token, a senha é decifrada com a vault_key e re-cifrada com a
+    app key (snapshot). Assim o resgate não requer cofre desbloqueado.
+    """
+
+    password = models.ForeignKey(
+        "Password",
+        on_delete=models.CASCADE,
+        related_name="share_tokens",
+        verbose_name="Senha",
+    )
+    token = models.UUIDField(
+        default=_uuid.uuid4,
+        unique=True,
+        editable=False,
+        verbose_name="Token",
+    )
+    # Snapshot da senha re-criptografada com a app key (não a vault_key)
+    _encrypted_password = models.TextField(
+        verbose_name="Senha (snapshot criptografado)"
+    )
+    expires_at = models.DateTimeField(verbose_name="Expira em")
+    used_at = models.DateTimeField(null=True, blank=True, verbose_name="Último uso em")
+    use_count = models.IntegerField(default=0, verbose_name="Usos realizados")
+    max_uses = models.IntegerField(default=1, verbose_name="Máximo de usos")
+    is_revoked = models.BooleanField(default=False, verbose_name="Revogado")
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_share_tokens",
+        verbose_name="Criado por",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_exhausted(self):
+        return self.use_count >= self.max_uses
+
+    @property
+    def is_valid(self):
+        return not self.is_revoked and not self.is_expired and not self.is_exhausted
+
+    class Meta:
+        verbose_name = "Token de Compartilhamento"
+        verbose_name_plural = "Tokens de Compartilhamento"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"ShareToken({self.password.title} | exp={self.expires_at})"

@@ -25,4 +25,9 @@ urlpatterns = [
         views.get_available_permissions,
         name="available-permissions",
     ),
+    path(
+        "members/<int:pk>/financial-report/",
+        views.MemberFinancialReportView.as_view(),
+        name="member-financial-report",
+    ),
 ]
