@@ -1345,7 +1345,7 @@
       "editTitle": "Edit Reading",
       "newTitle": "Record Reading",
       "editDesc": "Update the reading information",
-      "newDesc": "Record the reading progress of a book",
+      "newDesc": "Record the reading progress of {{title}}",
       "deleteTitle": "Delete reading",
       "deleteDesc": "Are you sure you want to delete this reading? This action cannot be undone.",
       "created": "Reading recorded",

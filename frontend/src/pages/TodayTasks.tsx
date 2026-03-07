@@ -104,16 +104,47 @@ const getStatusBadge = (status: string) => {
     case 'skipped':
       return { variant: 'secondary' as const, label: 'Pulada' };
     default:
-      return { variant: 'outline' as const, label: 'Pendente' };
+      return { variant: 'info' as const, label: 'Pendente' };
   }
 };
 
-function TaskCategoryBadge({ icon, label }: { icon?: string | null; label: string }) {
+const getCategoryColor = (category: string): string => {
+  const colors: Record<string, string> = {
+    health: 'bg-category-health text-white dark:text-black border-transparent',
+    studies: 'bg-category-studies text-white dark:text-black border-transparent',
+    spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
+    exercise: 'bg-category-exercise text-white dark:text-black border-transparent',
+    nutrition: 'bg-category-nutrition text-white dark:text-black border-transparent',
+    meditation: 'bg-category-spiritual text-white dark:text-black border-transparent',
+    reading: 'bg-category-studies text-white dark:text-black border-transparent',
+    writing: 'bg-category-work text-white dark:text-black border-transparent',
+    work: 'bg-category-work text-white dark:text-black border-transparent',
+    leisure: 'bg-category-leisure text-white dark:text-black border-transparent',
+    family: 'bg-accent text-accent-foreground border-transparent',
+    social: 'bg-category-leisure text-white dark:text-black border-transparent',
+    finance: 'bg-category-finance text-white dark:text-black border-transparent',
+    household: 'bg-category-nutrition text-white dark:text-black border-transparent',
+    personal_care: 'bg-category-health text-white dark:text-black border-transparent',
+  };
+  return colors[category] ?? 'bg-muted text-muted-foreground border-transparent';
+};
+
+function TaskCategoryBadge({
+  icon,
+  label,
+  category,
+}: {
+  icon?: string | null;
+  label: string;
+  category: string;
+}) {
   const Icon = getIconByName(icon);
   return (
-    <div className="flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-sm text-muted-foreground">
+    <div
+      className={`flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold ${getCategoryColor(category)}`}
+    >
       {/* eslint-disable-next-line react-hooks/static-components -- Icon is a stable Lucide reference, not a dynamic component */}
-      {Icon && <Icon className="h-4 w-4" aria-hidden="true" />}
+      {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
       <span>{label}</span>
     </div>
   );
@@ -527,6 +558,7 @@ export default function TodayTasks() {
                       <TaskCategoryBadge
                         icon={task.icon}
                         label={task.category_display}
+                        category={task.category}
                       />
                     )}
                   </div>

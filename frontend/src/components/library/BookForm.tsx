@@ -142,7 +142,7 @@ export function BookForm({
       <div>
         <Label>Capa do Livro</Label>
         <div className="mt-2 flex items-start gap-4">
-          <div className="relative flex h-32 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+          <div className="relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted shadow-sm">
             {coverPreview ? (
               <>
                 <img
