@@ -14,18 +14,18 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
         outline:
-          'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
+          'border border-input bg-background text-primary shadow-sm hover:bg-accent hover:text-accent-foreground',
         secondary:
           'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        ghost: 'text-primary hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-9 px-4 py-2',
+        default: 'h-9 rounded-md px-4 py-2',
         sm: 'h-8 rounded-md px-3 text-xs',
         lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
-        xs: 'h-7 rounded px-2 text-xs',
+        icon: 'h-9 w-9 rounded-full',
+        xs: 'h-7 rounded-md px-2 text-xs',
       },
     },
     defaultVariants: {
@@ -50,7 +50,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled}
         whileTap={disabled ? undefined : { scale: 0.95 }}
-        whileHover={disabled ? undefined : { scale: 1.02 }}
         transition={{ duration: DURATION.fast }}
         {...(props as React.ComponentProps<typeof motion.button>)}
       />

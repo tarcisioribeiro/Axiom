@@ -1,5 +1,4 @@
 import {
-  Plus,
   Edit,
   Trash2,
   FileText,
@@ -13,8 +12,6 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,22 +41,23 @@ import { booksService } from '@/services/books-service';
 import { summariesService } from '@/services/summaries-service';
 import type { BookHighlight, Summary, SummaryFormData, Book } from '@/types';
 
-export default function Summaries() {
+interface SummariesTabProps {
+  isCreateOpen: boolean;
+  onCreateClose: () => void;
+}
+
+const EMPTY_FORM: SummaryFormData = { title: '', book: 0, text: '', owner: 0 };
+
+export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps) {
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [highlights, setHighlights] = useState<BookHighlight[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedSummary, setSelectedSummary] = useState<Summary | null>(null);
+  const [formData, setFormData] = useState<SummaryFormData>(EMPTY_FORM);
   const { showConfirm } = useAlertDialog();
-  const [formData, setFormData] = useState<SummaryFormData>({
-    title: '',
-    book: 0,
-    text: '',
-    owner: 0,
-  });
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -79,15 +77,29 @@ export default function Summaries() {
       setBooks(booksData);
       setHighlights(highlightsData);
     } catch {
-      toast({
-        title: t('common.messages.loadError'),
-        description: 'Não foi possível carregar os resumos.',
-        variant: 'destructive',
-      });
+      toast({ title: t('common.messages.loadError'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCreateOpen = () => {
+    const readBooks = books.filter((b) => b.read_status === 'read');
+    if (readBooks.length === 0) {
+      toast({
+        title: t('common.messages.actionDenied'),
+        description: t('pages.summaries.noBookMsg'),
+        variant: 'destructive',
+      });
+      onCreateClose();
+    } else {
+      setFormData(EMPTY_FORM);
+    }
+  };
+
+  useEffect(() => {
+    if (isCreateOpen) handleCreateOpen();
+  }, [isCreateOpen]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,75 +109,29 @@ export default function Summaries() {
         title: t('pages.summaries.created'),
         description: t('pages.summaries.createdDesc'),
       });
-      setIsCreateDialogOpen(false);
-      setFormData({
-        title: '',
-        book: 0,
-        text: '',
-        owner: 0,
-      });
+      onCreateClose();
+      setFormData(EMPTY_FORM);
       void loadData();
     } catch {
-      toast({
-        title: t('common.messages.createError'),
-        description: 'Não foi possível criar o resumo.',
-        variant: 'destructive',
-      });
+      toast({ title: t('common.messages.createError'), variant: 'destructive' });
     }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSummary) return;
-
     try {
       await summariesService.update(selectedSummary.id, formData);
       toast({
         title: t('pages.summaries.updated'),
         description: t('pages.summaries.updatedDesc'),
       });
-      setIsEditDialogOpen(false);
+      setIsEditOpen(false);
       setSelectedSummary(null);
-      setFormData({
-        title: '',
-        book: 0,
-        text: '',
-        owner: 0,
-      });
+      setFormData(EMPTY_FORM);
       void loadData();
     } catch {
-      toast({
-        title: t('common.messages.updateError'),
-        description: 'Não foi possível atualizar o resumo.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    const confirmed = await showConfirm({
-      title: t('pages.summaries.deleteTitle'),
-      description: t('pages.summaries.deleteDesc'),
-      confirmText: t('common.actions.delete'),
-      cancelText: t('common.actions.cancel'),
-      variant: 'destructive',
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await summariesService.delete(id);
-      toast({
-        title: t('pages.summaries.deleted'),
-        description: t('pages.summaries.deletedDesc'),
-      });
-      void loadData();
-    } catch {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: 'Não foi possível excluir o resumo.',
-        variant: 'destructive',
-      });
+      toast({ title: t('common.messages.updateError'), variant: 'destructive' });
     }
   };
 
@@ -177,109 +143,48 @@ export default function Summaries() {
       text: summary.text,
       owner: summary.owner,
     });
-    setIsEditDialogOpen(true);
+    setIsEditOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.summaries.deleteTitle'),
+      description: t('pages.summaries.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      await summariesService.delete(id);
+      toast({
+        title: t('pages.summaries.deleted'),
+        description: t('pages.summaries.deletedDesc'),
+      });
+      void loadData();
+    } catch {
+      toast({ title: t('common.messages.deleteError'), variant: 'destructive' });
+    }
   };
 
   const filteredSummaries = summaries.filter(
-    (summary) =>
-      summary.book_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      summary.text.toLowerCase().includes(searchTerm.toLowerCase())
+    (s) =>
+      s.book_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreateClick = () => {
-    const readBooks = books.filter((book) => book.read_status === 'read');
-    if (readBooks.length === 0) {
-      toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.summaries.noBookMsg'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    setIsCreateDialogOpen(true);
-  };
+  const readBooks = books.filter((b) => b.read_status === 'read');
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  if (loading) return <LoadingState />;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title={t('pages.summaries.title')}
-        icon={<FileText />}
-        action={{
-          label: t('pages.summaries.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreateClick,
-        }}
+    <div className="space-y-4">
+      <SearchInput
+        placeholder={t('pages.summaries.searchPlaceholder')}
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+        className="flex-1"
       />
-
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <form onSubmit={handleCreate}>
-            <DialogHeader>
-              <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
-              <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="book">{t('pages.summaries.bookField')}</Label>
-                <Select
-                  value={formData.book.toString()}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, book: parseInt(value) })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('pages.summaries.bookPlaceholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {books
-                      .filter((book) => book.read_status === 'read')
-                      .map((book) => (
-                        <SelectItem key={book.id} value={book.id.toString()}>
-                          {book.title}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="text">{t('pages.summaries.contentField')}</Label>
-                <Textarea
-                  id="text"
-                  value={formData.text}
-                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                  rows={10}
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">{t('pages.summaries.createBtn')}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <div className="flex items-center gap-4">
-        <SearchInput
-          placeholder={t('pages.summaries.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="flex-1"
-        />
-      </div>
 
       {filteredSummaries.length === 0 ? (
         <EmptyState
@@ -336,7 +241,7 @@ export default function Summaries() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(summary.id)}
+                      onClick={() => void handleDelete(summary.id)}
                       aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -385,9 +290,69 @@ export default function Summaries() {
         </div>
       )}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Create dialog */}
+      <Dialog
+        open={isCreateOpen && readBooks.length > 0}
+        onOpenChange={(open) => {
+          if (!open) onCreateClose();
+        }}
+      >
         <DialogContent className="max-w-2xl">
-          <form onSubmit={handleEdit}>
+          <form onSubmit={(e) => void handleCreate(e)}>
+            <DialogHeader>
+              <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
+              <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="book">{t('pages.summaries.bookField')}</Label>
+                <Select
+                  value={formData.book.toString()}
+                  onValueChange={(v) => setFormData({ ...formData, book: parseInt(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('pages.summaries.bookPlaceholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {readBooks.map((b) => (
+                      <SelectItem key={b.id} value={b.id.toString()}>
+                        {b.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="text">{t('pages.summaries.contentField')}</Label>
+                <Textarea
+                  id="text"
+                  value={formData.text}
+                  onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                  rows={10}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="submit">{t('pages.summaries.createBtn')}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl">
+          <form onSubmit={(e) => void handleEdit(e)}>
             <DialogHeader>
               <DialogTitle>{t('pages.summaries.editTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.editDesc')}</DialogDescription>
@@ -406,21 +371,17 @@ export default function Summaries() {
                 <Label htmlFor="edit-book">{t('pages.summaries.bookField')}</Label>
                 <Select
                   value={formData.book.toString()}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, book: parseInt(value) })
-                  }
+                  onValueChange={(v) => setFormData({ ...formData, book: parseInt(v) })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {books
-                      .filter((book) => book.read_status === 'read')
-                      .map((book) => (
-                        <SelectItem key={book.id} value={book.id.toString()}>
-                          {book.title}
-                        </SelectItem>
-                      ))}
+                    {readBooks.map((b) => (
+                      <SelectItem key={b.id} value={b.id.toString()}>
+                        {b.title}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -441,6 +402,6 @@ export default function Summaries() {
           </form>
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </div>
   );
 }

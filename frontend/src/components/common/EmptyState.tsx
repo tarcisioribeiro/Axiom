@@ -31,7 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       aria-label={title ?? message}
       className="space-y-4 rounded-lg border bg-card p-12 text-center"
     >
-      {icon && <div className="flex justify-center">{icon}</div>}
+      {icon && <div className="flex justify-center [&>svg]:text-primary">{icon}</div>}
       {title && <h3 className="text-lg font-semibold">{title}</h3>}
       <p>{message}</p>
       {action && (

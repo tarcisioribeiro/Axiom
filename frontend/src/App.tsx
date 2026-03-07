@@ -24,7 +24,6 @@ const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
 const Revenues = lazy(() => import('./pages/Revenues'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
-const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
 const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
@@ -38,18 +37,12 @@ const Passwords = lazy(() => import('./pages/Passwords'));
 const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
-const PasswordGeneratorPage = lazy(() => import('./pages/PasswordGeneratorPage'));
-const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 
 // Library Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
 const Books = lazy(() => import('./pages/Books'));
 const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
-const Summaries = lazy(() => import('./pages/Summaries'));
-const Readings = lazy(() => import('./pages/Readings'));
-const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
-const Highlights = lazy(() => import('./pages/Highlights'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -57,19 +50,16 @@ const PersonalPlanningDashboard = lazy(
 );
 const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
 const Goals = lazy(() => import('./pages/Goals'));
-const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const TodayTasks = lazy(() => import('./pages/TodayTasks'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
 const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
-const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
-// Bank Reconciliation Module
-const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
+// Bank Reconciliation Detail (navigated from Accounts page)
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
 
 // Loading component
@@ -174,11 +164,7 @@ function AnimatedRoutes() {
           />
           <Route
             path="/credit-card-bills"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <CreditCardBills />
-              </Suspense>
-            }
+            element={<Navigate to="/credit-cards" replace />}
           />
           <Route
             path="/credit-card-expenses"
@@ -263,14 +249,6 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/security/password-generator"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PasswordGeneratorPage />
-              </Suspense>
-            }
-          />
-          <Route
             path="/security/archives"
             element={
               <Suspense fallback={<LoadingFallback />}>
@@ -278,15 +256,6 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-          <Route
-            path="/security/import"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PasswordImport />
-              </Suspense>
-            }
-          />
-
           {/* Library Module routes */}
           <Route
             path="/library/dashboard"
@@ -320,39 +289,6 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-          <Route
-            path="/library/summaries"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Summaries />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/library/readings"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Readings />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/library/reading-queue"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ReadingQueue />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/library/highlights"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <Highlights />
-              </Suspense>
-            }
-          />
-
           {/* Personal Planning Module routes */}
           <Route
             path="/planning/dashboard"
@@ -380,11 +316,7 @@ function AnimatedRoutes() {
           />
           <Route
             path="/planning/daily"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <DailyChecklist />
-              </Suspense>
-            }
+            element={<Navigate to="/planning/today-tasks" replace />}
           />
           <Route
             path="/planning/today-tasks"
@@ -405,14 +337,10 @@ function AnimatedRoutes() {
             }
           />
 
-          {/* Bank Reconciliation Module routes */}
+          {/* Bank Reconciliation Detail (accessed from Accounts) */}
           <Route
             path="/bank-reconciliation"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <BankReconciliation />
-              </Suspense>
-            }
+            element={<Navigate to="/accounts" replace />}
           />
           <Route
             path="/bank-reconciliation/:importId"
@@ -440,14 +368,7 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-          <Route
-            path="/vaults/simulator"
-            element={
-              <Suspense fallback={<LoadingFallback />}>
-                <VaultSimulator />
-              </Suspense>
-            }
-          />
+          <Route path="/vaults/simulator" element={<Navigate to="/vaults" replace />} />
         </Route>
 
         {/* Fallback */}

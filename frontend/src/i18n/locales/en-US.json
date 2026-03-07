@@ -115,6 +115,8 @@
       "publishers": "Publishers",
       "summaries": "Summaries",
       "readings": "Readings",
+      "readingQueue": "Reading Queue",
+      "highlights": "Highlights",
       "todayTasks": "Today's Tasks",
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
@@ -501,6 +503,7 @@
       "deleted": "Card deleted",
       "deletedDesc": "The card was deleted successfully.",
       "noAccountMsg": "You need at least one registered account before creating a credit card.",
+      "viewBills": "View Bills",
       "emptyTitle": "No cards registered",
       "emptyState": "Start by adding your first credit card.",
       "cardCount": "{{count}} card(s) registered",
@@ -1256,7 +1259,17 @@
       "noPrerequisitesMsg": "You need to have authors and publishers registered before creating a book.",
       "emptySearch": "No books found for the current search.",
       "emptyState": "No books registered. Click \"New Book\" to get started.",
-      "searchPlaceholder": "Search books, authors or publishers..."
+      "searchPlaceholder": "Search books, authors or publishers...",
+      "tabCatalog": "Catalog",
+      "colCover": "Cover",
+      "colTitle": "Title",
+      "colAuthors": "Authors",
+      "colPublisher": "Publisher",
+      "colGenre": "Genre",
+      "colStatus": "Status",
+      "colPages": "Pages",
+      "colRating": "Rating",
+      "colProgress": "Progress"
     },
     "authors": {
       "title": "Authors",
@@ -1614,7 +1627,9 @@
       "title": "Today's Tasks",
       "loadError": "Error loading tasks",
       "emptyState": "No tasks scheduled for today.",
-      "timeLabel": "Time: {{time}}"
+      "timeLabel": "Time: {{time}}",
+      "listMode": "List mode",
+      "kanbanMode": "Kanban mode"
     }
   }
 }

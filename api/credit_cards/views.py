@@ -27,6 +27,7 @@ from credit_cards.serializers import (
     CreditCardSerializer,
     PayCreditCardBillSerializer,
 )
+from credit_cards.utils import recalculate_bill_total
 from expenses.models import Expense
 
 
@@ -190,6 +191,28 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
         if self.request.method in ["PUT", "PATCH"]:
             return CreditCardPurchaseUpdateSerializer
         return CreditCardPurchaseSerializer
+
+    def perform_destroy(self, instance):
+        # Coleta faturas afetadas antes da deleção
+        affected_bill_ids = list(
+            CreditCardInstallment.objects.filter(
+                purchase=instance,
+                bill__isnull=False,
+                is_deleted=False,
+            )
+            .values_list("bill_id", flat=True)
+            .distinct()
+        )
+
+        instance.delete()
+
+        # Recalcula todas as faturas afetadas após a deleção em cascata
+        for bill_id in affected_bill_ids:
+            try:
+                bill = CreditCardBill.objects.get(pk=bill_id, is_deleted=False)
+                recalculate_bill_total(bill)
+            except CreditCardBill.DoesNotExist:
+                pass
 
 
 class CreditCardInstallmentListView(generics.ListAPIView):

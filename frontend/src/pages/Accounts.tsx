@@ -1,9 +1,19 @@
-import { Plus, Pencil, Trash2, Wallet } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Wallet,
+  ArrowLeftRight,
+  FileUp,
+  RefreshCw,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -12,19 +22,43 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getErrorMessage } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
-import type { Account, AccountFormData } from '@/types';
+import { bankReconciliationService } from '@/services/bank-reconciliation-service';
+import type { Account, AccountFormData, BankStatementImport } from '@/types';
+
+function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }) {
+  const variants: Record<string, string> = {
+    completed: 'bg-success/10 text-success border-success/30',
+    processing: 'bg-warning/10 text-warning border-warning/30',
+    failed: 'bg-destructive/10 text-destructive border-destructive/30',
+  };
+  const labels: Record<string, string> = {
+    completed: 'Concluído',
+    processing: 'Processando',
+    failed: 'Falhou',
+  };
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
+    >
+      {labels[status] ?? status}
+    </span>
+  );
+}
 
 export default function Accounts() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,6 +66,17 @@ export default function Accounts() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+
+  // Bank reconciliation state
+  const [reconciliationAccount, setReconciliationAccount] = useState<
+    Account | undefined
+  >();
+  const [isReconciliationOpen, setIsReconciliationOpen] = useState(false);
+  const [imports, setImports] = useState<BankStatementImport[]>([]);
+  const [importsLoading, setImportsLoading] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
   useEffect(() => {
     void loadData();
@@ -119,6 +164,65 @@ export default function Accounts() {
     }
   };
 
+  const openReconciliation = async (account: Account) => {
+    setReconciliationAccount(account);
+    setImportsLoading(true);
+    setIsReconciliationOpen(true);
+    try {
+      const all = await bankReconciliationService.getAll();
+      setImports(all.filter((imp) => imp.account === account.id));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setImportsLoading(false);
+    }
+  };
+
+  function detectFormat(filename: string): 'ofx' | 'csv' | '' {
+    const lower = filename.toLowerCase();
+    if (lower.endsWith('.ofx')) return 'ofx';
+    if (lower.endsWith('.csv')) return 'csv';
+    return '';
+  }
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile || !reconciliationAccount) return;
+    const format = detectFormat(uploadFile.name);
+    if (!format) {
+      toast({ title: 'Formato inválido. Use OFX ou CSV.', variant: 'destructive' });
+      return;
+    }
+    setUploadLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('account', String(reconciliationAccount.id));
+      formData.append('file_format', format);
+      const imported = await bankReconciliationService.importFile(formData);
+      try {
+        const matched = await bankReconciliationService.runMatch(imported.id);
+        setIsUploadOpen(false);
+        setUploadFile(null);
+        setIsReconciliationOpen(false);
+        void navigate(`/bank-reconciliation/${matched.id}`);
+      } catch {
+        setIsUploadOpen(false);
+        setUploadFile(null);
+        setIsReconciliationOpen(false);
+        void navigate(`/bank-reconciliation/${imported.id}`);
+      }
+    } catch (error: unknown) {
+      toast({ title: getErrorMessage(error), variant: 'destructive' });
+    } finally {
+      setUploadLoading(false);
+    }
+  };
+
   // Definir colunas da tabela
   const columns: Column<Account>[] = [
     {
@@ -195,8 +299,18 @@ export default function Accounts() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => void openReconciliation(account)}
+              title="Conciliação Bancária"
+              aria-label="Conciliação Bancária"
+            >
+              <ArrowLeftRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => handleEdit(account)}
-              aria-label="Editar"
+              title={t('common.actions.edit')}
+              aria-label={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -204,7 +318,8 @@ export default function Accounts() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(account.id)}
-              aria-label="Excluir"
+              title={t('common.actions.delete')}
+              aria-label={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -232,6 +347,130 @@ export default function Accounts() {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bank Reconciliation dialog */}
+      <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowLeftRight className="h-5 w-5" />
+              Conciliação Bancária — {reconciliationAccount?.account_name}
+            </DialogTitle>
+            <DialogDescription>
+              Importe extratos bancários para conciliar com suas transações.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setIsUploadOpen(true)}>
+              <FileUp className="mr-2 h-4 w-4" />
+              Importar Extrato
+            </Button>
+          </div>
+
+          {importsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : imports.length === 0 ? (
+            <EmptyState
+              icon={<ArrowLeftRight className="h-12 w-12 text-muted-foreground" />}
+              title="Nenhum extrato importado"
+              message="Clique em 'Importar Extrato' para começar."
+            />
+          ) : (
+            <div className="rounded-md border">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-muted/50">
+                  <tr>
+                    <th className="p-3 text-left font-medium">Arquivo</th>
+                    <th className="p-3 text-left font-medium">Formato</th>
+                    <th className="p-3 text-left font-medium">Status</th>
+                    <th className="p-3 text-right font-medium">Entradas</th>
+                    <th className="p-3 text-right font-medium">Conciliados</th>
+                    <th className="p-3 text-left font-medium">Importado em</th>
+                    <th className="p-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {imports.map((imp) => (
+                    <tr key={imp.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium">{imp.original_filename}</td>
+                      <td className="p-3">
+                        <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
+                      </td>
+                      <td className="p-3">
+                        <ImportStatusBadge status={imp.status} />
+                      </td>
+                      <td className="p-3 text-right">{imp.total_entries}</td>
+                      <td className="p-3 text-right font-medium text-success">
+                        {imp.matched_count}
+                      </td>
+                      <td className="p-3 text-muted-foreground">
+                        {formatDate(imp.created_at)}
+                      </td>
+                      <td className="p-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsReconciliationOpen(false);
+                            void navigate(`/bank-reconciliation/${imp.id}`);
+                          }}
+                        >
+                          Ver
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload dialog */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importar Extrato Bancário</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
+            <div className="space-y-sm">
+              <Label htmlFor="upload-file">Arquivo (.ofx ou .csv)</Label>
+              <input
+                id="upload-file"
+                type="file"
+                accept=".ofx,.csv"
+                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
+              />
+              {uploadFile && (
+                <p className="text-xs text-muted-foreground">
+                  {uploadFile.name} — formato:{' '}
+                  <strong>
+                    {detectFormat(uploadFile.name).toUpperCase() || 'desconhecido'}
+                  </strong>
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsUploadOpen(false)}
+                disabled={uploadLoading}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={uploadLoading || !uploadFile}>
+                {uploadLoading ? 'Importando...' : 'Importar'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </PageContainer>

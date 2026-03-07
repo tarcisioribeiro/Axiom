@@ -1,11 +1,9 @@
-import { BookMarked, Download, Edit, Highlighter, Plus, Trash2 } from 'lucide-react';
+import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,60 +45,6 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   note: 'secondary',
   idea: 'outline',
 };
-
-function HighlightCard({
-  highlight,
-  onEdit,
-  onDelete,
-}: {
-  highlight: BookHighlight;
-  onEdit: (h: BookHighlight) => void;
-  onDelete: (id: number) => void;
-}) {
-  const colorClass = COLOR_CLASSES[highlight.color] ?? COLOR_CLASSES.yellow;
-
-  return (
-    <div className={`rounded-lg border-l-4 p-4 ${colorClass}`}>
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={TYPE_VARIANT[highlight.highlight_type] ?? 'default'}>
-            {highlight.highlight_type_display}
-          </Badge>
-          {highlight.page_number && (
-            <span className="text-xs text-muted-foreground">
-              p. {highlight.page_number}
-            </span>
-          )}
-          {highlight.chapter && (
-            <span className="text-xs text-muted-foreground">{highlight.chapter}</span>
-          )}
-          <span className="text-xs font-medium text-muted-foreground">
-            {highlight.book_title}
-          </span>
-        </div>
-        <div className="flex shrink-0 gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0"
-            onClick={() => onEdit(highlight)}
-          >
-            <Edit className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-            onClick={() => onDelete(highlight.id)}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-      <p className="text-sm leading-relaxed">{highlight.text}</p>
-    </div>
-  );
-}
 
 interface HighlightFormProps {
   highlight?: BookHighlight;
@@ -243,14 +187,19 @@ function HighlightForm({
   );
 }
 
-export default function Highlights() {
+interface HighlightsTabProps {
+  isCreateOpen: boolean;
+  onCreateClose: () => void;
+}
+
+export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProps) {
   const [highlights, setHighlights] = useState<BookHighlight[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [ownerId, setOwnerId] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -284,14 +233,9 @@ export default function Highlights() {
     }
   };
 
-  const handleCreate = () => {
-    setEditingHighlight(undefined);
-    setIsFormOpen(true);
-  };
-
   const handleEdit = (highlight: BookHighlight) => {
     setEditingHighlight(highlight);
-    setIsFormOpen(true);
+    setIsEditOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -303,7 +247,6 @@ export default function Highlights() {
       variant: 'destructive',
     });
     if (!confirmed) return;
-
     try {
       await bookHighlightsService.delete(id);
       toast({ title: 'Destaque excluído' });
@@ -327,7 +270,8 @@ export default function Highlights() {
         await bookHighlightsService.create(data);
         toast({ title: 'Destaque salvo' });
       }
-      setIsFormOpen(false);
+      onCreateClose();
+      setIsEditOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
@@ -361,7 +305,6 @@ export default function Highlights() {
     }
   };
 
-  // Client-side filtering
   const filtered = searchTerm
     ? highlights.filter(
         (h) =>
@@ -374,17 +317,7 @@ export default function Highlights() {
   if (isLoading) return <LoadingState />;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Destaques"
-        icon={<Highlighter />}
-        action={{
-          label: 'Novo Destaque',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <SearchInput
           placeholder="Buscar destaques..."
@@ -416,39 +349,96 @@ export default function Highlights() {
         />
       ) : (
         <div className="space-y-3">
-          {filtered.map((h) => (
-            <HighlightCard
-              key={h.id}
-              highlight={h}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
+          {filtered.map((h) => {
+            const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
+            return (
+              <div key={h.id} className={`rounded-lg border-l-4 p-4 ${colorClass}`}>
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>
+                      {h.highlight_type_display}
+                    </Badge>
+                    {h.page_number && (
+                      <span className="text-xs text-muted-foreground">
+                        p. {h.page_number}
+                      </span>
+                    )}
+                    {h.chapter && (
+                      <span className="text-xs text-muted-foreground">{h.chapter}</span>
+                    )}
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {h.book_title}
+                    </span>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={() => handleEdit(h)}
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                      onClick={() => void handleDelete(h.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm leading-relaxed">{h.text}</p>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+      {/* Create dialog */}
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          if (!open) onCreateClose();
+        }}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {editingHighlight ? 'Editar Destaque' : 'Novo Destaque'}
-            </DialogTitle>
+            <DialogTitle>Novo Destaque</DialogTitle>
             <DialogDescription>
-              {editingHighlight
-                ? 'Edite os dados do destaque.'
-                : 'Adicione um novo destaque, citação ou nota de um livro.'}
+              Adicione um novo destaque, citação ou nota de um livro.
             </DialogDescription>
+          </DialogHeader>
+          <HighlightForm
+            books={books}
+            ownerId={ownerId}
+            onSubmit={handleSubmit}
+            onCancel={onCreateClose}
+            isLoading={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar Destaque</DialogTitle>
+            <DialogDescription>Edite os dados do destaque.</DialogDescription>
           </DialogHeader>
           <HighlightForm
             highlight={editingHighlight}
             books={books}
             ownerId={ownerId}
             onSubmit={handleSubmit}
-            onCancel={() => setIsFormOpen(false)}
+            onCancel={() => setIsEditOpen(false)}
             isLoading={isSubmitting}
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </div>
   );
 }
+
+export { Highlighter };
