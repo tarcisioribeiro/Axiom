@@ -345,6 +345,11 @@ export default function Archives() {
                             ? t('pages.archives.viewContent')
                             : t('pages.archives.downloadFile')
                         }
+                        title={
+                          arc.archive_type === 'text'
+                            ? t('pages.archives.viewContent')
+                            : t('pages.archives.downloadFile')
+                        }
                       >
                         {arc.archive_type === 'text' ? (
                           <Eye className="h-4 w-4" aria-hidden="true" />
@@ -358,6 +363,7 @@ export default function Archives() {
                         className="h-8 w-8"
                         onClick={() => handleEdit(arc)}
                         aria-label={t('common.actions.edit')}
+                        title={t('common.actions.edit')}
                       >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -367,6 +373,7 @@ export default function Archives() {
                         className="h-8 w-8"
                         onClick={() => handleDelete(arc.id)}
                         aria-label={t('common.actions.delete')}
+                        title={t('common.actions.delete')}
                       >
                         <Trash2
                           className="h-4 w-4 text-destructive"

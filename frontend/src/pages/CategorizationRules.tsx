@@ -228,7 +228,6 @@ export default function CategorizationRules() {
           icon={<Tag className="h-12 w-12" />}
           title="Nenhuma regra cadastrada"
           message="Crie regras para categorizar automaticamente suas despesas com base no estabelecimento."
-          action={{ label: 'Nova Regra', onClick: handleCreate }}
         />
       ) : (
         <DataTable

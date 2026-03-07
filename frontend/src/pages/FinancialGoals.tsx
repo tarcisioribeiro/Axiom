@@ -360,6 +360,7 @@ export default function FinancialGoals() {
             size="icon"
             onClick={() => handleManageVaults(goal)}
             aria-label={t('pages.financialGoals.manageVaults')}
+            title={t('pages.financialGoals.manageVaults')}
           >
             <Link className="h-4 w-4 text-info" aria-hidden="true" />
           </Button>
@@ -368,6 +369,7 @@ export default function FinancialGoals() {
             size="icon"
             onClick={() => handleCheckCompletion(goal)}
             aria-label={t('pages.financialGoals.checkCompletion')}
+            title={t('pages.financialGoals.checkCompletion')}
             disabled={goal.is_completed}
           >
             <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
@@ -377,6 +379,7 @@ export default function FinancialGoals() {
             size="icon"
             onClick={() => handleEdit(goal)}
             aria-label={t('common.actions.edit')}
+            title={t('common.actions.edit')}
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -385,6 +388,7 @@ export default function FinancialGoals() {
             size="icon"
             onClick={() => handleDelete(goal.id)}
             aria-label={t('common.actions.delete')}
+            title={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>

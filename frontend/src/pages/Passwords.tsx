@@ -10,6 +10,7 @@ import {
   Key,
   Share2,
   Wand2,
+  Upload,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PasswordGenerator } from '@/components/security/PasswordGenerator';
+import { PasswordImportContent } from '@/components/security/PasswordImportContent';
 import { SharePasswordModal } from '@/components/security/SharePasswordModal';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
@@ -72,6 +74,7 @@ export default function Passwords() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showGenerator, setShowGenerator] = useState(false);
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -278,15 +281,22 @@ export default function Passwords() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader
-          title={t('pages.passwords.title')}
-          icon={<Key />}
-          action={{
-            label: t('pages.passwords.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
-        />
+        <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsImportOpen(true)}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {t('pages.passwordImport.title')}
+            </Button>
+            <Button onClick={handleCreate} className="gap-2">
+              <Plus className="h-4 w-4" />
+              {t('pages.passwords.newBtn')}
+            </Button>
+          </div>
+        </PageHeader>
 
         <div className="flex gap-4">
           <SearchInput
@@ -367,22 +377,27 @@ export default function Passwords() {
                       variant="ghost"
                       onClick={() => setSharingPassword(password)}
                       title={t('pages.sharePassword.title')}
+                      aria-label={t('pages.sharePassword.title')}
                     >
-                      <Share2 className="h-3 w-3" />
+                      <Share2 className="h-3 w-3" aria-hidden="true" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleEdit(password)}
+                      title={t('common.actions.edit')}
+                      aria-label={t('common.actions.edit')}
                     >
-                      <Pencil className="h-3 w-3" />
+                      <Pencil className="h-3 w-3" aria-hidden="true" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(password.id)}
+                      title={t('common.actions.delete')}
+                      aria-label={t('common.actions.delete')}
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3 text-destructive" aria-hidden="true" />
                     </Button>
                   </div>
 
@@ -414,6 +429,25 @@ export default function Passwords() {
             if (!open) setSharingPassword(null);
           }}
         />
+
+        {/* Import dialog */}
+        <Dialog
+          open={isImportOpen}
+          onOpenChange={(open) => {
+            setIsImportOpen(open);
+            if (!open) void loadData();
+          }}
+        >
+          <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{t('pages.passwordImport.title')}</DialogTitle>
+              <DialogDescription>
+                {t('pages.passwordImport.description')}
+              </DialogDescription>
+            </DialogHeader>
+            <PasswordImportContent />
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">

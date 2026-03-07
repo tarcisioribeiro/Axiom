@@ -198,6 +198,7 @@ export default function DailyReflections() {
             size="icon"
             onClick={() => handleEdit(r)}
             aria-label={t('common.actions.edit')}
+            title={t('common.actions.edit')}
           >
             <Edit className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -206,6 +207,7 @@ export default function DailyReflections() {
             size="icon"
             onClick={() => void handleDelete(r.id)}
             aria-label={t('common.actions.delete')}
+            title={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
           </Button>

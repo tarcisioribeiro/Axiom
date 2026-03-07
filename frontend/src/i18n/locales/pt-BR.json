@@ -115,6 +115,8 @@
       "publishers": "Editoras",
       "summaries": "Resumos",
       "readings": "Leituras",
+      "readingQueue": "Fila de Leitura",
+      "highlights": "Destaques",
       "todayTasks": "Tarefas de Hoje",
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
@@ -501,6 +503,7 @@
       "deleted": "Cartão excluído",
       "deletedDesc": "O cartão foi excluído com sucesso.",
       "noAccountMsg": "É necessário ter pelo menos uma conta cadastrada antes de criar um cartão de crédito.",
+      "viewBills": "Ver Faturas",
       "emptyTitle": "Nenhum cartão cadastrado",
       "emptyState": "Comece adicionando seu primeiro cartão de crédito.",
       "cardCount": "{{count}} cartão(ões) cadastrado(s)",
@@ -1275,7 +1278,17 @@
       "noPrerequisitesMsg": "É necessário ter autores e editoras cadastrados antes de criar um livro.",
       "emptySearch": "Nenhum livro encontrado para a pesquisa atual.",
       "emptyState": "Nenhum livro cadastrado. Clique em \"Novo Livro\" para começar.",
-      "searchPlaceholder": "Buscar livros, autores ou editoras..."
+      "searchPlaceholder": "Buscar livros, autores ou editoras...",
+      "tabCatalog": "Catálogo",
+      "colCover": "Capa",
+      "colTitle": "Título",
+      "colAuthors": "Autores",
+      "colPublisher": "Editora",
+      "colGenre": "Gênero",
+      "colStatus": "Status",
+      "colPages": "Páginas",
+      "colRating": "Avaliação",
+      "colProgress": "Progresso"
     },
     "authors": {
       "title": "Autores",
@@ -1351,7 +1364,7 @@
       "editTitle": "Editar Leitura",
       "newTitle": "Registrar Leitura",
       "editDesc": "Atualize as informações da leitura",
-      "newDesc": "Registre o progresso de leitura de um livro",
+      "newDesc": "Registre o progresso de leitura de {{title}}",
       "deleteTitle": "Excluir leitura",
       "deleteDesc": "Tem certeza que deseja excluir esta leitura? Esta ação não pode ser desfeita.",
       "created": "Leitura registrada",
@@ -1633,7 +1646,9 @@
       "title": "Tarefas de Hoje",
       "loadError": "Erro ao carregar tarefas",
       "emptyState": "Nenhuma tarefa programada para hoje.",
-      "timeLabel": "Horário: {{time}}"
+      "timeLabel": "Horário: {{time}}",
+      "listMode": "Modo lista",
+      "kanbanMode": "Modo kanban"
     }
   }
 }

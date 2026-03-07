@@ -5,15 +5,22 @@ import {
   CreditCard as CreditCardIcon,
   Calendar,
   Wallet,
+  Receipt,
+  Filter,
+  RotateCcw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { BillPaymentForm } from '@/components/credit-cards/BillPaymentForm';
+import { CreditCardBillForm } from '@/components/credit-cards/CreditCardBillForm';
 import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
+import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,15 +31,76 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { translate } from '@/config/constants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { translate, TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
+import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { accountsService } from '@/services/accounts-service';
+import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
-import type { CreditCard, CreditCardFormData, Account } from '@/types';
+import { useAuthStore } from '@/stores/auth-store';
+import type {
+  CreditCard,
+  CreditCardFormData,
+  Account,
+  CreditCardBill,
+  CreditCardBillFormData,
+  BillPaymentFormData,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+// Mapeamento de abreviações de mês para número
+const MONTH_TO_NUMBER: Record<string, number> = {
+  Jan: 1,
+  Feb: 2,
+  Mar: 3,
+  Apr: 4,
+  May: 5,
+  Jun: 6,
+  Jul: 7,
+  Aug: 8,
+  Sep: 9,
+  Oct: 10,
+  Nov: 11,
+  Dec: 12,
+};
+
+function sortBills(bills: CreditCardBill[]): CreditCardBill[] {
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+  return [...bills].sort((a, b) => {
+    const aMonth = MONTH_TO_NUMBER[a.month] || 1;
+    const bMonth = MONTH_TO_NUMBER[b.month] || 1;
+    const aIsCurrent =
+      aMonth === currentMonth &&
+      parseInt(a.year) === currentYear &&
+      a.status !== 'paid';
+    const bIsCurrent =
+      bMonth === currentMonth &&
+      parseInt(b.year) === currentYear &&
+      b.status !== 'paid';
+    if (aIsCurrent && !bIsCurrent) return -1;
+    if (!aIsCurrent && bIsCurrent) return 1;
+    const aIsOpen = a.status === 'open' || a.status === 'overdue';
+    const bIsOpen = b.status === 'open' || b.status === 'overdue';
+    if (aIsOpen && !bIsOpen) return -1;
+    if (!aIsOpen && bIsOpen) return 1;
+    return (
+      new Date(parseInt(a.year), aMonth - 1).getTime() -
+      new Date(parseInt(b.year), bMonth - 1).getTime()
+    );
+  });
+}
 
 export default function CreditCards() {
   const { t } = useTranslation();
@@ -44,6 +112,20 @@ export default function CreditCards() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { user } = useAuthStore();
+
+  // Bills dialog state
+  const [billsCard, setBillsCard] = useState<CreditCard | undefined>();
+  const [isBillsOpen, setIsBillsOpen] = useState(false);
+  const [bills, setBills] = useState<CreditCardBill[]>([]);
+  const [billsLoading, setBillsLoading] = useState(false);
+  const [billStatusFilter, setBillStatusFilter] = useState<string>('all');
+  const [billYearFilter, setBillYearFilter] = useState<string>('all');
+  const [isBillFormOpen, setIsBillFormOpen] = useState(false);
+  const [selectedBill, setSelectedBill] = useState<CreditCardBill | undefined>();
+  const [isBillSubmitting, setIsBillSubmitting] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
 
   useEffect(() => {
     void loadData();
@@ -138,6 +220,202 @@ export default function CreditCards() {
     }
   };
 
+  const openBillsDialog = async (card: CreditCard) => {
+    setBillsCard(card);
+    setBillStatusFilter('all');
+    setBillYearFilter('all');
+    setIsBillsOpen(true);
+    setBillsLoading(true);
+    try {
+      const all = await creditCardBillsService.getAll();
+      setBills(all.filter((b) => b.credit_card === card.id));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setBillsLoading(false);
+    }
+  };
+
+  const handleBillSubmit = async (data: CreditCardBillFormData) => {
+    try {
+      setIsBillSubmitting(true);
+      if (selectedBill) {
+        await creditCardBillsService.update(selectedBill.id, data);
+        toast({
+          title: t('pages.creditCardBills.updated'),
+          description: t('pages.creditCardBills.updatedDesc'),
+        });
+      } else {
+        await creditCardBillsService.create(data);
+        toast({
+          title: t('pages.creditCardBills.created'),
+          description: t('pages.creditCardBills.createdDesc'),
+        });
+      }
+      setIsBillFormOpen(false);
+      if (billsCard) {
+        const all = await creditCardBillsService.getAll();
+        setBills(all.filter((b) => b.credit_card === billsCard.id));
+      }
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBillSubmitting(false);
+    }
+  };
+
+  const handleBillDelete = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.creditCardBills.deleteTitle'),
+      description: t('pages.creditCardBills.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      await creditCardBillsService.delete(id);
+      toast({
+        title: t('pages.creditCardBills.deleted'),
+        description: t('pages.creditCardBills.deletedDesc'),
+      });
+      if (billsCard) {
+        const all = await creditCardBillsService.getAll();
+        setBills(all.filter((b) => b.credit_card === billsCard.id));
+      }
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBillPayment = async (data: BillPaymentFormData) => {
+    if (!selectedBill) return;
+    try {
+      setIsPaymentSubmitting(true);
+      await creditCardBillsService.payBill(selectedBill.id, data);
+      toast({ title: t('pages.creditCardBills.paySuccess') });
+      setIsPaymentOpen(false);
+      if (billsCard) {
+        const all = await creditCardBillsService.getAll();
+        setBills(all.filter((b) => b.credit_card === billsCard.id));
+      }
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.creditCardBills.payError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPaymentSubmitting(false);
+    }
+  };
+
+  const handleReopenBill = async (bill: CreditCardBill) => {
+    const confirmed = await showConfirm({
+      title: t('pages.creditCardBills.reopenTitle'),
+      description: `Deseja reabrir a fatura de ${translate('months', bill.month)}/${bill.year}?`,
+      confirmText: t('pages.creditCardBills.reopenBtn'),
+      cancelText: t('common.actions.cancel'),
+    });
+    if (!confirmed) return;
+    try {
+      await creditCardBillsService.reopenBill(bill.id);
+      toast({
+        title: t('pages.creditCardBills.reopened'),
+        description: t('pages.creditCardBills.reopenedDesc'),
+      });
+      if (billsCard) {
+        const all = await creditCardBillsService.getAll();
+        setBills(all.filter((b) => b.credit_card === billsCard.id));
+      }
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.creditCardBills.reopenError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const currentYear = new Date().getFullYear();
+  const billYears = Array.from({ length: 5 }, (_, i) =>
+    (currentYear - 2 + i).toString()
+  );
+
+  const filteredBills = sortBills(
+    bills.filter((b) => {
+      if (billStatusFilter !== 'all' && b.status !== billStatusFilter) return false;
+      if (billYearFilter !== 'all' && b.year !== billYearFilter) return false;
+      return true;
+    })
+  );
+
+  const billColumns: Column<CreditCardBill>[] = [
+    {
+      key: 'period',
+      label: t('pages.creditCardBills.columns.period'),
+      render: (bill) => `${translate('months', bill.month)}/${bill.year}`,
+    },
+    {
+      key: 'total_amount',
+      label: t('pages.creditCardBills.columns.totalAmount'),
+      align: 'right',
+      render: (bill) => (
+        <span className="font-semibold">{formatCurrency(bill.total_amount)}</span>
+      ),
+    },
+    {
+      key: 'paid_amount',
+      label: t('pages.creditCardBills.columns.paid'),
+      align: 'right',
+      render: (bill) => (
+        <span className="font-semibold text-success">
+          {formatCurrency(bill.paid_amount)}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: t('pages.creditCardBills.columns.status'),
+      render: (bill) => (
+        <Badge
+          variant={
+            bill.status === 'paid'
+              ? 'success'
+              : bill.status === 'overdue'
+                ? 'destructive'
+                : bill.status === 'closed'
+                  ? 'secondary'
+                  : 'default'
+          }
+        >
+          {translate('billStatus', bill.status)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'due_date',
+      label: t('pages.creditCardBills.columns.dueDate'),
+      render: (bill) => (
+        <span className="text-sm">
+          {bill.due_date ? formatDate(bill.due_date) : 'N/A'}
+        </span>
+      ),
+    },
+  ];
+
   const totalLimit = sumByProperty(
     creditCards.map((c) => ({ value: parseFloat(c.credit_limit) })),
     'value'
@@ -222,7 +500,18 @@ export default function CreditCards() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        onClick={() => void openBillsDialog(card)}
+                        title={t('pages.creditCards.viewBills')}
+                        aria-label={t('pages.creditCards.viewBills')}
+                      >
+                        <Receipt className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => handleEdit(card)}
+                        title={t('common.actions.edit')}
                         aria-label={t('common.actions.edit')}
                       >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -232,6 +521,7 @@ export default function CreditCards() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleDelete(card.id)}
+                        title={t('common.actions.delete')}
                         aria-label={t('common.actions.delete')}
                       >
                         <Trash2
@@ -298,6 +588,168 @@ export default function CreditCards() {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bills dialog */}
+      <Dialog open={isBillsOpen} onOpenChange={setIsBillsOpen}>
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              {t('pages.creditCardBills.title')} — {billsCard?.name}
+            </DialogTitle>
+            <DialogDescription>{t('pages.creditCardBills.editDesc')}</DialogDescription>
+          </DialogHeader>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={billStatusFilter} onValueChange={setBillStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.creditCardBills.allStatus')}
+                </SelectItem>
+                {Object.entries(TRANSLATIONS.billStatus).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={billYearFilter} onValueChange={setBillYearFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t('pages.creditCardBills.allYears')}
+                </SelectItem>
+                {billYears.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex-1" />
+            <Button
+              size="sm"
+              onClick={() => {
+                setSelectedBill(undefined);
+                setIsBillFormOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t('pages.creditCardBills.newBtn')}
+            </Button>
+          </div>
+
+          <DataTable
+            data={filteredBills}
+            columns={billColumns}
+            keyExtractor={(b) => b.id}
+            isLoading={billsLoading}
+            emptyState={{ message: t('pages.creditCardBills.emptyState') }}
+            actions={(bill) => (
+              <div className="flex items-center justify-end gap-1">
+                <ReceiptButton
+                  source={{ type: 'credit_card_bill', data: bill }}
+                  memberName={getMemberDisplayName(null, user)}
+                />
+                {bill.status !== 'paid' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t('pages.creditCardBills.payBillLabel')}
+                    onClick={() => {
+                      setSelectedBill(bill);
+                      setIsPaymentOpen(true);
+                    }}
+                    aria-label={t('pages.creditCardBills.payBillLabel')}
+                  >
+                    <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
+                  </Button>
+                )}
+                {(bill.closed ||
+                  bill.status === 'paid' ||
+                  bill.status === 'closed') && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title={t('pages.creditCardBills.reopenBillLabel')}
+                    onClick={() => void handleReopenBill(bill)}
+                    aria-label={t('pages.creditCardBills.reopenBillLabel')}
+                  >
+                    <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title={t('common.actions.edit')}
+                  onClick={() => {
+                    setSelectedBill(bill);
+                    setIsBillFormOpen(true);
+                  }}
+                  aria-label={t('common.actions.edit')}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title={t('common.actions.delete')}
+                  onClick={() => void handleBillDelete(bill.id)}
+                  aria-label={t('common.actions.delete')}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                </Button>
+              </div>
+            )}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bill create/edit dialog */}
+      <Dialog open={isBillFormOpen} onOpenChange={setIsBillFormOpen}>
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedBill
+                ? t('pages.creditCardBills.editTitle')
+                : t('pages.creditCardBills.newTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('pages.creditCardBills.editDesc')}</DialogDescription>
+          </DialogHeader>
+          <CreditCardBillForm
+            bill={selectedBill}
+            creditCards={creditCards}
+            onSubmit={handleBillSubmit}
+            onCancel={() => setIsBillFormOpen(false)}
+            isLoading={isBillSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bill payment dialog */}
+      <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.creditCardBills.payTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.creditCardBills.payDesc')}</DialogDescription>
+          </DialogHeader>
+          {selectedBill && (
+            <BillPaymentForm
+              bill={selectedBill}
+              onSubmit={handleBillPayment}
+              onCancel={() => setIsPaymentOpen(false)}
+              isLoading={isPaymentSubmitting}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </PageContainer>
