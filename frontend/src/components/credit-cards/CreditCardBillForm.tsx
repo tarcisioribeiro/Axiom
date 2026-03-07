@@ -284,10 +284,11 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
                 step="0.01"
                 {...register('total_amount', { valueAsNumber: true })}
                 placeholder="0.00"
-                disabled
                 className="font-semibold"
               />
-              <p className="text-xs">Soma de todas as despesas associadas à fatura</p>
+              <p className="text-xs text-muted-foreground">
+                Calculado automaticamente. Pode ser editado manualmente.
+              </p>
             </div>
 
             <div className="space-y-2">

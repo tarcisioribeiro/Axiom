@@ -227,6 +227,7 @@ export default function FixedExpenses() {
                 setIsDialogOpen(true);
               }}
               aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -235,6 +236,7 @@ export default function FixedExpenses() {
               size="icon"
               onClick={() => handleDelete(item.id)}
               aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>

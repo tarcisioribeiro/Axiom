@@ -1,4 +1,14 @@
-import { BookOpen, Plus, Star, TrendingUp } from 'lucide-react';
+import {
+  BookOpen,
+  Plus,
+  Star,
+  Edit,
+  Trash2,
+  BookMarked,
+  FileText,
+  Highlighter,
+  MoreHorizontal,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,6 +20,7 @@ import { SearchInput } from '@/components/common/SearchInput';
 import { BookDetailModal } from '@/components/library/BookDetailModal';
 import { BookForm } from '@/components/library/BookForm';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +28,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
@@ -25,6 +50,8 @@ import { booksService } from '@/services/books-service';
 import { publishersService } from '@/services/publishers-service';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
   switch (status) {
@@ -72,9 +99,10 @@ export default function Books() {
   const [editingBook, setEditingBook] = useState<Book | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Detail modal (view)
+  // Detail modal
   const [detailBook, setDetailBook] = useState<Book | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailInitialTab, setDetailInitialTab] = useState<DetailTab>('info');
 
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -104,6 +132,12 @@ export default function Books() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openDetail = (book: Book, tab: DetailTab = 'info') => {
+    setDetailBook(book);
+    setDetailInitialTab(tab);
+    setIsDetailOpen(true);
   };
 
   const handleCreate = () => {
@@ -183,14 +217,22 @@ export default function Books() {
     }
   };
 
-  const filteredBooks = books.filter(
-    (book) =>
-      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.authors_names.some((a) =>
-        a.toLowerCase().includes(searchTerm.toLowerCase())
-      ) ||
-      book.publisher_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Default sort: by reading_priority ascending (null = not prioritized → last)
+  const filteredBooks = books
+    .filter(
+      (book) =>
+        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        book.authors_names.some((a) =>
+          a.toLowerCase().includes(searchTerm.toLowerCase())
+        ) ||
+        book.publisher_name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (a.reading_priority === null && b.reading_priority === null) return 0;
+      if (a.reading_priority === null) return 1;
+      if (b.reading_priority === null) return -1;
+      return a.reading_priority - b.reading_priority;
+    });
 
   if (isLoading) return <LoadingState />;
 
@@ -221,87 +263,192 @@ export default function Books() {
           }
         />
       ) : (
-        <div className="divide-y rounded-lg border bg-card">
-          {filteredBooks.map((book) => (
-            <button
-              key={book.id}
-              type="button"
-              className="flex w-full cursor-pointer items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => {
-                setDetailBook(book);
-                setIsDetailOpen(true);
-              }}
-              aria-label={`Ver detalhes de ${book.title}`}
-            >
-              {/* Cover thumbnail */}
-              <div className="shrink-0">
-                {book.cover ? (
-                  <img
-                    src={book.cover}
-                    alt={`Capa de ${book.title}`}
-                    className="h-16 w-11 rounded object-cover shadow-sm"
-                  />
-                ) : (
-                  <div className="flex h-16 w-11 items-center justify-center rounded border bg-muted">
-                    <BookOpen className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-14">{t('pages.books.colCover')}</TableHead>
+                <TableHead>{t('pages.books.colTitle')}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {t('pages.books.colAuthors')}
+                </TableHead>
+                <TableHead className="hidden lg:table-cell">
+                  {t('pages.books.colPublisher')}
+                </TableHead>
+                <TableHead className="hidden sm:table-cell">
+                  {t('pages.books.colGenre')}
+                </TableHead>
+                <TableHead>{t('pages.books.colStatus')}</TableHead>
+                <TableHead className="hidden text-right lg:table-cell">
+                  {t('pages.books.colPages')}
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {t('pages.books.colRating')}
+                </TableHead>
+                <TableHead className="hidden sm:table-cell">
+                  {t('pages.books.colProgress')}
+                </TableHead>
+                <TableHead className="w-24" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredBooks.map((book) => {
+                const pb = priorityBadge(book.reading_priority);
+                return (
+                  <TableRow
+                    key={book.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => openDetail(book, 'info')}
+                  >
+                    {/* Cover */}
+                    <TableCell className="py-2">
+                      {book.cover ? (
+                        <img
+                          src={book.cover}
+                          alt={`Capa de ${book.title}`}
+                          className="h-16 w-11 rounded object-cover shadow-sm"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-11 items-center justify-center rounded border bg-muted">
+                          <BookOpen className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
 
-              {/* Title + Authors + Progress */}
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="truncate font-semibold leading-tight">{book.title}</p>
-                <p className="truncate text-sm text-muted-foreground">
-                  {book.authors_names.join(', ')}
-                </p>
-                {book.reading_progress > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Progress
-                      value={book.reading_progress}
-                      className="h-1.5 max-w-[160px]"
-                    />
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <TrendingUp className="h-3 w-3" />
-                      {book.reading_progress}%
-                    </span>
-                  </div>
-                )}
-              </div>
+                    {/* Title + priority */}
+                    <TableCell>
+                      <p className="font-semibold leading-tight">{book.title}</p>
+                      {pb && (
+                        <Badge variant={pb.variant} className="mt-1 text-xs">
+                          {pb.label}
+                        </Badge>
+                      )}
+                    </TableCell>
 
-              {/* Status + Genre + Priority + Rating */}
-              <div className="hidden shrink-0 flex-col items-end gap-1.5 sm:flex">
-                <Badge variant={statusVariant(book.read_status)} className="text-xs">
-                  {book.read_status_display}
-                </Badge>
-                <Badge variant="secondary" className="text-xs">
-                  {book.genre_display}
-                </Badge>
-                {(() => {
-                  const pb = priorityBadge(book.reading_priority);
-                  return pb ? (
-                    <Badge variant={pb.variant} className="text-xs">
-                      {pb.label}
-                    </Badge>
-                  ) : null;
-                })()}
-                <StarRow rating={book.rating} />
-              </div>
+                    {/* Authors */}
+                    <TableCell className="hidden max-w-[160px] truncate text-sm text-muted-foreground md:table-cell">
+                      {book.authors_names.join(', ')}
+                    </TableCell>
 
-              {/* Pages */}
-              <div className="hidden shrink-0 text-right text-xs text-muted-foreground lg:block">
-                <p>{book.pages}p</p>
-                {book.media_type_display && <p>{book.media_type_display}</p>}
-              </div>
-            </button>
-          ))}
+                    {/* Publisher */}
+                    <TableCell className="hidden max-w-[120px] truncate text-sm text-muted-foreground lg:table-cell">
+                      {book.publisher_name}
+                    </TableCell>
+
+                    {/* Genre */}
+                    <TableCell className="hidden sm:table-cell">
+                      <Badge variant="secondary" className="text-xs">
+                        {book.genre_display}
+                      </Badge>
+                    </TableCell>
+
+                    {/* Status */}
+                    <TableCell>
+                      <Badge
+                        variant={statusVariant(book.read_status)}
+                        className="text-xs"
+                      >
+                        {book.read_status_display}
+                      </Badge>
+                    </TableCell>
+
+                    {/* Pages */}
+                    <TableCell className="hidden text-right text-sm text-muted-foreground lg:table-cell">
+                      {book.pages}p
+                    </TableCell>
+
+                    {/* Rating */}
+                    <TableCell className="hidden md:table-cell">
+                      <StarRow rating={book.rating} />
+                    </TableCell>
+
+                    {/* Progress */}
+                    <TableCell className="hidden sm:table-cell">
+                      {book.reading_progress > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <Progress
+                            value={book.reading_progress}
+                            className="h-1.5 w-20"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {book.reading_progress}%
+                          </span>
+                        </div>
+                      ) : null}
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell onClick={(e) => e.stopPropagation()} className="py-2">
+                      <div className="flex gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="Mais opções"
+                              aria-label="Mais opções"
+                            >
+                              <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => openDetail(book, 'readings')}
+                            >
+                              <BookMarked className="mr-2 h-4 w-4" />
+                              {t('pages.readings.title')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDetail(book, 'summaries')}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              {t('pages.summaries.title')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDetail(book, 'highlights')}
+                            >
+                              <Highlighter className="mr-2 h-4 w-4" />
+                              Destaques
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(book)}
+                          title={t('common.actions.edit')}
+                          aria-label={t('common.actions.edit')}
+                        >
+                          <Edit className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => void handleDelete(book.id)}
+                          title={t('common.actions.delete')}
+                          aria-label={t('common.actions.delete')}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      {/* Detail modal */}
+      {/* Book detail modal */}
       <BookDetailModal
         book={detailBook}
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
+        initialTab={detailInitialTab}
         onEdit={(book) => {
           setIsDetailOpen(false);
           handleEdit(book);

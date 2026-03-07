@@ -54,7 +54,7 @@ export function NotificationBell() {
           )}
         </div>
 
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="h-80 max-h-80">
           {isLoading ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               Carregando...
