@@ -19,8 +19,6 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { booksService } from '@/services/books-service';
@@ -91,7 +89,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
   );
 }
 
-export default function ReadingQueue() {
+export function ReadingQueueTab() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -157,33 +155,31 @@ export default function ReadingQueue() {
 
   if (isLoading) return <LoadingState />;
 
-  return (
-    <PageContainer>
-      <PageHeader title={t('pages.readingQueue.title')} />
+  if (books.length === 0) {
+    return (
+      <EmptyState
+        title={t('pages.readingQueue.emptyTitle')}
+        message={t('pages.readingQueue.emptyDesc')}
+      />
+    );
+  }
 
-      {books.length === 0 ? (
-        <EmptyState
-          title={t('pages.readingQueue.emptyTitle')}
-          message={t('pages.readingQueue.emptyDesc')}
-        />
-      ) : (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={books.map((b) => b.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="flex flex-col gap-sm">
-              {books.map((book, index) => (
-                <SortableBookItem key={book.id} book={book} rank={index + 1} />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
-    </PageContainer>
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={books.map((b) => b.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="flex flex-col gap-sm">
+          {books.map((book, index) => (
+            <SortableBookItem key={book.id} book={book} rank={index + 1} />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

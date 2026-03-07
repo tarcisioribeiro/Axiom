@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
-import { PageContainer } from '@/components/common/PageContainer';
-import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
@@ -26,13 +24,18 @@ import { readingsService } from '@/services/readings-service';
 import type { Reading, ReadingFormData, Book } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-export default function Readings() {
+interface ReadingsTabProps {
+  isCreateOpen: boolean;
+  onCreateClose: () => void;
+}
+
+export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
   const [readings, setReadings] = useState<Reading[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedReading, setSelectedReading] = useState<Reading | undefined>();
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -62,22 +65,26 @@ export default function Readings() {
     }
   };
 
-  const handleCreate = () => {
+  const handleCreateOpen = () => {
     if (books.length === 0) {
       toast({
         title: t('common.messages.actionDenied'),
         description: t('pages.readings.noBookMsg'),
         variant: 'destructive',
       });
+      onCreateClose();
       return;
     }
     setSelectedReading(undefined);
-    setIsDialogOpen(true);
   };
+
+  useEffect(() => {
+    if (isCreateOpen) handleCreateOpen();
+  }, [isCreateOpen]);
 
   const handleEdit = (reading: Reading) => {
     setSelectedReading(reading);
-    setIsDialogOpen(true);
+    setIsEditOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -88,7 +95,6 @@ export default function Readings() {
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
-
     if (!confirmed) return;
 
     try {
@@ -123,7 +129,8 @@ export default function Readings() {
           description: t('pages.readings.createdDesc'),
         });
       }
-      setIsDialogOpen(false);
+      onCreateClose();
+      setIsEditOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
@@ -142,22 +149,10 @@ export default function Readings() {
       reading.notes?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return <LoadingState />;
-  }
+  if (loading) return <LoadingState />;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title={t('pages.readings.title')}
-        icon={<BookMarked />}
-        action={{
-          label: t('pages.readings.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
+    <div className="space-y-4">
       <div className="flex items-center gap-4">
         <SearchInput
           placeholder={t('pages.readings.searchPlaceholder')}
@@ -213,7 +208,7 @@ export default function Readings() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => handleDelete(reading.id)}
+                      onClick={() => void handleDelete(reading.id)}
                       aria-label={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -231,29 +226,45 @@ export default function Readings() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Create dialog */}
+      <Dialog
+        open={isCreateOpen && books.length > 0}
+        onOpenChange={(open) => {
+          if (!open) onCreateClose();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {selectedReading
-                ? t('pages.readings.editTitle')
-                : t('pages.readings.newTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedReading
-                ? t('pages.readings.editDesc')
-                : t('pages.readings.newDesc')}
-            </DialogDescription>
+            <DialogTitle>{t('pages.readings.newTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.readings.newDesc')}</DialogDescription>
+          </DialogHeader>
+          <ReadingForm
+            books={books}
+            onSubmit={handleSubmit}
+            onCancel={onCreateClose}
+            isLoading={isSubmitting}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('pages.readings.editTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.readings.editDesc')}</DialogDescription>
           </DialogHeader>
           <ReadingForm
             reading={selectedReading}
             books={books}
             onSubmit={handleSubmit}
-            onCancel={() => setIsDialogOpen(false)}
+            onCancel={() => setIsEditOpen(false)}
             isLoading={isSubmitting}
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </div>
   );
 }
+
+export { Plus };

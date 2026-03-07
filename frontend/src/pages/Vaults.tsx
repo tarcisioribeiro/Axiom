@@ -9,8 +9,10 @@ import {
   History,
   CalendarClock,
   Zap,
+  TrendingUp,
+  Calculator,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -52,6 +54,8 @@ import { formatCurrency } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
+import { vaultSimulatorService } from '@/services/vault-simulator-service';
 import { vaultsService } from '@/services/vaults-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type {
@@ -118,6 +122,17 @@ export default function Vaults() {
     is_active: true,
     notes: '',
   });
+
+  // Simulator state
+  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [simulatorVault, setSimulatorVault] = useState<VaultType | null>(null);
+  const [simInitialAmount, setSimInitialAmount] = useState('');
+  const [simMonthlyDeposit, setSimMonthlyDeposit] = useState('');
+  const [simAnnualRate, setSimAnnualRate] = useState('');
+  const [simMonths, setSimMonths] = useState('12');
+  const [simResults, setSimResults] = useState<SimulatorScenarioResult[] | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const simFormId = useId();
 
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -602,6 +617,48 @@ export default function Vaults() {
   );
   const totalPendingYield = vaults.reduce((sum, v) => sum + v.pending_yield, 0);
 
+  const openSimulator = (vault: VaultType) => {
+    setSimulatorVault(vault);
+    setSimInitialAmount(vault.current_balance);
+    setSimMonthlyDeposit('');
+    setSimAnnualRate(String(vault.annual_yield_rate_percentage.toFixed(2)));
+    setSimMonths('12');
+    setSimResults(null);
+    setIsSimulatorOpen(true);
+  };
+
+  const handleSimulate = async () => {
+    setIsSimulating(true);
+    try {
+      const data = await vaultSimulatorService.simulate([
+        {
+          name: simulatorVault?.description || 'Simulação',
+          initial_amount: parseFloat(simInitialAmount) || 0,
+          monthly_deposit: parseFloat(simMonthlyDeposit) || 0,
+          annual_rate: parseFloat(simAnnualRate) || 0,
+          months: parseInt(simMonths) || 12,
+        },
+      ]);
+      setSimResults(data.scenarios);
+    } catch (err) {
+      toast({
+        title: 'Erro na simulação',
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  const simChartData = useMemo(() => {
+    if (!simResults?.length) return [];
+    return simResults[0].data_points.map((dp) => ({
+      label: dp.label,
+      value: dp.balance,
+    }));
+  }, [simResults]);
+
   const columns: Column<VaultType>[] = [
     {
       key: 'description',
@@ -676,6 +733,7 @@ export default function Vaults() {
             size="icon"
             onClick={() => openDepositDialog(vault)}
             aria-label={t('pages.vaults.depositBtn')}
+            title={t('pages.vaults.depositBtn')}
             disabled={!vault.is_active}
           >
             <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
@@ -685,6 +743,7 @@ export default function Vaults() {
             size="icon"
             onClick={() => openWithdrawDialog(vault)}
             aria-label={t('pages.vaults.withdrawBtn')}
+            title={t('pages.vaults.withdrawBtn')}
             disabled={!vault.is_active || parseFloat(vault.current_balance) <= 0}
           >
             <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
@@ -694,6 +753,7 @@ export default function Vaults() {
             size="icon"
             onClick={() => handleApplyYield(vault)}
             aria-label={t('pages.vaults.applyYieldBtn')}
+            title={t('pages.vaults.applyYieldBtn')}
             disabled={!vault.is_active || vault.pending_yield <= 0}
           >
             <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
@@ -703,6 +763,7 @@ export default function Vaults() {
             size="icon"
             onClick={() => openTransactionsDialog(vault)}
             aria-label={t('pages.vaults.transactionsBtn')}
+            title={t('pages.vaults.transactionsBtn')}
           >
             <History className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -711,13 +772,24 @@ export default function Vaults() {
             size="icon"
             onClick={() => openContributionsDialog(vault)}
             aria-label={t('pages.vaults.recurringContributions.btn')}
+            title={t('pages.vaults.recurringContributions.btn')}
           >
             <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
+            onClick={() => openSimulator(vault)}
+            title={t('pages.vaultSimulator.title')}
+            aria-label={t('pages.vaultSimulator.title')}
+          >
+            <TrendingUp className="h-4 w-4 text-info" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => handleEdit(vault)}
+            title={t('common.actions.edit')}
             aria-label={t('common.actions.edit')}
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -726,6 +798,7 @@ export default function Vaults() {
             variant="ghost"
             size="icon"
             onClick={() => handleDelete(vault.id)}
+            title={t('common.actions.delete')}
             aria-label={t('common.actions.delete')}
           >
             <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
@@ -1219,6 +1292,7 @@ export default function Vaults() {
                                       size="icon"
                                       onClick={() => startEditTransaction(transaction)}
                                       aria-label={t('common.actions.edit')}
+                                      title={t('common.actions.edit')}
                                     >
                                       <Pencil className="h-4 w-4" aria-hidden="true" />
                                     </Button>
@@ -1229,6 +1303,7 @@ export default function Vaults() {
                                         handleDeleteTransaction(transaction)
                                       }
                                       aria-label={t('common.actions.delete')}
+                                      title={t('common.actions.delete')}
                                     >
                                       <Trash2
                                         className="h-4 w-4 text-destructive"
@@ -1524,6 +1599,7 @@ export default function Vaults() {
                         size="icon"
                         onClick={() => openContributionForm(contribution)}
                         aria-label={t('common.actions.edit')}
+                        title={t('common.actions.edit')}
                       >
                         <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -1532,6 +1608,7 @@ export default function Vaults() {
                         size="icon"
                         onClick={() => handleDeleteContribution(contribution)}
                         aria-label={t('common.actions.delete')}
+                        title={t('common.actions.delete')}
                       >
                         <Trash2
                           className="h-4 w-4 text-destructive"
@@ -1553,6 +1630,148 @@ export default function Vaults() {
               {t('common.actions.close')}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Simulator dialog */}
+      <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
+        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              {t('pages.vaultSimulator.title')} — {simulatorVault?.description}
+            </DialogTitle>
+            <DialogDescription>
+              Simule o crescimento deste cofre com diferentes parâmetros.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="text-xs">
+                {t('pages.vaultSimulator.initialAmount')}
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                step="100"
+                value={simInitialAmount}
+                onChange={(e) => setSimInitialAmount(e.target.value)}
+                placeholder="0,00"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">
+                {t('pages.vaultSimulator.monthlyDeposit')}
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                step="100"
+                value={simMonthlyDeposit}
+                onChange={(e) => setSimMonthlyDeposit(e.target.value)}
+                placeholder="0,00"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={simAnnualRate}
+                onChange={(e) => setSimAnnualRate(e.target.value)}
+                placeholder="12,00"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
+              <Input
+                type="number"
+                min="1"
+                max="600"
+                step="1"
+                value={simMonths}
+                onChange={(e) => setSimMonths(e.target.value)}
+                placeholder="12"
+              />
+            </div>
+          </div>
+
+          <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
+            <Calculator className="mr-2 h-4 w-4" />
+            {isSimulating
+              ? t('pages.vaultSimulator.calculating')
+              : t('pages.vaultSimulator.calculate')}
+          </Button>
+
+          {simResults && simResults.length > 0 && (
+            <div className="space-y-3 rounded-lg border p-4">
+              {simResults.map((s, idx) => (
+                <div
+                  key={`${simFormId}-${idx}`}
+                  className="grid grid-cols-2 gap-2 text-sm"
+                >
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.vaultSimulator.columns.totalInvested')}
+                    </p>
+                    <p className="font-semibold">{formatCurrency(s.total_invested)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.vaultSimulator.columns.yield')}
+                    </p>
+                    <p className="font-semibold text-success">
+                      {formatCurrency(s.total_yield)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.vaultSimulator.columns.finalBalance')}
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {formatCurrency(s.final_balance)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.vaultSimulator.columns.term')}
+                    </p>
+                    <p className="font-semibold">
+                      {t('pages.vaultSimulator.monthsValue', { count: s.months })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {simChartData.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    Saldo final após {simResults[0].months} meses
+                  </p>
+                  <div className="flex h-16 items-end gap-0.5">
+                    {simChartData
+                      .filter(
+                        (_, i) =>
+                          i % Math.max(1, Math.floor(simChartData.length / 20)) === 0
+                      )
+                      .map((d, i) => {
+                        const max = Math.max(...simChartData.map((x) => x.value));
+                        const pct = max > 0 ? (d.value / max) * 100 : 0;
+                        return (
+                          <div
+                            key={i}
+                            title={`${d.label}: ${formatCurrency(d.value)}`}
+                            className="flex-1 rounded-sm bg-primary/60 transition-colors hover:bg-primary"
+                            style={{ height: `${pct}%`, minHeight: '2px' }}
+                          />
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </PageContainer>

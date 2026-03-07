@@ -1,8 +1,11 @@
 import {
+  BookMarked,
   BookOpen,
   Calendar,
+  CheckCircle2,
   Download,
   Edit,
+  FileText,
   Globe,
   Hash,
   Highlighter,
@@ -13,15 +16,20 @@ import {
   Trash2,
   TrendingUp,
   User,
+  XCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { ReadingForm } from '@/components/library/ReadingForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -40,7 +48,17 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { bookHighlightsService } from '@/services/book-highlights-service';
-import type { Book, BookHighlight, BookHighlightFormData } from '@/types';
+import { readingsService } from '@/services/readings-service';
+import { summariesService } from '@/services/summaries-service';
+import type {
+  Book,
+  BookHighlight,
+  BookHighlightFormData,
+  Reading,
+  ReadingFormData,
+  Summary,
+  SummaryFormData,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const COLOR_CLASSES: Record<string, string> = {
@@ -188,12 +206,15 @@ function HighlightInlineForm({
   );
 }
 
+type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
+
 interface BookDetailModalProps {
   book: Book | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: (book: Book) => void;
   onDelete: (id: number) => void;
+  initialTab?: DetailTab;
 }
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
@@ -239,38 +260,69 @@ function MetaRow({
   );
 }
 
-type ActiveTab = 'info' | 'highlights';
-
 export function BookDetailModal({
   book,
   open,
   onOpenChange,
   onEdit,
   onDelete,
+  initialTab = 'info',
 }: BookDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('info');
+  const [activeTab, setActiveTab] = useState<DetailTab>(initialTab);
+
+  // Highlights state
   const [highlights, setHighlights] = useState<BookHighlight[]>([]);
   const [isLoadingHighlights, setIsLoadingHighlights] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isExporting, setIsExporting] = useState(false);
+
+  // Readings state
+  const [readings, setReadings] = useState<Reading[]>([]);
+  const [isLoadingReadings, setIsLoadingReadings] = useState(false);
+  const [isReadingFormOpen, setIsReadingFormOpen] = useState(false);
+  const [editingReading, setEditingReading] = useState<Reading | undefined>();
+  const [isReadingSubmitting, setIsReadingSubmitting] = useState(false);
+
+  // Summaries state
+  const [summaries, setSummaries] = useState<Summary[]>([]);
+  const [isLoadingSummaries, setIsLoadingSummaries] = useState(false);
+  const [isSummaryFormOpen, setIsSummaryFormOpen] = useState(false);
+  const [editingSummary, setEditingSummary] = useState<Summary | null>(null);
+  const [summaryFormData, setSummaryFormData] = useState<SummaryFormData>({
+    title: '',
+    book: 0,
+    text: '',
+    owner: 0,
+  });
+  const [isSummarySubmitting, setIsSummarySubmitting] = useState(false);
+
   const { showConfirm } = useAlertDialog();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
+  // Load data when tab changes
   useEffect(() => {
-    if (book && open && activeTab === 'highlights') {
-      void loadHighlights();
+    if (book && open) {
+      if (activeTab === 'highlights') void loadHighlights();
+      if (activeTab === 'readings') void loadReadings();
+      if (activeTab === 'summaries') void loadSummaries();
     }
   }, [book, open, activeTab]);
 
-  // Reset tab when a different book is opened
+  // Reset state when modal opens with a new book or initialTab changes
   useEffect(() => {
-    if (!open) {
-      setActiveTab('info');
+    if (open) {
+      setActiveTab(initialTab);
+    } else {
       setShowAddForm(false);
       setEditingHighlight(undefined);
+      setIsReadingFormOpen(false);
+      setEditingReading(undefined);
+      setIsSummaryFormOpen(false);
+      setEditingSummary(null);
     }
-  }, [open]);
+  }, [open, initialTab]);
 
   const loadHighlights = async () => {
     if (!book) return;
@@ -282,6 +334,163 @@ export function BookDetailModal({
       // silently ignore
     } finally {
       setIsLoadingHighlights(false);
+    }
+  };
+
+  const loadReadings = async () => {
+    if (!book) return;
+    setIsLoadingReadings(true);
+    try {
+      const data = await readingsService.getAll();
+      setReadings(data.filter((r) => r.book === book.id));
+    } catch {
+      // silently ignore
+    } finally {
+      setIsLoadingReadings(false);
+    }
+  };
+
+  const handleReadingSubmit = async (data: ReadingFormData) => {
+    if (!book) return;
+    setIsReadingSubmitting(true);
+    try {
+      if (editingReading) {
+        await readingsService.update(editingReading.id, data);
+        toast({
+          title: t('pages.readings.updated'),
+          description: t('pages.readings.updatedDesc'),
+        });
+      } else {
+        await readingsService.create({ ...data, book: book.id });
+        toast({
+          title: t('pages.readings.created'),
+          description: t('pages.readings.createdDesc'),
+        });
+      }
+      setIsReadingFormOpen(false);
+      setEditingReading(undefined);
+      void loadReadings();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsReadingSubmitting(false);
+    }
+  };
+
+  const handleDeleteReading = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.readings.deleteTitle'),
+      description: t('pages.readings.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      await readingsService.delete(id);
+      toast({
+        title: t('pages.readings.deleted'),
+        description: t('pages.readings.deletedDesc'),
+      });
+      void loadReadings();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const loadSummaries = async () => {
+    if (!book) return;
+    setIsLoadingSummaries(true);
+    try {
+      const data = await summariesService.getAll();
+      setSummaries(data.filter((s) => s.book === book.id));
+    } catch {
+      // silently ignore
+    } finally {
+      setIsLoadingSummaries(false);
+    }
+  };
+
+  const openSummaryCreate = () => {
+    if (!book) return;
+    setEditingSummary(null);
+    setSummaryFormData({ title: '', book: book.id, text: '', owner: book.owner });
+    setIsSummaryFormOpen(true);
+  };
+
+  const openSummaryEdit = (summary: Summary) => {
+    setEditingSummary(summary);
+    setSummaryFormData({
+      title: summary.title,
+      book: summary.book,
+      text: summary.text,
+      owner: summary.owner,
+    });
+    setIsSummaryFormOpen(true);
+  };
+
+  const handleSummarySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!book) return;
+    setIsSummarySubmitting(true);
+    try {
+      if (editingSummary) {
+        await summariesService.update(editingSummary.id, summaryFormData);
+        toast({
+          title: t('pages.summaries.updated'),
+          description: t('pages.summaries.updatedDesc'),
+        });
+      } else {
+        await summariesService.create(summaryFormData);
+        toast({
+          title: t('pages.summaries.created'),
+          description: t('pages.summaries.createdDesc'),
+        });
+      }
+      setIsSummaryFormOpen(false);
+      setEditingSummary(null);
+      void loadSummaries();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSummarySubmitting(false);
+    }
+  };
+
+  const handleDeleteSummary = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.summaries.deleteTitle'),
+      description: t('pages.summaries.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      await summariesService.delete(id);
+      toast({
+        title: t('pages.summaries.deleted'),
+        description: t('pages.summaries.deletedDesc'),
+      });
+      void loadSummaries();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -342,29 +551,40 @@ export function BookDetailModal({
 
         {/* Tab navigation */}
         <div className="flex gap-1 rounded-md border p-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('info')}
-            className={`flex-1 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === 'info'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Informações
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('highlights')}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium transition-colors ${
-              activeTab === 'highlights'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Highlighter className="h-3.5 w-3.5" />
-            Destaques
-          </button>
+          {(
+            [
+              { id: 'info', label: 'Informações', icon: null },
+              {
+                id: 'readings',
+                label: 'Leituras',
+                icon: <BookMarked className="h-3.5 w-3.5" />,
+              },
+              {
+                id: 'summaries',
+                label: 'Resumos',
+                icon: <FileText className="h-3.5 w-3.5" />,
+              },
+              {
+                id: 'highlights',
+                label: 'Destaques',
+                icon: <Highlighter className="h-3.5 w-3.5" />,
+              },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Info tab */}
@@ -635,6 +855,258 @@ export function BookDetailModal({
             )}
           </div>
         )}
+
+        {/* Readings tab */}
+        {activeTab === 'readings' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">
+                {readings.length} sessão{readings.length !== 1 ? 'ões' : ''} de leitura
+              </span>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingReading(undefined);
+                  setIsReadingFormOpen(true);
+                }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Adicionar
+              </Button>
+            </div>
+
+            {isLoadingReadings ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Carregando leituras...
+              </p>
+            ) : readings.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Nenhuma sessão de leitura registrada.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {readings.map((r) => (
+                  <Card key={r.id}>
+                    <CardHeader className="pb-2 pt-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="font-medium">
+                              {formatDate(r.reading_date, 'dd/MM/yyyy')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{r.pages_read} páginas lidas</span>
+                            {r.reading_time > 0 && <span>{r.reading_time} min</span>}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            title={t('common.actions.edit')}
+                            onClick={() => {
+                              setEditingReading(r);
+                              setIsReadingFormOpen(true);
+                            }}
+                          >
+                            <Edit className="h-3 w-3" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                            title={t('common.actions.delete')}
+                            onClick={() => void handleDeleteReading(r.id)}
+                          >
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {r.notes && (
+                      <CardContent className="pb-3 pt-0">
+                        <p className="line-clamp-2 text-xs text-muted-foreground">
+                          {r.notes}
+                        </p>
+                      </CardContent>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Summaries tab */}
+        {activeTab === 'summaries' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">
+                {summaries.length} resumo{summaries.length !== 1 ? 's' : ''}
+              </span>
+              <Button size="sm" onClick={openSummaryCreate}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Adicionar
+              </Button>
+            </div>
+
+            {isLoadingSummaries ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Carregando resumos...
+              </p>
+            ) : summaries.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">
+                Nenhum resumo registrado para este livro.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {summaries.map((s) => (
+                  <Card key={s.id}>
+                    <CardHeader className="pb-2 pt-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <CardTitle className="text-sm">{s.title}</CardTitle>
+                          <div className="flex items-center gap-1.5">
+                            {s.is_vectorized ? (
+                              <Badge variant="default" className="gap-1 text-xs">
+                                <CheckCircle2 className="h-3 w-3" />
+                                {t('pages.summaries.vectorized')}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="gap-1 text-xs">
+                                <XCircle className="h-3 w-3" />
+                                {t('pages.summaries.notVectorized')}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            title={t('common.actions.edit')}
+                            onClick={() => openSummaryEdit(s)}
+                          >
+                            <Edit className="h-3 w-3" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                            title={t('common.actions.delete')}
+                            onClick={() => void handleDeleteSummary(s.id)}
+                          >
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3 pt-0">
+                      <p className="line-clamp-4 whitespace-pre-wrap text-xs text-muted-foreground">
+                        {s.text}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Reading form dialog */}
+        <Dialog open={isReadingFormOpen} onOpenChange={setIsReadingFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingReading
+                  ? t('pages.readings.editTitle')
+                  : t('pages.readings.newTitle')}
+              </DialogTitle>
+              <DialogDescription>
+                {editingReading
+                  ? t('pages.readings.editDesc')
+                  : t('pages.readings.newDesc')}
+              </DialogDescription>
+            </DialogHeader>
+            <ReadingForm
+              reading={editingReading}
+              books={[book]}
+              onSubmit={handleReadingSubmit}
+              onCancel={() => setIsReadingFormOpen(false)}
+              isLoading={isReadingSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Summary form dialog */}
+        <Dialog open={isSummaryFormOpen} onOpenChange={setIsSummaryFormOpen}>
+          <DialogContent className="max-w-2xl">
+            <form onSubmit={(e) => void handleSummarySubmit(e)}>
+              <DialogHeader>
+                <DialogTitle>
+                  {editingSummary
+                    ? t('pages.summaries.editTitle')
+                    : t('pages.summaries.createTitle')}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingSummary
+                    ? t('pages.summaries.editDesc')
+                    : t('pages.summaries.createDesc')}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="summary-title">
+                    {t('pages.summaries.titleField')}
+                  </Label>
+                  <Input
+                    id="summary-title"
+                    value={summaryFormData.title}
+                    onChange={(e) =>
+                      setSummaryFormData({ ...summaryFormData, title: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="summary-text">
+                    {t('pages.summaries.contentField')}
+                  </Label>
+                  <Textarea
+                    id="summary-text"
+                    value={summaryFormData.text}
+                    onChange={(e) =>
+                      setSummaryFormData({ ...summaryFormData, text: e.target.value })
+                    }
+                    rows={10}
+                    required
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsSummaryFormOpen(false)}
+                  disabled={isSummarySubmitting}
+                >
+                  {t('common.actions.cancel')}
+                </Button>
+                <Button type="submit" disabled={isSummarySubmitting}>
+                  {isSummarySubmitting
+                    ? 'Salvando...'
+                    : editingSummary
+                      ? t('pages.summaries.saveBtn')
+                      : t('pages.summaries.createBtn')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

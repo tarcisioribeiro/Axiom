@@ -788,6 +788,7 @@ export default function CreditCardExpenses() {
                               aria-label={t(
                                 'pages.creditCardExpenses.editInstallmentLabel'
                               )}
+                              title={t('pages.creditCardExpenses.editInstallmentLabel')}
                             >
                               <DollarSign
                                 className="h-4 w-4 text-primary"
@@ -801,6 +802,7 @@ export default function CreditCardExpenses() {
                               aria-label={t(
                                 'pages.creditCardExpenses.editPurchaseLabel'
                               )}
+                              title={t('pages.creditCardExpenses.editPurchaseLabel')}
                             >
                               <Pencil className="h-4 w-4" aria-hidden="true" />
                             </Button>
@@ -811,6 +813,7 @@ export default function CreditCardExpenses() {
                               aria-label={t(
                                 'pages.creditCardExpenses.deletePurchaseLabel'
                               )}
+                              title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                             >
                               <Trash2
                                 className="h-4 w-4 text-destructive"
@@ -851,6 +854,7 @@ export default function CreditCardExpenses() {
                   size="icon"
                   onClick={() => handleEditInstallment(installment)}
                   aria-label={t('pages.creditCardExpenses.editInstallmentLabel')}
+                  title={t('pages.creditCardExpenses.editInstallmentLabel')}
                 >
                   <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
                 </Button>
@@ -859,6 +863,7 @@ export default function CreditCardExpenses() {
                   size="icon"
                   onClick={() => handleEditPurchase(installment.purchase)}
                   aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
+                  title={t('pages.creditCardExpenses.editPurchaseLabel')}
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -867,6 +872,7 @@ export default function CreditCardExpenses() {
                   size="icon"
                   onClick={() => handleDeletePurchase(installment.purchase)}
                   aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                  title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>

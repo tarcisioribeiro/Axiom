@@ -368,35 +368,35 @@ export default function Loans() {
                 )}
               </div>
 
-              <div className="flex gap-2 border-t pt-2">
+              <div className="flex items-center justify-end gap-1 border-t pt-2">
                 <ReceiptButton
                   source={{ type: 'loan', data: loan }}
                   memberName={getMemberDisplayName(loan.benefited_name, user)}
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  size="icon"
                 />
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleEdit(loan)}
-                  className="flex-1"
+                  title={t('common.actions.edit')}
+                  aria-label={t('common.actions.edit')}
                 >
-                  <Pencil className="mr-1 h-3 w-3" />
-                  {t('common.actions.edit')}
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleDelete(loan)}
-                  className="flex-1"
+                  title={t('common.actions.delete')}
+                  aria-label={t('common.actions.delete')}
                 >
-                  <Trash2 className="mr-1 h-3 w-3" />
-                  {t('common.actions.delete')}
+                  <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>
                 {loan.contract_document && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={loan.contract_document} download>
-                      <Download className="h-3 w-3" />
+                  <Button variant="ghost" size="icon" title="Download" asChild>
+                    <a href={loan.contract_document} download aria-label="Download">
+                      <Download className="h-4 w-4" aria-hidden="true" />
                     </a>
                   </Button>
                 )}

@@ -1,9 +1,8 @@
-from decimal import Decimal
-
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from .models import CreditCardBill, CreditCardInstallment
+from .utils import recalculate_bill_total
 
 
 @receiver(post_save, sender=CreditCardInstallment)
@@ -21,25 +20,7 @@ def update_bill_totals_installment(sender, instance, **kwargs):
     if not instance.bill:
         return
 
-    _recalculate_bill_total(instance.bill)
-
-
-def _recalculate_bill_total(bill):
-    """
-    Recalcula o total de uma fatura baseado nas parcelas associadas.
-    """
-    total = Decimal("0.00")
-
-    # Soma parcelas
-    installments = CreditCardInstallment.objects.filter(
-        bill=bill, is_deleted=False, purchase__is_deleted=False
-    )
-    total += sum(Decimal(str(inst.value)) for inst in installments)
-
-    # Atualiza o total e o pagamento mínimo (10%)
-    bill.total_amount = total
-    bill.minimum_payment = total * Decimal("0.10")  # 10% do total
-    bill.save()
+    recalculate_bill_total(instance.bill)
 
 
 @receiver(post_save, sender=CreditCardBill)

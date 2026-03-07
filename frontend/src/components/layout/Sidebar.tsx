@@ -6,7 +6,6 @@ import {
   Library,
   ChevronDown,
   CreditCard,
-  Receipt,
   ShoppingCart,
   TrendingDown,
   TrendingUp,
@@ -18,8 +17,6 @@ import {
   BookOpen,
   UserPen,
   Building2,
-  BookMarked,
-  FileText,
   Home,
   Calendar,
   Target,
@@ -28,13 +25,9 @@ import {
   FolderOpen,
   ClipboardList,
   Vault,
-  Wand2,
   PiggyBank,
-  LineChart,
+  Receipt,
   Tag,
-  ListOrdered,
-  Highlighter,
-  FileInput,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -106,11 +99,6 @@ const navModules: NavModule[] = [
         icon: <CheckCircle2 className="h-4 w-4" />,
       },
       {
-        titleKey: 'nav.items.dailyChecklist',
-        href: '/planning/daily',
-        icon: <CheckCircle2 className="h-4 w-4" />,
-      },
-      {
         titleKey: 'nav.items.routineTasks',
         href: '/planning/routine-tasks',
         icon: <Calendar className="h-4 w-4" />,
@@ -150,11 +138,6 @@ const navModules: NavModule[] = [
             icon: <CreditCard className="h-4 w-4" />,
           },
           {
-            titleKey: 'nav.items.bills',
-            href: '/credit-card-bills',
-            icon: <Receipt className="h-4 w-4" />,
-          },
-          {
             titleKey: 'nav.items.fixedExpenses',
             href: '/fixed-expenses',
             icon: <CalendarClock className="h-4 w-4" />,
@@ -168,11 +151,6 @@ const navModules: NavModule[] = [
             titleKey: 'nav.items.budgets',
             href: '/budgets',
             icon: <PiggyBank className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.bankReconciliation',
-            href: '/bank-reconciliation',
-            icon: <ArrowLeftRight className="h-4 w-4" />,
           },
           {
             titleKey: 'nav.items.payables',
@@ -226,11 +204,6 @@ const navModules: NavModule[] = [
             href: '/vaults',
             icon: <Vault className="h-4 w-4" />,
           },
-          {
-            titleKey: 'nav.items.vaultSimulator',
-            href: '/vaults/simulator',
-            icon: <LineChart className="h-4 w-4" />,
-          },
         ],
       },
     ],
@@ -261,19 +234,9 @@ const navModules: NavModule[] = [
         icon: <Wallet className="h-4 w-4" />,
       },
       {
-        titleKey: 'nav.items.passwordGenerator',
-        href: '/security/password-generator',
-        icon: <Wand2 className="h-4 w-4" />,
-      },
-      {
         titleKey: 'nav.items.archives',
         href: '/security/archives',
         icon: <Archive className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.passwordImport',
-        href: '/security/import',
-        icon: <FileInput className="h-4 w-4" />,
       },
     ],
   },
@@ -301,26 +264,6 @@ const navModules: NavModule[] = [
         titleKey: 'nav.items.publishers',
         href: '/library/publishers',
         icon: <Building2 className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.summaries',
-        href: '/library/summaries',
-        icon: <FileText className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.readings',
-        href: '/library/readings',
-        icon: <BookMarked className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.readingQueue',
-        href: '/library/reading-queue',
-        icon: <ListOrdered className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.highlights',
-        href: '/library/highlights',
-        icon: <Highlighter className="h-4 w-4" />,
       },
     ],
   },
