@@ -184,6 +184,7 @@ export default function Publishers() {
                       size="icon"
                       onClick={() => handleEdit(publisher)}
                       aria-label={t('common.actions.edit')}
+                      title={t('common.actions.edit')}
                     >
                       <Edit className="h-4 w-4" aria-hidden="true" />
                     </Button>
@@ -192,6 +193,7 @@ export default function Publishers() {
                       size="icon"
                       onClick={() => handleDelete(publisher.id)}
                       aria-label={t('common.actions.delete')}
+                      title={t('common.actions.delete')}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>

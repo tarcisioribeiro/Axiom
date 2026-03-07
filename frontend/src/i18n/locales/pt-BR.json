@@ -1364,7 +1364,7 @@
       "editTitle": "Editar Leitura",
       "newTitle": "Registrar Leitura",
       "editDesc": "Atualize as informações da leitura",
-      "newDesc": "Registre o progresso de leitura de um livro",
+      "newDesc": "Registre o progresso de leitura de {{title}}",
       "deleteTitle": "Excluir leitura",
       "deleteDesc": "Tem certeza que deseja excluir esta leitura? Esta ação não pode ser desfeita.",
       "created": "Leitura registrada",

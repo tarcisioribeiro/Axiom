@@ -54,7 +54,7 @@ export function ReadingForm({
           owner: reading.owner,
         }
       : {
-          book: 0,
+          book: books[0]?.id ?? 0,
           pages_read: 0,
           reading_date: formatLocalDate(new Date()),
           reading_time: 0,
@@ -88,27 +88,29 @@ export function ReadingForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="book">Livro *</Label>
-          <Select
-            value={watch('book').toString()}
-            onValueChange={(value) => setValue('book', parseInt(value))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um livro" />
-            </SelectTrigger>
-            <SelectContent>
-              {books.map((book) => (
-                <SelectItem key={book.id} value={book.id.toString()}>
-                  {book.title} ({book.pages} páginas)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.book && (
-            <p className="mt-1 text-sm text-destructive">{errors.book.message}</p>
-          )}
-        </div>
+        {books.length > 1 && (
+          <div className="space-y-2">
+            <Label htmlFor="book">Livro *</Label>
+            <Select
+              value={watch('book').toString()}
+              onValueChange={(value) => setValue('book', parseInt(value))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um livro" />
+              </SelectTrigger>
+              <SelectContent>
+                {books.map((book) => (
+                  <SelectItem key={book.id} value={book.id.toString()}>
+                    {book.title} ({book.pages} páginas)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.book && (
+              <p className="mt-1 text-sm text-destructive">{errors.book.message}</p>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="pages_read">Páginas Lidas *</Label>

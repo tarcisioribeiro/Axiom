@@ -541,7 +541,7 @@ export function BookDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">{book.title}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -598,10 +598,10 @@ export function BookDetailModal({
                   <img
                     src={book.cover}
                     alt={`Capa de ${book.title}`}
-                    className="h-48 w-32 rounded-md object-cover shadow-md"
+                    className="h-64 w-44 rounded-md object-cover shadow-md"
                   />
                 ) : (
-                  <div className="flex h-48 w-32 items-center justify-center rounded-md border bg-muted shadow-sm">
+                  <div className="flex h-64 w-44 items-center justify-center rounded-md border bg-muted shadow-sm">
                     <BookOpen className="h-10 w-10 text-muted-foreground" />
                   </div>
                 )}
@@ -1029,7 +1029,7 @@ export function BookDetailModal({
               <DialogDescription>
                 {editingReading
                   ? t('pages.readings.editDesc')
-                  : t('pages.readings.newDesc')}
+                  : t('pages.readings.newDesc', { title: book.title })}
               </DialogDescription>
             </DialogHeader>
             <ReadingForm

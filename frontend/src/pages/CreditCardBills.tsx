@@ -479,6 +479,7 @@ export default function CreditCardBills() {
                 size="icon"
                 onClick={() => handleOpenPayment(bill)}
                 aria-label={t('pages.creditCardBills.payBillLabel')}
+                title={t('pages.creditCardBills.payBillLabel')}
               >
                 <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />
               </Button>
@@ -489,6 +490,7 @@ export default function CreditCardBills() {
                 size="icon"
                 onClick={() => handleReopenBill(bill)}
                 aria-label={t('pages.creditCardBills.reopenBillLabel')}
+                title={t('pages.creditCardBills.reopenBillLabel')}
               >
                 <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
               </Button>
@@ -498,6 +500,7 @@ export default function CreditCardBills() {
               size="icon"
               onClick={() => handleEdit(bill)}
               aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -506,6 +509,7 @@ export default function CreditCardBills() {
               size="icon"
               onClick={() => handleDelete(bill.id)}
               aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
