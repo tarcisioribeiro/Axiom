@@ -227,12 +227,12 @@ class GlobalDefaultPermissionTest(TestCase):
 
         for method, expected_suffix in test_cases:
             with self.subTest(method=method):
-                suffix = self.permission._get_action_sufix(method)
+                suffix = self.permission._get_action_suffix(method)
                 self.assertEqual(suffix, expected_suffix)
 
     def test_get_action_suffix_unknown_method(self):
         """Testa sufixo para método desconhecido"""
-        suffix = self.permission._get_action_sufix("UNKNOWN")
+        suffix = self.permission._get_action_suffix("UNKNOWN")
         self.assertEqual(suffix, "")
 
     def test_superuser_bypass(self):

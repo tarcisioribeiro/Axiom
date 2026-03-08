@@ -40,7 +40,11 @@ class BaseAPITestCase(APITestCase):
 
         # Cria conta de teste
         self.account = Account.objects.create(
-            account_name="NUB", account_type="CC", is_active=True
+            account_name="NUB",
+            account_type="CC",
+            institution_name="NUB",
+            is_active=True,
+            created_by=self.user,
         )
 
 
@@ -142,6 +146,7 @@ class ExpenseViewTest(BaseAPITestCase):
             category="supermarket",
             account=self.account,
             payed=True,
+            created_by=self.user,
         )
 
     def test_get_expenses_list(self):
