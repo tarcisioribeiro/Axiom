@@ -1,4 +1,6 @@
 import logging
+from calendar import monthrange
+from datetime import datetime
 
 from django.db import transaction
 from django.utils import timezone
@@ -10,6 +12,7 @@ from rest_framework.views import APIView
 from accounts.models import Account
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
+from expenses.models import FixedExpense
 
 from .models import FinancialGoal, Vault, VaultRecurringContribution, VaultTransaction
 from .serializers import (
@@ -40,8 +43,7 @@ class VaultListCreateView(BaseListCreateView):
     serializer_class = VaultSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filtros opcionais
+        queryset = Vault.objects.filter(is_deleted=False, created_by=self.request.user)
         account_id = self.request.query_params.get("account")
         is_active = self.request.query_params.get("is_active")
 
@@ -69,7 +71,9 @@ class VaultDetailView(BaseRetrieveUpdateDestroyView):
     serializer_class = VaultSerializer
 
     def get_queryset(self):
-        return super().get_queryset().select_related("account")
+        return Vault.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("account")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -466,8 +470,6 @@ class VaultTransactionUpdateView(APIView):
         vault.save()
 
         # Soft delete
-        from django.utils import timezone
-
         vault_transaction.is_deleted = True
         vault_transaction.deleted_at = timezone.now()
         vault_transaction.save()
@@ -501,8 +503,9 @@ class FinancialGoalListCreateView(BaseListCreateView):
         return FinancialGoalSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        # Filtros opcionais
+        queryset = FinancialGoal.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        )
         is_active = self.request.query_params.get("is_active")
         is_completed = self.request.query_params.get("is_completed")
         category = self.request.query_params.get("category")
@@ -533,7 +536,9 @@ class FinancialGoalDetailView(BaseRetrieveUpdateDestroyView):
     serializer_class = FinancialGoalSerializer
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related("vaults", "vaults__account")
+        return FinancialGoal.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).prefetch_related("vaults", "vaults__account")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -699,8 +704,6 @@ class VaultRecurringContributionListCreateView(BaseListCreateView):
         return VaultRecurringContributionSerializer
 
     def perform_create(self, serializer):
-        from expenses.models import FixedExpense
-
         vault_id = self.kwargs.get("vault_pk")
         vault = Vault.objects.select_related("account").get(
             pk=vault_id, is_deleted=False
@@ -785,9 +788,6 @@ class GenerateVaultContributionsView(APIView):
 
     @transaction.atomic
     def post(self, request):
-        from calendar import monthrange
-        from datetime import datetime
-
         month_str = request.data.get("month")
         if month_str:
             try:
@@ -943,8 +943,6 @@ class VaultSimulatorView(APIView):
                 {"error": "Máximo de 3 cenários permitido."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        from django.utils import timezone
 
         today = timezone.localdate()
         results = []

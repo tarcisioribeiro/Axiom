@@ -55,10 +55,13 @@ class CreditCardCreateListView(BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return (
-            CreditCard.objects.filter(is_deleted=False)
+            CreditCard.objects.filter(is_deleted=False, created_by=self.request.user)
             .select_related("associated_account")
             .defer("_card_number")
         )
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
 
 class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -78,10 +81,16 @@ class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = CreditCard.objects.filter(is_deleted=False).select_related(
-        "associated_account"
-    )
+    queryset = CreditCard.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = CreditCardSerializer
+
+    def get_queryset(self):
+        return CreditCard.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("associated_account")
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
 
 
 class CreditCardBillCreateListView(BaseListCreateView):
@@ -102,11 +111,16 @@ class CreditCardBillCreateListView(BaseListCreateView):
         Ordenação por ano, mês e data de fim da fatura (descendente)
     """
 
-    queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
-        "credit_card", "credit_card__associated_account"
-    )
+    queryset = CreditCardBill.objects.filter(
+        is_deleted=False
+    )  # GlobalDefaultPermission
     serializer_class = CreditCardBillsSerializer
     ordering = ["-year", "-month", "-invoice_ending_date"]
+
+    def get_queryset(self):
+        return CreditCardBill.objects.filter(
+            is_deleted=False, credit_card__created_by=self.request.user
+        ).select_related("credit_card", "credit_card__associated_account")
 
 
 class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -126,10 +140,15 @@ class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = CreditCardBill.objects.filter(is_deleted=False).select_related(
-        "credit_card", "credit_card__associated_account"
-    )
+    queryset = CreditCardBill.objects.filter(
+        is_deleted=False
+    )  # GlobalDefaultPermission
     serializer_class = CreditCardBillsSerializer
+
+    def get_queryset(self):
+        return CreditCardBill.objects.filter(
+            is_deleted=False, credit_card__created_by=self.request.user
+        ).select_related("credit_card", "credit_card__associated_account")
 
 
 # ============================================================================
@@ -157,7 +176,9 @@ class CreditCardPurchaseCreateListView(BaseListCreateView):
 
     def get_queryset(self):
         return (
-            CreditCardPurchase.objects.filter(is_deleted=False)
+            CreditCardPurchase.objects.filter(
+                is_deleted=False, created_by=self.request.user
+            )
             .select_related("card", "card__associated_account", "member")
             .prefetch_related("installments", "installments__bill")
         )
@@ -166,6 +187,9 @@ class CreditCardPurchaseCreateListView(BaseListCreateView):
         if self.request.method == "POST":
             return CreditCardPurchaseCreateSerializer
         return CreditCardPurchaseSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
 
 class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -178,14 +202,19 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
     - DELETE: Remove uma compra e suas parcelas
     """
 
-    queryset = CreditCardPurchase.objects.all()
+    queryset = CreditCardPurchase.objects.all()  # GlobalDefaultPermission
 
     def get_queryset(self):
         return (
-            CreditCardPurchase.objects.filter(is_deleted=False)
+            CreditCardPurchase.objects.filter(
+                is_deleted=False, created_by=self.request.user
+            )
             .select_related("card", "card__associated_account", "member")
             .prefetch_related("installments", "installments__bill")
         )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:

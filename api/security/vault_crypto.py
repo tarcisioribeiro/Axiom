@@ -168,7 +168,7 @@ class VaultEncryptedField:
         if vault_key:
             try:
                 return FieldEncryption.decrypt_with_key(raw, vault_key)
-            except (DecryptionError, EncryptionError, Exception):
+            except (DecryptionError, EncryptionError):
                 pass  # Dado cifrado com app key (antes da configuração do cofre)
 
         try:

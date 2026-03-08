@@ -260,8 +260,6 @@ function MetaRow({
   );
 }
 
-type ActiveTab = 'info' | 'highlights';
-
 export function BookDetailModal({
   book,
   open,

@@ -23,12 +23,12 @@ class GlobalDefaultPermission(permissions.BasePermission):
 
             model_name = queryset.model._meta.model_name
             app_label = queryset.model._meta.app_label
-            action = self._get_action_sufix(method)
+            action = self._get_action_suffix(method)
             return f"{app_label}.{action}_{model_name}"
         except AttributeError:
             return None
 
-    def _get_action_sufix(self, method):
+    def _get_action_suffix(self, method):
         method_actions = {
             "GET": "view",
             "POST": "add",

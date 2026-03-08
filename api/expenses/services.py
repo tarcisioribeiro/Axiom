@@ -1,4 +1,4 @@
-from calendar import monthrange
+from calendar import month_abbr, monthrange
 from datetime import datetime
 
 from django.db.models import Count, Sum
@@ -11,25 +11,10 @@ from credit_cards.models import (
 )
 from expenses.models import Expense, FixedExpense, FixedExpenseGenerationLog
 
-_MONTH_MAP = {
-    "01": "Jan",
-    "02": "Feb",
-    "03": "Mar",
-    "04": "Apr",
-    "05": "May",
-    "06": "Jun",
-    "07": "Jul",
-    "08": "Aug",
-    "09": "Sep",
-    "10": "Oct",
-    "11": "Nov",
-    "12": "Dec",
-}
-
 
 def get_or_create_bill(credit_card, year, month_num, user):
     """Return (bill, created) for the given credit card, year and month."""
-    month_code = _MONTH_MAP[month_num]
+    month_code = month_abbr[int(month_num)]
 
     bill = CreditCardBill.objects.filter(
         credit_card=credit_card,
@@ -99,12 +84,20 @@ def bulk_generate_fixed_expenses(month, expense_values, user):
     created_expenses = []
     fixed_expense_ids = []
 
-    for item in expense_values:
-        fixed_exp = FixedExpense.objects.get(
-            id=item["fixed_expense_id"],
+    ids = [item["fixed_expense_id"] for item in expense_values]
+    fixed_exps_map = {
+        fe.id: fe
+        for fe in FixedExpense.objects.filter(
+            id__in=ids,
             is_deleted=False,
             is_active=True,
-        )
+        ).select_related("credit_card", "account", "member")
+    }
+
+    for item in expense_values:
+        fixed_exp = fixed_exps_map.get(item["fixed_expense_id"])
+        if fixed_exp is None:
+            raise FixedExpense.DoesNotExist()
         fixed_expense_ids.append(fixed_exp.id)
 
         last_day = monthrange(year_int, month_int)[1]

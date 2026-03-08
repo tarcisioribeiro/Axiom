@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -119,22 +119,26 @@ export function useCrudPage<
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  // Mensagens padrao
-  const defaultMessages = {
-    loadError: messages.loadError ?? `Erro ao carregar ${resourceNamePlural}`,
-    createSuccess:
-      messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
-    updateSuccess:
-      messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
-    deleteSuccess:
-      messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
-    deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
-    saveError: messages.saveError ?? `Erro ao salvar ${resourceName}`,
-    deleteConfirmTitle: messages.deleteConfirmTitle ?? `Excluir ${resourceName}`,
-    deleteConfirmDescription:
-      messages.deleteConfirmDescription ??
-      `Tem certeza que deseja excluir este(a) ${resourceName}? Esta acao nao pode ser desfeita.`,
-  };
+  // Mensagens padrao — memoizadas para evitar re-criação a cada render
+  const defaultMessages = useMemo(
+    () => ({
+      loadError: messages.loadError ?? `Erro ao carregar ${resourceNamePlural}`,
+      createSuccess:
+        messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
+      updateSuccess:
+        messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
+      deleteSuccess:
+        messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
+      deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
+      saveError: messages.saveError ?? `Erro ao salvar ${resourceName}`,
+      deleteConfirmTitle: messages.deleteConfirmTitle ?? `Excluir ${resourceName}`,
+      deleteConfirmDescription:
+        messages.deleteConfirmDescription ??
+        `Tem certeza que deseja excluir este(a) ${resourceName}? Esta acao nao pode ser desfeita.`,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resourceName, resourceNamePlural]
+  );
 
   // Carrega dados
   const loadData = useCallback(async () => {
