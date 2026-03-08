@@ -41,6 +41,11 @@ class RevenueFilter(filters.FilterSet):
     account = filters.NumberFilter(
         field_name="account__id", help_text="Filter by account ID"
     )
+    accounts = filters.BaseInFilter(
+        field_name="account__id",
+        lookup_expr="in",
+        help_text="Filter by multiple account IDs (comma-separated: 1,2,3)",
+    )
 
     # Receipt status
     received = filters.BooleanFilter(help_text="Filter by received status (true/false)")

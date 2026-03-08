@@ -124,33 +124,19 @@ if "test" in sys.argv:
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)
 
-AUTH_PASSWORD_TYPES = [
-    "UserAttributeSimilarityValidator",
-    "MinimumLengthValidator",
-    "CommonPasswordValidator",
-    "NumericPasswordValidator",
-]
-
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": f"""django.contrib.auth.password_validation.{
-            AUTH_PASSWORD_TYPES[0]
-        }""",
+        "NAME": "django.contrib.auth.password_validation."
+        + ("UserAttributeSimilarityValidator"),
     },
     {
-        "NAME": f"""django.contrib.auth.password_validation.{
-            AUTH_PASSWORD_TYPES[1]
-        }""",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        "NAME": f"""django.contrib.auth.password_validation.{
-            AUTH_PASSWORD_TYPES[2]
-        }""",
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        "NAME": f"""django.contrib.auth.password_validation.{
-            AUTH_PASSWORD_TYPES[3]
-        }""",
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 

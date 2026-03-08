@@ -7,7 +7,7 @@ import {
   ChevronDown,
   Download,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -51,10 +51,12 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Expense, ExpenseFormData, Account, Loan, Payable } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const toDateParam = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export default function Expenses() {
   const { t } = useTranslation();
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [payables, setPayables] = useState<Payable[]>([]);
@@ -63,6 +65,7 @@ export default function Expenses() {
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -74,35 +77,23 @@ export default function Expenses() {
   const { user } = useAuthStore();
 
   useEffect(() => {
-    void loadData();
-  }, []);
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  useEffect(() => {
-    filterExpenses();
-  }, [
-    searchTerm,
-    categoryFilter,
-    statusFilter,
-    startDate,
-    endDate,
-    selectedAccounts,
-    expenses,
-  ]);
-
-  const loadData = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [expensesData, accountsData, loansData, payablesData] = await Promise.all([
-        expensesService.getAll(),
-        accountsService.getAll(),
-        loansService.getAll(),
-        payablesService.getAll(),
-      ]);
-      setExpenses(expensesData);
-      setFilteredExpenses(expensesData);
-      setAccounts(accountsData);
-      setLoans(Array.isArray(loansData) ? loansData : []);
-      setPayables(Array.isArray(payablesData) ? payablesData : []);
+      const params: Record<string, unknown> = {};
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (categoryFilter !== 'all') params.category = categoryFilter;
+      if (statusFilter !== 'all')
+        params.payed = statusFilter === 'paid' ? 'true' : 'false';
+      if (startDate) params.date_from = toDateParam(startDate);
+      if (endDate) params.date_to = toDateParam(endDate);
+      if (selectedAccounts.length > 0) params.accounts = selectedAccounts.join(',');
+      const data = await expensesService.getAll(params);
+      setExpenses(data);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -112,32 +103,42 @@ export default function Expenses() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    debouncedSearch,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+    t,
+    toast,
+  ]);
 
-  const filterExpenses = () => {
-    let filtered = [...expenses];
-    if (searchTerm) {
-      filtered = filtered.filter((e) =>
-        e.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter((e) => e.category === categoryFilter);
-    }
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((e) => (statusFilter === 'paid' ? e.payed : !e.payed));
-    }
-    if (startDate) {
-      filtered = filtered.filter((e) => new Date(e.date) >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter((e) => new Date(e.date) <= endDate);
-    }
-    if (selectedAccounts.length > 0) {
-      filtered = filtered.filter((e) => selectedAccounts.includes(e.account));
-    }
-    setFilteredExpenses(filtered);
-  };
+  useEffect(() => {
+    const loadReferenceData = async () => {
+      try {
+        const [accountsData, loansData, payablesData] = await Promise.all([
+          accountsService.getAll(),
+          loansService.getAll(),
+          payablesService.getAll(),
+        ]);
+        setAccounts(accountsData);
+        setLoans(Array.isArray(loansData) ? loansData : []);
+        setPayables(Array.isArray(payablesData) ? payablesData : []);
+      } catch (error: unknown) {
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
+      }
+    };
+    void loadReferenceData();
+  }, [t, toast]);
+
+  useEffect(() => {
+    void loadExpenses();
+  }, [loadExpenses]);
 
   const toggleAccount = (accountId: number) => {
     setSelectedAccounts((prev) =>
@@ -173,7 +174,7 @@ export default function Expenses() {
         });
       }
       setIsDialogOpen(false);
-      void loadData();
+      void loadExpenses();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.saveError'),
@@ -213,7 +214,7 @@ export default function Expenses() {
         title: t('pages.expenses.deleted'),
         description: t('pages.expenses.deletedDesc'),
       });
-      void loadData();
+      void loadExpenses();
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -258,7 +259,7 @@ export default function Expenses() {
   };
 
   const totalExpenses = sumByProperty(
-    filteredExpenses.map((e) => ({ value: parseFloat(e.value) })),
+    expenses.map((e) => ({ value: parseFloat(e.value) })),
     'value'
   );
 
@@ -456,7 +457,7 @@ export default function Expenses() {
         </div>
         <div className="flex items-center justify-between border-t pt-2">
           <span className="text-sm">
-            {t('pages.expenses.foundExpenses', { count: filteredExpenses.length })}
+            {t('pages.expenses.foundExpenses', { count: expenses.length })}
           </span>
           <span className="text-lg font-bold text-destructive">
             {t('pages.expenses.total')} {formatCurrency(totalExpenses)}
@@ -465,7 +466,7 @@ export default function Expenses() {
       </div>
 
       <DataTable
-        data={filteredExpenses}
+        data={expenses}
         columns={columns}
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading}

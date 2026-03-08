@@ -19,18 +19,13 @@ class TransferCreateListView(BaseListCreateView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Transfer.objects.filter(is_deleted=False)
+    queryset = Transfer.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = TransferSerializer
 
-    def perform_create(self, serializer):
-        """
-        Preenche automaticamente os campos de auditoria ao criar uma transferência.
+    def get_queryset(self):
+        return Transfer.objects.filter(is_deleted=False, created_by=self.request.user)
 
-        Parameters
-        ----------
-        serializer : TransferSerializer
-            Serializer validado com os dados da transferência
-        """
+    def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
 
@@ -51,16 +46,11 @@ class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Transfer.objects.filter(is_deleted=False)
+    queryset = Transfer.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = TransferSerializer
 
-    def perform_update(self, serializer):
-        """
-        Preenche automaticamente o campo updated_by ao atualizar uma transferência.
+    def get_queryset(self):
+        return Transfer.objects.filter(is_deleted=False, created_by=self.request.user)
 
-        Parameters
-        ----------
-        serializer : TransferSerializer
-            Serializer validado com os dados da transferência
-        """
+    def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)

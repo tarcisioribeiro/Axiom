@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import status
@@ -33,16 +33,32 @@ from expenses.services import bulk_generate_fixed_expenses, get_fixed_expenses_s
 
 
 class ExpenseCreateListView(BaseListCreateView):
-    queryset = Expense.objects.filter(is_deleted=False).select_related("account")
+    queryset = Expense.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = ExpenseSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = ExpenseFilter
     ordering = ["-date", "-id"]
 
+    def get_queryset(self):
+        return Expense.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("account")
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
 
 class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    queryset = Expense.objects.filter(is_deleted=False).select_related("account")
+    queryset = Expense.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = ExpenseSerializer
+
+    def get_queryset(self):
+        return Expense.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("account")
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
 
 
 class FixedExpenseListCreateView(BaseListCreateView):
@@ -201,8 +217,6 @@ class ApplyCategorizationRulesView(APIView):
     queryset = CategorizationRule.objects.none()
 
     def post(self, request):
-        from django.db import models as db_models
-
         rules = list(
             CategorizationRule.objects.filter(
                 owner=request.user, is_active=True, is_deleted=False
@@ -215,7 +229,7 @@ class ApplyCategorizationRulesView(APIView):
         expenses = Expense.objects.filter(
             is_deleted=False,
             created_by=request.user,
-        ).filter(db_models.Q(auto_categorized=True) | db_models.Q(category="others"))
+        ).filter(Q(auto_categorized=True) | Q(category="others"))
 
         total_processed = expenses.count()
         updated = 0

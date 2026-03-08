@@ -28,8 +28,6 @@ import {
   PiggyBank,
   Receipt,
   Tag,
-  ListOrdered,
-  Highlighter,
   FileInput,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';

@@ -43,6 +43,11 @@ class ExpenseFilter(filters.FilterSet):
     account = filters.NumberFilter(
         field_name="account__id", help_text="Filter by account ID"
     )
+    accounts = filters.BaseInFilter(
+        field_name="account__id",
+        lookup_expr="in",
+        help_text="Filter by multiple account IDs (comma-separated: 1,2,3)",
+    )
     account_name = filters.ChoiceFilter(
         field_name="account__name",
         choices=[],  # Will be populated in __init__
