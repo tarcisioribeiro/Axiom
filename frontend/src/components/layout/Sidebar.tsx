@@ -28,7 +28,6 @@ import {
   PiggyBank,
   Receipt,
   Tag,
-  FileInput,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -238,11 +237,6 @@ const navModules: NavModule[] = [
         titleKey: 'nav.items.archives',
         href: '/security/archives',
         icon: <Archive className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.passwordImport',
-        href: '/security/import',
-        icon: <FileInput className="h-4 w-4" />,
       },
     ],
   },

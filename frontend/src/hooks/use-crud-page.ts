@@ -126,7 +126,8 @@ export function useCrudPage<
       createSuccess:
         messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
       updateSuccess:
-        messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
+        messages.updateSuccess ??
+        `${capitalize(resourceName)} atualizado(a) com sucesso`,
       deleteSuccess:
         messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
       deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
