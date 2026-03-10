@@ -27,6 +27,11 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 # Exemplo: ALLOWED_HOSTS=mindledger.com,api.mindledger.com
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+# Number of trusted reverse proxies in front of the application.
+# Set to 0 for direct (no-proxy) connections; 1 for a single nginx/load-balancer.
+# Controls how X-Forwarded-For is parsed to prevent IP spoofing in audit logs.
+NUM_PROXIES = int(os.getenv("NUM_PROXIES", "1"))
+
 INSTALLED_APPS = [
     "django_admin_dracula",
     "django.contrib.admin",
