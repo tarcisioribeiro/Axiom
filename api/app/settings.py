@@ -27,11 +27,6 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 # Exemplo: ALLOWED_HOSTS=mindledger.com,api.mindledger.com
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# Em modo DEBUG, permitir todos os hosts para facilitar acesso via rede local
-# Isso e seguro apenas em desenvolvimento - NUNCA use DEBUG=True em producao
-if DEBUG:
-    ALLOWED_HOSTS = ["*"]
-
 INSTALLED_APPS = [
     "django_admin_dracula",
     "django.contrib.admin",
@@ -349,12 +344,6 @@ CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
     os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 )
 CORS_ALLOW_CREDENTIALS = True
-
-# Em modo DEBUG, permitir todas as origens para facilitar acesso via rede local
-# Isso permite que dispositivos na mesma rede acessem a API
-# NUNCA use DEBUG=True em producao
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
