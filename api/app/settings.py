@@ -205,6 +205,7 @@ REST_FRAMEWORK = {
         "user": "300/minute",
         "login": "5/minute",
         "register": "3/minute",
+        "share_token": "10/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

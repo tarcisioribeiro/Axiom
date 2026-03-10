@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.encryption import FieldEncryption
 from app.permissions import GlobalDefaultPermission
+from authentication.throttles import ShareTokenRateThrottle
 from security.activity_logs.models import ACTION_TYPES, ActivityLog
 from security.models import (
     PASSWORD_CATEGORIES,
@@ -1570,6 +1571,7 @@ class RedeemShareTokenView(APIView):
 
     permission_classes = []
     authentication_classes = []
+    throttle_classes = [ShareTokenRateThrottle]
 
     def get(self, request, token):
         try:
