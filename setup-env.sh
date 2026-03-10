@@ -180,6 +180,8 @@ if [ "$MODE" == "auto" ]; then
     MINIO_PORT="39105"
     MINIO_CONSOLE_PORT="39106"
 
+    REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
+
 else
     # Modo interativo
     read -p "Host do banco de dados [db]: " DB_HOST
@@ -280,6 +282,15 @@ else
     MINIO_USE_SSL="false"
     MINIO_PORT="39105"
     MINIO_CONSOLE_PORT="39106"
+
+    print_header "Configuração do Redis"
+
+    read -sp "Senha do Redis (Enter para gerar aleatoriamente): " REDIS_PASSWORD
+    echo
+    if [ -z "$REDIS_PASSWORD" ]; then
+        REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
+        print_info "Senha do Redis gerada automaticamente"
+    fi
 fi
 
 # Criar arquivo .env
@@ -365,6 +376,12 @@ MINIO_PORT=$MINIO_PORT
 MINIO_CONSOLE_PORT=$MINIO_CONSOLE_PORT
 
 # ============================================================================
+# REDIS
+# ============================================================================
+# Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+REDIS_PASSWORD=$REDIS_PASSWORD
+
+# ============================================================================
 # DEVELOPMENT SETTINGS
 # ============================================================================
 ENABLE_DEBUG_TOOLBAR=$ENABLE_DEBUG_TOOLBAR
@@ -417,6 +434,9 @@ if [ "$MODE" == "auto" ]; then
     echo "  Username: $DJANGO_SUPERUSER_USERNAME"
     echo "  Email: $DJANGO_SUPERUSER_EMAIL"
     echo "  Senha: $DJANGO_SUPERUSER_PASSWORD"
+    echo ""
+    echo -e "${CYAN}Redis:${NC}"
+    echo "  Senha: $REDIS_PASSWORD"
     echo ""
     echo -e "${CYAN}Backup Encryption:${NC}"
     echo "  BACKUP_ENCRYPTION_KEY: $BACKUP_ENCRYPTION_KEY"
