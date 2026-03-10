@@ -134,6 +134,19 @@ lint:npm-audit:
   script:
     - npm audit --audit-level=high
 
+lint:secrets:
+  image:
+    name: ghcr.io/gitleaks/gitleaks:v8.27.2
+    entrypoint: [""]
+  stage: lint
+  script:
+    # Scan full git history for leaked secrets; --redact masks secret values in output.
+    # gitleaks:allow comments in source suppress known false positives (e.g. CI dummy keys).
+    - gitleaks detect --source . --redact
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+
 lint:k8s:
   stage: lint
   image:
