@@ -216,6 +216,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API para gerenciamento financeiro pessoal",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "TAGS": [
