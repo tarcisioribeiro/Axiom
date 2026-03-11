@@ -22,6 +22,28 @@ if not SECRET_KEY and not _TESTING:
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
+# ============================================================================
+# HTTPS / SSL / HSTS
+# In production: SECURE_SSL_REDIRECT=True, SESSION_COOKIE_SECURE=True,
+# CSRF_COOKIE_SECURE=True, SECURE_HSTS_SECONDS=31536000 (after HTTPS verified).
+# ============================================================================
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+
+# HSTS — only active when SECURE_HSTS_SECONDS > 0.
+# Start with a short value (e.g. 300) in staging before committing to 31536000.
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+    os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
+)
+SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
+
+# Trust X-Forwarded-Proto from the TLS-terminating reverse proxy (e.g. nginx).
+# Set SECURE_PROXY_SSL_HEADER=true when running behind an SSL-terminating proxy.
+if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # ALLOWED_HOSTS configurado via variavel de ambiente
 # Em producao, definir explicitamente os dominios permitidos
 # Exemplo: ALLOWED_HOSTS=mindledger.com,api.mindledger.com
