@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import threading
@@ -118,8 +119,9 @@ class FieldEncryption:
         # Verificar cache primeiro
         if use_cache:
             cache = get_decryption_cache()
-            if encrypted_data in cache:
-                return cache[encrypted_data]
+            cache_key = hashlib.sha256(encrypted_data.encode()).hexdigest()
+            if cache_key in cache:
+                return cache[cache_key]
 
         try:
             key = FieldEncryption.get_encryption_key()
@@ -129,7 +131,7 @@ class FieldEncryption:
 
             # Armazenar no cache
             if use_cache:
-                cache[encrypted_data] = result
+                cache[cache_key] = result
 
             return result
         except ValidationError:
