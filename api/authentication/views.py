@@ -272,7 +272,11 @@ def create_user_with_member(request):
                 members_group = Group.objects.get(name="members")
                 user.groups.add(members_group)
             except Group.DoesNotExist:
-                pass
+                logger.warning(
+                    "Group 'members' not found during registration of user '%s'. "
+                    "Run 'python manage.py setup_permissions' to create it.",
+                    username,
+                )
 
             # Cria o membro vinculado
             member = Member(
