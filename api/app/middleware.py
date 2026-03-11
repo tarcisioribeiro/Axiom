@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Any
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
@@ -231,13 +232,15 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
             # com CSS-in-JS
             # Em producao, considerar implementar nonces para scripts
+            cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
+            connect_src = f"'self' http://localhost:* {cors_origins}".strip()
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "
                 "script-src 'self'; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "img-src 'self' data: https: blob:; "
-                "connect-src 'self' http://localhost:* https:; "
+                f"connect-src {connect_src}; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "
                 "form-action 'self';"
