@@ -360,8 +360,12 @@ CSRF_COOKIE_SECURE=$CSRF_COOKIE_SECURE
 # BACKUP CONFIGURATION
 # ============================================================================
 BACKUP_DIR=$BACKUP_DIR
-# AES-256 passphrase para criptografia dos backups — NUNCA altere após o primeiro backup
+# AES-256 passphrase para criptografia dos backups.
+# Para rotacionar: incremente BACKUP_KEY_VERSION e use rekey-backups.sh.
 BACKUP_ENCRYPTION_KEY=$BACKUP_ENCRYPTION_KEY
+BACKUP_KEY_VERSION=v1
+# Chaves históricas (adicionar ao rotacionar):
+# BACKUP_ENCRYPTION_KEY_V1=<chave-anterior>
 
 # ============================================================================
 # MinIO / S3 Object Storage
@@ -443,7 +447,7 @@ if [ "$MODE" == "auto" ]; then
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     print_warning "IMPORTANTE: Salve essas credenciais em um local seguro!"
-    print_warning "BACKUP_ENCRYPTION_KEY: nunca altere após o primeiro backup (dados inacessíveis)!"
+    print_warning "BACKUP_ENCRYPTION_KEY: ao rotacionar, incremente BACKUP_KEY_VERSION e use rekey-backups.sh para re-encriptar backups antigos."
 fi
 
 echo ""

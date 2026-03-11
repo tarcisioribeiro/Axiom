@@ -15,7 +15,10 @@
 #
 # Required environment variables (same as backup.sh):
 #   PGPASSWORD            PostgreSQL password
-#   BACKUP_ENCRYPTION_KEY AES-256 passphrase used when backup was created
+#   BACKUP_ENCRYPTION_KEY AES-256 passphrase for the current key version.
+#                         For older backups (e.g. _kv1), also set
+#                         BACKUP_ENCRYPTION_KEY_v1=<old-passphrase> so this
+#                         script can select the correct key automatically.
 #
 # Optional:
 #   PGHOST, PGPORT, DB_USER, BACKUP_DIR (defaults match backup.sh)
@@ -103,6 +106,34 @@ log "Step 1/5 — Verifying file: $(basename "$ENC_FILE")"
 ENC_SIZE=$(du -h "$ENC_FILE" | cut -f1)
 log "  File size : ${ENC_SIZE}"
 
+# ── Resolve decryption key ─────────────────────────────────────────────────────
+# Filenames include a key-version tag: db_backup_<TS>_kv<VER>.dump.enc
+# Try BACKUP_ENCRYPTION_KEY_<VER> first; fall back to BACKUP_ENCRYPTION_KEY.
+ENC_BASENAME=$(basename "$ENC_FILE")
+KEY_VERSION=""
+if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+    KEY_VERSION="${BASH_REMATCH[1]}"
+fi
+
+DECRYPT_KEY_VAR="BACKUP_ENCRYPTION_KEY"
+if [ -n "$KEY_VERSION" ]; then
+    VERSIONED_VAR="BACKUP_ENCRYPTION_KEY_${KEY_VERSION}"
+    if [ -n "${!VERSIONED_VAR:-}" ]; then
+        DECRYPT_KEY_VAR="$VERSIONED_VAR"
+        log "  Key version : ${KEY_VERSION} (using ${DECRYPT_KEY_VAR})"
+    else
+        log "  Key version : ${KEY_VERSION} (${VERSIONED_VAR} not set, using BACKUP_ENCRYPTION_KEY)"
+    fi
+else
+    log "  Key version : unknown (legacy filename, using BACKUP_ENCRYPTION_KEY)"
+fi
+
+export DECRYPT_KEY_FOR_VERIFY="${!DECRYPT_KEY_VAR}"
+if [ -z "$DECRYPT_KEY_FOR_VERIFY" ]; then
+    error "Decryption key is empty — set ${DECRYPT_KEY_VAR}"
+    exit 1
+fi
+
 # ── Step 2: Decrypt ────────────────────────────────────────────────────────────
 TEMP_DUMP=$(mktemp "${BACKUP_DIR}/verify_XXXXXX.dump")
 log "Step 2/5 — Decrypting backup..."
@@ -110,10 +141,10 @@ log "Step 2/5 — Decrypting backup..."
 if ! openssl enc -d -aes-256-cbc \
     -pbkdf2 \
     -iter 600000 \
-    -pass "env:BACKUP_ENCRYPTION_KEY" \
+    -pass "env:DECRYPT_KEY_FOR_VERIFY" \
     -in  "$ENC_FILE" \
     -out "$TEMP_DUMP"; then
-    error "Decryption failed — wrong BACKUP_ENCRYPTION_KEY or corrupt file"
+    error "Decryption failed — wrong key for version '${KEY_VERSION:-unknown}' or corrupt file"
     exit 1
 fi
 
