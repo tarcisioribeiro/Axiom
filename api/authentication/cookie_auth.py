@@ -58,7 +58,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             max_age=60 * 15,  # 15 minutos
             httponly=True,
             secure=settings.DEBUG is False,  # True em produção (HTTPS)
-            samesite="Lax",  # Proteção CSRF
+            samesite="Strict",  # Proteção CSRF
             path="/",
         )
 
@@ -69,7 +69,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             max_age=60 * 60,  # 1 hora
             httponly=True,
             secure=settings.DEBUG is False,  # True em produção (HTTPS)
-            samesite="Lax",  # Proteção CSRF
+            samesite="Strict",  # Proteção CSRF
             path="/api/v1/authentication/",  # Apenas para refresh endpoint
         )
 
@@ -119,7 +119,7 @@ class CookieTokenRefreshView(TokenRefreshView):
             max_age=60 * 15,  # 15 minutos
             httponly=True,
             secure=settings.DEBUG is False,
-            samesite="Lax",
+            samesite="Strict",
             path="/",
         )
 
@@ -132,7 +132,7 @@ class CookieTokenRefreshView(TokenRefreshView):
                 max_age=60 * 60,  # 1 hora
                 httponly=True,
                 secure=settings.DEBUG is False,
-                samesite="Lax",
+                samesite="Strict",
                 path="/api/v1/authentication/",
             )
 
