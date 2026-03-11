@@ -38,9 +38,19 @@ export default function ShareCredential() {
   useEffect(() => {
     if (!token) return;
 
-    const redeem = async (tok: string) => {
+    // The per-token decryption key is embedded in the URL fragment so that
+    // browsers never send it to the server in HTTP requests.
+    // Format: /share/<uuid>#key=<base64_fernet_key>
+    const fragmentKey = new URLSearchParams(window.location.hash.slice(1)).get('key');
+
+    if (!fragmentKey) {
+      setState('not_found');
+      return;
+    }
+
+    const redeem = async (tok: string, key: string) => {
       try {
-        const data = await credentialShareService.redeemToken(tok);
+        const data = await credentialShareService.redeemToken(tok, key);
         setCredential(data);
         setState('success');
       } catch (err: unknown) {
@@ -63,7 +73,7 @@ export default function ShareCredential() {
       }
     };
 
-    void redeem(token);
+    void redeem(token, fragmentKey);
   }, [token]);
 
   const handleCopy = async (text: string) => {

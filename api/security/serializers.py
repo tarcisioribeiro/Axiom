@@ -572,6 +572,52 @@ class CredentialShareTokenSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class CredentialShareTokenCreateResponseSerializer(serializers.ModelSerializer):
+    """
+    Serializer para a resposta de criação de token.
+
+    Inclui token_key (chave Fernet base64) que é gerada server-side mas
+    NÃO armazenada no banco — deve ser preservada pelo cliente e embutida
+    no fragment (#key=...) do link de compartilhamento.
+    """
+
+    is_token_valid = serializers.BooleanField(source="is_valid", read_only=True)
+    is_expired = serializers.BooleanField(read_only=True)
+    is_exhausted = serializers.BooleanField(read_only=True)
+    password_title = serializers.CharField(source="password.title", read_only=True)
+    token_key = serializers.SerializerMethodField(
+        help_text="Chave Fernet (base64) para decriptação do snapshot. "
+        "Exibida apenas na criação — não fica armazenada no servidor."
+    )
+
+    def __init__(self, *args, token_key: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self._token_key = token_key
+
+    def get_token_key(self, obj) -> str:  # noqa: ARG002
+        return self._token_key
+
+    class Meta:
+        model = CredentialShareToken
+        fields = [
+            "id",
+            "token",
+            "token_key",
+            "password",
+            "password_title",
+            "expires_at",
+            "used_at",
+            "use_count",
+            "max_uses",
+            "is_revoked",
+            "is_token_valid",
+            "is_expired",
+            "is_exhausted",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 # ============================================================================
 # ACTIVITY LOG SERIALIZERS
 # ============================================================================
