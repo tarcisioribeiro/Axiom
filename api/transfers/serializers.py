@@ -43,11 +43,4 @@ class TransferSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = [
-            "id",
-            "uuid",
-            "origin_account_name",
-            "destiny_account_name",
-            "created_at",
-            "updated_at",
-        ]
+        read_only_fields = ["id", "uuid", "created_at", "updated_at"]
