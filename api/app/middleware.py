@@ -2,7 +2,6 @@ import json
 import logging
 from typing import Any
 
-from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
@@ -227,12 +226,7 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             # Referrer policy
             response["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-            # Strict Transport Security (HSTS) - apenas em HTTPS
-            if not settings.DEBUG:
-                response["Strict-Transport-Security"] = (
-                    "max-age=31536000; includeSubDomains; preload"
-                )
-
+            # HSTS is handled by Django's SecurityMiddleware via SECURE_HSTS_SECONDS.
             # Content Security Policy (CSP)
             # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
             # com CSS-in-JS
