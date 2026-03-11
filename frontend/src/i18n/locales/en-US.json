@@ -988,6 +988,7 @@
       "statusRevoked": "Revoked",
       "statusExhausted": "Exhausted",
       "linkCopied": "Link copied to clipboard.",
+      "copyNowWarning": "Copy this link now — the decryption key is not stored on the server and cannot be recovered later.",
       "created": "Link created",
       "createdDesc": "The sharing link was created successfully.",
       "createError": "Error creating link",

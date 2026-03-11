@@ -66,7 +66,7 @@ class VaultLockedException(APIException):
 class VaultEncryption:
     """Utilitários de criptografia para o cofre por usuário."""
 
-    ITERATIONS = 480_000
+    ITERATIONS = 600_000
 
     @staticmethod
     def generate_salt() -> bytes:
@@ -77,7 +77,7 @@ class VaultEncryption:
     def derive_key(master_password: str, salt: bytes) -> bytes:
         """
         Deriva uma chave Fernet a partir da senha mestre e do salt.
-        Usa PBKDF2-HMAC-SHA256 com 480.000 iterações.
+        Usa PBKDF2-HMAC-SHA256 com 600.000 iterações (mínimo NIST SP 800-132 rev. 2023).
 
         Returns:
             bytes: Chave Fernet de 32 bytes (base64url-safe)

@@ -53,6 +53,10 @@ export function SharePasswordModal({
   const [isCreating, setIsCreating] = useState(false);
   const [ttlHours, setTtlHours] = useState('24');
   const [maxUses, setMaxUses] = useState('1');
+  /** Full share URL (with #key= fragment) for the most-recently created token.
+   *  Cleared when the modal is closed. token_key is never stored server-side,
+   *  so this is the only opportunity to copy the URL. */
+  const [newShareUrl, setNewShareUrl] = useState<string | null>(null);
 
   const loadTokens = useCallback(async () => {
     if (!password) return;
@@ -73,6 +77,7 @@ export function SharePasswordModal({
 
   useEffect(() => {
     if (open && password) {
+      setNewShareUrl(null);
       void loadTokens();
     }
   }, [open, password, loadTokens]);
@@ -81,14 +86,18 @@ export function SharePasswordModal({
     if (!password) return;
     setIsCreating(true);
     try {
-      await credentialShareService.createToken(password.id, {
+      const result = await credentialShareService.createToken(password.id, {
         ttl_hours: parseInt(ttlHours, 10),
         max_uses: parseInt(maxUses, 10),
       });
-      toast({
-        title: t('pages.sharePassword.created'),
-        description: t('pages.sharePassword.createdDesc'),
-      });
+      // token_key is returned only at creation time and never stored server-side.
+      // Build the full URL with the key in the fragment so it's never sent to
+      // the server by the browser.
+      if (result.token_key) {
+        setNewShareUrl(
+          `${window.location.origin}/share/${result.token}#key=${result.token_key}`
+        );
+      }
       void loadTokens();
     } catch (error: unknown) {
       toast({
@@ -118,9 +127,9 @@ export function SharePasswordModal({
     }
   };
 
-  const handleCopyLink = async (token: string) => {
-    const url = `${window.location.origin}/share/${token}`;
-    await copyToClipboard(url);
+  const handleCopyNewLink = async () => {
+    if (!newShareUrl) return;
+    await copyToClipboard(newShareUrl);
     toast({
       title: t('common.messages.copied'),
       description: t('pages.sharePassword.linkCopied'),
@@ -211,6 +220,22 @@ export function SharePasswordModal({
               </>
             )}
           </Button>
+
+          {newShareUrl && (
+            <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
+              <p className="mb-2 font-medium text-yellow-600 dark:text-yellow-400">
+                {t('pages.sharePassword.copyNowWarning')}
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 break-all rounded bg-muted px-2 py-1 text-xs">
+                  {newShareUrl}
+                </code>
+                <Button size="sm" variant="outline" onClick={handleCopyNewLink}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Existing tokens */}
@@ -248,16 +273,6 @@ export function SharePasswordModal({
                     </p>
                   </div>
                   <div className="ml-2 flex shrink-0 gap-1">
-                    {token.is_token_valid && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleCopyLink(String(token.token))}
-                        title={t('pages.sharePassword.copyLink')}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    )}
                     {!token.is_revoked && (
                       <Button
                         size="sm"
