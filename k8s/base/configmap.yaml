@@ -11,9 +11,6 @@ data:
   DB_HOST: "postgres-service"
   DB_PORT: "5432"
 
-  # Redis connection
-  REDIS_URL: "redis://redis-service:6379/0"
-
   # API settings
   API_PORT: "39100"
   DEBUG: "0"
