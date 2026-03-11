@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.encryption import FieldEncryption
 from app.permissions import GlobalDefaultPermission
+from authentication.throttles import ShareTokenRateThrottle
 from security.activity_logs.models import ACTION_TYPES, ActivityLog
 from security.models import (
     PASSWORD_CATEGORIES,
@@ -56,13 +57,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request):
-    """Extrai o IP do cliente da requisição."""
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(",")[0]
-    else:
-        ip = request.META.get("REMOTE_ADDR")
-    return ip
+    """Extrai o IP do cliente da requisição, respeitando NUM_PROXIES."""
+    from app.ip_utils import get_client_ip as _get_trusted_client_ip
+
+    return _get_trusted_client_ip(request)
 
 
 def log_activity(request, action, model_name, object_id, description):
@@ -1570,6 +1568,7 @@ class RedeemShareTokenView(APIView):
 
     permission_classes = []
     authentication_classes = []
+    throttle_classes = [ShareTokenRateThrottle]
 
     def get(self, request, token):
         try:

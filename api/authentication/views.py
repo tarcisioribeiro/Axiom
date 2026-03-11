@@ -9,7 +9,6 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .throttles import RegisterRateThrottle
 
@@ -100,14 +99,6 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
             errors.append("Email invalido")
 
     return (len(errors) == 0, errors)
-
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        request.user.auth_token.delete()
-        return Response({"detail": "Logout efetuado com sucesso."})
 
 
 @api_view(["GET"])

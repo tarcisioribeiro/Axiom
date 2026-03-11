@@ -2,9 +2,12 @@ import json
 import logging
 from typing import Any
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
+
+from app.ip_utils import get_client_ip as _get_trusted_client_ip
 
 logger = logging.getLogger("mindledger.audit")
 
@@ -155,13 +158,8 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         return {"authenticated": False}
 
     def _get_client_ip(self, request: HttpRequest) -> str:
-        """Get client IP address, handling proxies"""
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(",")[0].strip()
-        else:
-            ip = request.META.get("REMOTE_ADDR", "")
-        return ip
+        """Get client IP address, respecting NUM_PROXIES to prevent spoofing."""
+        return _get_trusted_client_ip(request)
 
     def _get_safe_request_data(self, request: HttpRequest) -> dict:
         """Get request data with sensitive fields removed"""
@@ -230,10 +228,10 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             response["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
             # Strict Transport Security (HSTS) - apenas em HTTPS
-            # Em produção, descomentar a linha abaixo:
-            # response['Strict-Transport-Security'] = (
-            #     'max-age=31536000; includeSubDomains; preload'
-            # )
+            if not settings.DEBUG:
+                response["Strict-Transport-Security"] = (
+                    "max-age=31536000; includeSubDomains; preload"
+                )
 
             # Content Security Policy (CSP)
             # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
