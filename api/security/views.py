@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
-from app.encryption import FieldEncryption
+from app.encryption import DecryptionError, FieldEncryption
 from app.permissions import GlobalDefaultPermission
 from authentication.throttles import ShareTokenRateThrottle
 from security.activity_logs.models import ACTION_TYPES, ActivityLog
@@ -40,6 +40,7 @@ from security.serializers import (
     ArchiveRevealSerializer,
     ArchiveSerializer,
     CreateShareTokenSerializer,
+    CredentialShareTokenCreateResponseSerializer,
     CredentialShareTokenSerializer,
     PasswordCreateUpdateSerializer,
     PasswordRevealSerializer,
@@ -1505,8 +1506,15 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
         ttl_hours = serializer.validated_data["ttl_hours"]
         max_uses = serializer.validated_data["max_uses"]
 
-        # Re-encrypt with app key as a snapshot (vault-key-independent)
-        encrypted_snapshot = FieldEncryption.encrypt_data(plaintext)
+        # Generate a random per-token Fernet key.
+        # This key is NEVER stored server-side — it is returned to the caller
+        # once and must be embedded in the share URL fragment (#key=...) so
+        # that only someone who has the full URL can decrypt the snapshot.
+        token_key = FieldEncryption.generate_key()  # base64-encoded 32-byte key
+        token_key_bytes = token_key.encode()
+        encrypted_snapshot = FieldEncryption.encrypt_with_key(
+            plaintext, token_key_bytes
+        )
 
         token_obj = CredentialShareToken.objects.create(
             password=password_obj,
@@ -1525,7 +1533,9 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
         )
 
         return Response(
-            CredentialShareTokenSerializer(token_obj).data,
+            CredentialShareTokenCreateResponseSerializer(
+                token_obj, token_key=token_key
+            ).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -1560,19 +1570,33 @@ class RevokeShareTokenView(APIView):
 
 class RedeemShareTokenView(APIView):
     """
-    GET /api/v1/security/share/<token>/
+    POST /api/v1/security/share/<token>/
 
-    Endpoint público (sem autenticação). Descriptografa e retorna a
-    credencial se o token for válido. Registra acesso no ActivityLog.
+    Endpoint público (sem autenticação). Recebe a chave de decriptação
+    no corpo da requisição (campo ``key``), descriptografa o snapshot e
+    retorna a credencial se o token for válido.
+
+    O campo ``key`` é a chave Fernet base64 que foi retornada na criação
+    do token e embutida no fragment (#key=...) do link compartilhado.
+    O servidor nunca armazena essa chave — sem ela o snapshot é ilegível,
+    mesmo com acesso direto ao banco de dados.
 
     Retorna 410 Gone se o token estiver expirado, revogado ou esgotado.
+    Retorna 400 se a chave estiver ausente ou incorreta.
     """
 
     permission_classes = []
     authentication_classes = []
     throttle_classes = [ShareTokenRateThrottle]
 
-    def get(self, request, token):
+    def post(self, request, token):
+        token_key = request.data.get("key", "")
+        if not token_key:
+            return Response(
+                {"error": "Chave de decriptação ausente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             token_obj = CredentialShareToken.objects.select_related("password").get(
                 token=token
@@ -1594,12 +1618,27 @@ class RedeemShareTokenView(APIView):
                 status=status.HTTP_410_GONE,
             )
 
-        # Decrypt with app key (snapshot stored at token creation)
+        # Decrypt snapshot using the caller-supplied per-token key.
+        # The key is never stored server-side; an incorrect key (or a token
+        # created before this security fix) will raise DecryptionError.
         try:
-            plaintext = FieldEncryption.decrypt_data(token_obj._encrypted_password)
+            plaintext = FieldEncryption.decrypt_with_key(
+                token_obj._encrypted_password, token_key.encode()
+            )
+        except DecryptionError:
+            logger.warning(
+                "Share token decryption failed — wrong key or legacy token "
+                "(token_id=%s)",
+                token_obj.id,
+            )
+            return Response(
+                {"error": "Chave incorreta ou link inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         except Exception:
             logger.error(
-                "Failed to decrypt share token snapshot (token_id=%s)", token_obj.id
+                "Unexpected error decrypting share token snapshot (token_id=%s)",
+                token_obj.id,
             )
             return Response(
                 {"error": "Erro ao descriptografar a senha."},

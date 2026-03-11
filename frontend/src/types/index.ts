@@ -825,6 +825,9 @@ export interface PasswordReveal {
 export interface CredentialShareToken {
   id: number;
   token: string;
+  /** Per-token Fernet key (base64). Present ONLY in the creation response.
+   *  Never stored server-side — must be embedded in the share URL fragment. */
+  token_key?: string;
   password: number;
   password_title: string;
   expires_at: string;
