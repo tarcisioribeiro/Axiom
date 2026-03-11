@@ -175,7 +175,8 @@ class VaultLockedMixin:
     - Se tem VaultConfig e cofre está desbloqueado: set_vault_key() e processa.
     - Se tem VaultConfig e cofre está bloqueado: levanta VaultLockedException (423).
 
-    A vault_key é limpa do thread-local ao final de cada request (finalize_response).
+    A vault_key é limpa do thread-local ao final de cada request via dispatch/finally,
+    garantindo limpeza mesmo em caso de exceções não tratadas.
     """
 
     def _get_vault_config(self, request):
@@ -186,6 +187,12 @@ class VaultLockedMixin:
             return VaultConfig.objects.get(owner=member)
         except VaultConfig.DoesNotExist:
             return None
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
+        finally:
+            clear_vault_key()
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)  # type: ignore[misc]
@@ -199,12 +206,6 @@ class VaultLockedMixin:
             raise VaultLockedException()
 
         set_vault_key(vault_key)
-
-    def finalize_response(self, request, response, *args, **kwargs):
-        clear_vault_key()
-        return super().finalize_response(
-            request, response, *args, **kwargs
-        )  # type: ignore[misc]
 
 
 # ============================================================================

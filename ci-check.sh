@@ -11,11 +11,11 @@
 #   lint:pip-audit     pip-audit -r api/requirements.txt --desc
 #   lint:frontend      eslint · prettier
 #   lint:npm-audit     npm audit --audit-level=high
+#   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
 #   typecheck:backend  mypy
 #   typecheck:frontend tsc
 #   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
 #   test:frontend      vitest --run --coverage
-#   secret-detection   gitleaks (opcional — só se instalado)
 #
 # Etapas não cobertas (requerem registry ou infraestrutura de deploy):
 #   build              docker build + push para o registry GitLab
@@ -370,15 +370,18 @@ if ! $BACKEND_ONLY; then
 fi
 
 # ==============================================================================
-# STAGE: secret-detection (opcional — gitleaks, se disponível)
+# STAGE: lint:secrets (opcional local — obrigatório no GitLab CI)
 # ==============================================================================
-section "SECRET DETECTION"
+section "lint:secrets"
 
 if command -v gitleaks >/dev/null 2>&1; then
-	run_step_safe "secret-detection" "gitleaks" \
-		gitleaks detect --source "$SCRIPT_DIR" --no-git --redact
+	# Mirrors the GitLab CI job: scans git history (not just the working tree).
+	run_step_safe "lint:secrets" "gitleaks" \
+		gitleaks detect --source "$SCRIPT_DIR" --redact
 else
-	log "${DIM}  (gitleaks não encontrado — pulando. Instale: https://github.com/gitleaks/gitleaks)${NC}"
+	log "${YELLOW}  ⚠  gitleaks não encontrado — pulando verificação local de secrets.${NC}"
+	log "${YELLOW}     Esta verificação é OBRIGATÓRIA no GitLab CI (lint:secrets).${NC}"
+	log "${DIM}     Instale: https://github.com/gitleaks/gitleaks${NC}"
 fi
 
 # ==============================================================================

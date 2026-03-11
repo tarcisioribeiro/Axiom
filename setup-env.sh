@@ -180,6 +180,8 @@ if [ "$MODE" == "auto" ]; then
     MINIO_PORT="39105"
     MINIO_CONSOLE_PORT="39106"
 
+    REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
+
 else
     # Modo interativo
     read -p "Host do banco de dados [db]: " DB_HOST
@@ -280,6 +282,15 @@ else
     MINIO_USE_SSL="false"
     MINIO_PORT="39105"
     MINIO_CONSOLE_PORT="39106"
+
+    print_header "Configuração do Redis"
+
+    read -sp "Senha do Redis (Enter para gerar aleatoriamente): " REDIS_PASSWORD
+    echo
+    if [ -z "$REDIS_PASSWORD" ]; then
+        REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
+        print_info "Senha do Redis gerada automaticamente"
+    fi
 fi
 
 # Criar arquivo .env
@@ -349,8 +360,12 @@ CSRF_COOKIE_SECURE=$CSRF_COOKIE_SECURE
 # BACKUP CONFIGURATION
 # ============================================================================
 BACKUP_DIR=$BACKUP_DIR
-# AES-256 passphrase para criptografia dos backups — NUNCA altere após o primeiro backup
+# AES-256 passphrase para criptografia dos backups.
+# Para rotacionar: incremente BACKUP_KEY_VERSION e use rekey-backups.sh.
 BACKUP_ENCRYPTION_KEY=$BACKUP_ENCRYPTION_KEY
+BACKUP_KEY_VERSION=v1
+# Chaves históricas (adicionar ao rotacionar):
+# BACKUP_ENCRYPTION_KEY_V1=<chave-anterior>
 
 # ============================================================================
 # MinIO / S3 Object Storage
@@ -363,6 +378,12 @@ MINIO_EXTERNAL_ENDPOINT=$MINIO_EXTERNAL_ENDPOINT
 MINIO_USE_SSL=$MINIO_USE_SSL
 MINIO_PORT=$MINIO_PORT
 MINIO_CONSOLE_PORT=$MINIO_CONSOLE_PORT
+
+# ============================================================================
+# REDIS
+# ============================================================================
+# Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+REDIS_PASSWORD=$REDIS_PASSWORD
 
 # ============================================================================
 # DEVELOPMENT SETTINGS
@@ -418,12 +439,15 @@ if [ "$MODE" == "auto" ]; then
     echo "  Email: $DJANGO_SUPERUSER_EMAIL"
     echo "  Senha: $DJANGO_SUPERUSER_PASSWORD"
     echo ""
+    echo -e "${CYAN}Redis:${NC}"
+    echo "  Senha: $REDIS_PASSWORD"
+    echo ""
     echo -e "${CYAN}Backup Encryption:${NC}"
     echo "  BACKUP_ENCRYPTION_KEY: $BACKUP_ENCRYPTION_KEY"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     print_warning "IMPORTANTE: Salve essas credenciais em um local seguro!"
-    print_warning "BACKUP_ENCRYPTION_KEY: nunca altere após o primeiro backup (dados inacessíveis)!"
+    print_warning "BACKUP_ENCRYPTION_KEY: ao rotacionar, incremente BACKUP_KEY_VERSION e use rekey-backups.sh para re-encriptar backups antigos."
 fi
 
 echo ""

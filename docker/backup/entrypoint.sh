@@ -20,6 +20,11 @@ printenv \
   | grep -E '^(DB_|PG|BACKUP_|MINIO_|KEEP_|MC_|TZ)' \
   | sed "s/'/'\\\\''/g; s/=\(.*\)/='\1'/" \
   > /etc/backup-env.sh
+# Also capture versioned historical keys (BACKUP_ENCRYPTION_KEY_v*)
+printenv \
+  | grep -E '^BACKUP_ENCRYPTION_KEY_v' \
+  | sed "s/'/'\\\\''/g; s/=\(.*\)/='\1'/" \
+  >> /etc/backup-env.sh
 chmod 600 /etc/backup-env.sh
 
 # ── Prepare log file ─────────────────────────────────────────────────────────

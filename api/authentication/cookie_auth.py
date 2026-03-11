@@ -7,9 +7,12 @@ para maior segurança, prevenindo ataques XSS.
 
 from django.conf import settings
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .throttles import LoginRateThrottle
@@ -55,7 +58,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             max_age=60 * 15,  # 15 minutos
             httponly=True,
             secure=settings.DEBUG is False,  # True em produção (HTTPS)
-            samesite="Lax",  # Proteção CSRF
+            samesite="Strict",  # Proteção CSRF
             path="/",
         )
 
@@ -66,7 +69,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             max_age=60 * 60,  # 1 hora
             httponly=True,
             secure=settings.DEBUG is False,  # True em produção (HTTPS)
-            samesite="Lax",  # Proteção CSRF
+            samesite="Strict",  # Proteção CSRF
             path="/api/v1/authentication/",  # Apenas para refresh endpoint
         )
 
@@ -116,9 +119,22 @@ class CookieTokenRefreshView(TokenRefreshView):
             max_age=60 * 15,  # 15 minutos
             httponly=True,
             secure=settings.DEBUG is False,
-            samesite="Lax",
+            samesite="Strict",
             path="/",
         )
+
+        # Atualizar refresh token rotacionado no cookie
+        new_refresh_token = serializer.validated_data.get("refresh")
+        if new_refresh_token:
+            response.set_cookie(
+                key="refresh_token",
+                value=new_refresh_token,
+                max_age=60 * 60,  # 1 hora
+                httponly=True,
+                secure=settings.DEBUG is False,
+                samesite="Strict",
+                path="/api/v1/authentication/",
+            )
 
         return response
 
@@ -150,15 +166,23 @@ class CookieTokenVerifyView(TokenRefreshView):
             )
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
     """
-    View de logout que remove os cookies de autenticação.
+    View de logout que invalida o refresh token no servidor e remove os cookies.
     """
+    refresh_token = request.COOKIES.get("refresh_token")
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            pass  # Token já expirado ou inválido — sem ação necessária
+
     response = Response(
         {"message": "Logout realizado com sucesso"}, status=status.HTTP_200_OK
     )
-
-    # Remover cookies
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/api/v1/authentication/")
 

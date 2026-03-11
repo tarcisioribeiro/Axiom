@@ -12,6 +12,8 @@ paths = [
   '''api/\.env\.example$''',
   # setup-env.sh generates keys at runtime using os commands, not hardcoded values
   '''setup-env\.sh$''',
+  # Documentation files contain example/placeholder values for illustration purposes
+  '''documentation/''',
 ]
 # Plain strings required by gitleaks (not TOML tables)
 # Django/Fernet key placeholders in documentation
