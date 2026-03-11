@@ -204,7 +204,7 @@ export function useCrudPage<
           ToastAction,
           { altText: 'Desfazer exclusão', onClick: handleUndo },
           'Desfazer'
-        ) as ToastActionElement,
+        ) as unknown as ToastActionElement,
       });
 
       timer.handle = setTimeout(() => {
