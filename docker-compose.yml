@@ -236,8 +236,13 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET: ${BACKUP_MINIO_BUCKET:-mindledger-backups}
       MC_BIN: /usr/local/bin/mc
-      # Backup encryption — NEVER change after first backup
+      # Backup encryption — rotate via rekey-backups.sh (see api/scripts/).
+      # Increment BACKUP_KEY_VERSION (v1 → v2, …) when rotating keys and keep
+      # old keys as BACKUP_ENCRYPTION_KEY_v1 etc. for decrypting old backups.
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      BACKUP_KEY_VERSION: ${BACKUP_KEY_VERSION:-v1}
+      # Historical keys for verify-backup.sh / rekey-backups.sh (add as needed):
+      # BACKUP_ENCRYPTION_KEY_v1: ${BACKUP_ENCRYPTION_KEY_V1}
       # Cron schedule (default: 02:00 BRT daily)
       BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
       # GFS retention policy

@@ -28,14 +28,15 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #
 #   1. Download the encrypted dump from MinIO:
-#        mc cp mindledger-minio/mindledger-backups/db/db_backup_<TS>.dump.enc .
+#        mc cp mindledger-minio/mindledger-backups/db/db_backup_<TS>_kv<VER>.dump.enc .
 #
-#   2. Decrypt (key must match BACKUP_ENCRYPTION_KEY used during backup):
-#        export BACKUP_ENCRYPTION_KEY="<key>"
+#   2. Decrypt (use the key that matches the _kv<VER> suffix in the filename;
+#      store historical keys as BACKUP_ENCRYPTION_KEY_v1, _v2, etc.):
+#        export BACKUP_ENCRYPTION_KEY="<key-for-that-version>"
 #        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
 #          -pass env:BACKUP_ENCRYPTION_KEY \
-#          -in  db_backup_<TS>.dump.enc \
-#          -out db_backup_<TS>.dump
+#          -in  db_backup_<TS>_kv<VER>.dump.enc \
+#          -out db_backup_<TS>_kv<VER>.dump
 #
 #   3. Restore:
 #        pg_restore \
@@ -48,24 +49,42 @@
 # Required Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────
 #   PGPASSWORD            PostgreSQL password
-#   BACKUP_ENCRYPTION_KEY AES-256 passphrase (keep secret; never change after
-#                         encrypting data or older backups become unrecoverable)
+#   BACKUP_ENCRYPTION_KEY AES-256 passphrase for new backups (keep secret;
+#                         rotate via rekey-backups.sh — see Key Rotation below)
 #   MINIO_ENDPOINT        MinIO/S3 endpoint, e.g. http://minio:9000
 #   MINIO_ACCESS_KEY      MinIO/S3 access key
 #   MINIO_SECRET_KEY      MinIO/S3 secret key
 #
 # Optional Environment Variables
 # ─────────────────────────────────────────────────────────────────────────────
-#   PGHOST          (default: db)
-#   PGPORT          (default: 5432)
-#   DB_NAME         (default: mindledger_db)
-#   DB_USER         (default: postgres)
-#   BACKUP_DIR      (default: /backups)
-#   MINIO_BUCKET    (default: mindledger-backups)
-#   KEEP_DAILY      (default: 7)   — daily backups to keep locally
-#   KEEP_WEEKLY     (default: 4)   — one-per-week backups to keep locally
-#   KEEP_MONTHLY    (default: 3)   — one-per-month backups to keep locally
-#   MC_BIN          (default: /usr/local/bin/mc)
+#   PGHOST               (default: db)
+#   PGPORT               (default: 5432)
+#   DB_NAME              (default: mindledger_db)
+#   DB_USER              (default: postgres)
+#   BACKUP_DIR           (default: /backups)
+#   MINIO_BUCKET         (default: mindledger-backups)
+#   KEEP_DAILY           (default: 7)   — daily backups to keep locally
+#   KEEP_WEEKLY          (default: 4)   — one-per-week backups to keep locally
+#   KEEP_MONTHLY         (default: 3)   — one-per-month backups to keep locally
+#   MC_BIN               (default: /usr/local/bin/mc)
+#   BACKUP_KEY_VERSION   (default: v1)  — version label embedded in filename;
+#                        increment (v2, v3, …) when rotating the key
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Key Rotation
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   Backup filenames include the key version (e.g. _kv1) so that the correct
+#   decryption key can always be identified.  To rotate:
+#
+#   1. Generate a new passphrase and set it as BACKUP_ENCRYPTION_KEY in .env.
+#   2. Increment BACKUP_KEY_VERSION (e.g. v1 → v2) in .env.
+#   3. Store the OLD key as BACKUP_ENCRYPTION_KEY_v1 in .env (for decryption
+#      of historical backups and for rekey-backups.sh).
+#   4. Restart the db-backup container so it picks up the new env vars.
+#   5. Optionally re-encrypt existing backups:
+#        BACKUP_ENCRYPTION_KEY_v1=<old> BACKUP_ENCRYPTION_KEY=<new> \
+#          /scripts/rekey-backups.sh --from-version v1 --to-version v2
 # =============================================================================
 
 set -euo pipefail
@@ -79,6 +98,7 @@ PGHOST="${PGHOST:-db}"
 PGPORT="${PGPORT:-5432}"
 MINIO_BUCKET="${MINIO_BUCKET:-mindledger-backups}"
 MC_BIN="${MC_BIN:-/usr/local/bin/mc}"
+BACKUP_KEY_VERSION="${BACKUP_KEY_VERSION:-v1}"
 
 # GFS (Grandfather-Father-Son) retention policy
 KEEP_DAILY="${KEEP_DAILY:-7}"
@@ -107,9 +127,9 @@ warning() { echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $*"; 
 # ── File paths ─────────────────────────────────────────────────────────────────
 mkdir -p "$BACKUP_DIR"
 
-DB_DUMP="$BACKUP_DIR/db_backup_${DATE}.dump"
-DB_ENC="$BACKUP_DIR/db_backup_${DATE}.dump.enc"
-DB_MANIFEST="$BACKUP_DIR/db_backup_${DATE}.manifest"
+DB_DUMP="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.dump"
+DB_ENC="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.dump.enc"
+DB_MANIFEST="$BACKUP_DIR/db_backup_${DATE}_kv${BACKUP_KEY_VERSION}.manifest"
 SENTINEL_FILE="$BACKUP_DIR/.last_successful_backup"
 STATUS_FILE="$BACKUP_DIR/.last_backup_status"
 
@@ -175,7 +195,7 @@ fi
 # • Random salt prepended to ciphertext (required for decryption)
 # • Key read via -pass env:VAR — not visible in /proc/<pid>/cmdline or ps
 # ─────────────────────────────────────────────────────────────────────────────
-log "Step 3/5 — Encrypting backup (AES-256-CBC, PBKDF2, 600k iterations)..."
+log "Step 3/5 — Encrypting backup (AES-256-CBC, PBKDF2, 600k iterations, key version: ${BACKUP_KEY_VERSION})..."
 
 openssl enc -aes-256-cbc \
     -pbkdf2 \
@@ -376,4 +396,5 @@ log "  Manifest       : $(basename "$DB_MANIFEST")"
 log "  Remote path    : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
 log "  Local dir size : ${TOTAL_LOCAL}"
 log "  Timestamp      : ${DATE}"
+log "  Key version    : ${BACKUP_KEY_VERSION}"
 log "════════════════════════════════════════════════════════════"
