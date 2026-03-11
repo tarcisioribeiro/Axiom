@@ -32,9 +32,9 @@ class CredentialShareService {
     return apiClient.delete<void>(url);
   }
 
-  redeemToken(token: string): Promise<SharedCredential> {
+  redeemToken(token: string, key: string): Promise<SharedCredential> {
     const url = API_CONFIG.ENDPOINTS.SHARE_TOKEN_REDEEM.replace(':token', token);
-    return apiClient.get<SharedCredential>(url);
+    return apiClient.post<SharedCredential>(url, { key });
   }
 }
 

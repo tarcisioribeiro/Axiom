@@ -10,8 +10,15 @@ const getApiBaseUrl = (): string => {
   // Sempre usar o hostname do browser para evitar problemas de cross-site cookies
   // Ex: acessar via 127.0.0.1 mas API apontar para localhost causa SameSite cookie block
   if (typeof window !== 'undefined') {
-    const { hostname, protocol } = window.location;
+    const { hostname, protocol, port } = window.location;
 
+    // Sem porta explícita = produção via ingress (80/443 padrão)
+    // A API é acessada pelo mesmo origin via path routing (/api → api-service)
+    if (!port || port === '80' || port === '443') {
+      return `${protocol}//${hostname}`;
+    }
+
+    // Dev local: usa a porta da API definida na defaultApiUrl
     try {
       const url = new URL(defaultApiUrl);
       const apiPort = url.port || '39100';

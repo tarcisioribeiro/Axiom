@@ -53,16 +53,20 @@ urlpatterns = [
     path("api/v1/", include("budgets.urls")),
     # Bank Reconciliation Module
     path("api/v1/", include("bank_reconciliation.urls")),
-    # API Documentation (OpenAPI/Swagger)
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui",
-    ),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
 
 if settings.DEBUG:
+    # API Documentation (OpenAPI/Swagger) — only exposed in development
+    urlpatterns += [
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path(
+            "api/docs/",
+            SpectacularSwaggerView.as_view(url_name="schema"),
+            name="swagger-ui",
+        ),
+        path(
+            "api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
+        ),
+    ]
     urlpatterns += static(settings.STATIC_URL or "", document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT)

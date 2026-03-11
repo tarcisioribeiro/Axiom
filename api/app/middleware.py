@@ -2,9 +2,12 @@ import json
 import logging
 from typing import Any
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
+
+from app.ip_utils import get_client_ip as _get_trusted_client_ip
 
 logger = logging.getLogger("mindledger.audit")
 
@@ -155,13 +158,8 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         return {"authenticated": False}
 
     def _get_client_ip(self, request: HttpRequest) -> str:
-        """Get client IP address, handling proxies"""
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(",")[0].strip()
-        else:
-            ip = request.META.get("REMOTE_ADDR", "")
-        return ip
+        """Get client IP address, respecting NUM_PROXIES to prevent spoofing."""
+        return _get_trusted_client_ip(request)
 
     def _get_safe_request_data(self, request: HttpRequest) -> dict:
         """Get request data with sensitive fields removed"""
@@ -229,23 +227,20 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             # Referrer policy
             response["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-            # Strict Transport Security (HSTS) - apenas em HTTPS
-            # Em produção, descomentar a linha abaixo:
-            # response['Strict-Transport-Security'] = (
-            #     'max-age=31536000; includeSubDomains; preload'
-            # )
-
+            # HSTS is handled by Django's SecurityMiddleware via SECURE_HSTS_SECONDS.
             # Content Security Policy (CSP)
             # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
             # com CSS-in-JS
             # Em producao, considerar implementar nonces para scripts
+            cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
+            connect_src = f"'self' http://localhost:* {cors_origins}".strip()
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "
                 "script-src 'self'; "
                 "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "img-src 'self' data: https: blob:; "
-                "connect-src 'self' http://localhost:* https:; "
+                f"connect-src {connect_src}; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "
                 "form-action 'self';"
