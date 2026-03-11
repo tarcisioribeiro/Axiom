@@ -22,15 +22,37 @@ if not SECRET_KEY and not _TESTING:
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
+# ============================================================================
+# HTTPS / SSL / HSTS
+# In production: SECURE_SSL_REDIRECT=True, SESSION_COOKIE_SECURE=True,
+# CSRF_COOKIE_SECURE=True, SECURE_HSTS_SECONDS=31536000 (after HTTPS verified).
+# ============================================================================
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+
+# HSTS — only active when SECURE_HSTS_SECONDS > 0.
+# Start with a short value (e.g. 300) in staging before committing to 31536000.
+SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+    os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "False") == "True"
+)
+SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
+
+# Trust X-Forwarded-Proto from the TLS-terminating reverse proxy (e.g. nginx).
+# Set SECURE_PROXY_SSL_HEADER=true when running behind an SSL-terminating proxy.
+if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # ALLOWED_HOSTS configurado via variavel de ambiente
 # Em producao, definir explicitamente os dominios permitidos
 # Exemplo: ALLOWED_HOSTS=mindledger.com,api.mindledger.com
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# Em modo DEBUG, permitir todos os hosts para facilitar acesso via rede local
-# Isso e seguro apenas em desenvolvimento - NUNCA use DEBUG=True em producao
-if DEBUG:
-    ALLOWED_HOSTS = ["*"]
+# Number of trusted reverse proxies in front of the application.
+# Set to 0 for direct (no-proxy) connections; 1 for a single nginx/load-balancer.
+# Controls how X-Forwarded-For is parsed to prevent IP spoofing in audit logs.
+NUM_PROXIES = int(os.getenv("NUM_PROXIES", "1"))
 
 INSTALLED_APPS = [
     "django_admin_dracula",
@@ -43,6 +65,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
     "app",
@@ -154,6 +177,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -207,6 +232,7 @@ REST_FRAMEWORK = {
         "user": "300/minute",
         "login": "5/minute",
         "register": "3/minute",
+        "share_token": "10/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -217,6 +243,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API para gerenciamento financeiro pessoal",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.IsAdminUser"],
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "TAGS": [
@@ -349,12 +376,6 @@ CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
     os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 )
 CORS_ALLOW_CREDENTIALS = True
-
-# Em modo DEBUG, permitir todas as origens para facilitar acesso via rede local
-# Isso permite que dispositivos na mesma rede acessem a API
-# NUNCA use DEBUG=True em producao
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",

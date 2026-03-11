@@ -1005,6 +1005,7 @@
       "statusRevoked": "Revogado",
       "statusExhausted": "Esgotado",
       "linkCopied": "Link copiado para a área de transferência.",
+      "copyNowWarning": "Copie este link agora — a chave de decriptação não é armazenada no servidor e não poderá ser recuperada depois.",
       "created": "Link criado",
       "createdDesc": "O link de compartilhamento foi criado com sucesso.",
       "createError": "Erro ao criar link",

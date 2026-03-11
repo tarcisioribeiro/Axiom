@@ -29,7 +29,11 @@ type PageState = 'loading' | 'success' | 'expired' | 'not_found' | 'error';
 export default function ShareCredential() {
   const { token } = useParams<{ token: string }>();
   const { t } = useTranslation();
-  const [state, setState] = useState<PageState>(token ? 'loading' : 'not_found');
+  const [state, setState] = useState<PageState>(() => {
+    if (!token) return 'not_found';
+    const fk = new URLSearchParams(window.location.hash.slice(1)).get('key');
+    return fk ? 'loading' : 'not_found';
+  });
   const [credential, setCredential] = useState<SharedCredential | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,9 +42,16 @@ export default function ShareCredential() {
   useEffect(() => {
     if (!token) return;
 
-    const redeem = async (tok: string) => {
+    // The per-token decryption key is embedded in the URL fragment so that
+    // browsers never send it to the server in HTTP requests.
+    // Format: /share/<uuid>#key=<base64_fernet_key>
+    const fragmentKey = new URLSearchParams(window.location.hash.slice(1)).get('key');
+
+    if (!fragmentKey) return; // Initial state already set to 'not_found' via useState initializer
+
+    const redeem = async (tok: string, key: string) => {
       try {
-        const data = await credentialShareService.redeemToken(tok);
+        const data = await credentialShareService.redeemToken(tok, key);
         setCredential(data);
         setState('success');
       } catch (err: unknown) {
@@ -63,7 +74,7 @@ export default function ShareCredential() {
       }
     };
 
-    void redeem(token);
+    void redeem(token, fragmentKey);
   }, [token]);
 
   const handleCopy = async (text: string) => {
