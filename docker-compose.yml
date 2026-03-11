@@ -85,7 +85,7 @@ services:
 
   # MinIO Object Storage
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z@sha256:a929054ae025fa7997857cd0e2a2e3029238e31ad89877326dc032f4c1a14259
     container_name: mindledger-minio
     command: server /data --console-address ":9001"
     environment:
@@ -122,7 +122,7 @@ services:
 
   # MinIO Bucket Initialization (one-shot)
   minio-init:
-    image: minio/mc:latest
+    image: minio/mc:RELEASE.2025-02-15T10-36-16Z@sha256:9ae9ed28d04f7c36ee6b84c36b2c0168f1be28350d54344c3e5088a631f4c603
     container_name: mindledger-minio-init
     depends_on:
       minio:
