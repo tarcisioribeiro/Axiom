@@ -601,9 +601,11 @@ class ArchiveDownloadView(APIView):
         )
 
         # Retornar o arquivo via streaming (proxy through Django to avoid CORS)
-        import mimetypes
+        import os
 
         from django.http import FileResponse
+
+        from security.serializers import ALLOWED_UPLOAD_TYPES
 
         try:
             file = archive.encrypted_file.open("rb")
@@ -614,9 +616,9 @@ class ArchiveDownloadView(APIView):
             )
 
         filename = archive.file_name or archive.encrypted_file.name.split("/")[-1]
-        content_type, _ = mimetypes.guess_type(filename)
-        if not content_type:
-            content_type = "application/octet-stream"
+        _, ext = os.path.splitext(filename.lower())
+        # Derive Content-Type from the upload whitelist only — never from user input
+        content_type = ALLOWED_UPLOAD_TYPES.get(ext, "application/octet-stream")
 
         response = FileResponse(
             file,

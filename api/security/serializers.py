@@ -1,3 +1,5 @@
+import os
+
 from rest_framework import serializers
 
 from security.activity_logs.models import ActivityLog
@@ -319,6 +321,74 @@ class StoredBankAccountRevealSerializer(serializers.Serializer):
 
 
 # ============================================================================
+# ARCHIVE UPLOAD VALIDATION
+# ============================================================================
+
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+# Whitelist: extension → safe MIME type for serving
+ALLOWED_UPLOAD_TYPES = {
+    ".pdf": "application/pdf",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".txt": "text/plain; charset=utf-8",
+    ".zip": "application/zip",
+    ".doc": "application/msword",
+    ".docx": (
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ),
+}
+
+# Magic byte signatures: extension → list of (bytes, offset) tuples
+_MAGIC_SIGNATURES: dict[str, list[tuple[bytes, int]]] = {
+    ".pdf": [(b"%PDF", 0)],
+    ".jpg": [(b"\xff\xd8\xff", 0)],
+    ".jpeg": [(b"\xff\xd8\xff", 0)],
+    ".png": [(b"\x89PNG\r\n\x1a\n", 0)],
+    ".gif": [(b"GIF87a", 0), (b"GIF89a", 0)],
+    ".webp": [(b"RIFF", 0)],
+    ".zip": [(b"PK\x03\x04", 0), (b"PK\x05\x06", 0)],
+    ".docx": [(b"PK\x03\x04", 0)],
+    ".doc": [(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", 0)],
+    # .txt has no reliable magic bytes — extension check only
+}
+
+
+def validate_uploaded_file(value):
+    """Validates file size, extension whitelist, and magic bytes."""
+    if value.size > MAX_UPLOAD_SIZE:
+        limit_mb = MAX_UPLOAD_SIZE // (1024 * 1024)
+        raise serializers.ValidationError(
+            f"O arquivo excede o limite de {limit_mb} MB."
+        )
+
+    _, ext = os.path.splitext(value.name.lower())
+    if ext not in ALLOWED_UPLOAD_TYPES:
+        allowed = ", ".join(sorted(ALLOWED_UPLOAD_TYPES.keys()))
+        raise serializers.ValidationError(
+            f"Tipo de arquivo não permitido. Extensões aceitas: {allowed}"
+        )
+
+    signatures = _MAGIC_SIGNATURES.get(ext)
+    if signatures:
+        max_read = max(offset + len(sig) for sig, offset in signatures)
+        value.seek(0)
+        header = value.read(max_read)
+        value.seek(0)
+        if not any(
+            header[offset : offset + len(sig)] == sig for sig, offset in signatures
+        ):
+            raise serializers.ValidationError(
+                "O conteúdo do arquivo não corresponde à extensão informada."
+            )
+
+    return value
+
+
+# ============================================================================
 # ARCHIVE SERIALIZERS
 # ============================================================================
 
@@ -380,6 +450,11 @@ class ArchiveCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True
     )
     encrypted_file = serializers.FileField(required=False, allow_null=True)
+
+    def validate_encrypted_file(self, value):
+        if value is None:
+            return value
+        return validate_uploaded_file(value)
 
     class Meta:
         model = Archive
