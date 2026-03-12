@@ -7,7 +7,9 @@ import { PageHeader } from '@/components/common/PageHeader';
 describe('PageHeader', () => {
   it('renders the title as an h1', () => {
     render(<PageHeader title="Despesas" />);
-    expect(screen.getByRole('heading', { level: 1, name: 'Despesas' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Despesas' })
+    ).toBeInTheDocument();
   });
 
   it('renders without an action button when action prop is absent', () => {
@@ -16,7 +18,12 @@ describe('PageHeader', () => {
   });
 
   it('renders an action button with the given label', () => {
-    render(<PageHeader title="Despesas" action={{ label: 'Nova Despesa', onClick: vi.fn() }} />);
+    render(
+      <PageHeader
+        title="Despesas"
+        action={{ label: 'Nova Despesa', onClick: vi.fn() }}
+      />
+    );
     expect(screen.getByRole('button', { name: 'Nova Despesa' })).toBeInTheDocument();
   });
 

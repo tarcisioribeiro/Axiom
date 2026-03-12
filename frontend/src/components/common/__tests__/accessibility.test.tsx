@@ -14,20 +14,22 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('framer-motion', async (importOriginal) => {
   const React = await import('react');
-  const actual = await importOriginal<typeof import('framer-motion')>();
+  const actual = await importOriginal();
   return {
     ...actual,
     motion: new Proxy(
       {},
       {
         get: (_target, tag: string) =>
-          React.forwardRef(({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
-            React.createElement(tag, { ...props, ref }, children)
+          React.forwardRef(
+            ({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
+              React.createElement(tag, { ...props, ref }, children)
           ),
       }
     ),
     useReducedMotion: () => true,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
   };
 });
 
@@ -76,7 +78,10 @@ describe('Accessibility (axe)', () => {
 
   it('PageHeader with action — no violations', async () => {
     const { container } = render(
-      <PageHeader title="Despesas" action={{ label: 'Nova Despesa', onClick: vi.fn() }} />
+      <PageHeader
+        title="Despesas"
+        action={{ label: 'Nova Despesa', onClick: vi.fn() }}
+      />
     );
     expect(await axe(container)).toHaveNoViolations();
   });
