@@ -1,19 +1,21 @@
 vi.mock('framer-motion', async (importOriginal) => {
   const React = await import('react');
-  const actual = await importOriginal<typeof import('framer-motion')>();
+  const actual = await importOriginal();
   return {
     ...actual,
     motion: new Proxy(
       {},
       {
         get: (_target, tag: string) =>
-          React.forwardRef(({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
-            React.createElement(tag, { ...props, ref }, children)
+          React.forwardRef(
+            ({ children, ...props }: React.ComponentPropsWithRef<'div'>, ref) =>
+              React.createElement(tag, { ...props, ref }, children)
           ),
       }
     ),
     useReducedMotion: () => false,
-    AnimatePresence: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+    AnimatePresence: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(React.Fragment, null, children),
   };
 });
 
@@ -44,7 +46,9 @@ describe('StatCard', () => {
   });
 
   it('renders icon when provided', () => {
-    render(<StatCard title="Despesas" value={0} icon={<svg data-testid="stat-icon" />} />);
+    render(
+      <StatCard title="Despesas" value={0} icon={<svg data-testid="stat-icon" />} />
+    );
     expect(screen.getByTestId('stat-icon')).toBeInTheDocument();
   });
 
@@ -55,12 +59,16 @@ describe('StatCard', () => {
   });
 
   it('renders positive trend indicator', () => {
-    render(<StatCard title="Lucro" value={100} trend={{ value: 5, isPositive: true }} />);
+    render(
+      <StatCard title="Lucro" value={100} trend={{ value: 5, isPositive: true }} />
+    );
     expect(screen.getByText('+5%')).toBeInTheDocument();
   });
 
   it('renders negative trend indicator without + prefix', () => {
-    render(<StatCard title="Gasto" value={100} trend={{ value: -3, isPositive: false }} />);
+    render(
+      <StatCard title="Gasto" value={100} trend={{ value: -3, isPositive: false }} />
+    );
     expect(screen.getByText('-3%')).toBeInTheDocument();
   });
 

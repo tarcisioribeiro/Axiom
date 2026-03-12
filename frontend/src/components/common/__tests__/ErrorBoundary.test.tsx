@@ -42,7 +42,9 @@ describe('ErrorBoundary', () => {
         <Bomb shouldThrow />
       </ErrorBoundary>
     );
-    expect(screen.getByRole('button', { name: /tentar novamente/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /tentar novamente/i })
+    ).toBeInTheDocument();
   });
 
   it('shows the reload button in the default error UI', () => {

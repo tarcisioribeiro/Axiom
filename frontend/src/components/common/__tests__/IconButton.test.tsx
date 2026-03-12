@@ -27,7 +27,11 @@ describe('IconButton', () => {
   it('calls onClick when clicked', async () => {
     const onClick = vi.fn();
     const user = userEvent.setup();
-    render(<IconButton aria-label="Delete" onClick={onClick}>✕</IconButton>);
+    render(
+      <IconButton aria-label="Delete" onClick={onClick}>
+        ✕
+      </IconButton>
+    );
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onClick).toHaveBeenCalledOnce();
   });

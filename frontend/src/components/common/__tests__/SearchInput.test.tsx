@@ -20,7 +20,9 @@ describe('SearchInput', () => {
   });
 
   it('uses custom placeholder when provided', () => {
-    render(<SearchInput value="" onValueChange={vi.fn()} placeholder="Buscar despesas" />);
+    render(
+      <SearchInput value="" onValueChange={vi.fn()} placeholder="Buscar despesas" />
+    );
     expect(screen.getByPlaceholderText('Buscar despesas')).toBeInTheDocument();
   });
 

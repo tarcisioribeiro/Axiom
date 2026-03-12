@@ -7,11 +7,13 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Permission } from '@/types';
 
 // Helper to set auth store state
-function setAuthState(partial: Partial<{
-  isAuthenticated: boolean;
-  isInitializing: boolean;
-  permissions: Permission[];
-}>) {
+function setAuthState(
+  partial: Partial<{
+    isAuthenticated: boolean;
+    isInitializing: boolean;
+    permissions: Permission[];
+  }>
+) {
   useAuthStore.setState({
     isAuthenticated: false,
     isInitializing: false,
@@ -64,7 +66,9 @@ describe('ProtectedRoute', () => {
   it('renders children when authenticated and has the required permission', () => {
     setAuthState({
       isAuthenticated: true,
-      permissions: [{ app_label: 'expenses', codename: 'view_expenses', name: 'Can view expense' }],
+      permissions: [
+        { app_label: 'expenses', codename: 'view_expenses', name: 'Can view expense' },
+      ],
     });
     renderInRouter(
       <ProtectedRoute requirePermission={{ appName: 'expenses', action: 'view' }}>
