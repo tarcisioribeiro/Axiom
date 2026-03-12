@@ -363,3 +363,16 @@ class AuthCurrentUserNoMemberTest(APITestCase):
         )
         if response.status_code == status.HTTP_200_OK:
             self.assertIsNone(response.data.get("member"))  # type: ignore
+
+
+# ---------------------------------------------------------------------------
+# Auth views — user-permissions blocks superusers
+# ---------------------------------------------------------------------------
+
+
+class UserPermissionsSuperuserTest(BasePush2TestCase):
+    def test_user_permissions_superuser_blocked(self):
+        """Covers superuser-blocked branch in get_user_permissions (line 165)."""
+        url = reverse("user-permissions")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
