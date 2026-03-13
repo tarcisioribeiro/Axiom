@@ -27,7 +27,6 @@ class NotificationSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "notification_type",
-            "notification_type_display",
             "title",
             "message",
             "due_date",
