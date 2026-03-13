@@ -274,12 +274,12 @@ class NotificationListView(generics.ListAPIView):
     queryset = Notification.objects.filter(is_deleted=False)
 
     def get_queryset(self):
-        member = Member.objects.get(user=self.request.user)
+        member = Member.objects.select_related("user").get(user=self.request.user)
         _generate_notifications(member)
         return Notification.objects.filter(
             owner=member,
             is_deleted=False,
-        )
+        ).select_related("owner")
 
 
 class NotificationUpdateView(generics.UpdateAPIView):
@@ -292,11 +292,11 @@ class NotificationUpdateView(generics.UpdateAPIView):
     http_method_names = ["patch"]
 
     def get_queryset(self):
-        member = Member.objects.get(user=self.request.user)
+        member = Member.objects.select_related("user").get(user=self.request.user)
         return Notification.objects.filter(
             owner=member,
             is_deleted=False,
-        )
+        ).select_related("owner")
 
 
 @api_view(["POST"])
