@@ -29,7 +29,8 @@
  * ```
  */
 
-import React from 'react';
+import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '../EmptyState';
@@ -80,10 +81,40 @@ export function DataTable<T>({
   isLoading = false,
   emptyState,
   pagination,
+  sorting,
   actions,
   rowClassName,
 }: DataTableProps<T>) {
   const { t } = useTranslation();
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTableRowElement>, index: number) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        rowRefs.current[Math.min(index + 1, data.length - 1)]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        rowRefs.current[Math.max(index - 1, 0)]?.focus();
+      }
+    },
+    [data.length]
+  );
+
+  const getAriaSortValue = (columnKey: string): React.AriaAttributes['aria-sort'] => {
+    if (sorting?.column !== columnKey) return 'none';
+    return sorting.direction === 'asc' ? 'ascending' : 'descending';
+  };
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sorting?.column !== columnKey) return <ChevronsUpDown className="h-3 w-3" />;
+    return sorting.direction === 'asc' ? (
+      <ChevronUp className="h-3 w-3" />
+    ) : (
+      <ChevronDown className="h-3 w-3" />
+    );
+  };
+
   // Loading state - usa skeleton para melhor perceived performance
   if (isLoading) {
     return (
@@ -137,11 +168,27 @@ export function DataTable<T>({
                   <th
                     key={column.key}
                     scope="col"
+                    aria-sort={
+                      column.sortable ? getAriaSortValue(column.key) : undefined
+                    }
                     className={`px-6 py-4 ${getAlignClass(column.align)} text-sm font-semibold ${
                       column.className || ''
                     }`}
                   >
-                    {column.label}
+                    {column.sortable && sorting ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded hover:text-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
+                        onClick={() => sorting.onSort(column.key)}
+                      >
+                        {column.label}
+                        <span aria-hidden="true">
+                          <SortIcon columnKey={column.key} />
+                        </span>
+                      </button>
+                    ) : (
+                      column.label
+                    )}
                   </th>
                 ))}
                 {actions && (
@@ -155,10 +202,15 @@ export function DataTable<T>({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {data.map((item) => (
+              {data.map((item, index) => (
                 <tr
                   key={keyExtractor(item)}
-                  className={`transition-colors hover:bg-muted/30 ${rowClassName ? rowClassName(item) : ''}`}
+                  ref={(el) => {
+                    rowRefs.current[index] = el;
+                  }}
+                  tabIndex={0}
+                  className={`transition-colors hover:bg-muted/30 focus:bg-muted/40 focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
+                  onKeyDown={(e) => handleRowKeyDown(e, index)}
                 >
                   {columns.map((column) => (
                     <td
