@@ -71,9 +71,11 @@ function login() {
 
 // ── Default function (one iteration per VU) ───────────────────────────────────
 export default function () {
-  // 1. Health check — no auth required
+  // 1. Liveness check — no auth required; /live/ always returns 200 if the
+  //    process is running (unlike /health/ which returns 503 when a dependency
+  //    such as MinIO is unreachable, causing false-positive load-test failures).
   group('health', () => {
-    const res = http.get(`${BASE_URL}/health/`)
+    const res = http.get(`${BASE_URL}/live/`)
     const ok = check(res, {
       'health: status 200': (r) => r.status === 200,
       'health: < 500 ms': (r) => r.timings.duration < 500,

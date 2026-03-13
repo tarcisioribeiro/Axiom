@@ -408,7 +408,8 @@ test:load:
     TEST_USERNAME: $K6_TEST_USERNAME
     TEST_PASSWORD: $K6_TEST_PASSWORD
   script:
-    - k6 run --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
+    - mkdir -p k6
+    - k6 run --out json=k6/results.json --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
   artifacts:
     when: always
     paths:
