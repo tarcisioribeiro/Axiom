@@ -137,6 +137,9 @@ export class PermissionError extends Error {
  * await apiClient.post('/api/v1/archives/', formData);
  * ```
  */
+const MAX_RETRIES = 3;
+const REQUEST_TIMEOUT_MS = 30_000;
+
 class ApiClient {
   private client: AxiosInstance;
   private isRefreshing = false;
@@ -149,6 +152,7 @@ class ApiClient {
         'Content-Type': 'application/json',
       },
       withCredentials: true, // Importante: permite enviar cookies httpOnly
+      timeout: REQUEST_TIMEOUT_MS,
     });
 
     this.setupInterceptors();
@@ -179,13 +183,46 @@ class ApiClient {
         Promise.reject(error instanceof Error ? error : new Error(String(error)))
     );
 
-    // Response interceptor - Handle token refresh
+    // Response interceptor - Handle retries, 429 rate limits, and token refresh
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & {
           _retry?: boolean;
+          _retryCount?: number;
         };
+
+        // Retry on network errors (no response) with exponential backoff
+        const isNetworkError = !error.response && !axios.isCancel(error);
+        if (isNetworkError) {
+          originalRequest._retryCount = (originalRequest._retryCount ?? 0) + 1;
+          if (originalRequest._retryCount <= MAX_RETRIES) {
+            const delayMs = Math.pow(2, originalRequest._retryCount - 1) * 1000;
+            logger.log(
+              `[ApiClient] Network error, retry ${originalRequest._retryCount}/${MAX_RETRIES} in ${delayMs}ms`
+            );
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            return this.client(originalRequest);
+          }
+        }
+
+        // Retry on 429 Rate Limit, respecting Retry-After header
+        if (error.response?.status === 429) {
+          originalRequest._retryCount = (originalRequest._retryCount ?? 0) + 1;
+          if (originalRequest._retryCount <= MAX_RETRIES) {
+            const retryAfterHeader = error.response.headers?.['retry-after'] as
+              | string
+              | undefined;
+            const delayMs = retryAfterHeader
+              ? parseInt(retryAfterHeader, 10) * 1000
+              : Math.pow(2, originalRequest._retryCount) * 1000;
+            logger.log(
+              `[ApiClient] Rate limited (429), retry ${originalRequest._retryCount}/${MAX_RETRIES} in ${delayMs}ms`
+            );
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            return this.client(originalRequest);
+          }
+        }
 
         // NÃO tenta refresh para endpoints de autenticação
         const authEndpoints = [

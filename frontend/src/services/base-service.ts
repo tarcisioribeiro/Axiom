@@ -100,6 +100,14 @@ export abstract class BaseService<
   async delete(id: number): Promise<void> {
     return apiClient.delete(`${this.endpoint}${id}/`);
   }
+
+  /**
+   * Cria múltiplos recursos em paralelo.
+   * Envia uma requisição POST por item de forma concorrente.
+   */
+  async batchCreate(items: CreateData[]): Promise<T[]> {
+    return Promise.all(items.map((item) => this.create(item)));
+  }
 }
 
 /**
