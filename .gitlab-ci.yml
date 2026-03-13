@@ -383,6 +383,7 @@ deploy:staging:
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - kubectl apply -f k8s/staging/ingress.yaml
+    - kubectl apply -f k8s/staging/api/deployment.yaml
     - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
@@ -408,6 +409,18 @@ test:load:
     BASE_URL: $STAGING_URL
     TEST_USERNAME: $K6_TEST_USERNAME
     TEST_PASSWORD: $K6_TEST_PASSWORD
+  before_script:
+    # Wait up to 90 s for the staging API liveness endpoint to return 200
+    # before starting the load test. This guards against the case where the
+    # pod restarts after rollout status exits (e.g. readiness probe oscillation).
+    - |
+      echo "Waiting for ${BASE_URL}/live/ to return 200..."
+      for i in $(seq 1 18); do
+        STATUS=$(wget -qO- -S "${BASE_URL}/live/" 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -1)
+        [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
+        [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS:-no response})"; exit 1; }
+        sleep 5
+      done
   script:
     - mkdir -p k6
     - k6 run --out json=k6/results.json --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js

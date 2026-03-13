@@ -80,7 +80,7 @@ spec:
               cpu: "1000m"
           readinessProbe:
             httpGet:
-              path: /health/
+              path: /ready/
               port: 39100
               httpHeaders:
                 - name: Host
