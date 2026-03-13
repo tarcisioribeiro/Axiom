@@ -139,10 +139,7 @@ export default function CategorizationRules() {
     messages: {
       createSuccess: 'Regra de categorização criada com sucesso',
       updateSuccess: 'Regra de categorização atualizada com sucesso',
-      deleteSuccess: 'Regra de categorização excluída com sucesso',
-      deleteConfirmTitle: 'Excluir Regra',
-      deleteConfirmDescription:
-        'Tem certeza que deseja excluir esta regra? Esta ação não pode ser desfeita.',
+      deleteSuccess: 'Regra de categorização excluída. Desfazer?',
     },
   });
 
