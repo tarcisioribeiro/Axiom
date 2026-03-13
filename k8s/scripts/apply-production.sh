@@ -74,14 +74,15 @@ kubectl apply -f k8s/minio/service.yaml
 echo "    Waiting for MinIO..."
 kubectl rollout status deployment/minio -n "$NAMESPACE" --timeout=60s
 
-echo "==> [7/10] API + Frontend"
+echo "==> [7/10] API + Frontend (blue-green)"
 kubectl apply -f k8s/api/pvc.yaml
-kubectl apply -f k8s/api/deployment.yaml
+kubectl apply -f k8s/api/deployment-blue.yaml
+kubectl apply -f k8s/api/deployment-green.yaml
 kubectl apply -f k8s/api/service.yaml
 kubectl apply -f k8s/frontend/deployment.yaml
 kubectl apply -f k8s/frontend/service.yaml
-echo "    Waiting for API..."
-kubectl rollout status deployment/api -n "$NAMESPACE" --timeout=180s
+echo "    Waiting for API (blue slot — initial bootstrap)..."
+kubectl rollout status deployment/api-blue -n "$NAMESPACE" --timeout=180s
 echo "    Waiting for Frontend..."
 kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
 

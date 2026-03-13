@@ -40,7 +40,8 @@ resources:
   - minio/deployment.yaml
   - minio/service.yaml
   - api/pvc.yaml
-  - api/deployment.yaml
+  - api/deployment-blue.yaml
+  - api/deployment-green.yaml
   - api/service.yaml
   - frontend/configmap-nginx.yaml
   - frontend/deployment.yaml

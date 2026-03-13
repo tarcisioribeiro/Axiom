@@ -12,8 +12,12 @@ metadata:
     prometheus.io/port: "8002"
 spec:
   type: ClusterIP
+  # Blue-green: the selector is toggled between slot: blue and slot: green
+  # by blue-green-switch.sh on every production deploy. Do NOT set this
+  # selector manually; use the script to avoid split-brain traffic.
   selector:
     app: api
+    slot: blue
   ports:
     - port: 8002
       targetPort: 39100

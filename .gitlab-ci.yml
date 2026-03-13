@@ -9,6 +9,7 @@ stages:
   - build
   - scan
   - deploy-staging
+  - test-load
   - deploy-production
 
 # ------------------------------------------------------------------------------
@@ -272,6 +273,8 @@ test:frontend:
 #   KUBECONFIG_CONTENT — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
 #   STAGING_URL        — public URL of the staging environment (e.g. https://staging.example.com)
 #   PRODUCTION_URL     — public URL of the production environment (e.g. https://example.com)
+#   K6_TEST_USERNAME   — username of a pre-seeded load-test user in the staging DB
+#   K6_TEST_PASSWORD   — password for the load-test user (masked variable)
 
 .build_base:
   extends: .docker_base
@@ -387,6 +390,33 @@ deploy:staging:
     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
+# STAGE: test-load
+# ==============================================================================
+
+test:load:
+  image:
+    name: grafana/k6:latest
+    entrypoint: [""]
+  stage: test-load
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  variables:
+    # BASE_URL points at staging so the load test exercises the real deploy.
+    BASE_URL: $STAGING_URL
+    TEST_USERNAME: $K6_TEST_USERNAME
+    TEST_PASSWORD: $K6_TEST_PASSWORD
+  script:
+    - k6 run --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
+  artifacts:
+    when: always
+    paths:
+      - k6/results.json
+    expire_in: 7 days
+  allow_failure: false
+
+# ==============================================================================
 # STAGE: deploy-production
 # ==============================================================================
 
@@ -411,10 +441,15 @@ deploy:production:
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
+    - chmod +x k8s/scripts/blue-green-switch.sh
   script:
-    - kubectl -n mindledger set image deployment/api api="$API_IMAGE:main"
-    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:main"
-    - kubectl -n mindledger rollout status deployment/api --timeout=300s
+    # API: blue-green zero-downtime deploy.
+    # The script reads the active slot from the Service selector, deploys the
+    # new image to the inactive slot, waits for readiness, then switches
+    # traffic and scales the old slot to 0 (kept for instant rollback).
+    - k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" mindledger api-service
+    # Frontend: stateless nginx — rolling update is sufficient.
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig
