@@ -413,10 +413,12 @@ test:load:
     # Wait up to 90 s for the staging API liveness endpoint to return 200
     # before starting the load test. This guards against the case where the
     # pod restarts after rollout status exits (e.g. readiness probe oscillation).
+    # Note: `|| true` prevents set -eo pipefail from exiting when grep finds no
+    # "HTTP/" line (i.e. the host is unreachable and wget emits no HTTP headers).
     - |
       echo "Waiting for ${BASE_URL}/live/ to return 200..."
       for i in $(seq 1 18); do
-        STATUS=$(wget -qO- -S "${BASE_URL}/live/" 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -1)
+        STATUS=$(wget -qO- -S "${BASE_URL}/live/" 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -1 || true)
         [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
         [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS:-no response})"; exit 1; }
         sleep 5
