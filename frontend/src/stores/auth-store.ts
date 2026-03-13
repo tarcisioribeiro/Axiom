@@ -123,7 +123,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     loadUserDataPromise = (async () => {
       try {
-
         let user = authService.getUserData();
         const permissions = authService.getPermissions();
 
