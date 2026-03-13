@@ -461,13 +461,7 @@ class CreditCardPurchaseSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = [
-            "id",
-            "uuid",
-            "installment_value",
-            "created_at",
-            "updated_at",
-        ]
+        read_only_fields = ["id", "uuid", "created_at", "updated_at"]
 
 
 class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):

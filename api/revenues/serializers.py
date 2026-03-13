@@ -34,4 +34,4 @@ class RevenueSerializer(serializers.ModelSerializer):
             "frequency",
             "notes",
         ]
-        read_only_fields = ["id", "net_amount", "account_name", "current_balance"]
+        read_only_fields = ["id", "net_amount"]
