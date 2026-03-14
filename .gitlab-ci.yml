@@ -413,14 +413,16 @@ test:load:
     # Wait up to 90 s for the staging API liveness endpoint to return 200
     # before starting the load test. This guards against the case where the
     # pod restarts after rollout status exits (e.g. readiness probe oscillation).
-    # Note: `|| true` prevents set -eo pipefail from exiting when grep finds no
-    # "HTTP/" line (i.e. the host is unreachable and wget emits no HTTP headers).
+    # Uses wget (BusyBox) instead of curl — curl is not available in grafana/k6:latest.
+    # The awk pattern anchors to lines starting with two spaces ("^  HTTP/") so that
+    # wget's own error message ("wget: server returned error: HTTP/1.1 …") is ignored.
     - |
       echo "Waiting for ${BASE_URL}/live/ to return 200..."
       for i in $(seq 1 18); do
-        STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/live/" 2>/dev/null || echo "000")
+        STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/live/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1)
+        [ -z "$STATUS" ] && STATUS="000"
         [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
-        [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS:-no response})"; exit 1; }
+        [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS})"; exit 1; }
         sleep 5
       done
   script:
