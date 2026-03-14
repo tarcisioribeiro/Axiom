@@ -418,7 +418,7 @@ test:load:
     - |
       echo "Waiting for ${BASE_URL}/live/ to return 200..."
       for i in $(seq 1 18); do
-        STATUS=$(wget -qO- -S "${BASE_URL}/live/" 2>&1 | grep "HTTP/" | awk '{print $2}' | tail -1 || true)
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/live/" 2>/dev/null || echo "000")
         [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
         [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS:-no response})"; exit 1; }
         sleep 5
