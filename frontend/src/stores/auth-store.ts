@@ -117,10 +117,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return loadUserDataPromise;
     }
 
+    // Set isInitializing synchronously before the IIFE so any concurrent caller
+    // that checks get().isInitializing sees the guard immediately.
+    set({ isInitializing: true });
+
     loadUserDataPromise = (async () => {
       try {
-        set({ isInitializing: true });
-
         let user = authService.getUserData();
         const permissions = authService.getPermissions();
 

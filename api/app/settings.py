@@ -55,6 +55,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 NUM_PROXIES = int(os.getenv("NUM_PROXIES", "1"))
 
 INSTALLED_APPS = [
+    "django_prometheus",
     "django_admin_dracula",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -97,6 +98,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "app.middleware.DecryptionCacheMiddleware",  # Limpa cache de decriptacao
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -109,6 +111,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "app.middleware.SecurityHeadersMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"

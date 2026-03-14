@@ -9,6 +9,7 @@ stages:
   - build
   - scan
   - deploy-staging
+  - test-load
   - deploy-production
 
 # ------------------------------------------------------------------------------
@@ -272,6 +273,8 @@ test:frontend:
 #   KUBECONFIG_CONTENT — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
 #   STAGING_URL        — public URL of the staging environment (e.g. https://staging.example.com)
 #   PRODUCTION_URL     — public URL of the production environment (e.g. https://example.com)
+#   K6_TEST_USERNAME   — username of a pre-seeded load-test user in the staging DB
+#   K6_TEST_PASSWORD   — password for the load-test user (masked variable)
 
 .build_base:
   extends: .docker_base
@@ -379,12 +382,56 @@ deploy:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
+    - kubectl apply -f k8s/staging/ingress.yaml
+    - kubectl apply -f k8s/staging/api/deployment.yaml
     - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
     - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig
+
+# ==============================================================================
+# STAGE: test-load
+# ==============================================================================
+
+test:load:
+  image:
+    name: grafana/k6:latest
+    entrypoint: [""]
+  stage: test-load
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  variables:
+    # BASE_URL points at staging so the load test exercises the real deploy.
+    BASE_URL: $STAGING_URL
+    TEST_USERNAME: $K6_TEST_USERNAME
+    TEST_PASSWORD: $K6_TEST_PASSWORD
+  before_script:
+    # Wait up to 90 s for the staging API liveness endpoint to return 200
+    # before starting the load test. This guards against the case where the
+    # pod restarts after rollout status exits (e.g. readiness probe oscillation).
+    # Note: `|| true` prevents set -eo pipefail from exiting when grep finds no
+    # "HTTP/" line (i.e. the host is unreachable and wget emits no HTTP headers).
+    - |
+      echo "Waiting for ${BASE_URL}/live/ to return 200..."
+      for i in $(seq 1 18); do
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/live/" 2>/dev/null || echo "000")
+        [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
+        [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS:-no response})"; exit 1; }
+        sleep 5
+      done
+  script:
+    - mkdir -p k6
+    - k6 run --out json=k6/results.json --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
+  artifacts:
+    when: always
+    paths:
+      - k6/results.json
+    expire_in: 7 days
+  allow_failure: false
 
 # ==============================================================================
 # STAGE: deploy-production
@@ -411,10 +458,15 @@ deploy:production:
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
+    - chmod +x k8s/scripts/blue-green-switch.sh
   script:
-    - kubectl -n mindledger set image deployment/api api="$API_IMAGE:main"
-    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:main"
-    - kubectl -n mindledger rollout status deployment/api --timeout=300s
+    # API: blue-green zero-downtime deploy.
+    # The script reads the active slot from the Service selector, deploys the
+    # new image to the inactive slot, waits for readiness, then switches
+    # traffic and scales the old slot to 0 (kept for instant rollback).
+    - k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" mindledger api-service
+    # Frontend: stateless nginx — rolling update is sufficient.
+    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig

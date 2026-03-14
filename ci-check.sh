@@ -16,12 +16,13 @@
 #   typecheck:frontend tsc
 #   test:backend       pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml
 #   test:frontend      vitest --run --coverage
+#   test:load          k6 (opcional local — requer k6 instalado e BASE_URL configurada)
 #
 # Etapas não cobertas (requerem registry ou infraestrutura de deploy):
 #   build              docker build + push para o registry GitLab
 #   scan               trivy sobre imagens do registry (requer build)
 #   deploy-staging     kubectl (requer kubeconfig de staging)
-#   deploy-production  kubectl (requer kubeconfig de produção)
+#   deploy-production  kubectl + blue-green-switch.sh (requer kubeconfig de produção)
 #
 # Pré-requisitos:
 #   - Docker + docker compose com o serviço 'api' rodando
@@ -382,6 +383,40 @@ else
 	log "${YELLOW}  ⚠  gitleaks não encontrado — pulando verificação local de secrets.${NC}"
 	log "${YELLOW}     Esta verificação é OBRIGATÓRIA no GitLab CI (lint:secrets).${NC}"
 	log "${DIM}     Instale: https://github.com/gitleaks/gitleaks${NC}"
+fi
+
+# ==============================================================================
+# STAGE: test:load (opcional local — requer k6 + servidor acessível)
+# ==============================================================================
+section "test:load"
+
+# No CI this job targets $STAGING_URL after a real staging deploy.
+# Locally it runs against BASE_URL (default: http://localhost:39100) so you
+# can validate the script and thresholds without a staging environment.
+# Set TEST_USERNAME / TEST_PASSWORD to also exercise authenticated endpoints.
+if command -v k6 >/dev/null 2>&1; then
+	_K6_BASE_URL="${BASE_URL:-http://localhost:39100}"
+	_K6_USERNAME="${TEST_USERNAME:-}"
+	_K6_PASSWORD="${TEST_PASSWORD:-}"
+
+	log "${CYAN}  BASE_URL     : $_K6_BASE_URL${NC}"
+	if [ -n "$_K6_USERNAME" ]; then
+		log "${CYAN}  TEST_USERNAME: $_K6_USERNAME${NC}"
+	else
+		log "${YELLOW}  TEST_USERNAME não definido — endpoints autenticados serão pulados.${NC}"
+		log "${DIM}  Defina TEST_USERNAME e TEST_PASSWORD para testar endpoints autenticados.${NC}"
+	fi
+
+	run_step_safe "test:load" "k6" \
+		k6 run \
+		--env BASE_URL="$_K6_BASE_URL" \
+		--env TEST_USERNAME="$_K6_USERNAME" \
+		--env TEST_PASSWORD="$_K6_PASSWORD" \
+		"$SCRIPT_DIR/k6/load-test.js"
+else
+	log "${YELLOW}  ⚠  k6 não encontrado — pulando load test local.${NC}"
+	log "${YELLOW}     Esta verificação é executada no GitLab CI após o deploy de staging.${NC}"
+	log "${DIM}     Instale: https://grafana.com/docs/k6/latest/set-up/install-k6/${NC}"
 fi
 
 # ==============================================================================

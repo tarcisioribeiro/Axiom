@@ -23,7 +23,9 @@ class TransferCreateListView(BaseListCreateView):
     serializer_class = TransferSerializer
 
     def get_queryset(self):
-        return Transfer.objects.filter(is_deleted=False, created_by=self.request.user)
+        return Transfer.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("origin_account", "destiny_account")
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -50,7 +52,9 @@ class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = TransferSerializer
 
     def get_queryset(self):
-        return Transfer.objects.filter(is_deleted=False, created_by=self.request.user)
+        return Transfer.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("origin_account", "destiny_account")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
