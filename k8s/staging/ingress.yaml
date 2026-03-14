@@ -1,9 +1,15 @@
-# nginx-ingress Controller — Staging
+# Ingress — Staging
 # -------------------------------------------------------
-# Prerequisites (run once on the VPS):
+# k3s ships with Traefik as the default ingress controller, so this Ingress
+# intentionally omits `ingressClassName` to let whatever controller is set as
+# the cluster default handle the rules. On a plain k3s VPS that means Traefik;
+# if nginx-ingress is later installed and marked as default, it will take over
+# automatically.
 #
-#   # Install nginx-ingress (k3s comes with Traefik — we replace it with nginx-ingress)
-#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.0/deploy/static/provider/cloud/deploy.yaml
+# nginx-ingress annotations are kept as comments for reference but are not
+# applied (Traefik ignores unknown annotation namespaces).
+#
+# Prerequisites (run once on the VPS):
 #
 #   # Install cert-manager (for TLS certificates via Let's Encrypt)
 #   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
@@ -23,13 +29,15 @@ metadata:
     environment: staging
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
-    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    # Traefik (k3s default) — disable HTTPS redirect so HTTP works during cert provisioning
+    traefik.ingress.kubernetes.io/router.entrypoints: "web,websecure"
+    # nginx-ingress equivalents (ignored by Traefik, active if nginx-ingress is the controller):
+    # nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    # nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
-  ingressClassName: nginx
   tls:
     - hosts:
         - mindledger-staging.tjtux.duckdns.org
