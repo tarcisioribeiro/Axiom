@@ -43,6 +43,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 SNAPSHOT_DIR = "/app/media/vault_snapshots"
+_BACKUP_KEY_ENV = "BACKUP_ENCRYPTION_KEY_PREVIOUS"
 
 
 class Command(BaseCommand):
@@ -227,6 +228,27 @@ class Command(BaseCommand):
             self.stdout.write(
                 '\nTip: pass --test-password "<senha_mestre>" to verify '
                 "whether the master password can unlock this vault.\n"
+            )
+
+        # Report BACKUP_ENCRYPTION_KEY_PREVIOUS status
+        backup_key = os.getenv(_BACKUP_KEY_ENV)
+        if backup_key:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"\n[INFO] {_BACKUP_KEY_ENV} is set.\n"
+                    "  A previous encryption key is available as a fallback.\n"
+                    "  If any app-level encrypted field fails to decrypt (e.g.\n"
+                    "  CredentialShareToken, Account, CreditCard, Member), run:\n"
+                    "    python manage.py rotate_encryption_key \\\n"
+                    f"      --old-key ${{BACKUP_ENCRYPTION_KEY_PREVIOUS}} \\\n"
+                    "      --new-key ${ENCRYPTION_KEY}\n"
+                    "  to re-encrypt those records with the current key.\n"
+                )
+            )
+        else:
+            self.stdout.write(
+                f"\n[INFO] {_BACKUP_KEY_ENV} is not set "
+                "(normal when no key rotation has occurred)."
             )
 
         # Only show recovery hint when there is a detectable problem

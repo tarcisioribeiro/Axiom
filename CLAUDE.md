@@ -278,10 +278,69 @@ Key testing conventions:
 ## Environment Variables (Critical)
 
 - `SECRET_KEY`: Django secret key
-- `ENCRYPTION_KEY`: Fernet key (44 chars base64) — **NEVER change after encrypting data**
+- `ENCRYPTION_KEY`: Fernet key (44 chars base64) — rotate safely using the procedure below; do **not** change it manually without running `rotate_encryption_key` first
+- `BACKUP_ENCRYPTION_KEY_PREVIOUS`: previous Fernet key kept after a rotation — set this so `vault_recovery` can report its presence as a fallback hint; clear it once you confirm all fields decrypted correctly with the new key
 - `DB_USER`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL credentials
 - `VITE_API_BASE_URL`: Backend URL (default: `http://localhost:39100`)
 - `DB_HOST`: `db` for Docker, `localhost` for local
+
+## Key Rotation
+
+`ENCRYPTION_KEY` (Fernet) protects app-level encrypted fields (`Account._account_number`, `CreditCard._security_code/_card_number`, `Member._document`, `CredentialShareToken._encrypted_password`) and serves as an HMAC key for `Member.document_hash`. If the key is compromised, rotate it with the `rotate_encryption_key` management command.
+
+> **Vault data is NOT affected.** `security.Password`, `StoredCreditCard`, `StoredBankAccount`, and `Archive` use per-user vault-key encryption derived from the master password. Those records are skipped automatically (unless vault was never configured and the app key was used as a fallback).
+
+### Rotation procedure
+
+```bash
+# 1. Take a full DB backup first
+docker compose exec db pg_dump -U $DB_USER mindledger_db \
+    > backups/pre_rotation_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Generate a new Fernet key
+docker compose exec api python -c \
+    "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+# 3. Dry-run to preview what will be rotated (no writes)
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>" --dry-run
+
+# 4. Live rotation — runs inside a single DB transaction; rolls back on any error
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>"
+
+# 5. Update .env
+#    ENCRYPTION_KEY=<NEW_KEY>
+#    BACKUP_ENCRYPTION_KEY_PREVIOUS=<OLD_KEY>   ← keep for 24 h as a safety net
+
+# 6. Rebuild and restart
+docker compose up --build -d
+
+# 7. Smoke-test: verify encrypted fields are readable in the UI / API
+
+# 8. Once confirmed, clear the backup key from .env
+#    Remove or blank BACKUP_ENCRYPTION_KEY_PREVIOUS
+docker compose up --build -d
+```
+
+### Emergency fallback after a failed rotation
+
+If the app starts returning decryption errors after updating `.env`:
+
+```bash
+# Re-run rotation in reverse (new→old) to undo DB changes
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "<NEW_KEY>" --new-key "$BACKUP_ENCRYPTION_KEY_PREVIOUS"
+
+# Revert ENCRYPTION_KEY in .env to the old key and rebuild
+docker compose up --build -d
+```
+
+The `vault_recovery` diagnostic command reports whether `BACKUP_ENCRYPTION_KEY_PREVIOUS` is set and reminds you of the reverse-rotation command if needed:
+
+```bash
+docker compose exec api python manage.py vault_recovery --username <username>
+```
 
 ## Accessing the Application
 
