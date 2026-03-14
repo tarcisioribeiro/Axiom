@@ -383,7 +383,11 @@ deploy:staging:
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - kubectl apply -f k8s/staging/ingress.yaml
+    - kubectl apply -f k8s/staging/api/service.yaml
     - kubectl apply -f k8s/staging/api/deployment.yaml
+    - kubectl apply -f k8s/staging/frontend/configmap-nginx.yaml
+    - kubectl apply -f k8s/staging/frontend/service.yaml
+    - kubectl apply -f k8s/staging/frontend/deployment.yaml
     - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
