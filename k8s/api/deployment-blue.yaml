@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api
-  namespace: mindledger-staging
+  name: api-blue
+  namespace: mindledger
   labels:
     app.kubernetes.io/name: mindledger
     app.kubernetes.io/component: api
-    environment: staging
+    slot: blue
 spec:
   replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: api
+      slot: blue
   template:
     metadata:
       labels:
         app: api
+        slot: blue
         app.kubernetes.io/name: mindledger
         app.kubernetes.io/component: api
-        environment: staging
     spec:
-      serviceAccountName: sa-api
-      automountServiceAccountToken: false
-      imagePullSecrets:
-        - name: gitlab-registry-secret
       initContainers:
         - name: wait-for-postgres
           image: busybox:1.36
@@ -49,10 +49,18 @@ spec:
                 sleep 2
               done
               echo "Redis is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
+      serviceAccountName: sa-api
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: gitlab-registry-secret
       containers:
         - name: api
           # Image tag is pinned to the build digest on every deploy by CI/CD.
-          # See deploy:staging job in .gitlab-ci.yml.
+          # See blue-green-switch.sh and deploy:production in .gitlab-ci.yml.
           image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
           ports:
             - containerPort: 39100
@@ -71,14 +79,14 @@ spec:
               mountPath: /app/staticfiles
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
-            limits:
               memory: "512Mi"
               cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
           readinessProbe:
             httpGet:
-              path: /ready/
+              path: /health/
               port: 39100
               httpHeaders:
                 - name: Host

@@ -66,6 +66,27 @@ spec:
                 name: api-service
                 port:
                   number: 8002
+          - path: /live
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8002
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8002
+          - path: /ready
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 8002
           - path: /
             pathType: Prefix
             backend:

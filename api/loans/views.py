@@ -23,7 +23,9 @@ class LoanCreateListView(BaseListCreateView):
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(is_deleted=False, created_by=self.request.user)
+        return Loan.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("account", "benefited", "creditor", "guarantor")
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -50,7 +52,9 @@ class LoanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(is_deleted=False, created_by=self.request.user)
+        return Loan.objects.filter(
+            is_deleted=False, created_by=self.request.user
+        ).select_related("account", "benefited", "creditor", "guarantor")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
