@@ -1,13 +1,10 @@
 # Ingress — Staging
 # -------------------------------------------------------
-# k3s ships with Traefik as the default ingress controller, so this Ingress
-# intentionally omits `ingressClassName` to let whatever controller is set as
-# the cluster default handle the rules. On a plain k3s VPS that means Traefik;
-# if nginx-ingress is later installed and marked as default, it will take over
-# automatically.
-#
-# nginx-ingress annotations are kept as comments for reference but are not
-# applied (Traefik ignores unknown annotation namespaces).
+# Uses nginx-ingress (ingressClassName: nginx), matching the production setup
+# in k8s/ingress.yaml. The cluster runs nginx-ingress as the ingress controller,
+# not Traefik, so ingressClassName must be set explicitly for this resource to
+# be processed. Without it, nginx-ingress ignores the Ingress and returns 404
+# for every request to the staging host.
 #
 # Prerequisites (run once on the VPS):
 #
@@ -29,15 +26,13 @@ metadata:
     environment: staging
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    # Traefik (k3s default) — disable HTTPS redirect so HTTP works during cert provisioning
-    traefik.ingress.kubernetes.io/router.entrypoints: "web,websecure"
-    # nginx-ingress equivalents (ignored by Traefik, active if nginx-ingress is the controller):
-    # nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    # nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    # nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    # nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
-    # nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
 spec:
+  ingressClassName: nginx
   tls:
     - hosts:
         - mindledger-staging.tjtux.duckdns.org
