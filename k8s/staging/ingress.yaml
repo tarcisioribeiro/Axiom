@@ -52,49 +52,49 @@ spec:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /admin
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /static
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /media
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /live
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /health
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /ready
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /
             pathType: Prefix
             backend:

@@ -12,7 +12,7 @@ spec:
   selector:
     app: api
   ports:
-    - port: 8002
+    - port: 39100
       targetPort: 39100
       protocol: TCP
       name: http

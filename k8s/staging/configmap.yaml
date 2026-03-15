@@ -14,7 +14,7 @@ data:
 
   # API settings
   API_PORT: "39100"
-  DEBUG: "1"
+  DEBUG: "True"
 
   ALLOWED_HOSTS: "localhost,127.0.0.1,api-service,mindledger-staging.tjtux.duckdns.org"
   CORS_ALLOWED_ORIGINS: "http://localhost:39101,https://mindledger-staging.tjtux.duckdns.org"
