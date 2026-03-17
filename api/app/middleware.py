@@ -214,7 +214,8 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
 
     def process_request(self, request: HttpRequest) -> None:
         """Generate a per-request CSP nonce and attach it to the request."""
-        setattr(request, "_csp_nonce", base64.b64encode(os.urandom(16)).decode("ascii"))
+        nonce = base64.b64encode(os.urandom(16)).decode("ascii")
+        setattr(request, "_csp_nonce", nonce)  # type: ignore[attr-defined]
 
     def process_response(
         self, request: HttpRequest, response: HttpResponse
