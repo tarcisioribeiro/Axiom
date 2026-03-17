@@ -206,12 +206,19 @@ if MINIO_ENDPOINT:
             "MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set."
         )
     AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "mindledger")
-    AWS_S3_ENDPOINT_URL = f"http://{MINIO_ENDPOINT}"
+    _minio_use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    _minio_scheme = "https" if _minio_use_ssl else "http"
+    AWS_S3_ENDPOINT_URL = f"{_minio_scheme}://{MINIO_ENDPOINT}"
     AWS_S3_REGION_NAME = "us-east-1"
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = True
     AWS_S3_ADDRESSING_STYLE = "path"
+    # When TLS is enabled, verify using the internal CA cert mounted by the
+    # k8s deployment (MINIO_CA_BUNDLE=/etc/ssl/minio/ca.crt). Falls back to
+    # True (system CAs) when the env var is unset (e.g. local Docker Compose).
+    if _minio_use_ssl:
+        AWS_S3_VERIFY = os.getenv("MINIO_CA_BUNDLE", True)
 
 # Health check configuration
 DISK_SPACE_WARN_THRESHOLD = float(os.getenv("DISK_SPACE_WARN_THRESHOLD", "10"))
