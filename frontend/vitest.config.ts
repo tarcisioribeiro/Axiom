@@ -72,7 +72,7 @@ export default defineConfig({
         // Feature-specific stores used only by excluded feature components
         'src/stores/notifications-store.ts',
       ],
-      thresholds: { lines: 50, functions: 40, branches: 50, statements: 50 },
+      thresholds: { lines: 55, functions: 50, branches: 65, statements: 55 },
     },
   },
   resolve: {
