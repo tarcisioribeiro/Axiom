@@ -271,11 +271,16 @@ test:frontend:
 # ==============================================================================
 
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
-#   KUBECONFIG_CONTENT — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
-#   STAGING_URL        — public URL of the staging environment (e.g. https://staging.example.com)
-#   PRODUCTION_URL     — public URL of the production environment (e.g. https://example.com)
-#   K6_TEST_USERNAME   — username of a pre-seeded load-test user in the staging DB
-#   K6_TEST_PASSWORD   — password for the load-test user (masked variable)
+#   KUBECONFIG_CONTENT        — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
+#   STAGING_URL               — public URL of the staging environment (e.g. https://staging.example.com)
+#   PRODUCTION_URL            — public URL of the production environment (e.g. https://example.com)
+#   K6_TEST_USERNAME          — username of a pre-seeded load-test user in the staging DB
+#   K6_TEST_PASSWORD          — password for the load-test user (masked variable)
+#   STAGING_MINIO_ENDPOINT    — MinIO endpoint for staging backups (e.g. https://minio.staging.example.com)
+#   STAGING_MINIO_ACCESS_KEY  — MinIO access key for the staging backup bucket
+#   STAGING_MINIO_SECRET_KEY  — MinIO secret key for the staging backup bucket (masked variable)
+#   STAGING_MINIO_BUCKET      — bucket name holding staging backups (default: mindledger-backups)
+#   BACKUP_ENCRYPTION_KEY     — AES-256-CBC passphrase used to encrypt staging backups (masked variable)
 
 .build_base:
   extends: .docker_base
@@ -493,6 +498,110 @@ test:e2e:
     reports:
       junit: e2e-results/results.xml
     expire_in: 7 days
+  allow_failure: false
+
+# ==============================================================================
+# Backup-restore validation
+#
+# Downloads the latest encrypted backup from the staging MinIO bucket, runs
+# verify-backup.sh (decrypt → pg_restore → schema checks), then performs a
+# second restore to exercise Django's system check framework against real data.
+# Job fails the pipeline if any step — download, decryption, restore, schema
+# validation, or manage.py check — returns a non-zero exit code.
+# ==============================================================================
+
+test:backup-restore:
+  extends: .python_base
+  stage: test-e2e
+  interruptible: false
+  needs:
+    - job: deploy:staging
+  services:
+    - name: postgres:16-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: postgres
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: ci_backup_restore_pw  # gitleaks:allow
+    POSTGRES_HOST_AUTH_METHOD: trust
+    # PGPASSWORD must match POSTGRES_PASSWORD so psql / pg_restore can connect
+    PGPASSWORD: ci_backup_restore_pw          # gitleaks:allow
+    PGHOST: postgres
+    PGPORT: "5432"
+    DB_USER: postgres
+    SECRET_KEY: "ci-insecure-key-not-for-production-use"  # gitleaks:allow
+    DEBUG: "False"
+    DJANGO_SETTINGS_MODULE: "app.settings"
+    BACKUP_DIR: "/tmp/ci-backups"
+    MIN_TABLE_COUNT: "20"
+    MINIO_ALIAS: "staging-minio"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  before_script:
+    - *python_before_script
+    - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+    - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+    # Generate a valid Fernet key so Django's FieldEncryption initialises cleanly
+    - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+    - until pg_isready -h postgres -p 5432; do sleep 1; done
+    - mkdir -p "$BACKUP_DIR"
+    # Configure MinIO client and fetch the latest backup from the staging bucket
+    - mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
+    - |
+      LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/" --json \
+        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
+      mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/${LATEST_FILE}" \
+        "${BACKUP_DIR}/${LATEST_FILE}"
+      # Store filename so the script section can resolve it (before_script runs in a separate shell)
+      echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
+      echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
+  script:
+    - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
+
+    # ── Step 1: verify-backup.sh — decrypt → pg_restore → schema checks ──────
+    - chmod +x api/scripts/verify-backup.sh
+    - |
+      BACKUP_DIR="$BACKUP_DIR" \
+      PGHOST="$PGHOST" PGPORT="$PGPORT" PGPASSWORD="$PGPASSWORD" \
+      DB_USER="$DB_USER" MIN_TABLE_COUNT="$MIN_TABLE_COUNT" \
+      BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
+      api/scripts/verify-backup.sh "$ENC_FILE"
+
+    # ── Step 2: re-restore and run manage.py check ────────────────────────────
+    # verify-backup.sh drops its temp DB in an EXIT trap; spin up a fresh
+    # restore so Django's system check framework can verify connectivity and
+    # model integrity against real data from the backup.
+    - |
+      RESTORE_DB="mindledger_managecheck_${CI_JOB_ID}"
+      TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
+
+      # Resolve versioned decryption key (mirrors verify-backup.sh logic)
+      ENC_BASENAME=$(basename "$ENC_FILE")
+      DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
+      if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+        KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
+        [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
+      fi
+
+      DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
+        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+          -pass "env:DECRYPT_KEY_FOR_VERIFY" \
+          -in  "$ENC_FILE" -out "$TEMP_DUMP"
+
+      createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
+      pg_restore --host=postgres --port=5432 --username=postgres \
+        --dbname="$RESTORE_DB" --no-owner --no-privileges \
+        "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
+      rm -f "$TEMP_DUMP"
+
+      cd api
+      # POSTGRES_HOST_AUTH_METHOD=trust — password is not checked by the server
+      DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
+        DB_USER=postgres DB_PASSWORD="" \
+        python manage.py check --database default
+      cd ..
+
+      dropdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
   allow_failure: false
 
 # ==============================================================================
