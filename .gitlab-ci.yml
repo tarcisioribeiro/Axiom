@@ -9,9 +9,11 @@ stages:
   - build
   - scan
   - deploy-staging
+  - smoke-staging
   - test-load
   - test-e2e
   - deploy-production
+  - smoke-production
 
 # ------------------------------------------------------------------------------
 # Global defaults
@@ -281,6 +283,8 @@ test:frontend:
 #   STAGING_MINIO_SECRET_KEY  — MinIO secret key for the staging backup bucket (masked variable)
 #   STAGING_MINIO_BUCKET      — bucket name holding staging backups (default: mindledger-backups)
 #   BACKUP_ENCRYPTION_KEY     — AES-256-CBC passphrase used to encrypt staging backups (masked variable)
+#   CI_SMOKE_JWT_STAGING      — Bearer JWT for a CI service account in the staging DB (masked variable)
+#   CI_SMOKE_JWT_PRODUCTION   — Bearer JWT for a CI service account in the production DB (masked variable)
 
 .build_base:
   extends: .docker_base
@@ -402,6 +406,86 @@ deploy:staging:
     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
+# STAGE: smoke-staging
+#
+# Lightweight HTTP checks run immediately after deploy:staging to catch runtime
+# failures (bad env vars, failed migrations, 500 errors) before load / E2E
+# tests begin. If any check fails, deploy:rollback:staging automatically
+# reverts both deployments in the same stage.
+#
+# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   CI_SMOKE_JWT_STAGING — Bearer JWT for a CI service account in the staging DB
+#                          (masked, protected). Generate with:
+#                            POST /api/v1/auth/token/  {"username":…,"password":…}
+#                          Refresh before expiry or use a long-lived service account.
+# ==============================================================================
+
+.smoke_base:
+  image: curlimages/curl:latest
+  interruptible: false
+
+smoke:staging:
+  extends: .smoke_base
+  stage: smoke-staging
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  variables:
+    SMOKE_URL: $STAGING_URL
+  script:
+    - |
+      set -e
+
+      check() {
+        local label="$1"
+        local url="$2"
+        local extra_args="${3:-}"
+        local expected="${4:-200}"
+
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+        if [ "$STATUS" = "$expected" ]; then
+          echo "OK   $label → HTTP $STATUS"
+        else
+          echo "FAIL $label → HTTP $STATUS (expected $expected)"
+          exit 1
+        fi
+      }
+
+      echo "=== Smoke tests: staging ==="
+      check "/health/" "${SMOKE_URL}/health/"
+      check "/ready/"  "${SMOKE_URL}/ready/"
+      check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
+        "-H 'Authorization: Bearer ${CI_SMOKE_JWT_STAGING}'"
+      echo "=== All staging smoke tests passed ==="
+  allow_failure: false
+
+deploy:rollback:staging:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: smoke-staging
+  interruptible: false
+  needs:
+    - job: smoke:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: on_failure
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - echo "Smoke tests failed — rolling back staging deployment..."
+    - kubectl -n mindledger-staging rollout undo deployment/api
+    - kubectl -n mindledger-staging rollout undo deployment/frontend
+    - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=60s
+    - echo "Staging rollback complete."
+  after_script:
+    - rm -f /tmp/kubeconfig
+  allow_failure: false
+
+# ==============================================================================
 # STAGE: test-load
 # ==============================================================================
 
@@ -411,7 +495,7 @@ test:load:
     entrypoint: [""]
   stage: test-load
   needs:
-    - job: deploy:staging
+    - job: smoke:staging
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
   variables:
@@ -464,7 +548,7 @@ test:e2e:
     entrypoint: [""]
   stage: test-e2e
   needs:
-    - job: deploy:staging
+    - job: smoke:staging
     - job: test:load
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -641,3 +725,96 @@ deploy:production:
     - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig
+
+# ==============================================================================
+# STAGE: smoke-production
+#
+# Same HTTP checks as smoke:staging, run against the live production URL after
+# deploy:production completes. On failure, deploy:rollback:production switches
+# traffic back to the previous blue-green slot (kept at 0 replicas by
+# blue-green-switch.sh) and restores the previous frontend revision.
+#
+# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   CI_SMOKE_JWT_PRODUCTION — Bearer JWT for a CI service account in production
+#                             (masked, protected). Same generation method as
+#                             CI_SMOKE_JWT_STAGING but against the production DB.
+# ==============================================================================
+
+smoke:production:
+  extends: .smoke_base
+  stage: smoke-production
+  needs:
+    - job: deploy:production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  variables:
+    SMOKE_URL: $PRODUCTION_URL
+  script:
+    - |
+      set -e
+
+      check() {
+        local label="$1"
+        local url="$2"
+        local extra_args="${3:-}"
+        local expected="${4:-200}"
+
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+        if [ "$STATUS" = "$expected" ]; then
+          echo "OK   $label → HTTP $STATUS"
+        else
+          echo "FAIL $label → HTTP $STATUS (expected $expected)"
+          exit 1
+        fi
+      }
+
+      echo "=== Smoke tests: production ==="
+      check "/health/" "${SMOKE_URL}/health/"
+      check "/ready/"  "${SMOKE_URL}/ready/"
+      check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
+        "-H 'Authorization: Bearer ${CI_SMOKE_JWT_PRODUCTION}'"
+      echo "=== All production smoke tests passed ==="
+  allow_failure: false
+
+deploy:rollback:production:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  stage: smoke-production
+  interruptible: false
+  needs:
+    - job: smoke:production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_failure
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - echo "Smoke tests failed — rolling back production deployment..."
+    # API: blue-green rollback — the old slot is at 0 replicas, still exists.
+    # Read which slot is currently active (the one just deployed), then switch
+    # the Service selector back to the previous slot and scale it up.
+    - |
+      CURRENT_SLOT=$(kubectl -n mindledger get svc api-service \
+        -o jsonpath='{.spec.selector.slot}')
+      if [ "$CURRENT_SLOT" = "blue" ]; then
+        ROLLBACK_SLOT="green"
+      else
+        ROLLBACK_SLOT="blue"
+      fi
+      echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT"
+      kubectl -n mindledger scale deployment/api-$ROLLBACK_SLOT --replicas=1
+      kubectl -n mindledger rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
+      kubectl -n mindledger patch svc api-service \
+        --type=merge \
+        -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
+      kubectl -n mindledger scale deployment/api-$CURRENT_SLOT --replicas=0
+      echo "API traffic restored to slot: $ROLLBACK_SLOT"
+    # Frontend: simple rolling update — undo to previous revision.
+    - kubectl -n mindledger rollout undo deployment/frontend
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=60s
+    - echo "Production rollback complete."
+  after_script:
+    - rm -f /tmp/kubeconfig
+  allow_failure: false
