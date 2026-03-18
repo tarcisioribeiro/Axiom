@@ -179,10 +179,13 @@ cd frontend && npm install && npm run dev
 ```
 
 ### Git Hooks (one-time setup, run from repo root)
+
+> **REQUIRED**: Both hooks below must be installed before your first commit. The `commit-msg` hook is enforced in CI via `lint:commits` on every MR — commits that bypass it will fail the pipeline.
+
 ```bash
 # Requires .venv active or pre-commit installed globally
 pre-commit install                        # pre-commit hook (black/isort/flake8/mypy)
-pre-commit install --hook-type commit-msg # commitlint hook
+pre-commit install --hook-type commit-msg # commitlint hook — REQUIRED
 ```
 
 ### Database
