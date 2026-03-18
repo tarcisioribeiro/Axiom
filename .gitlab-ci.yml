@@ -834,7 +834,10 @@ deploy:rollback:production:
       else
         ROLLBACK_SLOT="blue"
       fi
-      echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT"
+      ROLLBACK_IMAGE=$(kubectl -n mindledger get deployment/api-$ROLLBACK_SLOT \
+        -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
+      ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
+      echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
       kubectl -n mindledger scale deployment/api-$ROLLBACK_SLOT --replicas=1
       kubectl -n mindledger rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
       kubectl -n mindledger patch svc api-service \
@@ -842,8 +845,16 @@ deploy:rollback:production:
         -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
       kubectl -n mindledger scale deployment/api-$CURRENT_SLOT --replicas=0
       echo "API traffic restored to slot: $ROLLBACK_SLOT"
-    # Frontend: simple rolling update — undo to previous revision.
-    - kubectl -n mindledger rollout undo deployment/frontend
+    # Frontend: derive previous revision from rollout history for an explicit,
+    # traceable rollback instead of relying on the implicit undo pointer.
+    - |
+      PREV_REVISION=$(kubectl -n mindledger rollout history deployment/frontend \
+        --no-headers 2>/dev/null | awk '{print $1}' | sort -n | tail -2 | head -1)
+      PREV_IMAGE=$(kubectl -n mindledger rollout history deployment/frontend \
+        --revision="$PREV_REVISION" -o jsonpath='{.spec.template.spec.containers[0].image}')
+      PREV_SHA="${PREV_IMAGE##*:}"
+      echo "Rolling frontend back to revision $PREV_REVISION — image: $PREV_IMAGE (SHA: $PREV_SHA)"
+      kubectl -n mindledger rollout undo deployment/frontend --to-revision="$PREV_REVISION"
     - kubectl -n mindledger rollout status deployment/frontend --timeout=60s
     - echo "Production rollback complete."
   after_script:
@@ -882,7 +893,10 @@ rollback:production:
       else
         ROLLBACK_SLOT="blue"
       fi
-      echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT"
+      ROLLBACK_IMAGE=$(kubectl -n mindledger get deployment/api-$ROLLBACK_SLOT \
+        -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || echo "unknown")
+      ROLLBACK_SHA="${ROLLBACK_IMAGE##*:}"
+      echo "Current slot: $CURRENT_SLOT — rolling back to: $ROLLBACK_SLOT (image: $ROLLBACK_IMAGE, SHA: $ROLLBACK_SHA)"
       kubectl -n mindledger scale deployment/api-$ROLLBACK_SLOT --replicas=1
       kubectl -n mindledger rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
       kubectl -n mindledger patch svc api-service \
@@ -890,7 +904,16 @@ rollback:production:
         -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
       kubectl -n mindledger scale deployment/api-$CURRENT_SLOT --replicas=0
       echo "API traffic restored to slot: $ROLLBACK_SLOT"
-    - kubectl -n mindledger rollout undo deployment/frontend
+    # Frontend: derive previous revision from rollout history for an explicit,
+    # traceable rollback instead of relying on the implicit undo pointer.
+    - |
+      PREV_REVISION=$(kubectl -n mindledger rollout history deployment/frontend \
+        --no-headers 2>/dev/null | awk '{print $1}' | sort -n | tail -2 | head -1)
+      PREV_IMAGE=$(kubectl -n mindledger rollout history deployment/frontend \
+        --revision="$PREV_REVISION" -o jsonpath='{.spec.template.spec.containers[0].image}')
+      PREV_SHA="${PREV_IMAGE##*:}"
+      echo "Rolling frontend back to revision $PREV_REVISION — image: $PREV_IMAGE (SHA: $PREV_SHA)"
+      kubectl -n mindledger rollout undo deployment/frontend --to-revision="$PREV_REVISION"
     - kubectl -n mindledger rollout status deployment/frontend --timeout=60s
     - echo "Production rollback complete."
   after_script:
