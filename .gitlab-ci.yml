@@ -154,7 +154,7 @@ lint:secrets:
 lint:k8s:
   stage: lint
   image:
-    name: ghcr.io/yannh/kubeconform:latest-alpine
+    name: ghcr.io/yannh/kubeconform:v0.7.0-alpine@sha256:8f0eeaaa96ba27ba1500b0e4b1c215acc358d159c62a7ecae58d7a03403287b0
     entrypoint: [""]
   script:
     # kubeconform validates manifests against official Kubernetes schemas
@@ -339,7 +339,7 @@ build:frontend:
 
 .trivy_base:
   image:
-    name: aquasec/trivy:latest
+    name: aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c
     entrypoint: [""]
   stage: scan
   interruptible: false
@@ -374,7 +374,7 @@ scan:frontend:
 
 deploy:staging:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: deploy-staging
   interruptible: false
@@ -462,7 +462,7 @@ smoke:staging:
 
 deploy:rollback:staging:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: smoke-staging
   interruptible: false
@@ -489,7 +489,7 @@ deploy:rollback:staging:
 # after deploy:staging, regardless of smoke test outcome.
 rollback:staging:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: smoke-staging
   interruptible: false
@@ -725,7 +725,7 @@ test:backup-restore:
 
 deploy:production:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: deploy-production
   interruptible: false
@@ -809,7 +809,7 @@ smoke:production:
 
 deploy:rollback:production:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: smoke-production
   interruptible: false
@@ -866,7 +866,7 @@ deploy:rollback:production:
 # API uses the same blue-green slot-switch as the automated rollback.
 rollback:production:
   image:
-    name: bitnami/kubectl:latest
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
     entrypoint: [""]
   stage: smoke-production
   interruptible: false
