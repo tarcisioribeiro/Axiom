@@ -26,7 +26,7 @@ variables:
   API_IMAGE: "$CI_REGISTRY_IMAGE/api"
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
   # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
-  CI_COVERAGE_THRESHOLD: "70"
+  CI_COVERAGE_THRESHOLD: "80"
 
 workflow:
   rules:

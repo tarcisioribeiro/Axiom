@@ -1,6 +1,6 @@
 """
-Coverage boost tests — security archives, vault yield/contributions, dashboard,
-and other remaining uncovered endpoints.
+Tests for security archives CRUD, vault yield/goal operations,
+dashboard stats, and expense service endpoints.
 """
 
 from datetime import date
@@ -54,6 +54,8 @@ class ArchiveViewTest(BaseCoverageTestCase):
         url = reverse("archive-list-create")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data["results"], list)
+        self.assertIsInstance(response.data["count"], int)
 
     def test_create_archive_text(self):
         url = reverse("archive-list-create")
@@ -62,15 +64,14 @@ class ArchiveViewTest(BaseCoverageTestCase):
             {
                 "title": "My Notes",
                 "category": "personal",
-                "archive_type": "note",
+                "archive_type": "text",
                 "text_content": "This is a note.",
                 "owner": self.member.pk,
             },
         )
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["title"], "My Notes")
+        self.assertEqual(response.data["category"], "personal")
 
     def test_retrieve_archive(self):
         from security.models import Archive
@@ -78,13 +79,15 @@ class ArchiveViewTest(BaseCoverageTestCase):
         archive = Archive.objects.create(
             title="Test Archive",
             category="personal",
-            archive_type="note",
+            archive_type="text",
             owner=self.member,
             created_by=self.user,
         )
         url = reverse("archive-detail", args=[archive.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Test Archive")
+        self.assertEqual(response.data["category"], "personal")
 
     def test_update_archive(self):
         from security.models import Archive
@@ -92,13 +95,14 @@ class ArchiveViewTest(BaseCoverageTestCase):
         archive = Archive.objects.create(
             title="Old Title",
             category="personal",
-            archive_type="note",
+            archive_type="text",
             owner=self.member,
             created_by=self.user,
         )
         url = reverse("archive-detail", args=[archive.pk])
         response = self.client.patch(url, {"title": "New Title"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "New Title")
 
     def test_delete_archive(self):
         from security.models import Archive
@@ -106,7 +110,7 @@ class ArchiveViewTest(BaseCoverageTestCase):
         archive = Archive.objects.create(
             title="To Delete",
             category="personal",
-            archive_type="note",
+            archive_type="text",
             owner=self.member,
             created_by=self.user,
         )
@@ -123,7 +127,6 @@ class ArchiveViewTest(BaseCoverageTestCase):
 class VaultYieldOperationsViewTest(BaseCoverageTestCase):
     def setUp(self):
         super().setUp()
-        # Create vault via API
         self.vault_pk = self._create_vault()
 
     def _create_vault(self):
@@ -138,9 +141,12 @@ class VaultYieldOperationsViewTest(BaseCoverageTestCase):
                 "is_active": True,
             },
         )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         return resp.data["id"]  # type: ignore
 
     def test_vault_apply_yield(self):
+        # No contributions yet — may succeed (no-op) or return 400 if validation
+        # requires prior contributions; both are legitimate outcomes.
         url = reverse("vault-apply-yield", args=[self.vault_pk])
         response = self.client.post(url)
         self.assertIn(
@@ -153,18 +159,13 @@ class VaultYieldOperationsViewTest(BaseCoverageTestCase):
         response = self.client.post(
             url, {"yield_rate": "0.010", "annual_yield_rate": "0.1200"}
         )
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_vault_contribution_history(self):
         url = reverse("vault-contribution-history", args=[self.vault_pk])
         response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data["results"], list)
 
     def test_vault_generate_contributions(self):
         url = reverse("vault-generate-contributions")
@@ -204,6 +205,7 @@ class VaultYieldOperationsViewTest(BaseCoverageTestCase):
         url = reverse("financial-goal-detail", args=[goal.pk])
         response = self.client.patch(url, {"description": "Updated Goal"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["description"], "Updated Goal")
 
     def test_financial_goal_delete(self):
         from vaults.models import FinancialGoal
@@ -256,11 +258,21 @@ class DashboardStatsViewTest(BaseCoverageTestCase):
         url = reverse("dashboard-stats")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for key in (
+            "total_revenues",
+            "total_expenses",
+            "total_balance",
+            "accounts_count",
+        ):
+            self.assertIn(key, response.data)
+        self.assertGreater(response.data["total_revenues"], 0)
 
     def test_balance_forecast_with_data(self):
         url = reverse("balance-forecast")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for key in ("forecast_balance", "pending_expenses", "pending_revenues"):
+            self.assertIn(key, response.data)
 
 
 # ---------------------------------------------------------------------------
@@ -272,18 +284,12 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
     def test_expense_export(self):
         url = reverse("expense-export")
         response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_revenue_export(self):
         url = reverse("revenue-export")
         response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_fixed_expense_generate(self):
         url = reverse("fixed-expense-generate")
@@ -308,6 +314,8 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
         url = reverse("categorization-rule-detail", args=[rule.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["merchant_contains"], "test")
+        self.assertEqual(response.data["category"], "food and drink")
 
     def test_categorization_rule_update(self):
         from expenses.models import CategorizationRule
@@ -322,6 +330,7 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
         url = reverse("categorization-rule-detail", args=[rule.pk])
         response = self.client.patch(url, {"merchant_contains": "updated"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["merchant_contains"], "updated")
 
     def test_categorization_rule_apply(self):
         url = reverse("categorization-rule-apply")
