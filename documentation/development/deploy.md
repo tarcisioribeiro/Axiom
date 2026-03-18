@@ -20,7 +20,12 @@ lint → typecheck → test → build → scan → deploy-staging → deploy-pro
 | `build`             | `build:api`, `build:frontend`                                                   | develop / main / tag |
 | `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                               | develop / main / tag |
 | `deploy-staging`    | `deploy:staging`                                                                | develop              |
+| `smoke-staging`     | `smoke:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**) | develop           |
 | `deploy-production` | `deploy:production` (**manual**)                                                | main                 |
+| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**) | main    |
+
+> Para detalhes sobre os procedimentos de rollback consulte o
+> [Runbook de Rollback](rollback.md).
 
 > **Atenção:** `deploy:staging` e `deploy:production` só são liberados se `scan:api`
 > e `scan:frontend` passarem. Uma vulnerabilidade HIGH ou CRITICAL nas imagens
