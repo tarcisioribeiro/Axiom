@@ -10,6 +10,7 @@ stages:
   - scan
   - deploy-staging
   - test-load
+  - test-e2e
   - deploy-production
 
 # ------------------------------------------------------------------------------
@@ -436,6 +437,61 @@ test:load:
     when: always
     paths:
       - k6/results.json
+    expire_in: 7 days
+  allow_failure: false
+
+# ==============================================================================
+# STAGE: test-e2e
+# ==============================================================================
+#
+# Runs Playwright E2E tests against the staging environment after it is
+# deployed.  Tests use a pre-seeded test account (same vars as load tests).
+# The mcr.microsoft.com/playwright image bundles all required browser binaries.
+#
+# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   STAGING_URL     — public URL of the staging environment
+#   E2E_USERNAME    — username of a test account seeded in the staging database
+#   E2E_PASSWORD    — password for the E2E test account (masked variable)
+
+test:e2e:
+  image:
+    name: mcr.microsoft.com/playwright:v1.58.2-noble
+    entrypoint: [""]
+  stage: test-e2e
+  needs:
+    - job: deploy:staging
+    - job: test:load
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  variables:
+    BASE_URL: $STAGING_URL
+    E2E_USERNAME: $E2E_USERNAME
+    E2E_PASSWORD: $E2E_PASSWORD
+    # HOME must be writable for Playwright's browser cache
+    HOME: /root
+  before_script:
+    # Wait up to 60 s for the staging frontend to become available.
+    - |
+      echo "Waiting for ${BASE_URL} to respond..."
+      for i in $(seq 1 12); do
+        STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
+        [ -z "$STATUS" ] && STATUS="000"
+        [ "$STATUS" = "200" ] && { echo "Frontend ready (attempt $i)"; break; }
+        [ "$i" = "12" ] && { echo "ERROR: Frontend not ready after 60s (last status: ${STATUS})"; exit 1; }
+        sleep 5
+      done
+    - cd frontend
+    - npm ci --prefer-offline
+  script:
+    - npm run test:e2e -- --reporter=list,junit
+  after_script:
+    - mkdir -p e2e-results
+  artifacts:
+    when: always
+    paths:
+      - e2e-results/
+    reports:
+      junit: e2e-results/results.xml
     expire_in: 7 days
   allow_failure: false
 
