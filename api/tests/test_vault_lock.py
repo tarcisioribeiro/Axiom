@@ -1,6 +1,6 @@
 """
-Final coverage push — CSV exports, permissions, vault lock/unlock paths,
-and additional specific endpoint coverage.
+Tests for vault lock/unlock behavior, member permissions, loan operations,
+notification endpoints, and vault change-password flow.
 """
 
 from datetime import date
@@ -45,41 +45,6 @@ class BaseFinalPushTestCase(APITestCase):
 
 
 # ---------------------------------------------------------------------------
-# Member Financial Report CSV export
-# ---------------------------------------------------------------------------
-
-
-class MemberCSVExportViewTest(BaseFinalPushTestCase):
-    def test_member_financial_report_csv(self):
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url, {"format": "csv"})
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-
-    def test_member_permissions_update(self):
-        url = reverse("member-permissions-update", args=[self.member.pk])
-        response = self.client.put(url, {"permission_codenames": []}, format="json")
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_200_OK,
-                status.HTTP_400_BAD_REQUEST,
-                status.HTTP_403_FORBIDDEN,
-            ],
-        )
-
-    def test_available_permissions(self):
-        url = reverse("available-permissions")
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN],
-        )
-
-
-# ---------------------------------------------------------------------------
 # Security locked vault path (VaultLockedMixin with VaultConfig)
 # ---------------------------------------------------------------------------
 
@@ -87,7 +52,6 @@ class MemberCSVExportViewTest(BaseFinalPushTestCase):
 class VaultLockedSecurityViewTest(BaseFinalPushTestCase):
     def setUp(self):
         super().setUp()
-        # Create VaultConfig to trigger the vault check path
         from security.models import VaultConfig
 
         VaultConfig.objects.create(
@@ -97,10 +61,52 @@ class VaultLockedSecurityViewTest(BaseFinalPushTestCase):
         )
 
     def test_password_list_locked_returns_423(self):
-        # With VaultConfig but no key in cache → locked
+        """With VaultConfig configured but no key in cache → vault is locked."""
         url = reverse("password-list-create")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_423_LOCKED)
+
+    def test_password_share_token_list_locked_returns_423(self):
+        """Share-token endpoint also requires vault to be unlocked."""
+        # Use a placeholder pk; the vault-lock check fires before any DB lookup.
+        url = reverse("password-share-token-list-create", args=[99999])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_423_LOCKED)
+
+
+# ---------------------------------------------------------------------------
+# Member permissions
+# ---------------------------------------------------------------------------
+
+
+class MemberPermissionsViewTest(BaseFinalPushTestCase):
+    def test_member_permissions_update(self):
+        url = reverse("member-permissions-update", args=[self.member.pk])
+        response = self.client.put(url, {"permission_codenames": []}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("message", response.data)  # type: ignore
+        self.assertIn("permissions", response.data)  # type: ignore
+
+    def test_available_permissions(self):
+        url = reverse("available-permissions")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Response is a dict keyed by app name
+        self.assertIsInstance(response.data, dict)
+        self.assertIn("accounts", response.data)  # type: ignore
+
+
+# ---------------------------------------------------------------------------
+# Member Financial Report CSV export
+# ---------------------------------------------------------------------------
+
+
+class MemberReportViewTest(BaseFinalPushTestCase):
+    def test_member_financial_report_json(self):
+        url = reverse("member-financial-report", args=[self.member.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +152,7 @@ class LoanUpdateDeleteViewTest(BaseFinalPushTestCase):
         url = reverse("loan-detail-view", args=[self.loan.pk])
         response = self.client.patch(url, {"description": "Updated Loan"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["description"], "Updated Loan")
 
     def test_delete_loan(self):
         url = reverse("loan-detail-view", args=[self.loan.pk])
@@ -163,14 +170,15 @@ class NotificationOperationsViewTest(BaseFinalPushTestCase):
         url = reverse("notification-summary")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("unread_count", response.data)  # type: ignore
+        self.assertIsInstance(response.data["unread_count"], int)  # type: ignore
 
     def test_mark_all_notifications_read(self):
         url = reverse("notification-mark-all-read")
         response = self.client.post(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("marked_read", response.data)  # type: ignore
+        self.assertIsInstance(response.data["marked_read"], int)  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -198,95 +206,39 @@ class RevenueDeleteViewTest(BaseFinalPushTestCase):
 
 
 # ---------------------------------------------------------------------------
-# Dashboard more queries
+# Dashboard current date (public utility endpoint)
 # ---------------------------------------------------------------------------
 
 
-class DashboardMoreStatsViewTest(BaseFinalPushTestCase):
+class DashboardCurrentDateViewTest(BaseFinalPushTestCase):
     def test_dashboard_stats_current_date(self):
         url = reverse("current-date")
         response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("date", response.data)  # type: ignore
+        # Value should be a parseable date string (YYYY-MM-DD)
+        from datetime import datetime
+
+        parsed = datetime.strptime(response.data["date"], "%Y-%m-%d")
+        self.assertIsNotNone(parsed)
 
 
 # ---------------------------------------------------------------------------
-# Security password share tokens
-# ---------------------------------------------------------------------------
-
-
-class PasswordShareTokenViewTest(BaseFinalPushTestCase):
-    def setUp(self):
-        super().setUp()
-        # Create a password to share
-        create_url = reverse("password-list-create")
-        resp = self.client.post(
-            create_url,
-            {
-                "title": "Share Test",
-                "username": "shareuser",
-                "password": "sharedPass123",
-                "category": "other",
-                "owner": self.member.pk,
-            },
-        )
-        if resp.status_code == status.HTTP_201_CREATED:
-            self.password_pk = resp.data["id"]  # type: ignore
-        else:
-            self.password_pk = None
-
-    def test_list_share_tokens(self):
-        if self.password_pk is None:
-            return
-        url = reverse("password-share-token-list-create", args=[self.password_pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-
-    def test_create_share_token(self):
-        if self.password_pk is None:
-            return
-        url = reverse("password-share-token-list-create", args=[self.password_pk])
-        response = self.client.post(
-            url,
-            {"expires_in_hours": 24},
-        )
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_201_CREATED,
-                status.HTTP_400_BAD_REQUEST,
-                status.HTTP_404_NOT_FOUND,
-            ],
-        )
-
-
-# ---------------------------------------------------------------------------
-# Vault change password endpoint
+# Vault change password — no VaultConfig → 400
 # ---------------------------------------------------------------------------
 
 
 class VaultChangePasswordViewTest(BaseFinalPushTestCase):
     def test_vault_change_password_no_vault_config(self):
+        """When no VaultConfig exists the view returns 400."""
         url = reverse("vault-change-password")
         response = self.client.post(
             url,
             {
-                "current_password": "oldpass",
-                "new_password": "newpass123",
-                "confirm_new_password": "newpass123",
+                "current_master_password": "oldpass",
+                "new_master_password": "newpass1234",
+                "confirm_new_master_password": "newpass1234",
             },
         )
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_200_OK,
-                status.HTTP_400_BAD_REQUEST,
-                status.HTTP_403_FORBIDDEN,
-                status.HTTP_404_NOT_FOUND,
-            ],
-        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)  # type: ignore
