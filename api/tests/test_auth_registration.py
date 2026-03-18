@@ -321,6 +321,47 @@ class AdminPurgeDeletedTest(BasePush2TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data["dry_run"])  # type: ignore
 
+    def test_purge_deleted_with_actual_records(self):
+        """
+        Creates soft-deleted records older than the cutoff and runs the purge
+        to trigger the anonymization + hard-delete loop in app/views.py.
+        Covers _anonymize_account, _anonymize_member, _log_purge paths.
+        """
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        cutoff_past = timezone.now() - timedelta(days=2)
+
+        # Soft-deleted Account
+        stale_account = Account.objects.create(
+            account_name="Stale Account",
+            institution_name="STALE",
+            account_type="CS",
+            is_active=False,
+        )
+        stale_account.is_deleted = True
+        stale_account.deleted_at = cutoff_past
+        stale_account.save()
+
+        # Soft-deleted Member (no user to avoid FK complications)
+        stale_member = Member.objects.create(
+            name="Stale Member",
+            document_hash="s" * 64,
+            phone="11900000099",
+            sex="M",
+        )
+        stale_member.is_deleted = True
+        stale_member.deleted_at = cutoff_past
+        stale_member.save()
+
+        url = reverse("admin-purge-deleted")
+        response = self.client.post(url, {"days": 1, "dry_run": False}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["dry_run"])  # type: ignore
+        self.assertIn("purged", response.data)  # type: ignore
+        self.assertGreater(response.data["total"], 0)  # type: ignore
+
 
 # ---------------------------------------------------------------------------
 # Auth views — get_current_user without member (Member.DoesNotExist branch)
