@@ -138,6 +138,19 @@ lint:npm-audit:
   script:
     - npm audit --audit-level=high
 
+lint:commits:
+  extends: .node_base
+  stage: lint
+  # Fetch the full git history so every commit in the MR range is reachable.
+  variables:
+    GIT_DEPTH: 0
+  script:
+    # commitlint.config.js lives at the repo root; npx resolves it from the
+    # parent of the frontend/ working directory set by .node_base before_script.
+    - npx commitlint --from "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --to "$CI_COMMIT_SHA"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 lint:secrets:
   image:
     name: ghcr.io/gitleaks/gitleaks:v8.27.2
