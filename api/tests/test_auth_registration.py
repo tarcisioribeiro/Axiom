@@ -1,6 +1,6 @@
 """
-Coverage push 2 — registration success, member CSV report with data,
-admin purge (dry run), and authentication paths.
+Tests for user registration validation paths, member financial reports,
+admin purge endpoint, and auth current-user edge cases.
 """
 
 from datetime import date
@@ -46,17 +46,16 @@ class BasePush2TestCase(APITestCase):
 
 
 # ---------------------------------------------------------------------------
-# Member financial report CSV with actual member-linked data
+# Member financial report with member-linked data
 # ---------------------------------------------------------------------------
 
 
-class MemberFinancialReportCSVWithDataTest(BasePush2TestCase):
+class MemberFinancialReportWithDataTest(BasePush2TestCase):
     def setUp(self):
         super().setUp()
         from expenses.models import Expense
         from revenues.models import Revenue
 
-        # Create expenses linked to the member
         Expense.objects.create(
             description="Member Rent",
             value=Decimal("1200.00"),
@@ -79,7 +78,6 @@ class MemberFinancialReportCSVWithDataTest(BasePush2TestCase):
             member=self.member,
             created_by=self.user,
         )
-        # Create revenues linked to the member
         Revenue.objects.create(
             description="Member Salary",
             value=Decimal("5000.00"),
@@ -91,7 +89,6 @@ class MemberFinancialReportCSVWithDataTest(BasePush2TestCase):
             member=self.member,
             created_by=self.user,
         )
-        # Create loans, payables, transfers to cover CSV loan/payable/transfer rows
         from datetime import time
 
         from loans.models import Loan
@@ -162,57 +159,37 @@ class MemberFinancialReportCSVWithDataTest(BasePush2TestCase):
             created_by=self.user,
         )
 
+    def test_member_financial_report_json_with_data(self):
+        """Exercises category_totals loop when expenses exist."""
+        url = reverse("member-financial-report", args=[self.member.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Response should contain financial summary sections
+        self.assertIsInstance(response.data, dict)
+        self.assertIn("expenses", response.data)
+
     def test_member_financial_report_csv_with_data(self):
-        """Exercises _generate_csv + category_totals loop (lines 374-594)."""
+        """Exercises _generate_csv + category_totals loop."""
         from django.conf import settings
         from django.test import override_settings
 
-        # Disable DRF's URL format override so ?format=csv reaches the view
-        # without triggering DRF content negotiation (which has no CSV renderer)
         rf = dict(settings.REST_FRAMEWORK)
         rf["URL_FORMAT_OVERRIDE"] = None
         url = reverse("member-financial-report", args=[self.member.pk])
         with override_settings(REST_FRAMEWORK=rf):
             response = self.client.get(url, {"format": "csv"})
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
-        if response.status_code == status.HTTP_200_OK:
-            # Should return CSV content
-            self.assertIn(
-                "text/csv",
-                response.get("Content-Type", ""),
-            )
-
-    def test_member_financial_report_json_with_data(self):
-        """Exercises category_totals loop when expenses exist (lines 374-378)."""
-        url = reverse("member-financial-report", args=[self.member.pk])
-        response = self.client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_404_NOT_FOUND],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("text/csv", response.get("Content-Type", ""))
 
 
 # ---------------------------------------------------------------------------
-# Auth registration success path
+# Auth registration validation paths
 # ---------------------------------------------------------------------------
 
 
-class AuthRegistrationSuccessTest(APITestCase):
-    REGISTER_OK = [
-        status.HTTP_201_CREATED,
-        status.HTTP_400_BAD_REQUEST,
-        status.HTTP_429_TOO_MANY_REQUESTS,
-    ]
-    REGISTER_BAD = [
-        status.HTTP_400_BAD_REQUEST,
-        status.HTTP_429_TOO_MANY_REQUESTS,
-    ]
-
+class AuthRegistrationTest(APITestCase):
     def test_register_user_success(self):
-        """Covers validate_cpf, validate_registration_data, register view success."""
+        """Covers validate_cpf, validate_registration_data, register success."""
         url = reverse("register-user")
         response = self.client.post(
             url,
@@ -225,10 +202,16 @@ class AuthRegistrationSuccessTest(APITestCase):
                 "email": "newreg@test.com",
             },
         )
-        self.assertIn(response.status_code, self.REGISTER_OK)
+        # 429 is only expected if rate-limiting is active in this environment
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_201_CREATED, status.HTTP_429_TOO_MANY_REQUESTS],
+        )
+        if response.status_code == status.HTTP_201_CREATED:
+            self.assertIn("username", response.data)
 
     def test_register_user_duplicate_username(self):
-        """Covers duplicate check path (lines 237-252)."""
+        """Covers duplicate-username rejection path."""
         User.objects.create_user(
             username="dupuser",
             email="dup@test.com",
@@ -245,10 +228,10 @@ class AuthRegistrationSuccessTest(APITestCase):
                 "phone": "11988887766",
             },
         )
-        self.assertIn(response.status_code, self.REGISTER_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_user_invalid_cpf(self):
-        """Covers invalid CPF branch in validate_cpf (lines 18-35)."""
+        """Covers invalid CPF branch in validate_cpf."""
         url = reverse("register-user")
         response = self.client.post(
             url,
@@ -260,16 +243,20 @@ class AuthRegistrationSuccessTest(APITestCase):
                 "phone": "11988887755",
             },
         )
-        self.assertIn(response.status_code, self.REGISTER_BAD)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_user_missing_fields(self):
-        """Covers validation errors path in validate_registration_data."""
+        """Covers missing-required-fields path in validate_registration_data."""
         url = reverse("register-user")
         response = self.client.post(url, {})
-        self.assertIn(response.status_code, self.REGISTER_BAD)
+        # 429 is possible when rate-limiting fires before validation in this environment
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
+        )
 
     def test_register_user_invalid_username_length(self):
-        """Covers username length validation branch."""
+        """Covers username-too-short validation branch."""
         url = reverse("register-user")
         response = self.client.post(
             url,
@@ -281,10 +268,14 @@ class AuthRegistrationSuccessTest(APITestCase):
                 "phone": "11988887744",
             },
         )
-        self.assertIn(response.status_code, self.REGISTER_BAD)
+        # 429 is possible when rate-limiting fires before validation in this environment
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
+        )
 
     def test_register_user_invalid_username_chars(self):
-        """Covers username special chars branch."""
+        """Covers username-special-characters validation branch."""
         url = reverse("register-user")
         response = self.client.post(
             url,
@@ -296,7 +287,11 @@ class AuthRegistrationSuccessTest(APITestCase):
                 "phone": "11988887733",
             },
         )
-        self.assertIn(response.status_code, self.REGISTER_BAD)
+        # 429 is possible when rate-limiting fires before validation in this environment
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -306,47 +301,76 @@ class AuthRegistrationSuccessTest(APITestCase):
 
 class AdminPurgeDeletedTest(BasePush2TestCase):
     def test_purge_deleted_dry_run(self):
-        """Covers app/views.py PurgeDeletedRecordsView (lines 63-93)."""
+        """Covers PurgeDeletedView with dry_run=True."""
         url = reverse("admin-purge-deleted")
         response = self.client.post(
             url,
             {"days": 90, "dry_run": True},
             format="json",
         )
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_200_OK,
-                status.HTTP_400_BAD_REQUEST,
-                status.HTTP_403_FORBIDDEN,
-            ],
-        )
-        if response.status_code == status.HTTP_200_OK:
-            self.assertIn("dry_run", response.data)  # type: ignore
-            self.assertTrue(response.data["dry_run"])  # type: ignore
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("dry_run", response.data)  # type: ignore
+        self.assertTrue(response.data["dry_run"])  # type: ignore
+        self.assertIn("total", response.data)  # type: ignore
+        self.assertIn("cutoff_date", response.data)  # type: ignore
 
     def test_purge_deleted_default_params(self):
-        """Covers app/views.py with default params."""
+        """Covers PurgeDeletedView with default params."""
         url = reverse("admin-purge-deleted")
         response = self.client.post(url, {"days": 30}, format="json")
-        self.assertIn(
-            response.status_code,
-            [
-                status.HTTP_200_OK,
-                status.HTTP_400_BAD_REQUEST,
-                status.HTTP_403_FORBIDDEN,
-            ],
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["dry_run"])  # type: ignore
+
+    def test_purge_deleted_with_actual_records(self):
+        """
+        Creates soft-deleted records older than the cutoff and runs the purge
+        to trigger the anonymization + hard-delete loop in app/views.py.
+        Covers _anonymize_account, _anonymize_member, _log_purge paths.
+        """
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        cutoff_past = timezone.now() - timedelta(days=2)
+
+        # Soft-deleted Account
+        stale_account = Account.objects.create(
+            account_name="Stale Account",
+            institution_name="STALE",
+            account_type="CS",
+            is_active=False,
         )
+        stale_account.is_deleted = True
+        stale_account.deleted_at = cutoff_past
+        stale_account.save()
+
+        # Soft-deleted Member (no user to avoid FK complications)
+        stale_member = Member.objects.create(
+            name="Stale Member",
+            document_hash="s" * 64,
+            phone="11900000099",
+            sex="M",
+        )
+        stale_member.is_deleted = True
+        stale_member.deleted_at = cutoff_past
+        stale_member.save()
+
+        url = reverse("admin-purge-deleted")
+        response = self.client.post(url, {"days": 1, "dry_run": False}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["dry_run"])  # type: ignore
+        self.assertIn("purged", response.data)  # type: ignore
+        self.assertGreater(response.data["total"], 0)  # type: ignore
 
 
 # ---------------------------------------------------------------------------
-# Auth views — get_current_user without member (line 136 branch)
+# Auth views — get_current_user without member (Member.DoesNotExist branch)
 # ---------------------------------------------------------------------------
 
 
 class AuthCurrentUserNoMemberTest(APITestCase):
     def test_current_user_no_member(self):
-        """Covers Member.DoesNotExist branch in get_current_user (line 136)."""
+        """Covers Member.DoesNotExist branch in get_current_user."""
         user = User.objects.create_user(
             username="nomemberuser",
             email="nomember@test.com",
@@ -357,12 +381,8 @@ class AuthCurrentUserNoMemberTest(APITestCase):
         client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
         url = reverse("current-user")
         response = client.get(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN],
-        )
-        if response.status_code == status.HTTP_200_OK:
-            self.assertIsNone(response.data.get("member"))  # type: ignore
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(response.data.get("member"))  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -372,7 +392,7 @@ class AuthCurrentUserNoMemberTest(APITestCase):
 
 class UserPermissionsSuperuserTest(BasePush2TestCase):
     def test_user_permissions_superuser_blocked(self):
-        """Covers superuser-blocked branch in get_user_permissions (line 165)."""
+        """Covers superuser-blocked branch in get_user_permissions."""
         url = reverse("user-permissions")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

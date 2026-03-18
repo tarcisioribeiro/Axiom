@@ -63,10 +63,17 @@ omit = [
     "manage.py",
     "*/wsgi.py",
     "*/asgi.py",
+    # Management commands are operational scripts tested via integration/manual runs
+    "*/management/commands/*",
+    # Type-checking configuration — not runtime code
+    "app/settings_mypy.py",
+    # Root-level setup scripts
+    "setup_members.py",
+    "createsuperuser.py",
 ]
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
