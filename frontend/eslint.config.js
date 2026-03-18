@@ -42,6 +42,7 @@ export default defineConfig([
       }],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': 'warn',
+      'max-lines': ['warn', { max: 250, skipBlankLines: true, skipComments: true }],
       'no-restricted-syntax': [
         'error',
         {
