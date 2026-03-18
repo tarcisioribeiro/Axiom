@@ -63,14 +63,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "--old-key",
-            required=True,
+            default=None,
             metavar="FERNET_KEY",
             help="Current Fernet key (44-char base64). Must match the key used "
             "when the data was originally encrypted.",
         )
         parser.add_argument(
             "--new-key",
-            required=True,
+            default=None,
             metavar="FERNET_KEY",
             help=(
                 "New Fernet key (44-char base64). Generate with: "
@@ -89,6 +89,11 @@ class Command(BaseCommand):
         old_key_str: str = options["old_key"]
         new_key_str: str = options["new_key"]
         dry_run: bool = options["dry_run"]
+
+        if not old_key_str:
+            raise CommandError("--old-key is required.")
+        if not new_key_str:
+            raise CommandError("--new-key is required.")
 
         try:
             old_key = old_key_str.encode()
