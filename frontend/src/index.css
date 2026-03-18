@@ -153,7 +153,7 @@
 
     /* Muted - Background levemente mais claro */
     --muted: 235 15% 23%;
-    --muted-foreground: 225 27% 51%; /* Comment (#6272A4) */
+    --muted-foreground: 225 27% 78%; /* Lightened Comment for WCAG AA contrast (~4.6:1 on card, ~7.6:1 on background) */
 
     /* Accent - Pink (#FF79C6) */
     --accent: 326 100% 74%;
@@ -187,7 +187,7 @@
     --category-spiritual: 326 100% 74%; /* pink */
     --category-exercise: 31 100% 71%; /* orange */
     --category-nutrition: 65 92% 76%; /* yellow */
-    --category-work: 225 27% 51%; /* comment */
+    --category-work: 225 27% 78%; /* lightened comment for WCAG AA contrast */
     --category-leisure: 0 100% 67%; /* red */
 
     /* Texto sobre superfícies coloridas (semantic on-colors) */
