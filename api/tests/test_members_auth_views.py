@@ -116,6 +116,36 @@ class AuthenticationViewTest(APITestCase):
             [status.HTTP_200_OK, status.HTTP_401_UNAUTHORIZED],
         )
 
+    def test_login_sets_samesite_strict_on_access_token_cookie(self):
+        User.objects.create_user("samesitest", "samesite@test.com", "pass123!")
+        url = reverse("token_obtain_pair")
+        response = self.client.post(
+            url, {"username": "samesitest", "password": "pass123!"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        access_cookie = response.cookies.get("access_token")
+        self.assertIsNotNone(access_cookie, "access_token cookie not set")
+        self.assertEqual(access_cookie["samesite"], "Strict")
+
+    def test_token_refresh_sets_samesite_strict_on_access_token_cookie(self):
+        User.objects.create_user("refreshsite", "refreshsite@test.com", "pass!")
+        # Perform login to obtain the refresh_token cookie
+        login_url = reverse("token_obtain_pair")
+        login_response = self.client.post(
+            login_url, {"username": "refreshsite", "password": "pass!"}
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+        refresh_cookie = login_response.cookies.get("refresh_token")
+        self.assertIsNotNone(refresh_cookie)
+        # Use the refresh_token cookie to obtain a new access token
+        self.client.cookies["refresh_token"] = refresh_cookie.value
+        refresh_url = reverse("token_refresh")
+        response = self.client.post(refresh_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        access_cookie = response.cookies.get("access_token")
+        self.assertIsNotNone(access_cookie, "access_token cookie not set on refresh")
+        self.assertEqual(access_cookie["samesite"], "Strict")
+
 
 # ---------------------------------------------------------------------------
 # Member Views

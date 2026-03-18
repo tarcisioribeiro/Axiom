@@ -30,6 +30,8 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+SESSION_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Strict"
 
 # HSTS — only active when SECURE_HSTS_SECONDS > 0.
 # Start with a short value (e.g. 300) in staging before committing to 31536000.
