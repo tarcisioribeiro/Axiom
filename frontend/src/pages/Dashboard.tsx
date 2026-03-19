@@ -464,7 +464,7 @@ export default function Dashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                <CardTitle>{t('pages.dashboard.accountBalance')}</CardTitle>
+                <CardTitle as="h2">{t('pages.dashboard.accountBalance')}</CardTitle>
               </div>
               <p className="text-sm">{t('pages.dashboard.accountBalanceDesc')}</p>
             </CardHeader>
@@ -557,7 +557,7 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.balanceForecast')}</CardTitle>
+                  <CardTitle as="h2">{t('pages.dashboard.balanceForecast')}</CardTitle>
                 </div>
                 <p className="text-sm">{t('pages.dashboard.balanceForecastDesc')}</p>
               </CardHeader>
@@ -618,10 +618,10 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Entradas Previstas */}
                   <div className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-success">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-success">
                       <ArrowUpRight className="h-4 w-4" />
                       {t('pages.dashboard.inflows')}
-                    </h4>
+                    </h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
@@ -652,10 +652,10 @@ export default function Dashboard() {
 
                   {/* Saídas Previstas */}
                   <div className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-destructive">
                       <ArrowDownRight className="h-4 w-4" />
                       {t('pages.dashboard.outflows')}
-                    </h4>
+                    </h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
@@ -712,13 +712,16 @@ export default function Dashboard() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.cashFlowProjection')}</CardTitle>
+                  <CardTitle as="h2">{t('pages.dashboard.cashFlowProjection')}</CardTitle>
                 </div>
                 <Select
                   value={String(forecastDays)}
                   onValueChange={(v) => setForecastDays(Number(v) as 30 | 60 | 90)}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger
+                    className="w-[140px]"
+                    aria-label={t('pages.dashboard.selectForecastPeriod')}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -869,7 +872,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.dashboard.expensesByCategory')}</CardTitle>
+              <CardTitle as="h2">{t('pages.dashboard.expensesByCategory')}</CardTitle>
               <p className="text-sm">{t('pages.dashboard.expensesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
@@ -889,7 +892,7 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.dashboard.revenuesByCategory')}</CardTitle>
+              <CardTitle as="h2">{t('pages.dashboard.revenuesByCategory')}</CardTitle>
               <p className="text-sm">{t('pages.dashboard.revenuesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
@@ -911,7 +914,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <CardTitle>
+              <CardTitle as="h2">
                 {evolutionPeriod === 'daily'
                   ? t('pages.dashboard.evolutionDaily')
                   : evolutionPeriod === 'weekly'
@@ -926,7 +929,10 @@ export default function Dashboard() {
                   setEvolutionPeriod(v as 'daily' | 'weekly' | 'monthly' | 'yearly')
                 }
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger
+                  className="w-[160px]"
+                  aria-label={t('pages.dashboard.selectEvolutionPeriod')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -977,7 +983,7 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle as="h2" className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
                   {t('pages.dashboard.cardExpensesByCategory')}
                 </CardTitle>
@@ -987,7 +993,10 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Select value={selectedCard} onValueChange={setSelectedCard}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger
+                    className="w-[180px]"
+                    aria-label={t('pages.dashboard.selectCard')}
+                  >
                     <SelectValue placeholder={t('pages.dashboard.allCards')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1004,7 +1013,10 @@ export default function Dashboard() {
                   onValueChange={setSelectedBill}
                   disabled={filteredBills.length === 0}
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger
+                    className="w-[180px]"
+                    aria-label={t('pages.dashboard.selectBill')}
+                  >
                     <SelectValue
                       placeholder={
                         filteredBills.length === 0
@@ -1094,7 +1106,7 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <PiggyBank className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.monthBudgets')}</CardTitle>
+                  <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t('pages.dashboard.monthBudgetsDesc')}
