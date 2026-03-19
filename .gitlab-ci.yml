@@ -30,6 +30,9 @@ variables:
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
   # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
   CI_COVERAGE_THRESHOLD: "80"
+  # SBOM / supply-chain tooling — pin exact versions for reproducibility.
+  SYFT_VERSION: "1.18.1"
+  COSIGN_VERSION: "2.4.3"
 
 workflow:
   rules:
@@ -298,6 +301,11 @@ test:frontend:
 #   BACKUP_ENCRYPTION_KEY     — AES-256-CBC passphrase used to encrypt staging backups (masked variable)
 #   CI_SMOKE_JWT_STAGING      — Bearer JWT for a CI service account in the staging DB (masked variable)
 #   CI_SMOKE_JWT_PRODUCTION   — Bearer JWT for a CI service account in the production DB (masked variable)
+#
+# Optional CI/CD variables for image signing (SBOM attestation):
+#   COSIGN_PRIVATE_KEY        — PEM-encoded cosign private key (masked variable); if absent, attestation is skipped.
+#                               Generate with: cosign generate-key-pair  (commit cosign.pub; keep .key secret)
+#   COSIGN_PASSWORD           — passphrase for COSIGN_PRIVATE_KEY (masked variable; leave empty if key has no password)
 
 .build_base:
   extends: .docker_base
@@ -327,6 +335,56 @@ build:api:
         docker push "$API_IMAGE:main"
       fi
 
+    # ── SBOM generation (syft) ────────────────────────────────────────────────
+    # Install syft at the pinned version declared in global variables.
+    - |
+      curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+        | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+    # Generate both CycloneDX JSON and SPDX JSON from the image just pushed.
+    - |
+      syft "$API_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        -o cyclonedx-json=api-sbom.cdx.json \
+        -o spdx-json=api-sbom.spdx.json
+    # Upload both SBOM formats to the GitLab generic package registry so they
+    # are stored alongside the image and retrievable outside of job artifacts.
+    - |
+      curl --fail --silent --show-error \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file api-sbom.cdx.json \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sbom/${CI_COMMIT_SHORT_SHA}/api-sbom.cdx.json"
+    - |
+      curl --fail --silent --show-error \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file api-sbom.spdx.json \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sbom/${CI_COMMIT_SHORT_SHA}/api-sbom.spdx.json"
+
+    # ── Optional cosign attestation ───────────────────────────────────────────
+    # Attaches the CycloneDX SBOM as a signed in-toto attestation on the image.
+    # Requires COSIGN_PRIVATE_KEY (and optionally COSIGN_PASSWORD) to be set as
+    # masked CI/CD variables. If not set, this step is silently skipped.
+    - |
+      if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
+        curl -sSfL \
+          "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
+          -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
+        printf '%s' "$COSIGN_PRIVATE_KEY" > /tmp/cosign.key
+        COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
+          --key /tmp/cosign.key \
+          --predicate api-sbom.cdx.json \
+          --type cyclonedx \
+          "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+        rm -f /tmp/cosign.key
+        echo "Cosign attestation complete for api image."
+      else
+        echo "COSIGN_PRIVATE_KEY not set — skipping image attestation."
+      fi
+  artifacts:
+    when: always
+    paths:
+      - api-sbom.cdx.json
+      - api-sbom.spdx.json
+    expire_in: 90 days
+
 build:frontend:
   extends: .build_base
   needs:
@@ -345,6 +403,49 @@ build:frontend:
         docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
         docker push "$FRONTEND_IMAGE:main"
       fi
+
+    # ── SBOM generation (syft) ────────────────────────────────────────────────
+    - |
+      curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
+        | sh -s -- -b /usr/local/bin "v${SYFT_VERSION}"
+    - |
+      syft "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        -o cyclonedx-json=frontend-sbom.cdx.json \
+        -o spdx-json=frontend-sbom.spdx.json
+    - |
+      curl --fail --silent --show-error \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file frontend-sbom.cdx.json \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sbom/${CI_COMMIT_SHORT_SHA}/frontend-sbom.cdx.json"
+    - |
+      curl --fail --silent --show-error \
+        --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file frontend-sbom.spdx.json \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/sbom/${CI_COMMIT_SHORT_SHA}/frontend-sbom.spdx.json"
+
+    # ── Optional cosign attestation ───────────────────────────────────────────
+    - |
+      if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
+        curl -sSfL \
+          "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
+          -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
+        printf '%s' "$COSIGN_PRIVATE_KEY" > /tmp/cosign.key
+        COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
+          --key /tmp/cosign.key \
+          --predicate frontend-sbom.cdx.json \
+          --type cyclonedx \
+          "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+        rm -f /tmp/cosign.key
+        echo "Cosign attestation complete for frontend image."
+      else
+        echo "COSIGN_PRIVATE_KEY not set — skipping image attestation."
+      fi
+  artifacts:
+    when: always
+    paths:
+      - frontend-sbom.cdx.json
+      - frontend-sbom.spdx.json
+    expire_in: 90 days
 
 # ==============================================================================
 # STAGE: scan
