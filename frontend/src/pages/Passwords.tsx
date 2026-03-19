@@ -1,3 +1,4 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Plus,
   Pencil,
@@ -13,6 +14,8 @@ import {
   Upload,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -54,6 +57,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { copyToClipboard } from '@/lib/utils';
+import { passwordSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
 import type { Password, PasswordFormData, Member } from '@/types';
@@ -79,15 +83,25 @@ export default function Passwords() {
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
 
-  // Form state
-  const [formData, setFormData] = useState<PasswordFormData>({
-    title: '',
-    site: '',
-    username: '',
-    password: '',
-    category: 'other',
-    notes: '',
-    owner: 0,
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    setValue,
+    watch,
+    reset,
+    setError,
+    formState: { errors },
+  } = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema) as Resolver<PasswordFormData>,
+    defaultValues: {
+      title: '',
+      site: '',
+      username: '',
+      password: '',
+      category: 'other',
+      notes: '',
+      owner: 0,
+    },
   });
 
   useEffect(() => {
@@ -124,7 +138,7 @@ export default function Passwords() {
       return;
     }
     setSelectedPassword(undefined);
-    setFormData({
+    reset({
       title: '',
       site: '',
       username: '',
@@ -138,7 +152,7 @@ export default function Passwords() {
 
   const handleEdit = (password: Password) => {
     setSelectedPassword(password);
-    setFormData({
+    reset({
       title: password.title,
       site: password.site || '',
       username: password.username,
@@ -218,27 +232,17 @@ export default function Passwords() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validações
-    if (
-      !formData.title ||
-      !formData.username ||
-      (!selectedPassword && !formData.password)
-    ) {
-      toast({
-        title: t('pages.passwords.requiredFields'),
-        description: t('pages.passwords.requiredFieldsDesc'),
-        variant: 'destructive',
-      });
+  const onFormSubmit = async (data: PasswordFormData) => {
+    // Password required on create
+    if (!selectedPassword && !data.password) {
+      setError('password', { message: 'Senha é obrigatória' });
       return;
     }
 
     try {
       setIsSubmitting(true);
       if (selectedPassword) {
-        const updateData: Partial<PasswordFormData> = { ...formData };
+        const updateData: Partial<PasswordFormData> = { ...data };
         if (!updateData.password) {
           delete updateData.password; // Não enviar senha vazia
         }
@@ -248,7 +252,7 @@ export default function Passwords() {
           description: t('pages.passwords.updatedDesc'),
         });
       } else {
-        await passwordsService.create(formData);
+        await passwordsService.create(data);
         toast({
           title: t('pages.passwords.created'),
           description: t('pages.passwords.createdDesc'),
@@ -463,15 +467,17 @@ export default function Passwords() {
                   : t('pages.passwords.newDesc')}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={rhfHandleSubmit(onFormSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">{t('common.fields.title')} *</Label>
                 <Input
                   id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  {...register('title')}
                   placeholder={t('pages.passwords.titlePlaceholder')}
                 />
+                {errors.title && (
+                  <p className="text-sm text-destructive">{errors.title.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -479,22 +485,24 @@ export default function Passwords() {
                 <Input
                   id="site"
                   type="url"
-                  value={formData.site}
-                  onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+                  {...register('site')}
                   placeholder={t('pages.passwords.sitePlaceholder')}
                 />
+                {errors.site && (
+                  <p className="text-sm text-destructive">{errors.site.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="username">{t('common.fields.username')} *</Label>
                 <Input
                   id="username"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
+                  {...register('username')}
                   placeholder={t('pages.passwords.usernamePlaceholder')}
                 />
+                {errors.username && (
+                  <p className="text-sm text-destructive">{errors.username.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -518,21 +526,19 @@ export default function Passwords() {
                 <Input
                   id="password"
                   type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  {...register('password')}
                   placeholder={
                     selectedPassword ? t('pages.passwords.keepCurrentPassword') : ''
                   }
                 />
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password.message}</p>
+                )}
                 {showGenerator && (
                   <div className="rounded-lg border bg-muted/30 p-3">
                     <PasswordGenerator
                       compact
-                      onPasswordGenerated={(password) => {
-                        setFormData({ ...formData, password });
-                      }}
+                      onPasswordGenerated={(pwd) => setValue('password', pwd)}
                     />
                   </div>
                 )}
@@ -541,10 +547,8 @@ export default function Passwords() {
               <div className="space-y-2">
                 <Label htmlFor="category">{t('common.fields.category')} *</Label>
                 <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
+                  value={watch('category')}
+                  onValueChange={(value) => setValue('category', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -557,17 +561,22 @@ export default function Passwords() {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.category && (
+                  <p className="text-sm text-destructive">{errors.category.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="notes">{t('common.fields.notes')}</Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  {...register('notes')}
                   placeholder={t('pages.passwords.notesSitePlaceholder')}
                   rows={3}
                 />
+                {errors.notes && (
+                  <p className="text-sm text-destructive">{errors.notes.message}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
