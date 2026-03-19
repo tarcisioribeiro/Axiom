@@ -1,3 +1,5 @@
+from typing import Any
+
 from rest_framework import serializers
 
 from accounts.models import Account
@@ -43,17 +45,17 @@ class AccountSerializer(serializers.ModelSerializer):
             "updated_by",
         ]
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().create(validated_data)
+        instance: Account = super().create(validated_data)  # type: ignore[assignment]
         if account_number:
             instance.account_number = account_number
             instance.save()
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Account, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)  # type: ignore[assignment]
         if account_number:
             instance.account_number = account_number
             instance.save()

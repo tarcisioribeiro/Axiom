@@ -367,7 +367,7 @@ os.makedirs(logs_dir, exist_ok=True)
 
 # CORS Configuration
 # Permitir apenas origens específicas (desenvolvimento e produção)
-def _normalize_cors_origins(origins_str):
+def _normalize_cors_origins(origins_str: str) -> list[str]:
     """
     Normaliza origens CORS garantindo que todas tenham esquema (http/https).
     Adiciona https:// automaticamente se o esquema estiver faltando.

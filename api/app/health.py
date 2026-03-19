@@ -1,13 +1,14 @@
 import os
+from typing import Any
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.utils.timezone import now
 
 
-def check_storage():
+def check_storage() -> dict[str, str]:
     """
     Lightweight MinIO/S3 connectivity check.
     Uses a HEAD bucket request with a 2-second timeout.
@@ -55,12 +56,12 @@ def check_storage():
         return {"status": "unhealthy", "message": f"Storage error: {str(e)}"}
 
 
-def health_check(request):
+def health_check(request: HttpRequest) -> JsonResponse:
     """
     Health check endpoint for monitoring system status.
     Returns 200 if all services are healthy, 503 if any service is down.
     """
-    health = {
+    health: dict[str, Any] = {
         "status": "healthy",
         "timestamp": now().isoformat(),
         "version": "1.0.0",
@@ -166,7 +167,7 @@ def health_check(request):
     return JsonResponse(health, status=status_code)
 
 
-def ready_check(request):
+def ready_check(request: HttpRequest) -> JsonResponse:
     """
     Readiness check - indicates if the application is ready to serve traffic.
     More lightweight than health check.
@@ -184,7 +185,7 @@ def ready_check(request):
         )
 
 
-def live_check(request):
+def live_check(request: HttpRequest) -> JsonResponse:
     """
     Liveness check - indicates if the application is running.
     Most basic check.

@@ -91,6 +91,7 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
         if pw._password:
             try:
                 plaintext = FieldEncryption.decrypt_data(pw._password)
+                assert plaintext is not None
                 pw._password = FieldEncryption.encrypt_with_key(plaintext, vault_key)
                 pw.save(update_fields=["_password"])
             except Exception as e:
@@ -103,12 +104,14 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
         try:
             if card._card_number:
                 plaintext = FieldEncryption.decrypt_data(card._card_number)
+                assert plaintext is not None
                 card._card_number = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
                 update_fields.append("_card_number")
             if card._security_code:
                 plaintext = FieldEncryption.decrypt_data(card._security_code)
+                assert plaintext is not None
                 card._security_code = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
@@ -125,16 +128,19 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
         try:
             if acc._account_number:
                 plaintext = FieldEncryption.decrypt_data(acc._account_number)
+                assert plaintext is not None
                 acc._account_number = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
                 update_fields.append("_account_number")
             if acc._password:
                 plaintext = FieldEncryption.decrypt_data(acc._password)
+                assert plaintext is not None
                 acc._password = FieldEncryption.encrypt_with_key(plaintext, vault_key)
                 update_fields.append("_password")
             if acc._digital_password:
                 plaintext = FieldEncryption.decrypt_data(acc._digital_password)
+                assert plaintext is not None
                 acc._digital_password = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
@@ -150,6 +156,7 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
         if archive._encrypted_text:
             try:
                 plaintext = FieldEncryption.decrypt_data(archive._encrypted_text)
+                assert plaintext is not None
                 archive._encrypted_text = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )

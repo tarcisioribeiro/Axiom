@@ -122,14 +122,8 @@ ignore_missing_imports = true
 # Add type annotations incrementally going forward.
 [[tool.mypy.overrides]]
 module = [
-    "accounts",
-    "accounts.*",
     "ai_assistant",
     "ai_assistant.*",
-    "app",
-    "app.*",
-    "authentication",
-    "authentication.*",
     "budgets",
     "budgets.*",
     "credit_cards",

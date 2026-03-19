@@ -1,5 +1,6 @@
 # views.py
 import re
+from typing import cast
 
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
@@ -8,6 +9,7 @@ from django.core.validators import validate_email
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .throttles import RegisterRateThrottle
@@ -103,7 +105,7 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_current_user(request):
+def get_current_user(request: Request) -> Response:
     """
     GET /api/v1/me/
 
@@ -116,7 +118,7 @@ def get_current_user(request):
     """
     from members.models import Member
 
-    user = request.user
+    user = cast(User, request.user)
 
     # Buscar membro vinculado
     try:
@@ -157,7 +159,7 @@ def get_current_user(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_user_permissions(request):
+def get_user_permissions(request: Request) -> Response:
     user = request.user
 
     # Bloqueia superusuários de usar a interface Streamlit
@@ -180,7 +182,7 @@ def get_user_permissions(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def get_available_users(request):
+def get_available_users(request: Request) -> Response:
     """
     Retorna lista de usuários disponíveis para vinculação com membros.
     Exclui superusuários e usuários já vinculados a membros.
@@ -204,7 +206,7 @@ def get_available_users(request):
 
 @api_view(["POST"])
 @throttle_classes([RegisterRateThrottle])
-def create_user_with_member(request):
+def create_user_with_member(request: Request) -> Response:
     """
     Cria um novo usuário e o vincula a um membro.
     Endpoint público para registro de novos usuários.

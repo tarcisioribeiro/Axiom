@@ -179,7 +179,7 @@ class AuditLoggingMiddleware(MiddlewareMixin):
                 data = dict(request.POST)
 
             # Remove sensitive fields
-            safe_data = self._sanitize_data(data)
+            safe_data: dict[str, Any] = self._sanitize_data(data)
 
             # Limit size of logged data
             data_str = json.dumps(safe_data)

@@ -1,3 +1,6 @@
+from django.db.models import QuerySet
+from rest_framework.serializers import BaseSerializer
+
 from accounts.models import Account
 from accounts.serializers import AccountSerializer
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
@@ -25,14 +28,16 @@ class AccountCreateListView(BaseListCreateView):
     serializer_class = AccountSerializer
     ordering = ["name"]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Account]:
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return Account.objects.filter(
-            is_deleted=False, created_by=self.request.user
+            is_deleted=False, created_by=self.request.user  # type: ignore[misc]
         ).defer("_account_number")
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+    def perform_create(self, serializer: BaseSerializer[Account]) -> None:
+        serializer.save(  # type: ignore[misc]
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -55,8 +60,10 @@ class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     queryset = Account.objects.filter(is_deleted=False)  # GlobalDefaultPermission
     serializer_class = AccountSerializer
 
-    def get_queryset(self):
-        return Account.objects.filter(is_deleted=False, created_by=self.request.user)
+    def get_queryset(self) -> QuerySet[Account]:
+        return Account.objects.filter(  # type: ignore[misc]
+            is_deleted=False, created_by=self.request.user
+        )
 
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+    def perform_update(self, serializer: BaseSerializer[Account]) -> None:
+        serializer.save(updated_by=self.request.user)  # type: ignore[misc]
