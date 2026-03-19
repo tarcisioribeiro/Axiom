@@ -161,7 +161,30 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreditCardBill
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "credit_card",
+            "credit_card_on_card_name",
+            "credit_card_number_masked",
+            "credit_card_flag",
+            "credit_card_associated_account_name",
+            "year",
+            "month",
+            "invoice_beginning_date",
+            "invoice_ending_date",
+            "closed",
+            "total_amount",
+            "minimum_payment",
+            "due_date",
+            "paid_amount",
+            "payment_date",
+            "interest_charged",
+            "late_fee",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_credit_card_number_masked(self, obj):
         """
