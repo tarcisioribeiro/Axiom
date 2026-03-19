@@ -1,5 +1,6 @@
 # Development dependencies - not needed in production
 # Install with: pip install -r requirements-dev.txt
+# NOTE: first run `pip install -e api/` from the repo root to register local flake8 plugins.
 
 # Include production dependencies
 -r requirements.txt

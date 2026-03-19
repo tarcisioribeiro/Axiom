@@ -1,3 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "mindledger-api-checks"
+version = "1.0.0"
+description = "Local flake8 plugins for MindLedger API"
+
+[project.entry-points."flake8.extension"]
+DRF = "flake8_no_serializer_all:NoSerializerAllChecker"
+
 [tool.black]
 line-length = 88
 target-version = ['py311']
