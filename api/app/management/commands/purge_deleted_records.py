@@ -54,7 +54,7 @@ class Command(BaseCommand):
         results = {}
 
         for label, model, anonymize_fn in self._get_sensitive_models():
-            qs = model.objects.filter(is_deleted=True, deleted_at__lte=cutoff)
+            qs = model.all_objects.filter(is_deleted=True, deleted_at__lte=cutoff)
             count = qs.count()
             results[label] = count
 

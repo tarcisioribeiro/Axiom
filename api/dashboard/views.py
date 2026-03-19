@@ -92,7 +92,6 @@ class AccountBalancesView(APIView):
         pending_revenues_subquery = (
             Revenue.objects.filter(
                 account=OuterRef("pk"),
-                is_deleted=False,
                 related_transfer__isnull=True,
                 received=False,
             )
@@ -105,7 +104,6 @@ class AccountBalancesView(APIView):
         pending_expenses_subquery = (
             Expense.objects.filter(
                 account=OuterRef("pk"),
-                is_deleted=False,
                 related_transfer__isnull=True,
                 payed=False,
             )
@@ -115,22 +113,18 @@ class AccountBalancesView(APIView):
         )
 
         # Query unica com annotate (evita N+1)
-        accounts = (
-            Account.objects.filter(is_deleted=False)
-            .annotate(
-                pending_revenues=Coalesce(
-                    Subquery(pending_revenues_subquery),
-                    Value(Decimal("0.00")),
-                    output_field=DecimalField(),
-                ),
-                pending_expenses=Coalesce(
-                    Subquery(pending_expenses_subquery),
-                    Value(Decimal("0.00")),
-                    output_field=DecimalField(),
-                ),
-            )
-            .order_by("account_name")
-        )
+        accounts = Account.objects.annotate(
+            pending_revenues=Coalesce(
+                Subquery(pending_revenues_subquery),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(),
+            ),
+            pending_expenses=Coalesce(
+                Subquery(pending_expenses_subquery),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(),
+            ),
+        ).order_by("account_name")
 
         result = []
         for account in accounts:
@@ -197,16 +191,13 @@ class DashboardStatsView(APIView):
         if cached_result is not None:
             return Response(cached_result)
 
-        # Filtrar apenas registros não deletados (soft delete)
         # E excluir transações relacionadas a transferências internas
-        accounts_qs = Account.objects.filter(is_deleted=False)
-        expenses_qs = Expense.objects.filter(
-            is_deleted=False, related_transfer__isnull=True, payed=True
-        )
+        accounts_qs = Account.objects.all()
+        expenses_qs = Expense.objects.filter(related_transfer__isnull=True, payed=True)
         revenues_qs = Revenue.objects.filter(
-            is_deleted=False, related_transfer__isnull=True, received=True
+            related_transfer__isnull=True, received=True
         )
-        credit_cards_qs = CreditCard.objects.filter(is_deleted=False)
+        credit_cards_qs = CreditCard.objects.all()
 
         # Aggregations no banco de dados (otimizado)
         accounts_agg = accounts_qs.aggregate(
@@ -223,11 +214,10 @@ class DashboardStatsView(APIView):
 
         # Calcular crédito usado (parcelas não pagas de cartões ativos)
         used_credit = CreditCardInstallment.objects.filter(
-            is_deleted=False,
-            purchase__is_deleted=False,
-            purchase__card__is_deleted=False,
             payed=False,
-        ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+        ).aggregate(
+            total=Sum("value")
+        )["total"] or Decimal("0.00")
 
         total_credit_limit = credit_cards_agg["total_limit"] or Decimal("0.00")
         available_credit = total_credit_limit - used_credit
@@ -280,9 +270,7 @@ class CreditCardExpensesByCategoryView(APIView):
         bill_id = request.query_params.get("bill")
 
         # Base queryset - parcelas não deletadas de compras não deletadas
-        queryset = CreditCardInstallment.objects.filter(
-            is_deleted=False, purchase__is_deleted=False
-        )
+        queryset = CreditCardInstallment.objects.all()
 
         # Aplicar filtros
         if card_id:
@@ -347,24 +335,22 @@ class BalanceForecastView(APIView):
 
     def get(self, request):
         # Saldo atual total das contas
-        current_balance = Account.objects.filter(is_deleted=False).aggregate(
-            total=Sum("current_balance")
-        )["total"] or Decimal("0.00")
+        current_balance = Account.objects.aggregate(total=Sum("current_balance"))[
+            "total"
+        ] or Decimal("0.00")
 
         # Despesas pendentes (não pagas, excluindo transferências)
         pending_expenses = Expense.objects.filter(
-            is_deleted=False, payed=False, related_transfer__isnull=True
+            payed=False, related_transfer__isnull=True
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
         # Receitas pendentes (não recebidas, excluindo transferências)
         pending_revenues = Revenue.objects.filter(
-            is_deleted=False, received=False, related_transfer__isnull=True
+            received=False, related_transfer__isnull=True
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
         # Faturas de cartão não pagas (total - valor pago)
-        open_bills = CreditCardBill.objects.filter(is_deleted=False).exclude(
-            status="paid"
-        )
+        open_bills = CreditCardBill.objects.exclude(status="paid")
         pending_card_bills = Decimal("0.00")
         for bill in open_bills:
             total = bill.total_amount or Decimal("0.00")
@@ -380,7 +366,6 @@ class BalanceForecastView(APIView):
         if member:
             # Empréstimos a receber (usuário é credor, empréstimo não pago)
             loans_as_creditor = Loan.objects.filter(
-                is_deleted=False,
                 creditor=member,
                 payed=False,
                 status__in=["active", "pending", "in_progress"],
@@ -393,7 +378,6 @@ class BalanceForecastView(APIView):
 
             # Empréstimos a pagar (usuário é beneficiado, empréstimo não pago)
             loans_as_benefited = Loan.objects.filter(
-                is_deleted=False,
                 benefited=member,
                 payed=False,
                 status__in=["active", "pending", "in_progress"],
@@ -406,7 +390,7 @@ class BalanceForecastView(APIView):
 
         # Valores a pagar pendentes (payables ativos ou em atraso)
         pending_payables = Payable.objects.filter(
-            is_deleted=False, status__in=["active", "overdue"]
+            status__in=["active", "overdue"]
         ).aggregate(total=Sum("value") - Sum("paid_value"))["total"] or Decimal("0.00")
 
         # Calcular totais
@@ -481,12 +465,10 @@ class MonthlyStatementView(APIView):
         month = max(1, min(12, month))
 
         expenses_qs = Expense.objects.filter(
-            is_deleted=False,
             date__year=year,
             date__month=month,
         )
         revenues_qs = Revenue.objects.filter(
-            is_deleted=False,
             date__year=year,
             date__month=month,
         )
@@ -600,14 +582,13 @@ class CashFlowForecastView(APIView):
         end_date = today + timedelta(days=days)
 
         # Saldo atual total de todas as contas
-        current_balance = Account.objects.filter(is_deleted=False).aggregate(
-            total=Sum("current_balance")
-        )["total"] or Decimal("0.00")
+        current_balance = Account.objects.aggregate(total=Sum("current_balance"))[
+            "total"
+        ] or Decimal("0.00")
 
         # Despesas pendentes no periodo (excluindo transferencias)
         scheduled_expenses = (
             Expense.objects.filter(
-                is_deleted=False,
                 payed=False,
                 related_transfer__isnull=True,
                 date__gte=today,
@@ -623,7 +604,6 @@ class CashFlowForecastView(APIView):
         # Receitas pendentes no periodo (excluindo transferencias)
         scheduled_revenues = (
             Revenue.objects.filter(
-                is_deleted=False,
                 received=False,
                 related_transfer__isnull=True,
                 date__gte=today,
@@ -700,7 +680,6 @@ class CashFlowForecastView(APIView):
         lancamento avulso gerado e adiciona uma entrada virtual.
         """
         fixed_expenses = FixedExpense.objects.filter(
-            is_deleted=False,
             is_active=True,
             account__isnull=False,
         ).select_related("account")
@@ -711,7 +690,6 @@ class CashFlowForecastView(APIView):
         # Pre-fetch lancamentos ja gerados no periodo para evitar N+1
         existing = set(
             Expense.objects.filter(
-                is_deleted=False,
                 fixed_expense_template__isnull=False,
                 date__gte=today,
                 date__lte=end_date,
@@ -833,9 +811,7 @@ class FinancialAlertsView(APIView):
         month = today.month
         year = today.year
 
-        budgets = Budget.objects.filter(
-            month=month, year=year, is_deleted=False
-        ).select_related("member")
+        budgets = Budget.objects.filter(month=month, year=year).select_related("member")
 
         if not budgets.exists():
             return alerts
@@ -844,7 +820,6 @@ class FinancialAlertsView(APIView):
             Expense.objects.filter(
                 date__month=month,
                 date__year=year,
-                is_deleted=False,
                 payed=True,
             )
             .values("category")
@@ -889,7 +864,6 @@ class FinancialAlertsView(APIView):
             due_date__isnull=False,
             due_date__lte=deadline,
             status__in=["open", "closed", "overdue"],
-            is_deleted=False,
         ).select_related("credit_card")
 
         for bill in bills:
@@ -933,7 +907,6 @@ class FinancialAlertsView(APIView):
         alerts = []
 
         accounts = Account.objects.filter(
-            is_deleted=False,
             is_active=True,
             minimum_balance__gt=0,
             current_balance__lt=F("minimum_balance"),
@@ -970,7 +943,6 @@ class FinancialAlertsView(APIView):
             due_date__isnull=False,
             due_date__lte=deadline,
             status__in=["active", "overdue"],
-            is_deleted=False,
         )
 
         for payable in payables:
@@ -1021,7 +993,6 @@ class FinancialAlertsView(APIView):
             due_date__lte=deadline,
             payed=False,
             status__in=["active", "in_progress", "pending", "overdue"],
-            is_deleted=False,
         )
 
         for loan in loans:

@@ -73,7 +73,7 @@ class PurgeDeletedView(APIView):
         total = 0
 
         for label, model, anonymize_fn in self._get_sensitive_models():
-            qs = model.objects.filter(is_deleted=True, deleted_at__lte=cutoff)
+            qs = model.all_objects.filter(is_deleted=True, deleted_at__lte=cutoff)
             count = qs.count()
 
             if not dry_run and count > 0:

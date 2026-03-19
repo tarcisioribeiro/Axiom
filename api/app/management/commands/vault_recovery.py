@@ -123,7 +123,7 @@ class Command(BaseCommand):
             raise CommandError(f"User '{username}' not found.")
 
         try:
-            member = Member.objects.get(user=user, is_deleted=False)
+            member = Member.objects.get(user=user)
         except Member.DoesNotExist:
             raise CommandError(f"No active Member record found for user '{username}'.")
 
@@ -199,14 +199,10 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"  EV-Key len: {evk_len} chars")
 
-        pw_count = Password.objects.filter(owner=member, is_deleted=False).count()
-        card_count = StoredCreditCard.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        acc_count = StoredBankAccount.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        arch_count = Archive.objects.filter(owner=member, is_deleted=False).count()
+        pw_count = Password.objects.filter(owner=member).count()
+        card_count = StoredCreditCard.objects.filter(owner=member).count()
+        acc_count = StoredBankAccount.objects.filter(owner=member).count()
+        arch_count = Archive.objects.filter(owner=member).count()
         total = pw_count + card_count + acc_count + arch_count
 
         self.stdout.write("\nVault items :")
@@ -321,24 +317,16 @@ class Command(BaseCommand):
         path = os.path.join(SNAPSHOT_DIR, f"vault_reset_{username}_{ts}.json")
 
         pw_ids = list(
-            Password.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            Password.objects.filter(owner=member).values_list("id", flat=True)
         )
         card_ids = list(
-            StoredCreditCard.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            StoredCreditCard.objects.filter(owner=member).values_list("id", flat=True)
         )
         acc_ids = list(
-            StoredBankAccount.objects.filter(
-                owner=member, is_deleted=False
-            ).values_list("id", flat=True)
+            StoredBankAccount.objects.filter(owner=member).values_list("id", flat=True)
         )
         arch_ids = list(
-            Archive.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            Archive.objects.filter(owner=member).values_list("id", flat=True)
         )
 
         snapshot = {
@@ -390,14 +378,10 @@ class Command(BaseCommand):
             )
             return
 
-        pw_count = Password.objects.filter(owner=member, is_deleted=False).count()
-        card_count = StoredCreditCard.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        acc_count = StoredBankAccount.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        arch_count = Archive.objects.filter(owner=member, is_deleted=False).count()
+        pw_count = Password.objects.filter(owner=member).count()
+        card_count = StoredCreditCard.objects.filter(owner=member).count()
+        acc_count = StoredBankAccount.objects.filter(owner=member).count()
+        arch_count = Archive.objects.filter(owner=member).count()
         total = pw_count + card_count + acc_count + arch_count
 
         # Always save snapshot BEFORE any deletion.
@@ -433,18 +417,18 @@ class Command(BaseCommand):
         with transaction.atomic():
             now = timezone.now()
 
-            deleted_pws = Password.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_cards = StoredCreditCard.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_accs = StoredBankAccount.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_archs = Archive.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
+            deleted_pws = Password.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_cards = StoredCreditCard.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_accs = StoredBankAccount.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_archs = Archive.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
 
             vault_config.delete()
             cache.delete(f"vault_key:{user.id}")
@@ -556,16 +540,16 @@ class Command(BaseCommand):
                 )
                 self.stdout.write("  VaultConfig created.")
 
-            restored_pws = Password.objects.filter(
+            restored_pws = Password.all_objects.filter(
                 id__in=item_ids["passwords"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_cards = StoredCreditCard.objects.filter(
+            restored_cards = StoredCreditCard.all_objects.filter(
                 id__in=item_ids["credit_cards"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_accs = StoredBankAccount.objects.filter(
+            restored_accs = StoredBankAccount.all_objects.filter(
                 id__in=item_ids["bank_accounts"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_archs = Archive.objects.filter(
+            restored_archs = Archive.all_objects.filter(
                 id__in=item_ids["archives"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
 
