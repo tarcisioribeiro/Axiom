@@ -522,6 +522,12 @@ deploy:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
+    # Pause both deployments so that the subsequent `apply` (which patches the
+    # spec with the placeholder image 0.0.0) and `set image` (which sets the
+    # real SHA tag) are batched into a single rollout on resume.  Without this,
+    # two back-to-back Recreate rollouts race and the second one can time out
+    # while waiting for the first one to finish terminating the old pod.
+    - kubectl -n mindledger-staging rollout pause deployment/api deployment/frontend 2>/dev/null || true
     - kubectl apply -f k8s/staging/ingress.yaml
     - kubectl apply -f k8s/staging/api/service.yaml
     - kubectl apply -f k8s/staging/api/deployment.yaml
@@ -530,6 +536,7 @@ deploy:staging:
     - kubectl apply -f k8s/staging/frontend/deployment.yaml
     - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - kubectl -n mindledger-staging rollout resume deployment/api deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
     - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
   after_script:
