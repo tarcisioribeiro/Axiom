@@ -5,6 +5,8 @@ Drives coverage of the vault lifecycle and master-password management.
 """
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -224,8 +226,20 @@ class VaultLockViewTest(BaseVaultConfigTestCase):
 # ---------------------------------------------------------------------------
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "vault-status-test-unique",
+        }
+    }
+)
 class VaultStatusAfterSetupTest(BaseVaultConfigTestCase):
     MASTER_PASSWORD = "StrongPass2!"
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
 
     def test_vault_status_configured_and_unlocked(self):
         """After setup, vault is configured and unlocked."""
