@@ -27,7 +27,7 @@ Note on vault items (security.Password, StoredCreditCard, StoredBankAccount, Arc
 
 import hashlib
 import hmac as hmac_lib
-from typing import Optional
+from typing import Any, Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -60,7 +60,7 @@ class Command(BaseCommand):
         "key and re-encrypt them with the new key. Runs inside a single transaction."
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--old-key",
             default=None,
@@ -85,7 +85,7 @@ class Command(BaseCommand):
             help="Iterate and decrypt all fields but make no writes.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         old_key_str: str = options["old_key"]
         new_key_str: str = options["new_key"]
         dry_run: bool = options["dry_run"]
@@ -152,7 +152,9 @@ class Command(BaseCommand):
     # Per-model rotators                                                   #
     # ------------------------------------------------------------------ #
 
-    def _rotate_accounts(self, old_key, new_key, dry_run, totals):
+    def _rotate_accounts(
+        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+    ) -> None:
         from accounts.models import Account
 
         self._rotate_model(
@@ -165,7 +167,9 @@ class Command(BaseCommand):
             label="accounts.Account",
         )
 
-    def _rotate_credit_cards(self, old_key, new_key, dry_run, totals):
+    def _rotate_credit_cards(
+        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+    ) -> None:
         from credit_cards.models import CreditCard
 
         self._rotate_model(
@@ -179,8 +183,14 @@ class Command(BaseCommand):
         )
 
     def _rotate_members(
-        self, old_key, old_key_str, new_key, new_key_str, dry_run, totals
-    ):
+        self,
+        old_key: bytes,
+        old_key_str: str,
+        new_key: bytes,
+        new_key_str: str,
+        dry_run: bool,
+        totals: dict[str, int],
+    ) -> None:
         """Rotate Member._document and recompute document_hash with the new HMAC key."""
         from members.models import Member
 
@@ -227,7 +237,9 @@ class Command(BaseCommand):
         else:
             self.stdout.write("  No records needed updating")
 
-    def _rotate_share_tokens(self, old_key, new_key, dry_run, totals):
+    def _rotate_share_tokens(
+        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+    ) -> None:
         from security.models import CredentialShareToken
 
         self._rotate_model(
@@ -240,7 +252,9 @@ class Command(BaseCommand):
             label="security.CredentialShareToken",
         )
 
-    def _rotate_vault_items(self, old_key, new_key, dry_run, totals):
+    def _rotate_vault_items(
+        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+    ) -> None:
         """
         Rotate vault model fields that fall back to app-key encryption.
         Records encrypted with vault_key (not app key) are silently skipped.
@@ -299,15 +313,15 @@ class Command(BaseCommand):
 
     def _rotate_model(
         self,
-        model_class,
-        field_names: list,
+        model_class: type[Any],
+        field_names: list[str],
         old_key: bytes,
         new_key: bytes,
         dry_run: bool,
-        totals: dict,
+        totals: dict[str, int],
         label: str,
         best_effort: bool = False,
-    ):
+    ) -> None:
         """
         Rotate listed encrypted fields on a model using bulk_update.
 

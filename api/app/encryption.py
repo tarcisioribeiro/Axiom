@@ -2,7 +2,7 @@ import hashlib
 import logging
 import os
 import threading
-from typing import Any, Callable, Optional, overload
+from typing import Any, Callable, Optional, cast, overload
 
 from django.core.exceptions import ValidationError
 
@@ -26,11 +26,11 @@ class DecryptionError(EncryptionError):
     pass
 
 
-def get_decryption_cache() -> dict:
+def get_decryption_cache() -> dict[str, str]:
     """Retorna o cache de decriptacao para a thread atual."""
     if not hasattr(_decryption_cache, "cache"):
         _decryption_cache.cache = {}
-    return _decryption_cache.cache
+    return cast(dict[str, str], _decryption_cache.cache)
 
 
 def clear_decryption_cache() -> None:
@@ -49,7 +49,7 @@ class FieldEncryption:
     """
 
     @staticmethod
-    def get_encryption_key():
+    def get_encryption_key() -> bytes:
         """
         Obtem a chave de criptografia das variaveis de ambiente.
 
@@ -67,7 +67,7 @@ class FieldEncryption:
         return encryption_key.encode()
 
     @staticmethod
-    def encrypt_data(data):
+    def encrypt_data(data: Optional[str]) -> Optional[str]:
         """
         Criptografa dados sensiveis.
 
@@ -98,7 +98,9 @@ class FieldEncryption:
             raise EncryptionError("Tipo de dado invalido para criptografia")
 
     @staticmethod
-    def decrypt_data(encrypted_data, use_cache=True):
+    def decrypt_data(
+        encrypted_data: Optional[str], use_cache: bool = True
+    ) -> Optional[str]:
         """
         Descriptografa dados sensiveis.
 
@@ -196,7 +198,7 @@ class FieldEncryption:
             raise DecryptionError("Erro ao descriptografar dados")
 
     @staticmethod
-    def generate_key():
+    def generate_key() -> str:
         """
         Gera uma nova chave de criptografia.
         Use esta função apenas para gerar a chave inicial.

@@ -37,6 +37,7 @@ import base64
 import json
 import os
 from datetime import datetime
+from typing import Any
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
@@ -49,7 +50,7 @@ _BACKUP_KEY_ENV = "BACKUP_ENCRYPTION_KEY_PREVIOUS"
 class Command(BaseCommand):
     help = "Diagnose, reset, or restore the security vault for a user."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--username",
             required=True,
@@ -99,7 +100,7 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         from members.models import Member
         from security.models import (
             Archive,
@@ -149,16 +150,16 @@ class Command(BaseCommand):
 
     def _diagnose(
         self,
-        username,
-        user,
-        member,
-        test_password,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        test_password: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         self.stdout.write(
             f"\n=== Vault Diagnostics for '{username}'" f" (user_id={user.id}) ===\n"
         )
@@ -265,7 +266,7 @@ class Command(BaseCommand):
                 )
             )
 
-    def _test_password(self, vault_config, master_password: str) -> None:
+    def _test_password(self, vault_config: Any, master_password: str) -> None:
         """Try to decrypt the vault_key with the given master password."""
         from app.encryption import DecryptionError
         from security.vault_crypto import VaultEncryption
@@ -305,15 +306,15 @@ class Command(BaseCommand):
 
     def _save_snapshot(
         self,
-        username,
-        user,
-        member,
-        vault_config,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        vault_config: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+    ) -> str:
         """Persist VaultConfig credentials + item IDs to a JSON file."""
         os.makedirs(SNAPSHOT_DIR, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -372,15 +373,15 @@ class Command(BaseCommand):
 
     def _reset(
         self,
-        username,
-        user,
-        member,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         try:
             vault_config = VaultConfig.objects.get(owner=member)
         except VaultConfig.DoesNotExist:
@@ -469,16 +470,16 @@ class Command(BaseCommand):
 
     def _restore_snapshot(
         self,
-        snapshot_file,
-        member,
-        user,
-        force_restore,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        snapshot_file: str,
+        member: Any,
+        user: Any,
+        force_restore: bool,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         """Restore VaultConfig from a snapshot and undelete recorded items."""
         try:
             with open(snapshot_file) as f:

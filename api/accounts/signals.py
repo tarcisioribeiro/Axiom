@@ -7,6 +7,7 @@ Também cria automaticamente uma receita quando uma conta é criada com saldo in
 """
 
 from decimal import Decimal
+from typing import Any, Type
 
 from django.db import models, transaction
 from django.db.models.signals import post_delete, post_save
@@ -14,7 +15,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 
-def update_account_balance(account):
+def update_account_balance(account: Any) -> None:
     """
     Atualiza o saldo de uma conta com base em suas receitas e despesas.
 
@@ -51,7 +52,9 @@ def update_account_balance(account):
 
 
 @receiver(post_save, sender="revenues.Revenue")
-def update_balance_on_revenue_save(sender, instance, created, **kwargs):
+def update_balance_on_revenue_save(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma receita é criada ou editada.
 
@@ -71,7 +74,9 @@ def update_balance_on_revenue_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender="revenues.Revenue")
-def update_balance_on_revenue_delete(sender, instance, **kwargs):
+def update_balance_on_revenue_delete(
+    sender: Type[Any], instance: Any, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma receita é deletada.
 
@@ -89,7 +94,9 @@ def update_balance_on_revenue_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="expenses.Expense")
-def update_balance_on_expense_save(sender, instance, created, **kwargs):
+def update_balance_on_expense_save(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma despesa é criada ou editada.
 
@@ -109,7 +116,9 @@ def update_balance_on_expense_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender="expenses.Expense")
-def update_balance_on_expense_delete(sender, instance, **kwargs):
+def update_balance_on_expense_delete(
+    sender: Type[Any], instance: Any, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma despesa é deletada.
 
@@ -127,7 +136,9 @@ def update_balance_on_expense_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="accounts.Account")
-def create_initial_revenue_on_account_creation(sender, instance, created, **kwargs):
+def create_initial_revenue_on_account_creation(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Cria automaticamente uma receita quando uma conta é criada com saldo inicial.
 
