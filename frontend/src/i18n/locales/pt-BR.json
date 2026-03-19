@@ -899,7 +899,11 @@
           "payable_due": "A Pagar",
           "loan_due": "Empréstimo"
         }
-      }
+      },
+      "selectForecastPeriod": "Selecionar período da projeção",
+      "selectEvolutionPeriod": "Selecionar período de evolução",
+      "selectCard": "Selecionar cartão",
+      "selectBill": "Selecionar fatura"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
