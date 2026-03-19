@@ -178,7 +178,10 @@ export default function Dashboard() {
     () => accountBalancesQuery.data ?? [],
     [accountBalancesQuery.data]
   );
-  const creditCards = useMemo(() => creditCardsQuery.data ?? [], [creditCardsQuery.data]);
+  const creditCards = useMemo(
+    () => creditCardsQuery.data ?? [],
+    [creditCardsQuery.data]
+  );
   const creditCardBills = useMemo(
     () => creditCardBillsQuery.data ?? [],
     [creditCardBillsQuery.data]
@@ -194,8 +197,7 @@ export default function Dashboard() {
   );
   const cashFlowForecast = cashFlowForecastQuery.data ?? null;
   const financialAlerts = useMemo(
-    () =>
-      Array.isArray(financialAlertsQuery.data) ? financialAlertsQuery.data : [],
+    () => (Array.isArray(financialAlertsQuery.data) ? financialAlertsQuery.data : []),
     [financialAlertsQuery.data]
   );
 
@@ -679,7 +681,9 @@ export default function Dashboard() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle as="h2">{t('pages.dashboard.cashFlowProjection')}</CardTitle>
+                  <CardTitle as="h2">
+                    {t('pages.dashboard.cashFlowProjection')}
+                  </CardTitle>
                 </div>
                 <Select
                   value={String(forecastDays)}

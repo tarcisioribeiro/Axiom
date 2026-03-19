@@ -295,6 +295,13 @@ CACHES = {
     },
 }
 
+# Use in-memory cache for tests — no Redis required in CI
+if "test" in sys.argv:
+    CACHES["default"] = {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
+
 # TTLs de cache especificos (em segundos)
 CACHE_TTL_DASHBOARD_STATS = 60  # 1 minuto - dados mudam frequentemente
 CACHE_TTL_ACCOUNT_BALANCES = 30  # 30 segundos - saldos sao criticos

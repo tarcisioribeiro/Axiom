@@ -94,11 +94,18 @@ export default function Accounts() {
     mutationFn: (data: AccountFormData) => accountsService.create(data),
     onSuccess: () => {
       void invalidateAccounts();
-      toast({ title: t('pages.accounts.created'), description: t('pages.accounts.createdDesc') });
+      toast({
+        title: t('pages.accounts.created'),
+        description: t('pages.accounts.createdDesc'),
+      });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -107,11 +114,18 @@ export default function Accounts() {
       accountsService.update(id, data),
     onSuccess: () => {
       void invalidateAccounts();
-      toast({ title: t('pages.accounts.updated'), description: t('pages.accounts.updatedDesc') });
+      toast({
+        title: t('pages.accounts.updated'),
+        description: t('pages.accounts.updatedDesc'),
+      });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -119,10 +133,17 @@ export default function Accounts() {
     mutationFn: (id: number) => accountsService.delete(id),
     onSuccess: () => {
       void invalidateAccounts();
-      toast({ title: t('pages.accounts.deleted'), description: t('pages.accounts.deletedDesc') });
+      toast({
+        title: t('pages.accounts.deleted'),
+        description: t('pages.accounts.deletedDesc'),
+      });
     },
     onError: (error: unknown) => {
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 

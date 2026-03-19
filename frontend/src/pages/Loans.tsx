@@ -23,7 +23,10 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+const STATUS_VARIANTS: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
   active: 'default',
   paid: 'secondary',
   defaulted: 'destructive',
@@ -34,10 +37,20 @@ export default function Loans() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
-    accounts, members, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedLoan, isSubmitting,
-    searchTerm, setSearchTerm, filteredLoans,
-    handleCreate, handleEdit, handleDelete, handleSubmit,
+    accounts,
+    members,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedLoan,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    filteredLoans,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
   } = useLoansPage();
 
   if (isLoading) return <LoadingState />;
@@ -47,7 +60,11 @@ export default function Loans() {
       <PageHeader
         title={t('pages.loans.title')}
         icon={<HandCoins />}
-        action={{ label: t('pages.loans.newBtn'), icon: <Plus className="h-4 w-4" />, onClick: handleCreate }}
+        action={{
+          label: t('pages.loans.newBtn'),
+          icon: <Plus className="h-4 w-4" />,
+          onClick: handleCreate,
+        }}
       />
 
       <div className="flex gap-4">
@@ -62,16 +79,23 @@ export default function Loans() {
       {filteredLoans.length === 0 ? (
         <EmptyState
           icon={<HandCoins className="h-12 w-12 text-muted-foreground" />}
-          message={searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')}
+          message={
+            searchTerm ? t('pages.loans.emptySearch') : t('pages.loans.emptyState')
+          }
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredLoans.map((loan) => (
-            <div key={loan.id} className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md">
+            <div
+              key={loan.id}
+              className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md"
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="font-semibold">{loan.description}</h3>
-                  <p className="text-sm">{translate('expenseCategories', loan.category)}</p>
+                  <p className="text-sm">
+                    {translate('expenseCategories', loan.category)}
+                  </p>
                 </div>
                 <Badge variant={STATUS_VARIANTS[loan.status] ?? 'default'}>
                   {translate('loanStatus', loan.status)}
@@ -79,26 +103,69 @@ export default function Loans() {
               </div>
 
               <div className="space-y-1 text-sm">
-                <div className="flex justify-between"><span>Valor Total:</span><span className="font-medium">{formatCurrency(loan.value)}</span></div>
-                <div className="flex justify-between"><span>Valor Pago:</span><span className="font-medium">{formatCurrency(loan.payed_value)}</span></div>
+                <div className="flex justify-between">
+                  <span>Valor Total:</span>
+                  <span className="font-medium">{formatCurrency(loan.value)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Valor Pago:</span>
+                  <span className="font-medium">
+                    {formatCurrency(loan.payed_value)}
+                  </span>
+                </div>
                 <div className="flex justify-between">
                   <span>Saldo:</span>
-                  <span className="font-medium text-destructive">{formatCurrency(parseFloat(loan.value) - parseFloat(loan.payed_value))}</span>
+                  <span className="font-medium text-destructive">
+                    {formatCurrency(
+                      parseFloat(loan.value) - parseFloat(loan.payed_value)
+                    )}
+                  </span>
                 </div>
-                <div className="flex justify-between"><span>Beneficiado:</span><span className="font-medium">{loan.benefited_name}</span></div>
-                <div className="flex justify-between"><span>Credor:</span><span className="font-medium">{loan.creditor_name}</span></div>
-                <div className="flex justify-between"><span>Parcelas:</span><span className="font-medium">{loan.installments}x</span></div>
+                <div className="flex justify-between">
+                  <span>Beneficiado:</span>
+                  <span className="font-medium">{loan.benefited_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Credor:</span>
+                  <span className="font-medium">{loan.creditor_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Parcelas:</span>
+                  <span className="font-medium">{loan.installments}x</span>
+                </div>
                 {loan.due_date && (
-                  <div className="flex justify-between"><span>Vencimento:</span><span className="font-medium">{formatDate(loan.due_date, 'dd/MM/yyyy')}</span></div>
+                  <div className="flex justify-between">
+                    <span>Vencimento:</span>
+                    <span className="font-medium">
+                      {formatDate(loan.due_date, 'dd/MM/yyyy')}
+                    </span>
+                  </div>
                 )}
               </div>
 
               <div className="flex items-center justify-end gap-1 border-t pt-2">
-                <ReceiptButton source={{ type: 'loan', data: loan }} memberName={getMemberDisplayName(loan.benefited_name, user)} variant="ghost" size="icon" />
-                <Button variant="ghost" size="icon" onClick={() => handleEdit(loan)} title={t('common.actions.edit')} aria-label={t('common.actions.edit')}>
+                <ReceiptButton
+                  source={{ type: 'loan', data: loan }}
+                  memberName={getMemberDisplayName(loan.benefited_name, user)}
+                  variant="ghost"
+                  size="icon"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(loan)}
+                  title={t('common.actions.edit')}
+                  aria-label={t('common.actions.edit')}
+                >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(loan)} title={t('common.actions.delete')} aria-label={t('common.actions.delete')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(loan)}
+                  title={t('common.actions.delete')}
+                  aria-label={t('common.actions.delete')}
+                >
                   <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>
                 {loan.contract_document && (
@@ -117,8 +184,12 @@ export default function Loans() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}</DialogTitle>
-            <DialogDescription>{selectedLoan ? t('pages.loans.editDesc') : t('pages.loans.newDesc')}</DialogDescription>
+            <DialogTitle>
+              {selectedLoan ? t('pages.loans.editTitle') : t('pages.loans.newTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedLoan ? t('pages.loans.editDesc') : t('pages.loans.newDesc')}
+            </DialogDescription>
           </DialogHeader>
           <LoanForm
             loan={selectedLoan}

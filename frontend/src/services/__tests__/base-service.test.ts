@@ -75,10 +75,9 @@ describe('BaseService', () => {
 
       await service.update(uuid, { name: 'Updated' });
 
-      expect(apiClient.put).toHaveBeenCalledWith(
-        `/api/v1/test/${uuid}/`,
-        { name: 'Updated' }
-      );
+      expect(apiClient.put).toHaveBeenCalledWith(`/api/v1/test/${uuid}/`, {
+        name: 'Updated',
+      });
     });
   });
 
@@ -89,10 +88,9 @@ describe('BaseService', () => {
 
       await service.patch(uuid, { name: 'Patched' });
 
-      expect(apiClient.patch).toHaveBeenCalledWith(
-        `/api/v1/test/${uuid}/`,
-        { name: 'Patched' }
-      );
+      expect(apiClient.patch).toHaveBeenCalledWith(`/api/v1/test/${uuid}/`, {
+        name: 'Patched',
+      });
     });
   });
 

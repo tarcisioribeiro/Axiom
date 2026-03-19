@@ -48,7 +48,11 @@ export function usePayablesPage(): UsePayablesPageReturn {
       setPayables(Array.isArray(payablesData) ? payablesData : []);
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
-      toast({ title: t('common.messages.loadError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
       setPayables([]);
       setCurrentUserMember(null);
     } finally {
@@ -79,10 +83,17 @@ export function usePayablesPage(): UsePayablesPageReturn {
     if (!confirmed) return;
     try {
       await payablesService.delete(payable.id);
-      toast({ title: t('pages.payables.deleted'), description: t('pages.payables.deletedDesc') });
+      toast({
+        title: t('pages.payables.deleted'),
+        description: t('pages.payables.deletedDesc'),
+      });
       void loadData();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -92,15 +103,25 @@ export function usePayablesPage(): UsePayablesPageReturn {
       const dataToSend = { ...data, member: currentUserMember?.id ?? null };
       if (selectedPayable) {
         await payablesService.update(selectedPayable.id, dataToSend);
-        toast({ title: t('pages.payables.updated'), description: t('pages.payables.updatedDesc') });
+        toast({
+          title: t('pages.payables.updated'),
+          description: t('pages.payables.updatedDesc'),
+        });
       } else {
         await payablesService.create(dataToSend);
-        toast({ title: t('pages.payables.created'), description: t('pages.payables.createdDesc') });
+        toast({
+          title: t('pages.payables.created'),
+          description: t('pages.payables.createdDesc'),
+        });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -113,10 +134,20 @@ export function usePayablesPage(): UsePayablesPageReturn {
   );
 
   return {
-    payables, currentUserMember, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedPayable, isSubmitting,
-    searchTerm, setSearchTerm, filteredPayables,
-    handleCreate, handleEdit, handleDelete, handleSubmit,
+    payables,
+    currentUserMember,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedPayable,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    filteredPayables,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
   };
 }
 

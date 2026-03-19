@@ -85,7 +85,9 @@ export function ExpensesFilters({
           <SelectContent>
             <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
             {Object.entries(TRANSLATIONS.expenseCategories).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {v}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -104,11 +106,21 @@ export function ExpensesFilters({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-1">
           <span className="text-sm">{t('pages.expenses.dateFrom')}</span>
-          <DatePicker value={startDate} onChange={setStartDate} placeholder={t('pages.expenses.dateFromPlaceholder')} clearable />
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder={t('pages.expenses.dateFromPlaceholder')}
+            clearable
+          />
         </div>
         <div className="space-y-1">
           <span className="text-sm">{t('pages.expenses.dateTo')}</span>
-          <DatePicker value={endDate} onChange={setEndDate} placeholder={t('pages.expenses.datePlaceholder')} clearable />
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder={t('pages.expenses.datePlaceholder')}
+            clearable
+          />
         </div>
         <div className="space-y-1">
           <span className="text-sm">{t('common.fields.account')}</span>
@@ -117,7 +129,9 @@ export function ExpensesFilters({
               <Button variant="outline" className="w-full justify-between">
                 {selectedAccounts.length === 0
                   ? t('pages.expenses.allAccounts')
-                  : t('pages.expenses.selectedAccounts', { count: selectedAccounts.length })}
+                  : t('pages.expenses.selectedAccounts', {
+                      count: selectedAccounts.length,
+                    })}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -144,9 +158,7 @@ export function ExpensesFilters({
       </div>
 
       <div className="flex items-center justify-between border-t pt-2">
-        <span className="text-sm">
-          {t('pages.expenses.foundExpenses', { count })}
-        </span>
+        <span className="text-sm">{t('pages.expenses.foundExpenses', { count })}</span>
         <span className="text-lg font-bold text-destructive">
           {t('pages.expenses.total')} {formatCurrency(totalExpenses)}
         </span>

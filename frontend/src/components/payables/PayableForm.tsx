@@ -19,10 +19,28 @@ import { formatLocalDate } from '@/lib/utils';
 import type { Payable, PayableFormData } from '@/types';
 
 const EXPENSE_CATEGORIES = [
-  'food and drink', 'bills and services', 'electronics', 'family and friends', 'pets',
-  'digital signs', 'house', 'purchases', 'donate', 'education', 'loans', 'entertainment',
-  'taxes', 'investments', 'others', 'vestuary', 'health and care', 'professional services',
-  'supermarket', 'rates', 'transport', 'travels',
+  'food and drink',
+  'bills and services',
+  'electronics',
+  'family and friends',
+  'pets',
+  'digital signs',
+  'house',
+  'purchases',
+  'donate',
+  'education',
+  'loans',
+  'entertainment',
+  'taxes',
+  'investments',
+  'others',
+  'vestuary',
+  'health and care',
+  'professional services',
+  'supermarket',
+  'rates',
+  'transport',
+  'travels',
 ];
 
 const PAYABLE_STATUSES = ['active', 'paid', 'overdue', 'cancelled'];
@@ -34,7 +52,12 @@ interface PayableFormProps {
   isLoading: boolean;
 }
 
-export function PayableForm({ payable, onSubmit, onCancel, isLoading }: PayableFormProps) {
+export function PayableForm({
+  payable,
+  onSubmit,
+  onCancel,
+  isLoading,
+}: PayableFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<PayableFormData>(() =>
     payable
@@ -58,7 +81,8 @@ export function PayableForm({ payable, onSubmit, onCancel, isLoading }: PayableF
         }
   );
 
-  const set = (patch: Partial<PayableFormData>) => setFormData((prev) => ({ ...prev, ...patch }));
+  const set = (patch: Partial<PayableFormData>) =>
+    setFormData((prev) => ({ ...prev, ...patch }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,31 +105,61 @@ export function PayableForm({ payable, onSubmit, onCancel, isLoading }: PayableF
 
         <div>
           <Label htmlFor="value">Valor Total *</Label>
-          <Input id="value" type="number" step="0.01" value={formData.value} onChange={(e) => set({ value: parseFloat(e.target.value) })} required />
+          <Input
+            id="value"
+            type="number"
+            step="0.01"
+            value={formData.value}
+            onChange={(e) => set({ value: parseFloat(e.target.value) })}
+            required
+          />
         </div>
 
         <div>
           <Label htmlFor="paid_value">Valor Já Pago</Label>
-          <Input id="paid_value" type="number" step="0.01" value={formData.paid_value ?? 0} onChange={(e) => set({ paid_value: parseFloat(e.target.value) })} />
+          <Input
+            id="paid_value"
+            type="number"
+            step="0.01"
+            value={formData.paid_value ?? 0}
+            onChange={(e) => set({ paid_value: parseFloat(e.target.value) })}
+          />
         </div>
 
         <div>
           <Label htmlFor="date">Data de Registro *</Label>
-          <DatePicker value={formData.date ?? undefined} onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })} placeholder="Selecione a data" />
+          <DatePicker
+            value={formData.date ?? undefined}
+            onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
+            placeholder="Selecione a data"
+          />
         </div>
 
         <div>
           <Label htmlFor="due_date">Data de Vencimento</Label>
-          <DatePicker value={formData.due_date ?? undefined} onChange={(date) => set({ due_date: date ? formatLocalDate(date) : undefined })} placeholder="Selecione a data de vencimento" />
+          <DatePicker
+            value={formData.due_date ?? undefined}
+            onChange={(date) =>
+              set({ due_date: date ? formatLocalDate(date) : undefined })
+            }
+            placeholder="Selecione a data de vencimento"
+          />
         </div>
 
         <div>
           <Label htmlFor="category">Categoria *</Label>
-          <Select value={formData.category} onValueChange={(value) => set({ category: value })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => set({ category: value })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {EXPENSE_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>{translate('expenseCategories', cat)}</SelectItem>
+                <SelectItem key={cat} value={cat}>
+                  {translate('expenseCategories', cat)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -115,12 +169,18 @@ export function PayableForm({ payable, onSubmit, onCancel, isLoading }: PayableF
           <Label htmlFor="status">Status</Label>
           <Select
             value={formData.status}
-            onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') => set({ status: value })}
+            onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') =>
+              set({ status: value })
+            }
           >
-            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               {PAYABLE_STATUSES.map((status) => (
-                <SelectItem key={status} value={status}>{translate('payableStatus', status)}</SelectItem>
+                <SelectItem key={status} value={status}>
+                  {translate('payableStatus', status)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -139,9 +199,18 @@ export function PayableForm({ payable, onSubmit, onCancel, isLoading }: PayableF
       </div>
 
       <div className="flex justify-end gap-2 border-t pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>{t('common.actions.cancel')}</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t('common.actions.cancel')}
+        </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('common.actions.saving')}</> : t('common.actions.save')}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
+            </>
+          ) : (
+            t('common.actions.save')
+          )}
         </Button>
       </div>
     </form>
