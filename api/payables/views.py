@@ -19,13 +19,13 @@ class PayableCreateListView(BaseListCreateView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Payable.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Payable.objects.all()  # GlobalDefaultPermission
     serializer_class = PayableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("member")
+        return Payable.objects.filter(created_by=self.request.user).select_related(
+            "member"
+        )
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -48,13 +48,13 @@ class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Payable.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Payable.objects.all()  # GlobalDefaultPermission
     serializer_class = PayableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("member")
+        return Payable.objects.filter(created_by=self.request.user).select_related(
+            "member"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)

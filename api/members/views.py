@@ -39,7 +39,7 @@ class MemberCreateListView(BaseListCreateView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Member.objects.filter(is_deleted=False)
+    queryset = Member.objects.all()
     serializer_class = MemberSerializer
 
 
@@ -60,7 +60,7 @@ class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Member.objects.filter(is_deleted=False)
+    queryset = Member.objects.all()
     serializer_class = MemberSerializer
 
 
@@ -103,7 +103,7 @@ def get_member_permissions(request, pk):
         JSON com lista de codenames de permissões do membro ou erro 404
     """
     try:
-        member = Member.objects.get(pk=pk, is_deleted=False)
+        member = Member.objects.get(pk=pk)
 
         # Verificar se o membro tem um usuário associado
         if not member.user:
@@ -147,7 +147,7 @@ def update_member_permissions(request, pk):
         JSON com mensagem de sucesso e novas permissões ou erro
     """
     try:
-        member = Member.objects.get(pk=pk, is_deleted=False)
+        member = Member.objects.get(pk=pk)
 
         # Verificar se o membro tem um usuário associado
         if not member.user:
@@ -257,7 +257,7 @@ class MemberFinancialReportView(APIView):
     queryset = Member.objects.all()
 
     def get(self, request, pk):
-        member = get_object_or_404(Member, pk=pk, is_deleted=False)
+        member = get_object_or_404(Member, pk=pk)
 
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
@@ -278,9 +278,9 @@ class MemberFinancialReportView(APIView):
                 "payed": e.payed,
                 "merchant": e.merchant or "",
             }
-            for e in Expense.objects.filter(
-                member=member, is_deleted=False, **date_filter
-            ).order_by("-date")
+            for e in Expense.objects.filter(member=member, **date_filter).order_by(
+                "-date"
+            )
         ]
 
         revenues = [
@@ -293,9 +293,9 @@ class MemberFinancialReportView(APIView):
                 "received": r.received,
                 "source": r.source or "",
             }
-            for r in Revenue.objects.filter(
-                member=member, is_deleted=False, **date_filter
-            ).order_by("-date")
+            for r in Revenue.objects.filter(member=member, **date_filter).order_by(
+                "-date"
+            )
         ]
 
         loans_as_benefited = [
@@ -308,9 +308,7 @@ class MemberFinancialReportView(APIView):
                 "status": lo.status,
                 "creditor": lo.creditor.name,
             }
-            for lo in Loan.objects.filter(
-                benefited=member, is_deleted=False, **date_filter
-            )
+            for lo in Loan.objects.filter(benefited=member, **date_filter)
             .select_related("creditor")
             .order_by("-date")
         ]
@@ -325,9 +323,7 @@ class MemberFinancialReportView(APIView):
                 "status": lo.status,
                 "benefited": lo.benefited.name,
             }
-            for lo in Loan.objects.filter(
-                creditor=member, is_deleted=False, **date_filter
-            )
+            for lo in Loan.objects.filter(creditor=member, **date_filter)
             .select_related("benefited")
             .order_by("-date")
         ]
@@ -343,9 +339,9 @@ class MemberFinancialReportView(APIView):
                 "status": p.status,
                 "category": p.category,
             }
-            for p in Payable.objects.filter(
-                member=member, is_deleted=False, **date_filter
-            ).order_by("-date")
+            for p in Payable.objects.filter(member=member, **date_filter).order_by(
+                "-date"
+            )
         ]
 
         transfers = [
@@ -357,9 +353,9 @@ class MemberFinancialReportView(APIView):
                 "category": t.category,
                 "transfered": t.transfered,
             }
-            for t in Transfer.objects.filter(
-                member=member, is_deleted=False, **date_filter
-            ).order_by("-date")
+            for t in Transfer.objects.filter(member=member, **date_filter).order_by(
+                "-date"
+            )
         ]
 
         total_expenses = sum(Decimal(e["value"]) for e in expenses)

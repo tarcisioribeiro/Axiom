@@ -39,11 +39,11 @@ class VaultListCreateView(BaseListCreateView):
     POST: Cria um novo cofre
     """
 
-    queryset = Vault.objects.filter(is_deleted=False)
+    queryset = Vault.objects.all()
     serializer_class = VaultSerializer
 
     def get_queryset(self):
-        queryset = Vault.objects.filter(is_deleted=False, created_by=self.request.user)
+        queryset = Vault.objects.filter(created_by=self.request.user)
         account_id = self.request.query_params.get("account")
         is_active = self.request.query_params.get("is_active")
 
@@ -67,13 +67,13 @@ class VaultDetailView(BaseRetrieveUpdateDestroyView):
     DELETE: Remove um cofre (soft delete)
     """
 
-    queryset = Vault.objects.filter(is_deleted=False)
+    queryset = Vault.objects.all()
     serializer_class = VaultSerializer
 
     def get_queryset(self):
-        return Vault.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account")
+        return Vault.objects.filter(created_by=self.request.user).select_related(
+            "account"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -95,9 +95,7 @@ class VaultDepositView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         try:
-            vault = Vault.objects.select_for_update().get(
-                pk=pk, is_deleted=False, is_active=True
-            )
+            vault = Vault.objects.select_for_update().get(pk=pk, is_active=True)
             # Lock the associated account to prevent race conditions
             account = Account.objects.select_for_update().get(pk=vault.account_id)
             vault.account = account
@@ -157,9 +155,7 @@ class VaultWithdrawView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         try:
-            vault = Vault.objects.select_for_update().get(
-                pk=pk, is_deleted=False, is_active=True
-            )
+            vault = Vault.objects.select_for_update().get(pk=pk, is_active=True)
             # Lock the associated account to prevent race conditions
             account = Account.objects.select_for_update().get(pk=vault.account_id)
             vault.account = account
@@ -219,9 +215,7 @@ class VaultApplyYieldView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         try:
-            vault = Vault.objects.select_for_update().get(
-                pk=pk, is_deleted=False, is_active=True
-            )
+            vault = Vault.objects.select_for_update().get(pk=pk, is_active=True)
         except Vault.DoesNotExist:
             return Response(
                 {"error": "Cofre não encontrado ou inativo"},
@@ -260,7 +254,7 @@ class VaultUpdateYieldView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         try:
-            vault = Vault.objects.select_for_update().get(pk=pk, is_deleted=False)
+            vault = Vault.objects.select_for_update().get(pk=pk)
         except Vault.DoesNotExist:
             return Response(
                 {"error": "Cofre não encontrado"}, status=status.HTTP_404_NOT_FOUND
@@ -335,15 +329,13 @@ class VaultTransactionListView(generics.ListAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = VaultTransactionSerializer
-    queryset = VaultTransaction.objects.filter(
-        is_deleted=False
-    )  # Required for GlobalDefaultPermission
+    queryset = VaultTransaction.objects.all()  # Required for GlobalDefaultPermission
 
     def get_queryset(self):
         vault_id = self.kwargs.get("pk")
-        queryset = VaultTransaction.objects.filter(
-            vault_id=vault_id, is_deleted=False
-        ).select_related("vault")
+        queryset = VaultTransaction.objects.filter(vault_id=vault_id).select_related(
+            "vault"
+        )
 
         # Filtros opcionais
         transaction_type = self.request.query_params.get("type")
@@ -363,7 +355,7 @@ class AllVaultTransactionsView(generics.ListAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = VaultTransactionSerializer
-    queryset = VaultTransaction.objects.filter(is_deleted=False)
+    queryset = VaultTransaction.objects.all()
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related("vault", "vault__account")
@@ -397,9 +389,7 @@ class VaultTransactionUpdateView(APIView):
     @transaction.atomic
     def patch(self, request, pk):
         try:
-            vault_transaction = VaultTransaction.objects.select_for_update().get(
-                pk=pk, is_deleted=False
-            )
+            vault_transaction = VaultTransaction.objects.select_for_update().get(pk=pk)
         except VaultTransaction.DoesNotExist:
             return Response(
                 {"error": "Transação não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -447,9 +437,7 @@ class VaultTransactionUpdateView(APIView):
     @transaction.atomic
     def delete(self, request, pk):
         try:
-            vault_transaction = VaultTransaction.objects.select_for_update().get(
-                pk=pk, is_deleted=False
-            )
+            vault_transaction = VaultTransaction.objects.select_for_update().get(pk=pk)
         except VaultTransaction.DoesNotExist:
             return Response(
                 {"error": "Transação não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -495,7 +483,7 @@ class FinancialGoalListCreateView(BaseListCreateView):
     POST: Cria uma nova meta
     """
 
-    queryset = FinancialGoal.objects.filter(is_deleted=False)
+    queryset = FinancialGoal.objects.all()
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -503,9 +491,7 @@ class FinancialGoalListCreateView(BaseListCreateView):
         return FinancialGoalSerializer
 
     def get_queryset(self):
-        queryset = FinancialGoal.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        )
+        queryset = FinancialGoal.objects.filter(created_by=self.request.user)
         is_active = self.request.query_params.get("is_active")
         is_completed = self.request.query_params.get("is_completed")
         category = self.request.query_params.get("category")
@@ -532,12 +518,12 @@ class FinancialGoalDetailView(BaseRetrieveUpdateDestroyView):
     DELETE: Remove uma meta (soft delete)
     """
 
-    queryset = FinancialGoal.objects.filter(is_deleted=False)
+    queryset = FinancialGoal.objects.all()
     serializer_class = FinancialGoalSerializer
 
     def get_queryset(self):
         return FinancialGoal.objects.filter(
-            is_deleted=False, created_by=self.request.user
+            created_by=self.request.user
         ).prefetch_related("vaults", "vaults__account")
 
     def perform_update(self, serializer):
@@ -559,7 +545,7 @@ class FinancialGoalCheckCompletionView(APIView):
 
     def post(self, request, pk):
         try:
-            goal = FinancialGoal.objects.get(pk=pk, is_deleted=False, is_active=True)
+            goal = FinancialGoal.objects.get(pk=pk, is_active=True)
         except FinancialGoal.DoesNotExist:
             return Response(
                 {"error": "Meta não encontrada ou inativa"},
@@ -598,7 +584,7 @@ class FinancialGoalAddVaultsView(APIView):
 
     def post(self, request, pk):
         try:
-            goal = FinancialGoal.objects.get(pk=pk, is_deleted=False)
+            goal = FinancialGoal.objects.get(pk=pk)
         except FinancialGoal.DoesNotExist:
             return Response(
                 {"error": "Meta não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -612,9 +598,7 @@ class FinancialGoalAddVaultsView(APIView):
             )
 
         # Verificar se os cofres existem
-        vaults = Vault.objects.filter(
-            id__in=vault_ids, is_deleted=False, is_active=True
-        )
+        vaults = Vault.objects.filter(id__in=vault_ids, is_active=True)
 
         if not vaults.exists():
             return Response(
@@ -654,7 +638,7 @@ class FinancialGoalRemoveVaultsView(APIView):
 
     def post(self, request, pk):
         try:
-            goal = FinancialGoal.objects.get(pk=pk, is_deleted=False)
+            goal = FinancialGoal.objects.get(pk=pk)
         except FinancialGoal.DoesNotExist:
             return Response(
                 {"error": "Meta não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -688,13 +672,13 @@ class FinancialGoalRemoveVaultsView(APIView):
 class VaultRecurringContributionListCreateView(BaseListCreateView):
     """Lista e cria contribuições recorrentes de um cofre específico."""
 
-    queryset = VaultRecurringContribution.objects.filter(is_deleted=False)
+    queryset = VaultRecurringContribution.objects.all()
     serializer_class = VaultRecurringContributionSerializer
 
     def get_queryset(self):
         vault_id = self.kwargs.get("vault_pk")
         qs = VaultRecurringContribution.objects.filter(
-            is_deleted=False, vault_id=vault_id
+            vault_id=vault_id
         ).select_related("vault", "vault__account", "fixed_expense")
         return qs
 
@@ -705,9 +689,7 @@ class VaultRecurringContributionListCreateView(BaseListCreateView):
 
     def perform_create(self, serializer):
         vault_id = self.kwargs.get("vault_pk")
-        vault = Vault.objects.select_related("account").get(
-            pk=vault_id, is_deleted=False
-        )
+        vault = Vault.objects.select_related("account").get(pk=vault_id)
 
         contribution = serializer.save(
             vault=vault,
@@ -739,13 +721,13 @@ class VaultRecurringContributionListCreateView(BaseListCreateView):
 class VaultRecurringContributionDetailView(BaseRetrieveUpdateDestroyView):
     """Detalhe, atualização e exclusão de contribuição recorrente."""
 
-    queryset = VaultRecurringContribution.objects.filter(is_deleted=False)
+    queryset = VaultRecurringContribution.objects.all()
     serializer_class = VaultRecurringContributionSerializer
 
     def get_queryset(self):
-        return VaultRecurringContribution.objects.filter(
-            is_deleted=False
-        ).select_related("vault", "vault__account", "fixed_expense")
+        return VaultRecurringContribution.objects.select_related(
+            "vault", "vault__account", "fixed_expense"
+        )
 
     def perform_update(self, serializer):
         contribution = serializer.save(updated_by=self.request.user)
@@ -805,7 +787,7 @@ class GenerateVaultContributionsView(APIView):
             month_str = f"{year_int:04d}-{month_int:02d}"
 
         contributions = VaultRecurringContribution.objects.filter(
-            is_deleted=False, is_active=True
+            is_active=True
         ).select_related("vault", "vault__account")
 
         generated = []
@@ -887,14 +869,13 @@ class VaultContributionHistoryView(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     serializer_class = VaultTransactionSerializer
-    queryset = VaultTransaction.objects.filter(is_deleted=False)
+    queryset = VaultTransaction.objects.all()
 
     def get_queryset(self):
         vault_id = self.kwargs.get("vault_pk")
         return (
             VaultTransaction.objects.filter(
                 vault_id=vault_id,
-                is_deleted=False,
                 recurring_contribution__isnull=False,
             )
             .select_related("vault", "recurring_contribution")

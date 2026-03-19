@@ -30,7 +30,6 @@ def _generate_notifications(member):
         owner=member,
         scheduled_date=today,
         status__in=["pending", "in_progress"],
-        is_deleted=False,
     )
     for task in today_tasks:
         Notification.objects.get_or_create(
@@ -51,7 +50,6 @@ def _generate_notifications(member):
         owner=member,
         scheduled_date__lt=today,
         status__in=["pending", "in_progress"],
-        is_deleted=False,
     )
     for task in overdue_tasks:
         Notification.objects.get_or_create(
@@ -73,16 +71,12 @@ def _generate_notifications(member):
     Notification.objects.filter(
         owner=member,
         content_type="task_instance",
-        is_deleted=False,
     ).exclude(
         object_id__in=TaskInstance.objects.filter(
             owner=member,
             status__in=["pending", "in_progress"],
-            is_deleted=False,
         ).values_list("id", flat=True)
-    ).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
     # --- Payable ---
     from payables.models import Payable
@@ -92,7 +86,6 @@ def _generate_notifications(member):
         member=member,
         due_date__range=[today, soon],
         status="active",
-        is_deleted=False,
     )
     for payable in due_soon_payables:
         Notification.objects.get_or_create(
@@ -113,7 +106,6 @@ def _generate_notifications(member):
         member=member,
         due_date__lt=today,
         status__in=["active", "overdue"],
-        is_deleted=False,
     )
     for payable in overdue_payables:
         Notification.objects.get_or_create(
@@ -133,23 +125,18 @@ def _generate_notifications(member):
     Notification.objects.filter(
         owner=member,
         content_type="payable",
-        is_deleted=False,
     ).exclude(
         object_id__in=Payable.objects.filter(
             member=member,
             status__in=["active", "overdue"],
-            is_deleted=False,
         ).values_list("id", flat=True)
-    ).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
     # --- Loan ---
     from loans.models import Loan
 
     member_loans = Loan.objects.filter(
         Q(benefited=member) | Q(creditor=member),
-        is_deleted=False,
     )
 
     # Loans próximos do vencimento
@@ -194,22 +181,19 @@ def _generate_notifications(member):
     active_loan_ids = Loan.objects.filter(
         Q(benefited=member) | Q(creditor=member),
         status__in=["active", "overdue"],
-        is_deleted=False,
     ).values_list("id", flat=True)
     Notification.objects.filter(
         owner=member,
         content_type="loan",
-        is_deleted=False,
-    ).exclude(object_id__in=active_loan_ids).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).exclude(
+        object_id__in=active_loan_ids
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
     # --- CreditCardBill ---
     from credit_cards.models import CreditCardBill
 
     member_bills = CreditCardBill.objects.filter(
         credit_card__owner=member,
-        is_deleted=False,
     )
 
     # Bills próximas do vencimento
@@ -254,15 +238,13 @@ def _generate_notifications(member):
     active_bill_ids = CreditCardBill.objects.filter(
         credit_card__owner=member,
         status__in=["open", "closed"],
-        is_deleted=False,
     ).values_list("id", flat=True)
     Notification.objects.filter(
         owner=member,
         content_type="bill",
-        is_deleted=False,
-    ).exclude(object_id__in=active_bill_ids).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).exclude(
+        object_id__in=active_bill_ids
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
 
 class NotificationListView(generics.ListAPIView):
@@ -271,14 +253,13 @@ class NotificationListView(generics.ListAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.filter(is_deleted=False)
+    queryset = Notification.objects.all()
 
     def get_queryset(self):
         member = Member.objects.select_related("user").get(user=self.request.user)
         _generate_notifications(member)
         return Notification.objects.filter(
             owner=member,
-            is_deleted=False,
         ).select_related("owner")
 
 
@@ -288,14 +269,13 @@ class NotificationUpdateView(generics.UpdateAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.filter(is_deleted=False)
+    queryset = Notification.objects.all()
     http_method_names = ["patch"]
 
     def get_queryset(self):
         member = Member.objects.select_related("user").get(user=self.request.user)
         return Notification.objects.filter(
             owner=member,
-            is_deleted=False,
         ).select_related("owner")
 
 
@@ -306,7 +286,6 @@ def mark_all_read(request):
     count = Notification.objects.filter(
         owner=member,
         is_read=False,
-        is_deleted=False,
     ).update(is_read=True)
     return Response({"marked_read": count}, status=status.HTTP_200_OK)
 
@@ -318,6 +297,5 @@ def notification_summary(request):
     unread_count = Notification.objects.filter(
         owner=member,
         is_read=False,
-        is_deleted=False,
     ).count()
     return Response({"unread_count": unread_count}, status=status.HTTP_200_OK)

@@ -122,7 +122,7 @@ def get_current_user(request: Request) -> Response:
 
     # Buscar membro vinculado
     try:
-        member = Member.objects.get(user=user, is_deleted=False)
+        member = Member.objects.get(user=user)
         member_data = {
             "id": member.id,
             "name": member.name,

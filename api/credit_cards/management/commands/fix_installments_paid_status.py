@@ -99,7 +99,7 @@ class Command(BaseCommand):
             self.style.HTTP_INFO("\n--- RESET DE LIMITES DE CARTÕES ---\n")
         )
 
-        cards = CreditCard.objects.filter(is_deleted=False)
+        cards = CreditCard.objects.all()
 
         if not cards.exists():
             self.stdout.write("Nenhum cartão encontrado.")

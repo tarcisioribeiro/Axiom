@@ -56,7 +56,7 @@ class BankStatementImportCreateView(APIView):
 
         # Check duplicate
         if BankStatementImport.objects.filter(
-            owner=request.user, file_hash=file_hash, is_deleted=False
+            owner=request.user, file_hash=file_hash
         ).exists():
             return Response(
                 {"detail": "Arquivo já importado."},
@@ -129,7 +129,6 @@ class BankStatementImportListView(generics.ListAPIView):
     def get_queryset(self):
         return BankStatementImport.objects.filter(
             owner=self.request.user,
-            is_deleted=False,
         ).order_by("-created_at")
 
 
@@ -142,7 +141,6 @@ class BankStatementImportDetailView(generics.RetrieveAPIView):
     def get_queryset(self):
         return BankStatementImport.objects.filter(
             owner=self.request.user,
-            is_deleted=False,
         ).prefetch_related("entries")
 
 
@@ -154,9 +152,7 @@ class BankStatementMatchView(APIView):
 
     def post(self, request, pk):
         try:
-            stmt_import = BankStatementImport.objects.get(
-                pk=pk, owner=request.user, is_deleted=False
-            )
+            stmt_import = BankStatementImport.objects.get(pk=pk, owner=request.user)
         except BankStatementImport.DoesNotExist:
             return Response(
                 {"detail": "Importação não encontrada."},
@@ -180,7 +176,6 @@ class BankStatementEntryUpdateView(generics.UpdateAPIView):
     def get_queryset(self):
         return BankStatementEntry.objects.filter(
             statement_import__owner=self.request.user,
-            is_deleted=False,
         ).select_related("statement_import")
 
     def perform_update(self, serializer):
