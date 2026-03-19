@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime, timezone
 from typing import Any
 
 from django.conf import settings
@@ -191,3 +193,79 @@ def live_check(request: HttpRequest) -> JsonResponse:
     Most basic check.
     """
     return JsonResponse({"status": "alive", "timestamp": now().isoformat()})
+
+
+def backup_health_check(request: HttpRequest) -> JsonResponse:
+    """
+    Backup staleness check.
+
+    Reads the sentinel files written by api/scripts/backup.sh and returns:
+      200  {"status": "ok",    "last_backup": "<ISO8601>"}  — backup within window
+      503  {"status": "error", "message": "..."}             — stale, failed, or missing
+
+    The staleness threshold defaults to 26 h (daily schedule + 2 h grace) and
+    can be overridden via the BACKUP_MAX_AGE_HOURS Django setting.
+    """
+    backup_dir = os.environ.get("BACKUP_DIR", "/backups")
+    max_age_hours: float = getattr(settings, "BACKUP_MAX_AGE_HOURS", 26.0)
+    max_age_seconds = max_age_hours * 3600
+
+    sentinel = os.path.join(backup_dir, ".last_successful_backup")
+    status_file = os.path.join(backup_dir, ".last_backup_status")
+
+    if not os.path.exists(sentinel):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    "No backup sentinel found. "
+                    "The backup service may not have run yet."
+                ),
+            },
+            status=503,
+        )
+
+    try:
+        with open(sentinel) as fh:
+            last_ts = float(fh.read().strip())
+    except (ValueError, OSError) as exc:
+        return JsonResponse(
+            {"status": "error", "message": f"Cannot read backup sentinel: {exc}"},
+            status=503,
+        )
+
+    last_status = ""
+    if os.path.exists(status_file):
+        try:
+            with open(status_file) as fh:
+                last_status = fh.read().strip()
+        except OSError:
+            pass
+
+    if last_status.startswith("failed:"):
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": f"Last backup failed: {last_status}",
+            },
+            status=503,
+        )
+
+    age_seconds = time.time() - last_ts
+    last_backup_iso = datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
+
+    if age_seconds > max_age_seconds:
+        age_hours = age_seconds / 3600
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": (
+                    f"Last backup is {age_hours:.1f}h old "
+                    f"(threshold: {max_age_hours}h)."
+                ),
+                "last_backup": last_backup_iso,
+            },
+            status=503,
+        )
+
+    return JsonResponse({"status": "ok", "last_backup": last_backup_iso})
