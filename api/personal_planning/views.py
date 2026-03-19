@@ -29,7 +29,7 @@ from personal_planning.serializers import (
 def log_activity(request, action, model_name, object_id, description):
     """Helper para registrar atividades."""
     try:
-        from security.activity_logs.models import ActivityLog
+        from security.models import ActivityLog
 
         ActivityLog.log_action(
             user=request.user,
