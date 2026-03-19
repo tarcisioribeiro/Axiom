@@ -19,20 +19,21 @@ from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.encryption import DecryptionError, FieldEncryption
 from app.permissions import GlobalDefaultPermission
 from authentication.throttles import ShareTokenRateThrottle
-from security.activity_logs.models import ACTION_TYPES, ActivityLog
+from security.importers import (
+    SUPPORTED_FORMATS,
+    ImportParseError,
+    parse_bitwarden_json,
+    parse_lastpass_csv,
+)
 from security.models import (
+    ACTION_TYPES,
     PASSWORD_CATEGORIES,
+    ActivityLog,
     Archive,
     CredentialShareToken,
     Password,
     StoredBankAccount,
     StoredCreditCard,
-)
-from security.passwords.importers import (
-    SUPPORTED_FORMATS,
-    ImportParseError,
-    parse_bitwarden_json,
-    parse_lastpass_csv,
 )
 from security.serializers import (
     ActivityLogSerializer,

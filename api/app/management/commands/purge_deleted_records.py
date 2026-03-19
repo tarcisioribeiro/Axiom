@@ -188,7 +188,7 @@ class Command(BaseCommand):
     def _log_purge(self, instance: Any, label: str) -> None:
         """Write an immutable ActivityLog entry recording the hard delete."""
         try:
-            from security.activity_logs.models import ActivityLog
+            from security.models import ActivityLog
 
             ActivityLog.log_action(
                 user=None,

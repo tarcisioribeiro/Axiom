@@ -179,7 +179,7 @@ class PurgeDeletedView(APIView):
 
     def _log_purge(self, instance: Any, label: str, triggered_by: Any) -> None:
         try:
-            from security.activity_logs.models import ActivityLog
+            from security.models import ActivityLog
 
             ActivityLog.log_action(
                 user=triggered_by,

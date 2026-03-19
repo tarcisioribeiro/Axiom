@@ -2,8 +2,8 @@ import os
 
 from rest_framework import serializers
 
-from security.activity_logs.models import ActivityLog
 from security.models import (
+    ActivityLog,
     Archive,
     CredentialShareToken,
     Password,
