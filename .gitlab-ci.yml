@@ -629,7 +629,7 @@ rollback:staging:
   environment:
     name: staging
     url: $STAGING_URL
-    action: rollback
+    action: start
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
@@ -1006,7 +1006,7 @@ rollback:production:
   environment:
     name: production
     url: $PRODUCTION_URL
-    action: rollback
+    action: start
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
