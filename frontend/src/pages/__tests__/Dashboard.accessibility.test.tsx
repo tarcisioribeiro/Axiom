@@ -118,18 +118,23 @@ const { mockToast } = vi.hoisted(() => ({ mockToast: vi.fn() }));
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
+  toast: mockToast,
 }));
 
 // ---- Imports ----
-import { render, act } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { render, act, waitFor } from '@testing-library/react';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
+import { queryClient } from '@/lib/query-client';
 import Dashboard from '@/pages/Dashboard';
+
+queryClient.setDefaultOptions({ queries: { retry: false } });
 
 expect.extend(toHaveNoViolations);
 const axe = configureAxe();
@@ -145,11 +150,17 @@ beforeAll(async () => {
   }
 });
 
+beforeEach(() => {
+  queryClient.clear();
+});
+
 function renderDashboard() {
   return render(
-    <MemoryRouter>
-      <Dashboard />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -158,6 +169,10 @@ describe('Dashboard page accessibility', () => {
     let container!: HTMLElement;
     await act(async () => {
       ({ container } = renderDashboard());
+    });
+    // Wait for queries to resolve so we test the loaded state, not the spinner
+    await waitFor(() => {
+      expect(container.querySelector('[data-testid="chart-container"]')).toBeTruthy();
     });
     expect(await axe(container)).toHaveNoViolations();
   });

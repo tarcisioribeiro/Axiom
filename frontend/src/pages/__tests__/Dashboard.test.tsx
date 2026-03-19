@@ -54,6 +54,8 @@ const { mockToast } = vi.hoisted(() => ({
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
+  // Mock the standalone export used by the global QueryCache error handler
+  toast: mockToast,
 }));
 
 vi.mock('@/services/dashboard-service', () => ({
@@ -113,6 +115,7 @@ vi.mock('@/services/budgets-service', () => ({
   budgetsService: { getStatus: vi.fn().mockResolvedValue([]) },
 }));
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -120,8 +123,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
+import { queryClient } from '@/lib/query-client';
 import Dashboard from '@/pages/Dashboard';
 import { dashboardService } from '@/services/dashboard-service';
+
+// Use retry: false so failed queries don't retry and slow down tests
+queryClient.setDefaultOptions({ queries: { retry: false } });
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -136,9 +143,11 @@ beforeAll(async () => {
 
 function renderDashboard() {
   return render(
-    <MemoryRouter>
-      <Dashboard />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -153,6 +162,7 @@ const defaultStats = {
 describe('Dashboard page', () => {
   beforeEach(() => {
     mockToast.mockClear();
+    queryClient.clear(); // Reset cache to avoid cross-test contamination
     // Reset to default resolved values before each test
     vi.mocked(dashboardService.getStats).mockResolvedValue(defaultStats);
   });
@@ -170,38 +180,34 @@ describe('Dashboard page', () => {
   });
 
   it('renders the dashboard title after data loads', async () => {
-    await act(async () => {
-      renderDashboard();
+    renderDashboard();
+    await waitFor(() => {
+      expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
     });
-
-    expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
   });
 
   it('renders total balance stat card with mocked data', async () => {
-    await act(async () => {
-      renderDashboard();
-    });
-
+    renderDashboard();
     // formatCurrency(11111) → "R$ 11.111,00"
-    expect(screen.getByText(/11\.111/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/11\.111/)).toBeInTheDocument();
+    });
   });
 
   it('renders monthly expenses stat card', async () => {
-    await act(async () => {
-      renderDashboard();
-    });
-
+    renderDashboard();
     // formatCurrency(2222) → "R$ 2.222,00"
-    expect(screen.getByText(/2\.222/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/2\.222/)).toBeInTheDocument();
+    });
   });
 
   it('renders monthly revenues stat card', async () => {
-    await act(async () => {
-      renderDashboard();
-    });
-
+    renderDashboard();
     // formatCurrency(33333) → "R$ 33.333,00"
-    expect(screen.getByText(/33\.333/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/33\.333/)).toBeInTheDocument();
+    });
   });
 
   it('calls all required dashboard service methods on mount', async () => {
