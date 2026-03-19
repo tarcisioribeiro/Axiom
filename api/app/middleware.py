@@ -44,6 +44,7 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         "/health/",
         "/ready/",
         "/live/",
+        "/api/v1/health/backup/",
         "/static/",
         "/media/",
     ]
