@@ -284,6 +284,19 @@ test:frontend:
         coverage_format: cobertura
         path: frontend/coverage/cobertura-coverage.xml
 
+build:storybook:
+  extends: .node_base
+  stage: test
+  needs:
+    - typecheck:frontend
+  script:
+    - npm run build:storybook
+  artifacts:
+    when: always
+    paths:
+      - frontend/storybook-static/
+    expire_in: 7 days
+
 # ==============================================================================
 # STAGE: build
 # ==============================================================================

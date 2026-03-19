@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { apiClient } from '@/services/api-client';
 import { BaseService, createCrudService } from '@/services/base-service';
 
 vi.mock('@/services/api-client', () => ({
@@ -11,8 +12,6 @@ vi.mock('@/services/api-client', () => ({
     delete: vi.fn(),
   },
 }));
-
-import { apiClient } from '@/services/api-client';
 
 // --- Type-level tests ---
 // These assertions are checked by the TypeScript compiler at build time.

@@ -7,7 +7,7 @@
 // ---- Framer-motion mock ----
 vi.mock('framer-motion', async (importOriginal) => {
   const React = await import('react');
-  const actual = await importOriginal<typeof import('framer-motion')>();
+  const actual = await importOriginal();
   return {
     ...(actual as Record<string, unknown>),
     motion: new Proxy(
@@ -124,8 +124,8 @@ vi.mock('@/hooks/use-toast', () => ({
 // ---- Imports ----
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, act, waitFor } from '@testing-library/react';
-import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import i18next from 'i18next';
+import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
