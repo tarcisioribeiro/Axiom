@@ -116,7 +116,7 @@ vi.mock('@/services/budgets-service', () => ({
 }));
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';

@@ -8,7 +8,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import importPlugin from 'eslint-plugin-import'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'storybook-static']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -90,5 +90,15 @@ export default defineConfig([
       'src/test/**/*.ts',
     ],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    // Story files: disable rules that conflict with Storybook patterns
+    files: ['src/**/*.stories.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
+    extends: [tseslint.configs.disableTypeChecked],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+      'import/no-anonymous-default-export': 'off',
+      'max-lines': 'off',
+    },
   },
 ])

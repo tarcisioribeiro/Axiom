@@ -23,8 +23,8 @@ vi.mock('@/hooks/use-theme-assets', () => ({
 
 // ---- Imports ----
 import { render } from '@testing-library/react';
-import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import i18next from 'i18next';
+import { configureAxe, toHaveNoViolations } from 'jest-axe';
 import { initReactI18next } from 'react-i18next';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
