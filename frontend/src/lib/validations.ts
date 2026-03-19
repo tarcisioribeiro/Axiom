@@ -169,11 +169,15 @@ export const expenseSchema = z.object({
     .min(1, requiredError('Descrição'))
     .max(500, maxError('Descrição', 500)),
   date: z.string().min(1, requiredError('Data')),
-  is_paid: z.boolean().default(false),
+  horary: z.string().min(1, requiredError('Horário')),
+  payed: z.boolean().default(false),
   account: z
     .number({ message: 'Conta inválida' })
     .int('Conta deve ser um número inteiro')
     .positive('Selecione uma conta'),
+  member: z.number().int().positive().optional().nullable(),
+  related_loan: z.number().int().positive().optional().nullable(),
+  related_payable: z.number().int().positive().optional().nullable(),
 });
 
 // ============================================================================
@@ -422,7 +426,10 @@ export const passwordSchema = z.object({
     .string()
     .min(1, requiredError('Usuário'))
     .max(255, maxError('Usuário', 255)),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: z.union([
+    z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+    z.literal(''),
+  ]),
   category: z.enum(
     [
       'social',
