@@ -85,7 +85,9 @@ export function RevenuesFilters({
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
             {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {v}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -104,11 +106,21 @@ export function RevenuesFilters({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="space-y-1">
           <span className="text-sm">{t('pages.revenues.dateFrom')}</span>
-          <DatePicker value={startDate} onChange={setStartDate} placeholder="De..." clearable />
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder="De..."
+            clearable
+          />
         </div>
         <div className="space-y-1">
           <span className="text-sm">{t('pages.revenues.dateTo')}</span>
-          <DatePicker value={endDate} onChange={setEndDate} placeholder="Até..." clearable />
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder="Até..."
+            clearable
+          />
         </div>
         <div className="space-y-1">
           <span className="text-sm">{t('common.fields.account')}</span>
@@ -117,7 +129,9 @@ export function RevenuesFilters({
               <Button variant="outline" className="w-full justify-between">
                 {selectedAccounts.length === 0
                   ? t('pages.revenues.allAccounts')
-                  : t('pages.revenues.selectedAccounts', { count: selectedAccounts.length })}
+                  : t('pages.revenues.selectedAccounts', {
+                      count: selectedAccounts.length,
+                    })}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </PopoverTrigger>
@@ -144,9 +158,7 @@ export function RevenuesFilters({
       </div>
 
       <div className="flex items-center justify-between border-t pt-2">
-        <span className="text-sm">
-          {t('pages.revenues.foundRevenues', { count })}
-        </span>
+        <span className="text-sm">{t('pages.revenues.foundRevenues', { count })}</span>
         <span className="text-lg font-bold text-success">
           {t('pages.revenues.total')} {formatCurrency(totalRevenues)}
         </span>

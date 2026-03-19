@@ -24,22 +24,48 @@ export default function Revenues() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
-    revenues, accounts, loans, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedRevenue, isSubmitting,
-    searchTerm, setSearchTerm, categoryFilter, setCategoryFilter,
-    statusFilter, setStatusFilter, startDate, setStartDate,
-    endDate, setEndDate, selectedAccounts,
-    isExportModalOpen, setIsExportModalOpen,
-    toggleAccount, clearFilters,
-    handleCreate, handleEdit, handleDelete, handleSubmit, handleExport,
-    totalRevenues, hasActiveFilters, columns,
+    revenues,
+    accounts,
+    loans,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedRevenue,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    selectedAccounts,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    toggleAccount,
+    clearFilters,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+    handleExport,
+    totalRevenues,
+    hasActiveFilters,
+    columns,
   } = useRevenuesPage();
 
   return (
     <PageContainer>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsExportModalOpen(true)} className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-2"
+          >
             <Download className="h-4 w-4" />
             {t('common.actions.export')}
           </Button>
@@ -118,10 +144,14 @@ export default function Revenues() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedRevenue ? t('pages.revenues.editTitle') : t('pages.revenues.newTitle')}
+              {selectedRevenue
+                ? t('pages.revenues.editTitle')
+                : t('pages.revenues.newTitle')}
             </DialogTitle>
             <DialogDescription>
-              {selectedRevenue ? t('pages.revenues.editDesc') : t('pages.revenues.newDesc')}
+              {selectedRevenue
+                ? t('pages.revenues.editDesc')
+                : t('pages.revenues.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <RevenueForm

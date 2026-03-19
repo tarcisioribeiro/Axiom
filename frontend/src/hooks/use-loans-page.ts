@@ -70,7 +70,11 @@ export function useLoansPage(): UseLoansPageReturn {
       setAccounts(Array.isArray(accountsData) ? accountsData : []);
       setMembers(Array.isArray(membersData) ? membersData : []);
     } catch (error: unknown) {
-      toast({ title: t('common.messages.loadError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
       setLoans([]);
       setAccounts([]);
       setMembers([]);
@@ -91,7 +95,9 @@ export function useLoansPage(): UseLoansPageReturn {
       if (members.length === 0) missing.push('membros');
       toast({
         title: t('common.messages.actionDenied'),
-        description: t('pages.loans.noPrerequisitesMsg', { missing: missing.join(' e ') }),
+        description: t('pages.loans.noPrerequisitesMsg', {
+          missing: missing.join(' e '),
+        }),
         variant: 'destructive',
       });
       return;
@@ -113,10 +119,17 @@ export function useLoansPage(): UseLoansPageReturn {
     if (!confirmed) return;
     try {
       await loansService.delete(loan.id);
-      toast({ title: t('pages.loans.deleted'), description: t('pages.loans.deletedDesc') });
+      toast({
+        title: t('pages.loans.deleted'),
+        description: t('pages.loans.deletedDesc'),
+      });
       void loadData();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -126,15 +139,25 @@ export function useLoansPage(): UseLoansPageReturn {
       if (selectedLoan) {
         const { payed_value: _payed_value, ...updateData } = data;
         await loansService.update(selectedLoan.id, updateData);
-        toast({ title: t('pages.loans.updated'), description: 'O empréstimo foi atualizado com sucesso.' });
+        toast({
+          title: t('pages.loans.updated'),
+          description: 'O empréstimo foi atualizado com sucesso.',
+        });
       } else {
         await loansService.create(data);
-        toast({ title: t('pages.loans.created'), description: 'O empréstimo foi criado com sucesso.' });
+        toast({
+          title: t('pages.loans.created'),
+          description: 'O empréstimo foi criado com sucesso.',
+        });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -148,10 +171,21 @@ export function useLoansPage(): UseLoansPageReturn {
   );
 
   return {
-    loans, accounts, members, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedLoan, isSubmitting,
-    searchTerm, setSearchTerm, filteredLoans,
-    handleCreate, handleEdit, handleDelete, handleSubmit,
+    loans,
+    accounts,
+    members,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedLoan,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    filteredLoans,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
   };
 }
 

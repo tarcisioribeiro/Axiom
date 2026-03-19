@@ -24,22 +24,49 @@ export default function Expenses() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
-    expenses, accounts, loans, payables, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedExpense, isSubmitting,
-    searchTerm, setSearchTerm, categoryFilter, setCategoryFilter,
-    statusFilter, setStatusFilter, startDate, setStartDate,
-    endDate, setEndDate, selectedAccounts,
-    isExportModalOpen, setIsExportModalOpen,
-    toggleAccount, clearFilters,
-    handleCreate, handleEdit, handleDelete, handleSubmit, handleExport,
-    totalExpenses, hasActiveFilters, columns,
+    expenses,
+    accounts,
+    loans,
+    payables,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedExpense,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    selectedAccounts,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    toggleAccount,
+    clearFilters,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+    handleExport,
+    totalExpenses,
+    hasActiveFilters,
+    columns,
   } = useExpensesPage();
 
   return (
     <PageContainer>
       <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsExportModalOpen(true)} className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-2"
+          >
             <Download className="h-4 w-4" />
             {t('common.actions.export')}
           </Button>
@@ -118,10 +145,14 @@ export default function Expenses() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedExpense ? t('pages.expenses.editTitle') : t('pages.expenses.newTitle')}
+              {selectedExpense
+                ? t('pages.expenses.editTitle')
+                : t('pages.expenses.newTitle')}
             </DialogTitle>
             <DialogDescription>
-              {selectedExpense ? t('pages.expenses.editDesc') : t('pages.expenses.newDesc')}
+              {selectedExpense
+                ? t('pages.expenses.editDesc')
+                : t('pages.expenses.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <ExpenseForm

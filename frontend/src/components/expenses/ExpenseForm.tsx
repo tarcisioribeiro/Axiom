@@ -168,12 +168,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
         <div className="space-y-2">
           <Label htmlFor="horary">Horário *</Label>
-          <Input
-            id="horary"
-            type="time"
-            {...register('horary')}
-            disabled={isLoading}
-          />
+          <Input id="horary" type="time" {...register('horary')} disabled={isLoading} />
           {errors.horary && (
             <p className="text-sm text-destructive">{errors.horary.message}</p>
           )}

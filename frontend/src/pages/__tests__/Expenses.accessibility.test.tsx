@@ -16,9 +16,16 @@ vi.mock('@/services/expenses-service', () => ({
 
 vi.mock('@/services/accounts-service', () => ({
   accountsService: {
-    getAll: vi.fn().mockResolvedValue([
-      { id: 1, account_name: 'Conta Corrente', account_type: 'checking', balance: '1000.00' },
-    ]),
+    getAll: vi
+      .fn()
+      .mockResolvedValue([
+        {
+          id: 1,
+          account_name: 'Conta Corrente',
+          account_type: 'checking',
+          balance: '1000.00',
+        },
+      ]),
   },
 }));
 
@@ -56,7 +63,9 @@ vi.mock('@/components/expenses/ExpenseForm', () => ({
   }) => (
     <div>
       <button
-        onClick={() => onSubmit({ description: 'Test Expense', value: '100', account: 1 })}
+        onClick={() =>
+          onSubmit({ description: 'Test Expense', value: '100', account: 1 })
+        }
       >
         Salvar Despesa
       </button>

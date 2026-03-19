@@ -89,18 +89,32 @@ export function useExpensesPage(): UseExpensesPageReturn {
       const params: Record<string, unknown> = {};
       if (debouncedSearch) params.search = debouncedSearch;
       if (categoryFilter !== 'all') params.category = categoryFilter;
-      if (statusFilter !== 'all') params.payed = statusFilter === 'paid' ? 'true' : 'false';
+      if (statusFilter !== 'all')
+        params.payed = statusFilter === 'paid' ? 'true' : 'false';
       if (startDate) params.date_from = formatLocalDate(startDate);
       if (endDate) params.date_to = formatLocalDate(endDate);
       if (selectedAccounts.length > 0) params.accounts = selectedAccounts.join(',');
       const data = await expensesService.getAll(params);
       setExpenses(data);
     } catch (error: unknown) {
-      toast({ title: t('common.messages.loadError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch, categoryFilter, statusFilter, startDate, endDate, selectedAccounts, t, toast]);
+  }, [
+    debouncedSearch,
+    categoryFilter,
+    statusFilter,
+    startDate,
+    endDate,
+    selectedAccounts,
+    t,
+    toast,
+  ]);
 
   useEffect(() => {
     const loadReferenceData = async () => {
@@ -114,7 +128,11 @@ export function useExpensesPage(): UseExpensesPageReturn {
         setLoans(Array.isArray(loansData) ? loansData : []);
         setPayables(Array.isArray(payablesData) ? payablesData : []);
       } catch (error: unknown) {
-        toast({ title: t('common.messages.loadError'), description: getErrorMessage(error), variant: 'destructive' });
+        toast({
+          title: t('common.messages.loadError'),
+          description: getErrorMessage(error),
+          variant: 'destructive',
+        });
       }
     };
     void loadReferenceData();
@@ -126,7 +144,9 @@ export function useExpensesPage(): UseExpensesPageReturn {
 
   const toggleAccount = (accountId: number) => {
     setSelectedAccounts((prev) =>
-      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId]
+      prev.includes(accountId)
+        ? prev.filter((id) => id !== accountId)
+        : [...prev, accountId]
     );
   };
 
@@ -141,7 +161,11 @@ export function useExpensesPage(): UseExpensesPageReturn {
 
   const handleCreate = () => {
     if (accounts.length === 0) {
-      toast({ title: t('common.messages.actionDenied'), description: t('pages.expenses.noAccountMsg'), variant: 'destructive' });
+      toast({
+        title: t('common.messages.actionDenied'),
+        description: t('pages.expenses.noAccountMsg'),
+        variant: 'destructive',
+      });
       return;
     }
     setSelectedExpense(undefined);
@@ -164,10 +188,17 @@ export function useExpensesPage(): UseExpensesPageReturn {
     if (!confirmed) return;
     try {
       await expensesService.delete(id);
-      toast({ title: t('pages.expenses.deleted'), description: t('pages.expenses.deletedDesc') });
+      toast({
+        title: t('pages.expenses.deleted'),
+        description: t('pages.expenses.deletedDesc'),
+      });
       void loadExpenses();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -176,15 +207,25 @@ export function useExpensesPage(): UseExpensesPageReturn {
       setIsSubmitting(true);
       if (selectedExpense) {
         await expensesService.update(selectedExpense.id, data);
-        toast({ title: t('pages.expenses.updated'), description: t('pages.expenses.updatedDesc') });
+        toast({
+          title: t('pages.expenses.updated'),
+          description: t('pages.expenses.updatedDesc'),
+        });
       } else {
         await expensesService.create(data);
-        toast({ title: t('pages.expenses.created'), description: t('pages.expenses.createdDesc') });
+        toast({
+          title: t('pages.expenses.created'),
+          description: t('pages.expenses.createdDesc'),
+        });
       }
       setIsDialogOpen(false);
       void loadExpenses();
     } catch (error: unknown) {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -200,20 +241,41 @@ export function useExpensesPage(): UseExpensesPageReturn {
       date_from: modalParams.date_from,
       date_to: modalParams.date_to,
       category: categoryFilter !== 'all' ? categoryFilter : undefined,
-      payed: statusFilter !== 'all' ? (statusFilter === 'paid' ? 'true' : 'false') : undefined,
+      payed:
+        statusFilter !== 'all'
+          ? statusFilter === 'paid'
+            ? 'true'
+            : 'false'
+          : undefined,
       search: searchTerm || undefined,
       account: selectedAccounts.length > 0 ? selectedAccounts : undefined,
     };
     try {
       await expensesService.exportExpenses(params);
-      toast({ title: t('common.messages.exportSuccess'), description: t('common.messages.exportSuccessDesc') });
+      toast({
+        title: t('common.messages.exportSuccess'),
+        description: t('common.messages.exportSuccessDesc'),
+      });
     } catch (error: unknown) {
-      toast({ title: t('common.messages.exportError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.exportError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     }
   };
 
-  const totalExpenses = sumByProperty(expenses.map((e) => ({ value: parseFloat(e.value) })), 'value');
-  const hasActiveFilters = !!searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || !!startDate || !!endDate || selectedAccounts.length > 0;
+  const totalExpenses = sumByProperty(
+    expenses.map((e) => ({ value: parseFloat(e.value) })),
+    'value'
+  );
+  const hasActiveFilters =
+    !!searchTerm ||
+    categoryFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    !!startDate ||
+    !!endDate ||
+    selectedAccounts.length > 0;
 
   const columns: Column<Expense>[] = [
     {
@@ -226,14 +288,18 @@ export function useExpensesPage(): UseExpensesPageReturn {
       label: t('pages.expenses.columns.amount'),
       align: 'right',
       render: (expense) => (
-        <span className="font-semibold text-destructive">{formatCurrency(expense.value)}</span>
+        <span className="font-semibold text-destructive">
+          {formatCurrency(expense.value)}
+        </span>
       ),
     },
     {
       key: 'account_name',
       label: t('pages.expenses.columns.account'),
       render: (expense) => (
-        <Badge variant="outline" className="font-medium">{expense.account_name ?? 'N/A'}</Badge>
+        <Badge variant="outline" className="font-medium">
+          {expense.account_name ?? 'N/A'}
+        </Badge>
       ),
     },
     {
@@ -241,9 +307,16 @@ export function useExpensesPage(): UseExpensesPageReturn {
       label: t('pages.expenses.columns.category'),
       render: (expense) => (
         <div className="flex items-center gap-1">
-          <Badge variant="secondary">{translate('expenseCategories', expense.category)}</Badge>
+          <Badge variant="secondary">
+            {translate('expenseCategories', expense.category)}
+          </Badge>
           {expense.auto_categorized && (
-            <Badge variant="outline" className="px-1 py-0 text-xs text-muted-foreground">Auto</Badge>
+            <Badge
+              variant="outline"
+              className="px-1 py-0 text-xs text-muted-foreground"
+            >
+              Auto
+            </Badge>
           )}
         </div>
       ),
@@ -263,21 +336,46 @@ export function useExpensesPage(): UseExpensesPageReturn {
       render: (expense) => (
         <div>
           <div className="text-sm">{formatDateTime(expense.date, expense.horary)}</div>
-          {expense.member_name && <div className="text-xs">Membro: {expense.member_name}</div>}
+          {expense.member_name && (
+            <div className="text-xs">Membro: {expense.member_name}</div>
+          )}
         </div>
       ),
     },
   ];
 
   return {
-    expenses, accounts, loans, payables, isLoading,
-    isDialogOpen, setIsDialogOpen, selectedExpense, isSubmitting,
-    searchTerm, setSearchTerm, categoryFilter, setCategoryFilter,
-    statusFilter, setStatusFilter, startDate, setStartDate,
-    endDate, setEndDate, selectedAccounts,
-    isExportModalOpen, setIsExportModalOpen,
-    toggleAccount, clearFilters,
-    handleCreate, handleEdit, handleDelete, handleSubmit, handleExport,
-    totalExpenses, hasActiveFilters, columns,
+    expenses,
+    accounts,
+    loans,
+    payables,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedExpense,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    selectedAccounts,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    toggleAccount,
+    clearFilters,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+    handleExport,
+    totalExpenses,
+    hasActiveFilters,
+    columns,
   };
 }
