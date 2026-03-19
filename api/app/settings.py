@@ -11,7 +11,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-_TESTING = "test" in sys.argv
+_TESTING = "test" in sys.argv or (len(sys.argv) > 0 and "pytest" in sys.argv[0])
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY and not _TESTING:
@@ -147,7 +147,7 @@ DATABASES = {
 }
 
 # Use SQLite for tests to avoid database connection issues
-if "test" in sys.argv:
+if _TESTING:
     DATABASES["default"] = {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)
@@ -296,7 +296,7 @@ CACHES = {
 }
 
 # Use in-memory cache for tests — no Redis required in CI
-if "test" in sys.argv:
+if _TESTING:
     CACHES["default"] = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "test-cache",
