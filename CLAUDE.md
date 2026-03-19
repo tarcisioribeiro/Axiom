@@ -230,6 +230,59 @@ Each `fontSize` entry includes a companion `lineHeight` via `--leading-{size}`.
 
 **Rule**: Prefer semantic spacing tokens (`p-md`, `gap-lg`) over numeric Tailwind defaults (`p-4`, `gap-6`) for layout and component padding. Numeric values are still acceptable for small adjustments (borders, icon sizes, etc.).
 
+## Frontend Data-Fetching & Caching
+
+The frontend uses **TanStack Query v5** (`@tanstack/react-query`) for server-state management. It provides stale-while-revalidate semantics, background refetching, deduplication, and cache invalidation.
+
+### Why TanStack Query (not SWR)
+- Richer per-query cache invalidation (`queryClient.invalidateQueries`)
+- Native `useMutation` with `onSuccess`/`onError` lifecycle (replaces manual try/catch + setState patterns)
+- Better TypeScript support and devtools
+- `forecastDays`-style parameterised queries cached separately per key — no duplicate fetch
+
+### Setup
+`QueryClientProvider` wraps the entire app in `App.tsx`. The shared `QueryClient` instance lives in `src/lib/query-client.ts`.
+
+### Cache TTLs
+`staleTime` is aligned with the backend's Redis cache TTLs (`api/app/settings.py`). Data within its stale window is served from cache; data beyond it triggers a background refetch.
+
+| Constant | Value | Backend setting | Used for |
+|---|---|---|---|
+| `STALE_TIMES.DASHBOARD_STATS` | 60 s | `CACHE_TTL_DASHBOARD_STATS` | Dashboard aggregate stats |
+| `STALE_TIMES.ACCOUNT_BALANCES` | 30 s | `CACHE_TTL_ACCOUNT_BALANCES` | Per-account balances |
+| `STALE_TIMES.CATEGORY_BREAKDOWN` | 300 s | `CACHE_TTL_CATEGORY_BREAKDOWN` | CC expenses by category |
+| `STALE_TIMES.BALANCE_FORECAST` | 120 s | `CACHE_TTL_BALANCE_FORECAST` | Balance & cash-flow forecasts |
+| `STALE_TIMES.DEFAULT_LIST` | 60 s | — | All other list endpoints |
+
+`gcTime` (inactive cache retention) is 5 minutes for all queries. `refetchOnWindowFocus: true` by default — no need to add manual `visibilitychange` listeners.
+
+### Cache invalidation
+After a mutation succeeds, call `queryClient.invalidateQueries({ queryKey: ['resource'] })` to mark the affected cache entry stale and trigger a background refetch. Example in `Accounts.tsx`:
+```tsx
+const queryClient = useQueryClient();
+const deleteMutation = useMutation({
+  mutationFn: (id: number) => accountsService.delete(id),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+});
+```
+
+### Query key conventions
+| Scope | Key shape | Example |
+|---|---|---|
+| Resource list | `['resourceName']` | `['accounts']`, `['expenses']` |
+| Dashboard endpoint | `['dashboard', 'endpointName']` | `['dashboard', 'stats']` |
+| Parameterised | `['resource', 'action', ...params]` | `['dashboard', 'cashFlowForecast', 30]` |
+| Filtered | `['resource', 'action', filterA, filterB]` | `['dashboard', 'ccExpensesByCategory', 'all', 'all']` |
+
+### Global error handling
+`QueryCache.onError` in `query-client.ts` shows a destructive toast for any query failure, debounced at 2 s to collapse simultaneous failures (e.g. network outage). Pages do **not** need per-query error state — the global handler covers it.
+
+### Auth token refresh compatibility
+The JWT refresh flow in `api-client.ts` is implemented as an Axios response interceptor. TanStack Query never sees 401 errors — the interceptor transparently refreshes the token and retries the request. No changes to `api-client.ts` were required.
+
+### Testing
+Wrap components that use queries with `<QueryClientProvider client={queryClient}>` in test render helpers. Call `queryClient.clear()` in `beforeEach` to reset cache between tests. Set `queryClient.setDefaultOptions({ queries: { retry: false } })` at the top of the test file to prevent retry delays.
+
 ## Key Patterns and Conventions
 
 ### Adding a New Backend Resource

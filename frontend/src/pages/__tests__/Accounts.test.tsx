@@ -40,6 +40,7 @@ const { mockToast } = vi.hoisted(() => ({
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: mockToast }),
+  toast: mockToast,
 }));
 
 const { mockShowConfirm } = vi.hoisted(() => ({
@@ -67,6 +68,7 @@ vi.mock('@/components/accounts/AccountForm', () => ({
   ),
 }));
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
@@ -75,8 +77,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
+import { queryClient } from '@/lib/query-client';
 import Accounts from '@/pages/Accounts';
 import { accountsService } from '@/services/accounts-service';
+
+queryClient.setDefaultOptions({ queries: { retry: false } });
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -91,9 +96,11 @@ beforeAll(async () => {
 
 function renderAccounts() {
   return render(
-    <MemoryRouter>
-      <Accounts />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Accounts />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -101,6 +108,7 @@ describe('Accounts page', () => {
   beforeEach(() => {
     mockToast.mockClear();
     mockShowConfirm.mockClear().mockResolvedValue(false);
+    queryClient.clear();
   });
 
   it('renders the page title', async () => {
