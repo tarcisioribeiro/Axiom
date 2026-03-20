@@ -37,7 +37,14 @@ Padrões e boas práticas para contribuir:
 - Process de Pull Request
 - Code review
 
-### 5. [Solução de Problemas](./troubleshooting.md)
+### 5. [Deploy e CI/CD](./deploy.md)
+Configuração completa do pipeline GitLab e infraestrutura Kubernetes:
+- Variáveis CI/CD obrigatórias e como gerar cada uma
+- Configuração do Container Registry (GitLab.com e self-hosted)
+- Provisionamento do cluster k3s
+- Checklist antes do primeiro push
+
+### 6. [Solução de Problemas](./troubleshooting.md)
 Diagnóstico e resolução de problemas comuns:
 - Problemas com Docker
 - Erros de banco de dados
