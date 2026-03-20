@@ -64,7 +64,10 @@
     "table": {
       "actions": "Ações",
       "noData": "Nenhum registro encontrado.",
-      "showing": "Mostrando {{count}} de {{total}} registros"
+      "showing": "Mostrando {{count}} de {{total}} registros",
+      "previousPage": "Página anterior",
+      "nextPage": "Próxima página",
+      "pageOf": "Página {{page}} de {{totalPages}}"
     },
     "status": {
       "active": "Ativo",

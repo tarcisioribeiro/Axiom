@@ -187,5 +187,88 @@ describe('DataTable', () => {
       );
       expect(screen.getByText(/25 registros/)).toBeInTheDocument();
     });
+
+    it('renders previous and next buttons', () => {
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 2, pageSize: 10, total: 25, onPageChange: vi.fn() }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Página anterior' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Próxima página' })).toBeInTheDocument();
+    });
+
+    it('disables previous button on first page', () => {
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 1, pageSize: 10, total: 25, onPageChange: vi.fn() }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Página anterior' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Próxima página' })).not.toBeDisabled();
+    });
+
+    it('disables next button on last page', () => {
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 3, pageSize: 10, total: 25, onPageChange: vi.fn() }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Próxima página' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Página anterior' })).not.toBeDisabled();
+    });
+
+    it('calls onPageChange with previous page when clicking previous', async () => {
+      const { userEvent } = await import('@testing-library/user-event');
+      const user = userEvent.setup();
+      const onPageChange = vi.fn();
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 2, pageSize: 10, total: 25, onPageChange }}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: 'Página anterior' }));
+      expect(onPageChange).toHaveBeenCalledWith(1);
+    });
+
+    it('calls onPageChange with next page when clicking next', async () => {
+      const { userEvent } = await import('@testing-library/user-event');
+      const user = userEvent.setup();
+      const onPageChange = vi.fn();
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 1, pageSize: 10, total: 25, onPageChange }}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: 'Próxima página' }));
+      expect(onPageChange).toHaveBeenCalledWith(2);
+    });
+
+    it('shows correct page indicator', () => {
+      render(
+        <DataTable
+          data={items}
+          columns={columns}
+          keyExtractor={keyExtractor}
+          pagination={{ page: 2, pageSize: 10, total: 25, onPageChange: vi.fn() }}
+        />
+      );
+      expect(screen.getByText('Página 2 de 3')).toBeInTheDocument();
+    });
   });
 });

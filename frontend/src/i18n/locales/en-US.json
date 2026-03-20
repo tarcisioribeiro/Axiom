@@ -64,7 +64,10 @@
     "table": {
       "actions": "Actions",
       "noData": "No records found.",
-      "showing": "Showing {{count}} of {{total}} records"
+      "showing": "Showing {{count}} of {{total}} records",
+      "previousPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "Page {{page}} of {{totalPages}}"
     },
     "status": {
       "active": "Active",
