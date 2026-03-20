@@ -54,11 +54,11 @@ export function SkeletonTable({
 }) {
   return (
     <div className={cn('w-full overflow-auto', className)}>
-      <table className="w-full">
+      <table className="w-full" role="presentation">
         <thead>
           <tr className="border-b bg-muted/50">
             {Array.from({ length: columns }).map((_, i) => (
-              <th key={i} className="p-4 text-left">
+              <th key={i} className="p-4 text-left" aria-hidden="true">
                 <Skeleton className="h-4 w-20" />
               </th>
             ))}
@@ -176,7 +176,7 @@ export function SkeletonChart({
  */
 export function SkeletonDashboard() {
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Carregando dashboard">
+    <div className="space-y-6" role="status" aria-busy="true" aria-label="Carregando dashboard">
       <SkeletonStatsGrid items={4} />
       <div className="grid gap-6 md:grid-cols-2">
         <SkeletonChart height={300} />

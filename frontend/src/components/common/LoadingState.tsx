@@ -65,6 +65,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   // Skeleton mode
   if (skeleton) {
     const ariaProps = {
+      role: 'status' as const,
       'aria-busy': true,
       'aria-label': message || 'Carregando conteudo',
     };
