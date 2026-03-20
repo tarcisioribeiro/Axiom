@@ -66,7 +66,7 @@ export const cardVariants: Variants = {
   hover: {
     scale: 1.05,
     y: -5,
-    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+    boxShadow: 'var(--shadow-card-hover)',
     transition: { duration: 0.3, ease: EASING.snappy },
   },
   tap: { scale: 0.98 },
