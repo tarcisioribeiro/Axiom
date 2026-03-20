@@ -415,15 +415,52 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Smooth theme transition - cascades to all children during theme switch */
+  /* Smooth theme transition - scoped to elements that consume theme tokens */
   .theme-transitioning,
-  .theme-transitioning * {
+  .theme-transitioning
+    :is(
+      body,
+      header,
+      nav,
+      main,
+      footer,
+      aside,
+      section,
+      article,
+      div,
+      p,
+      span,
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      label,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      li,
+      td,
+      th,
+      tr,
+      thead,
+      tbody,
+      tfoot,
+      table,
+      svg,
+      path,
+      circle,
+      rect
+    ) {
     transition:
       background-color var(--duration-normal) ease,
       border-color var(--duration-normal) ease,
       color var(--duration-normal) ease,
       fill var(--duration-normal) ease,
-      stroke var(--duration-normal) ease !important;
+      stroke var(--duration-normal) ease;
   }
 }
 
