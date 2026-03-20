@@ -9,7 +9,7 @@ metadata:
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 240
+  progressDeadlineSeconds: 480
   strategy:
     type: Recreate
   selector:
