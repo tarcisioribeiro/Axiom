@@ -78,6 +78,9 @@ workflow:
   services:
     - name: docker:26-dind
       alias: docker
+      # Pass public DNS servers so the daemon can resolve external hostnames
+      # (e.g. the GitLab registry) even when the runner's bridge DNS times out.
+      command: ["--dns", "8.8.8.8", "--dns", "8.8.4.4"]
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
