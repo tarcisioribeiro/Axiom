@@ -532,9 +532,20 @@ deploy:staging:
     # two back-to-back Recreate rollouts race and the second one can time out
     # while waiting for the first one to finish terminating the old pod.
     - kubectl -n mindledger-staging rollout pause deployment/api deployment/frontend 2>/dev/null || true
-    # Sync secrets from CI variables to the cluster so the API always uses
-    # credentials that match the GitLab CI/CD variable values.
-    # Using kubectl create secret --dry-run avoids any template-substitution tooling.
+    # Sync secrets from CI variables to the cluster.
+    # Guard: abort early if any critical variable is unset/empty to avoid
+    # wiping a working secret with blank values.
+    - |
+      for var in STAGING_DB_NAME STAGING_DB_USER STAGING_DB_PASSWORD \
+                 STAGING_SECRET_KEY STAGING_ENCRYPTION_KEY \
+                 STAGING_SUPERUSER_USERNAME STAGING_SUPERUSER_EMAIL STAGING_SUPERUSER_PASSWORD \
+                 STAGING_MINIO_ROOT_USER STAGING_MINIO_ROOT_PASSWORD; do
+        val=$(eval echo "\$$var")
+        if [ -z "$val" ]; then
+          echo "ERROR: required CI variable $var is not set. Aborting to avoid overwriting a working secret."
+          exit 1
+        fi
+      done
     - kubectl -n mindledger-staging create secret generic mindledger-secrets
         --from-literal=DB_NAME="$STAGING_DB_NAME"
         --from-literal=DB_USER="$STAGING_DB_USER"
@@ -545,10 +556,10 @@ deploy:staging:
         --from-literal=DJANGO_SUPERUSER_EMAIL="$STAGING_SUPERUSER_EMAIL"
         --from-literal=DJANGO_SUPERUSER_PASSWORD="$STAGING_SUPERUSER_PASSWORD"
         --from-literal=REDIS_PASSWORD="$STAGING_REDIS_PASSWORD"
-        --from-literal=REDIS_URL="redis://:${STAGING_REDIS_PASSWORD}@redis-service:6379/0"
+        --from-literal=REDIS_URL="redis://redis-service:6379/0"
         --from-literal=MINIO_ROOT_USER="$STAGING_MINIO_ROOT_USER"
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
-        --from-literal=SENTRY_DSN="$STAGING_SENTRY_DSN"
+        --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
         --dry-run=client -o yaml | kubectl apply -f -
     - kubectl apply -f k8s/staging/ingress.yaml
     - kubectl apply -f k8s/staging/api/service.yaml
