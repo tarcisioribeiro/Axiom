@@ -66,26 +66,34 @@ export default function Home() {
   const quickActions = [
     {
       icon: <TrendingDown className="h-5 w-5" />,
-      label: 'Nova Despesa',
+      label: t('pages.home.quickActions.newExpense'),
       href: '/expenses',
     },
     {
       icon: <TrendingUp className="h-5 w-5" />,
-      label: 'Nova Receita',
+      label: t('pages.home.quickActions.newRevenue'),
       href: '/revenues',
     },
     {
       icon: <ArrowLeftRight className="h-5 w-5" />,
-      label: 'Transferência',
+      label: t('pages.home.quickActions.transfer'),
       href: '/transfers',
     },
     {
       icon: <CreditCard className="h-5 w-5" />,
-      label: 'Cartões',
+      label: t('pages.home.quickActions.cards'),
       href: '/credit-cards',
     },
-    { icon: <Key className="h-5 w-5" />, label: 'Senhas', href: '/security/passwords' },
-    { icon: <BookOpen className="h-5 w-5" />, label: 'Livros', href: '/library/books' },
+    {
+      icon: <Key className="h-5 w-5" />,
+      label: t('pages.home.quickActions.passwords'),
+      href: '/security/passwords',
+    },
+    {
+      icon: <BookOpen className="h-5 w-5" />,
+      label: t('pages.home.quickActions.books'),
+      href: '/library/books',
+    },
   ];
 
   return (
@@ -95,7 +103,7 @@ export default function Home() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LayoutDashboard className="h-5 w-5" />
-            Ações Rápidas
+            {t('pages.home.quickActionsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -126,7 +134,7 @@ export default function Home() {
 
       {/* Modules */}
       <div>
-        <h2 className="mb-6 text-2xl font-bold">Módulos Disponíveis</h2>
+        <h2 className="mb-6 text-2xl font-bold">{t('pages.home.modulesTitle')}</h2>
         <motion.div
           className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
@@ -177,14 +185,11 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-success">
                 <Wallet className="h-5 w-5" />
-                Finanças Organizadas
+                {t('pages.home.infoCards.financeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Controle total das suas finanças pessoais com dashboards intuitivos e
-                relatórios detalhados.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.financeDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -194,14 +199,11 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-info">
                 <Lock className="h-5 w-5" />
-                Segurança Máxima
+                {t('pages.home.infoCards.securityTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Seus dados protegidos com criptografia de ponta a ponta e armazenamento
-                seguro.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.securityDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -211,13 +213,11 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
                 <BookMarked className="h-5 w-5" />
-                Conhecimento
+                {t('pages.home.infoCards.knowledgeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Organize sua biblioteca pessoal e acompanhe seu progresso de leitura.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.knowledgeDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>

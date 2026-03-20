@@ -176,7 +176,12 @@ export function SkeletonChart({
  */
 export function SkeletonDashboard() {
   return (
-    <div className="space-y-6" role="status" aria-busy="true" aria-label="Carregando dashboard">
+    <div
+      className="space-y-6"
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando dashboard"
+    >
       <SkeletonStatsGrid items={4} />
       <div className="grid gap-6 md:grid-cols-2">
         <SkeletonChart height={300} />
