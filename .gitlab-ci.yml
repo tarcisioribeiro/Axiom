@@ -540,7 +540,7 @@ deploy:staging:
     - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger-staging rollout resume deployment/api deployment/frontend
-    - kubectl -n mindledger-staging rollout status deployment/api --timeout=300s
+    - kubectl -n mindledger-staging rollout status deployment/api --timeout=540s
     - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig
