@@ -9,7 +9,7 @@ metadata:
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 480
+  progressDeadlineSeconds: 900
   strategy:
     type: Recreate
   selector:
@@ -81,6 +81,19 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /live/
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
+            # Allow up to 40 × 15s = 600s for the entrypoint to finish
+            # (migrations, collectstatic, createsuperuser, setup_members).
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 40
           readinessProbe:
             httpGet:
               path: /ready/
@@ -88,7 +101,8 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            initialDelaySeconds: 30
+            # startupProbe guarantees gunicorn is up before this runs.
+            initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
@@ -99,7 +113,8 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            initialDelaySeconds: 40
+            # startupProbe guarantees gunicorn is up before this runs.
+            initialDelaySeconds: 0
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
