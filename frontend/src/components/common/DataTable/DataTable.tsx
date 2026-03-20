@@ -114,7 +114,7 @@ export function DataTable<T>({
     return sorting.direction === 'asc' ? 'ascending' : 'descending';
   };
 
-  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+  const renderSortIcon = (columnKey: string) => {
     if (sorting?.column !== columnKey) return <ChevronsUpDown className="h-3 w-3" />;
     return sorting.direction === 'asc' ? (
       <ChevronUp className="h-3 w-3" />
@@ -190,9 +190,7 @@ export function DataTable<T>({
                         onClick={() => sorting.onSort(column.key)}
                       >
                         {column.label}
-                        <span aria-hidden="true">
-                          <SortIcon columnKey={column.key} />
-                        </span>
+                        <span aria-hidden="true">{renderSortIcon(column.key)}</span>
                       </button>
                     ) : (
                       column.label
