@@ -319,8 +319,9 @@ build:storybook:
 #   CI_SMOKE_JWT_PRODUCTION   — Bearer JWT for a CI service account in the production DB (masked variable)
 #
 # Optional CI/CD variables for image signing (SBOM attestation):
-#   COSIGN_PRIVATE_KEY        — PEM-encoded cosign private key (masked variable); if absent, attestation is skipped.
-#                               Generate with: cosign generate-key-pair  (commit cosign.pub; keep .key secret)
+#   COSIGN_PRIVATE_KEY        — base64-encoded cosign private key (masked variable); if absent, attestation is skipped.
+#                               Generate with: cosign generate-key-pair && base64 -w 0 cosign.key
+#                               (commit cosign.pub; store base64 output as masked variable; keep .key secret)
 #   COSIGN_PASSWORD           — passphrase for COSIGN_PRIVATE_KEY (masked variable; leave empty if key has no password)
 
 .build_base:
@@ -386,7 +387,7 @@ build:api:
         curl -sSfL \
           "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
           -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
-        printf '%s' "$COSIGN_PRIVATE_KEY" > /tmp/cosign.key
+        printf '%s' "$COSIGN_PRIVATE_KEY" | base64 -d > /tmp/cosign.key
         COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
           --key /tmp/cosign.key \
           --predicate api-sbom.cdx.json \
@@ -448,7 +449,7 @@ build:frontend:
         curl -sSfL \
           "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64" \
           -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign
-        printf '%s' "$COSIGN_PRIVATE_KEY" > /tmp/cosign.key
+        printf '%s' "$COSIGN_PRIVATE_KEY" | base64 -d > /tmp/cosign.key
         COSIGN_PASSWORD="${COSIGN_PASSWORD:-}" cosign attest \
           --key /tmp/cosign.key \
           --predicate frontend-sbom.cdx.json \
