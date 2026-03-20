@@ -392,9 +392,9 @@ build:api:
           --key /tmp/cosign.key \
           --predicate api-sbom.cdx.json \
           --type cyclonedx \
-          "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+          "$API_IMAGE:$CI_COMMIT_SHORT_SHA" \
+          || echo "WARNING: cosign attestation failed for api image — skipping (non-fatal)."
         rm -f /tmp/cosign.key
-        echo "Cosign attestation complete for api image."
       else
         echo "COSIGN_PRIVATE_KEY not set — skipping image attestation."
       fi
@@ -454,9 +454,9 @@ build:frontend:
           --key /tmp/cosign.key \
           --predicate frontend-sbom.cdx.json \
           --type cyclonedx \
-          "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+          "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" \
+          || echo "WARNING: cosign attestation failed for frontend image — skipping (non-fatal)."
         rm -f /tmp/cosign.key
-        echo "Cosign attestation complete for frontend image."
       else
         echo "COSIGN_PRIVATE_KEY not set — skipping image attestation."
       fi
