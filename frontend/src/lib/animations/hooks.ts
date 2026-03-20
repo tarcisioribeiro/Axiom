@@ -19,13 +19,8 @@ export const useCounter = (end: number, duration = 2) => {
   const [count, setCount] = useState(prefersReducedMotion ? end : 0);
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      setCount(end);
-      return;
-    }
-
     const controls = animate(motionValue, end, {
-      duration,
+      duration: prefersReducedMotion ? 0 : duration,
       ease: EASING.smooth,
       onUpdate: setCount,
     });

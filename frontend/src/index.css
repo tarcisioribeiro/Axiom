@@ -125,6 +125,9 @@
     --spacing-md: 1rem; /* 16px */
     --spacing-lg: 1.5rem; /* 24px */
     --spacing-xl: 2rem; /* 32px */
+
+    /* Card hover elevation shadow */
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
   }
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
@@ -204,6 +207,9 @@
 
     /* Star rating color - Dracula yellow (#F1FA8C) */
     --star: 65 92% 76%;
+
+    /* Card hover elevation shadow */
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
   }
 }
 
