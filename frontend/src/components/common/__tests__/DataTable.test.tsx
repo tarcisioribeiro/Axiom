@@ -197,8 +197,12 @@ describe('DataTable', () => {
           pagination={{ page: 2, pageSize: 10, total: 25, onPageChange: vi.fn() }}
         />
       );
-      expect(screen.getByRole('button', { name: 'Página anterior' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Próxima página' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Página anterior' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Próxima página' })
+      ).toBeInTheDocument();
     });
 
     it('disables previous button on first page', () => {
@@ -224,7 +228,9 @@ describe('DataTable', () => {
         />
       );
       expect(screen.getByRole('button', { name: 'Próxima página' })).toBeDisabled();
-      expect(screen.getByRole('button', { name: 'Página anterior' })).not.toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: 'Página anterior' })
+      ).not.toBeDisabled();
     });
 
     it('calls onPageChange with previous page when clicking previous', async () => {
