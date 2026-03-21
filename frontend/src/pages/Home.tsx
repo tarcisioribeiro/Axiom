@@ -98,18 +98,18 @@ export default function Home() {
   ];
 
   return (
-    <PageContainer className="space-y-8">
+    <PageContainer className="space-y-xl">
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-sm">
             <LayoutDashboard className="h-5 w-5" />
             {t('pages.home.quickActionsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
-            className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6"
+            className="grid grid-cols-2 gap-md md:grid-cols-3 lg:grid-cols-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -118,7 +118,7 @@ export default function Home() {
               <motion.div key={action.href} variants={itemVariants}>
                 <Link
                   to={action.href}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border p-4 transition-all hover:scale-105 hover:border-primary hover:bg-accent"
+                  className="flex flex-col items-center justify-center gap-sm rounded-lg border border-border p-md transition-all hover:scale-105 hover:border-primary hover:bg-accent"
                 >
                   <div className="rounded-full bg-primary/10 p-3 text-primary">
                     {action.icon}
@@ -134,10 +134,10 @@ export default function Home() {
       </Card>
 
       {/* Modules */}
-      <div className="space-y-6">
+      <div className="space-y-lg">
         <PageHeader title={t('pages.home.modulesTitle')} />
         <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -163,9 +163,9 @@ export default function Home() {
                     <CardTitle className="text-xl">{module.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
+                    <ul className="space-y-sm">
                       {module.features.map((feature) => (
-                        <li key={feature} className="flex items-center gap-2 text-sm">
+                        <li key={feature} className="flex items-center gap-sm text-sm">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                           {feature}
                         </li>
@@ -181,7 +181,7 @@ export default function Home() {
 
       {/* Info Cards */}
       <motion.div
-        className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        className="grid grid-cols-1 gap-md md:grid-cols-3"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -190,7 +190,7 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-success/20 bg-gradient-to-br from-success/10 to-success/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-success">
+              <CardTitle className="flex items-center gap-sm text-success">
                 <Wallet className="h-5 w-5" />
                 {t('pages.home.infoCards.financeTitle')}
               </CardTitle>
@@ -204,7 +204,7 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-info/20 bg-gradient-to-br from-info/10 to-primary/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-info">
+              <CardTitle className="flex items-center gap-sm text-info">
                 <Lock className="h-5 w-5" />
                 {t('pages.home.infoCards.securityTitle')}
               </CardTitle>
@@ -218,7 +218,7 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-accent/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
+              <CardTitle className="flex items-center gap-sm text-primary">
                 <BookMarked className="h-5 w-5" />
                 {t('pages.home.infoCards.knowledgeTitle')}
               </CardTitle>
