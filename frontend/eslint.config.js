@@ -92,6 +92,32 @@ export default defineConfig([
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
+    // Enforce semantic spacing tokens in layout/common/pages layers.
+    // Direct mapping: 1→xs, 2→sm, 4→md, 6→lg, 8→xl.
+    // Numeric values remain acceptable for fine-grained adjustments (icon sizes, borders, etc.).
+    files: [
+      'src/components/common/**/*.{ts,tsx}',
+      'src/components/layout/**/*.{ts,tsx}',
+      'src/pages/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/\\brounded-xl\\b/]',
+          message:
+            'Use rounded-lg instead of rounded-xl. The design token --radius (0.75rem) maps to rounded-lg.',
+        },
+        {
+          selector:
+            'Literal[value=/\\b(?:p|py|px|pt|pb|pl|pr|m|my|mx|mt|mb|ml|mr|gap|space-[xy])-(?:1|2|4|6|8)\\b/]',
+          message:
+            'Use semantic spacing tokens instead of numeric values. Mapping: 1→xs, 2→sm, 4→md, 6→lg, 8→xl (e.g., gap-4 → gap-md, p-6 → p-lg). See CLAUDE.md "Design Token System".',
+        },
+      ],
+    },
+  },
+  {
     // Story files: disable rules that conflict with Storybook patterns
     files: ['src/**/*.stories.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
     extends: [tseslint.configs.disableTypeChecked],

@@ -29,13 +29,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     <section
       role="status"
       aria-label={title ?? message}
-      className="space-y-4 rounded-lg border bg-card p-12 text-center"
+      className="space-y-md rounded-lg border bg-card p-12 text-center"
     >
       {icon && <div className="flex justify-center [&>svg]:text-primary">{icon}</div>}
       {title && <h3 className="text-lg font-semibold">{title}</h3>}
       <p>{message}</p>
       {action && (
-        <Button onClick={action.onClick} variant="outline" className="mt-4">
+        <Button onClick={action.onClick} variant="outline" className="mt-md">
           {action.label}
         </Button>
       )}

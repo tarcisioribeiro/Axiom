@@ -100,7 +100,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   // Spinner mode (default)
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-4 ${
+      className={`flex flex-col items-center justify-center gap-md ${
         fullScreen ? 'h-screen' : sizeClasses[size]
       }`}
       role="status"

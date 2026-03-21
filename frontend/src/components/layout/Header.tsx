@@ -15,14 +15,14 @@ export const Header = () => {
   const { t } = useTranslation();
 
   return (
-    <header className="border-b bg-card px-4 py-4 lg:px-6">
+    <header className="border-b bg-card px-md py-md lg:px-lg">
       <div className="flex items-center justify-between">
         {/* Botão Hamburger (apenas mobile) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="mr-2 lg:hidden"
+          className="mr-sm lg:hidden"
           aria-label={t('layout.openMenu')}
         >
           <Menu className="h-5 w-5" aria-hidden="true" />
@@ -33,7 +33,7 @@ export const Header = () => {
           <Breadcrumb />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-md">
           <ThemeToggle className="hover-lift" />
 
           <LanguageSelector />

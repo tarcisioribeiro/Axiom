@@ -97,7 +97,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       whileTap="tap"
     >
       <Card className={`transition-shadow ${variantClasses[variant]}`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           {icon && (
             <motion.div
@@ -111,7 +111,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <CardContent>
           <div className="text-2xl font-bold">{displayValue}</div>
           {trend && (
-            <div className="mt-2 flex items-center gap-1">
+            <div className="mt-sm flex items-center gap-xs">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
