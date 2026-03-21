@@ -612,17 +612,30 @@ smoke:staging:
         local url="$2"
         local extra_args="${3:-}"
         local expected="${4:-200}"
+        local max_retries=5
+        local retry_delay=6
+        local attempt=0
+        local STATUS
 
-        STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
-        if [ "$STATUS" = "$expected" ]; then
-          echo "OK   $label → HTTP $STATUS"
-        else
-          echo "FAIL $label → HTTP $STATUS (expected $expected)"
-          exit 1
-        fi
+        while [ $attempt -lt $max_retries ]; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+          if [ "$STATUS" = "$expected" ]; then
+            echo "OK   $label → HTTP $STATUS"
+            return 0
+          fi
+          attempt=$((attempt + 1))
+          if [ $attempt -lt $max_retries ]; then
+            echo "WARN $label → HTTP $STATUS (attempt $attempt/$max_retries, retrying in ${retry_delay}s...)"
+            sleep $retry_delay
+          fi
+        done
+        echo "FAIL $label → HTTP $STATUS (expected $expected)"
+        exit 1
       }
 
       echo "=== Smoke tests: staging ==="
+      echo "Waiting 15s for nginx-ingress to propagate new endpoints..."
+      sleep 15
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
@@ -649,7 +662,7 @@ deploy:rollback:staging:
     - kubectl -n mindledger-staging rollout undo deployment/api
     - kubectl -n mindledger-staging rollout undo deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=60s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=200s
     - echo "Staging rollback complete."
   after_script:
     - rm -f /tmp/kubeconfig
@@ -681,7 +694,7 @@ rollback:staging:
     - kubectl -n mindledger-staging rollout undo deployment/api
     - kubectl -n mindledger-staging rollout undo deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=60s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=200s
     - echo "Staging rollback complete."
   after_script:
     - rm -f /tmp/kubeconfig
@@ -959,17 +972,30 @@ smoke:production:
         local url="$2"
         local extra_args="${3:-}"
         local expected="${4:-200}"
+        local max_retries=5
+        local retry_delay=6
+        local attempt=0
+        local STATUS
 
-        STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
-        if [ "$STATUS" = "$expected" ]; then
-          echo "OK   $label → HTTP $STATUS"
-        else
-          echo "FAIL $label → HTTP $STATUS (expected $expected)"
-          exit 1
-        fi
+        while [ $attempt -lt $max_retries ]; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+          if [ "$STATUS" = "$expected" ]; then
+            echo "OK   $label → HTTP $STATUS"
+            return 0
+          fi
+          attempt=$((attempt + 1))
+          if [ $attempt -lt $max_retries ]; then
+            echo "WARN $label → HTTP $STATUS (attempt $attempt/$max_retries, retrying in ${retry_delay}s...)"
+            sleep $retry_delay
+          fi
+        done
+        echo "FAIL $label → HTTP $STATUS (expected $expected)"
+        exit 1
       }
 
       echo "=== Smoke tests: production ==="
+      echo "Waiting 15s for nginx-ingress to propagate new endpoints..."
+      sleep 15
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
@@ -1025,7 +1051,7 @@ deploy:rollback:production:
       PREV_SHA="${PREV_IMAGE##*:}"
       echo "Rolling frontend back to revision $PREV_REVISION — image: $PREV_IMAGE (SHA: $PREV_SHA)"
       kubectl -n mindledger rollout undo deployment/frontend --to-revision="$PREV_REVISION"
-    - kubectl -n mindledger rollout status deployment/frontend --timeout=60s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
     - echo "Production rollback complete."
   after_script:
     - rm -f /tmp/kubeconfig
@@ -1084,7 +1110,7 @@ rollback:production:
       PREV_SHA="${PREV_IMAGE##*:}"
       echo "Rolling frontend back to revision $PREV_REVISION — image: $PREV_IMAGE (SHA: $PREV_SHA)"
       kubectl -n mindledger rollout undo deployment/frontend --to-revision="$PREV_REVISION"
-    - kubectl -n mindledger rollout status deployment/frontend --timeout=60s
+    - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
     - echo "Production rollback complete."
   after_script:
     - rm -f /tmp/kubeconfig
