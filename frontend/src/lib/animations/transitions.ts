@@ -2,6 +2,7 @@
 export const DURATION = {
   fast: 0.2,
   normal: 0.3,
+  medium: 0.4,
   slow: 0.6,
 };
 
@@ -27,11 +28,11 @@ export const transitions = {
     damping: 20,
   },
   smooth: {
-    duration: 0.4,
+    duration: DURATION.medium,
     ease: [0.25, 0.46, 0.45, 0.94],
   },
   bounce: {
-    duration: 0.4,
+    duration: DURATION.medium,
     ease: [0.22, 1.0, 0.36, 1],
   },
 };

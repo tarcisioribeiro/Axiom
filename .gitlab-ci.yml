@@ -612,8 +612,8 @@ smoke:staging:
         local url="$2"
         local extra_args="${3:-}"
         local expected="${4:-200}"
-        local max_retries=5
-        local retry_delay=6
+        local max_retries=10
+        local retry_delay=12
         local attempt=0
         local STATUS
 
@@ -634,8 +634,12 @@ smoke:staging:
       }
 
       echo "=== Smoke tests: staging ==="
-      echo "Waiting 15s for nginx-ingress to propagate new endpoints..."
-      sleep 15
+      # nginx-ingress tem sync period padrão de ~60s. O sleep abaixo garante que
+      # o controller tenha tido tempo suficiente para recarregar a configuração
+      # após o rollout dos pods completar. Com 75s iniciais + 10 retries × 12s
+      # (120s) o timeout máximo é ~195s, cobrindo com folga um reload lento.
+      echo "Waiting 75s for nginx-ingress to reload configuration..."
+      sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
@@ -972,8 +976,8 @@ smoke:production:
         local url="$2"
         local extra_args="${3:-}"
         local expected="${4:-200}"
-        local max_retries=5
-        local retry_delay=6
+        local max_retries=10
+        local retry_delay=12
         local attempt=0
         local STATUS
 
@@ -994,8 +998,11 @@ smoke:production:
       }
 
       echo "=== Smoke tests: production ==="
-      echo "Waiting 15s for nginx-ingress to propagate new endpoints..."
-      sleep 15
+      # Em produção o deploy é blue-green: o ingress já existe, mas o
+      # nginx-ingress pode levar até ~60s para sincronizar o novo upstream
+      # após o switch de slot. Mantemos o mesmo budget de espera que staging.
+      echo "Waiting 75s for nginx-ingress to reload configuration..."
+      sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
