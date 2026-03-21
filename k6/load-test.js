@@ -47,30 +47,42 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:39100'
 const TEST_USERNAME = __ENV.TEST_USERNAME || ''
 const TEST_PASSWORD = __ENV.TEST_PASSWORD || ''
 
-// ── Helper: obtain JWT cookies via the token endpoint ─────────────────────────
-function login() {
+// ── Setup: authenticate once before VUs start ─────────────────────────────────
+//
+// The login endpoint has a strict rate limit (5 req/min per IP) to prevent
+// brute-force attacks. Calling login inside the default() function would cause
+// every VU to hit the endpoint on every iteration, exhausting the quota almost
+// immediately when running 10 concurrent VUs.
+//
+// Instead, setup() runs a single login before the test begins, extracts the
+// access_token from the Set-Cookie response, and returns it as a Bearer token
+// string. The token is injected into every VU via the `data` parameter and sent
+// as an Authorization header — compatible with JWTCookieMiddleware (which only
+// sets the header when one is not already present).
+//
+export function setup() {
+  if (!TEST_USERNAME || !TEST_PASSWORD) return {}
+
   const res = http.post(
     `${BASE_URL}/api/v1/authentication/token/`,
     JSON.stringify({ username: TEST_USERNAME, password: TEST_PASSWORD }),
     { headers: { 'Content-Type': 'application/json' } },
   )
 
-  const ok = check(res, {
-    'login: status 200': (r) => r.status === 200,
-  })
-
-  if (!ok) {
-    errorRate.add(1)
-    return null
+  if (res.status !== 200) {
+    throw new Error(`setup() login failed: HTTP ${res.status} — ${res.body}`)
   }
 
-  // The API sets HttpOnly JWT cookies on the response; k6 tracks cookies per
-  // jar automatically, so simply return the jar handle for the VU.
-  return res.cookies
+  const cookieArr = res.cookies.access_token
+  if (!cookieArr || !cookieArr[0]) {
+    throw new Error('setup() login succeeded but access_token cookie is missing')
+  }
+
+  return { token: cookieArr[0].value }
 }
 
 // ── Default function (one iteration per VU) ───────────────────────────────────
-export default function () {
+export default function (data) {
   // 1. Liveness check — no auth required; /live/ always returns 200 if the
   //    process is running (unlike /health/ which returns 503 when a dependency
   //    such as MinIO is unreachable, causing false-positive load-test failures).
@@ -86,24 +98,19 @@ export default function () {
 
   // Skip authenticated endpoints when credentials are not configured
   // (allows running the script against a local dev server quickly).
-  if (!TEST_USERNAME || !TEST_PASSWORD) {
-    sleep(1)
-    return
-  }
-
-  // 2. Authenticate
-  const cookies = login()
-  if (!cookies) {
+  if (!TEST_USERNAME || !TEST_PASSWORD || !data.token) {
     sleep(1)
     return
   }
 
   const params = {
-    headers: { 'Content-Type': 'application/json' },
-    cookies,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${data.token}`,
+    },
   }
 
-  // 3. Authenticated endpoint smoke tests
+  // 2. Authenticated endpoint smoke tests
   group('expenses list', () => {
     const res = http.get(`${BASE_URL}/api/v1/expenses/`, params)
     const ok = check(res, {
@@ -127,8 +134,8 @@ export default function () {
     apiLatency.add(res.timings.duration)
   })
 
-  group('dashboard', () => {
-    const res = http.get(`${BASE_URL}/api/v1/dashboard/`, params)
+  group('dashboard stats', () => {
+    const res = http.get(`${BASE_URL}/api/v1/dashboard/stats/`, params)
     const ok = check(res, { 'dashboard: status 200': (r) => r.status === 200 })
     errorRate.add(!ok)
     apiLatency.add(res.timings.duration)
