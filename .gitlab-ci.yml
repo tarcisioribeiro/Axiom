@@ -588,6 +588,47 @@ deploy:staging:
     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
+# seed:staging
+#
+# Creates (or updates) the e2e_tester account used by Playwright E2E tests.
+# Trigger manually once after the first deploy, or any time the staging DB
+# is reset. The job is idempotent — re-running is safe.
+#
+# Required CI/CD variables:
+#   E2E_USERNAME — username for the E2E test account
+#   E2E_PASSWORD — password for the E2E test account (masked)
+# ==============================================================================
+
+seed:staging:
+  image:
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    entrypoint: [""]
+  stage: deploy-staging
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: manual
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    - |
+      kubectl -n mindledger-staging exec deployment/api -- python manage.py shell -c "
+from django.contrib.auth.models import User, Group
+u, created = User.objects.get_or_create(username='${E2E_USERNAME}')
+u.set_password('${E2E_PASSWORD}')
+u.is_superuser = False
+u.is_staff = False
+u.save()
+g = Group.objects.get(name='members')
+u.groups.add(g)
+print('OK:', u.username, '| created:', created, '| groups:', list(u.groups.values_list('name', flat=True)))
+"
+  after_script:
+    - rm -f /tmp/kubeconfig
+
+# ==============================================================================
 # backup:staging
 #
 # Ensures the staging MinIO bucket and backup CronJob are present, then
