@@ -7,7 +7,7 @@
 
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
@@ -59,12 +59,19 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   // Parse numeric value for counter animation.
   // Skip animation for ratio/fraction values (e.g., "8 / 18").
-  const isRatio = typeof value === 'string' && value.includes('/');
-  const isPercentage = typeof value === 'string' && value.includes('%');
-  const isCurrency = typeof value === 'string' && value.includes('R$');
-
-  const numericValue = isRatio ? NaN : extractNumber(value);
-  const isNumeric = !isNaN(numericValue);
+  const { isRatio, isPercentage, isCurrency, numericValue, isNumeric } = useMemo(() => {
+    const ratio = typeof value === 'string' && value.includes('/');
+    const percentage = typeof value === 'string' && value.includes('%');
+    const currency = typeof value === 'string' && value.includes('R$');
+    const numeric = ratio ? NaN : extractNumber(value);
+    return {
+      isRatio: ratio,
+      isPercentage: percentage,
+      isCurrency: currency,
+      numericValue: numeric,
+      isNumeric: !isNaN(numeric),
+    };
+  }, [value]);
 
   // useCounter returns a float — callers format as needed.
   const animatedCount = useCounter(isNumeric ? numericValue : 0);
