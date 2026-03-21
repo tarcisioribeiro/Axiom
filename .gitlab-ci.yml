@@ -613,18 +613,18 @@ seed:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
-    - |
-      kubectl -n mindledger-staging exec deployment/api -- python manage.py shell -c "
-from django.contrib.auth.models import User, Group
-u, created = User.objects.get_or_create(username='${E2E_USERNAME}')
-u.set_password('${E2E_PASSWORD}')
-u.is_superuser = False
-u.is_staff = False
-u.save()
-g = Group.objects.get(name='members')
-u.groups.add(g)
-print('OK:', u.username, '| created:', created, '| groups:', list(u.groups.values_list('name', flat=True)))
-"
+    - >-
+      kubectl -n mindledger-staging exec deployment/api --
+      python manage.py shell -c
+      "from django.contrib.auth.models import User, Group;
+      u, created = User.objects.get_or_create(username='${E2E_USERNAME}');
+      u.set_password('${E2E_PASSWORD}');
+      u.is_superuser = False;
+      u.is_staff = False;
+      u.save();
+      g = Group.objects.get(name='members');
+      u.groups.add(g);
+      print('OK:', u.username, '| created:', created, '| groups:', list(u.groups.values_list('name', flat=True)))"
   after_script:
     - rm -f /tmp/kubeconfig
 
