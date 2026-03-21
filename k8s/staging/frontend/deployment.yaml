@@ -9,7 +9,8 @@ metadata:
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 180
+  progressDeadlineSeconds: 300
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: frontend

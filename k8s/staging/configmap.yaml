@@ -23,8 +23,7 @@ data:
   MINIO_ENDPOINT: "minio-service:9000"
   MINIO_EXTERNAL_ENDPOINT: "mindledger-staging.tjtux.duckdns.org:9000"
   MINIO_BUCKET_NAME: "mindledger-staging"
-  MINIO_USE_SSL: "true"
-  MINIO_CA_BUNDLE: "/etc/ssl/minio/ca.crt"
+  MINIO_USE_SSL: "false"
 
   # Ollama — disabled in staging (too heavy for shared VPS)
   OLLAMA_HOST: ""

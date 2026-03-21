@@ -526,11 +526,11 @@ deploy:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
-    # Pause both deployments so that the subsequent `apply` (which patches the
-    # spec with the placeholder image 0.0.0) and `set image` (which sets the
-    # real SHA tag) are batched into a single rollout on resume.  Without this,
-    # two back-to-back Recreate rollouts race and the second one can time out
-    # while waiting for the first one to finish terminating the old pod.
+    # Pause both deployments so all spec changes (configmap, service, deployment)
+    # are batched into a single rollout on resume.  The image is substituted
+    # directly in the YAML via sed before kubectl apply, so there is never an
+    # intermediate revision with the placeholder tag 0.0.0 — which would
+    # otherwise become the rollback target on rollout undo.
     - kubectl -n mindledger-staging rollout pause deployment/api deployment/frontend 2>/dev/null || true
     # Sync secrets from CI variables to the cluster.
     # Guard: abort early if any critical variable is unset/empty to avoid
@@ -563,15 +563,23 @@ deploy:staging:
         --dry-run=client -o yaml | kubectl apply -f -
     - kubectl apply -f k8s/staging/ingress.yaml
     - kubectl apply -f k8s/staging/api/service.yaml
-    - kubectl apply -f k8s/staging/api/deployment.yaml
+    - kubectl apply -f k8s/staging/configmap.yaml
+    - kubectl apply -f k8s/staging/minio/service.yaml
+    # Apply deployment specs with the real image tag substituted in-place so
+    # kubectl apply creates exactly one rollout revision per deploy cycle.
+    # Using sed to replace the placeholder 0.0.0 tag avoids a spurious revision
+    # with the placeholder image that would otherwise be the rollback target.
+    - |
+      sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
+        k8s/staging/api/deployment.yaml | kubectl apply -f -
     - kubectl apply -f k8s/staging/frontend/configmap-nginx.yaml
     - kubectl apply -f k8s/staging/frontend/service.yaml
-    - kubectl apply -f k8s/staging/frontend/deployment.yaml
-    - kubectl -n mindledger-staging set image deployment/api api="$API_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - kubectl -n mindledger-staging set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    - |
+      sed "s|image: .*:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
+        k8s/staging/frontend/deployment.yaml | kubectl apply -f -
     - kubectl -n mindledger-staging rollout resume deployment/api deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=1140s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=120s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=300s
   after_script:
     - rm -f /tmp/kubeconfig
 
@@ -666,7 +674,7 @@ deploy:rollback:staging:
     - kubectl -n mindledger-staging rollout undo deployment/api
     - kubectl -n mindledger-staging rollout undo deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=200s
+    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=360s
     - echo "Staging rollback complete."
   after_script:
     - rm -f /tmp/kubeconfig
@@ -847,8 +855,15 @@ test:backup-restore:
     - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
     - until pg_isready -h postgres -p 5432; do sleep 1; done
     - mkdir -p "$BACKUP_DIR"
-    # Configure MinIO client and fetch the latest backup from the staging bucket
-    - mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
+    # Configure MinIO client and fetch the latest backup from the staging bucket.
+    # Try with the configured endpoint first (--insecure handles self-signed certs).
+    # If the endpoint uses https:// but MinIO serves plain HTTP, fall back to http://.
+    - |
+      mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
+        "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY" --insecure 2>/dev/null \
+      || mc alias set "$MINIO_ALIAS" \
+        "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
+        "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
     - |
       LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/" --json \
         | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
