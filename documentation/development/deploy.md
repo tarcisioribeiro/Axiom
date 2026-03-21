@@ -12,19 +12,19 @@ primeiro push.
 lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-load → test-e2e → deploy-production → smoke-production
 ```
 
-| Estágio             | Jobs                                                                                        | Quando executa           |
-|---------------------|---------------------------------------------------------------------------------------------|--------------------------|
-| `lint`              | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`          | todo push / MR           |
-| `typecheck`         | `typecheck:backend`, `typecheck:frontend`                                                   | todo push / MR           |
-| `test`              | `test:backend`                                                                              | todo push / MR           |
-| `build`             | `build:api`, `build:frontend`                                                               | develop / main / tag     |
-| `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                           | develop / main / tag     |
-| `deploy-staging`    | `deploy:staging`                                                                            | develop                  |
-| `smoke-staging`     | `smoke:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)          | develop                  |
-| `test-load`         | `test:load` (k6)                                                                            | develop                  |
-| `test-e2e`          | `test:e2e` (Playwright)                                                                     | develop                  |
-| `deploy-production` | `deploy:production` (**manual**)                                                            | main                     |
-| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**) | main                     |
+| Estágio             | Jobs                                                                                                       | Quando executa           |
+|---------------------|------------------------------------------------------------------------------------------------------------|--------------------------|
+| `lint`              | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`        | todo push / MR           |
+| `typecheck`         | `typecheck:backend`, `typecheck:frontend`                                                                  | todo push / MR           |
+| `test`              | `test:backend`                                                                                             | todo push / MR           |
+| `build`             | `build:api`, `build:frontend`                                                                              | develop / main / tag     |
+| `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                         | develop / main / tag     |
+| `deploy-staging`    | `deploy:staging`                                                                                           | develop                  |
+| `smoke-staging`     | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)      | develop                  |
+| `test-load`         | `test:load` (k6)                                                                                           | develop                  |
+| `test-e2e`          | `test:e2e` (Playwright), `test:backup-restore`                                                             | develop                  |
+| `deploy-production` | `deploy:production` (**manual**)                                                                           | main                     |
+| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)               | main                     |
 
 > Para detalhes sobre os procedimentos de rollback consulte o
 > [Runbook de Rollback](rollback.md).
@@ -153,71 +153,70 @@ GitLab Environments.
 
 ---
 
-#### `CI_SMOKE_JWT_STAGING`
+#### `STAGING_SUPERUSER_USERNAME` e `STAGING_SUPERUSER_PASSWORD`
 
-Bearer JWT de um usuário de serviço no banco de staging. O smoke test usa este
-token para verificar o endpoint autenticado `GET /api/v1/me/`.
+Credenciais do superusuário Django no banco de staging. O smoke test
+(`smoke:staging`) faz login via `POST /api/v1/authentication/token/` com essas
+credenciais para obter um JWT em cookie HttpOnly e validar o endpoint autenticado
+`GET /api/v1/me/`.
 
-**Como gerar:**
+> O endpoint de autenticação do MindLedger devolve o token como cookie HttpOnly
+> (não no body da resposta). O smoke test salva o cookie com `curl -c` e extrai
+> o `access_token` diretamente do arquivo de cookie.
 
-1. Crie o usuário de serviço no banco de staging (execute após o primeiro deploy):
+**Valores:** devem ser idênticos aos usados na provisão do K8s secret
+(`STAGING_SUPERUSER_USERNAME` / `STAGING_SUPERUSER_PASSWORD` em `k8s/staging/secrets.yaml`).
 
-```bash
-kubectl -n mindledger-staging exec -it deployment/api -- \
-  python manage.py createsuperuser \
-  --username ci-smoke \
-  --email ci-smoke@staging.local
-```
-
-2. Obtenha o token JWT:
+**Como confirmar os valores vigentes no cluster:**
 
 ```bash
-curl -s -X POST https://mindledger-staging.tjtux.duckdns.org/api/v1/auth/token/ \
-  -H "Content-Type: application/json" \
-  -d '{"username": "ci-smoke", "password": "SENHA_DO_USUARIO"}' \
-  | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['access'])"
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 ```
 
-3. Cole o valor do campo `access` como valor da variável no GitLab.
+> **Atenção:** O script `api/createsuperuser.py` **só cria** o superusuário se
+> ele ainda não existir. Se o usuário já existe no banco e a senha do K8s secret
+> foi alterada posteriormente, o banco e a variável CI ficam dessincronizados —
+> o smoke test passará a retornar 401. Para realinhar, redefina a senha no banco:
+>
+> ```bash
+> kubectl exec -n mindledger-staging deployment/api -- \
+>   python manage.py shell -c "
+> from django.contrib.auth import get_user_model
+> U = get_user_model()
+> u = U.objects.get(username='admin')
+> u.set_password('NOVA_SENHA')
+> u.save()
+> "
+> ```
 
-> **Atenção:** O token de acesso expira em 15 minutos (configuração padrão do projeto).
-> Para uso em CI, gere um token de refresh de longa duração ou ajuste
-> `ACCESS_TOKEN_LIFETIME` em `settings.py` para o usuário de serviço.
-> Alternativamente, use o token de `refresh` e adicione uma etapa de renovação
-> no smoke test.
-
-| Configuração | Valor |
-|---|---|
-| Masked | Sim |
-| Protected | Sim |
+| Variável                       | Masked | Protected |
+|-------------------------------|--------|-----------|
+| `STAGING_SUPERUSER_USERNAME`  | Não    | Sim       |
+| `STAGING_SUPERUSER_PASSWORD`  | Sim    | Sim       |
 
 ---
 
-#### `CI_SMOKE_JWT_PRODUCTION`
+#### `PRODUCTION_SUPERUSER_USERNAME` e `PRODUCTION_SUPERUSER_PASSWORD`
 
-Mesmo que `CI_SMOKE_JWT_STAGING`, mas para o banco de produção. Usado pelo
-job `smoke:production`.
+Mesmo papel que as variáveis de staging, mas para o ambiente de produção. Usadas
+pelo job `smoke:production`.
 
-**Como gerar:**
+**Como confirmar os valores vigentes no cluster:**
 
 ```bash
-# Crie o usuário no banco de produção
-kubectl -n mindledger exec -it deployment/api-blue -- \
-  python manage.py createsuperuser \
-  --username ci-smoke \
-  --email ci-smoke@prod.local
-
-# Obtenha o token
-curl -s -X POST https://mindledger.tjtux.duckdns.org/api/v1/auth/token/ \
-  -H "Content-Type: application/json" \
-  -d '{"username": "ci-smoke", "password": "SENHA_DO_USUARIO"}' \
-  | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['access'])"
+kubectl get secret mindledger-secrets -n mindledger \
+  -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
+kubectl get secret mindledger-secrets -n mindledger \
+  -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 ```
 
-| Configuração | Valor |
-|---|---|
-| Masked | Sim |
-| Protected | Sim |
+| Variável                          | Masked | Protected |
+|----------------------------------|--------|-----------|
+| `PRODUCTION_SUPERUSER_USERNAME`  | Não    | Sim       |
+| `PRODUCTION_SUPERUSER_PASSWORD`  | Sim    | Sim       |
 
 ---
 
@@ -268,18 +267,59 @@ kubectl -n mindledger-staging exec -it deployment/api -- \
 
 ---
 
-### Variáveis manuais para validação de backups
+### Variáveis manuais para backup e validação de backups
 
-Usadas pelo job `test:backup-restore` para baixar e restaurar o backup mais
-recente do MinIO de staging.
+Usadas pelos jobs `backup:staging` (dispara o backup no cluster) e
+`test:backup-restore` (baixa e restaura o backup para validação).
+
+---
+
+#### `STAGING_MINIO_ROOT_USER` e `STAGING_MINIO_ROOT_PASSWORD`
+
+Credenciais root do MinIO de staging. O job `backup:staging` as usa para criar
+(ou atualizar) o secret `mindledger-backup-secrets` no Kubernetes antes de
+disparar o job de backup.
+
+**Como obter os valores vigentes no cluster:**
+
+```bash
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
+```
+
+| Variável                      | Masked | Protected |
+|------------------------------|--------|-----------|
+| `STAGING_MINIO_ROOT_USER`    | Não    | Sim       |
+| `STAGING_MINIO_ROOT_PASSWORD`| Sim    | Sim       |
 
 ---
 
 #### `STAGING_MINIO_ENDPOINT`
 
-Endpoint público do MinIO de staging.
+Endpoint do MinIO de staging **acessível a partir do runner de CI**. O runner
+roda como container Docker no próprio VPS, portanto deve-se usar o IP público
+do VPS na porta NodePort exposta pelo serviço MinIO.
 
-**Valor:** `https://mindledger-staging.tjtux.duckdns.org:9000`
+**Como obter:**
+
+```bash
+# IP público do VPS
+curl -s ifconfig.me
+
+# NodePort do serviço MinIO
+kubectl get svc minio-service -n mindledger-staging \
+  -o jsonpath='{.spec.ports[?(@.port==9000)].nodePort}'
+```
+
+**Formato do valor:** `http://<IP_PUBLICO_VPS>:<NODEPORT>`
+
+Exemplo: `http://84.247.184.151:30900`
+
+> Não use `https://` nem a URL do ingress para esta variável — o MinIO interno
+> do cluster não serve TLS no NodePort. O ingress não expõe a porta 9000 por
+> padrão.
 
 | Configuração | Valor |
 |---|---|
@@ -288,27 +328,30 @@ Endpoint público do MinIO de staging.
 
 ---
 
-#### `STAGING_MINIO_ACCESS_KEY`
+#### `STAGING_MINIO_ACCESS_KEY` e `STAGING_MINIO_SECRET_KEY`
 
-Access key do MinIO de staging. Corresponde ao valor de `MINIO_ROOT_USER`
-configurado no cluster (veja seção de provisionamento do k8s abaixo).
+Credenciais que o job `test:backup-restore` usa para autenticar no MinIO e
+baixar o backup mais recente. Como o MinIO de staging não possui usuários
+adicionais configurados além do root, **devem ter o mesmo valor** que
+`STAGING_MINIO_ROOT_USER` e `STAGING_MINIO_ROOT_PASSWORD`.
 
-| Configuração | Valor |
-|---|---|
-| Masked | Não |
-| Protected | Sim |
+**Como obter:**
 
----
+```bash
+# São os mesmos valores do root user — confirme com:
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
+kubectl get secret mindledger-secrets -n mindledger-staging \
+  -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
+```
 
-#### `STAGING_MINIO_SECRET_KEY`
+> Se no futuro for criado um usuário MinIO dedicado para CI com policy
+> `readonly`, atualize estas variáveis para usar esse usuário em vez do root.
 
-Secret key do MinIO de staging. Corresponde ao valor de `MINIO_ROOT_PASSWORD`
-configurado no cluster.
-
-| Configuração | Valor |
-|---|---|
-| Masked | Sim |
-| Protected | Sim |
+| Variável                   | Masked | Protected |
+|---------------------------|--------|-----------|
+| `STAGING_MINIO_ACCESS_KEY`| Não    | Sim       |
+| `STAGING_MINIO_SECRET_KEY`| Sim    | Sim       |
 
 ---
 
@@ -328,8 +371,9 @@ Nome do bucket MinIO onde os backups de staging são armazenados.
 #### `BACKUP_ENCRYPTION_KEY`
 
 Passphrase AES-256-CBC usada para encriptar os backups gerados pelo script
-`api/scripts/backup.sh`. O job `test:backup-restore` usa esta chave para
-descriptografar o backup antes de restaurá-lo.
+`api/scripts/backup.sh`. Os jobs `backup:staging` e `test:backup-restore` usam
+esta chave — o primeiro para encriptar, o segundo para descriptografar antes de
+restaurar.
 
 **Como gerar:**
 
@@ -338,7 +382,7 @@ openssl rand -base64 32
 ```
 
 > Guarde este valor com segurança. Sem ele, os backups encriptados não podem
-> ser restaurados.
+> ser restaurados. Use um valor diferente para produção.
 
 | Configuração | Valor |
 |---|---|
@@ -684,25 +728,34 @@ kubectl apply -f k8s/staging/ingress.yaml
 [ ] Pull secret gitlab-registry-secret criado em ambos os namespaces
 [ ] Secrets do k8s de staging aplicados via envsubst
 [ ] Demais recursos de infraestrutura de staging aplicados
-[ ] Variável KUBECONFIG_CONTENT configurada no GitLab
-[ ] Variável STAGING_URL configurada no GitLab
-[ ] Variável PRODUCTION_URL configurada no GitLab
-[ ] Variável CI_SMOKE_JWT_STAGING configurada no GitLab *
-[ ] Variável CI_SMOKE_JWT_PRODUCTION configurada no GitLab *
-[ ] Variável K6_TEST_USERNAME configurada no GitLab
-[ ] Variável K6_TEST_PASSWORD configurada no GitLab
-[ ] Variável E2E_USERNAME configurada no GitLab
-[ ] Variável E2E_PASSWORD configurada no GitLab
-[ ] Variável STAGING_MINIO_ENDPOINT configurada no GitLab
-[ ] Variável STAGING_MINIO_ACCESS_KEY configurada no GitLab
-[ ] Variável STAGING_MINIO_SECRET_KEY configurada no GitLab
-[ ] Variável BACKUP_ENCRYPTION_KEY configurada no GitLab
+
+Variáveis de CI/CD no GitLab (Settings → CI/CD → Variables):
+[ ] KUBECONFIG_CONTENT
+[ ] STAGING_URL
+[ ] PRODUCTION_URL
+[ ] STAGING_SUPERUSER_USERNAME   *
+[ ] STAGING_SUPERUSER_PASSWORD   *
+[ ] PRODUCTION_SUPERUSER_USERNAME  **
+[ ] PRODUCTION_SUPERUSER_PASSWORD  **
+[ ] K6_TEST_USERNAME             *
+[ ] K6_TEST_PASSWORD             *
+[ ] E2E_USERNAME                 *
+[ ] E2E_PASSWORD                 *
+[ ] STAGING_MINIO_ENDPOINT
+[ ] STAGING_MINIO_ROOT_USER
+[ ] STAGING_MINIO_ROOT_PASSWORD
+[ ] STAGING_MINIO_ACCESS_KEY
+[ ] STAGING_MINIO_SECRET_KEY
+[ ] BACKUP_ENCRYPTION_KEY
+[ ] COSIGN_PRIVATE_KEY           (opcional)
+[ ] COSIGN_PASSWORD              (opcional)
 ```
 
-> (*) `CI_SMOKE_JWT_STAGING` e `CI_SMOKE_JWT_PRODUCTION` só podem ser gerados
-> após o primeiro deploy bem-sucedido, pois dependem do banco estar disponível.
-> O smoke test falhará na primeira execução se não estiverem configurados — isso
-> é esperado. Configure-os após o deploy inicial e reexecute o pipeline.
+> (*) Requerem o primeiro `deploy:staging` bem-sucedido para que o banco de
+> staging esteja disponível. Configure antes do segundo push e reexecute o pipeline.
+>
+> (**) Requerem o primeiro `deploy:production` bem-sucedido. O job
+> `smoke:production` só executa em pushes para `main`.
 
 ---
 
@@ -710,19 +763,19 @@ kubectl apply -f k8s/staging/ingress.yaml
 
 ```
 Push para develop
-  → lint (black, isort, flake8, bandit, pip-audit, eslint, prettier, npm audit)
+  → lint (black, isort, flake8, bandit, pip-audit, eslint, prettier, npm audit, commitlint)
   → typecheck (mypy, tsc)
   → test:backend (pytest + coverage)
-  → build:api + build:frontend  ← push para o Container Registry + SBOM
-  → scan:api + scan:frontend    ← Trivy: bloqueia se HIGH/CRITICAL encontrado
-  → deploy:staging              ← kubectl apply + set image → k3s reinicia os pods
-  → smoke:staging               ← curl /health/, /ready/, /api/v1/me/
-  → test:load                   ← k6 contra staging
-  → test:e2e                    ← Playwright contra staging
-  → test:backup-restore         ← baixa backup do MinIO, restaura, valida schema
+  → build:api + build:frontend    ← push para o Container Registry + SBOM
+  → scan:api + scan:frontend       ← Trivy: bloqueia se HIGH/CRITICAL encontrado
+  → deploy:staging                 ← kubectl apply + set image → k3s reinicia os pods
+  → smoke:staging                  ← curl /health/, /ready/ + login cookie + /api/v1/me/
+  → backup:staging                 ← cria job K8s a partir do CronJob; aguarda conclusão
+  → test:load                      ← k6 contra staging
+  → test:e2e + test:backup-restore ← Playwright / baixa dump MinIO, pg_restore, manage.py check
 
 Push para main (+ aprovação manual)
   → (mesmos estágios acima até scan)
-  → deploy:production           ← blue-green switch + kubectl set image frontend
-  → smoke:production            ← curl /health/, /ready/, /api/v1/me/
+  → deploy:production              ← blue-green switch + kubectl set image frontend
+  → smoke:production               ← curl /health/, /ready/ + login cookie + /api/v1/me/
 ```
