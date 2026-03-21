@@ -275,6 +275,9 @@
       },
       "quickActionsTitle": "Quick Actions",
       "modulesTitle": "Available Modules",
+      "modules": {
+        "navigateTo": "Navigate to {{module}}"
+      },
       "quickActions": {
         "newExpense": "New Expense",
         "newRevenue": "New Revenue",

@@ -275,6 +275,9 @@
       },
       "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
+      "modules": {
+        "navigateTo": "Navegar para {{module}}"
+      },
       "quickActions": {
         "newExpense": "Nova Despesa",
         "newRevenue": "Nova Receita",

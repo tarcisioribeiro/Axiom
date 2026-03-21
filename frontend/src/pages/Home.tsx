@@ -143,7 +143,13 @@ export default function Home() {
         >
           {modules.map((module) => (
             <motion.div key={module.href} variants={itemVariants}>
-              <Link to={module.href} className="group block h-full">
+              <Link
+                to={module.href}
+                className="group block h-full"
+                aria-label={t('pages.home.modules.navigateTo', {
+                  module: module.title,
+                })}
+              >
                 <Card className="h-full border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl">
                   <CardHeader>
                     <motion.div
