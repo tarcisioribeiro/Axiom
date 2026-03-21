@@ -713,18 +713,21 @@ smoke:staging:
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
-      # Obtain a fresh JWT — any pre-stored token will have expired during the
-      # build/scan/deploy stages (access token TTL is 15 min).
-      SMOKE_TOKEN_RESP=$(curl -s --max-time 10 \
+      # Obtain a fresh JWT via cookie-based login (access token is set as an
+      # HttpOnly cookie, not returned in the response body).
+      SMOKE_COOKIE_JAR=$(mktemp)
+      LOGIN_RESP=$(curl -s --max-time 10 \
+        -c "$SMOKE_COOKIE_JAR" \
         -X POST "${SMOKE_URL}/api/v1/authentication/token/" \
         -H "Content-Type: application/json" \
         -d "{\"username\":\"${STAGING_SUPERUSER_USERNAME}\",\"password\":\"${STAGING_SUPERUSER_PASSWORD}\"}" \
         2>/dev/null || true)
-      SMOKE_TOKEN=$(echo "$SMOKE_TOKEN_RESP" | tr ',' '\n' | grep '"access"' | \
-        tr -d ' ' | cut -d'"' -f4)
+      # Extract access_token from Netscape cookie jar (last field on the matching line)
+      SMOKE_TOKEN=$(awk '$6 == "access_token" {print $7}' "$SMOKE_COOKIE_JAR" || true)
+      rm -f "$SMOKE_COOKIE_JAR"
       if [ -z "$SMOKE_TOKEN" ]; then
-        echo "FAIL /api/v1/me/ — could not obtain JWT token"
-        echo "Token endpoint response: ${SMOKE_TOKEN_RESP}"
+        echo "FAIL /api/v1/me/ — could not obtain JWT token (cookie not set)"
+        echo "Login response: ${LOGIN_RESP}"
         exit 1
       fi
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
@@ -1102,18 +1105,21 @@ smoke:production:
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
-      # Obtain a fresh JWT — any pre-stored token will have expired during the
-      # build/scan/deploy stages (access token TTL is 15 min).
-      SMOKE_TOKEN_RESP=$(curl -s --max-time 10 \
+      # Obtain a fresh JWT via cookie-based login (access token is set as an
+      # HttpOnly cookie, not returned in the response body).
+      SMOKE_COOKIE_JAR=$(mktemp)
+      LOGIN_RESP=$(curl -s --max-time 10 \
+        -c "$SMOKE_COOKIE_JAR" \
         -X POST "${SMOKE_URL}/api/v1/authentication/token/" \
         -H "Content-Type: application/json" \
         -d "{\"username\":\"${PRODUCTION_SUPERUSER_USERNAME}\",\"password\":\"${PRODUCTION_SUPERUSER_PASSWORD}\"}" \
         2>/dev/null || true)
-      SMOKE_TOKEN=$(echo "$SMOKE_TOKEN_RESP" | tr ',' '\n' | grep '"access"' | \
-        tr -d ' ' | cut -d'"' -f4)
+      # Extract access_token from Netscape cookie jar (last field on the matching line)
+      SMOKE_TOKEN=$(awk '$6 == "access_token" {print $7}' "$SMOKE_COOKIE_JAR" || true)
+      rm -f "$SMOKE_COOKIE_JAR"
       if [ -z "$SMOKE_TOKEN" ]; then
-        echo "FAIL /api/v1/me/ — could not obtain JWT token"
-        echo "Token endpoint response: ${SMOKE_TOKEN_RESP}"
+        echo "FAIL /api/v1/me/ — could not obtain JWT token (cookie not set)"
+        echo "Login response: ${LOGIN_RESP}"
         exit 1
       fi
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
