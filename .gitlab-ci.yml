@@ -877,6 +877,7 @@ test:e2e:
       done
     - cd frontend
     - npm ci --prefer-offline
+    - export NODE_PATH="$(pwd)/node_modules"
   script:
     - npm run test:e2e -- --reporter=list,junit
   after_script:
