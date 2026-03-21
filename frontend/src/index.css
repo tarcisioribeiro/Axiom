@@ -62,6 +62,7 @@
     /* Animation duration tokens */
     --duration-fast: 200ms;
     --duration-normal: 300ms;
+    --duration-medium: 400ms;
     --duration-slow: 600ms;
 
     /* Animation easing tokens */
