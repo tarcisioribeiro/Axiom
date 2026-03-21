@@ -310,13 +310,17 @@ build:storybook:
 #   PRODUCTION_URL            — public URL of the production environment (e.g. https://example.com)
 #   K6_TEST_USERNAME          — username of a pre-seeded load-test user in the staging DB
 #   K6_TEST_PASSWORD          — password for the load-test user (masked variable)
-#   STAGING_MINIO_ENDPOINT    — MinIO endpoint for staging backups (e.g. https://minio.staging.example.com)
-#   STAGING_MINIO_ACCESS_KEY  — MinIO access key for the staging backup bucket
-#   STAGING_MINIO_SECRET_KEY  — MinIO secret key for the staging backup bucket (masked variable)
-#   STAGING_MINIO_BUCKET      — bucket name holding staging backups (default: mindledger-backups)
-#   BACKUP_ENCRYPTION_KEY     — AES-256-CBC passphrase used to encrypt staging backups (masked variable)
-#   CI_SMOKE_JWT_STAGING      — Bearer JWT for a CI service account in the staging DB (masked variable)
-#   CI_SMOKE_JWT_PRODUCTION   — Bearer JWT for a CI service account in the production DB (masked variable)
+#   STAGING_MINIO_ENDPOINT         — MinIO endpoint reachable from the CI runner (e.g. http://HOST:30900)
+#   STAGING_MINIO_ACCESS_KEY       — MinIO access key for the staging backup bucket
+#   STAGING_MINIO_SECRET_KEY       — MinIO secret key for the staging backup bucket (masked variable)
+#   STAGING_MINIO_ROOT_USER        — MinIO root user for the staging cluster (also used by backup:staging)
+#   STAGING_MINIO_ROOT_PASSWORD    — MinIO root password for the staging cluster (masked variable)
+#   STAGING_MINIO_BUCKET           — bucket name holding staging backups (default: mindledger-backups)
+#   BACKUP_ENCRYPTION_KEY          — AES-256-CBC passphrase used to encrypt staging backups (masked variable)
+#   STAGING_SUPERUSER_USERNAME     — username of the staging Django superuser (for smoke test JWT)
+#   STAGING_SUPERUSER_PASSWORD     — password of the staging Django superuser (masked variable)
+#   PRODUCTION_SUPERUSER_USERNAME  — username of the production Django superuser (for smoke test JWT)
+#   PRODUCTION_SUPERUSER_PASSWORD  — password of the production Django superuser (masked variable)
 #
 # Optional CI/CD variables for image signing (SBOM attestation):
 #   COSIGN_PRIVATE_KEY        — base64-encoded cosign private key (masked variable); if absent, attestation is skipped.
@@ -584,6 +588,62 @@ deploy:staging:
     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
+# backup:staging
+#
+# Ensures the staging MinIO bucket and backup CronJob are present, then
+# triggers a one-off Job and waits for it to complete successfully. This
+# guarantees test:backup-restore always has a fresh encrypted dump to
+# download and verify.
+#
+# Required CI/CD variables:
+#   BACKUP_ENCRYPTION_KEY      — AES-256-CBC passphrase (masked)
+#   STAGING_MINIO_ROOT_USER    — MinIO root user for staging cluster
+#   STAGING_MINIO_ROOT_PASSWORD — MinIO root password (masked)
+# ==============================================================================
+
+backup:staging:
+  image:
+    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+    entrypoint: [""]
+  stage: smoke-staging
+  interruptible: false
+  needs:
+    - job: deploy:staging
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  before_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+  script:
+    # Upsert the backup secret (MINIO_ENDPOINT points to the in-cluster service)
+    - |
+      kubectl -n mindledger-staging create secret generic mindledger-backup-secrets \
+        --from-literal=BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
+        --from-literal=MINIO_ENDPOINT="http://minio-service:9000" \
+        --from-literal=MINIO_ACCESS_KEY="$STAGING_MINIO_ROOT_USER" \
+        --from-literal=MINIO_SECRET_KEY="$STAGING_MINIO_ROOT_PASSWORD" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    # Ensure the sa-backup service account and CronJob/PVC/ConfigMap exist
+    - kubectl apply -f k8s/staging/serviceaccounts.yaml
+    - kubectl apply -f k8s/staging/backup-cronjob.yaml
+    # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
+    - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
+    - |
+      kubectl -n mindledger-staging create job "$JOB_NAME" \
+        --from=cronjob/mindledger-db-backup-staging
+    - |
+      kubectl -n mindledger-staging wait \
+        --for=condition=complete "job/${JOB_NAME}" --timeout=600s \
+      || {
+        echo "--- backup job logs ---"
+        kubectl -n mindledger-staging logs -l "job-name=${JOB_NAME}" --tail=100 || true
+        exit 1
+      }
+    - echo "Staging backup job ${JOB_NAME} completed successfully."
+  after_script:
+    - rm -f /tmp/kubeconfig
+
+# ==============================================================================
 # STAGE: smoke-staging
 #
 # Lightweight HTTP checks run immediately after deploy:staging to catch runtime
@@ -592,10 +652,8 @@ deploy:staging:
 # reverts both deployments in the same stage.
 #
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
-#   CI_SMOKE_JWT_STAGING — Bearer JWT for a CI service account in the staging DB
-#                          (masked, protected). Generate with:
-#                            POST /api/v1/auth/token/  {"username":…,"password":…}
-#                          Refresh before expiry or use a long-lived service account.
+#   STAGING_SUPERUSER_USERNAME — username of the Django superuser in staging
+#   STAGING_SUPERUSER_PASSWORD — password for the staging superuser (masked variable)
 # ==============================================================================
 
 .smoke_base:
@@ -655,8 +713,22 @@ smoke:staging:
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
+      # Obtain a fresh JWT — any pre-stored token will have expired during the
+      # build/scan/deploy stages (access token TTL is 15 min).
+      SMOKE_TOKEN_RESP=$(curl -s --max-time 10 \
+        -X POST "${SMOKE_URL}/api/v1/authentication/token/" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"${STAGING_SUPERUSER_USERNAME}\",\"password\":\"${STAGING_SUPERUSER_PASSWORD}\"}" \
+        2>/dev/null || true)
+      SMOKE_TOKEN=$(echo "$SMOKE_TOKEN_RESP" | tr ',' '\n' | grep '"access"' | \
+        tr -d ' ' | cut -d'"' -f4)
+      if [ -z "$SMOKE_TOKEN" ]; then
+        echo "FAIL /api/v1/me/ — could not obtain JWT token"
+        echo "Token endpoint response: ${SMOKE_TOKEN_RESP}"
+        exit 1
+      fi
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
-        "Authorization: Bearer ${CI_SMOKE_JWT_STAGING}"
+        "Authorization: Bearer ${SMOKE_TOKEN}"
       echo "=== All staging smoke tests passed ==="
   allow_failure: false
 
@@ -831,6 +903,7 @@ test:backup-restore:
   interruptible: false
   needs:
     - job: deploy:staging
+    - job: backup:staging
   services:
     - name: postgres:16-alpine
       alias: postgres
@@ -973,9 +1046,8 @@ deploy:production:
 # blue-green-switch.sh) and restores the previous frontend revision.
 #
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
-#   CI_SMOKE_JWT_PRODUCTION — Bearer JWT for a CI service account in production
-#                             (masked, protected). Same generation method as
-#                             CI_SMOKE_JWT_STAGING but against the production DB.
+#   PRODUCTION_SUPERUSER_USERNAME — username of the Django superuser in production
+#   PRODUCTION_SUPERUSER_PASSWORD — password for the production superuser (masked variable)
 # ==============================================================================
 
 smoke:production:
@@ -1030,8 +1102,22 @@ smoke:production:
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
+      # Obtain a fresh JWT — any pre-stored token will have expired during the
+      # build/scan/deploy stages (access token TTL is 15 min).
+      SMOKE_TOKEN_RESP=$(curl -s --max-time 10 \
+        -X POST "${SMOKE_URL}/api/v1/authentication/token/" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"${PRODUCTION_SUPERUSER_USERNAME}\",\"password\":\"${PRODUCTION_SUPERUSER_PASSWORD}\"}" \
+        2>/dev/null || true)
+      SMOKE_TOKEN=$(echo "$SMOKE_TOKEN_RESP" | tr ',' '\n' | grep '"access"' | \
+        tr -d ' ' | cut -d'"' -f4)
+      if [ -z "$SMOKE_TOKEN" ]; then
+        echo "FAIL /api/v1/me/ — could not obtain JWT token"
+        echo "Token endpoint response: ${SMOKE_TOKEN_RESP}"
+        exit 1
+      fi
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
-        "Authorization: Bearer ${CI_SMOKE_JWT_PRODUCTION}"
+        "Authorization: Bearer ${SMOKE_TOKEN}"
       echo "=== All production smoke tests passed ==="
   allow_failure: false
 
