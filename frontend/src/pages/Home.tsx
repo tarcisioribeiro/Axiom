@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
 
@@ -133,8 +134,8 @@ export default function Home() {
       </Card>
 
       {/* Modules */}
-      <div>
-        <h2 className="mb-6 text-2xl font-bold">{t('pages.home.modulesTitle')}</h2>
+      <div className="space-y-6">
+        <PageHeader title={t('pages.home.modulesTitle')} />
         <motion.div
           className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
