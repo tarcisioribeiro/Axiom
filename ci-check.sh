@@ -205,7 +205,7 @@ check_docker_devdeps() {
 		log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
 		if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
 			pip install --quiet --user \
-			mypy pytest pytest-cov pytest-django \
+			mypy pytest pytest-cov pytest-django freezegun \
 			django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1; then
 			log "${RED}  ✗  Falha ao instalar ferramentas de dev no container.${NC}"
 			return 1

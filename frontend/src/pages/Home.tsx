@@ -113,8 +113,8 @@ export default function Home() {
             initial="hidden"
             animate="visible"
           >
-            {quickActions.map((action, index) => (
-              <motion.div key={index} variants={itemVariants}>
+            {quickActions.map((action) => (
+              <motion.div key={action.href} variants={itemVariants}>
                 <Link
                   to={action.href}
                   className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border p-4 transition-all hover:scale-105 hover:border-primary hover:bg-accent"
@@ -141,8 +141,8 @@ export default function Home() {
           initial="hidden"
           animate="visible"
         >
-          {modules.map((module, index) => (
-            <motion.div key={index} variants={itemVariants}>
+          {modules.map((module) => (
+            <motion.div key={module.href} variants={itemVariants}>
               <Link to={module.href} className="group block h-full">
                 <Card className="h-full border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl">
                   <CardHeader>
@@ -157,8 +157,8 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {module.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm">
+                      {module.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-2 text-sm">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                           {feature}
                         </li>
