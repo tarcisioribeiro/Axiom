@@ -618,7 +618,7 @@ smoke:staging:
       check() {
         local label="$1"
         local url="$2"
-        local extra_args="${3:-}"
+        local auth_header="${3:-}"
         local expected="${4:-200}"
         local max_retries=10
         local retry_delay=12
@@ -626,7 +626,12 @@ smoke:staging:
         local STATUS
 
         while [ $attempt -lt $max_retries ]; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+          if [ -n "$auth_header" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+              -H "$auth_header" "$url")
+          else
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+          fi
           if [ "$STATUS" = "$expected" ]; then
             echo "OK   $label → HTTP $STATUS"
             return 0
@@ -651,7 +656,7 @@ smoke:staging:
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
-        "-H 'Authorization: Bearer ${CI_SMOKE_JWT_STAGING}'"
+        "Authorization: Bearer ${CI_SMOKE_JWT_STAGING}"
       echo "=== All staging smoke tests passed ==="
   allow_failure: false
 
@@ -989,7 +994,7 @@ smoke:production:
       check() {
         local label="$1"
         local url="$2"
-        local extra_args="${3:-}"
+        local auth_header="${3:-}"
         local expected="${4:-200}"
         local max_retries=10
         local retry_delay=12
@@ -997,7 +1002,12 @@ smoke:production:
         local STATUS
 
         while [ $attempt -lt $max_retries ]; do
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 $extra_args "$url")
+          if [ -n "$auth_header" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+              -H "$auth_header" "$url")
+          else
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+          fi
           if [ "$STATUS" = "$expected" ]; then
             echo "OK   $label → HTTP $STATUS"
             return 0
@@ -1021,7 +1031,7 @@ smoke:production:
       check "/health/" "${SMOKE_URL}/health/"
       check "/ready/"  "${SMOKE_URL}/ready/"
       check "/api/v1/me/" "${SMOKE_URL}/api/v1/me/" \
-        "-H 'Authorization: Bearer ${CI_SMOKE_JWT_PRODUCTION}'"
+        "Authorization: Bearer ${CI_SMOKE_JWT_PRODUCTION}"
       echo "=== All production smoke tests passed ==="
   allow_failure: false
 
