@@ -9,7 +9,7 @@ metadata:
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 100
+  progressDeadlineSeconds: 180
   selector:
     matchLabels:
       app: frontend
