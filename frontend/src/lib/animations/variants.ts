@@ -7,11 +7,14 @@ const DURATION = {
   slow: 0.6,
 };
 
-// Easing vibrantes com bounce
+// Easing para animações de interface
 const EASING = {
-  bounce: [0.34, 1.56, 0.64, 1] as const, // Overshoot bounce
+  // ease-out suave sem overshoot — adequado para contexto financeiro (confiabilidade > leveza)
+  bounce: [0.22, 1.0, 0.36, 1] as const,
   smooth: [0.25, 0.46, 0.45, 0.94] as const,
   snappy: [0.4, 0, 0.2, 1] as const,
+  // overshoot reservado para animações comemorativas (ex: celebrationVariants, successVariants)
+  celebration: [0.34, 1.56, 0.64, 1] as const,
 };
 
 // Page transitions - apenas fade para evitar movimento do menu lateral
