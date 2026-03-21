@@ -879,13 +879,14 @@ test:e2e:
     - npm ci --prefer-offline
     - export NODE_PATH="$(pwd)/node_modules"
   script:
-    - npm run test:e2e -- --reporter=list,junit
+    - npm run test:e2e
   after_script:
     - mkdir -p e2e-results
   artifacts:
     when: always
     paths:
       - e2e-results/
+      - frontend/test-results/
     reports:
       junit: e2e-results/results.xml
     expire_in: 7 days
