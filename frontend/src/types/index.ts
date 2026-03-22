@@ -1292,20 +1292,20 @@ export interface BookHighlightFormData {
 
 // Library Module Constants
 export const NATIONALITIES = [
-  { value: 'USA', label: 'Americana' },
-  { value: 'BRA', label: 'Brasileira' },
-  { value: 'SUI', label: 'Suíça' },
   { value: 'ALE', label: 'Alemã' },
-  { value: 'CZE', label: 'Checa' },
-  { value: 'ISR', label: 'Israelense' },
+  { value: 'USA', label: 'Americana' },
   { value: 'AUS', label: 'Austríaca' },
-  { value: 'ROM', label: 'Romana' },
-  { value: 'GRE', label: 'Grega' },
-  { value: 'FRA', label: 'Francesa' },
-  { value: 'ING', label: 'Inglesa' },
+  { value: 'BRA', label: 'Brasileira' },
+  { value: 'CZE', label: 'Checa' },
   { value: 'CUB', label: 'Cubana' },
-  { value: 'MEX', label: 'Mexicana' },
   { value: 'ESP', label: 'Espanhola' },
+  { value: 'FRA', label: 'Francesa' },
+  { value: 'GRE', label: 'Grega' },
+  { value: 'ING', label: 'Inglesa' },
+  { value: 'ISR', label: 'Israelense' },
+  { value: 'MEX', label: 'Mexicana' },
+  { value: 'ROM', label: 'Romana' },
+  { value: 'SUI', label: 'Suíça' },
 ];
 
 export const COUNTRIES = [

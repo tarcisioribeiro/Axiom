@@ -861,7 +861,7 @@ export function BookDetailModal({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">
-                {readings.length} sessão{readings.length !== 1 ? 'ões' : ''} de leitura
+                {readings.length} sess{readings.length !== 1 ? 'ões' : 'ão'} de leitura
               </span>
               <Button
                 size="sm"
