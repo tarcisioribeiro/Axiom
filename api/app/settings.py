@@ -242,7 +242,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "1000/minute",
-        "login": "5/minute",
+        "login": "30/minute",  # raised: NUM_PROXIES=1 collapses CI traffic to ingress IP
         "register": "3/minute",
         "share_token": "10/minute",
     },
