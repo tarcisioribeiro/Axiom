@@ -608,7 +608,7 @@ seed:staging:
     - job: deploy:staging
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
-      when: manual
+      when: on_success
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
@@ -897,6 +897,7 @@ test:e2e:
   needs:
     - job: smoke:staging
     - job: test:load
+    - job: seed:staging
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
   variables:
