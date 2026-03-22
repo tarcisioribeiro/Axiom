@@ -11,8 +11,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-_TESTING = "test" in sys.argv or (
-    len(sys.argv) > 0 and "pytest" in sys.argv[0])
+_TESTING = "test" in sys.argv or (len(sys.argv) > 0 and "pytest" in sys.argv[0])
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY and not _TESTING:
@@ -149,8 +148,7 @@ DATABASES = {
 
 # Use SQLite for tests to avoid database connection issues
 if _TESTING:
-    DATABASES["default"] = {
-        "ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+    DATABASES["default"] = {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)
 
@@ -394,8 +392,7 @@ def _normalize_cors_origins(origins_str: str) -> list[str]:
 
 
 CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
-    os.getenv("CORS_ALLOWED_ORIGINS",
-              "http://localhost:3000,http://127.0.0.1:3000")
+    os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
 )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
