@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-import { login } from './helpers';
+import { login, ensureAccount } from './helpers';
 
 test.describe('Expenses', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
+    // The create-expense form guards against missing accounts; ensure one exists.
+    await ensureAccount(page);
     await page.goto('/expenses');
     // Wait for the page to finish loading data
     await page.waitForLoadState('networkidle');

@@ -25,3 +25,28 @@ export async function login(page: Page): Promise<void> {
     timeout: 15_000,
   });
 }
+
+/**
+ * Ensure the e2e user has at least one bank account. The expenses form
+ * requires an account to exist before it allows creating a new expense.
+ * If no accounts exist, one is created via the API using the session
+ * cookies already set by a prior `login()` call.
+ */
+export async function ensureAccount(page: Page): Promise<void> {
+  const baseUrl = process.env.BASE_URL ?? 'http://localhost:39101';
+  const apiBase = baseUrl.replace(':39101', ':39100');
+
+  const listResp = await page.request.get(`${apiBase}/api/v1/accounts/`);
+  if (!listResp.ok()) return; // can't verify — proceed and let the test fail naturally
+
+  const body = await listResp.json();
+  if ((body.count ?? body.results?.length ?? 0) > 0) return; // already exists
+
+  await page.request.post(`${apiBase}/api/v1/accounts/`, {
+    data: {
+      account_name: 'Conta E2E',
+      institution: 'NUB',
+      account_type: 'CC',
+    },
+  });
+}
