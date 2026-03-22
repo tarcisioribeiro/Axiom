@@ -907,8 +907,6 @@ test:e2e:
     - if: $CI_COMMIT_BRANCH == "develop"
   variables:
     BASE_URL: $STAGING_URL
-    E2E_USERNAME: $E2E_USERNAME
-    E2E_PASSWORD: $E2E_PASSWORD
     # HOME must be writable for Playwright's browser cache
     HOME: /root
   before_script:
