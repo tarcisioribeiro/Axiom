@@ -590,7 +590,7 @@ deploy:staging:
 # ==============================================================================
 # seed:staging
 #
-# Creates (or updates) the e2e_tester account used by Playwright E2E tests.
+# Creates (or updates) the E2E test account used by Playwright E2E tests.
 # Trigger manually once after the first deploy, or any time the staging DB
 # is reset. The job is idempotent — re-running is safe.
 #
@@ -613,15 +613,17 @@ seed:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
-    # ${VAR:-default} is expanded by GitLab CI (supported since 12.7) so that
-    # if E2E_USERNAME/E2E_PASSWORD CI variables are unset or empty, the same
-    # fallback values used in e2e/helpers.ts are applied here automatically.
+    - |
+      if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
+        echo "ERROR: E2E_USERNAME and E2E_PASSWORD must be set as CI/CD variables."
+        exit 1
+      fi
     - >-
       kubectl -n mindledger-staging exec deployment/api --
       python manage.py shell -c
       "from django.contrib.auth.models import User, Group;
-      u, created = User.objects.get_or_create(username='${E2E_USERNAME:-e2e_tester}');
-      u.set_password('${E2E_PASSWORD:-E2eTest@2025}');
+      u, created = User.objects.get_or_create(username='${E2E_USERNAME}');
+      u.set_password('${E2E_PASSWORD}');
       u.is_superuser = False;
       u.is_staff = False;
       u.save();
@@ -924,17 +926,18 @@ test:e2e:
     # running the full test suite.  A failure here means seed:staging did not
     # create the account or the credentials are misconfigured — much clearer
     # than 20 tests timing out with a 15 s waitForURL error each.
-    # ${VAR:-default} mirrors the || fallback in e2e/helpers.ts.
     - |
-      E2E_USER="${E2E_USERNAME:-e2e_tester}"
-      E2E_PASS="${E2E_PASSWORD:-E2eTest@2025}"
+      if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
+        echo "ERROR: E2E_USERNAME and E2E_PASSWORD must be set as CI/CD variables."
+        exit 1
+      fi
       API_URL="${BASE_URL}/api/v1/authentication/token/"
       HTTP_STATUS=$(wget -qS --method=POST \
         --header="Content-Type: application/json" \
-        --body-data="{\"username\":\"${E2E_USER}\",\"password\":\"${E2E_PASS}\"}" \
+        --body-data="{\"username\":\"${E2E_USERNAME}\",\"password\":\"${E2E_PASSWORD}\"}" \
         --server-response -O /dev/null "${API_URL}" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
       [ -z "$HTTP_STATUS" ] && HTTP_STATUS="000"
-      echo "E2E credential check: HTTP ${HTTP_STATUS} (user=${E2E_USER})"
+      echo "E2E credential check: HTTP ${HTTP_STATUS} (user=${E2E_USERNAME})"
       if [ "${HTTP_STATUS}" != "200" ]; then
         echo "ERROR: E2E login failed (HTTP ${HTTP_STATUS}). Verify E2E_USERNAME/E2E_PASSWORD CI variables and that seed:staging ran successfully."
         exit 1

@@ -1,10 +1,14 @@
 import { type Page } from '@playwright/test';
 
-// Use || instead of ?? so that empty-string CI variables fall back to the
-// default values (the token endpoint rejects empty credentials, and HTML5
-// required validation silently blocks the form without navigating away).
-export const E2E_USERNAME = process.env.E2E_USERNAME || 'e2e_tester';
-export const E2E_PASSWORD = process.env.E2E_PASSWORD || 'E2eTest@2025';
+if (!process.env.E2E_USERNAME || !process.env.E2E_PASSWORD) {
+  throw new Error(
+    'E2E_USERNAME and E2E_PASSWORD must be set as CI/CD variables. ' +
+      'Run seed:staging in GitLab to create the test account.'
+  );
+}
+
+export const E2E_USERNAME = process.env.E2E_USERNAME as string;
+export const E2E_PASSWORD = process.env.E2E_PASSWORD as string;
 
 /**
  * Log in via the login form and wait for the home page to load.
