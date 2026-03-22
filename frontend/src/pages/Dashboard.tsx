@@ -201,20 +201,11 @@ export default function Dashboard() {
     [financialAlertsQuery.data]
   );
 
-  // Overall loading: show full-screen spinner until every query has resolved
-  // its first fetch (isLoading is false once data or an error is available).
-  const isLoading = [
-    statsQuery,
-    expensesQuery,
-    revenuesQuery,
-    accountBalancesQuery,
-    creditCardsQuery,
-    creditCardBillsQuery,
-    balanceForecastQuery,
-    budgetStatusQuery,
-    cashFlowForecastQuery,
-    financialAlertsQuery,
-  ].some((q) => q.isLoading);
+  // Overall loading: show full-screen spinner only until the primary stats
+  // query resolves. Secondary queries (charts, forecast, alerts) load in the
+  // background and each section handles its own loading state. This prevents
+  // slow/hung secondary queries from blocking the entire page.
+  const isLoading = statsQuery.isLoading;
 
   // isForecastLoading: true while a forecastDays-triggered refetch is in flight.
   const isForecastLoading = cashFlowForecastQuery.isFetching;

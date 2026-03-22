@@ -267,7 +267,7 @@ export default function Books() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-44">{t('pages.books.colCover')}</TableHead>
+                <TableHead className="w-50">{t('pages.books.colCover')}</TableHead>
                 <TableHead>{t('pages.books.colTitle')}</TableHead>
                 <TableHead className="hidden md:table-cell">
                   {t('pages.books.colAuthors')}
@@ -306,10 +306,10 @@ export default function Books() {
                         <img
                           src={book.cover}
                           alt={`Capa de ${book.title}`}
-                          className="h-64 w-44 rounded-md object-cover shadow-md"
+                          className="h-64 w-50 rounded-md object-cover shadow-md"
                         />
                       ) : (
-                        <div className="flex h-64 w-44 items-center justify-center rounded-md border bg-muted shadow-sm">
+                        <div className="flex h-64 w-50 items-center justify-center rounded-md border bg-muted shadow-sm">
                           <BookOpen className="h-10 w-10 text-muted-foreground" />
                         </div>
                       )}

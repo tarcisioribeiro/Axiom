@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-import { login } from './helpers';
+import { login, ensureAccount } from './helpers';
 
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
@@ -51,11 +51,20 @@ test.describe('Dashboard', () => {
   });
 
   test('navigating to /expenses from the dashboard works', async ({ page }) => {
-    // Use the sidebar navigation link
-    const expensesLink = page
-      .getByRole('link', { name: /despesas/i })
-      .first();
+    // The "Despesas" link lives inside two nested collapsible sections:
+    //   1. Module "Controle Financeiro"  →  2. Submodule "Registros"
+    // Both must be expanded before the link is clickable.
+    await page
+      .getByRole('button', { name: /controle financeiro/i })
+      .first()
+      .click();
 
+    await page
+      .getByRole('button', { name: /registros/i })
+      .first()
+      .click();
+
+    const expensesLink = page.getByRole('link', { name: 'Despesas' }).first();
     await expensesLink.click();
     await expect(page).toHaveURL(/\/expenses/, { timeout: 10_000 });
 
@@ -70,6 +79,8 @@ test.describe('Dashboard', () => {
     await expect(balanceCard).toBeVisible();
 
     // Navigate to expenses and create a new one
+    // Ensure an account exists so the create dialog is allowed to open.
+    await ensureAccount(page);
     await page.goto('/expenses');
     await page.waitForLoadState('networkidle');
 
