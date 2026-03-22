@@ -613,16 +613,19 @@ seed:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
+    # ${VAR:-default} is expanded by GitLab CI (supported since 12.7) so that
+    # if E2E_USERNAME/E2E_PASSWORD CI variables are unset or empty, the same
+    # fallback values used in e2e/helpers.ts are applied here automatically.
     - >-
       kubectl -n mindledger-staging exec deployment/api --
       python manage.py shell -c
       "from django.contrib.auth.models import User, Group;
-      u, created = User.objects.get_or_create(username='${E2E_USERNAME}');
-      u.set_password('${E2E_PASSWORD}');
+      u, created = User.objects.get_or_create(username='${E2E_USERNAME:-e2e_tester}');
+      u.set_password('${E2E_PASSWORD:-E2eTest@2025}');
       u.is_superuser = False;
       u.is_staff = False;
       u.save();
-      g = Group.objects.get(name='members');
+      g, _ = Group.objects.get_or_create(name='members');
       u.groups.add(g);
       print('OK:', u.username, '| created:', created, '| groups:', list(u.groups.values_list('name', flat=True)))"
   after_script:
@@ -917,6 +920,25 @@ test:e2e:
         [ "$i" = "12" ] && { echo "ERROR: Frontend not ready after 60s (last status: ${STATUS})"; exit 1; }
         sleep 5
       done
+    # Smoke-test the E2E credentials against the real login endpoint before
+    # running the full test suite.  A failure here means seed:staging did not
+    # create the account or the credentials are misconfigured — much clearer
+    # than 20 tests timing out with a 15 s waitForURL error each.
+    # ${VAR:-default} mirrors the || fallback in e2e/helpers.ts.
+    - |
+      E2E_USER="${E2E_USERNAME:-e2e_tester}"
+      E2E_PASS="${E2E_PASSWORD:-E2eTest@2025}"
+      API_URL="${BASE_URL}/api/v1/authentication/token/"
+      HTTP_STATUS=$(wget -qS --method=POST \
+        --header="Content-Type: application/json" \
+        --body-data="{\"username\":\"${E2E_USER}\",\"password\":\"${E2E_PASS}\"}" \
+        --server-response -O /dev/null "${API_URL}" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
+      [ -z "$HTTP_STATUS" ] && HTTP_STATUS="000"
+      echo "E2E credential check: HTTP ${HTTP_STATUS} (user=${E2E_USER})"
+      if [ "${HTTP_STATUS}" != "200" ]; then
+        echo "ERROR: E2E login failed (HTTP ${HTTP_STATUS}). Verify E2E_USERNAME/E2E_PASSWORD CI variables and that seed:staging ran successfully."
+        exit 1
+      fi
     - cd frontend
     - npm ci --prefer-offline
     - export NODE_PATH="$(pwd)/node_modules"
