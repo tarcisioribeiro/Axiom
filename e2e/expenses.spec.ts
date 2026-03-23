@@ -54,7 +54,7 @@ test.describe('Expenses', () => {
 
     // Category is a Radix UI Select (not a native <select>) — use click, not selectOption()
     await page.getByRole('dialog').getByRole('combobox').first().click();
-    await page.getByRole('option').first().click();
+    await page.getByRole('listbox').getByRole('option').first().click();
 
     // Submit
     await page
@@ -85,7 +85,7 @@ test.describe('Expenses', () => {
 
     // Category is required (Zod enum) — select the first option via Radix UI click
     await page.getByRole('dialog').getByRole('combobox').first().click();
-    await page.getByRole('option').first().click();
+    await page.getByRole('listbox').getByRole('option').first().click();
 
     await page
       .getByRole('dialog')
