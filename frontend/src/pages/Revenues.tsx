@@ -104,10 +104,12 @@ export default function Revenues() {
         emptyState={{ message: t('pages.revenues.emptyState') }}
         actions={(revenue) => (
           <div className="flex items-center justify-end gap-2">
-            <ReceiptButton
-              source={{ type: 'revenue', data: revenue }}
-              memberName={getMemberDisplayName(revenue.member_name, user)}
-            />
+            {revenue.received && (
+              <ReceiptButton
+                source={{ type: 'revenue', data: revenue }}
+                memberName={getMemberDisplayName(revenue.member_name, user)}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon"
