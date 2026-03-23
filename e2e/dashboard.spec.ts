@@ -5,7 +5,7 @@ import { login, ensureAccount } from './helpers';
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.goto('/');
+    await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
     // networkidle can fire during Axios retry delays (no active HTTP connections
     // while the stats query waits to retry). Wait explicitly for the page
@@ -106,7 +106,7 @@ test.describe('Dashboard', () => {
 
     // Category is a Radix UI Select — use click, not selectOption()
     await page.getByRole('dialog').getByRole('combobox').first().click();
-    await page.getByRole('option').first().click();
+    await page.getByRole('listbox').getByRole('option').first().click();
 
     await page
       .getByRole('dialog')
@@ -116,7 +116,7 @@ test.describe('Dashboard', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10_000 });
 
     // Return to dashboard and verify it still renders correctly (no crash)
-    await page.goto('/');
+    await page.goto('/dashboard');
     await page.waitForLoadState('networkidle');
     // TanStack Query cache is fresh (staleTime 60s), so data renders immediately
     // on the second visit — the 15s timeout below covers any edge case.
