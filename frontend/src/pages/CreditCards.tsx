@@ -716,7 +716,7 @@ export default function CreditCards() {
 
       {/* Bill create/edit dialog */}
       <Dialog open={isBillFormOpen} onOpenChange={setIsBillFormOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {selectedBill

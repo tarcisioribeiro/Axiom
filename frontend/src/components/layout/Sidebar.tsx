@@ -369,8 +369,8 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 lg:static',
-          'min-h-screen w-72 border-r bg-card p-4',
+          'fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0',
+          'h-screen w-72 border-r bg-card p-4',
           'flex flex-col',
           'transform transition-transform duration-300 ease-in-out lg:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
