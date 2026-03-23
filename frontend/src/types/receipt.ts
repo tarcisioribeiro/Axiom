@@ -32,6 +32,8 @@ export interface ReceiptData {
   // Type of receipt
   type: ReceiptType;
   typeLabel: string;
+  /** Custom document title. When set, replaces the default "Comprovante de {typeLabel}". */
+  documentTitle?: string;
 
   // Main information
   description: string;

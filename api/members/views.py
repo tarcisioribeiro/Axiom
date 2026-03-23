@@ -42,7 +42,7 @@ class MemberCreateListView(BaseListCreateView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):
-        return Member.objects.filter(created_by=self.request.user)
+        return Member.objects.filter(is_deleted=False)
 
 
 class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -65,7 +65,7 @@ class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):
-        return Member.objects.filter(created_by=self.request.user)
+        return Member.objects.filter(is_deleted=False)
 
 
 @api_view(["GET"])
@@ -261,7 +261,7 @@ class MemberFinancialReportView(APIView):
     queryset = Member.objects.all()
 
     def get(self, request, pk):
-        member = get_object_or_404(Member, pk=pk, created_by=request.user)
+        member = get_object_or_404(Member, pk=pk, user=request.user, is_deleted=False)
 
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")

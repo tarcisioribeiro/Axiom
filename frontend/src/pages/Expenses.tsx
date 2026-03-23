@@ -105,10 +105,12 @@ export default function Expenses() {
         emptyState={{ message: t('pages.expenses.emptyState') }}
         actions={(expense) => (
           <div className="flex items-center justify-end gap-2">
-            <ReceiptButton
-              source={{ type: 'expense', data: expense }}
-              memberName={getMemberDisplayName(expense.member_name, user)}
-            />
+            {expense.payed && (
+              <ReceiptButton
+                source={{ type: 'expense', data: expense }}
+                memberName={getMemberDisplayName(expense.member_name, user)}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon"

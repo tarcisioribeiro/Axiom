@@ -656,10 +656,12 @@ export default function CreditCards() {
             emptyState={{ message: t('pages.creditCardBills.emptyState') }}
             actions={(bill) => (
               <div className="flex items-center justify-end gap-1">
-                <ReceiptButton
-                  source={{ type: 'credit_card_bill', data: bill }}
-                  memberName={getMemberDisplayName(null, user)}
-                />
+                {bill.status === 'paid' && (
+                  <ReceiptButton
+                    source={{ type: 'credit_card_bill', data: bill }}
+                    memberName={getMemberDisplayName(null, user)}
+                  />
+                )}
                 {bill.status !== 'paid' && (
                   <Button
                     variant="ghost"
