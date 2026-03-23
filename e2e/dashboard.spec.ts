@@ -7,6 +7,11 @@ test.describe('Dashboard', () => {
     await login(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    // networkidle can fire during Axios retry delays (no active HTTP connections
+    // while the stats query waits to retry). Wait explicitly for the page
+    // heading — it is only rendered once the stats query settles (success or
+    // final error) and the Dashboard moves past its full-screen loading state.
+    await page.getByRole('heading').first().waitFor({ state: 'visible', timeout: 30_000 });
   });
 
   test('dashboard loads with at least one StatCard visible', async ({ page }) => {
@@ -99,6 +104,10 @@ test.describe('Dashboard', () => {
       .first()
       .fill('10.00');
 
+    // Category is a Radix UI Select — use click, not selectOption()
+    await page.getByRole('dialog').getByRole('combobox').first().click();
+    await page.getByRole('option').first().click();
+
     await page
       .getByRole('dialog')
       .getByRole('button', { name: /salvar|confirmar|criar/i })
@@ -109,6 +118,8 @@ test.describe('Dashboard', () => {
     // Return to dashboard and verify it still renders correctly (no crash)
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    // TanStack Query cache is fresh (staleTime 60s), so data renders immediately
+    // on the second visit — the 15s timeout below covers any edge case.
 
     await expect(
       page.locator('text=/R\\$|%/').first()

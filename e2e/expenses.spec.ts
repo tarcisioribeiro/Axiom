@@ -48,20 +48,13 @@ test.describe('Expenses', () => {
     const amountInput = page.getByRole('dialog').getByLabel(/valor/i).first();
     await amountInput.fill('50.00');
 
-    // Pick a date if there is a date field (leave blank to use today's default)
-    const dateInput = page.getByRole('dialog').getByLabel(/data/i).first();
-    if (await dateInput.isVisible()) {
-      await dateInput.fill(new Date().toISOString().split('T')[0]);
-    }
+    // Date is pre-filled with today by default — no need to set it.
+    // (getByLabel(/data/i) would match the aria-label "Limpar data" clear button,
+    //  not the flatpickr input, so we skip the fill to avoid that selector trap.)
 
-    // Select a category if the select is present
-    const categorySelect = page
-      .getByRole('dialog')
-      .getByLabel(/categoria/i)
-      .first();
-    if (await categorySelect.isVisible()) {
-      await categorySelect.selectOption({ index: 1 });
-    }
+    // Category is a Radix UI Select (not a native <select>) — use click, not selectOption()
+    await page.getByRole('dialog').getByRole('combobox').first().click();
+    await page.getByRole('option').first().click();
 
     // Submit
     await page
@@ -89,6 +82,10 @@ test.describe('Expenses', () => {
 
     const amountInput = page.getByRole('dialog').getByLabel(/valor/i).first();
     await amountInput.fill('25.00');
+
+    // Category is required (Zod enum) — select the first option via Radix UI click
+    await page.getByRole('dialog').getByRole('combobox').first().click();
+    await page.getByRole('option').first().click();
 
     await page
       .getByRole('dialog')
