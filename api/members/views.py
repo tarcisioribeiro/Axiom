@@ -39,8 +39,10 @@ class MemberCreateListView(BaseListCreateView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Member.objects.all()
     serializer_class = MemberSerializer
+
+    def get_queryset(self):
+        return Member.objects.filter(created_by=self.request.user)
 
 
 class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -60,8 +62,10 @@ class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Member.objects.all()
     serializer_class = MemberSerializer
+
+    def get_queryset(self):
+        return Member.objects.filter(created_by=self.request.user)
 
 
 @api_view(["GET"])
@@ -257,7 +261,7 @@ class MemberFinancialReportView(APIView):
     queryset = Member.objects.all()
 
     def get(self, request, pk):
-        member = get_object_or_404(Member, pk=pk)
+        member = get_object_or_404(Member, pk=pk, created_by=request.user)
 
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")

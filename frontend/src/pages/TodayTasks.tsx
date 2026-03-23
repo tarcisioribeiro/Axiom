@@ -111,6 +111,7 @@ const getStatusBadge = (status: string) => {
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
     health: 'bg-category-health text-white dark:text-black border-transparent',
+    intellect: 'bg-category-studies text-white dark:text-black border-transparent',
     studies: 'bg-category-studies text-white dark:text-black border-transparent',
     spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
     exercise: 'bg-category-exercise text-white dark:text-black border-transparent',

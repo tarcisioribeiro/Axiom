@@ -29,6 +29,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       health: 'bg-category-health',
+      intellect: 'bg-category-studies',
       studies: 'bg-category-studies',
       spiritual: 'bg-category-spiritual',
       exercise: 'bg-category-exercise',
