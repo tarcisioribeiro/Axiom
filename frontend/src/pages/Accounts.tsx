@@ -271,15 +271,28 @@ export default function Accounts() {
       key: 'balance',
       label: t('pages.accounts.columns.balance'),
       align: 'right',
-      render: (account) => (
-        <span
-          className={`font-semibold ${
-            parseFloat(account.balance) >= 0 ? 'text-success' : 'text-destructive'
-          }`}
-        >
-          {formatCurrency(account.balance)}
-        </span>
-      ),
+      render: (account) => {
+        const balance = parseFloat(account.balance);
+        const overdraft = parseFloat(account.overdraft_limit ?? '0');
+        const available = balance + overdraft;
+        return (
+          <div className="flex flex-col items-end gap-0.5">
+            <span
+              className={`font-semibold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
+            >
+              {formatCurrency(account.balance)}
+            </span>
+            {overdraft > 0 && (
+              <span
+                className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
+                title="Saldo disponível (incluindo cheque especial)"
+              >
+                Disp.: {formatCurrency(String(available))}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'created_at',

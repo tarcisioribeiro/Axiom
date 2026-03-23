@@ -158,20 +158,22 @@ def create_initial_revenue_on_account_creation(
     **kwargs
         Argumentos adicionais do signal
     """
+    from expenses.models import Expense
     from revenues.models import Revenue
 
-    # Só criar receita se for uma nova conta E tiver saldo inicial
-    if created and instance.current_balance > Decimal("0.00"):
-        # Usar a data de abertura da conta se disponível, senão usar a data atual
-        revenue_date = instance.opening_date or timezone.now().date()
-        revenue_time = timezone.now().time()
+    if not created:
+        return
 
-        # Criar a receita de saldo inicial
+    entry_date = instance.opening_date or timezone.now().date()
+    entry_time = timezone.now().time()
+
+    if instance.current_balance > Decimal("0.00"):
+        # Criar receita de saldo inicial positivo
         Revenue.objects.create(
             description="Saldo inicial",
             value=instance.current_balance,
-            date=revenue_date,
-            horary=revenue_time,
+            date=entry_date,
+            horary=entry_time,
             category="deposit",
             account=instance,
             received=True,
@@ -179,4 +181,18 @@ def create_initial_revenue_on_account_creation(
             created_by=instance.created_by,
             updated_by=instance.updated_by,
             notes="Receita criada automaticamente a partir do saldo inicial da conta.",
+        )
+    elif instance.current_balance < Decimal("0.00"):
+        # Saldo inicial negativo: registrar como despesa (uso de cheque especial)
+        Expense.objects.create(
+            description="Saldo inicial negativo (cheque especial)",
+            value=abs(instance.current_balance),
+            date=entry_date,
+            horary=entry_time,
+            category="others",
+            account=instance,
+            payed=True,
+            member=instance.owner,
+            created_by=instance.created_by,
+            updated_by=instance.updated_by,
         )

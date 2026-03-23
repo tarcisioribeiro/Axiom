@@ -76,7 +76,7 @@
     /* Category colors - Alucard palette */
     --category-finance: 114 84% 24%; /* verde Alucard */
     --category-health: 198 96% 30%; /* cyan Alucard */
-    --category-studies: 252 54% 54%; /* purple Alucard */
+    --category-studies: 228 62% 42%; /* indigo Alucard (distinto de --primary 252) */
     --category-spiritual: 336 78% 36%; /* pink Alucard */
     --category-exercise: 24 78% 36%; /* orange Alucard */
     --category-nutrition: 48 73% 30%; /* yellow Alucard */
@@ -187,7 +187,7 @@
     /* Category colors - Dracula palette */
     --category-finance: 135 94% 65%; /* green */
     --category-health: 191 97% 77%; /* cyan */
-    --category-studies: 265 89% 78%; /* purple */
+    --category-studies: 248 65% 72%; /* indigo Dracula (distinto de --primary 265) */
     --category-spiritual: 326 100% 74%; /* pink */
     --category-exercise: 31 100% 71%; /* orange */
     --category-nutrition: 65 92% 76%; /* yellow */

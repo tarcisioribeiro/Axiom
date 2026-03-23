@@ -1,4 +1,4 @@
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { LanguageSelector } from '@/components/common/LanguageSelector';
@@ -15,7 +15,7 @@ export const Header = () => {
   const { t } = useTranslation();
 
   return (
-    <header className="border-b bg-card px-md py-md lg:px-lg">
+    <header className="sticky top-0 z-30 border-b bg-card px-md py-md lg:px-lg">
       <div className="flex items-center justify-between">
         {/* Botão Hamburger (apenas mobile) */}
         <Button
@@ -34,6 +34,21 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-md">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              document.dispatchEvent(
+                new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
+              )
+            }
+            className="hover-lift"
+            aria-label="Abrir menu de comandos"
+            title="Menu de Comandos (Ctrl+K)"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
           <ThemeToggle className="hover-lift" />
 
           <LanguageSelector />
