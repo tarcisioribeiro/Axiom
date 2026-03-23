@@ -50,12 +50,21 @@ interface DialogContentProps
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, size, ...props }, ref) => (
+>(({ className, children, size, onInteractOutside, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(dialogContentVariants({ size }), className)}
+      onInteractOutside={(e) => {
+        // Prevent dialog close when clicking inside a Flatpickr calendar
+        // (the calendar is appended to document.body, outside the dialog DOM)
+        if ((e.target as Element)?.closest?.('.flatpickr-calendar')) {
+          e.preventDefault();
+          return;
+        }
+        onInteractOutside?.(e);
+      }}
       {...props}
     >
       {children}

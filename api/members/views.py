@@ -252,7 +252,7 @@ class MemberFinancialReportView(APIView):
     Query params:
     - start_date (optional): YYYY-MM-DD
     - end_date (optional): YYYY-MM-DD
-    - format (optional): 'csv' para exportação (default: json)
+    - export_format (optional): 'csv' para exportação (default: json)
 
     Requer permissão view_member (GlobalDefaultPermission).
     """
@@ -383,7 +383,7 @@ class MemberFinancialReportView(APIView):
             )
         ]
 
-        if request.query_params.get("format") == "csv":
+        if request.query_params.get("export_format") == "csv":
             return self._generate_csv(
                 member=member,
                 expenses=expenses,

@@ -217,7 +217,9 @@ export default function Books() {
     }
   };
 
-  // Default sort: by reading_priority ascending (null = not prioritized → last)
+  const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
+
+  // Sort: by read_status first (reading → to_read → read), then by reading_priority ascending (null last)
   const filteredBooks = books
     .filter(
       (book) =>
@@ -228,6 +230,9 @@ export default function Books() {
         book.publisher_name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
+      const statusDiff =
+        (STATUS_ORDER[a.read_status] ?? 3) - (STATUS_ORDER[b.read_status] ?? 3);
+      if (statusDiff !== 0) return statusDiff;
       if (a.reading_priority === null && b.reading_priority === null) return 0;
       if (a.reading_priority === null) return 1;
       if (b.reading_priority === null) return -1;
