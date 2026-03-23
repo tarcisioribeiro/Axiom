@@ -286,10 +286,22 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_expense_export_pdf(self):
+        url = reverse("expense-export")
+        response = self.client.get(url, {"export_format": "pdf"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("application/pdf", response.get("Content-Type", ""))
+
     def test_revenue_export(self):
         url = reverse("revenue-export")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_revenue_export_pdf(self):
+        url = reverse("revenue-export")
+        response = self.client.get(url, {"export_format": "pdf"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("application/pdf", response.get("Content-Type", ""))
 
     def test_fixed_expense_generate(self):
         url = reverse("fixed-expense-generate")
