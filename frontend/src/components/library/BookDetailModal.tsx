@@ -947,11 +947,26 @@ export function BookDetailModal({
               <span className="text-sm font-medium text-muted-foreground">
                 {summaries.length} resumo{summaries.length !== 1 ? 's' : ''}
               </span>
-              <Button size="sm" onClick={openSummaryCreate}>
+              <Button
+                size="sm"
+                onClick={openSummaryCreate}
+                disabled={book.read_status !== 'read'}
+                title={
+                  book.read_status !== 'read'
+                    ? 'Resumos só podem ser adicionados a livros lidos completamente'
+                    : undefined
+                }
+              >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Adicionar
               </Button>
             </div>
+            {book.read_status !== 'read' && (
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Resumos só podem ser cadastrados para livros com status{' '}
+                <strong>Lido</strong>.
+              </p>
+            )}
 
             {isLoadingSummaries ? (
               <p className="py-4 text-center text-sm text-muted-foreground">

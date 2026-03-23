@@ -1,4 +1,5 @@
 from django.db.models import QuerySet
+from django.utils import timezone
 from rest_framework.serializers import BaseSerializer
 
 from accounts.models import Account
@@ -67,3 +68,9 @@ class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def perform_update(self, serializer: BaseSerializer[Account]) -> None:
         serializer.save(updated_by=self.request.user)  # type: ignore[misc]
+
+    def perform_destroy(self, instance: Account) -> None:
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user  # type: ignore[assignment]
+        instance.save()

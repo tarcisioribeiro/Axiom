@@ -306,10 +306,10 @@ export default function Books() {
                         <img
                           src={book.cover}
                           alt={`Capa de ${book.title}`}
-                          className="h-64 w-50 rounded-md object-cover shadow-md"
+                          className="w-50 h-64 rounded-md object-cover shadow-md"
                         />
                       ) : (
-                        <div className="flex h-64 w-50 items-center justify-center rounded-md border bg-muted shadow-sm">
+                        <div className="w-50 flex h-64 items-center justify-center rounded-md border bg-muted shadow-sm">
                           <BookOpen className="h-10 w-10 text-muted-foreground" />
                         </div>
                       )}
@@ -401,6 +401,7 @@ export default function Books() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'summaries')}
+                              disabled={book.read_status !== 'read'}
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               {t('pages.summaries.title')}

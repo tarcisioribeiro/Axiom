@@ -1357,16 +1357,11 @@ export const READ_STATUS = [
 // Task Category Choices
 export const TASK_CATEGORIES = [
   { value: 'health', label: 'Saúde' },
-  { value: 'studies', label: 'Estudos' },
+  { value: 'intellect', label: 'Intelecto' },
   { value: 'spiritual', label: 'Espiritual' },
   { value: 'exercise', label: 'Exercício Físico' },
   { value: 'nutrition', label: 'Nutrição' },
-  { value: 'meditation', label: 'Meditação' },
-  { value: 'reading', label: 'Leitura' },
-  { value: 'writing', label: 'Escrita' },
   { value: 'work', label: 'Trabalho' },
-  { value: 'leisure', label: 'Lazer' },
-  { value: 'family', label: 'Família' },
   { value: 'social', label: 'Social' },
   { value: 'finance', label: 'Finanças' },
   { value: 'household', label: 'Casa' },
