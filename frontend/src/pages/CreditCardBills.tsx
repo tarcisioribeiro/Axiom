@@ -530,6 +530,7 @@ export default function CreditCardBills() {
             <DialogDescription>{t('pages.creditCardBills.editDesc')}</DialogDescription>
           </DialogHeader>
           <CreditCardBillForm
+            key={selectedBill?.id ?? 'new'}
             bill={selectedBill}
             creditCards={creditCards}
             onSubmit={handleSubmit}

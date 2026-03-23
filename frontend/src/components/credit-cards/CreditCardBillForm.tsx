@@ -37,14 +37,31 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const [isCalculating, setIsCalculating] = useState(false);
   const { register, handleSubmit, setValue, watch, reset } =
     useForm<CreditCardBillFormData>({
-      defaultValues: {
-        credit_card: 0,
-        year: new Date().getFullYear().toString(),
-        month: 'Jan',
-        invoice_beginning_date: formatLocalDate(new Date()),
-        invoice_ending_date: formatLocalDate(new Date()),
-        closed: false,
-      },
+      defaultValues: bill
+        ? {
+            credit_card: bill.credit_card,
+            year: bill.year,
+            month: bill.month,
+            invoice_beginning_date: bill.invoice_beginning_date,
+            invoice_ending_date: bill.invoice_ending_date,
+            closed: bill.closed,
+            total_amount: parseFloat(bill.total_amount),
+            minimum_payment: parseFloat(bill.minimum_payment),
+            paid_amount: parseFloat(bill.paid_amount),
+            interest_charged: parseFloat(bill.interest_charged),
+            late_fee: parseFloat(bill.late_fee),
+            status: bill.status,
+            due_date: bill.due_date || '',
+            payment_date: bill.payment_date || '',
+          }
+        : {
+            credit_card: 0,
+            year: new Date().getFullYear().toString(),
+            month: 'Jan',
+            invoice_beginning_date: formatLocalDate(new Date()),
+            invoice_ending_date: formatLocalDate(new Date()),
+            closed: false,
+          },
     });
 
   // Função para calcular valores automaticamente
