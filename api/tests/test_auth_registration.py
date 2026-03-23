@@ -170,14 +170,8 @@ class MemberFinancialReportWithDataTest(BasePush2TestCase):
 
     def test_member_financial_report_csv_with_data(self):
         """Exercises _generate_csv + category_totals loop."""
-        from django.conf import settings
-        from django.test import override_settings
-
-        rf = dict(settings.REST_FRAMEWORK)
-        rf["URL_FORMAT_OVERRIDE"] = None
         url = reverse("member-financial-report", args=[self.member.pk])
-        with override_settings(REST_FRAMEWORK=rf):
-            response = self.client.get(url, {"format": "csv"})
+        response = self.client.get(url, {"export_format": "csv"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("text/csv", response.get("Content-Type", ""))
 
