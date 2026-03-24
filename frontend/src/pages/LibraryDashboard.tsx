@@ -28,7 +28,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import { ChartContainer } from '@/components/charts';
+import { ChartContainer, EnhancedTooltip } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
@@ -441,7 +441,7 @@ export default function LibraryDashboard() {
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip />
+                        <Tooltip content={<EnhancedTooltip />} />
                         <Legend wrapperStyle={{ fontSize: 12 }} />
                         <Bar dataKey={currKey} fill={COLORS[0]} radius={[4, 4, 0, 0]} />
                         <Bar dataKey={prevKey} fill={COLORS[2]} radius={[4, 4, 0, 0]} />

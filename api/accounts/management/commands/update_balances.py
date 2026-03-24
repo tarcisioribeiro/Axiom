@@ -5,6 +5,8 @@ Este comando pode ser executado com:
 python manage.py update_balances
 """
 
+from typing import Any
+
 from django.core.management.base import BaseCommand
 
 from accounts.models import Account
@@ -14,7 +16,7 @@ from accounts.signals import update_account_balance
 class Command(BaseCommand):
     help = "Recalcula os saldos de todas as contas com base em receitas e despesas"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         """
         Executa o comando de recálculo de saldos.
 

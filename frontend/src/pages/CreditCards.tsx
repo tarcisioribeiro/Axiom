@@ -656,10 +656,12 @@ export default function CreditCards() {
             emptyState={{ message: t('pages.creditCardBills.emptyState') }}
             actions={(bill) => (
               <div className="flex items-center justify-end gap-1">
-                <ReceiptButton
-                  source={{ type: 'credit_card_bill', data: bill }}
-                  memberName={getMemberDisplayName(null, user)}
-                />
+                {bill.status === 'paid' && (
+                  <ReceiptButton
+                    source={{ type: 'credit_card_bill', data: bill }}
+                    memberName={getMemberDisplayName(null, user)}
+                  />
+                )}
                 {bill.status !== 'paid' && (
                   <Button
                     variant="ghost"
@@ -716,7 +718,7 @@ export default function CreditCards() {
 
       {/* Bill create/edit dialog */}
       <Dialog open={isBillFormOpen} onOpenChange={setIsBillFormOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               {selectedBill

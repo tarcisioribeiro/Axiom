@@ -7,6 +7,7 @@ Também cria automaticamente uma receita quando uma conta é criada com saldo in
 """
 
 from decimal import Decimal
+from typing import Any, Type
 
 from django.db import models, transaction
 from django.db.models.signals import post_delete, post_save
@@ -14,7 +15,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 
-def update_account_balance(account):
+def update_account_balance(account: Any) -> None:
     """
     Atualiza o saldo de uma conta com base em suas receitas e despesas.
 
@@ -51,7 +52,9 @@ def update_account_balance(account):
 
 
 @receiver(post_save, sender="revenues.Revenue")
-def update_balance_on_revenue_save(sender, instance, created, **kwargs):
+def update_balance_on_revenue_save(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma receita é criada ou editada.
 
@@ -71,7 +74,9 @@ def update_balance_on_revenue_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender="revenues.Revenue")
-def update_balance_on_revenue_delete(sender, instance, **kwargs):
+def update_balance_on_revenue_delete(
+    sender: Type[Any], instance: Any, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma receita é deletada.
 
@@ -89,7 +94,9 @@ def update_balance_on_revenue_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="expenses.Expense")
-def update_balance_on_expense_save(sender, instance, created, **kwargs):
+def update_balance_on_expense_save(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma despesa é criada ou editada.
 
@@ -109,7 +116,9 @@ def update_balance_on_expense_save(sender, instance, created, **kwargs):
 
 
 @receiver(post_delete, sender="expenses.Expense")
-def update_balance_on_expense_delete(sender, instance, **kwargs):
+def update_balance_on_expense_delete(
+    sender: Type[Any], instance: Any, **kwargs: Any
+) -> None:
     """
     Atualiza o saldo da conta quando uma despesa é deletada.
 
@@ -127,7 +136,9 @@ def update_balance_on_expense_delete(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender="accounts.Account")
-def create_initial_revenue_on_account_creation(sender, instance, created, **kwargs):
+def create_initial_revenue_on_account_creation(
+    sender: Type[Any], instance: Any, created: bool, **kwargs: Any
+) -> None:
     """
     Cria automaticamente uma receita quando uma conta é criada com saldo inicial.
 
@@ -147,20 +158,22 @@ def create_initial_revenue_on_account_creation(sender, instance, created, **kwar
     **kwargs
         Argumentos adicionais do signal
     """
+    from expenses.models import Expense
     from revenues.models import Revenue
 
-    # Só criar receita se for uma nova conta E tiver saldo inicial
-    if created and instance.current_balance > Decimal("0.00"):
-        # Usar a data de abertura da conta se disponível, senão usar a data atual
-        revenue_date = instance.opening_date or timezone.now().date()
-        revenue_time = timezone.now().time()
+    if not created:
+        return
 
-        # Criar a receita de saldo inicial
+    entry_date = instance.opening_date or timezone.now().date()
+    entry_time = timezone.now().time()
+
+    if instance.current_balance > Decimal("0.00"):
+        # Criar receita de saldo inicial positivo
         Revenue.objects.create(
             description="Saldo inicial",
             value=instance.current_balance,
-            date=revenue_date,
-            horary=revenue_time,
+            date=entry_date,
+            horary=entry_time,
             category="deposit",
             account=instance,
             received=True,
@@ -168,4 +181,18 @@ def create_initial_revenue_on_account_creation(sender, instance, created, **kwar
             created_by=instance.created_by,
             updated_by=instance.updated_by,
             notes="Receita criada automaticamente a partir do saldo inicial da conta.",
+        )
+    elif instance.current_balance < Decimal("0.00"):
+        # Saldo inicial negativo: registrar como despesa (uso de cheque especial)
+        Expense.objects.create(
+            description="Saldo inicial negativo (cheque especial)",
+            value=abs(instance.current_balance),
+            date=entry_date,
+            horary=entry_time,
+            category="others",
+            account=instance,
+            payed=True,
+            member=instance.owner,
+            created_by=instance.created_by,
+            updated_by=instance.updated_by,
         )

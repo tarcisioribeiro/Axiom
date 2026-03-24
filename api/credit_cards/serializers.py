@@ -11,6 +11,7 @@ from credit_cards.models import (
     CreditCardInstallment,
     CreditCardPurchase,
 )
+from credit_cards.utils import recalculate_bill_total
 
 
 class CreditCardSerializer(serializers.ModelSerializer):
@@ -161,7 +162,30 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreditCardBill
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "credit_card",
+            "credit_card_on_card_name",
+            "credit_card_number_masked",
+            "credit_card_flag",
+            "credit_card_associated_account_name",
+            "year",
+            "month",
+            "invoice_beginning_date",
+            "invoice_ending_date",
+            "closed",
+            "total_amount",
+            "minimum_payment",
+            "due_date",
+            "paid_amount",
+            "payment_date",
+            "interest_charged",
+            "late_fee",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_credit_card_number_masked(self, obj):
         """
@@ -335,56 +359,41 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
         """
         old_bill = instance.bill
         new_bill = validated_data.get("bill", old_bill)
-        old_value = Decimal(str(instance.value))
-        new_value = Decimal(str(validated_data.get("value", instance.value)))
 
         # Verificar se a fatura mudou
         bill_changed = old_bill != new_bill
-        value_changed = old_value != new_value
 
         # Atualizar a parcela
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # Atualizar fatura antiga (remover valor)
+        # Se a fatura mudou, recalcular a fatura antiga (o signal só recalcula a nova)
         if bill_changed and old_bill:
-            old_bill.total_amount = Decimal(str(old_bill.total_amount)) - old_value
-            if old_bill.total_amount < 0:
-                old_bill.total_amount = Decimal("0")
+            recalculate_bill_total(old_bill)
 
-            # Recalcular status da fatura antiga
-            if (
-                Decimal(str(old_bill.paid_amount)) >= old_bill.total_amount
-                and old_bill.total_amount > 0
-            ):
-                if not old_bill.closed:
-                    old_bill.status = "paid"
-            old_bill.save()
+        # Ajustar status das faturas afetadas com valores frescos do banco
+        bills_to_check = set()
+        if old_bill:
+            bills_to_check.add(old_bill.pk)
+        if new_bill:
+            bills_to_check.add(new_bill.pk)
 
-        # Atualizar fatura nova (adicionar valor)
-        if bill_changed and new_bill:
-            new_bill.total_amount = Decimal(str(new_bill.total_amount)) + new_value
-
-            # Se a fatura estava 'paid' mas não fechada, mudar status para 'open'
-            if new_bill.status == "paid" and not new_bill.closed:
-                if Decimal(str(new_bill.paid_amount)) < new_bill.total_amount:
-                    new_bill.status = "open"
-            new_bill.save()
-
-        # Se apenas o valor mudou (sem mudar a fatura)
-        elif value_changed and old_bill:
-            diff = new_value - old_value
-            old_bill.total_amount = Decimal(str(old_bill.total_amount)) + diff
-
-            # Ajustar status conforme necessário
-            if Decimal(str(old_bill.paid_amount)) >= old_bill.total_amount:
-                if not old_bill.closed:
-                    old_bill.status = "paid"
-            elif old_bill.status == "paid" and not old_bill.closed:
-                old_bill.status = "open"
-
-            old_bill.save()
+        for bill_pk in bills_to_check:
+            try:
+                bill = CreditCardBill.objects.get(pk=bill_pk)
+                if (
+                    Decimal(str(bill.paid_amount)) >= bill.total_amount
+                    and bill.total_amount > 0
+                ):
+                    if not bill.closed:
+                        bill.status = "paid"
+                elif bill.status == "paid" and not bill.closed:
+                    if Decimal(str(bill.paid_amount)) < bill.total_amount:
+                        bill.status = "open"
+                bill.save()
+            except CreditCardBill.DoesNotExist:
+                pass
 
         return instance
 
@@ -527,8 +536,8 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
             credit_card=card, is_deleted=False
         ).order_by("invoice_beginning_date")
 
-        # Rastrear faturas que precisam ser atualizadas
-        bills_to_update = {}
+        # Rastrear faturas afetadas
+        affected_bill_ids = set()
 
         # Criar parcelas
         for i in range(total_installments):
@@ -551,30 +560,20 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
                 payed=False,
             )
 
-            # Rastrear valor a adicionar à fatura
             if matching_bill:
-                if matching_bill.id not in bills_to_update:
-                    bills_to_update[matching_bill.id] = {
-                        "bill": matching_bill,
-                        "value_to_add": Decimal("0"),
-                    }
-                bills_to_update[matching_bill.id]["value_to_add"] += installment_value
+                affected_bill_ids.add(matching_bill.id)
 
-        # Atualizar faturas afetadas
-        for bill_data in bills_to_update.values():
-            bill = bill_data["bill"]
-            value_to_add = bill_data["value_to_add"]
-
-            # Atualizar total_amount
-            bill.total_amount = Decimal(str(bill.total_amount)) + value_to_add
-
-            # Se a fatura estava 'paid' mas não fechada, mudar status para 'open'
-            # porque agora o total é maior que o valor pago
-            if bill.status == "paid" and not bill.closed:
-                if Decimal(str(bill.paid_amount)) < bill.total_amount:
-                    bill.status = "open"
-
-            bill.save()
+        # Ajustar status das faturas afetadas
+        # (total já recalculado pelo signal post_save)
+        for bill_id in affected_bill_ids:
+            try:
+                bill = CreditCardBill.objects.get(pk=bill_id)
+                if bill.status == "paid" and not bill.closed:
+                    if Decimal(str(bill.paid_amount)) < bill.total_amount:
+                        bill.status = "open"
+                        bill.save()
+            except CreditCardBill.DoesNotExist:
+                pass
 
         return purchase
 

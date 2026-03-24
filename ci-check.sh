@@ -197,19 +197,27 @@ check_node() {
 	return 0
 }
 
+_install_docker_devdeps() {
+	log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
+	docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
+		pip install --quiet --user \
+		mypy pytest pytest-cov pytest-django freezegun \
+		django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1
+	# pip exits non-zero when a dependency is already satisfied at a conflicting version;
+	# ignore the exit code and verify importability directly instead.
+	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1 || \
+		! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m pytest --version >/dev/null 2>&1; then
+		log "${RED}  ✗  Ferramentas de dev não encontradas após instalação — verifique o container.${NC}"
+		return 1
+	fi
+}
+
 check_docker_devdeps() {
 	log "${YELLOW}Verificando ferramentas de dev no container api...${NC}"
 
 	if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m mypy --version >/dev/null 2>&1 || \
 		! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api python -m pytest --version >/dev/null 2>&1; then
-		log "${YELLOW}  mypy/pytest ausentes — instalando dependências de dev no container (--user)...${NC}"
-		if ! docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
-			pip install --quiet --user \
-			mypy pytest pytest-cov pytest-django \
-			django-stubs djangorestframework-stubs >>"$LOG_FILE" 2>&1; then
-			log "${RED}  ✗  Falha ao instalar ferramentas de dev no container.${NC}"
-			return 1
-		fi
+		_install_docker_devdeps || return 1
 	fi
 
 	log "${GREEN}  ✓  Ferramentas de dev disponíveis no container${NC}"
@@ -328,7 +336,7 @@ if ! $BACKEND_ONLY; then
 		sh -c "cd '$SCRIPT_DIR/frontend' && npm run format:check"
 
 	run_step_safe "lint:npm-audit" "npm audit --audit-level=high" \
-		sh -c "cd '$SCRIPT_DIR/frontend' && npm audit --audit-level=high"
+		sh -c "cd '$SCRIPT_DIR/frontend' && out=\$(npm audit --audit-level=high 2>&1); ec=\$?; printf '%s\n' \"\$out\"; if [ \$ec -ne 0 ] && printf '%s' \"\$out\" | grep -qE 'endpoint returned an error|request.*failed'; then printf 'AVISO: npm audit falhou por indisponibilidade do registry — verifique manualmente.\n'; exit 0; fi; exit \$ec"
 fi
 
 # ==============================================================================
@@ -345,7 +353,8 @@ if ! $FRONTEND_ONLY; then
 		-e SECRET_KEY="$_MYPY_SECRET_KEY" \
 		-e DEBUG="False" \
 		-e DJANGO_SETTINGS_MODULE="app.settings" \
-		api python -m mypy .
+		api bash -c \
+		'python -m mypy --version >/dev/null 2>&1 || pip install --quiet --user mypy django-stubs djangorestframework-stubs; python -m mypy .'
 fi
 
 if ! $BACKEND_ONLY; then
@@ -362,7 +371,7 @@ if ! $FRONTEND_ONLY; then
 	# ENCRYPTION_KEY gerado por job (igual ao CI); seguro pois testes usam SQLite in-memory.
 	run_step_safe "test:backend" "pytest" \
 		docker compose -f "$SCRIPT_DIR/docker-compose.yml" exec -T api \
-		bash -c 'export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
+		bash -c 'python -m pytest --version >/dev/null 2>&1 || pip install --quiet --user pytest pytest-cov pytest-django freezegun; export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())") && python -m pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml'
 fi
 
 if ! $BACKEND_ONLY; then

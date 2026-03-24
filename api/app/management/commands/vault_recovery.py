@@ -37,18 +37,20 @@ import base64
 import json
 import os
 from datetime import datetime
+from typing import Any
 
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 SNAPSHOT_DIR = "/app/media/vault_snapshots"
+_BACKUP_KEY_ENV = "BACKUP_ENCRYPTION_KEY_PREVIOUS"
 
 
 class Command(BaseCommand):
     help = "Diagnose, reset, or restore the security vault for a user."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--username",
             required=True,
@@ -98,7 +100,7 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         from members.models import Member
         from security.models import (
             Archive,
@@ -121,7 +123,7 @@ class Command(BaseCommand):
             raise CommandError(f"User '{username}' not found.")
 
         try:
-            member = Member.objects.get(user=user, is_deleted=False)
+            member = Member.objects.get(user=user)
         except Member.DoesNotExist:
             raise CommandError(f"No active Member record found for user '{username}'.")
 
@@ -148,16 +150,16 @@ class Command(BaseCommand):
 
     def _diagnose(
         self,
-        username,
-        user,
-        member,
-        test_password,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        test_password: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         self.stdout.write(
             f"\n=== Vault Diagnostics for '{username}'" f" (user_id={user.id}) ===\n"
         )
@@ -197,14 +199,10 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"  EV-Key len: {evk_len} chars")
 
-        pw_count = Password.objects.filter(owner=member, is_deleted=False).count()
-        card_count = StoredCreditCard.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        acc_count = StoredBankAccount.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        arch_count = Archive.objects.filter(owner=member, is_deleted=False).count()
+        pw_count = Password.objects.filter(owner=member).count()
+        card_count = StoredCreditCard.objects.filter(owner=member).count()
+        acc_count = StoredBankAccount.objects.filter(owner=member).count()
+        arch_count = Archive.objects.filter(owner=member).count()
         total = pw_count + card_count + acc_count + arch_count
 
         self.stdout.write("\nVault items :")
@@ -229,6 +227,27 @@ class Command(BaseCommand):
                 "whether the master password can unlock this vault.\n"
             )
 
+        # Report BACKUP_ENCRYPTION_KEY_PREVIOUS status
+        backup_key = os.getenv(_BACKUP_KEY_ENV)
+        if backup_key:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"\n[INFO] {_BACKUP_KEY_ENV} is set.\n"
+                    "  A previous encryption key is available as a fallback.\n"
+                    "  If any app-level encrypted field fails to decrypt (e.g.\n"
+                    "  CredentialShareToken, Account, CreditCard, Member), run:\n"
+                    "    python manage.py rotate_encryption_key \\\n"
+                    f"      --old-key ${{BACKUP_ENCRYPTION_KEY_PREVIOUS}} \\\n"
+                    "      --new-key ${ENCRYPTION_KEY}\n"
+                    "  to re-encrypt those records with the current key.\n"
+                )
+            )
+        else:
+            self.stdout.write(
+                f"\n[INFO] {_BACKUP_KEY_ENV} is not set "
+                "(normal when no key rotation has occurred)."
+            )
+
         # Only show recovery hint when there is a detectable problem
         if not salt_ok or not vault_config.encrypted_vault_key:
             self.stdout.write(
@@ -243,7 +262,7 @@ class Command(BaseCommand):
                 )
             )
 
-    def _test_password(self, vault_config, master_password: str) -> None:
+    def _test_password(self, vault_config: Any, master_password: str) -> None:
         """Try to decrypt the vault_key with the given master password."""
         from app.encryption import DecryptionError
         from security.vault_crypto import VaultEncryption
@@ -283,39 +302,31 @@ class Command(BaseCommand):
 
     def _save_snapshot(
         self,
-        username,
-        user,
-        member,
-        vault_config,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        vault_config: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+    ) -> str:
         """Persist VaultConfig credentials + item IDs to a JSON file."""
         os.makedirs(SNAPSHOT_DIR, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         path = os.path.join(SNAPSHOT_DIR, f"vault_reset_{username}_{ts}.json")
 
         pw_ids = list(
-            Password.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            Password.objects.filter(owner=member).values_list("id", flat=True)
         )
         card_ids = list(
-            StoredCreditCard.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            StoredCreditCard.objects.filter(owner=member).values_list("id", flat=True)
         )
         acc_ids = list(
-            StoredBankAccount.objects.filter(
-                owner=member, is_deleted=False
-            ).values_list("id", flat=True)
+            StoredBankAccount.objects.filter(owner=member).values_list("id", flat=True)
         )
         arch_ids = list(
-            Archive.objects.filter(owner=member, is_deleted=False).values_list(
-                "id", flat=True
-            )
+            Archive.objects.filter(owner=member).values_list("id", flat=True)
         )
 
         snapshot = {
@@ -350,15 +361,15 @@ class Command(BaseCommand):
 
     def _reset(
         self,
-        username,
-        user,
-        member,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        username: str,
+        user: Any,
+        member: Any,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         try:
             vault_config = VaultConfig.objects.get(owner=member)
         except VaultConfig.DoesNotExist:
@@ -367,14 +378,10 @@ class Command(BaseCommand):
             )
             return
 
-        pw_count = Password.objects.filter(owner=member, is_deleted=False).count()
-        card_count = StoredCreditCard.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        acc_count = StoredBankAccount.objects.filter(
-            owner=member, is_deleted=False
-        ).count()
-        arch_count = Archive.objects.filter(owner=member, is_deleted=False).count()
+        pw_count = Password.objects.filter(owner=member).count()
+        card_count = StoredCreditCard.objects.filter(owner=member).count()
+        acc_count = StoredBankAccount.objects.filter(owner=member).count()
+        arch_count = Archive.objects.filter(owner=member).count()
         total = pw_count + card_count + acc_count + arch_count
 
         # Always save snapshot BEFORE any deletion.
@@ -410,18 +417,18 @@ class Command(BaseCommand):
         with transaction.atomic():
             now = timezone.now()
 
-            deleted_pws = Password.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_cards = StoredCreditCard.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_accs = StoredBankAccount.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
-            deleted_archs = Archive.objects.filter(
-                owner=member, is_deleted=False
-            ).update(is_deleted=True, deleted_at=now)
+            deleted_pws = Password.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_cards = StoredCreditCard.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_accs = StoredBankAccount.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
+            deleted_archs = Archive.objects.filter(owner=member).update(
+                is_deleted=True, deleted_at=now
+            )
 
             vault_config.delete()
             cache.delete(f"vault_key:{user.id}")
@@ -447,16 +454,16 @@ class Command(BaseCommand):
 
     def _restore_snapshot(
         self,
-        snapshot_file,
-        member,
-        user,
-        force_restore,
-        Password,
-        StoredCreditCard,
-        StoredBankAccount,
-        Archive,
-        VaultConfig,
-    ):
+        snapshot_file: str,
+        member: Any,
+        user: Any,
+        force_restore: bool,
+        Password: type[Any],
+        StoredCreditCard: type[Any],
+        StoredBankAccount: type[Any],
+        Archive: type[Any],
+        VaultConfig: type[Any],
+    ) -> None:
         """Restore VaultConfig from a snapshot and undelete recorded items."""
         try:
             with open(snapshot_file) as f:
@@ -533,16 +540,16 @@ class Command(BaseCommand):
                 )
                 self.stdout.write("  VaultConfig created.")
 
-            restored_pws = Password.objects.filter(
+            restored_pws = Password.all_objects.filter(
                 id__in=item_ids["passwords"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_cards = StoredCreditCard.objects.filter(
+            restored_cards = StoredCreditCard.all_objects.filter(
                 id__in=item_ids["credit_cards"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_accs = StoredBankAccount.objects.filter(
+            restored_accs = StoredBankAccount.all_objects.filter(
                 id__in=item_ids["bank_accounts"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
-            restored_archs = Archive.objects.filter(
+            restored_archs = Archive.all_objects.filter(
                 id__in=item_ids["archives"], is_deleted=True
             ).update(is_deleted=False, deleted_at=None, deleted_by_id=None)
 

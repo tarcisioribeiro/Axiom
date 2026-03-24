@@ -8,15 +8,17 @@ metadata:
     app.kubernetes.io/component: minio
     environment: staging
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: minio
   ports:
     - port: 9000
       targetPort: 9000
+      nodePort: 30900
       protocol: TCP
       name: api
     - port: 9001
       targetPort: 9001
+      nodePort: 30901
       protocol: TCP
       name: console

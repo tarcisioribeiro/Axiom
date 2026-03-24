@@ -139,9 +139,7 @@ class VaultSerializer(serializers.ModelSerializer):
 
     def get_recent_transactions(self, obj):
         """Retorna as últimas 5 transações."""
-        transactions = obj.transactions.filter(is_deleted=False).order_by(
-            "-created_at"
-        )[:5]
+        transactions = obj.transactions.order_by("-created_at")[:5]
         return VaultTransactionSerializer(transactions, many=True).data
 
 

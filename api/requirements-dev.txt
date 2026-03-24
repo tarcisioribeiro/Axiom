@@ -1,5 +1,6 @@
 # Development dependencies - not needed in production
 # Install with: pip install -r requirements-dev.txt
+# NOTE: first run `pip install -e api/` from the repo root to register local flake8 plugins.
 
 # Include production dependencies
 -r requirements.txt
@@ -8,6 +9,7 @@
 pytest==9.0.2
 pytest-django==4.12.0
 pytest-cov==7.0.0
+freezegun==1.5.1
 
 # Code quality dependencies
 black==24.10.0

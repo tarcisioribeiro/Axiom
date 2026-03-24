@@ -157,16 +157,11 @@ export default function RoutineTasks() {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       health: 'bg-category-health',
-      studies: 'bg-category-studies',
+      intellect: 'bg-category-studies',
       spiritual: 'bg-category-spiritual',
       exercise: 'bg-category-exercise',
       nutrition: 'bg-category-nutrition',
-      meditation: 'bg-category-spiritual',
-      reading: 'bg-category-studies',
-      writing: 'bg-category-work',
       work: 'bg-category-work',
-      leisure: 'bg-category-leisure',
-      family: 'bg-accent',
       social: 'bg-category-leisure',
       finance: 'bg-category-finance',
       household: 'bg-category-nutrition',

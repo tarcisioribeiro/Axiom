@@ -10,7 +10,18 @@ class BudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Budget
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "category",
+            "limit_amount",
+            "month",
+            "year",
+            "member",
+            "member_name",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate(self, attrs):
         category = attrs.get("category", getattr(self.instance, "category", None))

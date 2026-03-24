@@ -86,9 +86,9 @@ export function ExportModal({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <Label className="text-sm">Data inicial</Label>
               <DatePicker
                 value={dateFrom}
@@ -97,7 +97,7 @@ export function ExportModal({
                 clearable
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <Label className="text-sm">Data final</Label>
               <DatePicker
                 value={dateTo}
@@ -108,7 +108,7 @@ export function ExportModal({
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label className="text-sm">Formato</Label>
             <Select
               value={exportFormat}
@@ -130,7 +130,7 @@ export function ExportModal({
           </p>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex justify-end gap-sm pt-sm">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -138,7 +138,7 @@ export function ExportModal({
           >
             Cancelar
           </Button>
-          <Button onClick={handleExport} disabled={isExporting} className="gap-2">
+          <Button onClick={handleExport} disabled={isExporting} className="gap-sm">
             {isExporting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

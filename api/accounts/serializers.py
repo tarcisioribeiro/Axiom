@@ -1,3 +1,6 @@
+from decimal import Decimal
+from typing import Any
+
 from rest_framework import serializers
 
 from accounts.models import Account
@@ -43,17 +46,31 @@ class AccountSerializer(serializers.ModelSerializer):
             "updated_by",
         ]
 
-    def create(self, validated_data):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        balance = attrs.get("current_balance", Decimal("0.00"))
+        overdraft_limit = attrs.get("overdraft_limit", Decimal("0.00"))
+        if balance < -overdraft_limit:
+            raise serializers.ValidationError(
+                {
+                    "balance": (
+                        f"Saldo não pode ser menor que -{overdraft_limit} "
+                        f"(limite do cheque especial)."
+                    )
+                }
+            )
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().create(validated_data)
+        instance: Account = super().create(validated_data)  # type: ignore[assignment]
         if account_number:
             instance.account_number = account_number
             instance.save()
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Account, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)  # type: ignore[assignment]
         if account_number:
             instance.account_number = account_number
             instance.save()

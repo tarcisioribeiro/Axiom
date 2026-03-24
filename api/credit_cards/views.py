@@ -55,7 +55,7 @@ class CreditCardCreateListView(BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return (
-            CreditCard.objects.filter(is_deleted=False, created_by=self.request.user)
+            CreditCard.objects.filter(created_by=self.request.user)
             .select_related("associated_account")
             .defer("_card_number")
         )
@@ -81,13 +81,13 @@ class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = CreditCard.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = CreditCard.objects.all()  # GlobalDefaultPermission
     serializer_class = CreditCardSerializer
 
     def get_queryset(self):
-        return CreditCard.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("associated_account")
+        return CreditCard.objects.filter(created_by=self.request.user).select_related(
+            "associated_account"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -111,15 +111,13 @@ class CreditCardBillCreateListView(BaseListCreateView):
         Ordenação por ano, mês e data de fim da fatura (descendente)
     """
 
-    queryset = CreditCardBill.objects.filter(
-        is_deleted=False
-    )  # GlobalDefaultPermission
+    queryset = CreditCardBill.objects.all()  # GlobalDefaultPermission
     serializer_class = CreditCardBillsSerializer
     ordering = ["-year", "-month", "-invoice_ending_date"]
 
     def get_queryset(self):
         return CreditCardBill.objects.filter(
-            is_deleted=False, credit_card__created_by=self.request.user
+            credit_card__created_by=self.request.user
         ).select_related("credit_card", "credit_card__associated_account")
 
 
@@ -140,14 +138,12 @@ class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = CreditCardBill.objects.filter(
-        is_deleted=False
-    )  # GlobalDefaultPermission
+    queryset = CreditCardBill.objects.all()  # GlobalDefaultPermission
     serializer_class = CreditCardBillsSerializer
 
     def get_queryset(self):
         return CreditCardBill.objects.filter(
-            is_deleted=False, credit_card__created_by=self.request.user
+            credit_card__created_by=self.request.user
         ).select_related("credit_card", "credit_card__associated_account")
 
 
@@ -176,9 +172,7 @@ class CreditCardPurchaseCreateListView(BaseListCreateView):
 
     def get_queryset(self):
         return (
-            CreditCardPurchase.objects.filter(
-                is_deleted=False, created_by=self.request.user
-            )
+            CreditCardPurchase.objects.filter(created_by=self.request.user)
             .select_related("card", "card__associated_account", "member")
             .prefetch_related("installments", "installments__bill")
         )
@@ -206,9 +200,7 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
 
     def get_queryset(self):
         return (
-            CreditCardPurchase.objects.filter(
-                is_deleted=False, created_by=self.request.user
-            )
+            CreditCardPurchase.objects.filter(created_by=self.request.user)
             .select_related("card", "card__associated_account", "member")
             .prefetch_related("installments", "installments__bill")
         )
@@ -227,7 +219,6 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
             CreditCardInstallment.objects.filter(
                 purchase=instance,
                 bill__isnull=False,
-                is_deleted=False,
             )
             .values_list("bill_id", flat=True)
             .distinct()
@@ -238,7 +229,7 @@ class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView)
         # Recalcula todas as faturas afetadas após a deleção em cascata
         for bill_id in affected_bill_ids:
             try:
-                bill = CreditCardBill.objects.get(pk=bill_id, is_deleted=False)
+                bill = CreditCardBill.objects.get(pk=bill_id)
                 recalculate_bill_total(bill)
             except CreditCardBill.DoesNotExist:
                 pass
@@ -271,9 +262,9 @@ class CreditCardInstallmentListView(generics.ListAPIView):
     ordering = ["due_date", "purchase__description"]
 
     def get_queryset(self):
-        return CreditCardInstallment.objects.filter(
-            is_deleted=False, purchase__is_deleted=False
-        ).select_related("purchase", "purchase__card", "purchase__member", "bill")
+        return CreditCardInstallment.objects.select_related(
+            "purchase", "purchase__card", "purchase__member", "bill"
+        )
 
 
 class CreditCardInstallmentUpdateView(generics.UpdateAPIView):
@@ -293,9 +284,7 @@ class CreditCardInstallmentUpdateView(generics.UpdateAPIView):
     serializer_class = CreditCardInstallmentUpdateSerializer
 
     def get_queryset(self):
-        return CreditCardInstallment.objects.filter(
-            is_deleted=False, purchase__is_deleted=False
-        ).select_related("purchase", "bill")
+        return CreditCardInstallment.objects.select_related("purchase", "bill")
 
 
 class PayCreditCardBillView(APIView):
@@ -326,7 +315,7 @@ class PayCreditCardBillView(APIView):
         try:
             bill = CreditCardBill.objects.select_related(
                 "credit_card", "credit_card__associated_account"
-            ).get(pk=pk, is_deleted=False)
+            ).get(pk=pk)
         except CreditCardBill.DoesNotExist:
             return Response(
                 {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -389,9 +378,9 @@ class PayCreditCardBillView(APIView):
 
             # 5.1 Marcar todas as parcelas desta fatura como pagas
             # Isso libera o limite do cartão automaticamente no cálculo
-            CreditCardInstallment.objects.filter(
-                bill=bill, is_deleted=False, payed=False
-            ).update(payed=True)
+            CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
+                payed=True
+            )
         # Pagamentos parciais mantêm o status atual (não fecham a fatura)
 
         bill.save()
@@ -448,7 +437,7 @@ class BillItemsView(APIView):
     def get(self, request, pk):
         # Buscar a fatura
         try:
-            bill = CreditCardBill.objects.get(pk=pk, is_deleted=False)
+            bill = CreditCardBill.objects.get(pk=pk)
         except CreditCardBill.DoesNotExist:
             return Response(
                 {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
@@ -459,7 +448,7 @@ class BillItemsView(APIView):
         # Buscar parcelas (CreditCardInstallment)
         installments = (
             CreditCardInstallment.objects.filter(
-                bill=bill, is_deleted=False, purchase__is_deleted=False
+                bill=bill,
             )
             .select_related("purchase", "purchase__card", "purchase__member")
             .order_by("-due_date", "-id")
@@ -538,9 +527,7 @@ class ReopenCreditCardBillView(APIView):
     def post(self, request, pk):
         # 1. Buscar a fatura
         try:
-            bill = CreditCardBill.objects.select_related("credit_card").get(
-                pk=pk, is_deleted=False
-            )
+            bill = CreditCardBill.objects.select_related("credit_card").get(pk=pk)
         except CreditCardBill.DoesNotExist:
             return Response(
                 {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND

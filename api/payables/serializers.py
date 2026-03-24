@@ -17,7 +17,25 @@ class PayableSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payable
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "value",
+            "paid_value",
+            "date",
+            "due_date",
+            "category",
+            "category_display",
+            "member",
+            "member_name",
+            "notes",
+            "status",
+            "status_display",
+            "remaining_value",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_remaining_value(self, obj):
         """Calcula o valor restante a pagar."""

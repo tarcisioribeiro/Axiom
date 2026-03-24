@@ -16,7 +16,7 @@ import { apiClient, type RequestData } from './api-client';
  * @example
  * ```ts
  * // Definir tipos
- * interface Account { id: number; name: string; balance: string; }
+ * interface Account { id: string; name: string; balance: string; }
  * interface AccountFormData { name:string; balance: string; }
  *
  * // Criar service
@@ -38,7 +38,7 @@ import { apiClient, type RequestData } from './api-client';
  * ```
  */
 export abstract class BaseService<
-  T extends { id: number },
+  T extends { id: string | number },
   CreateData = Partial<T>,
   UpdateData = Partial<CreateData>,
 > {
@@ -69,7 +69,7 @@ export abstract class BaseService<
   /**
    * Busca um recurso por ID.
    */
-  async getById(id: number): Promise<T> {
+  async getById(id: string | number): Promise<T> {
     return apiClient.get<T>(`${this.endpoint}${id}/`);
   }
 
@@ -83,21 +83,21 @@ export abstract class BaseService<
   /**
    * Atualiza um recurso existente (PUT - substituicao completa).
    */
-  async update(id: number, data: UpdateData): Promise<T> {
+  async update(id: string | number, data: UpdateData): Promise<T> {
     return apiClient.put<T>(`${this.endpoint}${id}/`, data as RequestData);
   }
 
   /**
    * Atualiza parcialmente um recurso (PATCH).
    */
-  async patch(id: number, data: Partial<UpdateData>): Promise<T> {
+  async patch(id: string | number, data: Partial<UpdateData>): Promise<T> {
     return apiClient.patch<T>(`${this.endpoint}${id}/`, data);
   }
 
   /**
    * Remove um recurso.
    */
-  async delete(id: number): Promise<void> {
+  async delete(id: string | number): Promise<void> {
     return apiClient.delete(`${this.endpoint}${id}/`);
   }
 
@@ -122,7 +122,7 @@ export abstract class BaseService<
  * ```
  */
 export function createCrudService<
-  T extends { id: number },
+  T extends { id: string | number },
   CreateData = Partial<T>,
   UpdateData = CreateData,
 >(endpoint: string) {

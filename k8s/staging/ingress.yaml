@@ -1,9 +1,12 @@
-# nginx-ingress Controller — Staging
+# Ingress — Staging
 # -------------------------------------------------------
-# Prerequisites (run once on the VPS):
+# Uses nginx-ingress (ingressClassName: nginx), matching the production setup
+# in k8s/ingress.yaml. The cluster runs nginx-ingress as the ingress controller,
+# not Traefik, so ingressClassName must be set explicitly for this resource to
+# be processed. Without it, nginx-ingress ignores the Ingress and returns 404
+# for every request to the staging host.
 #
-#   # Install nginx-ingress (k3s comes with Traefik — we replace it with nginx-ingress)
-#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.0/deploy/static/provider/cloud/deploy.yaml
+# Prerequisites (run once on the VPS):
 #
 #   # Install cert-manager (for TLS certificates via Let's Encrypt)
 #   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
@@ -44,49 +47,49 @@ spec:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /admin
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /static
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /media
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /live
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /health
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /ready
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /
             pathType: Prefix
             backend:

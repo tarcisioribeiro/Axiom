@@ -384,18 +384,20 @@ export function BookForm({
           )}
         </div>
 
-        <div>
-          <Label htmlFor="rating">Avaliação</Label>
-          <StarRating
-            value={watch('rating')}
-            onChange={(value) => setValue('rating', value)}
-            size="md"
-            className="mt-2"
-          />
-          {errors.rating && (
-            <p className="mt-1 text-sm text-destructive">{errors.rating.message}</p>
-          )}
-        </div>
+        {watch('read_status') === 'read' && (
+          <div>
+            <Label htmlFor="rating">Avaliação</Label>
+            <StarRating
+              value={watch('rating')}
+              onChange={(value) => setValue('rating', value)}
+              size="md"
+              className="mt-2"
+            />
+            {errors.rating && (
+              <p className="mt-1 text-sm text-destructive">{errors.rating.message}</p>
+            )}
+          </div>
+        )}
 
         <div className="col-span-2">
           <Label htmlFor="synopsis">Sinopse *</Label>

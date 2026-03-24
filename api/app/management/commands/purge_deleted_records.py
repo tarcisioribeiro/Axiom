@@ -10,6 +10,7 @@ Default retention period: 90 days.
 
 import uuid
 from datetime import timedelta
+from typing import Any
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -21,7 +22,7 @@ class Command(BaseCommand):
         "(LGPD/GDPR compliance)."
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--days",
             type=int,
@@ -36,7 +37,7 @@ class Command(BaseCommand):
             help="Simulate the purge without making any changes.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         days = options["days"]
         dry_run = options["dry_run"]
         cutoff = timezone.now() - timedelta(days=days)
@@ -53,7 +54,7 @@ class Command(BaseCommand):
         results = {}
 
         for label, model, anonymize_fn in self._get_sensitive_models():
-            qs = model.objects.filter(is_deleted=True, deleted_at__lte=cutoff)
+            qs = model.all_objects.filter(is_deleted=True, deleted_at__lte=cutoff)
             count = qs.count()
             results[label] = count
 
@@ -97,7 +98,7 @@ class Command(BaseCommand):
     # Sensitive model registry
     # ------------------------------------------------------------------
 
-    def _get_sensitive_models(self):
+    def _get_sensitive_models(self) -> list[Any]:
         """
         Returns a list of (label, Model, anonymize_fn) tuples for all
         sensitive/PII models that require LGPD/GDPR compliance purging.
@@ -134,7 +135,7 @@ class Command(BaseCommand):
     # Anonymization functions — clear PII/encrypted fields before purge
     # ------------------------------------------------------------------
 
-    def _anonymize_member(self, instance):
+    def _anonymize_member(self, instance: Any) -> None:
         """Replace PII fields with placeholder values."""
         instance.name = "[REMOVIDO]"
         instance.document = str(uuid.uuid4())
@@ -147,31 +148,31 @@ class Command(BaseCommand):
         instance.notes = None
         # Intentionally NOT saving — record will be hard-deleted immediately.
 
-    def _anonymize_account(self, instance):
+    def _anonymize_account(self, instance: Any) -> None:
         """Clear encrypted account number."""
         instance._account_number = None
 
-    def _anonymize_credit_card(self, instance):
+    def _anonymize_credit_card(self, instance: Any) -> None:
         """Clear encrypted card credentials."""
         instance._card_number = None
         instance._security_code = None
 
-    def _anonymize_password(self, instance):
+    def _anonymize_password(self, instance: Any) -> None:
         """Clear encrypted password payload."""
         instance._password = None
 
-    def _anonymize_stored_card(self, instance):
+    def _anonymize_stored_card(self, instance: Any) -> None:
         """Clear encrypted stored card credentials."""
         instance._card_number = None
         instance._security_code = None
 
-    def _anonymize_stored_bank_account(self, instance):
+    def _anonymize_stored_bank_account(self, instance: Any) -> None:
         """Clear encrypted banking credentials."""
         instance._account_number = None
         instance._password = None
         instance._digital_password = None
 
-    def _anonymize_archive(self, instance):
+    def _anonymize_archive(self, instance: Any) -> None:
         """Clear encrypted text and delete associated file from storage."""
         instance._encrypted_text = None
         if instance.encrypted_file:
@@ -184,10 +185,10 @@ class Command(BaseCommand):
     # Audit logging
     # ------------------------------------------------------------------
 
-    def _log_purge(self, instance, label):
+    def _log_purge(self, instance: Any, label: str) -> None:
         """Write an immutable ActivityLog entry recording the hard delete."""
         try:
-            from security.activity_logs.models import ActivityLog
+            from security.models import ActivityLog
 
             ActivityLog.log_action(
                 user=None,
