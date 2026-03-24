@@ -1,6 +1,8 @@
 import os
 from typing import Any, Optional
 
+import boto3
+from botocore.config import Config
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
@@ -9,14 +11,35 @@ class MinIOStorage(S3Boto3Storage):
     Custom S3Boto3Storage for MinIO.
 
     Uses the internal endpoint (minio:9000) for uploads/operations,
-    but generates URLs with the external endpoint (localhost:39105)
-    so that the browser can access files directly.
+    but generates presigned URLs signed with the external endpoint
+    (localhost:39105) so the browser can access files directly.
+
+    Presigned URLs must be signed with the same host the browser will use,
+    otherwise MinIO rejects the request because the Host header won't match
+    the value baked into the SigV4 signature.
     """
 
     def __init__(self, **settings: Any) -> None:
         super().__init__(**settings)
         self.external_endpoint = os.getenv("MINIO_EXTERNAL_ENDPOINT", "")
         self.use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+
+        if self.external_endpoint:
+            protocol = "https" if self.use_ssl else "http"
+            verify: Any = True
+            if self.use_ssl:
+                verify = os.getenv("MINIO_CA_BUNDLE", True)
+            self._url_signing_client = boto3.client(
+                "s3",
+                endpoint_url=f"{protocol}://{self.external_endpoint}",
+                aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
+                aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"),
+                region_name="us-east-1",
+                verify=verify,
+                config=Config(
+                    signature_version="s3v4", s3={"addressing_style": "path"}
+                ),
+            )
 
     def url(
         self,
@@ -26,18 +49,18 @@ class MinIOStorage(S3Boto3Storage):
         http_method: Optional[str] = None,
     ) -> str:
         """
-        Generate a presigned URL using the external endpoint
-        so the browser can access the file.
+        Generate a presigned URL signed with the external endpoint so that
+        the SigV4 Host header in the signature matches what the browser sends.
         """
-        url: str = super().url(  # type: ignore[assignment]
+        if self.external_endpoint and hasattr(self, "_url_signing_client"):
+            params: dict[str, Any] = {"Bucket": self.bucket_name, "Key": name}
+            if parameters:
+                params.update(parameters)
+            return self._url_signing_client.generate_presigned_url(
+                "get_object",
+                Params=params,
+                ExpiresIn=expire,
+            )
+        return super().url(  # type: ignore[return-value]
             name, parameters=parameters, expire=expire, http_method=http_method
         )
-        if self.external_endpoint:
-            internal_endpoint = os.getenv("MINIO_ENDPOINT", "minio:9000")
-            protocol = "https" if self.use_ssl else "http"
-            url = url.replace(
-                f"http://{internal_endpoint}", f"{protocol}://{self.external_endpoint}"
-            ).replace(
-                f"https://{internal_endpoint}", f"{protocol}://{self.external_endpoint}"
-            )
-        return url
