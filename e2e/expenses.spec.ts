@@ -55,6 +55,13 @@ test.describe('Expenses', () => {
     // Category is a Radix UI Select (not a native <select>) — use click, not selectOption()
     await page.getByRole('dialog').getByRole('combobox').first().click();
     await page.getByRole('listbox').getByRole('option').first().click();
+    // Wait for the category listbox to close before interacting with next select
+    await expect(page.getByRole('listbox')).not.toBeVisible({ timeout: 5_000 });
+
+    // Account is the 3rd combobox (index 2) — select explicitly; the useEffect
+    // auto-selection may not update the controlled Select value in time
+    await page.getByRole('dialog').getByRole('combobox').nth(2).click();
+    await page.getByRole('listbox').getByRole('option').first().click();
 
     // Submit
     await page
@@ -86,6 +93,11 @@ test.describe('Expenses', () => {
     // Category is required (Zod enum) — select the first option via Radix UI click
     await page.getByRole('dialog').getByRole('combobox').first().click();
     await page.getByRole('listbox').getByRole('option').first().click();
+    await expect(page.getByRole('listbox')).not.toBeVisible({ timeout: 5_000 });
+
+    // Account is the 3rd combobox (index 2) — select explicitly
+    await page.getByRole('dialog').getByRole('combobox').nth(2).click();
+    await page.getByRole('listbox').getByRole('option').first().click();
 
     await page
       .getByRole('dialog')
@@ -103,7 +115,9 @@ test.describe('Expenses', () => {
     const searchInput = page.getByPlaceholder(/buscar|pesquisar|search/i).first();
     await searchInput.fill('xyzzy_nonexistent_expense_12345');
 
-    // Wait for the debounced request to settle
+    // The search input is debounced (300 ms). Wait for the debounce to fire
+    // and the filtered request to complete before checking the result.
+    await page.waitForTimeout(600);
     await page.waitForLoadState('networkidle');
 
     // Either an empty state message or zero rows

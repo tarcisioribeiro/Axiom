@@ -59,17 +59,23 @@ test.describe('Dashboard', () => {
     // The "Despesas" link lives inside two nested collapsible sections:
     //   1. Module "Controle Financeiro"  →  2. Submodule "Registros"
     // Both must be expanded before the link is clickable.
-    await page
-      .getByRole('button', { name: /controle financeiro/i })
-      .first()
-      .click();
+    // On the dashboard page "Controle Financeiro" may already be expanded —
+    // only click to expand if it is currently collapsed.
+    const financeBtn = page.getByRole('button', { name: /controle financeiro/i }).first();
+    if ((await financeBtn.getAttribute('aria-expanded')) !== 'true') {
+      await financeBtn.click();
+    }
 
-    await page
-      .getByRole('button', { name: /registros/i })
-      .first()
-      .click();
+    // Wait for the "Registros" button to be visible inside the expanded section
+    const registrosBtn = page.getByRole('button', { name: /registros/i }).first();
+    await expect(registrosBtn).toBeVisible({ timeout: 5_000 });
+    if ((await registrosBtn.getAttribute('aria-expanded')) !== 'true') {
+      await registrosBtn.click();
+    }
 
+    // Wait for the "Despesas" link to be fully visible and interactive
     const expensesLink = page.getByRole('link', { name: 'Despesas' }).first();
+    await expect(expensesLink).toBeVisible({ timeout: 5_000 });
     await expensesLink.click();
     await expect(page).toHaveURL(/\/expenses/, { timeout: 10_000 });
 
@@ -106,6 +112,11 @@ test.describe('Dashboard', () => {
 
     // Category is a Radix UI Select — use click, not selectOption()
     await page.getByRole('dialog').getByRole('combobox').first().click();
+    await page.getByRole('listbox').getByRole('option').first().click();
+    await expect(page.getByRole('listbox')).not.toBeVisible({ timeout: 5_000 });
+
+    // Account is the 3rd combobox (index 2) — select explicitly
+    await page.getByRole('dialog').getByRole('combobox').nth(2).click();
     await page.getByRole('listbox').getByRole('option').first().click();
 
     await page
