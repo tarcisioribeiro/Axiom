@@ -1130,19 +1130,32 @@ deploy:production:
     - kubectl apply -f k8s/base/configmap.yaml
     - kubectl apply -f k8s/serviceaccounts.yaml
     - kubectl apply -f k8s/api/pvc.yaml
-    # ── 3. Bootstrap blue-green Deployments + Service (create-only) ──────────────
-    # Skipped when resources already exist to avoid overwriting the live image
-    # tag or the Service selector that blue-green-switch.sh owns.
-    # On first bootstrap the real image is substituted so the standby slot has
-    # a valid image from the start — prevents ImagePullBackOff on first rollback.
+    # ── 3. Sync blue-green Deployment specs + Service ────────────────────────────
+    # Always apply the manifest so spec changes (volumes, probes, env) propagate.
+    # The image tag is preserved from whatever is currently running so we don't
+    # disturb the live slot — blue-green-switch.sh owns the image update.
+    # On first bootstrap (deployment absent) the real image is substituted so
+    # the standby slot has a valid image from the start (no ImagePullBackOff).
     - |
-      kubectl -n mindledger get deployment api-blue >/dev/null 2>&1 || \
+      if kubectl -n mindledger get deployment api-blue >/dev/null 2>&1; then
+        CURRENT_IMAGE=$(kubectl -n mindledger get deployment api-blue \
+          -o jsonpath='{.spec.template.spec.containers[0].image}')
+        sed "s|image: .*:0\.0\.0|image: $CURRENT_IMAGE|" \
+          k8s/api/deployment-blue.yaml | kubectl apply -f -
+      else
         sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
           k8s/api/deployment-blue.yaml | kubectl apply -f -
+      fi
     - |
-      kubectl -n mindledger get deployment api-green >/dev/null 2>&1 || \
+      if kubectl -n mindledger get deployment api-green >/dev/null 2>&1; then
+        CURRENT_IMAGE=$(kubectl -n mindledger get deployment api-green \
+          -o jsonpath='{.spec.template.spec.containers[0].image}')
+        sed "s|image: .*:0\.0\.0|image: $CURRENT_IMAGE|" \
+          k8s/api/deployment-green.yaml | kubectl apply -f -
+      else
         sed "s|image: .*:0\.0\.0|image: $API_IMAGE:$CI_COMMIT_SHORT_SHA|" \
           k8s/api/deployment-green.yaml | kubectl apply -f -
+      fi
     - kubectl -n mindledger get svc api-service >/dev/null 2>&1 || kubectl apply -f k8s/api/service.yaml
     # ── 4. Apply frontend manifests with the current image tag ───────────────────
     - kubectl apply -f k8s/frontend/configmap-nginx.yaml
