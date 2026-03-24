@@ -1094,13 +1094,12 @@ deploy:production:
   before_script:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
-    - chmod +x k8s/scripts/blue-green-switch.sh
   script:
     # API: blue-green zero-downtime deploy.
     # The script reads the active slot from the Service selector, deploys the
     # new image to the inactive slot, waits for readiness, then switches
     # traffic and scales the old slot to 0 (kept for instant rollback).
-    - k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" mindledger api-service
+    - bash k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" mindledger api-service
     # Frontend: stateless nginx — rolling update is sufficient.
     - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
     - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
