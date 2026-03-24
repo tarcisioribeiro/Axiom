@@ -1095,13 +1095,59 @@ deploy:production:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
-    # API: blue-green zero-downtime deploy.
+    # ── 0. Guard: abort early if any required production variable is unset ───────
+    - |
+      for var in PRODUCTION_DB_NAME PRODUCTION_DB_USER PRODUCTION_DB_PASSWORD \
+                 PRODUCTION_SECRET_KEY PRODUCTION_ENCRYPTION_KEY \
+                 PRODUCTION_SUPERUSER_USERNAME PRODUCTION_SUPERUSER_EMAIL \
+                 PRODUCTION_SUPERUSER_PASSWORD \
+                 PRODUCTION_MINIO_ROOT_USER PRODUCTION_MINIO_ROOT_PASSWORD; do
+        val=$(eval echo "\$$var")
+        if [ -z "$val" ]; then
+          echo "ERROR: required CI variable $var is not set. Aborting deploy."
+          exit 1
+        fi
+      done
+    # ── 1. Sync secrets from CI variables ───────────────────────────────────────
+    - |
+      kubectl -n mindledger create secret generic mindledger-secrets \
+        --from-literal=DB_NAME="$PRODUCTION_DB_NAME" \
+        --from-literal=DB_USER="$PRODUCTION_DB_USER" \
+        --from-literal=DB_PASSWORD="$PRODUCTION_DB_PASSWORD" \
+        --from-literal=SECRET_KEY="$PRODUCTION_SECRET_KEY" \
+        --from-literal=ENCRYPTION_KEY="$PRODUCTION_ENCRYPTION_KEY" \
+        --from-literal=DJANGO_SUPERUSER_USERNAME="$PRODUCTION_SUPERUSER_USERNAME" \
+        --from-literal=DJANGO_SUPERUSER_EMAIL="$PRODUCTION_SUPERUSER_EMAIL" \
+        --from-literal=DJANGO_SUPERUSER_PASSWORD="$PRODUCTION_SUPERUSER_PASSWORD" \
+        --from-literal=REDIS_PASSWORD="${PRODUCTION_REDIS_PASSWORD:-}" \
+        --from-literal=REDIS_URL="redis://redis-service:6379/0" \
+        --from-literal=MINIO_ROOT_USER="$PRODUCTION_MINIO_ROOT_USER" \
+        --from-literal=MINIO_ROOT_PASSWORD="$PRODUCTION_MINIO_ROOT_PASSWORD" \
+        --from-literal=SENTRY_DSN="${PRODUCTION_SENTRY_DSN:-}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    # ── 2. Apply base manifests (idempotent — safe on every run) ─────────────────
+    - kubectl apply -f k8s/base/namespace.yaml
+    - kubectl apply -f k8s/base/configmap.yaml
+    - kubectl apply -f k8s/serviceaccounts.yaml
+    - kubectl apply -f k8s/api/pvc.yaml
+    # ── 3. Bootstrap blue-green Deployments + Service (create-only) ──────────────
+    # Skipped when resources already exist to avoid overwriting the live image
+    # tag or the Service selector that blue-green-switch.sh owns.
+    - kubectl -n mindledger get deployment api-blue  >/dev/null 2>&1 || kubectl apply -f k8s/api/deployment-blue.yaml
+    - kubectl -n mindledger get deployment api-green >/dev/null 2>&1 || kubectl apply -f k8s/api/deployment-green.yaml
+    - kubectl -n mindledger get svc api-service      >/dev/null 2>&1 || kubectl apply -f k8s/api/service.yaml
+    # ── 4. Apply frontend manifests with the current image tag ───────────────────
+    - kubectl apply -f k8s/frontend/configmap-nginx.yaml
+    - |
+      sed "s|image: .*:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
+        k8s/frontend/deployment.yaml | kubectl apply -f -
+    - kubectl apply -f k8s/frontend/service.yaml
+    # ── 5. API: blue-green zero-downtime deploy ───────────────────────────────────
     # The script reads the active slot from the Service selector, deploys the
     # new image to the inactive slot, waits for readiness, then switches
     # traffic and scales the old slot to 0 (kept for instant rollback).
     - bash k8s/scripts/blue-green-switch.sh "$API_IMAGE:$CI_COMMIT_SHORT_SHA" mindledger api-service
-    # Frontend: stateless nginx — rolling update is sufficient.
-    - kubectl -n mindledger set image deployment/frontend frontend="$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+    # ── 6. Frontend: wait for rollout to complete ────────────────────────────────
     - kubectl -n mindledger rollout status deployment/frontend --timeout=120s
   after_script:
     - rm -f /tmp/kubeconfig
@@ -1115,8 +1161,18 @@ deploy:production:
 # blue-green-switch.sh) and restores the previous frontend revision.
 #
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
-#   PRODUCTION_SUPERUSER_USERNAME — username of the Django superuser in production
-#   PRODUCTION_SUPERUSER_PASSWORD — password for the production superuser (masked variable)
+#   PRODUCTION_DB_NAME              — PostgreSQL database name
+#   PRODUCTION_DB_USER              — PostgreSQL username
+#   PRODUCTION_DB_PASSWORD          — PostgreSQL password (masked)
+#   PRODUCTION_SECRET_KEY           — Django SECRET_KEY (masked)
+#   PRODUCTION_ENCRYPTION_KEY       — Fernet encryption key (masked)
+#   PRODUCTION_SUPERUSER_USERNAME   — Django superuser username
+#   PRODUCTION_SUPERUSER_EMAIL      — Django superuser e-mail
+#   PRODUCTION_SUPERUSER_PASSWORD   — Django superuser password (masked)
+#   PRODUCTION_MINIO_ROOT_USER      — MinIO root user
+#   PRODUCTION_MINIO_ROOT_PASSWORD  — MinIO root password (masked)
+#   PRODUCTION_REDIS_PASSWORD       — Redis password (optional, masked)
+#   PRODUCTION_SENTRY_DSN           — Sentry DSN (optional)
 # ==============================================================================
 
 smoke:production:
