@@ -117,7 +117,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setValue('related_loan', expense.related_loan || null);
       setValue('related_payable', expense.related_payable || null);
     } else if (accounts.length > 0) {
-      setValue('account', accounts[0].id);
+      setValue('account', accounts[0].id, { shouldDirty: true });
     }
   }, [expense, accounts, setValue]);
 
