@@ -11,7 +11,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-_TESTING = "test" in sys.argv
+_TESTING = "test" in sys.argv or (len(sys.argv) > 0 and "pytest" in sys.argv[0])
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY and not _TESTING:
@@ -30,6 +30,8 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False") == "True"
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
 CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False") == "True"
+SESSION_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Strict"
 
 # HSTS — only active when SECURE_HSTS_SECONDS > 0.
 # Start with a short value (e.g. 300) in staging before committing to 31536000.
@@ -145,7 +147,7 @@ DATABASES = {
 }
 
 # Use SQLite for tests to avoid database connection issues
-if "test" in sys.argv:
+if _TESTING:
     DATABASES["default"] = {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)
@@ -206,12 +208,19 @@ if MINIO_ENDPOINT:
             "MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set."
         )
     AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "mindledger")
-    AWS_S3_ENDPOINT_URL = f"http://{MINIO_ENDPOINT}"
+    _minio_use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
+    _minio_scheme = "https" if _minio_use_ssl else "http"
+    AWS_S3_ENDPOINT_URL = f"{_minio_scheme}://{MINIO_ENDPOINT}"
     AWS_S3_REGION_NAME = "us-east-1"
     AWS_S3_FILE_OVERWRITE = False
     AWS_DEFAULT_ACL = None
     AWS_QUERYSTRING_AUTH = True
     AWS_S3_ADDRESSING_STYLE = "path"
+    # When TLS is enabled, verify using the internal CA cert mounted by the
+    # k8s deployment (MINIO_CA_BUNDLE=/etc/ssl/minio/ca.crt). Falls back to
+    # True (system CAs) when the env var is unset (e.g. local Docker Compose).
+    if _minio_use_ssl:
+        AWS_S3_VERIFY = os.getenv("MINIO_CA_BUNDLE", True)
 
 # Health check configuration
 DISK_SPACE_WARN_THRESHOLD = float(os.getenv("DISK_SPACE_WARN_THRESHOLD", "10"))
@@ -232,8 +241,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
-        "user": "300/minute",
-        "login": "5/minute",
+        "user": "1000/minute",
+        "login": "30/minute",  # raised: NUM_PROXIES=1 collapses CI traffic to ingress
         "register": "3/minute",
         "share_token": "10/minute",
     },
@@ -285,6 +294,13 @@ CACHES = {
         "LOCATION": "unique-snowflake",
     },
 }
+
+# Use in-memory cache for tests — no Redis required in CI
+if _TESTING:
+    CACHES["default"] = {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "test-cache",
+    }
 
 # TTLs de cache especificos (em segundos)
 CACHE_TTL_DASHBOARD_STATS = 60  # 1 minuto - dados mudam frequentemente
@@ -358,7 +374,7 @@ os.makedirs(logs_dir, exist_ok=True)
 
 # CORS Configuration
 # Permitir apenas origens específicas (desenvolvimento e produção)
-def _normalize_cors_origins(origins_str):
+def _normalize_cors_origins(origins_str: str) -> list[str]:
     """
     Normaliza origens CORS garantindo que todas tenham esquema (http/https).
     Adiciona https:// automaticamente se o esquema estiver faltando.

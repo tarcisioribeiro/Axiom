@@ -6,7 +6,7 @@ class AccountsConfig(AppConfig):
     name = "accounts"
     verbose_name = "Contas"
 
-    def ready(self):
+    def ready(self) -> None:
         """
         Importa os signals quando o app é carregado.
 

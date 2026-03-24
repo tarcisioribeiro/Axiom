@@ -167,6 +167,15 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             placeholder="0.00"
             disabled={isLoading}
           />
+          {watch('overdraft_limit') > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Saldo mínimo permitido:{' '}
+              {(-watch('overdraft_limit')).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}
+            </p>
+          )}
           {errors.balance && (
             <p className="text-sm text-destructive">{errors.balance.message}</p>
           )}

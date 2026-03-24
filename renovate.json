@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["on the first day of the month"],
+  "labels": ["dependencies", "ci-cd"],
+  "packageRules": [
+    {
+      "description": "Group all CI image updates into a single PR",
+      "matchFileNames": [".gitlab-ci.yml"],
+      "groupName": "CI runner images",
+      "groupSlug": "ci-images",
+      "commitMessagePrefix": "chore(deps):"
+    },
+    {
+      "description": "Pin aquasec/trivy to exact digest on every release",
+      "matchPackageNames": ["aquasec/trivy"],
+      "pinDigests": true,
+      "versioning": "docker"
+    },
+    {
+      "description": "Pin ghcr.io/yannh/kubeconform to exact digest on every release",
+      "matchPackageNames": ["ghcr.io/yannh/kubeconform"],
+      "pinDigests": true,
+      "versioning": "docker"
+    },
+    {
+      "description": "Pin bitnami/kubectl — only publishes :latest; track digest changes",
+      "matchPackageNames": ["bitnami/kubectl"],
+      "pinDigests": true,
+      "versioning": "docker"
+    }
+  ],
+  "dockerfile": {
+    "enabled": true
+  },
+  "gitlabci": {
+    "enabled": true,
+    "fileMatch": ["\\.gitlab-ci\\.yml$"]
+  }
+}

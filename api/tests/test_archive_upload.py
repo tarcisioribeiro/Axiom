@@ -1,5 +1,9 @@
+import shutil
+import tempfile
+
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import serializers as drf_serializers
 from rest_framework import status
@@ -127,6 +131,17 @@ class ArchiveFileValidatorTest(BaseSecurityTestCase):
 class ArchiveUploadViewTest(BaseSecurityTestCase):
     """Integration tests for the archive upload endpoint."""
 
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        self.override.disable()
+        shutil.rmtree(self.media_root, ignore_errors=True)
+
     def _upload(self, filename, content, extra_data=None):
         url = reverse("archive-list-create")
         data = {
@@ -169,6 +184,17 @@ class ArchiveUploadViewTest(BaseSecurityTestCase):
 
 class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
     """Verify download endpoint uses whitelist-derived Content-Type."""
+
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        self.override.disable()
+        shutil.rmtree(self.media_root, ignore_errors=True)
 
     def _create_archive_with_file(self, filename, content):
         url = reverse("archive-list-create")

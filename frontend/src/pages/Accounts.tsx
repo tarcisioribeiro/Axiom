@@ -1,3 +1,4 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pencil,
@@ -7,7 +8,7 @@ import {
   FileUp,
   RefreshCw,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,6 +32,7 @@ import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { getErrorMessage } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
@@ -59,13 +61,12 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
 export default function Accounts() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<Account | undefined>();
 
   // Bank reconciliation state
   const [reconciliationAccount, setReconciliationAccount] = useState<
@@ -78,25 +79,75 @@ export default function Accounts() {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadLoading, setUploadLoading] = useState(false);
 
-  useEffect(() => {
-    void loadData();
-  }, []);
+  // ── Query ──────────────────────────────────────────────────────────────────
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const accountsData = await accountsService.getAll();
-      setAccounts(accountsData);
-    } catch (error: unknown) {
+  // ── Mutations ──────────────────────────────────────────────────────────────
+  const invalidateAccounts = () =>
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data: AccountFormData) => accountsService.create(data),
+    onSuccess: () => {
+      void invalidateAccounts();
       toast({
-        title: t('common.messages.loadError'),
+        title: t('pages.accounts.created'),
+        description: t('pages.accounts.createdDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: AccountFormData }) =>
+      accountsService.update(id, data),
+    onSuccess: () => {
+      void invalidateAccounts();
+      toast({
+        title: t('pages.accounts.updated'),
+        description: t('pages.accounts.updatedDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => accountsService.delete(id),
+    onSuccess: () => {
+      void invalidateAccounts();
+      toast({
+        title: t('pages.accounts.deleted'),
+        description: t('pages.accounts.deletedDesc'),
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleCreate = () => {
     setSelectedAccount(undefined);
@@ -118,49 +169,14 @@ export default function Accounts() {
     });
 
     if (!confirmed) return;
-
-    try {
-      await accountsService.delete(id);
-      toast({
-        title: t('pages.accounts.deleted'),
-        description: t('pages.accounts.deletedDesc'),
-      });
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handleSubmit = async (data: AccountFormData) => {
-    try {
-      setIsSubmitting(true);
-      if (selectedAccount) {
-        await accountsService.update(selectedAccount.id, data);
-        toast({
-          title: t('pages.accounts.updated'),
-          description: t('pages.accounts.updatedDesc'),
-        });
-      } else {
-        await accountsService.create(data);
-        toast({
-          title: t('pages.accounts.created'),
-          description: t('pages.accounts.createdDesc'),
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (data: AccountFormData) => {
+    if (selectedAccount) {
+      updateMutation.mutate({ id: selectedAccount.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
 
@@ -255,15 +271,28 @@ export default function Accounts() {
       key: 'balance',
       label: t('pages.accounts.columns.balance'),
       align: 'right',
-      render: (account) => (
-        <span
-          className={`font-semibold ${
-            parseFloat(account.balance) >= 0 ? 'text-success' : 'text-destructive'
-          }`}
-        >
-          {formatCurrency(account.balance)}
-        </span>
-      ),
+      render: (account) => {
+        const balance = parseFloat(account.balance);
+        const overdraft = parseFloat(account.overdraft_limit ?? '0');
+        const available = balance + overdraft;
+        return (
+          <div className="flex flex-col items-end gap-0.5">
+            <span
+              className={`font-semibold ${balance >= 0 ? 'text-success' : 'text-destructive'}`}
+            >
+              {formatCurrency(account.balance)}
+            </span>
+            {overdraft > 0 && (
+              <span
+                className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
+                title="Saldo disponível (incluindo cheque especial)"
+              >
+                Disp.: {formatCurrency(String(available))}
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'created_at',

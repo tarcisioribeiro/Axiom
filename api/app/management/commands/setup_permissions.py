@@ -3,6 +3,8 @@ Django management command to setup default permissions for the members group.
 This ensures all users in the members group have the necessary permissions.
 """
 
+from typing import Any
+
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
@@ -11,7 +13,7 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Setup default permissions for the members group"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # Get or create the members group
         members_group, created = Group.objects.get_or_create(name="members")
 

@@ -19,13 +19,13 @@ class LoanCreateListView(BaseListCreateView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Loan.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Loan.objects.all()  # GlobalDefaultPermission
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account", "benefited", "creditor", "guarantor")
+        return Loan.objects.filter(created_by=self.request.user).select_related(
+            "account", "benefited", "creditor", "guarantor"
+        )
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -48,13 +48,13 @@ class LoanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Loan.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Loan.objects.all()  # GlobalDefaultPermission
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account", "benefited", "creditor", "guarantor")
+        return Loan.objects.filter(created_by=self.request.user).select_related(
+            "account", "benefited", "creditor", "guarantor"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)

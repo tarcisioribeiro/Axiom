@@ -1,5 +1,7 @@
+import base64
 import json
 import logging
+import os
 from typing import Any
 
 from django.conf import settings
@@ -42,6 +44,7 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         "/health/",
         "/ready/",
         "/live/",
+        "/api/v1/health/backup/",
         "/static/",
         "/media/",
     ]
@@ -177,7 +180,7 @@ class AuditLoggingMiddleware(MiddlewareMixin):
                 data = dict(request.POST)
 
             # Remove sensitive fields
-            safe_data = self._sanitize_data(data)
+            safe_data: dict[str, Any] = self._sanitize_data(data)
 
             # Limit size of logged data
             data_str = json.dumps(safe_data)
@@ -210,6 +213,11 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
     Middleware to add security headers to responses.
     """
 
+    def process_request(self, request: HttpRequest) -> None:
+        """Generate a per-request CSP nonce and attach it to the request."""
+        nonce = base64.b64encode(os.urandom(16)).decode("ascii")
+        setattr(request, "_csp_nonce", nonce)  # type: ignore[attr-defined]
+
     def process_response(
         self, request: HttpRequest, response: HttpResponse
     ) -> HttpResponse:
@@ -229,15 +237,22 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
 
             # HSTS is handled by Django's SecurityMiddleware via SECURE_HSTS_SECONDS.
             # Content Security Policy (CSP)
-            # Nota: 'unsafe-inline' mantido em style-src para compatibilidade
-            # com CSS-in-JS
-            # Em producao, considerar implementar nonces para scripts
+            # A per-request nonce is generated in process_request and stored as
+            # request._csp_nonce. Django admin templates can reference it via
+            # {{ request._csp_nonce }} to whitelist specific <style> or <script>
+            # blocks without resorting to 'unsafe-inline'.
+            # Note: 'unsafe-inline' is intentionally absent from style-src.
+            # React inline style={} props are JavaScript DOM operations (not HTML
+            # attributes) and are not blocked by style-src. Framer Motion v11+
+            # uses WAAPI and does not inject <style> tags for standard animations.
+            nonce = getattr(request, "_csp_nonce", "")
+            nonce_src = f"'nonce-{nonce}'" if nonce else ""
             cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
             connect_src = f"'self' http://localhost:* {cors_origins}".strip()
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self'; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                f"script-src 'self' {nonce_src}; "
+                f"style-src 'self' {nonce_src} https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "img-src 'self' data: https: blob:; "
                 f"connect-src {connect_src}; "

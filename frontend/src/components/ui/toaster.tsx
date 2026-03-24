@@ -41,21 +41,40 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      {/* ARIA live region para anunciar notificacoes */}
+      {/* ARIA live region polite para toasts informativos */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {toasts.map(({ id, title, description }) => (
-          <span key={id}>
-            {typeof title === 'string' ? title : ''}
-            {typeof description === 'string' ? ` ${description}` : ''}
-          </span>
-        ))}
+        {toasts
+          .filter(({ variant }) => variant !== 'destructive')
+          .map(({ id, title, description }) => (
+            <span key={id}>
+              {typeof title === 'string' ? title : ''}
+              {typeof description === 'string' ? ` ${description}` : ''}
+            </span>
+          ))}
+      </div>
+      {/* ARIA live region assertive para toasts destrutivos */}
+      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+        {toasts
+          .filter(({ variant }) => variant === 'destructive')
+          .map(({ id, title, description }) => (
+            <span key={id}>
+              {typeof title === 'string' ? title : ''}
+              {typeof description === 'string' ? ` ${description}` : ''}
+            </span>
+          ))}
       </div>
       <AnimatePresence>
         {toasts
           .filter((t) => t.open !== false)
           .map(function ({ id, title, description, action, ...props }) {
+            const isDestructive = props.variant === 'destructive';
             return (
-              <Toast key={id} {...props} role="alert" aria-live="assertive">
+              <Toast
+                key={id}
+                {...props}
+                role={isDestructive ? 'alert' : 'status'}
+                aria-live={isDestructive ? 'assertive' : 'polite'}
+              >
                 <div className="grid flex-1 gap-1">
                   {title && <ToastTitle>{title}</ToastTitle>}
                   {description && <ToastDescription>{description}</ToastDescription>}

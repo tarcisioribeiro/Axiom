@@ -19,20 +19,21 @@ from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.encryption import DecryptionError, FieldEncryption
 from app.permissions import GlobalDefaultPermission
 from authentication.throttles import ShareTokenRateThrottle
-from security.activity_logs.models import ACTION_TYPES, ActivityLog
+from security.importers import (
+    SUPPORTED_FORMATS,
+    ImportParseError,
+    parse_bitwarden_json,
+    parse_lastpass_csv,
+)
 from security.models import (
+    ACTION_TYPES,
     PASSWORD_CATEGORIES,
+    ActivityLog,
     Archive,
     CredentialShareToken,
     Password,
     StoredBankAccount,
     StoredCreditCard,
-)
-from security.passwords.importers import (
-    SUPPORTED_FORMATS,
-    ImportParseError,
-    parse_bitwarden_json,
-    parse_lastpass_csv,
 )
 from security.serializers import (
     ActivityLogSerializer,
@@ -90,7 +91,7 @@ class PasswordListCreateView(VaultLockedMixin, BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return (
-            Password.objects.filter(owner__user=self.request.user, is_deleted=False)
+            Password.objects.filter(owner__user=self.request.user)
             .select_related("owner")
             .defer("_password")
         )
@@ -119,9 +120,9 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
     queryset = Password.objects.all()
 
     def get_queryset(self):
-        return Password.objects.filter(
-            owner__user=self.request.user, is_deleted=False
-        ).select_related("owner")
+        return Password.objects.filter(owner__user=self.request.user).select_related(
+            "owner"
+        )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -160,7 +161,7 @@ class PasswordRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = Password.objects.all()
 
     def get_queryset(self):
-        return Password.objects.filter(owner__user=self.request.user, is_deleted=False)
+        return Password.objects.filter(owner__user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -191,9 +192,7 @@ class StoredCreditCardListCreateView(VaultLockedMixin, BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campos criptografados na listagem (performance)
         return (
-            StoredCreditCard.objects.filter(
-                owner__user=self.request.user, is_deleted=False
-            )
+            StoredCreditCard.objects.filter(owner__user=self.request.user)
             .select_related("owner", "finance_card")
             .defer("_card_number", "_security_code")
         )
@@ -223,7 +222,7 @@ class StoredCreditCardDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView
 
     def get_queryset(self):
         return StoredCreditCard.objects.filter(
-            owner__user=self.request.user, is_deleted=False
+            owner__user=self.request.user
         ).select_related("owner", "finance_card")
 
     def get_serializer_class(self):
@@ -263,9 +262,7 @@ class StoredCreditCardRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = StoredCreditCard.objects.all()
 
     def get_queryset(self):
-        return StoredCreditCard.objects.filter(
-            owner__user=self.request.user, is_deleted=False
-        )
+        return StoredCreditCard.objects.filter(owner__user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -295,9 +292,7 @@ class StoredBankAccountListCreateView(VaultLockedMixin, BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campos criptografados na listagem (performance)
         return (
-            StoredBankAccount.objects.filter(
-                owner__user=self.request.user, is_deleted=False
-            )
+            StoredBankAccount.objects.filter(owner__user=self.request.user)
             .select_related("owner", "finance_account")
             .defer("_account_number", "_password", "_digital_password")
         )
@@ -327,7 +322,7 @@ class StoredBankAccountDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyVie
 
     def get_queryset(self):
         return StoredBankAccount.objects.filter(
-            owner__user=self.request.user, is_deleted=False
+            owner__user=self.request.user
         ).select_related("owner", "finance_account")
 
     def get_serializer_class(self):
@@ -367,9 +362,7 @@ class StoredBankAccountRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = StoredBankAccount.objects.all()
 
     def get_queryset(self):
-        return StoredBankAccount.objects.filter(
-            owner__user=self.request.user, is_deleted=False
-        )
+        return StoredBankAccount.objects.filter(owner__user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -400,7 +393,7 @@ class ArchiveListCreateView(VaultLockedMixin, BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return (
-            Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
+            Archive.objects.filter(owner__user=self.request.user)
             .select_related("owner")
             .defer("_encrypted_text")
         )
@@ -452,9 +445,9 @@ class ArchiveDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        return Archive.objects.filter(
-            owner__user=self.request.user, is_deleted=False
-        ).select_related("owner")
+        return Archive.objects.filter(owner__user=self.request.user).select_related(
+            "owner"
+        )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -517,7 +510,7 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        return Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
+        return Archive.objects.filter(owner__user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -578,9 +571,7 @@ class ArchiveDownloadView(APIView):
     def get(self, request, pk):
         """Download do arquivo criptografado."""
         try:
-            archive = Archive.objects.get(
-                pk=pk, owner__user=request.user, is_deleted=False
-            )
+            archive = Archive.objects.get(pk=pk, owner__user=request.user)
         except Archive.DoesNotExist:
             return Response(
                 {"error": "Arquivo não encontrado"}, status=status.HTTP_404_NOT_FOUND
@@ -691,7 +682,7 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
         from members.models import Member
 
         try:
-            member = Member.objects.get(user=user, is_deleted=False)
+            member = Member.objects.get(user=user)
         except Member.DoesNotExist:
             # Se não houver member, retornar estatísticas vazias
             return Response(
@@ -710,14 +701,10 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             )
 
         # Querysets filtrados por owner e não deletados
-        passwords_qs = Password.objects.filter(owner=member, is_deleted=False)
-        stored_cards_qs = StoredCreditCard.objects.filter(
-            owner=member, is_deleted=False
-        )
-        stored_accounts_qs = StoredBankAccount.objects.filter(
-            owner=member, is_deleted=False
-        )
-        archives_qs = Archive.objects.filter(owner=member, is_deleted=False)
+        passwords_qs = Password.objects.filter(owner=member)
+        stored_cards_qs = StoredCreditCard.objects.filter(owner=member)
+        stored_accounts_qs = StoredBankAccount.objects.filter(owner=member)
+        archives_qs = Archive.objects.filter(owner=member)
 
         # Contadores
         total_passwords = passwords_qs.count()
@@ -932,11 +919,11 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         from members.models import Member
 
         try:
-            member = Member.objects.get(user=request.user, is_deleted=False)
+            member = Member.objects.get(user=request.user)
         except Member.DoesNotExist:
             return Response(self._empty_report())
 
-        passwords_qs = Password.objects.filter(owner=member, is_deleted=False).only(
+        passwords_qs = Password.objects.filter(owner=member).only(
             "id",
             "title",
             "username",
@@ -1188,7 +1175,7 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
         from members.models import Member
 
         try:
-            member = Member.objects.get(user=request.user, is_deleted=False)
+            member = Member.objects.get(user=request.user)
         except Member.DoesNotExist:
             return Response(
                 {"error": "Perfil de membro não encontrado."},
@@ -1196,9 +1183,7 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
             )
 
         existing = set(
-            Password.objects.filter(owner=member, is_deleted=False).values_list(
-                "title", "username"
-            )
+            Password.objects.filter(owner=member).values_list("title", "username")
         )
 
         tagged_entries = []
@@ -1270,7 +1255,7 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
         from members.models import Member
 
         try:
-            member = Member.objects.get(user=request.user, is_deleted=False)
+            member = Member.objects.get(user=request.user)
         except Member.DoesNotExist:
             return Response(
                 {"error": "Perfil de membro não encontrado."},
@@ -1278,9 +1263,7 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
             )
 
         existing = set(
-            Password.objects.filter(owner=member, is_deleted=False).values_list(
-                "title", "username"
-            )
+            Password.objects.filter(owner=member).values_list("title", "username")
         )
 
         imported = 0
@@ -1481,17 +1464,13 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
     queryset = Password.objects.all()
 
     def get(self, request, pk):
-        password_obj = get_object_or_404(
-            Password, pk=pk, owner__user=request.user, is_deleted=False
-        )
+        password_obj = get_object_or_404(Password, pk=pk, owner__user=request.user)
         tokens = CredentialShareToken.objects.filter(password=password_obj)
         serializer = CredentialShareTokenSerializer(tokens, many=True)
         return Response(serializer.data)
 
     def post(self, request, pk):
-        password_obj = get_object_or_404(
-            Password, pk=pk, owner__user=request.user, is_deleted=False
-        )
+        password_obj = get_object_or_404(Password, pk=pk, owner__user=request.user)
 
         # Decrypt with vault key (already set by VaultLockedMixin)
         plaintext = password_obj.password

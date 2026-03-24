@@ -10,16 +10,11 @@ from app.models import BaseModel
 
 TASK_CATEGORY_CHOICES = (
     ("health", "Saúde"),
-    ("studies", "Estudos"),
+    ("intellect", "Intelecto"),
     ("spiritual", "Espiritual"),
     ("exercise", "Exercício Físico"),
     ("nutrition", "Nutrição"),
-    ("meditation", "Meditação"),
-    ("reading", "Leitura"),
-    ("writing", "Escrita"),
     ("work", "Trabalho"),
-    ("leisure", "Lazer"),
-    ("family", "Família"),
     ("social", "Social"),
     ("finance", "Finanças"),
     ("household", "Casa"),

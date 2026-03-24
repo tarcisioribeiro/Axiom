@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch
+import time
+from unittest.mock import MagicMock, mock_open, patch
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -159,6 +160,118 @@ class CheckStorageTest(TestCase):
         self.assertEqual(cfg.connect_timeout, 2)
         self.assertEqual(cfg.read_timeout, 2)
         self.assertEqual(cfg.retries["max_attempts"], 0)
+
+
+class BackupHealthCheckTest(TestCase):
+    """Tests for the /api/v1/health/backup/ endpoint."""
+
+    url = "/api/v1/health/backup/"
+
+    def _sentinel_exists(self, exists: bool, ts: float = 0.0) -> dict:
+        """Return patch kwargs for os.path.exists and open."""
+        return {"exists": exists, "ts": ts}
+
+    def test_returns_503_when_sentinel_missing(self):
+        with patch("os.path.exists", return_value=False):
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["status"], "error")
+        self.assertIn("sentinel", response.json()["message"])
+
+    def test_returns_503_when_sentinel_unreadable(self):
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", side_effect=OSError("permission denied")):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["status"], "error")
+
+    def test_returns_503_when_sentinel_contains_invalid_data(self):
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", mock_open(read_data="not-a-timestamp")):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["status"], "error")
+
+    def test_returns_503_when_last_status_is_failed(self):
+        recent_ts = str(time.time())
+
+        def fake_open(path, *args, **kwargs):
+            if "status" in path:
+                return mock_open(read_data="failed: upload error")()
+            return mock_open(read_data=recent_ts)()
+
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", side_effect=fake_open):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+        data = response.json()
+        self.assertEqual(data["status"], "error")
+        self.assertIn("failed", data["message"])
+
+    def test_returns_503_when_backup_is_stale(self):
+        stale_ts = str(time.time() - 30 * 3600)  # 30 hours ago
+
+        def fake_open(path, *args, **kwargs):
+            if "status" in path:
+                return mock_open(read_data="success:mindledger_20240101.sql.enc")()
+            return mock_open(read_data=stale_ts)()
+
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", side_effect=fake_open):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+        data = response.json()
+        self.assertEqual(data["status"], "error")
+        self.assertIn("last_backup", data)
+
+    def test_returns_200_when_backup_is_fresh(self):
+        recent_ts = str(time.time() - 3600)  # 1 hour ago
+
+        def fake_open(path, *args, **kwargs):
+            if "status" in path:
+                return mock_open(read_data="success:mindledger_20240101.sql.enc")()
+            return mock_open(read_data=recent_ts)()
+
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", side_effect=fake_open):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "ok")
+        self.assertIn("last_backup", data)
+        # Verify ISO8601 format (ends with +00:00)
+        self.assertIn("+00:00", data["last_backup"])
+
+    def test_custom_max_age_hours_via_setting(self):
+        """BACKUP_MAX_AGE_HOURS=2 should flag a 3-hour-old backup as stale."""
+        ts_3h_ago = str(time.time() - 3 * 3600)
+
+        def fake_open(path, *args, **kwargs):
+            if "status" in path:
+                return mock_open(read_data="success:backup.enc")()
+            return mock_open(read_data=ts_3h_ago)()
+
+        with patch("os.path.exists", return_value=True):
+            with patch("builtins.open", side_effect=fake_open):
+                with override_settings(BACKUP_MAX_AGE_HOURS=2):
+                    response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 503)
+
+    def test_returns_200_when_status_file_missing_but_sentinel_fresh(self):
+        """No .last_backup_status file should not block a healthy response."""
+        recent_ts = str(time.time() - 600)  # 10 minutes ago
+
+        def fake_exists(path: str) -> bool:
+            return "status" not in path
+
+        def fake_open(path, *args, **kwargs):
+            return mock_open(read_data=recent_ts)()
+
+        with patch("os.path.exists", side_effect=fake_exists):
+            with patch("builtins.open", side_effect=fake_open):
+                response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "ok")
 
 
 class DiskSpaceThresholdTest(TestCase):

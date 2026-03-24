@@ -21,10 +21,11 @@ printenv \
   | sed "s/'/'\\\\''/g; s/=\(.*\)/='\1'/" \
   > /etc/backup-env.sh
 # Also capture versioned historical keys (BACKUP_ENCRYPTION_KEY_v*)
+# grep exits 1 when no matches — suppress that to avoid killing the script under set -e
 printenv \
   | grep -E '^BACKUP_ENCRYPTION_KEY_v' \
   | sed "s/'/'\\\\''/g; s/=\(.*\)/='\1'/" \
-  >> /etc/backup-env.sh
+  >> /etc/backup-env.sh || true
 chmod 600 /etc/backup-env.sh
 
 # ── Prepare log file ─────────────────────────────────────────────────────────

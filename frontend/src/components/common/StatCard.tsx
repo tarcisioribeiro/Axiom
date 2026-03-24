@@ -7,7 +7,7 @@
 
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
@@ -59,12 +59,19 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   // Parse numeric value for counter animation.
   // Skip animation for ratio/fraction values (e.g., "8 / 18").
-  const isRatio = typeof value === 'string' && value.includes('/');
-  const isPercentage = typeof value === 'string' && value.includes('%');
-  const isCurrency = typeof value === 'string' && value.includes('R$');
-
-  const numericValue = isRatio ? NaN : extractNumber(value);
-  const isNumeric = !isNaN(numericValue);
+  const { isRatio, isPercentage, isCurrency, numericValue, isNumeric } = useMemo(() => {
+    const ratio = typeof value === 'string' && value.includes('/');
+    const percentage = typeof value === 'string' && value.includes('%');
+    const currency = typeof value === 'string' && value.includes('R$');
+    const numeric = ratio ? NaN : extractNumber(value);
+    return {
+      isRatio: ratio,
+      isPercentage: percentage,
+      isCurrency: currency,
+      numericValue: numeric,
+      isNumeric: !isNaN(numeric),
+    };
+  }, [value]);
 
   // useCounter returns a float — callers format as needed.
   const animatedCount = useCounter(isNumeric ? numericValue : 0);
@@ -90,7 +97,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       whileTap="tap"
     >
       <Card className={`transition-shadow ${variantClasses[variant]}`}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           {icon && (
             <motion.div
@@ -104,7 +111,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         <CardContent>
           <div className="text-2xl font-bold">{displayValue}</div>
           {trend && (
-            <div className="mt-2 flex items-center gap-1">
+            <div className="mt-sm flex items-center gap-xs">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

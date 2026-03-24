@@ -35,16 +35,34 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 }) => {
   const { showAlert } = useAlertDialog();
   const [isCalculating, setIsCalculating] = useState(false);
-  const { register, handleSubmit, setValue, watch } = useForm<CreditCardBillFormData>({
-    defaultValues: {
-      credit_card: 0,
-      year: new Date().getFullYear().toString(),
-      month: 'Jan',
-      invoice_beginning_date: formatLocalDate(new Date()),
-      invoice_ending_date: formatLocalDate(new Date()),
-      closed: false,
-    },
-  });
+  const { register, handleSubmit, setValue, watch, reset } =
+    useForm<CreditCardBillFormData>({
+      defaultValues: bill
+        ? {
+            credit_card: bill.credit_card,
+            year: bill.year,
+            month: bill.month,
+            invoice_beginning_date: bill.invoice_beginning_date,
+            invoice_ending_date: bill.invoice_ending_date,
+            closed: bill.closed,
+            total_amount: parseFloat(bill.total_amount),
+            minimum_payment: parseFloat(bill.minimum_payment),
+            paid_amount: parseFloat(bill.paid_amount),
+            interest_charged: parseFloat(bill.interest_charged),
+            late_fee: parseFloat(bill.late_fee),
+            status: bill.status,
+            due_date: bill.due_date || '',
+            payment_date: bill.payment_date || '',
+          }
+        : {
+            credit_card: 0,
+            year: new Date().getFullYear().toString(),
+            month: 'Jan',
+            invoice_beginning_date: formatLocalDate(new Date()),
+            invoice_ending_date: formatLocalDate(new Date()),
+            closed: false,
+          },
+    });
 
   // Função para calcular valores automaticamente
   const calculateBillAmounts = async (billId?: number) => {
@@ -77,28 +95,29 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   };
 
   useEffect(() => {
-    if (bill) {
-      setValue('credit_card', bill.credit_card);
-      setValue('year', bill.year);
-      setValue('month', bill.month);
-      setValue('invoice_beginning_date', bill.invoice_beginning_date);
-      setValue('invoice_ending_date', bill.invoice_ending_date);
-      setValue('closed', bill.closed);
-      setValue('total_amount', parseFloat(bill.total_amount));
-      setValue('minimum_payment', parseFloat(bill.minimum_payment));
-      setValue('paid_amount', parseFloat(bill.paid_amount));
-      setValue('interest_charged', parseFloat(bill.interest_charged));
-      setValue('late_fee', parseFloat(bill.late_fee));
-      setValue('status', bill.status);
-      if (bill.due_date) setValue('due_date', bill.due_date);
-      if (bill.payment_date) setValue('payment_date', bill.payment_date);
-
+    if (bill && creditCards.length > 0) {
+      reset({
+        credit_card: bill.credit_card,
+        year: bill.year,
+        month: bill.month,
+        invoice_beginning_date: bill.invoice_beginning_date,
+        invoice_ending_date: bill.invoice_ending_date,
+        closed: bill.closed,
+        total_amount: parseFloat(bill.total_amount),
+        minimum_payment: parseFloat(bill.minimum_payment),
+        paid_amount: parseFloat(bill.paid_amount),
+        interest_charged: parseFloat(bill.interest_charged),
+        late_fee: parseFloat(bill.late_fee),
+        status: bill.status,
+        due_date: bill.due_date || '',
+        payment_date: bill.payment_date || '',
+      });
       // Calcular valores automaticamente ao carregar fatura existente
       void calculateBillAmounts(bill.id);
     } else if (creditCards.length > 0) {
       setValue('credit_card', creditCards[0].id);
     }
-  }, [bill, creditCards, setValue]);
+  }, [bill, creditCards, setValue, reset]);
 
   const handleFormSubmit = async (data: CreditCardBillFormData) => {
     if (!data.credit_card || data.credit_card === 0) {
@@ -176,7 +195,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         <div className="space-y-2 md:col-span-2">
           <Label>Cartão de Crédito *</Label>
           <Select
-            value={watch('credit_card')?.toString() || ''}
+            value={watch('credit_card') > 0 ? watch('credit_card').toString() : ''}
             onValueChange={(v) => setValue('credit_card', parseInt(v))}
           >
             <SelectTrigger>

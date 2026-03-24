@@ -34,15 +34,15 @@ class RevenueCreateListView(BaseListCreateView):
         Ordenação padrão por data e ID decrescente
     """
 
-    queryset = Revenue.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Revenue.objects.all()  # GlobalDefaultPermission
     serializer_class = RevenueSerializer
     filterset_class = RevenueFilter
     ordering = ["-date", "-id"]
 
     def get_queryset(self):
-        return Revenue.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account")
+        return Revenue.objects.filter(created_by=self.request.user).select_related(
+            "account"
+        )
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -66,13 +66,13 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         Serializer usado para validação e serialização
     """
 
-    queryset = Revenue.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Revenue.objects.all()  # GlobalDefaultPermission
     serializer_class = RevenueSerializer
 
     def get_queryset(self):
-        return Revenue.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account")
+        return Revenue.objects.filter(created_by=self.request.user).select_related(
+            "account"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -114,11 +114,7 @@ class ExportRevenuesView(APIView):
         search = request.query_params.get("search")
         account_ids = request.query_params.getlist("account")
 
-        qs = (
-            Revenue.objects.filter(is_deleted=False)
-            .select_related("account")
-            .order_by("-date", "-id")
-        )
+        qs = Revenue.objects.select_related("account").order_by("-date", "-id")
 
         if date_from:
             qs = qs.filter(date__gte=date_from)
