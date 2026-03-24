@@ -22,6 +22,7 @@ spec:
         - ip: "84.247.184.151"
           hostnames:
             - "registry.tjtux.duckdns.org"
+      initContainers: []
       serviceAccountName: sa-frontend
       automountServiceAccountToken: false
       imagePullSecrets:
