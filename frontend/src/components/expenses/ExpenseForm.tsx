@@ -1,5 +1,7 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -13,9 +15,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
+import { expenseSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { Expense, ExpenseFormData, Account, Member, Loan, Payable } from '@/types';
 interface ExpenseFormProps {
@@ -40,9 +42,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
   const [eligiblePayables, setEligiblePayables] = useState<Payable[]>([]);
-  const { showAlert } = useAlertDialog();
-
-  const { register, handleSubmit, setValue, watch } = useForm<ExpenseFormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ExpenseFormData>({
+    resolver: zodResolver(expenseSchema) as Resolver<ExpenseFormData>,
     defaultValues: {
       description: '',
       value: 0,
@@ -110,30 +117,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setValue('related_loan', expense.related_loan || null);
       setValue('related_payable', expense.related_payable || null);
     } else if (accounts.length > 0) {
-      setValue('account', accounts[0].id);
+      setValue('account', accounts[0].id, { shouldDirty: true });
     }
   }, [expense, accounts, setValue]);
 
-  const handleFormSubmit = async (data: ExpenseFormData) => {
-    // Validação adicional
-    if (!data.account || data.account === 0) {
-      await showAlert({
-        title: 'Campo obrigatório',
-        description: 'Por favor, selecione uma conta',
-        confirmText: 'Ok',
-      });
-      return;
-    }
-
-    if (!data.category) {
-      await showAlert({
-        title: 'Campo obrigatório',
-        description: 'Por favor, selecione uma categoria',
-        confirmText: 'Ok',
-      });
-      return;
-    }
-
+  const handleFormSubmit = (data: ExpenseFormData) => {
     onSubmit(data);
   };
 
@@ -144,10 +132,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <Label htmlFor="description">Descrição *</Label>
           <Input
             id="description"
-            {...register('description', { required: true })}
+            {...register('description')}
             placeholder="Ex: Compra no supermercado"
             disabled={isLoading}
           />
+          {errors.description && (
+            <p className="text-sm text-destructive">{errors.description.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="value">Valor *</Label>
@@ -155,10 +146,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             id="value"
             type="number"
             step="0.01"
-            {...register('value', { required: true, valueAsNumber: true })}
+            {...register('value', { valueAsNumber: true })}
             placeholder="0.00"
             disabled={isLoading}
           />
+          {errors.value && (
+            <p className="text-sm text-destructive">{errors.value.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="date">Data *</Label>
@@ -168,15 +162,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             placeholder="Selecione a data"
             disabled={isLoading}
           />
+          {errors.date && (
+            <p className="text-sm text-destructive">{errors.date.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="horary">Horário *</Label>
-          <Input
-            id="horary"
-            type="time"
-            {...register('horary', { required: true })}
-            disabled={isLoading}
-          />
+          <Input id="horary" type="time" {...register('horary')} disabled={isLoading} />
+          {errors.horary && (
+            <p className="text-sm text-destructive">{errors.horary.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Categoria *</Label>
@@ -195,6 +190,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               ))}
             </SelectContent>
           </Select>
+          {errors.category && (
+            <p className="text-sm text-destructive">{errors.category.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Status de Pagamento *</Label>
@@ -228,6 +226,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               ))}
             </SelectContent>
           </Select>
+          {errors.account && (
+            <p className="text-sm text-destructive">{errors.account.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label>Empréstimo Relacionado (Opcional)</Label>

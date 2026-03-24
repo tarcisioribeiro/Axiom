@@ -190,6 +190,7 @@ export function mapCreditCardPurchaseToReceipt(
   return {
     type: 'credit_card_purchase',
     typeLabel: RECEIPT_TYPE_LABELS.credit_card_purchase,
+    documentTitle: 'Declaração de Compra',
     description: purchase.description,
     value: purchase.total_value,
     date: purchase.purchase_date,
@@ -214,6 +215,7 @@ export function mapLoanToReceipt(loan: Loan, memberName: string): ReceiptData {
   return {
     type: 'loan',
     typeLabel: RECEIPT_TYPE_LABELS.loan,
+    documentTitle: 'Declaração de Empréstimo',
     description: loan.description,
     value: parseFloat(loan.value),
     date: loan.date,
@@ -237,6 +239,7 @@ export function mapPayableToReceipt(payable: Payable, memberName: string): Recei
   return {
     type: 'payable',
     typeLabel: RECEIPT_TYPE_LABELS.payable,
+    documentTitle: 'Declaração de Conta a Pagar',
     description: payable.description,
     value: parseFloat(payable.value),
     date: payable.date,
@@ -342,6 +345,12 @@ export function mapVaultWithdrawalToReceipt(
  * generateReceiptFilename('expense', 'Supermercado', '2025-01-15', 'pdf')
  * // "comprovante_despesa_supermercado_15-01-2025.pdf"
  */
+const DECLARATION_TYPES: Partial<Record<ReceiptType, string>> = {
+  loan: 'declaracao_emprestimo',
+  payable: 'declaracao_conta_a_pagar',
+  credit_card_purchase: 'declaracao_compra',
+};
+
 export function generateReceiptFilename(
   type: ReceiptType,
   description: string,
@@ -360,6 +369,11 @@ export function generateReceiptFilename(
   // Format date as DD-MM-YYYY
   const [year, month, day] = date.split('-');
   const formattedDate = `${day}-${month}-${year}`;
+
+  const declarationSlug = DECLARATION_TYPES[type];
+  if (declarationSlug) {
+    return `${declarationSlug}_${sanitizedDescription}_${formattedDate}.${format}`;
+  }
 
   // Get type label in Portuguese
   const typeSlug = RECEIPT_TYPE_LABELS[type]

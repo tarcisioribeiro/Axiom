@@ -17,7 +17,36 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expense
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "value",
+            "date",
+            "horary",
+            "category",
+            "account",
+            "account_name",
+            "current_balance",
+            "payed",
+            "merchant",
+            "location",
+            "payment_method",
+            "receipt",
+            "member",
+            "notes",
+            "recurring",
+            "frequency",
+            "related_transfer",
+            "fixed_expense_template",
+            "related_loan",
+            "related_bill_payment",
+            "related_payable",
+            "payable_description",
+            "auto_categorized",
+            "created_at",
+            "updated_at",
+        ]
 
 
 # Fixed Expense Serializers
@@ -37,7 +66,29 @@ class FixedExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FixedExpense
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "default_value",
+            "category",
+            "account",
+            "account_name",
+            "credit_card",
+            "credit_card_name",
+            "due_day",
+            "merchant",
+            "payment_method",
+            "notes",
+            "member",
+            "member_name",
+            "is_active",
+            "allow_value_edit",
+            "last_generated_month",
+            "total_generated",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_account_name(self, obj):
         """
@@ -186,15 +237,20 @@ class CategorizationRuleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CategorizationRule
-        fields = "__all__"
-        read_only_fields = [
-            "owner",
+        fields = [
+            "id",
             "uuid",
+            "merchant_contains",
+            "category",
+            "is_active",
+            "owner",
             "created_at",
             "updated_at",
-            "created_by",
-            "updated_by",
-            "deleted_by",
-            "is_deleted",
-            "deleted_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "owner",
+            "created_at",
+            "updated_at",
         ]

@@ -264,7 +264,9 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       <div ref={ref} style={styles.container}>
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.headerTitle}>Comprovante de {data.typeLabel}</h1>
+          <h1 style={styles.headerTitle}>
+            {data.documentTitle ?? `Comprovante de ${data.typeLabel}`}
+          </h1>
         </div>
 
         {/* Main Content */}

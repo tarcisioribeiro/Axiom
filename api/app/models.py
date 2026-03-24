@@ -2,6 +2,12 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.query import QuerySet
+
+
+class ActiveManager(models.Manager):
+    def get_queryset(self) -> QuerySet:
+        return super().get_queryset().filter(is_deleted=False)
 
 
 class BaseModel(models.Model):
@@ -58,6 +64,9 @@ class BaseModel(models.Model):
         related_name="%(class)s_deleted",
         verbose_name="Excluído por",
     )
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True

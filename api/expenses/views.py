@@ -33,29 +33,29 @@ from expenses.services import bulk_generate_fixed_expenses, get_fixed_expenses_s
 
 
 class ExpenseCreateListView(BaseListCreateView):
-    queryset = Expense.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Expense.objects.all()  # GlobalDefaultPermission
     serializer_class = ExpenseSerializer
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = ExpenseFilter
     ordering = ["-date", "-id"]
 
     def get_queryset(self):
-        return Expense.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account")
+        return Expense.objects.filter(created_by=self.request.user).select_related(
+            "account"
+        )
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
 
 class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    queryset = Expense.objects.filter(is_deleted=False)  # GlobalDefaultPermission
+    queryset = Expense.objects.all()  # GlobalDefaultPermission
     serializer_class = ExpenseSerializer
 
     def get_queryset(self):
-        return Expense.objects.filter(
-            is_deleted=False, created_by=self.request.user
-        ).select_related("account")
+        return Expense.objects.filter(created_by=self.request.user).select_related(
+            "account"
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -66,8 +66,7 @@ class FixedExpenseListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         return (
-            FixedExpense.objects.filter(is_deleted=False)
-            .select_related("account", "member", "credit_card")
+            FixedExpense.objects.select_related("account", "member", "credit_card")
             .annotate(total_generated=Count("generated_expenses"))
             .order_by("due_day", "description")
         )
@@ -82,9 +81,7 @@ class FixedExpenseListCreateView(BaseListCreateView):
 
 
 class FixedExpenseDetailView(BaseRetrieveUpdateDestroyView):
-    queryset = FixedExpense.objects.filter(is_deleted=False).select_related(
-        "account", "member", "credit_card"
-    )
+    queryset = FixedExpense.objects.select_related("account", "member", "credit_card")
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -149,7 +146,6 @@ class BulkMarkPaidView(APIView):
         serializer.is_valid(raise_exception=True)
         updated = Expense.objects.filter(
             id__in=serializer.validated_data["expense_ids"],
-            is_deleted=False,
         ).update(payed=True, updated_by=request.user)
         return Response(
             {"success": True, "updated_count": updated}, status=status.HTTP_200_OK
@@ -168,13 +164,13 @@ class FixedExpensesStatsView(APIView):
 
 
 class CategorizationRuleListCreateView(BaseListCreateView):
-    queryset = CategorizationRule.objects.filter(is_deleted=False)
+    queryset = CategorizationRule.objects.all()
     serializer_class = CategorizationRuleSerializer
 
     def get_queryset(self):
-        return CategorizationRule.objects.filter(
-            is_deleted=False, owner=self.request.user
-        ).order_by("created_at")
+        return CategorizationRule.objects.filter(owner=self.request.user).order_by(
+            "created_at"
+        )
 
     def perform_create(self, serializer):
         serializer.save(
@@ -185,13 +181,11 @@ class CategorizationRuleListCreateView(BaseListCreateView):
 
 
 class CategorizationRuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    queryset = CategorizationRule.objects.filter(is_deleted=False)
+    queryset = CategorizationRule.objects.all()
     serializer_class = CategorizationRuleSerializer
 
     def get_queryset(self):
-        return CategorizationRule.objects.filter(
-            is_deleted=False, owner=self.request.user
-        )
+        return CategorizationRule.objects.filter(owner=self.request.user)
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -219,7 +213,7 @@ class ApplyCategorizationRulesView(APIView):
     def post(self, request):
         rules = list(
             CategorizationRule.objects.filter(
-                owner=request.user, is_active=True, is_deleted=False
+                owner=request.user, is_active=True
             ).order_by("created_at")
         )
 
@@ -227,7 +221,6 @@ class ApplyCategorizationRulesView(APIView):
             return Response({"updated": 0, "total_processed": 0})
 
         expenses = Expense.objects.filter(
-            is_deleted=False,
             created_by=request.user,
         ).filter(Q(auto_categorized=True) | Q(category="others"))
 
@@ -289,11 +282,7 @@ class ExportExpensesView(APIView):
         search = request.query_params.get("search")
         account_ids = request.query_params.getlist("account")
 
-        qs = (
-            Expense.objects.filter(is_deleted=False)
-            .select_related("account")
-            .order_by("-date", "-id")
-        )
+        qs = Expense.objects.select_related("account").order_by("-date", "-id")
 
         if date_from:
             qs = qs.filter(date__gte=date_from)

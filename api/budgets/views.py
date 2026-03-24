@@ -20,7 +20,7 @@ class BudgetListCreateView(BaseListCreateView):
     serializer_class = BudgetSerializer
 
     def get_queryset(self) -> QuerySet[Budget]:
-        return Budget.objects.filter(is_deleted=False).select_related("member")
+        return Budget.objects.select_related("member")
 
     def perform_create(self, serializer: Any) -> None:
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -30,7 +30,7 @@ class BudgetDetailView(BaseRetrieveUpdateDestroyView):
     serializer_class = BudgetSerializer
 
     def get_queryset(self) -> QuerySet[Budget]:
-        return Budget.objects.filter(is_deleted=False).select_related("member")
+        return Budget.objects.select_related("member")
 
     def perform_update(self, serializer: Any) -> None:
         serializer.save(updated_by=self.request.user)
@@ -69,16 +69,13 @@ class BudgetStatusView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        budgets = Budget.objects.filter(
-            month=month, year=year, is_deleted=False
-        ).select_related("member")
+        budgets = Budget.objects.filter(month=month, year=year).select_related("member")
 
         # Aggregate actual expenses by category for the given month/year
         expense_totals = (
             Expense.objects.filter(
                 date__month=month,
                 date__year=year,
-                is_deleted=False,
                 payed=True,
             )
             .values("category")

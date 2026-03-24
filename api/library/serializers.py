@@ -181,6 +181,9 @@ class BookSerializer(serializers.ModelSerializer):
         source="get_read_status_display", read_only=True
     )
 
+    authors: serializers.Field = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True
+    )
     authors_names = serializers.SerializerMethodField()
     publisher_name = serializers.CharField(source="publisher.name", read_only=True)
     has_summary = serializers.SerializerMethodField()
@@ -194,6 +197,7 @@ class BookSerializer(serializers.ModelSerializer):
             "uuid",
             "title",
             "cover",
+            "authors",
             "authors_names",
             "pages",
             "publisher",

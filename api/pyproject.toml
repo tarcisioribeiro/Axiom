@@ -1,3 +1,15 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "mindledger-api-checks"
+version = "1.0.0"
+description = "Local flake8 plugins for MindLedger API"
+
+[project.entry-points."flake8.extension"]
+DRF = "flake8_no_serializer_all:NoSerializerAllChecker"
+
 [tool.black]
 line-length = 88
 target-version = ['py311']
@@ -63,10 +75,17 @@ omit = [
     "manage.py",
     "*/wsgi.py",
     "*/asgi.py",
+    # Management commands are operational scripts tested via integration/manual runs
+    "*/management/commands/*",
+    # Type-checking configuration — not runtime code
+    "app/settings_mypy.py",
+    # Root-level setup scripts
+    "setup_members.py",
+    "createsuperuser.py",
 ]
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -115,14 +134,8 @@ ignore_missing_imports = true
 # Add type annotations incrementally going forward.
 [[tool.mypy.overrides]]
 module = [
-    "accounts",
-    "accounts.*",
     "ai_assistant",
     "ai_assistant.*",
-    "app",
-    "app.*",
-    "authentication",
-    "authentication.*",
     "budgets",
     "budgets.*",
     "credit_cards",

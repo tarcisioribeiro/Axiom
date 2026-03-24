@@ -28,6 +28,7 @@ export default function Members() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
+  const [currentUserMemberId, setCurrentUserMemberId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
@@ -42,7 +43,13 @@ export default function Members() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await membersService.getAll();
+      const [data] = await Promise.all([
+        membersService.getAll(),
+        membersService
+          .getCurrentUserMember()
+          .then((m) => setCurrentUserMemberId(m.id))
+          .catch(() => setCurrentUserMemberId(null)),
+      ]);
       setMembers(data);
     } catch (error: unknown) {
       toast({
@@ -186,15 +193,17 @@ export default function Members() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => navigate(`/members/${member.id}/report`)}
-                          aria-label={t('pages.members.viewReport')}
-                          title={t('pages.members.viewReport')}
-                        >
-                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
-                        </Button>
+                        {currentUserMemberId === member.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/members/${member.id}/report`)}
+                            aria-label={t('pages.members.viewReport')}
+                            title={t('pages.members.viewReport')}
+                          >
+                            <BarChart3 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

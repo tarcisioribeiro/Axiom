@@ -40,9 +40,9 @@ describe('PageContainer', () => {
         <p>content</p>
       </PageContainer>
     );
-    expect(container.firstChild).toHaveClass('space-y-6');
-    expect(container.firstChild).toHaveClass('px-4');
-    expect(container.firstChild).toHaveClass('py-8');
+    expect(container.firstChild).toHaveClass('space-y-lg');
+    expect(container.firstChild).toHaveClass('px-md');
+    expect(container.firstChild).toHaveClass('py-xl');
   });
 
   it('merges additional className', () => {

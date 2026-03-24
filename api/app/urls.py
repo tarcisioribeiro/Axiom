@@ -9,7 +9,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from app.health import health_check, live_check, ready_check
+from app.health import backup_health_check, health_check, live_check, ready_check
 from app.views import PurgeDeletedView, current_date
 
 urlpatterns = [
@@ -20,6 +20,7 @@ urlpatterns = [
     path("health/", health_check, name="health-check"),
     path("ready/", ready_check, name="ready-check"),
     path("live/", live_check, name="live-check"),
+    path("api/v1/health/backup/", backup_health_check, name="backup-health-check"),
     # App utilities
     path("api/v1/app/current-date/", current_date, name="current-date"),
     path(

@@ -16,9 +16,9 @@ def get_client_ip(request: HttpRequest) -> str:
     num_proxies: int = getattr(settings, "NUM_PROXIES", 1)
 
     if num_proxies == 0:
-        return request.META.get("REMOTE_ADDR", "")
+        return str(request.META.get("REMOTE_ADDR", ""))
 
-    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    x_forwarded_for: str = str(request.META.get("HTTP_X_FORWARDED_FOR", ""))
     if x_forwarded_for:
         ips = [ip.strip() for ip in x_forwarded_for.split(",")]
         # Take the IP that the Nth-from-right trusted proxy saw as its client.
@@ -27,4 +27,4 @@ def get_client_ip(request: HttpRequest) -> str:
         if len(ips) >= num_proxies:
             return ips[-num_proxies]
 
-    return request.META.get("REMOTE_ADDR", "")
+    return str(request.META.get("REMOTE_ADDR", ""))

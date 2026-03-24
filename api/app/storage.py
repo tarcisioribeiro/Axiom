@@ -1,4 +1,5 @@
 import os
+from typing import Any, Optional
 
 from storages.backends.s3boto3 import S3Boto3Storage
 
@@ -12,17 +13,23 @@ class MinIOStorage(S3Boto3Storage):
     so that the browser can access files directly.
     """
 
-    def __init__(self, **settings):
+    def __init__(self, **settings: Any) -> None:
         super().__init__(**settings)
         self.external_endpoint = os.getenv("MINIO_EXTERNAL_ENDPOINT", "")
         self.use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
 
-    def url(self, name, parameters=None, expire=3600, http_method=None):
+    def url(
+        self,
+        name: str,
+        parameters: Optional[dict[str, Any]] = None,
+        expire: int = 3600,
+        http_method: Optional[str] = None,
+    ) -> str:
         """
         Generate a presigned URL using the external endpoint
         so the browser can access the file.
         """
-        url = super().url(
+        url: str = super().url(  # type: ignore[assignment]
             name, parameters=parameters, expire=expire, http_method=http_method
         )
         if self.external_endpoint:

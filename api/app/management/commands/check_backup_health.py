@@ -21,6 +21,7 @@ Integrate with external monitoring (Prometheus, UptimeRobot, cron alert):
 import os
 import sys
 import time
+from typing import Any
 
 from django.core.management.base import BaseCommand
 
@@ -30,7 +31,7 @@ class Command(BaseCommand):
         "Exit non-zero if no successful database backup exists within the last N hours."
     )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--max-age-hours",
             type=float,
@@ -46,7 +47,7 @@ class Command(BaseCommand):
             help="Directory where backup files are stored (default: /backups).",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         backup_dir = options["backup_dir"]
         max_age_seconds = options["max_age_hours"] * 3600
 
