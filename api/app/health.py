@@ -38,12 +38,14 @@ def check_storage() -> dict[str, str]:
             "AWS_STORAGE_BUCKET_NAME",
             os.getenv("MINIO_BUCKET_NAME", "mindledger"),
         )
+        verify = getattr(settings, "AWS_S3_VERIFY", os.getenv("MINIO_CA_BUNDLE", True))
         client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
             aws_access_key_id=getattr(settings, "AWS_ACCESS_KEY_ID", None),
             aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
             region_name=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
+            verify=verify,
             config=Config(
                 connect_timeout=2,
                 read_timeout=2,
