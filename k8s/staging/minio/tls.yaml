@@ -1,0 +1,26 @@
+# MinIO TLS certificate — staging namespace.
+# Depends on the ClusterIssuers defined in k8s/minio/tls.yaml which must be
+# applied first (they are cluster-scoped and shared between environments).
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-tls
+  namespace: mindledger-staging
+  labels:
+    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/component: tls
+    environment: staging
+spec:
+  secretName: minio-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: minio-service.mindledger-staging.svc.cluster.local
+  dnsNames:
+    - minio-service
+    - minio-service.mindledger-staging
+    - minio-service.mindledger-staging.svc
+    - minio-service.mindledger-staging.svc.cluster.local
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer

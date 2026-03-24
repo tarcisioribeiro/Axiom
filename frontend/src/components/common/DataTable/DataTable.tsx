@@ -9,7 +9,7 @@
  * - Estados integrados (loading, empty)
  * - Coluna de ações customizável
  * - Alinhamento de texto por coluna
- * - Suporte a paginação (futura implementação)
+ * - Suporte a paginação com navegação Anterior/Próximo
  *
  * @example
  * ```tsx
@@ -29,9 +29,17 @@
  * ```
  */
 
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+} from 'lucide-react';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { Button } from '@/components/ui/button';
 
 import { EmptyState } from '../EmptyState';
 import { LoadingState } from '../LoadingState';
@@ -106,7 +114,7 @@ export function DataTable<T>({
     return sorting.direction === 'asc' ? 'ascending' : 'descending';
   };
 
-  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+  const renderSortIcon = (columnKey: string) => {
     if (sorting?.column !== columnKey) return <ChevronsUpDown className="h-3 w-3" />;
     return sorting.direction === 'asc' ? (
       <ChevronUp className="h-3 w-3" />
@@ -182,9 +190,7 @@ export function DataTable<T>({
                         onClick={() => sorting.onSort(column.key)}
                       >
                         {column.label}
-                        <span aria-hidden="true">
-                          <SortIcon columnKey={column.key} />
-                        </span>
+                        <span aria-hidden="true">{renderSortIcon(column.key)}</span>
                       </button>
                     ) : (
                       column.label
@@ -230,18 +236,49 @@ export function DataTable<T>({
         </div>
       </div>
 
-      {/* Pagination (placeholder para futura implementação) */}
-      {pagination && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm">
-            {t('common.table.showing', {
-              count: Math.min(pagination.pageSize, pagination.total),
-              total: pagination.total,
-            })}
-          </p>
-          <div className="flex gap-2">{/* Pagination controls aqui */}</div>
-        </div>
-      )}
+      {pagination &&
+        (() => {
+          const totalPages = Math.ceil(pagination.total / pagination.pageSize);
+          const isFirst = pagination.page <= 1;
+          const isLast = pagination.page >= totalPages;
+          const currentCount = Math.min(
+            pagination.pageSize,
+            pagination.total - (pagination.page - 1) * pagination.pageSize
+          );
+          return (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {t('common.table.showing', {
+                  count: currentCount,
+                  total: pagination.total,
+                })}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label={t('common.table.previousPage')}
+                  disabled={isFirst}
+                  onClick={() => pagination.onPageChange(pagination.page - 1)}
+                >
+                  <ChevronLeft />
+                </Button>
+                <span className="text-sm text-muted-foreground" aria-live="polite">
+                  {t('common.table.pageOf', { page: pagination.page, totalPages })}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  aria-label={t('common.table.nextPage')}
+                  disabled={isLast}
+                  onClick={() => pagination.onPageChange(pagination.page + 1)}
+                >
+                  <ChevronRight />
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
     </div>
   );
 }

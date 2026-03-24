@@ -217,7 +217,9 @@ export default function Books() {
     }
   };
 
-  // Default sort: by reading_priority ascending (null = not prioritized → last)
+  const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
+
+  // Sort: by read_status first (reading → to_read → read), then by reading_priority ascending (null last)
   const filteredBooks = books
     .filter(
       (book) =>
@@ -228,6 +230,9 @@ export default function Books() {
         book.publisher_name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
+      const statusDiff =
+        (STATUS_ORDER[a.read_status] ?? 3) - (STATUS_ORDER[b.read_status] ?? 3);
+      if (statusDiff !== 0) return statusDiff;
       if (a.reading_priority === null && b.reading_priority === null) return 0;
       if (a.reading_priority === null) return 1;
       if (b.reading_priority === null) return -1;
@@ -267,7 +272,7 @@ export default function Books() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-14">{t('pages.books.colCover')}</TableHead>
+                <TableHead className="w-50">{t('pages.books.colCover')}</TableHead>
                 <TableHead>{t('pages.books.colTitle')}</TableHead>
                 <TableHead className="hidden md:table-cell">
                   {t('pages.books.colAuthors')}
@@ -306,11 +311,11 @@ export default function Books() {
                         <img
                           src={book.cover}
                           alt={`Capa de ${book.title}`}
-                          className="h-16 w-11 rounded object-cover shadow-sm"
+                          className="w-50 h-64 rounded-md object-cover shadow-md"
                         />
                       ) : (
-                        <div className="flex h-16 w-11 items-center justify-center rounded border bg-muted">
-                          <BookOpen className="h-5 w-5 text-muted-foreground" />
+                        <div className="w-50 flex h-64 items-center justify-center rounded-md border bg-muted shadow-sm">
+                          <BookOpen className="h-10 w-10 text-muted-foreground" />
                         </div>
                       )}
                     </TableCell>
@@ -401,6 +406,7 @@ export default function Books() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'summaries')}
+                              disabled={book.read_status !== 'read'}
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               {t('pages.summaries.title')}

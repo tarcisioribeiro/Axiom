@@ -11,6 +11,7 @@ A vault_key em texto plano fica apenas em memória (Redis, TTL = 1h).
 """
 
 import base64
+import logging
 import os
 import threading
 from typing import Any, Callable, Optional, overload
@@ -28,6 +29,8 @@ from app.encryption import DecryptionError, EncryptionError, FieldEncryption
 # ---------------------------------------------------------------------------
 
 _vault_key_local = threading.local()
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_vault_key() -> Optional[bytes]:
@@ -169,7 +172,13 @@ class VaultEncryptedField:
             try:
                 return FieldEncryption.decrypt_with_key(raw, vault_key)
             except (DecryptionError, EncryptionError):
-                pass  # Dado cifrado com app key (antes da configuração do cofre)
+                model_name = type(obj).__name__
+                logger.warning(
+                    "VaultEncryptedField: vault-key decryption failed for "
+                    "%s.%s — falling back to app-key decryption",
+                    model_name,
+                    self.public_name,
+                )
 
         try:
             return FieldEncryption.decrypt_data(raw)

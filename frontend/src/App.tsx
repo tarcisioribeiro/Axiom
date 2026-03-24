@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useEffect, lazy, Suspense } from 'react';
@@ -8,6 +9,7 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { Layout } from './components/layout/Layout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
+import { queryClient } from './lib/query-client';
 // Eager load (páginas públicas carregadas imediatamente)
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -392,11 +394,13 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <AnimatedRoutes />
-      <Toaster />
-      <AlertDialogProvider />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AnimatedRoutes />
+        <Toaster />
+        <AlertDialogProvider />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

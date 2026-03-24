@@ -62,6 +62,7 @@
     /* Animation duration tokens */
     --duration-fast: 200ms;
     --duration-normal: 300ms;
+    --duration-medium: 400ms;
     --duration-slow: 600ms;
 
     /* Animation easing tokens */
@@ -75,7 +76,7 @@
     /* Category colors - Alucard palette */
     --category-finance: 114 84% 24%; /* verde Alucard */
     --category-health: 198 96% 30%; /* cyan Alucard */
-    --category-studies: 252 54% 54%; /* purple Alucard */
+    --category-studies: 228 62% 42%; /* indigo Alucard (distinto de --primary 252) */
     --category-spiritual: 336 78% 36%; /* pink Alucard */
     --category-exercise: 24 78% 36%; /* orange Alucard */
     --category-nutrition: 48 73% 30%; /* yellow Alucard */
@@ -125,6 +126,9 @@
     --spacing-md: 1rem; /* 16px */
     --spacing-lg: 1.5rem; /* 24px */
     --spacing-xl: 2rem; /* 32px */
+
+    /* Card hover elevation shadow */
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
   }
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
@@ -153,7 +157,7 @@
 
     /* Muted - Background levemente mais claro */
     --muted: 235 15% 23%;
-    --muted-foreground: 225 27% 51%; /* Comment (#6272A4) */
+    --muted-foreground: 225 27% 78%; /* Lightened Comment for WCAG AA contrast (~4.6:1 on card, ~7.6:1 on background) */
 
     /* Accent - Pink (#FF79C6) */
     --accent: 326 100% 74%;
@@ -183,11 +187,11 @@
     /* Category colors - Dracula palette */
     --category-finance: 135 94% 65%; /* green */
     --category-health: 191 97% 77%; /* cyan */
-    --category-studies: 265 89% 78%; /* purple */
+    --category-studies: 248 65% 72%; /* indigo Dracula (distinto de --primary 265) */
     --category-spiritual: 326 100% 74%; /* pink */
     --category-exercise: 31 100% 71%; /* orange */
     --category-nutrition: 65 92% 76%; /* yellow */
-    --category-work: 225 27% 51%; /* comment */
+    --category-work: 225 27% 78%; /* lightened comment for WCAG AA contrast */
     --category-leisure: 0 100% 67%; /* red */
 
     /* Texto sobre superfícies coloridas (semantic on-colors) */
@@ -204,6 +208,9 @@
 
     /* Star rating color - Dracula yellow (#F1FA8C) */
     --star: 65 92% 76%;
+
+    /* Card hover elevation shadow */
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
   }
 }
 
@@ -321,6 +328,11 @@
   }
 
   /* Custom scrollbar para browsers com suporte */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -389,14 +401,17 @@
   /* Page heights consistentes */
   .page-height {
     height: calc(100vh - 8rem);
+    height: calc(100dvh - 8rem);
   }
 
   .page-height-with-filters {
     height: calc(100vh - 12rem);
+    height: calc(100dvh - 12rem);
   }
 
   .full-page-height {
     height: calc(100vh - 4rem);
+    height: calc(100dvh - 4rem);
   }
 
   /* Text emphasis utilities */
@@ -409,15 +424,52 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Smooth theme transition - cascades to all children during theme switch */
+  /* Smooth theme transition - scoped to elements that consume theme tokens */
   .theme-transitioning,
-  .theme-transitioning * {
+  .theme-transitioning
+    :is(
+      body,
+      header,
+      nav,
+      main,
+      footer,
+      aside,
+      section,
+      article,
+      div,
+      p,
+      span,
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      label,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      li,
+      td,
+      th,
+      tr,
+      thead,
+      tbody,
+      tfoot,
+      table,
+      svg,
+      path,
+      circle,
+      rect
+    ) {
     transition:
       background-color var(--duration-normal) ease,
       border-color var(--duration-normal) ease,
       color var(--duration-normal) ease,
       fill var(--duration-normal) ease,
-      stroke var(--duration-normal) ease !important;
+      stroke var(--duration-normal) ease;
   }
 }
 

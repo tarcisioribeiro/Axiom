@@ -5,10 +5,13 @@ Este módulo implementa autenticação JWT usando httpOnly cookies
 para maior segurança, prevenindo ataques XSS.
 """
 
+from typing import Any
+
 from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -28,7 +31,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
     throttle_classes = [LoginRateThrottle]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -84,7 +87,7 @@ class CookieTokenRefreshView(TokenRefreshView):
     access token também em cookie.
     """
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         # Ler refresh token do cookie
         refresh_token = request.COOKIES.get("refresh_token")
 
@@ -144,7 +147,7 @@ class CookieTokenVerifyView(TokenRefreshView):
     View para verificar se o access token do cookie ainda é válido.
     """
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         access_token = request.COOKIES.get("access_token")
 
         if not access_token:
@@ -157,7 +160,7 @@ class CookieTokenVerifyView(TokenRefreshView):
         from rest_framework_simplejwt.tokens import AccessToken
 
         try:
-            AccessToken(access_token)
+            AccessToken(access_token)  # type: ignore[arg-type]
             return Response({"detail": "Token válido"}, status=status.HTTP_200_OK)
         except TokenError:
             return Response(
@@ -168,14 +171,14 @@ class CookieTokenVerifyView(TokenRefreshView):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def logout_view(request):
+def logout_view(request: Request) -> Response:
     """
     View de logout que invalida o refresh token no servidor e remove os cookies.
     """
     refresh_token = request.COOKIES.get("refresh_token")
     if refresh_token:
         try:
-            token = RefreshToken(refresh_token)
+            token = RefreshToken(refresh_token)  # type: ignore[arg-type]
             token.blacklist()
         except TokenError:
             pass  # Token já expirado ou inválido — sem ação necessária

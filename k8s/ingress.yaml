@@ -92,13 +92,13 @@ spec:
 # Ingress — routes external traffic to the frontend and API services.
 #
 # Path priority (evaluated top-to-bottom by nginx):
-#   /api/**    → api-service:8002   (Django REST API)
-#   /admin/**  → api-service:8002   (Django admin)
-#   /static/** → api-service:8002   (collected static files)
-#   /media/**  → api-service:8002   (user-uploaded media)
-#   /live/**   → api-service:8002   (liveness probe — always 200)
-#   /health/** → api-service:8002   (health check — 200/503)
-#   /ready/**  → api-service:8002   (readiness probe — 200/503)
+#   /api/**    → api-service:39100   (Django REST API)
+#   /admin/**  → api-service:39100   (Django admin)
+#   /static/** → api-service:39100   (collected static files)
+#   /media/**  → api-service:39100   (user-uploaded media)
+#   /live/**   → api-service:39100   (liveness probe — always 200)
+#   /health/** → api-service:39100   (health check — 200/503)
+#   /ready/**  → api-service:39100   (readiness probe — 200/503)
 #   /**        → frontend-service:80 (React SPA — catch-all, must be last)
 #
 apiVersion: networking.k8s.io/v1
@@ -133,49 +133,49 @@ spec:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /admin
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /static
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /media
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /live
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /health
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           - path: /ready
             pathType: Prefix
             backend:
               service:
                 name: api-service
                 port:
-                  number: 8002
+                  number: 39100
           # Catch-all: React SPA — must remain last
           - path: /
             pathType: Prefix

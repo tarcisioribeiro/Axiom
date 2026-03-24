@@ -39,7 +39,7 @@ class MembersService extends BaseService<Member, MemberFormData> {
     );
     const blob = await apiClient.getBlob(url, {
       ...(params as Record<string, unknown>),
-      format: 'csv',
+      export_format: 'csv',
     });
     const date = new Date().toISOString().split('T')[0];
     const filename = `relatorio_membro_${memberId}_${date}.csv`;

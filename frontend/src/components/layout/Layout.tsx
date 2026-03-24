@@ -13,7 +13,7 @@ export const Layout = () => {
       {/* Skip link para acessibilidade - permite pular navegacao */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-md focus:top-md focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-md focus:py-sm focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-ring"
       >
         {t('layout.skipToContent')}
       </a>
@@ -24,7 +24,7 @@ export const Layout = () => {
       {/* Main content: ocupa espaço restante */}
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
-        <main id="main-content" className="flex-1 p-4 lg:p-6" role="main">
+        <main id="main-content" className="flex-1 p-md lg:p-lg" role="main">
           <Outlet />
         </main>
       </div>

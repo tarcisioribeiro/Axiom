@@ -82,19 +82,15 @@ export function DatePicker({
       clickOpens: !disabled,
       disableMobile: true,
       // Usa a ref para chamar o onChange atual
+      // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
+      // valor do formulário durante a inicialização ou transições internas.
+      // A limpeza explícita é feita pelo botão de clear (handleClear).
       onChange: (selectedDates: Date[]) => {
         if (selectedDates.length > 0) {
           onChangeRef.current?.(selectedDates[0]);
-        } else {
-          onChangeRef.current?.(undefined);
         }
       },
-      // Posiciona o calendário abaixo do input usando posicionamento inline
-      // Isso garante que o calendário fique sempre junto ao campo
-      static: true,
       wrap: false,
-      // Posição abaixo do input
-      positionElement: inputRef.current || undefined,
       // Parser customizado para aceitar DD/MM/YYYY digitado manualmente
       parseDate: (dateStr: string) => {
         const parsed = parseDateBR(dateStr);
@@ -104,13 +100,19 @@ export function DatePicker({
       onReady: (_selectedDates, _dateStr, instance) => {
         instance.calendarContainer.classList.add('flatpickr-calendar-custom');
       },
-      // Validação ao fechar - mostra erro visual se data inválida
-      onClose: (_selectedDates, dateStr, instance) => {
-        if (dateStr && !parseDateBR(dateStr)) {
-          instance.input.classList.add('flatpickr-invalid');
-          setTimeout(() => {
-            instance.input.classList.remove('flatpickr-invalid');
-          }, 1500);
+      // Validação ao fechar - se o usuário digitou uma data válida mas não pressionou
+      // Enter/Tab, confirma a data ao fechar (ex: clicou em outro campo)
+      onClose: (selectedDates, dateStr, instance) => {
+        if (dateStr) {
+          const parsed = parseDateBR(dateStr);
+          if (!parsed) {
+            instance.input.classList.add('flatpickr-invalid');
+            setTimeout(() => {
+              instance.input.classList.remove('flatpickr-invalid');
+            }, 1500);
+          } else if (selectedDates.length === 0) {
+            instance.setDate(parsed, true);
+          }
         }
       },
     };

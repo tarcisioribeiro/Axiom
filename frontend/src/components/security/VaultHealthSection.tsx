@@ -29,7 +29,7 @@ function CircularScore({ score }: CircularScoreProps) {
     score >= 75
       ? 'hsl(var(--chart-2))'
       : score >= 45
-        ? 'hsl(38 92% 50%)'
+        ? 'hsl(var(--warning))'
         : 'hsl(var(--destructive))';
 
   const label = score >= 75 ? 'Boa' : score >= 45 ? 'Regular' : 'Crítica';
@@ -246,7 +246,7 @@ export function VaultHealthSection() {
               icon={<AlertTriangle className="h-5 w-5" />}
               count={issues_summary.duplicate}
               label="Duplicadas"
-              color="hsl(38 92% 50%)"
+              color="hsl(var(--warning))"
             />
             <IssueCount
               icon={<Copy className="h-5 w-5" />}

@@ -65,6 +65,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   // Skeleton mode
   if (skeleton) {
     const ariaProps = {
+      role: 'status' as const,
       'aria-busy': true,
       'aria-label': message || 'Carregando conteudo',
     };
@@ -99,7 +100,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   // Spinner mode (default)
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-4 ${
+      className={`flex flex-col items-center justify-center gap-md ${
         fullScreen ? 'h-screen' : sizeClasses[size]
       }`}
       role="status"

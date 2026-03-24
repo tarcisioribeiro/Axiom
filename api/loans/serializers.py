@@ -17,7 +17,36 @@ class LoanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Loan
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "value",
+            "payed_value",
+            "date",
+            "horary",
+            "category",
+            "account",
+            "account_name",
+            "benefited",
+            "benefited_name",
+            "creditor",
+            "creditor_name",
+            "payed",
+            "interest_rate",
+            "installments",
+            "due_date",
+            "contract_document",
+            "payment_frequency",
+            "late_fee",
+            "guarantor",
+            "guarantor_name",
+            "notes",
+            "status",
+            "remaining_balance",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_remaining_balance(self, obj):
         """

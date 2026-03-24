@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   format,
   subMonths,
@@ -31,7 +32,7 @@ import {
   ArrowDownRight,
   PiggyBank,
 } from 'lucide-react';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -57,10 +58,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { translate, TRANSLATIONS } from '@/config/constants';
-import { useToast } from '@/hooks/use-toast';
 import { containerVariants, itemVariants } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
@@ -68,179 +69,147 @@ import { creditCardsService } from '@/services/credit-cards-service';
 import { dashboardService } from '@/services/dashboard-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
-import type {
-  DashboardStats,
-  Expense,
-  Revenue,
-  AccountBalance,
-  CreditCard as CreditCardType,
-  CreditCardBill,
-  CreditCardExpensesByCategory,
-  BalanceForecast,
-  BudgetStatus,
-  CashFlowForecast,
-  FinancialAlert,
-} from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
 
 type CategoryStat = { category: string; name: string; value: number };
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [revenues, setRevenues] = useState<Revenue[]>([]);
-  const [accountBalances, setAccountBalances] = useState<AccountBalance[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCardType[]>([]);
-  const [creditCardBills, setCreditCardBills] = useState<CreditCardBill[]>([]);
-  const [creditCardExpensesByCategory, setCreditCardExpensesByCategory] = useState<
-    CreditCardExpensesByCategory[]
-  >([]);
-  const [balanceForecast, setBalanceForecast] = useState<BalanceForecast | null>(null);
-  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus[]>([]);
+
+  // Filter state
   const [selectedCard, setSelectedCard] = useState<string>('all');
   const [selectedBill, setSelectedBill] = useState<string>('all');
   const [evolutionPeriod, setEvolutionPeriod] = useState<
     'daily' | 'weekly' | 'monthly' | 'yearly'
   >('daily');
-  const [financialAlerts, setFinancialAlerts] = useState<FinancialAlert[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [cashFlowForecast, setCashFlowForecast] = useState<CashFlowForecast | null>(
-    null
-  );
   const [forecastDays, setForecastDays] = useState<30 | 60 | 90>(30);
-  const [isForecastLoading, setIsForecastLoading] = useState(false);
-  const forecastMounted = useRef(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    void loadData();
+  const now = new Date();
 
-    // Recarregar dados quando a aba/janela volta ao foco
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void loadData();
-      }
-    };
+  // ── Queries ────────────────────────────────────────────────────────────────
+  // staleTime mirrors backend Redis cache TTLs (see STALE_TIMES in query-client.ts).
+  // refetchOnWindowFocus is enabled by default — replaces the manual
+  // visibilitychange / focus event listeners that were here before.
 
-    const handleFocus = () => {
-      void loadData();
-    };
+  const statsQuery = useQuery({
+    queryKey: ['dashboard', 'stats'],
+    queryFn: () => dashboardService.getStats(),
+    staleTime: STALE_TIMES.DASHBOARD_STATS,
+  });
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
+  const expensesQuery = useQuery({
+    queryKey: ['expenses'],
+    queryFn: () => expensesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
+  const revenuesQuery = useQuery({
+    queryKey: ['revenues'],
+    queryFn: () => revenuesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const now = new Date();
-      const [
-        statsData,
-        expensesData,
-        revenuesData,
-        accountBalancesData,
-        cardsData,
-        billsData,
-        ccExpensesByCategoryData,
-        forecastData,
-        budgetStatusData,
-        cashFlowData,
-        alertsData,
-      ] = await Promise.all([
-        dashboardService.getStats(),
-        expensesService.getAll(),
-        revenuesService.getAll(),
-        dashboardService.getAccountBalances(),
-        creditCardsService.getAll(),
-        creditCardBillsService.getAll(),
-        dashboardService.getCreditCardExpensesByCategory(),
-        dashboardService.getBalanceForecast(),
-        budgetsService.getStatus({
-          month: now.getMonth() + 1,
-          year: now.getFullYear(),
-        }),
-        dashboardService.getCashFlowForecast(30),
-        dashboardService.getFinancialAlerts(),
-      ]);
-      setStats(statsData);
-      setExpenses(expensesData);
-      setRevenues(revenuesData);
-      setAccountBalances(accountBalancesData);
-      setCreditCards(cardsData);
-      setCreditCardBills(billsData);
-      setCreditCardExpensesByCategory(ccExpensesByCategoryData);
-      setBalanceForecast(forecastData);
-      setBudgetStatus(Array.isArray(budgetStatusData) ? budgetStatusData : []);
-      setCashFlowForecast(cashFlowData);
-      setFinancialAlerts(Array.isArray(alertsData) ? alertsData : []);
-      forecastMounted.current = true;
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const accountBalancesQuery = useQuery({
+    queryKey: ['dashboard', 'accountBalances'],
+    queryFn: () => dashboardService.getAccountBalances(),
+    staleTime: STALE_TIMES.ACCOUNT_BALANCES,
+  });
 
-  // Load credit card expenses by category with filters
-  const loadCreditCardExpensesByCategory = async () => {
-    try {
+  const creditCardsQuery = useQuery({
+    queryKey: ['creditCards'],
+    queryFn: () => creditCardsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const creditCardBillsQuery = useQuery({
+    queryKey: ['creditCardBills'],
+    queryFn: () => creditCardBillsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  // Card/bill filters are part of the query key so the cache entry is separate
+  // per combination — no manual effect needed.
+  const ccExpensesCategoryQuery = useQuery({
+    queryKey: ['dashboard', 'ccExpensesByCategory', selectedCard, selectedBill],
+    queryFn: () => {
       const params: { card?: number; bill?: number } = {};
-      if (selectedCard !== 'all') {
-        params.card = parseInt(selectedCard);
-      }
-      if (selectedBill !== 'all') {
-        params.bill = parseInt(selectedBill);
-      }
-      const data = await dashboardService.getCreditCardExpensesByCategory(params);
-      setCreditCardExpensesByCategory(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dashboard.loadCategoryError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
+      if (selectedCard !== 'all') params.card = parseInt(selectedCard);
+      if (selectedBill !== 'all') params.bill = parseInt(selectedBill);
+      return dashboardService.getCreditCardExpensesByCategory(params);
+    },
+    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
+  });
 
-  const loadForecast = async (days: 30 | 60 | 90) => {
-    setIsForecastLoading(true);
-    try {
-      const data = await dashboardService.getCashFlowForecast(days);
-      setCashFlowForecast(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('pages.dashboard.cashFlowProjection'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsForecastLoading(false);
-    }
-  };
+  const balanceForecastQuery = useQuery({
+    queryKey: ['dashboard', 'balanceForecast'],
+    queryFn: () => dashboardService.getBalanceForecast(),
+    staleTime: STALE_TIMES.BALANCE_FORECAST,
+  });
 
-  // Reload forecast only when the period selector changes (skip initial mount)
-  useEffect(() => {
-    if (!forecastMounted.current) return;
-    void loadForecast(forecastDays);
-  }, [forecastDays]);
+  const budgetStatusQuery = useQuery({
+    queryKey: ['budgets', 'status', now.getMonth() + 1, now.getFullYear()],
+    queryFn: () =>
+      budgetsService.getStatus({ month: now.getMonth() + 1, year: now.getFullYear() }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-  // Reload credit card expenses when filters change
-  useEffect(() => {
-    if (!isLoading) {
-      void loadCreditCardExpensesByCategory();
-    }
-  }, [selectedCard, selectedBill]);
+  // forecastDays is in the key — changing it transparently fetches a new result
+  // while the previous period's data stays cached (no loading flash when switching back).
+  const cashFlowForecastQuery = useQuery({
+    queryKey: ['dashboard', 'cashFlowForecast', forecastDays],
+    queryFn: () => dashboardService.getCashFlowForecast(forecastDays),
+    staleTime: STALE_TIMES.CASH_FLOW_FORECAST,
+  });
+
+  const financialAlertsQuery = useQuery({
+    queryKey: ['dashboard', 'financialAlerts'],
+    queryFn: () => dashboardService.getFinancialAlerts(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  // ── Derived data ───────────────────────────────────────────────────────────
+  // Arrays are wrapped in useMemo so the `?? []` fallback doesn't create a new
+  // reference every render during the loading phase (which would break the
+  // downstream useMemo hooks that list these as dependencies).
+  const stats = statsQuery.data ?? null;
+  const expenses = useMemo(() => expensesQuery.data ?? [], [expensesQuery.data]);
+  const revenues = useMemo(() => revenuesQuery.data ?? [], [revenuesQuery.data]);
+  const accountBalances = useMemo(
+    () => accountBalancesQuery.data ?? [],
+    [accountBalancesQuery.data]
+  );
+  const creditCards = useMemo(
+    () => creditCardsQuery.data ?? [],
+    [creditCardsQuery.data]
+  );
+  const creditCardBills = useMemo(
+    () => creditCardBillsQuery.data ?? [],
+    [creditCardBillsQuery.data]
+  );
+  const creditCardExpensesByCategory = useMemo(
+    () => ccExpensesCategoryQuery.data ?? [],
+    [ccExpensesCategoryQuery.data]
+  );
+  const balanceForecast = balanceForecastQuery.data ?? null;
+  const budgetStatus = useMemo(
+    () => (Array.isArray(budgetStatusQuery.data) ? budgetStatusQuery.data : []),
+    [budgetStatusQuery.data]
+  );
+  const cashFlowForecast = cashFlowForecastQuery.data ?? null;
+  const financialAlerts = useMemo(
+    () => (Array.isArray(financialAlertsQuery.data) ? financialAlertsQuery.data : []),
+    [financialAlertsQuery.data]
+  );
+
+  // Overall loading: show full-screen spinner only until the primary stats
+  // query resolves. Secondary queries (charts, forecast, alerts) load in the
+  // background and each section handles its own loading state. This prevents
+  // slow/hung secondary queries from blocking the entire page.
+  const isLoading = statsQuery.isLoading;
+
+  // isForecastLoading: true while a forecastDays-triggered refetch is in flight.
+  const isForecastLoading = cashFlowForecastQuery.isFetching;
+  // Errors are handled globally by the QueryCache in query-client.ts.
 
   // Filter bills by selected card
   const filteredBills = useMemo(() => {
@@ -248,17 +217,8 @@ export default function Dashboard() {
     return creditCardBills.filter((b) => b.credit_card.toString() === selectedCard);
   }, [selectedCard, creditCardBills]);
 
-  // Reset bill filter when card changes
-  useEffect(() => {
-    if (selectedCard !== 'all') {
-      const currentBillValid = filteredBills.some(
-        (b) => b.id.toString() === selectedBill
-      );
-      if (!currentBillValid) {
-        setSelectedBill('all');
-      }
-    }
-  }, [selectedCard, filteredBills]);
+  // Bill filter reset is handled inline in the card Select's onValueChange below
+  // to avoid calling setSelectedBill synchronously inside a useEffect.
 
   // Format credit card expenses for chart
   const creditCardExpensesChartData = useMemo(() => {
@@ -428,7 +388,7 @@ export default function Dashboard() {
         }
       );
     }
-  }, [expenses, revenues, evolutionPeriod]);
+  }, [expenses, revenues, evolutionPeriod, dateFnsLocale]);
 
   const COLORS = useChartColors();
 
@@ -464,7 +424,7 @@ export default function Dashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                <CardTitle>{t('pages.dashboard.accountBalance')}</CardTitle>
+                <CardTitle as="h2">{t('pages.dashboard.accountBalance')}</CardTitle>
               </div>
               <p className="text-sm">{t('pages.dashboard.accountBalanceDesc')}</p>
             </CardHeader>
@@ -557,7 +517,7 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.balanceForecast')}</CardTitle>
+                  <CardTitle as="h2">{t('pages.dashboard.balanceForecast')}</CardTitle>
                 </div>
                 <p className="text-sm">{t('pages.dashboard.balanceForecastDesc')}</p>
               </CardHeader>
@@ -618,10 +578,10 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   {/* Entradas Previstas */}
                   <div className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-success">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-success">
                       <ArrowUpRight className="h-4 w-4" />
                       {t('pages.dashboard.inflows')}
-                    </h4>
+                    </h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
@@ -652,10 +612,10 @@ export default function Dashboard() {
 
                   {/* Saídas Previstas */}
                   <div className="space-y-3">
-                    <h4 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-destructive">
                       <ArrowDownRight className="h-4 w-4" />
                       {t('pages.dashboard.outflows')}
-                    </h4>
+                    </h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">
@@ -712,13 +672,18 @@ export default function Dashboard() {
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.cashFlowProjection')}</CardTitle>
+                  <CardTitle as="h2">
+                    {t('pages.dashboard.cashFlowProjection')}
+                  </CardTitle>
                 </div>
                 <Select
                   value={String(forecastDays)}
                   onValueChange={(v) => setForecastDays(Number(v) as 30 | 60 | 90)}
                 >
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger
+                    className="w-[140px]"
+                    aria-label={t('pages.dashboard.selectForecastPeriod')}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -869,7 +834,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.dashboard.expensesByCategory')}</CardTitle>
+              <CardTitle as="h2">{t('pages.dashboard.expensesByCategory')}</CardTitle>
               <p className="text-sm">{t('pages.dashboard.expensesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
@@ -889,7 +854,7 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.dashboard.revenuesByCategory')}</CardTitle>
+              <CardTitle as="h2">{t('pages.dashboard.revenuesByCategory')}</CardTitle>
               <p className="text-sm">{t('pages.dashboard.revenuesByCategoryDesc')}</p>
             </CardHeader>
             <CardContent>
@@ -911,7 +876,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <CardTitle>
+              <CardTitle as="h2">
                 {evolutionPeriod === 'daily'
                   ? t('pages.dashboard.evolutionDaily')
                   : evolutionPeriod === 'weekly'
@@ -926,7 +891,10 @@ export default function Dashboard() {
                   setEvolutionPeriod(v as 'daily' | 'weekly' | 'monthly' | 'yearly')
                 }
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger
+                  className="w-[160px]"
+                  aria-label={t('pages.dashboard.selectEvolutionPeriod')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -977,7 +945,7 @@ export default function Dashboard() {
           <CardHeader>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle as="h2" className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
                   {t('pages.dashboard.cardExpensesByCategory')}
                 </CardTitle>
@@ -986,8 +954,17 @@ export default function Dashboard() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Select value={selectedCard} onValueChange={setSelectedCard}>
-                  <SelectTrigger className="w-[180px]">
+                <Select
+                  value={selectedCard}
+                  onValueChange={(v) => {
+                    setSelectedCard(v);
+                    setSelectedBill('all');
+                  }}
+                >
+                  <SelectTrigger
+                    className="w-[180px]"
+                    aria-label={t('pages.dashboard.selectCard')}
+                  >
                     <SelectValue placeholder={t('pages.dashboard.allCards')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -1004,7 +981,10 @@ export default function Dashboard() {
                   onValueChange={setSelectedBill}
                   disabled={filteredBills.length === 0}
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger
+                    className="w-[180px]"
+                    aria-label={t('pages.dashboard.selectBill')}
+                  >
                     <SelectValue
                       placeholder={
                         filteredBills.length === 0
@@ -1094,7 +1074,7 @@ export default function Dashboard() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <PiggyBank className="h-5 w-5" />
-                  <CardTitle>{t('pages.dashboard.monthBudgets')}</CardTitle>
+                  <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t('pages.dashboard.monthBudgetsDesc')}

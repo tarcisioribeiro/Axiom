@@ -69,6 +69,7 @@ Guias para desenvolvedores.
 - **[Configuração](development/configuration.md)** - Variáveis de ambiente e chaves
 - **[Workflow de Desenvolvimento](development/development_workflow.md)** - Comandos diários, debugging e testes
 - **[Guia de Contribuição](development/contribution_guide.md)** - Padrões de código e PRs
+- **[Deploy e CI/CD](development/deploy.md)** - Variáveis GitLab, k3s e pipeline completo
 - **[Troubleshooting](development/troubleshooting.md)** - Solução de problemas comuns
 
 ## 🚀 Início Rápido

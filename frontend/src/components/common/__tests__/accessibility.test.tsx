@@ -51,12 +51,7 @@ import { StatCard } from '@/components/common/StatCard';
 
 expect.extend(toHaveNoViolations);
 
-const axe = configureAxe({
-  rules: {
-    // Disable colour-contrast check — handled by design system, not unit tests
-    'color-contrast': { enabled: false },
-  },
-});
+const axe = configureAxe();
 
 describe('Accessibility (axe)', () => {
   it('EmptyState — no violations', async () => {

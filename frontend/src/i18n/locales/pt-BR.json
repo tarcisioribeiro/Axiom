@@ -64,7 +64,10 @@
     "table": {
       "actions": "Ações",
       "noData": "Nenhum registro encontrado.",
-      "showing": "Mostrando {{count}} de {{total}} registros"
+      "showing": "Mostrando {{count}} de {{total}} registros",
+      "previousPage": "Página anterior",
+      "nextPage": "Próxima página",
+      "pageOf": "Página {{page}} de {{totalPages}}"
     },
     "status": {
       "active": "Ativo",
@@ -272,6 +275,9 @@
       },
       "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
+      "modules": {
+        "navigateTo": "Navegar para {{module}}"
+      },
       "quickActions": {
         "newExpense": "Nova Despesa",
         "newRevenue": "Nova Receita",
@@ -899,7 +905,11 @@
           "payable_due": "A Pagar",
           "loan_due": "Empréstimo"
         }
-      }
+      },
+      "selectForecastPeriod": "Selecionar período da projeção",
+      "selectEvolutionPeriod": "Selecionar período de evolução",
+      "selectCard": "Selecionar cartão",
+      "selectBill": "Selecionar fatura"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",

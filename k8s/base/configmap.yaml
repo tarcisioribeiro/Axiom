@@ -23,7 +23,10 @@ data:
   MINIO_ENDPOINT: "minio-service:9000"
   MINIO_EXTERNAL_ENDPOINT: "mindledger.tjtux.duckdns.org:9000"
   MINIO_BUCKET_NAME: "mindledger"
-  MINIO_USE_HTTPS: "False"
+  MINIO_USE_SSL: "true"
+  # Path to the internal CA cert mounted from the minio-tls Secret (see k8s/api/deployment.yaml).
+  # Used by Django's S3 storage backend to verify the self-signed MinIO TLS certificate.
+  MINIO_CA_BUNDLE: "/etc/ssl/minio/ca.crt"
 
   # Ollama — local LLM. Set to empty string to disable AI features.
   # Ollama is NOT deployed in k8s by default (too heavy for a single VPS node).

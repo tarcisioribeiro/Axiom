@@ -179,10 +179,13 @@ cd frontend && npm install && npm run dev
 ```
 
 ### Git Hooks (one-time setup, run from repo root)
+
+> **REQUIRED**: Both hooks below must be installed before your first commit. The `commit-msg` hook is enforced in CI via `lint:commits` on every MR — commits that bypass it will fail the pipeline.
+
 ```bash
 # Requires .venv active or pre-commit installed globally
 pre-commit install                        # pre-commit hook (black/isort/flake8/mypy)
-pre-commit install --hook-type commit-msg # commitlint hook
+pre-commit install --hook-type commit-msg # commitlint hook — REQUIRED
 ```
 
 ### Database
@@ -226,6 +229,59 @@ Each `fontSize` entry includes a companion `lineHeight` via `--leading-{size}`.
 | `--spacing-xl`   | `2rem`     | `p-xl`, `m-xl`, `gap-xl`, …    |
 
 **Rule**: Prefer semantic spacing tokens (`p-md`, `gap-lg`) over numeric Tailwind defaults (`p-4`, `gap-6`) for layout and component padding. Numeric values are still acceptable for small adjustments (borders, icon sizes, etc.).
+
+## Frontend Data-Fetching & Caching
+
+The frontend uses **TanStack Query v5** (`@tanstack/react-query`) for server-state management. It provides stale-while-revalidate semantics, background refetching, deduplication, and cache invalidation.
+
+### Why TanStack Query (not SWR)
+- Richer per-query cache invalidation (`queryClient.invalidateQueries`)
+- Native `useMutation` with `onSuccess`/`onError` lifecycle (replaces manual try/catch + setState patterns)
+- Better TypeScript support and devtools
+- `forecastDays`-style parameterised queries cached separately per key — no duplicate fetch
+
+### Setup
+`QueryClientProvider` wraps the entire app in `App.tsx`. The shared `QueryClient` instance lives in `src/lib/query-client.ts`.
+
+### Cache TTLs
+`staleTime` is aligned with the backend's Redis cache TTLs (`api/app/settings.py`). Data within its stale window is served from cache; data beyond it triggers a background refetch.
+
+| Constant | Value | Backend setting | Used for |
+|---|---|---|---|
+| `STALE_TIMES.DASHBOARD_STATS` | 60 s | `CACHE_TTL_DASHBOARD_STATS` | Dashboard aggregate stats |
+| `STALE_TIMES.ACCOUNT_BALANCES` | 30 s | `CACHE_TTL_ACCOUNT_BALANCES` | Per-account balances |
+| `STALE_TIMES.CATEGORY_BREAKDOWN` | 300 s | `CACHE_TTL_CATEGORY_BREAKDOWN` | CC expenses by category |
+| `STALE_TIMES.BALANCE_FORECAST` | 120 s | `CACHE_TTL_BALANCE_FORECAST` | Balance & cash-flow forecasts |
+| `STALE_TIMES.DEFAULT_LIST` | 60 s | — | All other list endpoints |
+
+`gcTime` (inactive cache retention) is 5 minutes for all queries. `refetchOnWindowFocus: true` by default — no need to add manual `visibilitychange` listeners.
+
+### Cache invalidation
+After a mutation succeeds, call `queryClient.invalidateQueries({ queryKey: ['resource'] })` to mark the affected cache entry stale and trigger a background refetch. Example in `Accounts.tsx`:
+```tsx
+const queryClient = useQueryClient();
+const deleteMutation = useMutation({
+  mutationFn: (id: number) => accountsService.delete(id),
+  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+});
+```
+
+### Query key conventions
+| Scope | Key shape | Example |
+|---|---|---|
+| Resource list | `['resourceName']` | `['accounts']`, `['expenses']` |
+| Dashboard endpoint | `['dashboard', 'endpointName']` | `['dashboard', 'stats']` |
+| Parameterised | `['resource', 'action', ...params]` | `['dashboard', 'cashFlowForecast', 30]` |
+| Filtered | `['resource', 'action', filterA, filterB]` | `['dashboard', 'ccExpensesByCategory', 'all', 'all']` |
+
+### Global error handling
+`QueryCache.onError` in `query-client.ts` shows a destructive toast for any query failure, debounced at 2 s to collapse simultaneous failures (e.g. network outage). Pages do **not** need per-query error state — the global handler covers it.
+
+### Auth token refresh compatibility
+The JWT refresh flow in `api-client.ts` is implemented as an Axios response interceptor. TanStack Query never sees 401 errors — the interceptor transparently refreshes the token and retries the request. No changes to `api-client.ts` were required.
+
+### Testing
+Wrap components that use queries with `<QueryClientProvider client={queryClient}>` in test render helpers. Call `queryClient.clear()` in `beforeEach` to reset cache between tests. Set `queryClient.setDefaultOptions({ queries: { retry: false } })` at the top of the test file to prevent retry delays.
 
 ## Key Patterns and Conventions
 
@@ -278,10 +334,69 @@ Key testing conventions:
 ## Environment Variables (Critical)
 
 - `SECRET_KEY`: Django secret key
-- `ENCRYPTION_KEY`: Fernet key (44 chars base64) — **NEVER change after encrypting data**
+- `ENCRYPTION_KEY`: Fernet key (44 chars base64) — rotate safely using the procedure below; do **not** change it manually without running `rotate_encryption_key` first
+- `BACKUP_ENCRYPTION_KEY_PREVIOUS`: previous Fernet key kept after a rotation — set this so `vault_recovery` can report its presence as a fallback hint; clear it once you confirm all fields decrypted correctly with the new key
 - `DB_USER`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL credentials
 - `VITE_API_BASE_URL`: Backend URL (default: `http://localhost:39100`)
 - `DB_HOST`: `db` for Docker, `localhost` for local
+
+## Key Rotation
+
+`ENCRYPTION_KEY` (Fernet) protects app-level encrypted fields (`Account._account_number`, `CreditCard._security_code/_card_number`, `Member._document`, `CredentialShareToken._encrypted_password`) and serves as an HMAC key for `Member.document_hash`. If the key is compromised, rotate it with the `rotate_encryption_key` management command.
+
+> **Vault data is NOT affected.** `security.Password`, `StoredCreditCard`, `StoredBankAccount`, and `Archive` use per-user vault-key encryption derived from the master password. Those records are skipped automatically (unless vault was never configured and the app key was used as a fallback).
+
+### Rotation procedure
+
+```bash
+# 1. Take a full DB backup first
+docker compose exec db pg_dump -U $DB_USER mindledger_db \
+    > backups/pre_rotation_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Generate a new Fernet key
+docker compose exec api python -c \
+    "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+# 3. Dry-run to preview what will be rotated (no writes)
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>" --dry-run
+
+# 4. Live rotation — runs inside a single DB transaction; rolls back on any error
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>"
+
+# 5. Update .env
+#    ENCRYPTION_KEY=<NEW_KEY>
+#    BACKUP_ENCRYPTION_KEY_PREVIOUS=<OLD_KEY>   ← keep for 24 h as a safety net
+
+# 6. Rebuild and restart
+docker compose up --build -d
+
+# 7. Smoke-test: verify encrypted fields are readable in the UI / API
+
+# 8. Once confirmed, clear the backup key from .env
+#    Remove or blank BACKUP_ENCRYPTION_KEY_PREVIOUS
+docker compose up --build -d
+```
+
+### Emergency fallback after a failed rotation
+
+If the app starts returning decryption errors after updating `.env`:
+
+```bash
+# Re-run rotation in reverse (new→old) to undo DB changes
+docker compose exec api python manage.py rotate_encryption_key \
+    --old-key "<NEW_KEY>" --new-key "$BACKUP_ENCRYPTION_KEY_PREVIOUS"
+
+# Revert ENCRYPTION_KEY in .env to the old key and rebuild
+docker compose up --build -d
+```
+
+The `vault_recovery` diagnostic command reports whether `BACKUP_ENCRYPTION_KEY_PREVIOUS` is set and reminds you of the reverse-rotation command if needed:
+
+```bash
+docker compose exec api python manage.py vault_recovery --username <username>
+```
 
 ## Accessing the Application
 

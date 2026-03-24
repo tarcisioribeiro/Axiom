@@ -95,5 +95,5 @@ class Account(BaseModel):
         verbose_name = "Conta"
         verbose_name_plural = "Contas"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.account_name

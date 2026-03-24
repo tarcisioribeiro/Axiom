@@ -11,8 +11,8 @@ import { getErrorMessage } from '@/lib/utils';
 export interface CrudService<T, CreateData, UpdateData = CreateData> {
   getAll: () => Promise<T[]>;
   create: (data: CreateData) => Promise<T>;
-  update: (id: number, data: UpdateData) => Promise<T>;
-  delete: (id: number) => Promise<void>;
+  update: (id: string | number, data: UpdateData) => Promise<T>;
+  delete: (id: string | number) => Promise<void>;
 }
 
 /**
@@ -55,7 +55,7 @@ export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
   /** Abre dialog para editar item existente */
   handleEdit: (item: T) => void;
   /** Deleta item com confirmacao */
-  handleDelete: (id: number) => void;
+  handleDelete: (id: string | number) => void;
   /** Submete formulario (cria ou atualiza) */
   handleSubmit: (data: CreateData | UpdateData) => Promise<void>;
   /** Fecha dialog */
@@ -94,7 +94,7 @@ export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
  * ```
  */
 export function useCrudPage<
-  T extends { id: number },
+  T extends { id: string | number },
   CreateData,
   UpdateData = CreateData,
 >(
@@ -176,7 +176,7 @@ export function useCrudPage<
 
   // Deleta com janela de desfazer (undo toast) — sem dialog de confirmacao bloqueante
   const handleDelete = useCallback(
-    (id: number) => {
+    (id: string | number) => {
       const itemIndex = items.findIndex((item) => item.id === id);
       const deletedItem = items[itemIndex];
       if (!deletedItem) return;

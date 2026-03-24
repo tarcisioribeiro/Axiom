@@ -9,7 +9,7 @@ metadata:
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/path: "/metrics"
-    prometheus.io/port: "8002"
+    prometheus.io/port: "39100"
 spec:
   type: ClusterIP
   # Blue-green: the selector is toggled between slot: blue and slot: green
@@ -19,7 +19,7 @@ spec:
     app: api
     slot: blue
   ports:
-    - port: 8002
+    - port: 39100
       targetPort: 39100
       protocol: TCP
       name: http

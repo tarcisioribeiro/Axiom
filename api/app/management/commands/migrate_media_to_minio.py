@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -8,14 +9,14 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Migrate existing media files from local filesystem to MinIO/S3 storage"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="List files that would be migrated without actually migrating them",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
         media_root = settings.MEDIA_ROOT
 

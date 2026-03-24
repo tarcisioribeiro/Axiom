@@ -49,9 +49,21 @@ spec:
                 secretKeyRef:
                   name: mindledger-secrets
                   key: MINIO_ROOT_PASSWORD
+            # MinIO auto-enables TLS when public.crt / private.key are present
+            # in MINIO_CERTS_DIR. The cert-manager Certificate mounts them via subPath.
+            - name: MINIO_CERTS_DIR
+              value: "/root/.minio/certs"
           volumeMounts:
             - name: minio-data
               mountPath: /data
+            - name: minio-tls
+              mountPath: /root/.minio/certs/public.crt
+              subPath: tls.crt
+              readOnly: true
+            - name: minio-tls
+              mountPath: /root/.minio/certs/private.key
+              subPath: tls.key
+              readOnly: true
           resources:
             requests:
               memory: "256Mi"
@@ -63,6 +75,7 @@ spec:
             httpGet:
               path: /minio/health/ready
               port: 9000
+              scheme: HTTPS
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
@@ -71,6 +84,7 @@ spec:
             httpGet:
               path: /minio/health/live
               port: 9000
+              scheme: HTTPS
             initialDelaySeconds: 20
             periodSeconds: 30
             timeoutSeconds: 10
@@ -79,6 +93,14 @@ spec:
         - name: minio-data
           persistentVolumeClaim:
             claimName: minio-pvc
+        - name: minio-tls
+          secret:
+            secretName: minio-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
 ---
 # Job de inicialização — cria o bucket mindledger na primeira execução.
 # Re-executar é seguro (--ignore-existing).
@@ -133,9 +155,9 @@ spec:
             - sh
             - -c
             - |
-              mc alias set myminio http://minio-service:9000 \
+              mc --insecure alias set myminio https://minio-service:9000 \
                 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-              mc mb --ignore-existing myminio/mindledger
+              mc --insecure mb --ignore-existing myminio/mindledger
               echo "Bucket created (or already exists)"
           resources:
             requests:

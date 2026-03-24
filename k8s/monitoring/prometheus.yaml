@@ -111,7 +111,7 @@ data:
       # MindLedger Django API — auto-discovered via annotation on api-service:
       #   prometheus.io/scrape: "true"
       #   prometheus.io/path:   "/metrics"
-      #   prometheus.io/port:   "8002"
+      #   prometheus.io/port:   "39100"
       - job_name: mindledger-api
         kubernetes_sd_configs:
           - role: endpoints

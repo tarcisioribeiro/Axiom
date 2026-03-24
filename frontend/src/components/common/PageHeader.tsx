@@ -38,7 +38,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </div>
       {children}
       {!children && action && (
-        <Button onClick={action.onClick} className="gap-2">
+        <Button onClick={action.onClick} className="gap-sm">
           {action.icon}
           {action.label}
         </Button>
