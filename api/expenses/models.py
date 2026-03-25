@@ -369,6 +369,11 @@ class CategorizationRule(BaseModel):
         verbose_name="Ativa",
         help_text="Desmarque para desativar sem excluir a regra",
     )
+    priority = models.PositiveIntegerField(
+        default=100,
+        verbose_name="Prioridade",
+        help_text="Menor valor = maior prioridade.",
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -377,7 +382,7 @@ class CategorizationRule(BaseModel):
     )
 
     class Meta:
-        ordering = ["created_at"]
+        ordering = ["priority", "created_at"]
         verbose_name = "Regra de Categorização"
         verbose_name_plural = "Regras de Categorização"
         indexes = [

@@ -276,6 +276,7 @@ class CategorizationRuleSerializer(serializers.ModelSerializer):
             "merchant_contains",
             "category",
             "is_active",
+            "priority",
             "owner",
             "created_at",
             "updated_at",
