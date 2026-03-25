@@ -16,7 +16,6 @@ from accounts.services import recalculate_account_balance
 from expenses.models import Expense
 from revenues.models import Revenue
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
