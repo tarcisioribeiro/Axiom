@@ -2,8 +2,8 @@
 Tests for all Django signal handlers.
 
 Covers:
-- accounts/signals.py  — balance update on revenue/expense save/delete,
-                         initial revenue on account creation
+- accounts/signals.py  — initial revenue on account creation
+                         (balance updates are covered by tests/test_accounts.py)
 - credit_cards/signals.py — bill total recalculation, bill defaults
 - transfers/signals.py    — auto-create expense/revenue, cleanup on delete
 - payables/signals.py     — paid_value sync
@@ -83,65 +83,6 @@ def _make_revenue(account, value="100.00", received=True, **kwargs):
 # ---------------------------------------------------------------------------
 # accounts/signals.py
 # ---------------------------------------------------------------------------
-
-
-class AccountBalanceSignalTest(TestCase):
-    """update_account_balance fires on revenue/expense create, update, delete."""
-
-    def setUp(self):
-        self.account = _make_account()
-
-    # --- revenue signals ---
-
-    def test_balance_increases_when_received_revenue_created(self):
-        _make_revenue(self.account, value="200.00", received=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-    def test_balance_unchanged_when_unreceived_revenue_created(self):
-        _make_revenue(self.account, value="200.00", received=False)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("0.00"))
-
-    def test_balance_recalculated_when_revenue_deleted(self):
-        rev = _make_revenue(self.account, value="150.00", received=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("150.00"))
-
-        rev.delete()
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("0.00"))
-
-    # --- expense signals ---
-
-    def test_balance_decreases_when_paid_expense_created(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="100.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-    def test_balance_unchanged_when_unpaid_expense_created(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="100.00", payed=False)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("300.00"))
-
-    def test_balance_recalculated_when_expense_deleted(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        exp = _make_expense(self.account, value="100.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-        exp.delete()
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("300.00"))
-
-    def test_balance_reflects_multiple_revenues_and_expenses(self):
-        _make_revenue(self.account, value="500.00", received=True)
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="200.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("600.00"))
 
 
 class AccountInitialRevenueSignalTest(TestCase):

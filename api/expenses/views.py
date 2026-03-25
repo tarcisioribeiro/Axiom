@@ -45,7 +45,15 @@ class ExpenseCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        with transaction.atomic():
+            instance = serializer.save(
+                created_by=self.request.user, updated_by=self.request.user
+            )
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -69,7 +77,23 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        with transaction.atomic():
+            instance = serializer.save(updated_by=self.request.user)
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
+
+    def perform_destroy(self, instance):
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        account_id = instance.account_id
+        with transaction.atomic():
+            instance.delete()
+            if account_id:
+                recalculate_account_balance(account_id)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
@@ -165,11 +189,27 @@ class BulkMarkPaidView(APIView):
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def post(self, request):
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
         serializer = BulkMarkPaidSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        updated = Expense.objects.filter(
-            id__in=serializer.validated_data["expense_ids"],
-        ).update(payed=True, updated_by=request.user)
+        expense_ids = serializer.validated_data["expense_ids"]
+
+        account_ids = set(
+            Expense.objects.filter(id__in=expense_ids)
+            .values_list("account_id", flat=True)
+            .distinct()
+        )
+
+        with transaction.atomic():
+            updated = Expense.objects.filter(id__in=expense_ids).update(
+                payed=True, updated_by=request.user
+            )
+            for account_id in account_ids:
+                if account_id:
+                    recalculate_account_balance(account_id)
+
         return Response(
             {"success": True, "updated_count": updated}, status=status.HTTP_200_OK
         )

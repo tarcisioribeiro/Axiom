@@ -10,7 +10,7 @@ from typing import Any
 from django.core.management.base import BaseCommand
 
 from accounts.models import Account
-from accounts.signals import update_account_balance
+from accounts.services import recalculate_account_balance
 
 
 class Command(BaseCommand):
@@ -38,9 +38,7 @@ class Command(BaseCommand):
         for account in accounts:
             try:
                 old_balance = account.current_balance
-                update_account_balance(account)
-                account.refresh_from_db()
-                new_balance = account.current_balance
+                new_balance = recalculate_account_balance(account.pk)
 
                 self.stdout.write(
                     self.style.SUCCESS(
