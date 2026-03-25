@@ -2147,6 +2147,7 @@ export interface CategorizationRule {
   merchant_contains: string;
   category: string;
   is_active: boolean;
+  priority: number;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -2156,6 +2157,7 @@ export interface CategorizationRuleFormData {
   merchant_contains: string;
   category: string;
   is_active: boolean;
+  priority: number;
 }
 
 // Bank Reconciliation Types

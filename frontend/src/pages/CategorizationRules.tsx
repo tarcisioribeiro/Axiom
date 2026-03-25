@@ -48,6 +48,7 @@ function RuleForm({
   );
   const [category, setCategory] = useState(rule?.category ?? '');
   const [isActive, setIsActive] = useState(rule?.is_active ?? true);
+  const [priority, setPriority] = useState(rule?.priority ?? 100);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +57,7 @@ function RuleForm({
       merchant_contains: merchantContains.trim(),
       category,
       is_active: isActive,
+      priority,
     });
   }
 
@@ -90,6 +92,20 @@ function RuleForm({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-sm">
+        <Label htmlFor="priority">Prioridade</Label>
+        <Input
+          id="priority"
+          type="number"
+          min={1}
+          value={priority}
+          onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
+        />
+        <p className="text-xs text-muted-foreground">
+          Menor valor = maior prioridade. Regras com valor menor são avaliadas primeiro.
+        </p>
       </div>
 
       <div className="flex items-center gap-sm">
@@ -189,6 +205,12 @@ export default function CategorizationRules() {
         ) : (
           <Badge variant="outline">Inativa</Badge>
         ),
+    },
+    {
+      key: 'priority',
+      label: 'Prioridade',
+      sortable: true,
+      render: (rule) => <span className="text-sm tabular-nums">{rule.priority}</span>,
     },
     {
       key: 'created_at',

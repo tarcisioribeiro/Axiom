@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
+from app.throttles import ExportRateThrottle
 from library.models import (
     Author,
     Book,
@@ -1095,6 +1096,7 @@ class BookHighlightExportView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    throttle_classes = [ExportRateThrottle]
     queryset = BookHighlight.objects.all()
 
     def get(self, request):
