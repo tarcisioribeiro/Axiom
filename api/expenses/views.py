@@ -47,6 +47,17 @@ class ExpenseCreateListView(BaseListCreateView):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        data = dict(serializer.data)
+        budget_warning = getattr(serializer, "_budget_warning", None)
+        if budget_warning:
+            data["budget_warning"] = budget_warning
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     queryset = Expense.objects.all()  # GlobalDefaultPermission
@@ -59,6 +70,18 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        data = dict(serializer.data)
+        budget_warning = getattr(serializer, "_budget_warning", None)
+        if budget_warning:
+            data["budget_warning"] = budget_warning
+        return Response(data)
 
 
 class FixedExpenseListCreateView(BaseListCreateView):

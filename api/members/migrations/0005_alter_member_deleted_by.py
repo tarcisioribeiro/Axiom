@@ -8,14 +8,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0004_alter_member_deleted_by_alter_member_document_hash_and_more'),
+        ("members", "0004_alter_member_deleted_by_alter_member_document_hash_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='member',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Excluído por'),
+            model_name="member",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="%(class)s_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Excluído por",
+            ),
         ),
     ]
