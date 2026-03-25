@@ -56,11 +56,15 @@ class MinIOStorage(S3Boto3Storage):
             params: dict[str, Any] = {"Bucket": self.bucket_name, "Key": name}
             if parameters:
                 params.update(parameters)
-            return self._url_signing_client.generate_presigned_url(
-                "get_object",
-                Params=params,
-                ExpiresIn=expire,
+            return str(
+                self._url_signing_client.generate_presigned_url(
+                    "get_object",
+                    Params=params,
+                    ExpiresIn=expire,
+                )
             )
-        return super().url(  # type: ignore[return-value]
-            name, parameters=parameters, expire=expire, http_method=http_method
+        return str(
+            super().url(  # type: ignore[return-value]
+                name, parameters=parameters, expire=expire, http_method=http_method
+            )
         )
