@@ -245,6 +245,7 @@ REST_FRAMEWORK = {
         "login": "30/minute",  # raised: NUM_PROXIES=1 collapses CI traffic to ingress
         "register": "3/minute",
         "share_token": "10/minute",
+        "export": "20/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -308,6 +309,9 @@ CACHE_TTL_ACCOUNT_BALANCES = 30  # 30 segundos - saldos sao criticos
 CACHE_TTL_CATEGORY_BREAKDOWN = 300  # 5 minutos - agregacoes pesadas
 CACHE_TTL_BALANCE_FORECAST = 120  # 2 minutos - previsoes
 CACHE_TTL_CASH_FLOW_FORECAST = 300  # 5 minutos - projecao de fluxo de caixa
+
+# Budget enforcement mode: 'soft' (201 + budget_warning), 'hard' (400 block)
+BUDGET_ENFORCEMENT_MODE = os.getenv("BUDGET_ENFORCEMENT_MODE", "soft")
 
 # Structured Logging Configuration
 LOGGING = {

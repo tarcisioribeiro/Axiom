@@ -13,6 +13,7 @@ from django_filters import rest_framework as filters
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response, format_decimal
 from app.permissions import GlobalDefaultPermission
+from app.throttles import ExportRateThrottle
 from expenses.filters import ExpenseFilter
 from expenses.models import (
     EXPENSES_CATEGORIES,
@@ -45,7 +46,27 @@ class ExpenseCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
+
+        with transaction.atomic():
+            instance = serializer.save(
+                created_by=self.request.user, updated_by=self.request.user
+            )
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        data = dict(serializer.data)
+        budget_warning = getattr(serializer, "_budget_warning", None)
+        if budget_warning:
+            data["budget_warning"] = budget_warning
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -58,7 +79,37 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
+
+        with transaction.atomic():
+            instance = serializer.save(updated_by=self.request.user)
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
+
+    def perform_destroy(self, instance):
+        from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
+
+        account_id = instance.account_id
+        with transaction.atomic():
+            instance.delete()
+            if account_id:
+                recalculate_account_balance(account_id)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        data = dict(serializer.data)
+        budget_warning = getattr(serializer, "_budget_warning", None)
+        if budget_warning:
+            data["budget_warning"] = budget_warning
+        return Response(data)
 
 
 class FixedExpenseListCreateView(BaseListCreateView):
@@ -142,11 +193,28 @@ class BulkMarkPaidView(APIView):
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def post(self, request):
+        from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
+
         serializer = BulkMarkPaidSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        updated = Expense.objects.filter(
-            id__in=serializer.validated_data["expense_ids"],
-        ).update(payed=True, updated_by=request.user)
+        expense_ids = serializer.validated_data["expense_ids"]
+
+        account_ids = set(
+            Expense.objects.filter(id__in=expense_ids)
+            .values_list("account_id", flat=True)
+            .distinct()
+        )
+
+        with transaction.atomic():
+            updated = Expense.objects.filter(id__in=expense_ids).update(
+                payed=True, updated_by=request.user
+            )
+            for account_id in account_ids:
+                if account_id:
+                    recalculate_account_balance(account_id)
+
         return Response(
             {"success": True, "updated_count": updated}, status=status.HTTP_200_OK
         )
@@ -271,6 +339,7 @@ class ExportExpensesView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    throttle_classes = [ExportRateThrottle]
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def get(self, request):

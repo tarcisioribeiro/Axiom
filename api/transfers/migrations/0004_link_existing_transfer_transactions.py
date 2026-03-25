@@ -9,9 +9,9 @@ def link_existing_transfer_transactions(apps, schema_editor):
     Busca transferências efetivadas e encontra as despesas/receitas correspondentes
     baseando-se em descrição, data, horário, valor e conta.
     """
-    Transfer = apps.get_model('transfers', 'Transfer')
-    Expense = apps.get_model('expenses', 'Expense')
-    Revenue = apps.get_model('revenues', 'Revenue')
+    Transfer = apps.get_model("transfers", "Transfer")
+    Expense = apps.get_model("expenses", "Expense")
+    Revenue = apps.get_model("revenues", "Revenue")
 
     linked_expenses = 0
     linked_revenues = 0
@@ -26,7 +26,7 @@ def link_existing_transfer_transactions(apps, schema_editor):
             value=transfer.value + transfer.fee,
             account=transfer.origin_account,
             is_deleted=False,
-            related_transfer__isnull=True  # Apenas se ainda não está vinculada
+            related_transfer__isnull=True,  # Apenas se ainda não está vinculada
         ).first()
 
         if expense:
@@ -42,7 +42,7 @@ def link_existing_transfer_transactions(apps, schema_editor):
             value=transfer.value,
             account=transfer.destiny_account,
             is_deleted=False,
-            related_transfer__isnull=True  # Apenas se ainda não está vinculada
+            related_transfer__isnull=True,  # Apenas se ainda não está vinculada
         ).first()
 
         if revenue:
@@ -50,13 +50,15 @@ def link_existing_transfer_transactions(apps, schema_editor):
             revenue.save()
             linked_revenues += 1
 
-    print(f"✓ Vinculadas {linked_expenses} despesas e {linked_revenues} receitas a transferências")
+    print(
+        f"✓ Vinculadas {linked_expenses} despesas e {linked_revenues} receitas a transferências"
+    )
 
 
 def reverse_link(apps, schema_editor):
     """Reverter: desvincular todas as transferências"""
-    Expense = apps.get_model('expenses', 'Expense')
-    Revenue = apps.get_model('revenues', 'Revenue')
+    Expense = apps.get_model("expenses", "Expense")
+    Revenue = apps.get_model("revenues", "Revenue")
 
     Expense.objects.filter(related_transfer__isnull=False).update(related_transfer=None)
     Revenue.objects.filter(related_transfer__isnull=False).update(related_transfer=None)
@@ -65,9 +67,9 @@ def reverse_link(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('expenses', '0003_expense_related_transfer_and_more'),
-        ('revenues', '0002_revenue_related_transfer_and_more'),
-        ('transfers', '0003_alter_transfered_default'),
+        ("expenses", "0003_expense_related_transfer_and_more"),
+        ("revenues", "0002_revenue_related_transfer_and_more"),
+        ("transfers", "0003_alter_transfered_default"),
     ]
 
     operations = [

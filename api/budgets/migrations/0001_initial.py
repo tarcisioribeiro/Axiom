@@ -165,7 +165,9 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="budget",
-            index=models.Index(fields=["month", "year"], name="budgets_bud_month_year_idx"),
+            index=models.Index(
+                fields=["month", "year"], name="budgets_bud_month_year_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="budget",

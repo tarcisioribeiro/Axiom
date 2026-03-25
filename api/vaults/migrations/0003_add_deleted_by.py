@@ -8,24 +8,45 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('vaults', '0002_add_annual_yield_rate'),
+        ("vaults", "0002_add_annual_yield_rate"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='vault',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='vault_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="vault",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="vault_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='vaulttransaction',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='vaulttransaction_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="vaulttransaction",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="vaulttransaction_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='financialgoal',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='financialgoal_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="financialgoal",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="financialgoal_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
     ]
