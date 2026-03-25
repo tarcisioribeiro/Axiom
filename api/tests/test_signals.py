@@ -659,6 +659,98 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         )
         self.assertEqual(exp.category, "others")
 
+    def test_edit_to_others_triggers_recategorization(self):
+        """Updating category to 'others' re-applies matching rules."""
+        CategorizationRule.objects.create(
+            merchant_contains="starbucks",
+            category="food and drink",
+            is_active=True,
+            owner=self.user,
+        )
+        exp = Expense.objects.create(
+            description="Coffee",
+            value=Decimal("15.00"),
+            date=date.today(),
+            horary=time(9, 0),
+            category="transport",  # explicitly set on creation
+            account=self.account,
+            payed=True,
+            merchant="Starbucks Paulista",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "transport")
+        self.assertFalse(exp.auto_categorized)
+
+        # User resets category back to 'others'
+        exp.category = "others"
+        exp.save()
+        exp.refresh_from_db()
+
+        self.assertEqual(exp.category, "food and drink")
+        self.assertTrue(exp.auto_categorized)
+
+    def test_edit_to_specific_category_clears_auto_flag(self):
+        """Manually setting a specific category clears the auto_categorized flag."""
+        CategorizationRule.objects.create(
+            merchant_contains="uber",
+            category="transport",
+            is_active=True,
+            owner=self.user,
+        )
+        # Create expense — auto-categorized on creation
+        exp = Expense.objects.create(
+            description="Ride",
+            value=Decimal("20.00"),
+            date=date.today(),
+            horary=time(8, 0),
+            category="others",
+            account=self.account,
+            payed=True,
+            merchant="Uber trip",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "transport")
+        self.assertTrue(exp.auto_categorized)
+
+        # User explicitly overrides with a different category
+        exp.category = "food and drink"
+        exp.save()
+        exp.refresh_from_db()
+
+        self.assertEqual(exp.category, "food and drink")
+        self.assertFalse(exp.auto_categorized)
+
+    def test_edit_other_fields_category_already_others_no_recategorization(self):
+        """Updating other fields when category is already 'others' does not re-apply."""
+        exp = Expense.objects.create(
+            description="Mystery",
+            value=Decimal("10.00"),
+            date=date.today(),
+            horary=time(10, 0),
+            category="others",
+            account=self.account,
+            payed=False,
+            merchant="Unknown Shop",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "others")
+        self.assertFalse(exp.auto_categorized)
+
+        # Add a rule and update an unrelated field — category is still 'others'
+        CategorizationRule.objects.create(
+            merchant_contains="unknown",
+            category="purchases",
+            is_active=True,
+            owner=self.user,
+        )
+        exp.payed = True
+        exp.save()
+        exp.refresh_from_db()
+
+        # category stays 'others', auto_categorized stays False (no category change)
+        self.assertEqual(exp.category, "others")
+        self.assertFalse(exp.auto_categorized)
+
 
 # ---------------------------------------------------------------------------
 # personal_planning/signals.py
