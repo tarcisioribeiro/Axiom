@@ -22,7 +22,7 @@ def _apply_categorization_rules(user, instance):
     merchant_lower = instance.merchant.lower()
     rules = CategorizationRule.objects.filter(
         owner=user, is_active=True, is_deleted=False
-    ).order_by("created_at")
+    ).order_by("priority", "created_at")
 
     for rule in rules:
         if rule.merchant_contains.lower() in merchant_lower:
