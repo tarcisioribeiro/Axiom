@@ -7,24 +7,54 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0001_initial'),
-        ('security', '0003_archive_file_name'),
+        ("members", "0001_initial"),
+        ("security", "0003_archive_file_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='VaultConfig',
+            name="VaultConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('salt', models.CharField(max_length=100, verbose_name='Salt (base64)')),
-                ('encrypted_vault_key', models.TextField(verbose_name='Chave do Cofre (cifrada com senha mestre)')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Atualizado em')),
-                ('owner', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='vault_config', to='members.member', verbose_name='Proprietário')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "salt",
+                    models.CharField(max_length=100, verbose_name="Salt (base64)"),
+                ),
+                (
+                    "encrypted_vault_key",
+                    models.TextField(
+                        verbose_name="Chave do Cofre (cifrada com senha mestre)"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(auto_now_add=True, verbose_name="Criado em"),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(auto_now=True, verbose_name="Atualizado em"),
+                ),
+                (
+                    "owner",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="vault_config",
+                        to="members.member",
+                        verbose_name="Proprietário",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Configuração do Cofre',
-                'verbose_name_plural': 'Configurações do Cofre',
+                "verbose_name": "Configuração do Cofre",
+                "verbose_name_plural": "Configurações do Cofre",
             },
         ),
     ]

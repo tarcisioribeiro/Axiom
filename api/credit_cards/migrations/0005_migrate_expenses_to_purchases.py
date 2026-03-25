@@ -1,7 +1,8 @@
 # Generated manually for data migration from CreditCardExpense to Purchase/Installment
 
-from django.db import migrations
 from decimal import Decimal
+
+from django.db import migrations
 
 
 def migrate_expenses_to_purchases(apps, schema_editor):
@@ -15,13 +16,13 @@ def migrate_expenses_to_purchases(apps, schema_editor):
     - 1 CreditCardPurchase com valor total
     - N CreditCardInstallment vinculados
     """
-    CreditCardExpense = apps.get_model('credit_cards', 'CreditCardExpense')
-    CreditCardPurchase = apps.get_model('credit_cards', 'CreditCardPurchase')
-    CreditCardInstallment = apps.get_model('credit_cards', 'CreditCardInstallment')
+    CreditCardExpense = apps.get_model("credit_cards", "CreditCardExpense")
+    CreditCardPurchase = apps.get_model("credit_cards", "CreditCardPurchase")
+    CreditCardInstallment = apps.get_model("credit_cards", "CreditCardInstallment")
 
     # Buscar todas as despesas não deletadas
     expenses = CreditCardExpense.objects.filter(is_deleted=False).order_by(
-        'card', 'description', 'total_installments', 'date', 'installment'
+        "card", "description", "total_installments", "date", "installment"
     )
 
     if not expenses.exists():
@@ -55,7 +56,9 @@ def migrate_expenses_to_purchases(apps, schema_editor):
         # Nesse caso, agrupar por proximidade de datas
         if len(group_expenses) > total_installments:
             # Múltiplas compras com mesma descrição - subdividir
-            sub_groups = _subdivide_by_date_proximity(group_expenses, total_installments)
+            sub_groups = _subdivide_by_date_proximity(
+                group_expenses, total_installments
+            )
         else:
             sub_groups = [group_expenses]
 
@@ -141,8 +144,8 @@ def reverse_migration(apps, schema_editor):
     Reverte a migração - apenas limpa os dados das novas tabelas.
     Os dados originais em CreditCardExpense permanecem intactos.
     """
-    CreditCardPurchase = apps.get_model('credit_cards', 'CreditCardPurchase')
-    CreditCardInstallment = apps.get_model('credit_cards', 'CreditCardInstallment')
+    CreditCardPurchase = apps.get_model("credit_cards", "CreditCardPurchase")
+    CreditCardInstallment = apps.get_model("credit_cards", "CreditCardInstallment")
 
     # Deletar todos os registros das novas tabelas
     CreditCardInstallment.objects.all().delete()
@@ -152,7 +155,7 @@ def reverse_migration(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('credit_cards', '0004_add_purchase_and_installment_models'),
+        ("credit_cards", "0004_add_purchase_and_installment_models"),
     ]
 
     operations = [

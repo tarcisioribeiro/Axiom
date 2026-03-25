@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('library', '0005_add_deleted_by'),
+        ("library", "0005_add_deleted_by"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='book',
-            name='cover',
-            field=models.ImageField(blank=True, null=True, upload_to='library/covers/', verbose_name='Capa'),
+            model_name="book",
+            name="cover",
+            field=models.ImageField(
+                blank=True, null=True, upload_to="library/covers/", verbose_name="Capa"
+            ),
         ),
     ]
