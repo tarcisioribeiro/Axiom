@@ -8,24 +8,45 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('expenses', '0010_add_deleted_by'),
+        ("expenses", "0010_add_deleted_by"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='expense',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Excluído por'),
+            model_name="expense",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="%(class)s_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Excluído por",
+            ),
         ),
         migrations.AlterField(
-            model_name='fixedexpense',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Excluído por'),
+            model_name="fixedexpense",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="%(class)s_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Excluído por",
+            ),
         ),
         migrations.AlterField(
-            model_name='fixedexpensegenerationlog',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Excluído por'),
+            model_name="fixedexpensegenerationlog",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="%(class)s_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Excluído por",
+            ),
         ),
     ]

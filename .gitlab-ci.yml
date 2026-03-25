@@ -12,6 +12,7 @@ stages:
   - smoke-staging
   - test-load
   - test-e2e
+  - promote
   - deploy-production
   - smoke-production
 
@@ -37,6 +38,10 @@ variables:
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # Always run the full branch pipeline on develop even when the develop→main
+    # MR is already open. The promote stage needs branch pipelines to create or
+    # verify the promotion MR — an MR pipeline for develop→main is not enough.
+    - if: $CI_COMMIT_BRANCH == "develop"
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
     - if: $CI_COMMIT_BRANCH
@@ -305,6 +310,10 @@ build:storybook:
 # ==============================================================================
 
 # Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
+#   GITLAB_TOKEN              — Personal or Project Access Token with `api` scope
+#                               (Developer role or higher). Used by promote:to_main to
+#                               create the develop→main MR. Mark as Masked.
+#                               Do NOT use $CI_JOB_TOKEN — it cannot create MRs.
 #   KUBECONFIG_CONTENT        — base64-encoded kubeconfig (base64 -w0 ~/.kube/config)
 #   STAGING_URL               — public URL of the staging environment (e.g. https://staging.example.com)
 #   PRODUCTION_URL            — public URL of the production environment (e.g. https://example.com)
@@ -1324,6 +1333,129 @@ deploy:rollback:production:
     - rm -f /tmp/kubeconfig
   allow_failure: false
 
+# ==============================================================================
+# STAGE: promote
+#
+# Runs on the develop branch after all test-e2e stage jobs complete
+# successfully. Creates a Merge Request from develop → main via the GitLab
+# REST API. The job is idempotent — if an open MR already exists it prints the
+# URL and exits cleanly without creating a duplicate.
+#
+# After creating the MR the job attempts to enable "Merge when pipeline
+# succeeds" (auto-merge). This is best-effort: if the MR pipeline has not
+# started yet, or if project settings do not allow auto-merge, a warning is
+# printed but the job still succeeds (the MR was created).
+#
+# Required CI/CD variable:
+#   GITLAB_TOKEN  — Personal Access Token or Project Access Token with the
+#                   `api` scope and Developer (or higher) role on this project.
+#                   Configure it in: Settings → CI/CD → Variables (Masked).
+#                   ⚠  Do NOT use $CI_JOB_TOKEN — it cannot create Merge Requests.
+# ==============================================================================
+
+promote:to_main:
+  image: python:3.12-slim
+  stage: promote
+  interruptible: false
+  needs:
+    - job: test:e2e
+    - job: test:backup-restore
+  # CI_COMMIT_BRANCH is only populated for branch pipelines (not MR pipelines),
+  # so this rule is already implicitly restricted to push events on develop.
+  rules:
+    - if: $CI_COMMIT_BRANCH == "develop"
+  script:
+    - |
+      python3 - <<'PYEOF'
+      import json, os, sys
+      import urllib.request, urllib.error
+
+      token        = os.environ.get("GITLAB_TOKEN", "")
+      project_id   = os.environ["CI_PROJECT_ID"]
+      api_url      = os.environ["CI_API_V4_URL"]
+      pipeline_url = os.environ.get("CI_PIPELINE_URL", "")
+      commit_sha   = os.environ.get("CI_COMMIT_SHORT_SHA", "")
+
+      if not token:
+          print("ERROR: GITLAB_TOKEN is not set.")
+          print("Configure it in: Settings → CI/CD → Variables (scope: api, masked).")
+          sys.exit(1)
+
+      headers = {
+          "PRIVATE-TOKEN": token,
+          "Content-Type":  "application/json",
+      }
+
+      def api_call(method, path, payload=None):
+          url  = f"{api_url}/projects/{project_id}{path}"
+          data = json.dumps(payload).encode() if payload else None
+          req  = urllib.request.Request(url, data=data, headers=headers, method=method)
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  return json.loads(resp.read())
+          except urllib.error.HTTPError as exc:
+              body = exc.read().decode()
+              raise RuntimeError(f"HTTP {exc.code} {exc.reason} — {body}") from exc
+
+      # ── 1. Check for an existing open MR develop → main ─────────────────────
+      print("Checking for an existing open MR (develop → main)...")
+      try:
+          mrs = api_call(
+              "GET",
+              "/merge_requests?state=opened"
+              "&source_branch=develop&target_branch=main",
+          )
+      except RuntimeError as exc:
+          print(f"ERROR: Could not query open MRs: {exc}")
+          sys.exit(1)
+
+      if mrs:
+          mr = mrs[0]
+          print(f"Open MR already exists: !{mr['iid']} — {mr['web_url']}")
+          print("No new MR created.")
+          sys.exit(0)
+
+      # ── 2. Create the promotion MR ───────────────────────────────────────────
+      print("No open MR found — creating develop → main MR...")
+      description = (
+          "## Promoção automática\n\n"
+          "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
+          f"os testes de staging passarem para o commit `{commit_sha}`.\n\n"
+          f"**Pipeline:** {pipeline_url}\n\n"
+          "Revise as alterações abaixo e faça o merge quando estiver pronto."
+      )
+      try:
+          mr = api_call("POST", "/merge_requests", {
+              "source_branch":        "develop",
+              "target_branch":        "main",
+              "title":                "Auto MR: develop -> main",
+              "description":          description,
+              "remove_source_branch": False,
+              "squash":               False,
+          })
+      except RuntimeError as exc:
+          print(f"ERROR: Failed to create MR: {exc}")
+          sys.exit(1)
+
+      print(f"MR created: !{mr['iid']} — {mr['web_url']}")
+
+      # ── 3. Enable auto-merge (best-effort) ───────────────────────────────────
+      # Requires the MR pipeline to have already started and the project to
+      # allow "Merge when pipeline succeeds". Failure here is non-fatal.
+      print("Attempting to enable auto-merge (merge_when_pipeline_succeeds)...")
+      try:
+          result = api_call(
+              "PUT",
+              f"/merge_requests/{mr['iid']}/merge",
+              {"merge_when_pipeline_succeeds": True},
+          )
+          print(f"Auto-merge enabled for !{result['iid']}.")
+      except RuntimeError as exc:
+          print(f"WARNING: Could not enable auto-merge (non-fatal): {exc}")
+          print("The MR was created. Enable auto-merge manually from the MR page if needed.")
+
+      print("promote:to_main completed successfully.")
+      PYEOF
 # Manual rollback job for production — operators can trigger this at any point
 # after deploy:production, regardless of smoke test outcome.
 # API uses the same blue-green slot-switch as the automated rollback.

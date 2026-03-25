@@ -97,9 +97,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "unmatched_count",
-                    models.PositiveIntegerField(
-                        default=0, verbose_name="Divergentes"
-                    ),
+                    models.PositiveIntegerField(default=0, verbose_name="Divergentes"),
                 ),
                 (
                     "ignored_count",

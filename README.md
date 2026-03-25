@@ -276,6 +276,81 @@ docker-compose down -v && docker-compose up -d --build
 docker-compose exec api python manage.py migrate --fake-initial
 ```
 
+## Pipeline de CI/CD e Promoção Automática
+
+### Fluxo de branches
+
+```
+feature/* ──► develop ──► main (produção)
+               │
+               └── pipeline automático ──► MR develop→main criada automaticamente
+```
+
+1. Desenvolvedores trabalham em branches de feature e fazem merge para `develop`.
+2. A cada push em `develop` o pipeline completo é executado.
+3. Se todos os stages passarem, o job `promote:to_main` cria automaticamente uma
+   Merge Request de `develop` → `main` via API do GitLab.
+4. O deploy em produção (`deploy:production`) permanece **manual** — um membro da
+   equipe avalia e aprova a MR, depois dispara o job manualmente na branch `main`.
+
+### Stages do pipeline (branch `develop`)
+
+| Stage | O que faz |
+|---|---|
+| `lint` | Black, isort, flake8, bandit, eslint, secrets scan |
+| `typecheck` | mypy (backend) + tsc (frontend) |
+| `test` | pytest + vitest com cobertura |
+| `build` | Imagens Docker + SBOM (syft) + assinatura opcional (cosign) |
+| `scan` | Trivy — HIGH/CRITICAL vulnerabilidades |
+| `deploy-staging` | Deploy no cluster Kubernetes de staging |
+| `smoke-staging` | Health checks + validação de JWT em staging |
+| `test-load` | Testes de carga com k6 |
+| `test-e2e` | Testes E2E com Playwright + validação de backup |
+| `promote` | Cria MR `develop → main` via API do GitLab (idempotente) |
+
+### Como configurar o `GITLAB_TOKEN`
+
+O job `promote:to_main` precisa de um token com permissão para criar Merge Requests.
+O `$CI_JOB_TOKEN` padrão **não possui** essa permissão — é necessário criar um token
+dedicado.
+
+**Passo a passo:**
+
+1. Acesse **Settings → Access Tokens** no projeto (ou no seu perfil de usuário para um
+   Personal Access Token).
+2. Crie um token com:
+   - **Scope**: `api`
+   - **Role**: Developer (ou superior)
+   - **Expiry**: defina uma data de expiração razoável e renove periodicamente
+3. Copie o valor do token.
+4. Acesse **Settings → CI/CD → Variables** no projeto do GitLab.
+5. Crie uma variável:
+   - **Key**: `GITLAB_TOKEN`
+   - **Value**: cole o token
+   - **Type**: Variable
+   - Marque **Masked** (impede que o valor apareça nos logs)
+   - Marque **Protected** se quiser que o token só seja usado em branches protegidas
+
+> **Segurança**: nunca commite o token no código. Sempre use variáveis de CI/CD mascaradas.
+
+### Promoção automática e auto-merge
+
+Quando o pipeline de `develop` passa com sucesso:
+
+- O job `promote:to_main` verifica via API se já existe uma MR aberta de `develop`
+  para `main`. Se existir, ele exibe a URL e encerra sem criar duplicata.
+- Se não existir, uma nova MR é criada com título `Auto MR: develop -> main` e
+  descrição contendo o SHA do commit e o link para o pipeline.
+- Opcionalmente, o job tenta habilitar **"Merge when pipeline succeeds"** na MR
+  criada. Isso requer que o pipeline da MR já tenha iniciado. Se não for possível
+  (pipeline não iniciado, configuração do projeto não permite), um aviso é exibido
+  e o job ainda termina com sucesso — a MR foi criada normalmente.
+
+Para habilitar auto-merge manualmente: abra a MR criada e clique em
+**"Set to auto-merge"**.
+
+---
+
 ## Licença
 
 Este projeto é privado e proprietário.
