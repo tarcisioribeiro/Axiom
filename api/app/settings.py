@@ -245,6 +245,7 @@ REST_FRAMEWORK = {
         "login": "30/minute",  # raised: NUM_PROXIES=1 collapses CI traffic to ingress
         "register": "3/minute",
         "share_token": "10/minute",
+        "export": "20/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response, format_decimal
 from app.permissions import GlobalDefaultPermission
+from app.throttles import ExportRateThrottle
 from revenues.filters import RevenueFilter
 from revenues.models import REVENUES_CATEGORIES, Revenue
 from revenues.serializers import RevenueSerializer
@@ -45,8 +46,9 @@ class RevenueCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         with transaction.atomic():
             instance = serializer.save(
@@ -83,8 +85,9 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         with transaction.atomic():
             instance = serializer.save(updated_by=self.request.user)
@@ -92,8 +95,9 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
                 recalculate_account_balance(instance.account_id)
 
     def perform_destroy(self, instance):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         account_id = instance.account_id
         with transaction.atomic():
@@ -127,6 +131,7 @@ class ExportRevenuesView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    throttle_classes = [ExportRateThrottle]
     queryset = Revenue.objects.none()  # Required for GlobalDefaultPermission
 
     def get(self, request):

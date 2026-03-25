@@ -13,6 +13,7 @@ from django_filters import rest_framework as filters
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.export_utils import build_csv_response, build_pdf_response, format_decimal
 from app.permissions import GlobalDefaultPermission
+from app.throttles import ExportRateThrottle
 from expenses.filters import ExpenseFilter
 from expenses.models import (
     EXPENSES_CATEGORIES,
@@ -45,8 +46,9 @@ class ExpenseCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         with transaction.atomic():
             instance = serializer.save(
@@ -77,8 +79,9 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         with transaction.atomic():
             instance = serializer.save(updated_by=self.request.user)
@@ -86,8 +89,9 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
                 recalculate_account_balance(instance.account_id)
 
     def perform_destroy(self, instance):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         account_id = instance.account_id
         with transaction.atomic():
@@ -189,8 +193,9 @@ class BulkMarkPaidView(APIView):
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def post(self, request):
-        from accounts.services import recalculate_account_balance
         from django.db import transaction
+
+        from accounts.services import recalculate_account_balance
 
         serializer = BulkMarkPaidSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -334,6 +339,7 @@ class ExportExpensesView(APIView):
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    throttle_classes = [ExportRateThrottle]
     queryset = Expense.objects.none()  # Required for GlobalDefaultPermission
 
     def get(self, request):
