@@ -1,6 +1,17 @@
+from django.db import transaction
+
+from accounts.services import recalculate_account_balance
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from transfers.models import Transfer
 from transfers.serializers import TransferSerializer
+
+
+def _recalculate_transfer_accounts(origin_id, destiny_id):
+    """Recalculate balances for both accounts involved in a transfer."""
+    if origin_id:
+        recalculate_account_balance(origin_id)
+    if destiny_id and destiny_id != origin_id:
+        recalculate_account_balance(destiny_id)
 
 
 class TransferCreateListView(BaseListCreateView):
@@ -28,7 +39,13 @@ class TransferCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        with transaction.atomic():
+            instance = serializer.save(
+                created_by=self.request.user, updated_by=self.request.user
+            )
+            _recalculate_transfer_accounts(
+                instance.origin_account_id, instance.destiny_account_id
+            )
 
 
 class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -57,4 +74,15 @@ class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        with transaction.atomic():
+            instance = serializer.save(updated_by=self.request.user)
+            _recalculate_transfer_accounts(
+                instance.origin_account_id, instance.destiny_account_id
+            )
+
+    def perform_destroy(self, instance):
+        origin_id = instance.origin_account_id
+        destiny_id = instance.destiny_account_id
+        with transaction.atomic():
+            instance.delete()
+            _recalculate_transfer_accounts(origin_id, destiny_id)

@@ -2,8 +2,8 @@
 Tests for all Django signal handlers.
 
 Covers:
-- accounts/signals.py  — balance update on revenue/expense save/delete,
-                         initial revenue on account creation
+- accounts/signals.py  — initial revenue on account creation
+                         (balance updates are covered by tests/test_accounts.py)
 - credit_cards/signals.py — bill total recalculation, bill defaults
 - transfers/signals.py    — auto-create expense/revenue, cleanup on delete
 - payables/signals.py     — paid_value sync
@@ -83,65 +83,6 @@ def _make_revenue(account, value="100.00", received=True, **kwargs):
 # ---------------------------------------------------------------------------
 # accounts/signals.py
 # ---------------------------------------------------------------------------
-
-
-class AccountBalanceSignalTest(TestCase):
-    """update_account_balance fires on revenue/expense create, update, delete."""
-
-    def setUp(self):
-        self.account = _make_account()
-
-    # --- revenue signals ---
-
-    def test_balance_increases_when_received_revenue_created(self):
-        _make_revenue(self.account, value="200.00", received=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-    def test_balance_unchanged_when_unreceived_revenue_created(self):
-        _make_revenue(self.account, value="200.00", received=False)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("0.00"))
-
-    def test_balance_recalculated_when_revenue_deleted(self):
-        rev = _make_revenue(self.account, value="150.00", received=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("150.00"))
-
-        rev.delete()
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("0.00"))
-
-    # --- expense signals ---
-
-    def test_balance_decreases_when_paid_expense_created(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="100.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-    def test_balance_unchanged_when_unpaid_expense_created(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="100.00", payed=False)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("300.00"))
-
-    def test_balance_recalculated_when_expense_deleted(self):
-        _make_revenue(self.account, value="300.00", received=True)
-        exp = _make_expense(self.account, value="100.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("200.00"))
-
-        exp.delete()
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("300.00"))
-
-    def test_balance_reflects_multiple_revenues_and_expenses(self):
-        _make_revenue(self.account, value="500.00", received=True)
-        _make_revenue(self.account, value="300.00", received=True)
-        _make_expense(self.account, value="200.00", payed=True)
-        self.account.refresh_from_db()
-        self.assertEqual(self.account.current_balance, Decimal("600.00"))
 
 
 class AccountInitialRevenueSignalTest(TestCase):
@@ -717,6 +658,98 @@ class AutoCategorizeExpenseSignalTest(TestCase):
             created_by=self.user,
         )
         self.assertEqual(exp.category, "others")
+
+    def test_edit_to_others_triggers_recategorization(self):
+        """Updating category to 'others' re-applies matching rules."""
+        CategorizationRule.objects.create(
+            merchant_contains="starbucks",
+            category="food and drink",
+            is_active=True,
+            owner=self.user,
+        )
+        exp = Expense.objects.create(
+            description="Coffee",
+            value=Decimal("15.00"),
+            date=date.today(),
+            horary=time(9, 0),
+            category="transport",  # explicitly set on creation
+            account=self.account,
+            payed=True,
+            merchant="Starbucks Paulista",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "transport")
+        self.assertFalse(exp.auto_categorized)
+
+        # User resets category back to 'others'
+        exp.category = "others"
+        exp.save()
+        exp.refresh_from_db()
+
+        self.assertEqual(exp.category, "food and drink")
+        self.assertTrue(exp.auto_categorized)
+
+    def test_edit_to_specific_category_clears_auto_flag(self):
+        """Manually setting a specific category clears the auto_categorized flag."""
+        CategorizationRule.objects.create(
+            merchant_contains="uber",
+            category="transport",
+            is_active=True,
+            owner=self.user,
+        )
+        # Create expense — auto-categorized on creation
+        exp = Expense.objects.create(
+            description="Ride",
+            value=Decimal("20.00"),
+            date=date.today(),
+            horary=time(8, 0),
+            category="others",
+            account=self.account,
+            payed=True,
+            merchant="Uber trip",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "transport")
+        self.assertTrue(exp.auto_categorized)
+
+        # User explicitly overrides with a different category
+        exp.category = "food and drink"
+        exp.save()
+        exp.refresh_from_db()
+
+        self.assertEqual(exp.category, "food and drink")
+        self.assertFalse(exp.auto_categorized)
+
+    def test_edit_other_fields_category_already_others_no_recategorization(self):
+        """Updating other fields when category is already 'others' does not re-apply."""
+        exp = Expense.objects.create(
+            description="Mystery",
+            value=Decimal("10.00"),
+            date=date.today(),
+            horary=time(10, 0),
+            category="others",
+            account=self.account,
+            payed=False,
+            merchant="Unknown Shop",
+            created_by=self.user,
+        )
+        self.assertEqual(exp.category, "others")
+        self.assertFalse(exp.auto_categorized)
+
+        # Add a rule and update an unrelated field — category is still 'others'
+        CategorizationRule.objects.create(
+            merchant_contains="unknown",
+            category="purchases",
+            is_active=True,
+            owner=self.user,
+        )
+        exp.payed = True
+        exp.save()
+        exp.refresh_from_db()
+
+        # category stays 'others', auto_categorized stays False (no category change)
+        self.assertEqual(exp.category, "others")
+        self.assertFalse(exp.auto_categorized)
 
 
 # ---------------------------------------------------------------------------

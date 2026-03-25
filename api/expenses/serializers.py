@@ -48,6 +48,39 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, attrs):
+        from budgets.services import validate_budget_limit
+
+        payed = attrs.get("payed", getattr(self.instance, "payed", False))
+        if not payed:
+            self._budget_warning = None
+            return attrs
+
+        category = attrs.get("category", getattr(self.instance, "category", None))
+        value = attrs.get("value", getattr(self.instance, "value", None))
+        date = attrs.get("date", getattr(self.instance, "date", None))
+
+        if not all([category, value, date]):
+            self._budget_warning = None
+            return attrs
+
+        request = self.context.get("request")
+        if not request:
+            self._budget_warning = None
+            return attrs
+
+        exclude_id = self.instance.pk if self.instance else None
+
+        self._budget_warning = validate_budget_limit(
+            category=category,
+            value=value,
+            month=date.month,
+            year=date.year,
+            user=request.user,
+            exclude_expense_id=exclude_id,
+        )
+        return attrs
+
 
 # Fixed Expense Serializers
 
@@ -243,6 +276,7 @@ class CategorizationRuleSerializer(serializers.ModelSerializer):
             "merchant_contains",
             "category",
             "is_active",
+            "priority",
             "owner",
             "created_at",
             "updated_at",
