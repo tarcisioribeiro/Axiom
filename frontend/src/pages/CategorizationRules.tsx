@@ -210,9 +210,7 @@ export default function CategorizationRules() {
       key: 'priority',
       label: 'Prioridade',
       sortable: true,
-      render: (rule) => (
-        <span className="text-sm tabular-nums">{rule.priority}</span>
-      ),
+      render: (rule) => <span className="text-sm tabular-nums">{rule.priority}</span>,
     },
     {
       key: 'created_at',
