@@ -45,7 +45,15 @@ class RevenueCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        with transaction.atomic():
+            instance = serializer.save(
+                created_by=self.request.user, updated_by=self.request.user
+            )
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
 
 
 class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -75,7 +83,23 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        with transaction.atomic():
+            instance = serializer.save(updated_by=self.request.user)
+            if instance.account_id:
+                recalculate_account_balance(instance.account_id)
+
+    def perform_destroy(self, instance):
+        from accounts.services import recalculate_account_balance
+        from django.db import transaction
+
+        account_id = instance.account_id
+        with transaction.atomic():
+            instance.delete()
+            if account_id:
+                recalculate_account_balance(account_id)
 
 
 class ExportRevenuesView(APIView):
