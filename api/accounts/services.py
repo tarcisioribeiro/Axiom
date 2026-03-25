@@ -42,19 +42,13 @@ def recalculate_account_balance(account_id: Union[int, str]) -> Decimal:
     with transaction.atomic():
         account = Account.objects.select_for_update().get(pk=account_id)
 
-        total_revenues = (
-            Revenue.objects.filter(
-                account=account, received=True, is_deleted=False
-            ).aggregate(total=models.Sum("value"))["total"]
-            or Decimal("0.00")
-        )
+        total_revenues = Revenue.objects.filter(
+            account=account, received=True, is_deleted=False
+        ).aggregate(total=models.Sum("value"))["total"] or Decimal("0.00")
 
-        total_expenses = (
-            Expense.objects.filter(
-                account=account, payed=True, is_deleted=False
-            ).aggregate(total=models.Sum("value"))["total"]
-            or Decimal("0.00")
-        )
+        total_expenses = Expense.objects.filter(
+            account=account, payed=True, is_deleted=False
+        ).aggregate(total=models.Sum("value"))["total"] or Decimal("0.00")
 
         new_balance = total_revenues - total_expenses
         account.current_balance = new_balance
