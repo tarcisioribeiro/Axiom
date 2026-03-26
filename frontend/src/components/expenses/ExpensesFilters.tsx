@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS } from '@/config/constants';
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import type { Account } from '@/types';
 
@@ -84,9 +84,9 @@ export function ExpensesFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
-            {Object.entries(TRANSLATIONS.expenseCategories).map(([k, v]) => (
-              <SelectItem key={k} value={k}>
-                {v}
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              <SelectItem key={key} value={key}>
+                {label}
               </SelectItem>
             ))}
           </SelectContent>
