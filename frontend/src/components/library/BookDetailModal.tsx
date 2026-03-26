@@ -700,6 +700,57 @@ export function BookDetailModal({
                 </>
               )}
 
+              {/* Completion forecast */}
+              {book.read_status === 'reading' &&
+                (book.estimated_completion_general ||
+                  book.estimated_completion_book) && (
+                  <>
+                    <div className="border-t" />
+                    <div className="space-y-2">
+                      <span className="flex items-center gap-1 text-sm font-medium">
+                        <Calendar className="h-4 w-4" />
+                        Previsão de Conclusão
+                      </span>
+                      <div className="grid grid-cols-1 gap-2 text-xs">
+                        {book.estimated_completion_book && (
+                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
+                            <span className="text-muted-foreground">
+                              Média deste livro
+                              {book.book_avg_pages_per_day > 0 && (
+                                <span className="ml-1">
+                                  ({book.book_avg_pages_per_day} pág/dia)
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-semibold">
+                              {new Date(
+                                book.estimated_completion_book + 'T12:00:00'
+                              ).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        )}
+                        {book.estimated_completion_general && (
+                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
+                            <span className="text-muted-foreground">
+                              Média geral
+                              {book.general_avg_pages_per_day > 0 && (
+                                <span className="ml-1">
+                                  ({book.general_avg_pages_per_day} pág/dia)
+                                </span>
+                              )}
+                            </span>
+                            <span className="font-semibold">
+                              {new Date(
+                                book.estimated_completion_general + 'T12:00:00'
+                              ).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
               {/* Synopsis */}
               {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
                 <>

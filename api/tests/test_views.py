@@ -427,6 +427,7 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             category="bills and services",
             account=self.account,
             payed=payed,
+            created_by=self.user,
             **kwargs,
         )
 
@@ -439,6 +440,7 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             category="salary",
             account=self.account,
             received=received,
+            created_by=self.user,
         )
 
     def test_unauthenticated_returns_401(self):
@@ -565,6 +567,7 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             account=self.account,
             due_day=due_date.day,
             is_active=True,
+            created_by=self.user,
         )
 
         response = self.client.get(self.URL)
@@ -586,6 +589,7 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             account=self.account,
             due_day=due_date.day,
             is_active=True,
+            created_by=self.user,
         )
         # Lancamento avulso ja existente para este template neste mes
         Expense.objects.create(
@@ -597,6 +601,7 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             account=self.account,
             payed=False,
             fixed_expense_template=fe,
+            created_by=self.user,
         )
 
         response = self.client.get(self.URL)
