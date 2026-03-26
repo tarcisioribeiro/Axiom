@@ -83,22 +83,22 @@ MindLedger/
 
 ### Docker Workflow (primary)
 ```bash
-docker-compose up -d                                    # Start all services
-docker-compose logs -f api                              # View API logs
-docker-compose exec api python manage.py <command>      # Run management commands
-docker-compose up -d --build                            # Rebuild after dependency changes
+docker compose up -d                                    # Start all services
+docker compose logs -f api                              # View API logs
+docker compose exec api python manage.py <command>      # Run management commands
+docker compose up -d --build                            # Rebuild after dependency changes
 ```
 
-> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> mindledger-api:/app/<path>`) for a quick test, or rebuild with `docker-compose up -d --build` to make changes permanent.
+> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> mindledger-api:/app/<path>`) for a quick test, or rebuild with `docker compose up -d --build` to make changes permanent.
 
 ### Backend
 ```bash
 # Testing (tests live in api/tests/) — pytest is a dev dep; install in container first if missing:
 # docker exec mindledger-api pip install --user pytest pytest-django pytest-cov
-docker-compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
-docker-compose exec api python -m pytest tests/test_views.py                  # Single file
-docker-compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
-docker-compose exec api python -m pytest tests/ --cov                         # With coverage
+docker compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
+docker compose exec api python -m pytest tests/test_views.py                  # Single file
+docker compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
+docker compose exec api python -m pytest tests/ --cov                         # With coverage
 
 # Code quality (uses root .venv)
 source .venv/bin/activate && cd api && black . && isort . && flake8 .   # Format + lint
@@ -107,18 +107,18 @@ source .venv/bin/activate && cd api && black . && isort . && flake8 .   # Format
 # IMPORTANT: always run makemigrations locally and commit the generated files
 # before pushing. The container entrypoint runs --check --dry-run and will
 # refuse to start if there are uncommitted schema changes.
-docker-compose exec api python manage.py makemigrations
-docker-compose exec api python manage.py migrate
+docker compose exec api python manage.py makemigrations
+docker compose exec api python manage.py migrate
 
 # Custom management commands
-docker-compose exec api python manage.py update_balances             # Recalculate account balances from transactions
-docker-compose exec api python manage.py setup_permissions           # Create Members group with full CRUD on all user-facing apps
-docker-compose exec api python manage.py fix_installments_paid_status
-docker-compose exec api python manage.py close_overdue_bills         # Mark overdue credit card bills
-docker-compose exec api python manage.py process_existing_transfers
-docker-compose exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
-docker-compose exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
-docker-compose exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
+docker compose exec api python manage.py update_balances             # Recalculate account balances from transactions
+docker compose exec api python manage.py setup_permissions           # Create Members group with full CRUD on all user-facing apps
+docker compose exec api python manage.py fix_installments_paid_status
+docker compose exec api python manage.py close_overdue_bills         # Mark overdue credit card bills
+docker compose exec api python manage.py process_existing_transfers
+docker compose exec api python manage.py purge_deleted_records       # Hard-delete soft-deleted records >90 days (LGPD compliance)
+docker compose exec api python manage.py vault_recovery              # Vault diagnostics, snapshot, and restore
+docker compose exec api python manage.py migrate_media_to_minio      # Move local media files to MinIO (supports --dry-run)
 ```
 
 ### Frontend
@@ -133,8 +133,9 @@ npm run format:check     # Prettier check
 npm run typecheck        # TypeScript type check only (no build)
 
 # Testing (run on host machine — frontend container is nginx-only)
-npm run test -- --run                  # All tests (single run)
-npm run test:coverage                  # With coverage report
+npm run test -- --run                         # All tests (single run)
+npm run test -- --run -t "test name"          # Single test by name
+npm run test:coverage                         # With coverage report
 ```
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. Config in `vitest.config.ts`. Setup file: `src/test/setup.ts`. `globals: false` — test files must explicitly import `{ describe, it, expect, vi }` from `'vitest'`. Pre-push hook runs `npm run test:coverage` automatically.
@@ -178,6 +179,13 @@ cd api && python manage.py migrate && python manage.py runserver 0.0.0.0:39100
 cd frontend && npm install && npm run dev
 ```
 
+### Database
+```bash
+docker compose exec db pg_dump -U $DB_USER mindledger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec -T db psql -U $DB_USER mindledger_db < backups/your_backup.sql
+docker compose exec db psql -U $DB_USER -d mindledger_db    # PostgreSQL shell
+```
+
 ### Git Hooks (one-time setup, run from repo root)
 
 > **REQUIRED**: Both hooks below must be installed before your first commit. The `commit-msg` hook is enforced in CI via `lint:commits` on every MR — commits that bypass it will fail the pipeline.
@@ -188,60 +196,17 @@ pre-commit install                        # pre-commit hook (black/isort/flake8/
 pre-commit install --hook-type commit-msg # commitlint hook — REQUIRED
 ```
 
-### Database
-```bash
-docker-compose exec db pg_dump -U $DB_USER mindledger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
-docker-compose exec -T db psql -U $DB_USER mindledger_db < backups/your_backup.sql
-docker-compose exec db psql -U $DB_USER -d mindledger_db    # PostgreSQL shell
-```
-
 ## Design Token System
 
-Typography, spacing, and weight values are managed through CSS variables defined in `frontend/src/index.css` and mapped into Tailwind via `frontend/tailwind.config.js`. This allows global visual changes by editing a single variable.
-
-### Font Size Scale (`--text-*`)
-| CSS Variable     | Value       | Tailwind utility |
-|-----------------|-------------|-----------------|
-| `--text-xs`     | `0.75rem`   | `text-xs`       |
-| `--text-sm`     | `0.875rem`  | `text-sm`       |
-| `--text-base`   | `1rem`      | `text-base`     |
-| `--text-lg`     | `1.125rem`  | `text-lg`       |
-| `--text-xl`     | `1.25rem`   | `text-xl`       |
-| `--text-2xl`    | `1.5rem`    | `text-2xl`      |
-
-Each `fontSize` entry includes a companion `lineHeight` via `--leading-{size}`.
-
-### Font Weight Scale (`--font-*`)
-| CSS Variable       | Value | Tailwind utility   |
-|-------------------|-------|--------------------|
-| `--font-normal`   | `400` | `font-normal`      |
-| `--font-medium`   | `500` | `font-medium`      |
-| `--font-semibold` | `600` | `font-semibold`    |
-| `--font-bold`     | `700` | `font-bold`        |
-
-### Semantic Spacing (`--spacing-*`)
-| CSS Variable      | Value      | Tailwind utilities              |
-|------------------|------------|---------------------------------|
-| `--spacing-xs`   | `0.25rem`  | `p-xs`, `m-xs`, `gap-xs`, …    |
-| `--spacing-sm`   | `0.5rem`   | `p-sm`, `m-sm`, `gap-sm`, …    |
-| `--spacing-md`   | `1rem`     | `p-md`, `m-md`, `gap-md`, …    |
-| `--spacing-lg`   | `1.5rem`   | `p-lg`, `m-lg`, `gap-lg`, …    |
-| `--spacing-xl`   | `2rem`     | `p-xl`, `m-xl`, `gap-xl`, …    |
+Typography, spacing, and font weights are CSS variables defined in `frontend/src/index.css` and mapped to Tailwind utilities via `frontend/tailwind.config.js` (scales: `--text-*`, `--font-*`, `--spacing-*`).
 
 **Rule**: Prefer semantic spacing tokens (`p-md`, `gap-lg`) over numeric Tailwind defaults (`p-4`, `gap-6`) for layout and component padding. Numeric values are still acceptable for small adjustments (borders, icon sizes, etc.).
 
 ## Frontend Data-Fetching & Caching
 
-The frontend uses **TanStack Query v5** (`@tanstack/react-query`) for server-state management. It provides stale-while-revalidate semantics, background refetching, deduplication, and cache invalidation.
+The frontend uses **TanStack Query v5** (`@tanstack/react-query`) for all server-state management. `QueryClientProvider` wraps the app in `App.tsx`; the shared client lives in `src/lib/query-client.ts`.
 
-### Why TanStack Query (not SWR)
-- Richer per-query cache invalidation (`queryClient.invalidateQueries`)
-- Native `useMutation` with `onSuccess`/`onError` lifecycle (replaces manual try/catch + setState patterns)
-- Better TypeScript support and devtools
-- `forecastDays`-style parameterised queries cached separately per key — no duplicate fetch
-
-### Setup
-`QueryClientProvider` wraps the entire app in `App.tsx`. The shared `QueryClient` instance lives in `src/lib/query-client.ts`.
+**Data fetching pattern for new pages**: use `useQuery` + `useMutation` (TanStack Query) rather than the older `hooks/use-crud-page.ts` hook. Both exist in the codebase; TanStack Query is the current standard.
 
 ### Cache TTLs
 `staleTime` is aligned with the backend's Redis cache TTLs (`api/app/settings.py`). Data within its stale window is served from cache; data beyond it triggers a background refetch.
@@ -342,61 +307,9 @@ Key testing conventions:
 
 ## Key Rotation
 
-`ENCRYPTION_KEY` (Fernet) protects app-level encrypted fields (`Account._account_number`, `CreditCard._security_code/_card_number`, `Member._document`, `CredentialShareToken._encrypted_password`) and serves as an HMAC key for `Member.document_hash`. If the key is compromised, rotate it with the `rotate_encryption_key` management command.
+`ENCRYPTION_KEY` (Fernet) protects app-level encrypted fields (`Account._account_number`, `CreditCard._security_code/_card_number`, `Member._document`, `CredentialShareToken._encrypted_password`) and serves as an HMAC key for `Member.document_hash`. Vault data (`security.*`) is **not** affected — it uses per-user vault-key encryption.
 
-> **Vault data is NOT affected.** `security.Password`, `StoredCreditCard`, `StoredBankAccount`, and `Archive` use per-user vault-key encryption derived from the master password. Those records are skipped automatically (unless vault was never configured and the app key was used as a fallback).
-
-### Rotation procedure
-
-```bash
-# 1. Take a full DB backup first
-docker compose exec db pg_dump -U $DB_USER mindledger_db \
-    > backups/pre_rotation_$(date +%Y%m%d_%H%M%S).sql
-
-# 2. Generate a new Fernet key
-docker compose exec api python -c \
-    "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-
-# 3. Dry-run to preview what will be rotated (no writes)
-docker compose exec api python manage.py rotate_encryption_key \
-    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>" --dry-run
-
-# 4. Live rotation — runs inside a single DB transaction; rolls back on any error
-docker compose exec api python manage.py rotate_encryption_key \
-    --old-key "$ENCRYPTION_KEY" --new-key "<NEW_KEY>"
-
-# 5. Update .env
-#    ENCRYPTION_KEY=<NEW_KEY>
-#    BACKUP_ENCRYPTION_KEY_PREVIOUS=<OLD_KEY>   ← keep for 24 h as a safety net
-
-# 6. Rebuild and restart
-docker compose up --build -d
-
-# 7. Smoke-test: verify encrypted fields are readable in the UI / API
-
-# 8. Once confirmed, clear the backup key from .env
-#    Remove or blank BACKUP_ENCRYPTION_KEY_PREVIOUS
-docker compose up --build -d
-```
-
-### Emergency fallback after a failed rotation
-
-If the app starts returning decryption errors after updating `.env`:
-
-```bash
-# Re-run rotation in reverse (new→old) to undo DB changes
-docker compose exec api python manage.py rotate_encryption_key \
-    --old-key "<NEW_KEY>" --new-key "$BACKUP_ENCRYPTION_KEY_PREVIOUS"
-
-# Revert ENCRYPTION_KEY in .env to the old key and rebuild
-docker compose up --build -d
-```
-
-The `vault_recovery` diagnostic command reports whether `BACKUP_ENCRYPTION_KEY_PREVIOUS` is set and reminds you of the reverse-rotation command if needed:
-
-```bash
-docker compose exec api python manage.py vault_recovery --username <username>
-```
+To rotate: use the `rotate_encryption_key` management command (`--old-key`, `--new-key`, supports `--dry-run`). Always back up the DB first, keep the old key in `BACKUP_ENCRYPTION_KEY_PREVIOUS` for 24 h, then rebuild. To reverse a failed rotation, re-run the command with keys swapped. Use `vault_recovery --username <u>` for diagnostics.
 
 ## Accessing the Application
 
@@ -466,13 +379,6 @@ All dependencies are pinned to **exact versions** (no `^`, `~`, or `>=` ranges) 
 
 ### Automated updates (Dependabot)
 `.github/dependabot.yml` is configured to open monthly PRs for pip, npm, and GitHub Actions dependencies. Each PR must pass CI and receive a manual changelog review before merging.
-
-### Monthly maintenance checklist
-When processing Dependabot PRs or doing routine maintenance, also run:
-```bash
-pre-commit autoupdate   # bump hook revs in .pre-commit-config.yaml
-```
-Commit the result with `chore(ci): pre-commit autoupdate` and verify all hooks still pass before merging.
 
 ## Tool Configuration
 
