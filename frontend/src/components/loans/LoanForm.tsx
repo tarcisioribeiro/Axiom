@@ -14,34 +14,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { translate } from '@/config/constants';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { formatLocalDate } from '@/lib/utils';
 import type { Loan, LoanFormData, Account, Member } from '@/types';
-
-const EXPENSE_CATEGORIES = [
-  'food and drink',
-  'bills and services',
-  'electronics',
-  'family and friends',
-  'pets',
-  'digital signs',
-  'house',
-  'purchases',
-  'donate',
-  'education',
-  'loans',
-  'entertainment',
-  'taxes',
-  'investments',
-  'others',
-  'vestuary',
-  'health and care',
-  'professional services',
-  'supermarket',
-  'rates',
-  'transport',
-  'travels',
-];
 
 const PAYMENT_FREQUENCIES = [
   'daily',
@@ -198,9 +173,9 @@ export function LoanForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {translate('expenseCategories', cat)}
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+                <SelectItem key={key} value={key}>
+                  {label}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -12,6 +12,13 @@
 
 import { z } from 'zod';
 
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
+
+const EXPENSE_CATEGORY_KEYS = EXPENSE_CATEGORIES_CANONICAL.map((c) => c.key) as [
+  string,
+  ...string[],
+];
+
 // ============================================================================
 // HELPERS E VALIDAÇÕES CUSTOMIZADAS
 // ============================================================================
@@ -150,32 +157,9 @@ export const accountSchema = z
 
 export const expenseSchema = z.object({
   value: z.number({ message: numberError('Valor') }).positive(positiveError('Valor')),
-  category: z.enum(
-    [
-      'food and drink',
-      'bills and services',
-      'electronics',
-      'purchases',
-      'transportation',
-      'home',
-      'education',
-      'entertainment',
-      'clothing',
-      'health',
-      'investment',
-      'gifts and donations',
-      'taxes',
-      'personal care',
-      'travel',
-      'pets',
-      'savings',
-      'loans',
-      'other',
-    ],
-    {
-      message: 'Selecione uma categoria válida',
-    }
-  ),
+  category: z.enum(EXPENSE_CATEGORY_KEYS, {
+    message: 'Selecione uma categoria válida',
+  }),
   description: z
     .string()
     .min(1, requiredError('Descrição'))
@@ -389,32 +373,9 @@ export const creditCardExpenseSchema = z.object({
     .min(1, requiredError('Descrição'))
     .max(500, maxError('Descrição', 500)),
   date: z.string().min(1, requiredError('Data')),
-  category: z.enum(
-    [
-      'food and drink',
-      'bills and services',
-      'electronics',
-      'purchases',
-      'transportation',
-      'home',
-      'education',
-      'entertainment',
-      'clothing',
-      'health',
-      'investment',
-      'gifts and donations',
-      'taxes',
-      'personal care',
-      'travel',
-      'pets',
-      'savings',
-      'loans',
-      'other',
-    ],
-    {
-      message: 'Selecione uma categoria válida',
-    }
-  ),
+  category: z.enum(EXPENSE_CATEGORY_KEYS, {
+    message: 'Selecione uma categoria válida',
+  }),
   installments: z
     .number({ message: numberError('Parcelas') })
     .int('Parcelas deve ser um número inteiro')

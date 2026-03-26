@@ -15,7 +15,7 @@ from typing import Any, Optional
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, DecimalField, F, OuterRef, Subquery, Sum, Value
+from django.db.models import Count, DecimalField, F, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
@@ -82,8 +82,8 @@ class AccountBalancesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Tenta buscar do cache
-        cache_key = get_cache_key("account_balances")
+        # Tenta buscar do cache (por usuário)
+        cache_key = get_cache_key("account_balances", request.user.id)
         cached_result = cache.get(cache_key)
         if cached_result is not None:
             return Response(cached_result)
@@ -112,19 +112,25 @@ class AccountBalancesView(APIView):
             .values("total")
         )
 
-        # Query unica com annotate (evita N+1)
-        accounts = Account.objects.annotate(
-            pending_revenues=Coalesce(
-                Subquery(pending_revenues_subquery),
-                Value(Decimal("0.00")),
-                output_field=DecimalField(),
-            ),
-            pending_expenses=Coalesce(
-                Subquery(pending_expenses_subquery),
-                Value(Decimal("0.00")),
-                output_field=DecimalField(),
-            ),
-        ).order_by("account_name")
+        # Query unica com annotate (evita N+1) — apenas contas do usuário autenticado
+        accounts = (
+            Account.objects.filter(
+                created_by=request.user,
+            )
+            .annotate(
+                pending_revenues=Coalesce(
+                    Subquery(pending_revenues_subquery),
+                    Value(Decimal("0.00")),
+                    output_field=DecimalField(),
+                ),
+                pending_expenses=Coalesce(
+                    Subquery(pending_expenses_subquery),
+                    Value(Decimal("0.00")),
+                    output_field=DecimalField(),
+                ),
+            )
+            .order_by("account_name")
+        )
 
         result = []
         for account in accounts:
@@ -185,19 +191,25 @@ class DashboardStatsView(APIView):
         """
         Calcula todas as estatísticas do dashboard em aggregations do DB.
         """
-        # Tenta buscar do cache
-        cache_key = get_cache_key("stats")
+        # Tenta buscar do cache (por usuário)
+        cache_key = get_cache_key("stats", request.user.id)
         cached_result = cache.get(cache_key)
         if cached_result is not None:
             return Response(cached_result)
 
-        # E excluir transações relacionadas a transferências internas
-        accounts_qs = Account.objects.all()
-        expenses_qs = Expense.objects.filter(related_transfer__isnull=True, payed=True)
-        revenues_qs = Revenue.objects.filter(
-            related_transfer__isnull=True, received=True
+        # Apenas dados do usuário autenticado
+        accounts_qs = Account.objects.filter(created_by=request.user)
+        expenses_qs = Expense.objects.filter(
+            created_by=request.user,
+            related_transfer__isnull=True,
+            payed=True,
         )
-        credit_cards_qs = CreditCard.objects.all()
+        revenues_qs = Revenue.objects.filter(
+            created_by=request.user,
+            related_transfer__isnull=True,
+            received=True,
+        )
+        credit_cards_qs = CreditCard.objects.filter(created_by=request.user)
 
         # Aggregations no banco de dados (otimizado)
         accounts_agg = accounts_qs.aggregate(
@@ -212,12 +224,11 @@ class DashboardStatsView(APIView):
             total_limit=Sum("credit_limit"), count=Count("id")
         )
 
-        # Calcular crédito usado (parcelas não pagas de cartões ativos)
+        # Calcular crédito usado (parcelas não pagas dos cartões do usuário)
         used_credit = CreditCardInstallment.objects.filter(
             payed=False,
-        ).aggregate(
-            total=Sum("value")
-        )["total"] or Decimal("0.00")
+            purchase__card__created_by=request.user,
+        ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
         total_credit_limit = credit_cards_agg["total_limit"] or Decimal("0.00")
         available_credit = total_credit_limit - used_credit
@@ -269,8 +280,10 @@ class CreditCardExpensesByCategoryView(APIView):
         card_id = request.query_params.get("card")
         bill_id = request.query_params.get("bill")
 
-        # Base queryset - parcelas não deletadas de compras não deletadas
-        queryset = CreditCardInstallment.objects.all()
+        # Base queryset - apenas parcelas dos cartões do usuário autenticado
+        queryset = CreditCardInstallment.objects.filter(
+            purchase__card__created_by=request.user,
+        )
 
         # Aplicar filtros
         if card_id:
@@ -334,23 +347,31 @@ class BalanceForecastView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Saldo atual total das contas
-        current_balance = Account.objects.aggregate(total=Sum("current_balance"))[
-            "total"
-        ] or Decimal("0.00")
+        # Saldo atual total das contas do usuário
+        current_balance = Account.objects.filter(
+            created_by=request.user,
+        ).aggregate(
+            total=Sum("current_balance")
+        )["total"] or Decimal("0.00")
 
-        # Despesas pendentes (não pagas, excluindo transferências)
+        # Despesas pendentes (não pagas, excluindo transferências) do usuário
         pending_expenses = Expense.objects.filter(
-            payed=False, related_transfer__isnull=True
+            created_by=request.user,
+            payed=False,
+            related_transfer__isnull=True,
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
-        # Receitas pendentes (não recebidas, excluindo transferências)
+        # Receitas pendentes (não recebidas, excluindo transferências) do usuário
         pending_revenues = Revenue.objects.filter(
-            received=False, related_transfer__isnull=True
+            created_by=request.user,
+            received=False,
+            related_transfer__isnull=True,
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
-        # Faturas de cartão não pagas (total - valor pago)
-        open_bills = CreditCardBill.objects.exclude(status="paid")
+        # Faturas de cartão não pagas dos cartões do usuário (total - valor pago)
+        open_bills = CreditCardBill.objects.filter(
+            credit_card__created_by=request.user,
+        ).exclude(status="paid")
         pending_card_bills = Decimal("0.00")
         for bill in open_bills:
             total = bill.total_amount or Decimal("0.00")
@@ -388,9 +409,10 @@ class BalanceForecastView(APIView):
                 )
                 loans_to_pay += remaining
 
-        # Valores a pagar pendentes (payables ativos ou em atraso)
+        # Valores a pagar pendentes (payables ativos ou em atraso) do usuário
         pending_payables = Payable.objects.filter(
-            status__in=["active", "overdue"]
+            created_by=request.user,
+            status__in=["active", "overdue"],
         ).aggregate(total=Sum("value") - Sum("paid_value"))["total"] or Decimal("0.00")
 
         # Calcular totais
@@ -465,10 +487,12 @@ class MonthlyStatementView(APIView):
         month = max(1, min(12, month))
 
         expenses_qs = Expense.objects.filter(
+            created_by=request.user,
             date__year=year,
             date__month=month,
         )
         revenues_qs = Revenue.objects.filter(
+            created_by=request.user,
             date__year=year,
             date__month=month,
         )
@@ -566,6 +590,7 @@ class CashFlowForecastView(APIView):
     VALID_DAYS = {30, 60, 90}
 
     def get(self, request) -> Response:
+        self._user = request.user
         try:
             days = int(request.query_params.get("days", 30))
         except (ValueError, TypeError):
@@ -573,7 +598,7 @@ class CashFlowForecastView(APIView):
         if days not in self.VALID_DAYS:
             days = 30
 
-        cache_key = get_cache_key(f"cash_flow_forecast:days:{days}")
+        cache_key = get_cache_key(f"cash_flow_forecast:days:{days}", request.user.id)
         cached = cache.get(cache_key)
         if cached is not None:
             return Response(cached)
@@ -581,14 +606,17 @@ class CashFlowForecastView(APIView):
         today = date.today()
         end_date = today + timedelta(days=days)
 
-        # Saldo atual total de todas as contas
-        current_balance = Account.objects.aggregate(total=Sum("current_balance"))[
-            "total"
-        ] or Decimal("0.00")
+        # Saldo atual total das contas do usuário
+        current_balance = Account.objects.filter(
+            created_by=request.user,
+        ).aggregate(
+            total=Sum("current_balance")
+        )["total"] or Decimal("0.00")
 
-        # Despesas pendentes no periodo (excluindo transferencias)
+        # Despesas pendentes no periodo (excluindo transferencias) do usuário
         scheduled_expenses = (
             Expense.objects.filter(
+                created_by=request.user,
                 payed=False,
                 related_transfer__isnull=True,
                 date__gte=today,
@@ -601,9 +629,10 @@ class CashFlowForecastView(APIView):
             item["date"]: item["total"] for item in scheduled_expenses
         }
 
-        # Receitas pendentes no periodo (excluindo transferencias)
+        # Receitas pendentes no periodo (excluindo transferencias) do usuário
         scheduled_revenues = (
             Revenue.objects.filter(
+                created_by=request.user,
                 received=False,
                 related_transfer__isnull=True,
                 date__gte=today,
@@ -682,6 +711,7 @@ class CashFlowForecastView(APIView):
         fixed_expenses = FixedExpense.objects.filter(
             is_active=True,
             account__isnull=False,
+            created_by=self._user,
         ).select_related("account")
 
         if not fixed_expenses.exists():
@@ -783,22 +813,24 @@ class FinancialAlertsView(APIView):
 
     def get(self, request):
         today = timezone.now().date()
+        user = request.user
+        member = Member.objects.filter(user=user).first()
         alerts = []
 
         # 1. Orçamentos acima de 80% do limite
-        alerts.extend(self._check_budgets(today))
+        alerts.extend(self._check_budgets(today, user, member))
 
         # 2. Faturas de cartão com vencimento em ≤ 3 dias
-        alerts.extend(self._check_credit_card_bills(today))
+        alerts.extend(self._check_credit_card_bills(today, user))
 
         # 3. Contas com saldo abaixo do mínimo
-        alerts.extend(self._check_account_balances())
+        alerts.extend(self._check_account_balances(user))
 
         # 4. Valores a pagar com vencimento em ≤ 5 dias
-        alerts.extend(self._check_payables(today))
+        alerts.extend(self._check_payables(today, user))
 
         # 5. Empréstimos com vencimento em ≤ 7 dias
-        alerts.extend(self._check_loans(today))
+        alerts.extend(self._check_loans(today, member))
 
         # Ordenar: danger primeiro, depois warning
         severity_order = {"danger": 0, "warning": 1, "info": 2}
@@ -806,18 +838,24 @@ class FinancialAlertsView(APIView):
 
         return Response(alerts)
 
-    def _check_budgets(self, today: date) -> list:
+    def _check_budgets(self, today: date, user: Any, member: Any) -> list:
         alerts: list[Any] = []
         month = today.month
         year = today.year
 
-        budgets = Budget.objects.filter(month=month, year=year).select_related("member")
+        budgets_qs = Budget.objects.filter(month=month, year=year)
+        if member:
+            budgets_qs = budgets_qs.filter(member=member)
+        else:
+            budgets_qs = budgets_qs.none()
+        budgets = budgets_qs.select_related("member")
 
         if not budgets.exists():
             return alerts
 
         expense_totals = (
             Expense.objects.filter(
+                created_by=user,
                 date__month=month,
                 date__year=year,
                 payed=True,
@@ -856,11 +894,12 @@ class FinancialAlertsView(APIView):
                 )
         return alerts
 
-    def _check_credit_card_bills(self, today: date) -> list:
+    def _check_credit_card_bills(self, today: date, user: Any) -> list:
         alerts = []
         deadline = today + timedelta(days=3)
 
         bills = CreditCardBill.objects.filter(
+            credit_card__created_by=user,
             due_date__isnull=False,
             due_date__lte=deadline,
             status__in=["open", "closed", "overdue"],
@@ -903,10 +942,11 @@ class FinancialAlertsView(APIView):
             )
         return alerts
 
-    def _check_account_balances(self) -> list:
+    def _check_account_balances(self, user: Any) -> list:
         alerts = []
 
         accounts = Account.objects.filter(
+            created_by=user,
             is_active=True,
             minimum_balance__gt=0,
             current_balance__lt=F("minimum_balance"),
@@ -935,11 +975,12 @@ class FinancialAlertsView(APIView):
             )
         return alerts
 
-    def _check_payables(self, today: date) -> list:
+    def _check_payables(self, today: date, user: Any) -> list:
         alerts = []
         deadline = today + timedelta(days=5)
 
         payables = Payable.objects.filter(
+            created_by=user,
             due_date__isnull=False,
             due_date__lte=deadline,
             status__in=["active", "overdue"],
@@ -984,16 +1025,21 @@ class FinancialAlertsView(APIView):
             )
         return alerts
 
-    def _check_loans(self, today: date) -> list:
+    def _check_loans(self, today: date, member: Any) -> list:
         alerts = []
         deadline = today + timedelta(days=7)
 
-        loans = Loan.objects.filter(
+        loans_qs = Loan.objects.filter(
             due_date__isnull=False,
             due_date__lte=deadline,
             payed=False,
             status__in=["active", "in_progress", "pending", "overdue"],
         )
+        if member:
+            loans_qs = loans_qs.filter(Q(creditor=member) | Q(benefited=member))
+        else:
+            loans_qs = loans_qs.none()
+        loans = loans_qs
 
         for loan in loans:
             if loan.due_date is None:
