@@ -1,3 +1,6 @@
+from datetime import date, timedelta
+
+from django.db.models import Count, Sum
 from rest_framework import serializers
 
 from library.models import (
@@ -189,6 +192,10 @@ class BookSerializer(serializers.ModelSerializer):
     has_summary = serializers.SerializerMethodField()
     total_pages_read = serializers.SerializerMethodField()
     reading_progress = serializers.SerializerMethodField()
+    general_avg_pages_per_day = serializers.SerializerMethodField()
+    book_avg_pages_per_day = serializers.SerializerMethodField()
+    estimated_completion_general = serializers.SerializerMethodField()
+    estimated_completion_book = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -220,6 +227,10 @@ class BookSerializer(serializers.ModelSerializer):
             "has_summary",
             "total_pages_read",
             "reading_progress",
+            "general_avg_pages_per_day",
+            "book_avg_pages_per_day",
+            "estimated_completion_general",
+            "estimated_completion_book",
             "owner",
             "owner_name",
             "created_at",
@@ -242,6 +253,53 @@ class BookSerializer(serializers.ModelSerializer):
             total_read = self.get_total_pages_read(obj)
             return round((total_read / obj.pages) * 100, 1)
         return 0.0
+
+    def _calc_avg_pages_per_day(self, readings_qs):
+        """Calcula média de páginas por dia baseado em dias distintos de leitura."""
+        agg = readings_qs.aggregate(
+            total_pages=Sum("pages_read"),
+            distinct_days=Count("reading_date", distinct=True),
+        )
+        distinct_days = agg["distinct_days"] or 0
+        total_pages = agg["total_pages"] or 0
+        if distinct_days == 0:
+            return 0.0
+        return round(total_pages / distinct_days, 2)
+
+    def get_general_avg_pages_per_day(self, obj):
+        """Média geral do membro: todas as leituras de todos os livros."""
+        if not obj.owner_id:
+            return 0.0
+        readings_qs = Reading.objects.filter(
+            owner=obj.owner,
+            deleted_at__isnull=True,
+        )
+        return self._calc_avg_pages_per_day(readings_qs)
+
+    def get_book_avg_pages_per_day(self, obj):
+        """Média específica deste livro: apenas leituras deste livro."""
+        readings_qs = obj.readings.filter(deleted_at__isnull=True)
+        return self._calc_avg_pages_per_day(readings_qs)
+
+    def _estimated_completion(self, obj, avg_pages_per_day):
+        """Retorna a data estimada de conclusão ou None."""
+        if obj.read_status == "read" or avg_pages_per_day <= 0:
+            return None
+        total_read = self.get_total_pages_read(obj)
+        remaining = obj.pages - total_read
+        if remaining <= 0:
+            return None
+        days_needed = remaining / avg_pages_per_day
+        estimated_date = date.today() + timedelta(days=days_needed)
+        return estimated_date.isoformat()
+
+    def get_estimated_completion_general(self, obj):
+        avg = self.get_general_avg_pages_per_day(obj)
+        return self._estimated_completion(obj, avg)
+
+    def get_estimated_completion_book(self, obj):
+        avg = self.get_book_avg_pages_per_day(obj)
+        return self._estimated_completion(obj, avg)
 
 
 class BookCreateUpdateSerializer(serializers.ModelSerializer):

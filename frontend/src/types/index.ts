@@ -1167,6 +1167,10 @@ export interface Book {
   has_summary: boolean;
   total_pages_read: number;
   reading_progress: number;
+  general_avg_pages_per_day: number;
+  book_avg_pages_per_day: number;
+  estimated_completion_general: string | null;
+  estimated_completion_book: string | null;
   owner: number;
   owner_name: string;
   created_at: string;
