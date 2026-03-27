@@ -87,6 +87,7 @@ vi.mock('@/components/expenses/ExpensesFilters', () => ({
 }));
 
 // ---- Imports ----
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
@@ -96,7 +97,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
+import { queryClient } from '@/lib/query-client';
 import Expenses from '@/pages/Expenses';
+
+queryClient.setDefaultOptions({ queries: { retry: false } });
 
 expect.extend(toHaveNoViolations);
 const axe = configureAxe();
@@ -114,14 +118,17 @@ beforeAll(async () => {
 
 function renderExpenses() {
   return render(
-    <MemoryRouter>
-      <Expenses />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Expenses />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
 describe('Expenses page accessibility', () => {
   beforeEach(() => {
+    queryClient.clear();
     mockToast.mockClear();
   });
 

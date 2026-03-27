@@ -42,7 +42,7 @@ class MemberCreateListView(BaseListCreateView):
     serializer_class = MemberSerializer
 
     def get_queryset(self):
-        return Member.objects.filter(is_deleted=False)
+        return Member.objects.filter(is_deleted=False).defer("_document")
 
 
 class MemberRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
