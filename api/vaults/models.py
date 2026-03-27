@@ -547,6 +547,8 @@ GOAL_CATEGORIES = (
     ("vehicle", "Veículo"),
     ("retirement", "Aposentadoria"),
     ("health", "Saúde"),
+    ("reduce_expenses", "Reduzir Despesas"),
+    ("increase_revenue", "Aumentar Receitas"),
     ("other", "Outro"),
 )
 
@@ -593,6 +595,25 @@ class FinancialGoal(BaseModel):
         verbose_name="Concluída em", null=True, blank=True
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
+    linked_expense_category = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name="Categoria de Despesa Vinculada",
+        help_text=(
+            "Categoria de despesa usada para medir progresso"
+            " (para metas de redução de despesas)"
+        ),
+    )
+    linked_account = models.ForeignKey(
+        "accounts.Account",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="financial_goals",
+        verbose_name="Conta Vinculada",
+        help_text="Conta usada para filtrar transações ao calcular progresso",
+    )
 
     class Meta:
         ordering = ["-created_at"]
