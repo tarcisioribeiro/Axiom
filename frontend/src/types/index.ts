@@ -1821,8 +1821,17 @@ export const FINANCIAL_GOAL_CATEGORIES = [
   { value: 'vehicle', label: 'Veículo' },
   { value: 'retirement', label: 'Aposentadoria' },
   { value: 'health', label: 'Saúde' },
+  { value: 'reduce_expenses', label: 'Reduzir Despesas' },
+  { value: 'increase_revenue', label: 'Aumentar Receitas' },
   { value: 'other', label: 'Outro' },
 ] as const;
+
+export interface GoalComputedProgress {
+  current_value: string;
+  target_value: string;
+  percentage: string;
+  data_source: 'vaults' | 'expenses' | 'revenues';
+}
 
 export interface VaultTransaction {
   id: number;
@@ -2027,6 +2036,9 @@ export interface FinancialGoal {
   is_completed: boolean;
   completed_at?: string;
   notes?: string;
+  linked_expense_category?: string;
+  linked_account?: number | null;
+  computed_progress: GoalComputedProgress;
   created_at: string;
   updated_at: string;
   created_by?: number;
@@ -2046,6 +2058,7 @@ export interface FinancialGoalListItem {
   target_date?: string;
   is_active: boolean;
   is_completed: boolean;
+  computed_progress: GoalComputedProgress;
   created_at: string;
 }
 
@@ -2057,6 +2070,8 @@ export interface FinancialGoalFormData {
   target_date?: string;
   is_active: boolean;
   notes?: string;
+  linked_expense_category?: string;
+  linked_account?: number | null;
 }
 
 export interface FinancialGoalCheckResponse {

@@ -28,11 +28,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { accountsService } from '@/services/accounts-service';
 import { vaultsService, financialGoalsService } from '@/services/vaults-service';
 import type {
+  Account,
   FinancialGoal,
   FinancialGoalListItem,
   FinancialGoalFormData,
@@ -41,10 +44,19 @@ import type {
 import { FINANCIAL_GOAL_CATEGORIES as CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
+
+const DATA_SOURCE_LABELS: Record<string, string> = {
+  vaults: 'Baseado em cofres',
+  expenses: 'Baseado em despesas',
+  revenues: 'Baseado em receitas',
+};
+
 export default function FinancialGoals() {
   const { t } = useTranslation();
   const [goals, setGoals] = useState<FinancialGoalListItem[]>([]);
   const [vaults, setVaults] = useState<Vault[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isVaultsDialogOpen, setIsVaultsDialogOpen] = useState(false);
@@ -64,6 +76,8 @@ export default function FinancialGoals() {
     target_date: '',
     is_active: true,
     notes: '',
+    linked_expense_category: '',
+    linked_account: null,
   });
 
   const { toast } = useToast();
@@ -76,12 +90,14 @@ export default function FinancialGoals() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [goalsData, vaultsData] = await Promise.all([
+      const [goalsData, vaultsData, accountsData] = await Promise.all([
         financialGoalsService.getAll(),
         vaultsService.getAll({ is_active: true }),
+        accountsService.getAll(),
       ]);
       setGoals(goalsData);
       setVaults(vaultsData);
+      setAccounts(accountsData);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -103,6 +119,8 @@ export default function FinancialGoals() {
       target_date: '',
       is_active: true,
       notes: '',
+      linked_expense_category: '',
+      linked_account: null,
     });
     setIsDialogOpen(true);
   };
@@ -119,6 +137,8 @@ export default function FinancialGoals() {
         target_date: goal.target_date || '',
         is_active: goal.is_active,
         notes: goal.notes || '',
+        linked_expense_category: goal.linked_expense_category || '',
+        linked_account: goal.linked_account ?? null,
       });
       setIsDialogOpen(true);
     } catch (error: unknown) {
@@ -304,20 +324,25 @@ export default function FinancialGoals() {
     {
       key: 'progress',
       label: t('pages.financialGoals.columns.progress'),
-      render: (goal) => (
-        <div className="min-w-[200px]">
-          <div className="mb-1 flex justify-between text-sm">
-            <span>{formatCurrency(parseFloat(goal.current_value))}</span>
-            <span className="text-muted-foreground">
-              {formatCurrency(parseFloat(goal.target_value))}
-            </span>
+      render: (goal) => {
+        const cp = goal.computed_progress;
+        const currentVal = parseFloat(cp.current_value);
+        const targetVal = parseFloat(cp.target_value);
+        const pct = parseFloat(cp.percentage);
+        return (
+          <div className="min-w-[200px]">
+            <div className="mb-1 flex justify-between text-sm">
+              <span>{formatCurrency(currentVal)}</span>
+              <span className="text-muted-foreground">{formatCurrency(targetVal)}</span>
+            </div>
+            <Progress value={pct} className="h-2" />
+            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{pct.toFixed(1)}%</span>
+              <span className="italic">{DATA_SOURCE_LABELS[cp.data_source]}</span>
+            </div>
           </div>
-          <Progress value={parseFloat(goal.progress_percentage)} className="h-2" />
-          <div className="mt-1 text-center text-xs text-muted-foreground">
-            {parseFloat(goal.progress_percentage).toFixed(1)}%
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: 'vaults_count',
@@ -510,6 +535,55 @@ export default function FinancialGoals() {
                 </SelectContent>
               </Select>
             </div>
+            {formData.category === 'reduce_expenses' && (
+              <div>
+                <Label htmlFor="linked_expense_category">
+                  Categoria de Despesa Vinculada
+                </Label>
+                <Select
+                  value={formData.linked_expense_category || ''}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, linked_expense_category: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
+                      <SelectItem key={cat.key} value={cat.key}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
+              <div>
+                <Label htmlFor="linked_account">Conta Vinculada (opcional)</Label>
+                <Select
+                  value={formData.linked_account?.toString() ?? ''}
+                  onValueChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      linked_account: value ? parseInt(value, 10) : null,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas as contas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id.toString()}>
+                        {acc.account_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label htmlFor="target_value">
                 {t('pages.financialGoals.targetValueLabel')}
