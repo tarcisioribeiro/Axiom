@@ -28,6 +28,7 @@ import {
   PiggyBank,
   Receipt,
   Tag,
+  Bell,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -79,6 +80,11 @@ const navItems: NavItem[] = [
     titleKey: 'nav.home',
     href: '/',
     icon: <Home className="h-5 w-5" />,
+  },
+  {
+    titleKey: 'nav.notificationPreferences',
+    href: '/settings/notifications',
+    icon: <Bell className="h-5 w-5" />,
   },
 ];
 

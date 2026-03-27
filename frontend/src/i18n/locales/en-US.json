@@ -79,6 +79,7 @@
   },
   "nav": {
     "home": "Home",
+    "notificationPreferences": "Notifications",
     "dashboard": "Dashboard",
     "modules": {
       "planning": "Personal Planning",

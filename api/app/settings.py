@@ -418,3 +418,26 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+# ============================================================================
+# Email Configuration
+# Uses SMTP by default; switch EMAIL_BACKEND to console for development.
+# ============================================================================
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False") == "True"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "MindLedger <noreply@mindledger.app>"
+)
+# Public URL used in email links (e.g. https://mindledger.yourdomain.com)
+SITE_URL = os.getenv("SITE_URL", "")
+
+# Use console backend in tests to avoid hitting a real SMTP server
+if _TESTING:
+    EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

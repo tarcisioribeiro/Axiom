@@ -9,8 +9,11 @@ from rest_framework.response import Response
 
 from app.permissions import GlobalDefaultPermission
 from members.models import Member
-from notifications.models import Notification
-from notifications.serializers import NotificationSerializer
+from notifications.models import Notification, NotificationPreference
+from notifications.serializers import (
+    NotificationPreferenceSerializer,
+    NotificationSerializer,
+)
 
 
 def _generate_notifications(member):
@@ -299,3 +302,53 @@ def notification_summary(request):
         is_read=False,
     ).count()
     return Response({"unread_count": unread_count}, status=status.HTTP_200_OK)
+
+
+class NotificationPreferenceListCreateView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = NotificationPreferenceSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return NotificationPreference.objects.filter(
+            owner=member,
+            is_deleted=False,
+        )
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+
+        member = Member.objects.get(user=self.request.user)
+        notification_type = serializer.validated_data.get("notification_type")
+        if NotificationPreference.objects.filter(
+            owner=member,
+            notification_type=notification_type,
+            is_deleted=False,
+        ).exists():
+            raise ValidationError(
+                {"notification_type": "Preferência para este tipo já existe."}
+            )
+        serializer.save(owner=member, created_by=self.request.user)
+
+
+class NotificationPreferenceRetrieveUpdateDestroyView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = NotificationPreferenceSerializer
+    http_method_names = ["get", "patch", "delete"]
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return NotificationPreference.objects.filter(
+            owner=member,
+            is_deleted=False,
+        )
+
+    def perform_destroy(self, instance):
+        from django.utils import timezone as tz
+
+        instance.is_deleted = True
+        instance.deleted_at = tz.now()
+        instance.deleted_by = self.request.user
+        instance.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])

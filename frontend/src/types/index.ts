@@ -2109,6 +2109,24 @@ export interface NotificationSummary {
   unread_count: number;
 }
 
+export type NotificationChannel = 'in_app' | 'email' | 'both';
+
+export interface NotificationPreference {
+  id: number;
+  uuid: string;
+  notification_type: NotificationType;
+  notification_type_display: string;
+  channel: NotificationChannel;
+  channel_display: string;
+}
+
+export type CreateNotificationPreference = Pick<
+  NotificationPreference,
+  'notification_type' | 'channel'
+>;
+
+export type UpdateNotificationPreference = Pick<NotificationPreference, 'channel'>;
+
 // Budget Types
 export interface Budget {
   id: number;

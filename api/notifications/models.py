@@ -13,6 +13,12 @@ NOTIFICATION_TYPE_CHOICES = (
     ("bill_overdue", "Fatura Atrasada"),
 )
 
+NOTIFICATION_CHANNEL_CHOICES = (
+    ("in_app", "Somente no App"),
+    ("email", "Somente E-mail"),
+    ("both", "App e E-mail"),
+)
+
 
 class Notification(BaseModel):
     owner = models.ForeignKey(
@@ -64,3 +70,35 @@ class Notification(BaseModel):
 
     def __str__(self):
         return f"{self.title} - {self.owner}"
+
+
+class NotificationPreference(BaseModel):
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        verbose_name="Proprietário",
+        related_name="notification_preferences",
+    )
+    notification_type = models.CharField(
+        max_length=30,
+        choices=NOTIFICATION_TYPE_CHOICES,
+        verbose_name="Tipo",
+    )
+    channel = models.CharField(
+        max_length=10,
+        choices=NOTIFICATION_CHANNEL_CHOICES,
+        default="in_app",
+        verbose_name="Canal",
+    )
+
+    class Meta:
+        ordering = ["notification_type"]
+        verbose_name = "Preferência de Notificação"
+        verbose_name_plural = "Preferências de Notificação"
+        unique_together = ("owner", "notification_type")
+
+    def __str__(self):
+        return (
+            f"{self.owner} — {self.get_notification_type_display()}"
+            f" ({self.get_channel_display()})"
+        )
