@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { loansService } from '@/services/loans-service';
@@ -25,7 +27,7 @@ export interface UseLoansPageReturn {
   handleCreate: () => void;
   handleEdit: (loan: Loan) => void;
   handleDelete: (loan: Loan) => Promise<void>;
-  handleSubmit: (data: LoanFormData) => Promise<void>;
+  handleSubmit: (data: LoanFormData) => void;
 }
 
 const DEFAULT_FORM_DATA: LoanFormData = {
@@ -47,46 +49,100 @@ const DEFAULT_FORM_DATA: LoanFormData = {
 
 export function useLoansPage(): UseLoansPageReturn {
   const { t } = useTranslation();
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<Loan | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [loansData, accountsData, membersData] = await Promise.all([
-        loansService.getAll(),
-        accountsService.getAll(),
-        membersService.getAll(),
-      ]);
-      setLoans(Array.isArray(loansData) ? loansData : []);
-      setAccounts(Array.isArray(accountsData) ? accountsData : []);
-      setMembers(Array.isArray(membersData) ? membersData : []);
-    } catch (error: unknown) {
+  const { data: loans = [], isLoading: loansLoading } = useQuery({
+    queryKey: ['loans'],
+    queryFn: () => loansService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const { data: members = [], isLoading: membersLoading } = useQuery({
+    queryKey: ['members'],
+    queryFn: () => membersService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data: LoanFormData) => loansService.create(data),
+    onSuccess: () => {
+      void invalidateLoans();
       toast({
-        title: t('common.messages.loadError'),
+        title: t('pages.loans.created'),
+        description: 'O empréstimo foi criado com sucesso.',
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-      setLoans([]);
-      setAccounts([]);
-      setMembers([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Omit<LoanFormData, 'payed_value'>;
+    }) => loansService.update(id, data),
+    onSuccess: () => {
+      void invalidateLoans();
+      toast({
+        title: t('pages.loans.updated'),
+        description: 'O empréstimo foi atualizado com sucesso.',
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => loansService.delete(id),
+    onSuccess: () => {
+      void invalidateLoans();
+      toast({
+        title: t('pages.loans.deleted'),
+        description: t('pages.loans.deletedDesc'),
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const isLoading = loansLoading || accountsLoading || membersLoading;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const handleCreate = () => {
     if (accounts.length === 0 || members.length === 0) {
@@ -117,49 +173,15 @@ export function useLoansPage(): UseLoansPageReturn {
       description: t('pages.loans.deleteDesc', { name: loan.description }),
     });
     if (!confirmed) return;
-    try {
-      await loansService.delete(loan.id);
-      toast({
-        title: t('pages.loans.deleted'),
-        description: t('pages.loans.deletedDesc'),
-      });
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
+    deleteMutation.mutate(loan.id);
   };
 
-  const handleSubmit = async (data: LoanFormData) => {
-    setIsSubmitting(true);
-    try {
-      if (selectedLoan) {
-        const { payed_value: _payed_value, ...updateData } = data;
-        await loansService.update(selectedLoan.id, updateData);
-        toast({
-          title: t('pages.loans.updated'),
-          description: 'O empréstimo foi atualizado com sucesso.',
-        });
-      } else {
-        await loansService.create(data);
-        toast({
-          title: t('pages.loans.created'),
-          description: 'O empréstimo foi criado com sucesso.',
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (data: LoanFormData) => {
+    if (selectedLoan) {
+      const { payed_value: _payed_value, ...updateData } = data;
+      updateMutation.mutate({ id: selectedLoan.id, data: updateData });
+    } else {
+      createMutation.mutate(data);
     }
   };
 

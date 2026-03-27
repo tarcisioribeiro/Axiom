@@ -1,6 +1,7 @@
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
+from django.contrib.auth.models import User
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 from rest_framework import status
@@ -20,7 +21,10 @@ class BudgetListCreateView(BaseListCreateView):
     serializer_class = BudgetSerializer
 
     def get_queryset(self) -> QuerySet[Budget]:
-        return Budget.objects.select_related("member")
+        user = cast(User, self.request.user)
+        return Budget.objects.filter(created_by=user, is_deleted=False).select_related(
+            "member"
+        )
 
     def perform_create(self, serializer: Any) -> None:
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
@@ -30,7 +34,10 @@ class BudgetDetailView(BaseRetrieveUpdateDestroyView):
     serializer_class = BudgetSerializer
 
     def get_queryset(self) -> QuerySet[Budget]:
-        return Budget.objects.select_related("member")
+        user = cast(User, self.request.user)
+        return Budget.objects.filter(created_by=user, is_deleted=False).select_related(
+            "member"
+        )
 
     def perform_update(self, serializer: Any) -> None:
         serializer.save(updated_by=self.request.user)

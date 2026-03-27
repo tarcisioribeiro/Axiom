@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   Target,
   CheckCircle2,
@@ -13,95 +14,56 @@ import {
   Angry,
   Activity,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
+import { STALE_TIMES } from '@/lib/query-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
-import type { PersonalPlanningDashboardStats, DailyReflection } from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
+import type { DailyReflection } from '@/types';
 
 export default function PersonalPlanningDashboard() {
-  const [stats, setStats] = useState<PersonalPlanningDashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const { t } = useTranslation();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
 
-  useEffect(() => {
-    void loadData();
-
-    // Recarregar dados quando a aba/janela volta ao foco
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void loadData();
-      }
-    };
-
-    const handleFocus = () => {
-      void loadData();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await personalPlanningDashboardService.getStats();
-      setStats(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['personalPlanningDashboard'],
+    queryFn: () => personalPlanningDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
   // Processar dados para gráficos
-  const weeklyProgressData = useMemo(() => {
-    if (!stats?.weekly_progress) return [];
-    return stats.weekly_progress.map((item) => {
-      // Parse da data sem problemas de timezone - a data vem como "YYYY-MM-DD"
-      const parts = item.date.split('-');
-      const day = parts[2];
-      const month = parts[1];
-      const dateStr = `${day}/${month}`;
-      return {
-        date: dateStr,
-        total: item.total,
-        completadas: item.completed,
-        taxa: parseFloat(item.rate.toFixed(1)),
-      };
-    });
-  }, [stats?.weekly_progress]);
+  const weeklyProgressData = stats?.weekly_progress
+    ? stats.weekly_progress.map((item) => {
+        // Parse da data sem problemas de timezone - a data vem como "YYYY-MM-DD"
+        const parts = item.date.split('-');
+        const day = parts[2];
+        const month = parts[1];
+        const dateStr = `${day}/${month}`;
+        return {
+          date: dateStr,
+          total: item.total,
+          completadas: item.completed,
+          taxa: parseFloat(item.rate.toFixed(1)),
+        };
+      })
+    : [];
 
-  const tasksByCategoryData = useMemo(() => {
-    if (!stats?.tasks_by_category) return [];
-    return stats.tasks_by_category.map((item) => ({
-      category: item.category,
-      name: item.category_display,
-      count: item.count,
-    }));
-  }, [stats?.tasks_by_category]);
+  const tasksByCategoryData = stats?.tasks_by_category
+    ? stats.tasks_by_category.map((item) => ({
+        category: item.category,
+        name: item.category_display,
+        count: item.count,
+      }))
+    : [];
 
   // Função para obter cor por categoria (usa cores do tema)
   const getCategoryColor = (category: string) => {
@@ -134,15 +96,15 @@ export default function PersonalPlanningDashboard() {
 
   if (!stats) {
     return (
-      <div className="space-y-6 px-4 py-8">
+      <PageContainer>
         <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
         <p className="text-center">{t('pages.planningDashboard.noData')}</p>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6 px-4 py-8">
+    <PageContainer>
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* Grid 1: 8 Cards de Métricas Principais */}
@@ -367,6 +329,6 @@ export default function PersonalPlanningDashboard() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

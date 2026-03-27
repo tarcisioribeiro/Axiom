@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Tag, Trash2, Wand2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,9 +26,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
-import { useCrudPage } from '@/hooks/use-crud-page';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateTime } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
 import type { CategorizationRule, CategorizationRuleFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -136,48 +138,116 @@ function RuleForm({
 
 export default function CategorizationRules() {
   const { toast } = useToast();
-  const [isApplying, setIsApplying] = useState(false);
+  const { showConfirm } = useAlertDialog();
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<CategorizationRule | undefined>();
 
-  const {
-    items: rules,
-    isLoading,
-    isSubmitting,
-    isDialogOpen,
-    selectedItem,
-    handleCreate,
-    handleEdit,
-    handleDelete,
-    handleSubmit,
-    closeDialog,
-  } = useCrudPage(categorizationRulesService, {
-    resourceName: 'regra',
-    resourceNamePlural: 'regras',
-    messages: {
-      createSuccess: 'Regra de categorização criada com sucesso',
-      updateSuccess: 'Regra de categorização atualizada com sucesso',
-      deleteSuccess: 'Regra de categorização excluída. Desfazer?',
+  const { data: rules = [], isLoading } = useQuery({
+    queryKey: ['categorizationRules'],
+    queryFn: () => categorizationRulesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['categorizationRules'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data: CategorizationRuleFormData) =>
+      categorizationRulesService.create(data),
+    onSuccess: () => {
+      void invalidate();
+      toast({ title: 'Regra de categorização criada com sucesso' });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
-  async function handleApplyRules() {
-    setIsApplying(true);
-    try {
-      const result = await categorizationRulesService.applyRules();
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: CategorizationRuleFormData }) =>
+      categorizationRulesService.update(id, data),
+    onSuccess: () => {
+      void invalidate();
+      toast({ title: 'Regra de categorização atualizada com sucesso' });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Erro ao salvar',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => categorizationRulesService.delete(id),
+    onSuccess: () => {
+      void invalidate();
+      toast({ title: 'Regra de categorização excluída' });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: 'Erro ao excluir',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: () => categorizationRulesService.applyRules(),
+    onSuccess: (result) => {
       toast({
         title: 'Regras aplicadas',
         description: `${result.updated} despesa(s) categorizada(s) automaticamente.`,
-        variant: 'default',
       });
-    } catch (error: unknown) {
+    },
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao aplicar regras',
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-    } finally {
-      setIsApplying(false);
+    },
+  });
+
+  function handleCreate() {
+    setSelectedItem(undefined);
+    setIsDialogOpen(true);
+  }
+
+  function handleEdit(rule: CategorizationRule) {
+    setSelectedItem(rule);
+    setIsDialogOpen(true);
+  }
+
+  async function handleDelete(id: number) {
+    const confirmed = await showConfirm({
+      title: 'Excluir regra',
+      description: 'Tem certeza que deseja excluir esta regra de categorização?',
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (confirmed) deleteMutation.mutate(id);
+  }
+
+  function handleSubmit(data: CategorizationRuleFormData) {
+    if (selectedItem) {
+      updateMutation.mutate({ id: selectedItem.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   }
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const columns: Column<CategorizationRule>[] = [
     {
@@ -230,11 +300,11 @@ export default function CategorizationRules() {
       <PageHeader title="Regras de Categorização">
         <Button
           variant="outline"
-          onClick={() => void handleApplyRules()}
-          disabled={isApplying || rules.length === 0}
+          onClick={() => applyMutation.mutate()}
+          disabled={applyMutation.isPending || rules.length === 0}
         >
           <Wand2 className="mr-2 h-4 w-4" />
-          {isApplying ? 'Aplicando...' : 'Aplicar Regras'}
+          {applyMutation.isPending ? 'Aplicando...' : 'Aplicar Regras'}
         </Button>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -269,6 +339,7 @@ export default function CategorizationRules() {
                 onClick={() => void handleDelete(rule.id)}
                 title="Excluir"
                 className="text-destructive hover:text-destructive"
+                disabled={deleteMutation.isPending}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -277,7 +348,7 @@ export default function CategorizationRules() {
         />
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -286,8 +357,8 @@ export default function CategorizationRules() {
           </DialogHeader>
           <RuleForm
             rule={selectedItem}
-            onSubmit={(data) => void handleSubmit(data)}
-            onCancel={closeDialog}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
         </DialogContent>
