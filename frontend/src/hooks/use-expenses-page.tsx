@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
+import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import type { ExpenseExportParams } from '@/services/expenses-service';
@@ -46,7 +48,7 @@ export interface UseExpensesPageReturn {
   handleCreate: () => void;
   handleEdit: (expense: Expense) => void;
   handleDelete: (id: number) => Promise<void>;
-  handleSubmit: (data: ExpenseFormData) => Promise<void>;
+  handleSubmit: (data: ExpenseFormData) => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
     date_from?: string;
@@ -59,14 +61,9 @@ export interface UseExpensesPageReturn {
 
 export function useExpensesPage(): UseExpensesPageReturn {
   const { t } = useTranslation();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [payables, setPayables] = useState<Payable[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -83,28 +80,15 @@ export function useExpensesPage(): UseExpensesPageReturn {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadExpenses = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const params: Record<string, unknown> = {};
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (categoryFilter !== 'all') params.category = categoryFilter;
-      if (statusFilter !== 'all')
-        params.payed = statusFilter === 'paid' ? 'true' : 'false';
-      if (startDate) params.date_from = formatLocalDate(startDate);
-      if (endDate) params.date_to = formatLocalDate(endDate);
-      if (selectedAccounts.length > 0) params.accounts = selectedAccounts.join(',');
-      const data = await expensesService.getAll(params);
-      setExpenses(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const params = useMemo(() => {
+    const p: Record<string, unknown> = {};
+    if (debouncedSearch) p.search = debouncedSearch;
+    if (categoryFilter !== 'all') p.category = categoryFilter;
+    if (statusFilter !== 'all') p.payed = statusFilter === 'paid' ? 'true' : 'false';
+    if (startDate) p.date_from = formatLocalDate(startDate);
+    if (endDate) p.date_to = formatLocalDate(endDate);
+    if (selectedAccounts.length > 0) p.accounts = selectedAccounts.join(',');
+    return p;
   }, [
     debouncedSearch,
     categoryFilter,
@@ -112,35 +96,96 @@ export function useExpensesPage(): UseExpensesPageReturn {
     startDate,
     endDate,
     selectedAccounts,
-    t,
-    toast,
   ]);
 
-  useEffect(() => {
-    const loadReferenceData = async () => {
-      try {
-        const [accountsData, loansData, payablesData] = await Promise.all([
-          accountsService.getAll(),
-          loansService.getAll(),
-          payablesService.getAll(),
-        ]);
-        setAccounts(accountsData);
-        setLoans(Array.isArray(loansData) ? loansData : []);
-        setPayables(Array.isArray(payablesData) ? payablesData : []);
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    };
-    void loadReferenceData();
-  }, [t, toast]);
+  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
+    queryKey: ['expenses', params],
+    queryFn: () => expensesService.getAll(params),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-  useEffect(() => {
-    void loadExpenses();
-  }, [loadExpenses]);
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans'],
+    queryFn: () => loansService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const { data: payables = [] } = useQuery({
+    queryKey: ['payables'],
+    queryFn: () => payablesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const invalidateExpenses = () =>
+    queryClient.invalidateQueries({ queryKey: ['expenses'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data: ExpenseFormData) => expensesService.create(data),
+    onSuccess: () => {
+      void invalidateExpenses();
+      toast({
+        title: t('pages.expenses.created'),
+        description: t('pages.expenses.createdDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ExpenseFormData }) =>
+      expensesService.update(id, data),
+    onSuccess: () => {
+      void invalidateExpenses();
+      toast({
+        title: t('pages.expenses.updated'),
+        description: t('pages.expenses.updatedDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => expensesService.delete(id),
+    onSuccess: () => {
+      void invalidateExpenses();
+      toast({
+        title: t('pages.expenses.deleted'),
+        description: t('pages.expenses.deletedDesc'),
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const isLoading = expensesLoading || accountsLoading;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const toggleAccount = (accountId: number) => {
     setSelectedAccounts((prev) =>
@@ -186,48 +231,14 @@ export function useExpensesPage(): UseExpensesPageReturn {
       variant: 'destructive',
     });
     if (!confirmed) return;
-    try {
-      await expensesService.delete(id);
-      toast({
-        title: t('pages.expenses.deleted'),
-        description: t('pages.expenses.deletedDesc'),
-      });
-      void loadExpenses();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handleSubmit = async (data: ExpenseFormData) => {
-    try {
-      setIsSubmitting(true);
-      if (selectedExpense) {
-        await expensesService.update(selectedExpense.id, data);
-        toast({
-          title: t('pages.expenses.updated'),
-          description: t('pages.expenses.updatedDesc'),
-        });
-      } else {
-        await expensesService.create(data);
-        toast({
-          title: t('pages.expenses.created'),
-          description: t('pages.expenses.createdDesc'),
-        });
-      }
-      setIsDialogOpen(false);
-      void loadExpenses();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (data: ExpenseFormData) => {
+    if (selectedExpense) {
+      updateMutation.mutate({ id: selectedExpense.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
 
@@ -236,7 +247,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
     date_from?: string;
     date_to?: string;
   }) => {
-    const params: ExpenseExportParams = {
+    const exportParams: ExpenseExportParams = {
       export_format: modalParams.export_format,
       date_from: modalParams.date_from,
       date_to: modalParams.date_to,
@@ -251,7 +262,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
       account: selectedAccounts.length > 0 ? selectedAccounts : undefined,
     };
     try {
-      await expensesService.exportExpenses(params);
+      await expensesService.exportExpenses(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
         description: t('common.messages.exportSuccessDesc'),

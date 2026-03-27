@@ -289,7 +289,8 @@ services:
     ports:
       - "${FRONTEND_PORT:-39101}:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]

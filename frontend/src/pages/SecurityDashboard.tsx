@@ -1,67 +1,28 @@
+import { useQuery } from '@tanstack/react-query';
 import { Shield, Key, CreditCard, Wallet, Archive } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
+import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
-import {
-  securityDashboardService,
-  type SecurityDashboardStats,
-} from '@/services/security-dashboard-service';
-import { getErrorMessage } from '@/utils/error-utils';
+import { STALE_TIMES } from '@/lib/query-client';
+import { securityDashboardService } from '@/services/security-dashboard-service';
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
 
 export default function SecurityDashboard() {
-  const [stats, setStats] = useState<SecurityDashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    void loadData();
-
-    // Recarregar dados quando a aba/janela volta ao foco
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        void loadData();
-      }
-    };
-
-    const handleFocus = () => {
-      void loadData();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await securityDashboardService.getStats();
-      setStats(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['securityDashboard'],
+    queryFn: () => securityDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
   const COLORS = useChartColors();
   const strengthColors = usePasswordStrengthColors();
@@ -72,7 +33,7 @@ export default function SecurityDashboard() {
 
   return (
     <VaultGuard>
-      <div className="space-y-6 px-4 py-8">
+      <PageContainer>
         <PageHeader title={t('pages.securityDashboard.title')} icon={<Shield />} />
 
         {/* Métricas Principais - Grid 2x2 */}
@@ -230,7 +191,7 @@ export default function SecurityDashboard() {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </PageContainer>
     </VaultGuard>
   );
 }

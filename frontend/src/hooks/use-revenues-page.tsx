@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
+import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { loansService } from '@/services/loans-service';
@@ -44,7 +46,7 @@ export interface UseRevenuesPageReturn {
   handleCreate: () => void;
   handleEdit: (revenue: Revenue) => void;
   handleDelete: (id: number) => Promise<void>;
-  handleSubmit: (data: RevenueFormData) => Promise<void>;
+  handleSubmit: (data: RevenueFormData) => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
     date_from?: string;
@@ -57,13 +59,9 @@ export interface UseRevenuesPageReturn {
 
 export function useRevenuesPage(): UseRevenuesPageReturn {
   const { t } = useTranslation();
-  const [revenues, setRevenues] = useState<Revenue[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRevenue, setSelectedRevenue] = useState<Revenue | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -80,28 +78,16 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadRevenues = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const params: Record<string, unknown> = {};
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (categoryFilter !== 'all') params.category = categoryFilter;
-      if (statusFilter !== 'all')
-        params.received = statusFilter === 'received' ? 'true' : 'false';
-      if (startDate) params.date_from = formatLocalDate(startDate);
-      if (endDate) params.date_to = formatLocalDate(endDate);
-      if (selectedAccounts.length > 0) params.accounts = selectedAccounts.join(',');
-      const data = await revenuesService.getAll(params);
-      setRevenues(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const params = useMemo(() => {
+    const p: Record<string, unknown> = {};
+    if (debouncedSearch) p.search = debouncedSearch;
+    if (categoryFilter !== 'all') p.category = categoryFilter;
+    if (statusFilter !== 'all')
+      p.received = statusFilter === 'received' ? 'true' : 'false';
+    if (startDate) p.date_from = formatLocalDate(startDate);
+    if (endDate) p.date_to = formatLocalDate(endDate);
+    if (selectedAccounts.length > 0) p.accounts = selectedAccounts.join(',');
+    return p;
   }, [
     debouncedSearch,
     categoryFilter,
@@ -109,33 +95,89 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     startDate,
     endDate,
     selectedAccounts,
-    t,
-    toast,
   ]);
 
-  useEffect(() => {
-    const loadReferenceData = async () => {
-      try {
-        const [accountsData, loansData] = await Promise.all([
-          accountsService.getAll(),
-          loansService.getAll(),
-        ]);
-        setAccounts(accountsData);
-        setLoans(Array.isArray(loansData) ? loansData : []);
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.loadError'),
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    };
-    void loadReferenceData();
-  }, [t, toast]);
+  const { data: revenues = [], isLoading: revenuesLoading } = useQuery({
+    queryKey: ['revenues', params],
+    queryFn: () => revenuesService.getAll(params),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
-  useEffect(() => {
-    void loadRevenues();
-  }, [loadRevenues]);
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: loans = [] } = useQuery({
+    queryKey: ['loans'],
+    queryFn: () => loansService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
+  });
+
+  const invalidateRevenues = () =>
+    queryClient.invalidateQueries({ queryKey: ['revenues'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data: RevenueFormData) => revenuesService.create(data),
+    onSuccess: () => {
+      void invalidateRevenues();
+      toast({
+        title: t('pages.revenues.created'),
+        description: t('pages.revenues.createdDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: RevenueFormData }) =>
+      revenuesService.update(id, data),
+    onSuccess: () => {
+      void invalidateRevenues();
+      toast({
+        title: t('pages.revenues.updated'),
+        description: t('pages.revenues.updatedDesc'),
+      });
+      setIsDialogOpen(false);
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => revenuesService.delete(id),
+    onSuccess: () => {
+      void invalidateRevenues();
+      toast({
+        title: t('pages.revenues.deleted'),
+        description: t('pages.revenues.deletedDesc'),
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const isLoading = revenuesLoading || accountsLoading;
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const toggleAccount = (accountId: number) => {
     setSelectedAccounts((prev) =>
@@ -181,48 +223,14 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       variant: 'destructive',
     });
     if (!confirmed) return;
-    try {
-      await revenuesService.delete(id);
-      toast({
-        title: t('pages.revenues.deleted'),
-        description: t('pages.revenues.deletedDesc'),
-      });
-      void loadRevenues();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
-  const handleSubmit = async (data: RevenueFormData) => {
-    try {
-      setIsSubmitting(true);
-      if (selectedRevenue) {
-        await revenuesService.update(selectedRevenue.id, data);
-        toast({
-          title: t('pages.revenues.updated'),
-          description: t('pages.revenues.updatedDesc'),
-        });
-      } else {
-        await revenuesService.create(data);
-        toast({
-          title: t('pages.revenues.created'),
-          description: t('pages.revenues.createdDesc'),
-        });
-      }
-      setIsDialogOpen(false);
-      void loadRevenues();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = (data: RevenueFormData) => {
+    if (selectedRevenue) {
+      updateMutation.mutate({ id: selectedRevenue.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
 
@@ -231,7 +239,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     date_from?: string;
     date_to?: string;
   }) => {
-    const params: RevenueExportParams = {
+    const exportParams: RevenueExportParams = {
       export_format: modalParams.export_format,
       date_from: modalParams.date_from,
       date_to: modalParams.date_to,
@@ -246,7 +254,7 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       account: selectedAccounts.length > 0 ? selectedAccounts : undefined,
     };
     try {
-      await revenuesService.exportRevenues(params);
+      await revenuesService.exportRevenues(exportParams);
       toast({
         title: t('common.messages.exportSuccess'),
         description: t('common.messages.exportSuccessDesc'),

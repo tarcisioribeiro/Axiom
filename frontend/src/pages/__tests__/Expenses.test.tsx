@@ -78,6 +78,7 @@ vi.mock('@/components/common/ExportModal', () => ({
   ExportModal: () => null,
 }));
 
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import i18next from 'i18next';
@@ -86,8 +87,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ptBR from '@/i18n/locales/pt-BR.json';
+import { queryClient } from '@/lib/query-client';
 import Expenses from '@/pages/Expenses';
 import { expensesService } from '@/services/expenses-service';
+
+queryClient.setDefaultOptions({ queries: { retry: false } });
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -102,14 +106,17 @@ beforeAll(async () => {
 
 function renderExpenses() {
   return render(
-    <MemoryRouter>
-      <Expenses />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Expenses />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
 describe('Expenses page', () => {
   beforeEach(() => {
+    queryClient.clear();
     mockToast.mockClear();
     mockShowConfirm.mockClear();
     vi.mocked(expensesService.getAll).mockResolvedValue([]);
