@@ -61,6 +61,9 @@ const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
+// Notification Preferences
+const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
+
 // Bank Reconciliation Detail (navigated from Accounts page)
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
 
@@ -371,6 +374,16 @@ function AnimatedRoutes() {
             }
           />
           <Route path="/vaults/simulator" element={<Navigate to="/vaults" replace />} />
+
+          {/* Settings */}
+          <Route
+            path="/settings/notifications"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <NotificationPreferences />
+              </Suspense>
+            }
+          />
         </Route>
 
         {/* Fallback */}

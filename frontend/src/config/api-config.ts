@@ -117,6 +117,7 @@ export const API_CONFIG = {
     NOTIFICATIONS: '/api/v1/notifications/',
     NOTIFICATIONS_SUMMARY: '/api/v1/notifications/summary/',
     NOTIFICATIONS_MARK_ALL_READ: '/api/v1/notifications/mark-all-read/',
+    NOTIFICATION_PREFERENCES: '/api/v1/notification-preferences/',
 
     // Budgets Module
     BUDGETS: '/api/v1/budgets/',
