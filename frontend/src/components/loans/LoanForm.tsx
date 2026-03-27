@@ -35,7 +35,7 @@ interface LoanFormProps {
   loan: Loan | undefined;
   accounts: Account[];
   members: Member[];
-  onSubmit: (data: LoanFormData) => Promise<void>;
+  onSubmit: (data: LoanFormData) => void;
   onCancel: () => void;
   isLoading: boolean;
 }
@@ -94,9 +94,9 @@ export function LoanForm({
   const set = (patch: Partial<LoanFormData>) =>
     setFormData((prev) => ({ ...prev, ...patch }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    onSubmit(formData);
   };
 
   return (
