@@ -27,14 +27,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   children,
 }) => {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <div className="h-6 w-6">{icon}</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary md:h-12 md:w-12">
+            <div className="h-5 w-5 md:h-6 md:w-6">{icon}</div>
           </div>
         )}
-        <h1 className="text-3xl font-bold">{title}</h1>
+        <h1 className="text-xl font-bold md:text-3xl">{title}</h1>
       </div>
       {children}
       {!children && action && (

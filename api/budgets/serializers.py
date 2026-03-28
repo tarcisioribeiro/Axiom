@@ -59,3 +59,15 @@ class BudgetStatusSerializer(serializers.Serializer):
     member_name = serializers.CharField(allow_null=True)
     month = serializers.IntegerField()
     year = serializers.IntegerField()
+
+
+class BudgetHistorySerializer(serializers.Serializer):
+    """Histórico de orçamento: limite vs gasto real por mês."""
+
+    month = serializers.IntegerField()
+    year = serializers.IntegerField()
+    limit_amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, allow_null=True
+    )
+    actual_spent = serializers.DecimalField(max_digits=10, decimal_places=2)
+    percentage = serializers.FloatField()

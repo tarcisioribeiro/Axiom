@@ -33,6 +33,7 @@ CONFIDENCE_CHOICES = (
     ("high", "Alta"),
     ("medium", "Média"),
     ("low", "Baixa"),
+    ("manual", "Manual"),
 )
 
 

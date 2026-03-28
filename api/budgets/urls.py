@@ -14,4 +14,9 @@ urlpatterns = [
         views.BudgetStatusView.as_view(),
         name="budget-status",
     ),
+    path(
+        "budgets/history/",
+        views.BudgetHistoryView.as_view(),
+        name="budget-history",
+    ),
 ]
