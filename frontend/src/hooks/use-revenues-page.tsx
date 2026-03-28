@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
+import type { RevenuePrefillData } from '@/components/revenues/RevenueForm';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
@@ -17,7 +18,6 @@ import type { RevenueExportParams } from '@/services/revenues-service';
 import { revenuesService } from '@/services/revenues-service';
 import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-import type { RevenuePrefillData } from '@/components/revenues/RevenueForm';
 
 import type { Column } from '../components/common/DataTable';
 
@@ -64,9 +64,12 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
   const location = useLocation();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const locationState = location.state as {
+    prefillRevenue?: RevenuePrefillData;
+  } | null;
+  const [isDialogOpen, setIsDialogOpen] = useState(!!locationState?.prefillRevenue);
   const [selectedRevenue, setSelectedRevenue] = useState<Revenue | undefined>();
-  const [prefillRevenueData, setPrefillRevenueData] = useState<RevenuePrefillData | undefined>();
+  const prefillRevenueData = locationState?.prefillRevenue;
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -82,15 +85,6 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
-
-  useEffect(() => {
-    const state = location.state as { prefillRevenue?: RevenuePrefillData } | null;
-    if (state?.prefillRevenue) {
-      setPrefillRevenueData(state.prefillRevenue);
-      setSelectedRevenue(undefined);
-      setIsDialogOpen(true);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const params = useMemo(() => {
     const p: Record<string, unknown> = {};

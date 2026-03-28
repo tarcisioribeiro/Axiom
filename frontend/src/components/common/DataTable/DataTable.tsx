@@ -173,7 +173,10 @@ export function DataTable<T>({
           {data.map((item) => (
             <div key={keyExtractor(item)} className="space-y-2 px-4 py-3">
               {columns.map((column) => (
-                <div key={column.key} className="flex items-start justify-between gap-2">
+                <div
+                  key={column.key}
+                  className="flex items-start justify-between gap-2"
+                >
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {column.label}
                   </span>

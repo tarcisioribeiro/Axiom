@@ -159,9 +159,7 @@ class Command(BaseCommand):
         """
         if hasattr(instance, "anonymize"):
             instance.anonymize()
-            instance.save(
-                update_fields=self._anonymize_update_fields(instance)
-            )
+            instance.save(update_fields=self._anonymize_update_fields(instance))
         else:
             anonymize_fn(instance)
             instance.save()
@@ -252,9 +250,7 @@ class Command(BaseCommand):
                 "pk": str(instance.pk),
                 "uuid": str(instance.uuid),
                 "deleted_at": (
-                    instance.deleted_at.isoformat()
-                    if instance.deleted_at
-                    else None
+                    instance.deleted_at.isoformat() if instance.deleted_at else None
                 ),
                 "purged_at": timezone.now().isoformat(),
             },

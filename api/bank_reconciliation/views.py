@@ -182,7 +182,9 @@ class BankStatementEntryManualMatchView(APIView):
 
     def patch(self, request, import_pk, entry_pk):
         try:
-            stmt_import = BankStatementImport.objects.get(pk=import_pk, owner=request.user)
+            stmt_import = BankStatementImport.objects.get(
+                pk=import_pk, owner=request.user
+            )
         except BankStatementImport.DoesNotExist:
             return Response(
                 {"detail": "Importação não encontrada."},

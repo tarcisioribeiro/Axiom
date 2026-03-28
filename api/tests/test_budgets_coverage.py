@@ -291,9 +291,7 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
     def test_history_returns_months_list(self):
         """GET /budgets/history/?category=food+and+drink returns N data points."""
         url = reverse("budget-history")
-        response = self.client.get(
-            url, {"category": "food and drink", "months": 6}
-        )
+        response = self.client.get(url, {"category": "food and drink", "months": 6})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
 
@@ -338,9 +336,7 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
     def test_history_months_clamped_to_max(self):
         """months > 24 is clamped to 24."""
         url = reverse("budget-history")
-        response = self.client.get(
-            url, {"category": "food and drink", "months": 100}
-        )
+        response = self.client.get(url, {"category": "food and drink", "months": 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 24)
 
@@ -351,7 +347,8 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # First two months should have no budget (only current month has one)
         older_months = [
-            item for item in response.data
+            item
+            for item in response.data
             if not (item["month"] == self.month and item["year"] == self.year)
         ]
         for item in older_months:

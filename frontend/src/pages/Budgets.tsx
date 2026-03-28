@@ -1,5 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { PiggyBank, Plus, Pencil, Trash2, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  PiggyBank,
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -449,17 +457,21 @@ export default function Budgets() {
 }
 
 const MONTH_SHORT = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
 ];
 
-function BudgetTrendChart({
-  category,
-  months,
-}: {
-  category: string;
-  months: number;
-}) {
+function BudgetTrendChart({ category, months }: { category: string; months: number }) {
   const colors = useSemanticColors();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['budgets', 'history', category, months],
@@ -469,7 +481,11 @@ function BudgetTrendChart({
   });
 
   if (isLoading) {
-    return <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">Carregando...</div>;
+    return (
+      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
   }
 
   const chartData = history.map((h) => ({
@@ -478,7 +494,9 @@ function BudgetTrendChart({
     limit_amount: h.limit_amount !== null ? parseFloat(h.limit_amount) : null,
   }));
 
-  const hasAnyData = chartData.some((d) => d.actual_spent > 0 || d.limit_amount !== null);
+  const hasAnyData = chartData.some(
+    (d) => d.actual_spent > 0 || d.limit_amount !== null
+  );
 
   if (!hasAnyData) {
     return (
@@ -490,7 +508,10 @@ function BudgetTrendChart({
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart data={chartData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
+      <ComposedChart
+        data={chartData}
+        margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
+      >
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="label" tick={{ fontSize: 12 }} />
         <YAxis tickFormatter={axisFormatCurrency} tick={{ fontSize: 12 }} width={64} />

@@ -1,4 +1,11 @@
-import { ArrowLeft, ArrowLeftRight, Link2, Plus, RefreshCw, Search } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Link2,
+  Plus,
+  RefreshCw,
+  Search,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -22,7 +29,12 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
-import type { BankStatementEntry, BankStatementImport, Expense, Revenue } from '@/types';
+import type {
+  BankStatementEntry,
+  BankStatementImport,
+  Expense,
+  Revenue,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function ConfidenceBadge({
@@ -211,7 +223,11 @@ export default function BankReconciliationDetail() {
           ? { matched_expense_id: candidateId }
           : { matched_revenue_id: candidateId };
 
-      await bankReconciliationService.manualMatch(importData.id, matchingEntry.id, payload);
+      await bankReconciliationService.manualMatch(
+        importData.id,
+        matchingEntry.id,
+        payload
+      );
       setMatchingEntry(null);
 
       const updated = await bankReconciliationService.getImport(importData.id);
@@ -232,9 +248,9 @@ export default function BankReconciliationDetail() {
       date: entry.date,
     };
     if (entry.transaction_type === 'debit') {
-      navigate('/expenses', { state: { prefillExpense: prefill } });
+      void navigate('/expenses', { state: { prefillExpense: prefill } });
     } else {
-      navigate('/revenues', { state: { prefillRevenue: prefill } });
+      void navigate('/revenues', { state: { prefillRevenue: prefill } });
     }
   }
 
@@ -361,7 +377,11 @@ export default function BankReconciliationDetail() {
               variant="outline"
               className="gap-1"
               disabled={isUpdating}
-              title={isDebit ? 'Criar despesa a partir desta entrada' : 'Criar receita a partir desta entrada'}
+              title={
+                isDebit
+                  ? 'Criar despesa a partir desta entrada'
+                  : 'Criar receita a partir desta entrada'
+              }
               onClick={() => handleCreateFromEntry(entry)}
             >
               <Plus className="h-3 w-3" />
@@ -382,7 +402,8 @@ export default function BankReconciliationDetail() {
     importData.unmatched_count -
     importData.ignored_count;
 
-  const candidateLabel = matchingEntry?.transaction_type === 'debit' ? 'despesas' : 'receitas';
+  const candidateLabel =
+    matchingEntry?.transaction_type === 'debit' ? 'despesas' : 'receitas';
 
   return (
     <PageContainer>
@@ -446,7 +467,12 @@ export default function BankReconciliationDetail() {
       />
 
       {/* Manual Match Modal */}
-      <Dialog open={!!matchingEntry} onOpenChange={(open) => { if (!open) setMatchingEntry(null); }}>
+      <Dialog
+        open={!!matchingEntry}
+        onOpenChange={(open) => {
+          if (!open) setMatchingEntry(null);
+        }}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -454,8 +480,8 @@ export default function BankReconciliationDetail() {
               Vincular manualmente
             </DialogTitle>
             <DialogDescription>
-              Selecione uma {candidateLabel === 'despesas' ? 'despesa' : 'receita'} existente para
-              vincular a esta entrada do extrato.
+              Selecione uma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
+              existente para vincular a esta entrada do extrato.
             </DialogDescription>
           </DialogHeader>
 
@@ -466,7 +492,9 @@ export default function BankReconciliationDetail() {
                 {formatDate(matchingEntry.date)} ·{' '}
                 <span
                   className={
-                    matchingEntry.transaction_type === 'debit' ? 'text-destructive' : 'text-success'
+                    matchingEntry.transaction_type === 'debit'
+                      ? 'text-destructive'
+                      : 'text-success'
                   }
                 >
                   {matchingEntry.transaction_type === 'debit' ? '-' : '+'}
@@ -488,11 +516,13 @@ export default function BankReconciliationDetail() {
 
           <div className="max-h-72 space-y-2 overflow-y-auto">
             {candidateLoading ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">Carregando...</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Carregando...
+              </p>
             ) : candidates.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Nenhuma {candidateLabel === 'despesas' ? 'despesa' : 'receita'} encontrada com
-                valor e data próximos.
+                Nenhuma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
+                encontrada com valor e data próximos.
               </p>
             ) : (
               candidates.map((c) => (
