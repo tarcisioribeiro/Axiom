@@ -1,6 +1,18 @@
-import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { PiggyBank, Plus, Pencil, Trash2, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -29,7 +41,10 @@ import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useSemanticColors } from '@/lib/chart-colors';
+import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -79,6 +94,11 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
+  const [showTrend, setShowTrend] = useState(false);
+  const [trendCategory, setTrendCategory] = useState(
+    EXPENSE_CATEGORIES_CANONICAL[0]?.key ?? 'others'
+  );
+  const [trendMonths, setTrendMonths] = useState(6);
 
   useEffect(() => {
     void loadData();
@@ -258,6 +278,57 @@ export default function Budgets() {
         </div>
       )}
 
+      <div className="rounded-lg border bg-card">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between p-4 text-left"
+          onClick={() => setShowTrend((v) => !v)}
+        >
+          <div className="flex items-center gap-2 font-semibold">
+            <TrendingUp className="h-4 w-4" />
+            {t('pages.budgets.trend.title')}
+          </div>
+          {showTrend ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        {showTrend && (
+          <div className="border-t p-4">
+            <div className="mb-4 flex flex-wrap gap-4">
+              <Select value={trendCategory} onValueChange={setTrendCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder={t('common.fields.category')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
+                    <SelectItem key={cat.key} value={cat.key}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(trendMonths)}
+                onValueChange={(v) => setTrendMonths(parseInt(v))}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="6">6 meses</SelectItem>
+                  <SelectItem value="12">12 meses</SelectItem>
+                  <SelectItem value="24">24 meses</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <BudgetTrendChart category={trendCategory} months={trendMonths} />
+          </div>
+        )}
+      </div>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -374,6 +445,76 @@ export default function Budgets() {
         </DialogContent>
       </Dialog>
     </PageContainer>
+  );
+}
+
+const MONTH_SHORT = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+];
+
+function BudgetTrendChart({
+  category,
+  months,
+}: {
+  category: string;
+  months: number;
+}) {
+  const colors = useSemanticColors();
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ['budgets', 'history', category, months],
+    queryFn: () => budgetsService.getHistory({ category, months }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: !!category,
+  });
+
+  if (isLoading) {
+    return <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">Carregando...</div>;
+  }
+
+  const chartData = history.map((h) => ({
+    label: `${MONTH_SHORT[h.month - 1]}/${String(h.year).slice(2)}`,
+    actual_spent: parseFloat(h.actual_spent),
+    limit_amount: h.limit_amount !== null ? parseFloat(h.limit_amount) : null,
+  }));
+
+  const hasAnyData = chartData.some((d) => d.actual_spent > 0 || d.limit_amount !== null);
+
+  if (!hasAnyData) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+        Nenhum dado encontrado para esta categoria no período selecionado.
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <ComposedChart data={chartData} margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+        <YAxis tickFormatter={axisFormatCurrency} tick={{ fontSize: 12 }} width={64} />
+        <Tooltip
+          formatter={(value: number, name: string) => [
+            formatCurrencyBR(value),
+            name === 'actual_spent' ? 'Gasto real' : 'Limite',
+          ]}
+        />
+        <Legend
+          formatter={(value) => (value === 'actual_spent' ? 'Gasto real' : 'Limite')}
+        />
+        <Bar dataKey="actual_spent" fill={colors.info} radius={[3, 3, 0, 0]} />
+        <Line
+          type="monotone"
+          dataKey="limit_amount"
+          stroke={colors.danger}
+          strokeDasharray="5 5"
+          strokeWidth={2}
+          dot={false}
+          connectNulls={false}
+        />
+      </ComposedChart>
+    </ResponsiveContainer>
   );
 }
 

@@ -672,6 +672,9 @@
         "limitAmount": "Valor Limite (R$)",
         "month": "Mês",
         "year": "Ano"
+      },
+      "trend": {
+        "title": "Tendência de Gastos"
       }
     },
     "vaults": {
