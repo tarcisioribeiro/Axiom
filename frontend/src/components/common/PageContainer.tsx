@@ -22,7 +22,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   className,
 }) => {
   return (
-    <AnimatedPage className={cn('space-y-lg px-md py-xl', className)}>
+    <AnimatedPage className={cn('space-y-lg px-sm py-md md:px-lg md:py-xl', className)}>
       {children}
     </AnimatedPage>
   );

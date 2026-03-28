@@ -4,6 +4,7 @@ from django.db import models
 from rest_framework import serializers
 
 from .models import FinancialGoal, Vault, VaultRecurringContribution, VaultTransaction
+from .services.goal_progress import compute_progress
 
 
 class VaultTransactionSerializer(serializers.ModelSerializer):
@@ -313,6 +314,7 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
     )
     vaults_summary = serializers.SerializerMethodField()
     vaults_count = serializers.SerializerMethodField()
+    computed_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = FinancialGoal
@@ -336,6 +338,9 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
             "is_completed",
             "completed_at",
             "notes",
+            "linked_expense_category",
+            "linked_account",
+            "computed_progress",
             "created_at",
             "updated_at",
             "created_by",
@@ -359,6 +364,16 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
         """Retorna o número de cofres associados."""
         return obj.vaults.filter(is_deleted=False, is_active=True).count()
 
+    def get_computed_progress(self, obj):
+        """Retorna o progresso calculado com base na categoria da meta."""
+        progress = compute_progress(obj)
+        return {
+            "current_value": str(progress["current_value"]),
+            "target_value": str(progress["target_value"]),
+            "percentage": str(progress["percentage"]),
+            "data_source": progress["data_source"],
+        }
+
 
 class FinancialGoalListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de metas."""
@@ -373,6 +388,7 @@ class FinancialGoalListSerializer(serializers.ModelSerializer):
         max_digits=5, decimal_places=2, read_only=True
     )
     vaults_count = serializers.SerializerMethodField()
+    computed_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = FinancialGoal
@@ -389,9 +405,20 @@ class FinancialGoalListSerializer(serializers.ModelSerializer):
             "target_date",
             "is_active",
             "is_completed",
+            "computed_progress",
             "created_at",
         ]
 
     def get_vaults_count(self, obj):
         """Retorna o número de cofres associados."""
         return obj.vaults.filter(is_deleted=False, is_active=True).count()
+
+    def get_computed_progress(self, obj):
+        """Retorna o progresso calculado com base na categoria da meta."""
+        progress = compute_progress(obj)
+        return {
+            "current_value": str(progress["current_value"]),
+            "target_value": str(progress["target_value"]),
+            "percentage": str(progress["percentage"]),
+            "data_source": progress["data_source"],
+        }

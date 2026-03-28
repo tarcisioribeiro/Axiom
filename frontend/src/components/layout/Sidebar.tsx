@@ -28,6 +28,7 @@ import {
   PiggyBank,
   Receipt,
   Tag,
+  Bell,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -79,6 +80,11 @@ const navItems: NavItem[] = [
     titleKey: 'nav.home',
     href: '/',
     icon: <Home className="h-5 w-5" />,
+  },
+  {
+    titleKey: 'nav.notificationPreferences',
+    href: '/settings/notifications',
+    icon: <Bell className="h-5 w-5" />,
   },
 ];
 
@@ -360,7 +366,7 @@ export const Sidebar = () => {
       {/* Overlay para mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={close}
           aria-hidden="true"
         />
@@ -369,11 +375,11 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 lg:sticky lg:top-0',
+          'fixed inset-y-0 left-0 z-50 md:sticky md:top-0',
           'h-screen w-72 border-r bg-card p-4',
           'flex flex-col',
-          'transform transition-transform duration-300 ease-in-out lg:transform-none',
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          'transform transition-transform duration-300 ease-in-out md:transform-none',
+          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
         <div className="mb-8">
@@ -390,7 +396,7 @@ export const Sidebar = () => {
             {/* Botão fechar (apenas mobile) */}
             <button
               onClick={close}
-              className="rounded-lg p-2 transition-colors hover:bg-accent lg:hidden"
+              className="rounded-lg p-2 transition-colors hover:bg-accent md:hidden"
               aria-label={t('layout.closeMenu')}
             >
               <X className="h-5 w-5" />

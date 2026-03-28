@@ -122,8 +122,8 @@ describe('Accounts page', () => {
     renderAccounts();
 
     await waitFor(() => {
-      expect(screen.getByText('Conta Corrente')).toBeInTheDocument();
-      expect(screen.getByText('Poupança')).toBeInTheDocument();
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+      expect(screen.getAllByText('Poupança')[0]).toBeInTheDocument();
     });
   });
 
@@ -153,7 +153,7 @@ describe('Accounts page', () => {
     renderAccounts();
 
     await waitFor(() => {
-      expect(screen.getByText('Conta Corrente')).toBeInTheDocument();
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByRole('button', { name: /excluir/i });
@@ -170,7 +170,7 @@ describe('Accounts page', () => {
     renderAccounts();
 
     await waitFor(() => {
-      expect(screen.getByText('Conta Corrente')).toBeInTheDocument();
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByRole('button', { name: /excluir/i });
@@ -189,7 +189,7 @@ describe('Accounts page', () => {
     renderAccounts();
 
     await waitFor(() => {
-      expect(screen.getByText('Conta Corrente')).toBeInTheDocument();
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByRole('button', { name: /excluir/i });

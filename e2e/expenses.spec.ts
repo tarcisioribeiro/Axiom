@@ -72,8 +72,8 @@ test.describe('Expenses', () => {
     // Dialog should close after a successful save
     await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10_000 });
 
-    // The new description should appear somewhere on the page
-    await expect(page.getByText(description)).toBeVisible({ timeout: 10_000 });
+    // The new description should appear in the data table
+    await expect(page.getByRole('table').getByText(description)).toBeVisible({ timeout: 10_000 });
   });
 
   test('newly created expense appears in the expenses list', async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe('Expenses', () => {
     await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10_000 });
 
     // Verify the expense is listed in the table
-    await expect(page.getByText(description)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('table').getByText(description)).toBeVisible({ timeout: 10_000 });
   });
 
   test('search filter narrows the expenses list', async ({ page }) => {
