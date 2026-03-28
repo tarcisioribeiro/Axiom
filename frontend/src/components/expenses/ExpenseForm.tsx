@@ -20,8 +20,15 @@ import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { Expense, ExpenseFormData, Account, Member, Loan, Payable } from '@/types';
+export interface ExpensePrefillData {
+  description?: string;
+  value?: number;
+  date?: string;
+}
+
 interface ExpenseFormProps {
   expense?: Expense;
+  prefillData?: ExpensePrefillData;
   accounts: Account[];
   loans?: Loan[];
   payables?: Payable[];
@@ -32,6 +39,7 @@ interface ExpenseFormProps {
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   expense,
+  prefillData,
   accounts,
   loans,
   payables,
@@ -120,6 +128,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setValue('account', accounts[0].id, { shouldDirty: true });
     }
   }, [expense, accounts, setValue]);
+
+  useEffect(() => {
+    if (!expense && prefillData) {
+      if (prefillData.description !== undefined) setValue('description', prefillData.description);
+      if (prefillData.value !== undefined) setValue('value', prefillData.value);
+      if (prefillData.date !== undefined) setValue('date', prefillData.date);
+    }
+  }, [expense, prefillData, setValue]);
 
   const handleFormSubmit = (data: ExpenseFormData) => {
     onSubmit(data);
