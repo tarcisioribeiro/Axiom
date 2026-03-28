@@ -112,14 +112,16 @@ describe('DataTable', () => {
 
     it('renders column headers', () => {
       render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
-      expect(screen.getByText('Nome')).toBeInTheDocument();
-      expect(screen.getByText('Valor')).toBeInTheDocument();
+      // Column labels appear in both the mobile card view and the desktop table header
+      expect(screen.getAllByText('Nome').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Valor').length).toBeGreaterThan(0);
     });
 
     it('renders a row for each data item', () => {
       render(<DataTable data={items} columns={columns} keyExtractor={keyExtractor} />);
-      expect(screen.getByText('Alpha')).toBeInTheDocument();
-      expect(screen.getByText('Beta')).toBeInTheDocument();
+      // Values appear in both mobile card and desktop table — just assert presence
+      expect(screen.getAllByText('Alpha').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Beta').length).toBeGreaterThan(0);
       expect(screen.getAllByRole('row')).toHaveLength(items.length + 1); // +1 for header
     });
 
@@ -136,7 +138,8 @@ describe('DataTable', () => {
       render(
         <DataTable data={items} columns={customColumns} keyExtractor={keyExtractor} />
       );
-      expect(screen.getByTestId('name-1')).toHaveTextContent('ALPHA');
+      // Custom render is used in both mobile and desktop views
+      expect(screen.getAllByTestId('name-1')[0]).toHaveTextContent('ALPHA');
     });
 
     it('renders actions column header when actions prop is provided', () => {
@@ -160,8 +163,9 @@ describe('DataTable', () => {
           actions={(item) => <button data-testid={`action-${item.id}`}>Editar</button>}
         />
       );
-      expect(screen.getByTestId('action-1')).toBeInTheDocument();
-      expect(screen.getByTestId('action-2')).toBeInTheDocument();
+      // Actions are rendered in both mobile and desktop views
+      expect(screen.getAllByTestId('action-1')[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId('action-2')[0]).toBeInTheDocument();
     });
 
     it('does not render actions column when actions prop is not provided', () => {

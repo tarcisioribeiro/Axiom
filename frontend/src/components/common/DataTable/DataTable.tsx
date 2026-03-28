@@ -167,7 +167,29 @@ export function DataTable<T>({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-lg border bg-card">
+      {/* Mobile card list */}
+      <div className="block overflow-hidden rounded-lg border bg-card md:hidden">
+        <div className="divide-y">
+          {data.map((item) => (
+            <div key={keyExtractor(item)} className="space-y-2 px-4 py-3">
+              {columns.map((column) => (
+                <div key={column.key} className="flex items-start justify-between gap-2">
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {column.label}
+                  </span>
+                  <span className={`text-sm ${getAlignClass(column.align)}`}>
+                    {renderColumnContent(item, column)}
+                  </span>
+                </div>
+              ))}
+              {actions && <div className="flex justify-end pt-1">{actions(item)}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-lg border bg-card md:block">
         <div className="custom-scrollbar overflow-x-auto">
           <table className="w-full">
             <thead className="border-b bg-muted/50">
