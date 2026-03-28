@@ -254,6 +254,112 @@ class BudgetSerializerValidationTest(BaseBudgetTestCase):
 
 
 # ---------------------------------------------------------------------------
+# BudgetHistoryView — history endpoint
+# ---------------------------------------------------------------------------
+
+
+class BudgetHistoryViewTest(BaseBudgetTestCase):
+    def setUp(self):
+        super().setUp()
+        from budgets.models import Budget
+        from expenses.models import Expense
+
+        today = date.today()
+        self.month = today.month
+        self.year = today.year
+
+        # Budget for current month
+        self.budget = Budget.objects.create(
+            category="food and drink",
+            limit_amount=Decimal("1000.00"),
+            month=self.month,
+            year=self.year,
+            created_by=self.user,
+        )
+        # Paid expense for the same category/month
+        Expense.objects.create(
+            description="Groceries",
+            value=Decimal("400.00"),
+            date=today,
+            horary="10:00:00",
+            category="food and drink",
+            account=self.account,
+            payed=True,
+            created_by=self.user,
+        )
+
+    def test_history_returns_months_list(self):
+        """GET /budgets/history/?category=food+and+drink returns N data points."""
+        url = reverse("budget-history")
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 6}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 6)
+
+    def test_history_contains_correct_fields(self):
+        """Each history item has month, year, limit_amount, actual_spent, percentage."""
+        url = reverse("budget-history")
+        response = self.client.get(url, {"category": "food and drink", "months": 3})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = response.data[-1]  # most recent month
+        self.assertIn("month", item)
+        self.assertIn("year", item)
+        self.assertIn("actual_spent", item)
+        self.assertIn("percentage", item)
+
+    def test_history_current_month_has_expense(self):
+        """The current month entry shows the paid expense total."""
+        url = reverse("budget-history")
+        response = self.client.get(url, {"category": "food and drink", "months": 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        item = response.data[0]
+        self.assertEqual(item["month"], self.month)
+        self.assertEqual(item["year"], self.year)
+        self.assertEqual(Decimal(item["actual_spent"]), Decimal("400.00"))
+        self.assertEqual(Decimal(item["limit_amount"]), Decimal("1000.00"))
+        self.assertAlmostEqual(item["percentage"], 40.0, places=1)
+
+    def test_history_missing_category_returns_400(self):
+        """GET /budgets/history/ without category returns 400."""
+        url = reverse("budget-history")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_history_invalid_months_returns_400(self):
+        """GET /budgets/history/?months=abc returns 400."""
+        url = reverse("budget-history")
+        response = self.client.get(url, {"category": "food and drink", "months": "abc"})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_history_months_clamped_to_max(self):
+        """months > 24 is clamped to 24."""
+        url = reverse("budget-history")
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 100}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 24)
+
+    def test_history_null_limit_when_no_budget(self):
+        """Months without a budget have limit_amount=null."""
+        url = reverse("budget-history")
+        response = self.client.get(url, {"category": "food and drink", "months": 3})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # First two months should have no budget (only current month has one)
+        older_months = [
+            item for item in response.data
+            if not (item["month"] == self.month and item["year"] == self.year)
+        ]
+        for item in older_months:
+            self.assertIsNone(item["limit_amount"])
+            self.assertEqual(item["percentage"], 0.0)
+
+
+# ---------------------------------------------------------------------------
 # AccountSerializer — create/update with account_number field
 # ---------------------------------------------------------------------------
 

@@ -672,6 +672,9 @@
         "limitAmount": "Limit Amount",
         "month": "Month",
         "year": "Year"
+      },
+      "trend": {
+        "title": "Spending Trend"
       }
     },
     "vaults": {

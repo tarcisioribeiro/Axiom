@@ -122,6 +122,7 @@ export const API_CONFIG = {
     // Budgets Module
     BUDGETS: '/api/v1/budgets/',
     BUDGETS_STATUS: '/api/v1/budgets/status/',
+    BUDGET_HISTORY: '/api/v1/budgets/history/',
 
     // Categorization Rules
     CATEGORIZATION_RULES: '/api/v1/categorization-rules/',

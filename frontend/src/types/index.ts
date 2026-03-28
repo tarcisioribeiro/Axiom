@@ -2177,6 +2177,14 @@ export interface BudgetStatus {
   year: number;
 }
 
+export interface BudgetHistory {
+  month: number;
+  year: number;
+  limit_amount: string | null;
+  actual_spent: string;
+  percentage: number;
+}
+
 // Categorization Rule Types
 export interface CategorizationRule {
   id: number;
