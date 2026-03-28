@@ -12,7 +12,7 @@ Documentação completa do schema do banco de dados:
 - Diagramas ER (Entity-Relationship)
 - Campos de auditoria e soft delete
 
-### [indices-otimizacao.md](indices-otimizacao.md)
+### [index_otimization.md](index_otimization.md)
 Estratégias de otimização e performance:
 - Índices criados e suas justificativas
 - Índices compostos para queries frequentes
@@ -216,6 +216,10 @@ docker-compose exec db pg_dump -U mindledger_user mindledger_db > backup.sql
 # Restore
 docker-compose exec -T db psql -U mindledger_user mindledger_db < backup.sql
 ```
+
+---
+
+[Voltar ao índice da documentação](../README.md)
 
 ## Links Relacionados
 

@@ -44,7 +44,13 @@ Configuração completa do pipeline GitLab e infraestrutura Kubernetes:
 - Provisionamento do cluster k3s
 - Checklist antes do primeiro push
 
-### 6. [Solução de Problemas](./troubleshooting.md)
+### 6. [Rollback](./rollback.md)
+Procedimentos de reversão em caso de falha:
+- Rollback de deploy no Kubernetes
+- Rollback de migrations Django
+- Restauração de backup do banco de dados
+
+### 7. [Solução de Problemas](./troubleshooting.md)
 Diagnóstico e resolução de problemas comuns:
 - Problemas com Docker
 - Erros de banco de dados
@@ -158,6 +164,8 @@ Esta documentação também é código! Se você encontrar erros, informações 
 3. Abra um Pull Request com suas alterações
 
 ---
+
+[Voltar ao índice da documentação](../README.md)
 
 **Última atualização**: Janeiro 2026
 **Mantenedor**: Equipe MindLedger
