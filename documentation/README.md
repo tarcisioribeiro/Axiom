@@ -4,20 +4,21 @@ Bem-vindo à documentação oficial do MindLedger! Esta documentação completa 
 
 ## 📚 Índice Geral
 
-### [1. Visão Geral](overview/)
+### [1. Visão Geral](overview/README.md)
 Introdução ao sistema e seus recursos principais.
 
 - **[Introdução](overview/introduction.md)** - O que é o MindLedger, módulos, tecnologias e arquitetura de alto nível
 - **[Recursos e Funcionalidades](overview/resources.md)** - Detalhamento completo de todas as funcionalidades por módulo
 
-### [2. Arquitetura](architecture/)
+### [2. Arquitetura](architecture/README.md)
 Decisões técnicas e estrutura do sistema.
 
 - **[Visão Geral da Arquitetura](architecture/overview.md)** - Estrutura do monorepo, camadas, padrões arquiteturais
 - **[Fluxo de Dados](architecture/data_flow.md)** - Como os dados fluem entre frontend, backend e banco de dados
 - **[Decisões Arquiteturais](architecture/architectural_decisions.md)** - Decisões técnicas importantes e suas justificativas
+- **[Diagramas UML](architecture/diagrams.md)** - ERD, componentes, implantação e classes
 
-### [3. Backend](backend/)
+### [3. Backend](backend/README.md)
 Documentação do Django REST Framework.
 
 - **[Estrutura de Apps](backend/apps_structure.md)** - Organização das apps Django
@@ -28,7 +29,7 @@ Documentação do Django REST Framework.
 - **[Criptografia](backend/criptography.md)** - Sistema de criptografia Fernet
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
 
-### [4. Frontend](frontend/)
+### [4. Frontend](frontend/README.md)
 Documentação do React + TypeScript.
 
 - **[Estrutura do Projeto](frontend/project_structure.md)** - Organização de diretórios e arquivos
@@ -38,23 +39,23 @@ Documentação do React + TypeScript.
 - **[API Client](frontend/api_client.md)** - Axios, interceptores e serviços
 - **[Estilização](frontend/stylization.md)** - TailwindCSS e tema Dracula
 
-### [5. API](api/)
+### [5. API](api/README.md)
 Documentação dos endpoints RESTful.
 
 - **[Endpoints](api/endpoints.md)** - Lista completa de endpoints por módulo
-- **[Autenticação e Tokens](api/autenticacao-tokens.md)** - Login, refresh e logout
-- **[Tratamento de Erros](api/tratamento-erros.md)** - Status codes e mensagens de erro
-- **[Filtros e Ordenação](api/filtros-ordenacao.md)** - Query parameters suportados
+- **[Autenticação e Tokens](api/token_authentication.md)** - Login, refresh e logout
+- **[Tratamento de Erros](api/error_treatments.md)** - Status codes e mensagens de erro
+- **[Filtros e Ordenação](api/filters_ordering.md)** - Query parameters suportados
 
-### [6. Banco de Dados](database/)
+### [6. Banco de Dados](database/README.md)
 PostgreSQL com pgvector.
 
 - **[Schema](database/schema.md)** - Tabelas, campos e relacionamentos completos
-- **[Índices e Otimização](database/indices-otimizacao.md)** - Estratégias de performance
+- **[Índices e Otimização](database/index_otimization.md)** - Estratégias de performance
 - **[pgvector](database/pgvector.md)** - Busca vetorial e embeddings
 - **[Migrations](database/migrations.md)** - Guia de migrations Django
 
-### [7. Autenticação e Segurança](authentication-security/)
+### [7. Autenticação e Segurança](authentication-security/README.md)
 Segurança, permissões e criptografia.
 
 - **[Fluxo de Autenticação](authentication-security/authentication_flow.md)** - JWT com HttpOnly cookies
@@ -62,7 +63,7 @@ Segurança, permissões e criptografia.
 - **[Criptografia de Dados](authentication-security/data_encryption.md)** - Fernet para dados sensíveis
 - **[Boas Práticas de Segurança](authentication-security/security_best_practices.md)** - OWASP Top 10 e headers
 
-### [8. Desenvolvimento](development/)
+### [8. Desenvolvimento](development/README.md)
 Guias para desenvolvedores.
 
 - **[Instalação](development/installation.md)** - Setup inicial (Docker e local)
@@ -70,6 +71,7 @@ Guias para desenvolvedores.
 - **[Workflow de Desenvolvimento](development/development_workflow.md)** - Comandos diários, debugging e testes
 - **[Guia de Contribuição](development/contribution_guide.md)** - Padrões de código e PRs
 - **[Deploy e CI/CD](development/deploy.md)** - Variáveis GitLab, k3s e pipeline completo
+- **[Rollback](development/rollback.md)** - Procedimentos de reversão
 - **[Troubleshooting](development/troubleshooting.md)** - Solução de problemas comuns
 
 ## 🚀 Início Rápido
