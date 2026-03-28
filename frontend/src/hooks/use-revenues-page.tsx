@@ -68,8 +68,16 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
     prefillRevenue?: RevenuePrefillData;
   } | null;
   const [isDialogOpen, setIsDialogOpen] = useState(!!locationState?.prefillRevenue);
+  const [revenues, setRevenues] = useState<Revenue[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRevenue, setSelectedRevenue] = useState<Revenue | undefined>();
   const prefillRevenueData = locationState?.prefillRevenue;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
