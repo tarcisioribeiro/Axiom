@@ -70,17 +70,8 @@ export function useExpensesPage(): UseExpensesPageReturn {
     prefillExpense?: ExpensePrefillData;
   } | null;
   const [isDialogOpen, setIsDialogOpen] = useState(!!locationState?.prefillExpense);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [payables, setPayables] = useState<Payable[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
   const prefillExpenseData = locationState?.prefillExpense;
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
