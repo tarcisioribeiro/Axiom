@@ -15,21 +15,21 @@ export const Header = () => {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-card px-md py-md lg:px-lg">
+    <header className="sticky top-0 z-30 border-b bg-card px-md py-md md:px-lg">
       <div className="flex items-center justify-between">
         {/* Botão Hamburger (apenas mobile) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="mr-sm lg:hidden"
+          className="mr-sm md:hidden"
           aria-label={t('layout.openMenu')}
         >
           <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
 
         {/* Breadcrumb Navigation */}
-        <div className="flex-1 lg:flex-none">
+        <div className="flex-1 md:flex-none">
           <Breadcrumb />
         </div>
 

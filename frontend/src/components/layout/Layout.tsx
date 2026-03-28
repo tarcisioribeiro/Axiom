@@ -24,7 +24,7 @@ export const Layout = () => {
       {/* Main content: ocupa espaço restante */}
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
-        <main id="main-content" className="flex-1 p-md lg:p-lg" role="main">
+        <main id="main-content" className="flex-1 p-0 md:p-md" role="main">
           <Outlet />
         </main>
       </div>

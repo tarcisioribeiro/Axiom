@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import status
@@ -381,10 +381,6 @@ class ExportExpensesView(APIView):
             period_parts.append(f"até {date_to[8:10]}/{date_to[5:7]}/{date_to[:4]}")
         period = " ".join(period_parts) if period_parts else "Todo o período"
 
-        total = (
-            sum(Decimal(str(e.value)) for e in qs) if qs.exists() else Decimal("0.00")
-        )
-
         user_name = ""
         if hasattr(request.user, "get_full_name"):
             user_name = request.user.get_full_name() or request.user.username
@@ -403,9 +399,25 @@ class ExportExpensesView(APIView):
             "Merchant",
         ]
 
-        rows = []
-        for exp in qs:
-            rows.append(
+        if format_type == "pdf":
+            PDF_ROW_LIMIT = 10_000
+            count = qs.count()
+            if count > PDF_ROW_LIMIT:
+                return Response(
+                    {
+                        "detail": (
+                            f"O relatório contém {count} registros, que excede"
+                            f" o limite de {PDF_ROW_LIMIT} para exportação em"
+                            " PDF. Use um intervalo de datas menor ou exporte"
+                            " em CSV."
+                        )
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
+
+            total = qs.aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+
+            rows = [
                 [
                     exp.date.strftime("%d/%m/%Y"),
                     exp.description,
@@ -415,18 +427,10 @@ class ExportExpensesView(APIView):
                     "Sim" if exp.payed else "Não",
                     exp.merchant or "",
                 ]
-            )
-
-        if format_type == "pdf":
-            totals_row = [
-                "",
-                "TOTAL",
-                "",
-                "",
-                format_decimal(total),
-                "",
-                "",
+                for exp in qs
             ]
+
+            totals_row = ["", "TOTAL", "", "", format_decimal(total), "", ""]
             return build_pdf_response(
                 title="Relatório de Despesas",
                 headers=headers,
@@ -440,4 +444,16 @@ class ExportExpensesView(APIView):
                 filename=filename,
             )
 
-        return build_csv_response(rows=rows, headers=headers, filename=filename)
+        def _csv_rows():
+            for exp in qs.iterator(chunk_size=500):
+                yield [
+                    exp.date.strftime("%d/%m/%Y"),
+                    exp.description,
+                    EXPENSES_CATEGORY_LABELS.get(exp.category, exp.category),
+                    exp.account.account_name if exp.account else "",
+                    format_decimal(exp.value),
+                    "Sim" if exp.payed else "Não",
+                    exp.merchant or "",
+                ]
+
+        return build_csv_response(rows=_csv_rows(), headers=headers, filename=filename)

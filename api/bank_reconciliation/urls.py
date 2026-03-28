@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    BankStatementEntryManualMatchView,
     BankStatementEntryUpdateView,
     BankStatementImportCreateView,
     BankStatementImportDetailView,
@@ -33,5 +34,10 @@ urlpatterns = [
         "bank-reconciliation/entries/<int:pk>/",
         BankStatementEntryUpdateView.as_view(),
         name="bank-reconciliation-entry-update",
+    ),
+    path(
+        "bank-reconciliation/imports/<int:import_pk>/entries/<int:entry_pk>/match/",
+        BankStatementEntryManualMatchView.as_view(),
+        name="bank-reconciliation-entry-manual-match",
     ),
 ]

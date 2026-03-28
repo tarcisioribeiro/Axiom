@@ -8,9 +8,9 @@ Used by ExportExpensesView and ExportRevenuesView.
 import csv
 import io
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 
 from reportlab.lib import colors  # type: ignore
 from reportlab.lib.pagesizes import A4, landscape  # type: ignore
@@ -20,18 +20,28 @@ from reportlab.platypus import Paragraph  # type: ignore
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle
 
 
+class _Echo:
+    """Pseudo-buffer whose write() returns the value so csv.writer can stream."""
+
+    def write(self, value: str) -> str:
+        return value
+
+
 def build_csv_response(
-    rows: List[List[Any]],
+    rows: Iterable[List[Any]],
     headers: List[str],
     filename: str,
-) -> HttpResponse:
+) -> StreamingHttpResponse:
     """
-    Build an HttpResponse with CSV content, UTF-8 BOM for Excel compatibility.
+    Build a StreamingHttpResponse with CSV content, UTF-8 BOM for Excel compatibility.
+
+    Accepts any iterable for ``rows`` — including generators — so callers can
+    pass a queryset iterator without loading all records into memory at once.
 
     Parameters
     ----------
-    rows : list of lists
-        Data rows (each row is a list of cell values).
+    rows : iterable of lists
+        Data rows (each row is a list of cell values). May be a generator.
     headers : list of str
         Column header labels.
     filename : str
@@ -39,22 +49,22 @@ def build_csv_response(
 
     Returns
     -------
-    HttpResponse
+    StreamingHttpResponse
         Response with content-type text/csv and UTF-8 BOM encoding.
     """
-    response = HttpResponse(
-        content_type="text/csv; charset=utf-8-sig",
+    pseudo_buffer = _Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    def _generate() -> Iterable[str]:
+        yield "\ufeff"  # BOM — Excel UTF-8 recognition
+        yield writer.writerow(headers)
+        for row in rows:
+            yield writer.writerow(row)
+
+    response = StreamingHttpResponse(
+        _generate(), content_type="text/csv; charset=utf-8-sig"
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}.csv"'
-
-    # Write BOM manually so Excel recognises UTF-8
-    response.write("\ufeff")
-
-    writer = csv.writer(response)
-    writer.writerow(headers)
-    for row in rows:
-        writer.writerow(row)
-
     return response
 
 

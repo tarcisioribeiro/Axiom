@@ -120,6 +120,35 @@ class Member(BaseModel):
                 self.document_hash = compute_document_hash(plain)
         super().save(*args, **kwargs)
 
+    def anonymize(self) -> None:
+        """
+        Replace all PII fields with anonymous placeholders.
+
+        Must be called before hard-deletion (LGPD pre-deletion step).
+        The caller is responsible for calling save() after this method
+        so the anonymized state is persisted to the database before
+        instance.delete() runs.
+
+        document_hash is set to a deterministic unique placeholder so it
+        does not collide when multiple Members are anonymized in the same
+        purge run (unique constraint on the column).
+        """
+        if self.profile_photo:
+            try:
+                self.profile_photo.delete(save=False)
+            except Exception:
+                pass
+        self.name = "[REMOVIDO]"
+        self._document = None
+        self.document_hash = f"PURGED-{self.uuid}"
+        self.phone = "[REMOVIDO]"
+        self.email = None
+        self.address = None
+        self.birth_date = None
+        self.emergency_contact = None
+        self.occupation = None
+        self.notes = None
+
     @property
     def is_user(self):
         return self.user is not None
