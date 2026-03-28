@@ -408,7 +408,7 @@ export default function Dashboard() {
 
   return (
     <AnimatedPage>
-      <div className="space-y-6 px-4 py-8">
+      <div className="space-y-6 px-sm py-md md:px-4 md:py-8">
         <PageHeader title={t('pages.dashboard.title')} icon={<LayoutDashboard />} />
 
         {/* Alertas Financeiros */}
@@ -430,6 +430,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               {accountBalances.length > 0 ? (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -501,6 +502,7 @@ export default function Dashboard() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="py-8 text-center">
                   {t('pages.dashboard.noAccounts')}

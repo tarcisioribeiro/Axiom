@@ -384,7 +384,7 @@ export default function DailyChecklist() {
     <PageContainer>
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-end gap-2">
           <div>
             <Label htmlFor="date">{t('common.fields.date')}</Label>
@@ -499,7 +499,7 @@ export default function DailyChecklist() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
             <KanbanColumn
               status="todo"
               title={t('pages.dailyChecklist.todo')}
