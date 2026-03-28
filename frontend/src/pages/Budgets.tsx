@@ -103,7 +103,7 @@ export default function Budgets() {
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
   const [showTrend, setShowTrend] = useState(false);
-  const [trendCategory, setTrendCategory] = useState(
+  const [trendCategory, setTrendCategory] = useState<string>(
     EXPENSE_CATEGORIES_CANONICAL[0]?.key ?? 'others'
   );
   const [trendMonths, setTrendMonths] = useState(6);
