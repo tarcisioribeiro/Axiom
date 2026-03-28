@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
@@ -17,6 +18,7 @@ import { loansService } from '@/services/loans-service';
 import { payablesService } from '@/services/payables-service';
 import type { Expense, ExpenseFormData, Account, Loan, Payable } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+import type { ExpensePrefillData } from '@/components/expenses/ExpenseForm';
 
 import type { Column } from '../components/common/DataTable';
 
@@ -57,13 +59,16 @@ export interface UseExpensesPageReturn {
   totalExpenses: number;
   hasActiveFilters: boolean;
   columns: Column<Expense>[];
+  prefillExpenseData: ExpensePrefillData | undefined;
 }
 
 export function useExpensesPage(): UseExpensesPageReturn {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
+  const [prefillExpenseData, setPrefillExpenseData] = useState<ExpensePrefillData | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -79,6 +84,15 @@ export function useExpensesPage(): UseExpensesPageReturn {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  useEffect(() => {
+    const state = location.state as { prefillExpense?: ExpensePrefillData } | null;
+    if (state?.prefillExpense) {
+      setPrefillExpenseData(state.prefillExpense);
+      setSelectedExpense(undefined);
+      setIsDialogOpen(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const params = useMemo(() => {
     const p: Record<string, unknown> = {};
@@ -388,5 +402,6 @@ export function useExpensesPage(): UseExpensesPageReturn {
     totalExpenses,
     hasActiveFilters,
     columns,
+    prefillExpenseData,
   };
 }

@@ -6,10 +6,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.permissions import GlobalDefaultPermission
+from expenses.models import Expense
+from revenues.models import Revenue
 
 from .models import BankStatementEntry, BankStatementImport
 from .parsers import parse_statement
 from .serializers import (
+    BankStatementEntryManualMatchSerializer,
+    BankStatementEntrySerializer,
     BankStatementEntryUpdateSerializer,
     BankStatementImportListSerializer,
     BankStatementImportSerializer,
@@ -164,6 +168,83 @@ class BankStatementMatchView(APIView):
 
         serializer = BankStatementImportSerializer(stmt_import)
         return Response(serializer.data)
+
+
+class BankStatementEntryManualMatchView(APIView):
+    """PATCH /api/v1/bank-reconciliation/imports/<import_pk>/entries/<entry_pk>/match/
+
+    Manually link a statement entry to an existing Expense or Revenue.
+    Sets match_confidence='manual' and status='matched'.
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = BankStatementEntry.objects.all()
+
+    def patch(self, request, import_pk, entry_pk):
+        try:
+            stmt_import = BankStatementImport.objects.get(pk=import_pk, owner=request.user)
+        except BankStatementImport.DoesNotExist:
+            return Response(
+                {"detail": "Importação não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            entry = BankStatementEntry.objects.get(
+                pk=entry_pk, statement_import=stmt_import, is_deleted=False
+            )
+        except BankStatementEntry.DoesNotExist:
+            return Response(
+                {"detail": "Entrada não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = BankStatementEntryManualMatchSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        matched_expense_id = serializer.validated_data.get("matched_expense_id")
+        matched_revenue_id = serializer.validated_data.get("matched_revenue_id")
+
+        if matched_expense_id:
+            try:
+                expense = Expense.objects.get(
+                    pk=matched_expense_id, created_by=request.user, is_deleted=False
+                )
+            except Expense.DoesNotExist:
+                return Response(
+                    {"detail": "Despesa não encontrada."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            entry.matched_expense = expense
+            entry.matched_revenue = None
+        else:
+            try:
+                revenue = Revenue.objects.get(
+                    pk=matched_revenue_id, created_by=request.user, is_deleted=False
+                )
+            except Revenue.DoesNotExist:
+                return Response(
+                    {"detail": "Receita não encontrada."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            entry.matched_revenue = revenue
+            entry.matched_expense = None
+
+        entry.match_confidence = "manual"
+        entry.status = "matched"
+        entry.save(
+            update_fields=[
+                "matched_expense",
+                "matched_revenue",
+                "match_confidence",
+                "status",
+            ]
+        )
+        recount_import_stats(stmt_import)
+
+        return Response(BankStatementEntrySerializer(entry).data)
 
 
 class BankStatementEntryUpdateView(generics.UpdateAPIView):

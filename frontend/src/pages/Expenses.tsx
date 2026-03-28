@@ -56,6 +56,7 @@ export default function Expenses() {
     totalExpenses,
     hasActiveFilters,
     columns,
+    prefillExpenseData,
   } = useExpensesPage();
 
   return (
@@ -159,6 +160,7 @@ export default function Expenses() {
           </DialogHeader>
           <ExpenseForm
             expense={selectedExpense}
+            prefillData={!selectedExpense ? prefillExpenseData : undefined}
             accounts={accounts}
             loans={loans}
             payables={payables}
