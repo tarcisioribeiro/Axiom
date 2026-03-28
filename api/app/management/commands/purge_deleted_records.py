@@ -6,14 +6,24 @@ Usage:
     python manage.py purge_deleted_records [--days N] [--dry-run]
 
 Default retention period: 90 days.
+
+Before each hard-delete the command:
+  1. Anonymizes PII fields on the instance and persists that anonymized state
+     to the database (so the next DB backup sees clean data).
+  2. Emits a structured JSON line to the ``compliance`` logger
+     (compliance.log) for audit purposes.
+  3. Creates an immutable DeletionRecord row for audit reporting.
+  4. Writes an ActivityLog entry via the existing security audit trail.
 """
 
-import uuid
+import logging
 from datetime import timedelta
 from typing import Any
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
+compliance_logger = logging.getLogger("compliance")
 
 
 class Command(BaseCommand):
@@ -67,7 +77,9 @@ class Command(BaseCommand):
             if not dry_run:
                 for instance in qs.iterator():
                     try:
-                        anonymize_fn(instance)
+                        self._anonymize_and_save(instance, anonymize_fn)
+                        self._emit_compliance_log(instance, label)
+                        self._create_deletion_record(instance, label)
                         self._log_purge(instance, label)
                         instance.delete()
                     except Exception as e:
@@ -132,21 +144,55 @@ class Command(BaseCommand):
         ]
 
     # ------------------------------------------------------------------
+    # Anonymization + save
+    # ------------------------------------------------------------------
+
+    def _anonymize_and_save(self, instance: Any, anonymize_fn: Any) -> None:
+        """
+        Anonymize PII fields and persist the clean state to the database
+        before hard-deletion.  If the model exposes a first-class
+        ``anonymize()`` method (e.g. Member) we call that; otherwise we
+        fall back to the legacy inline function.
+
+        Using update_fields limits the UPDATE to only the columns we are
+        intentionally blanking, avoiding unintended side-effects.
+        """
+        if hasattr(instance, "anonymize"):
+            instance.anonymize()
+            instance.save(
+                update_fields=self._anonymize_update_fields(instance)
+            )
+        else:
+            anonymize_fn(instance)
+            instance.save()
+
+    def _anonymize_update_fields(self, instance: Any) -> list[str]:
+        """Return the DB column names that anonymize() touches per model."""
+        from members.models import Member
+
+        if isinstance(instance, Member):
+            return [
+                "name",
+                "_document",
+                "document_hash",
+                "phone",
+                "email",
+                "address",
+                "birth_date",
+                "emergency_contact",
+                "occupation",
+                "notes",
+            ]
+        return []
+
+    # ------------------------------------------------------------------
     # Anonymization functions — clear PII/encrypted fields before purge
+    # (used for models that do not yet have a first-class anonymize())
     # ------------------------------------------------------------------
 
     def _anonymize_member(self, instance: Any) -> None:
-        """Replace PII fields with placeholder values."""
-        instance.name = "[REMOVIDO]"
-        instance.document = str(uuid.uuid4())
-        instance.phone = "[REMOVIDO]"
-        instance.email = None
-        instance.address = None
-        instance.birth_date = None
-        instance.emergency_contact = None
-        instance.occupation = None
-        instance.notes = None
-        # Intentionally NOT saving — record will be hard-deleted immediately.
+        """Delegate to the model's own anonymize() method."""
+        instance.anonymize()
 
     def _anonymize_account(self, instance: Any) -> None:
         """Clear encrypted account number."""
@@ -182,7 +228,54 @@ class Command(BaseCommand):
                 pass
 
     # ------------------------------------------------------------------
-    # Audit logging
+    # Compliance logging
+    # ------------------------------------------------------------------
+
+    def _emit_compliance_log(self, instance: Any, label: str) -> None:
+        """
+        Emit a structured JSON line to the ``compliance`` logger so that
+        each hard-deletion is traceable in compliance.log.
+
+        Fields emitted:
+          event      — fixed string "record_purged"
+          model      — dotted model label (e.g. "members.Member")
+          pk         — database primary key of the deleted row
+          uuid       — UUID field value (referential integrity anchor)
+          deleted_at — ISO-8601 timestamp of the original soft-delete
+          purged_at  — ISO-8601 timestamp of this hard-delete
+        """
+        compliance_logger.info(
+            "record_purged",
+            extra={
+                "event": "record_purged",
+                "model": label,
+                "pk": str(instance.pk),
+                "uuid": str(instance.uuid),
+                "deleted_at": (
+                    instance.deleted_at.isoformat()
+                    if instance.deleted_at
+                    else None
+                ),
+                "purged_at": timezone.now().isoformat(),
+            },
+        )
+
+    def _create_deletion_record(self, instance: Any, label: str) -> None:
+        """Create an immutable DeletionRecord for audit reporting."""
+        try:
+            from security.models import DeletionRecord
+
+            DeletionRecord.objects.create(
+                record_uuid=instance.uuid,
+                model_name=label,
+                deleted_at=instance.deleted_at,
+            )
+        except Exception:
+            # DeletionRecord failure must never block the purge itself.
+            pass
+
+    # ------------------------------------------------------------------
+    # Audit logging (ActivityLog)
     # ------------------------------------------------------------------
 
     def _log_purge(self, instance: Any, label: str) -> None:

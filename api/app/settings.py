@@ -347,6 +347,14 @@ LOGGING = {
             "backupCount": 10,
             "formatter": "json",
         },
+        "compliance_file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "compliance.log"),
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 10,
+            "formatter": "json",
+        },
     },
     "loggers": {
         "django": {
@@ -361,6 +369,11 @@ LOGGING = {
         },
         "mindledger.audit": {
             "handlers": ["console", "audit_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "compliance": {
+            "handlers": ["compliance_file"],
             "level": "INFO",
             "propagate": False,
         },
