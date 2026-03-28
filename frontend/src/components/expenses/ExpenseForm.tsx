@@ -131,7 +131,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
   useEffect(() => {
     if (!expense && prefillData) {
-      if (prefillData.description !== undefined) setValue('description', prefillData.description);
+      if (prefillData.description !== undefined)
+        setValue('description', prefillData.description);
       if (prefillData.value !== undefined) setValue('value', prefillData.value);
       if (prefillData.date !== undefined) setValue('date', prefillData.date);
     }

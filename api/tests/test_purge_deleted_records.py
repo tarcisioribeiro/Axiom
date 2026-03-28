@@ -11,10 +11,8 @@ Covers:
   - purge command: records within retention window are not touched
 """
 
-import logging
 from datetime import timedelta
 from io import StringIO
-from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
@@ -104,9 +102,16 @@ class MemberAnonymizeTest(TestCase):
         self.member.anonymize()
         self.member.save(
             update_fields=[
-                "name", "_document", "document_hash", "phone",
-                "email", "address", "birth_date", "emergency_contact",
-                "occupation", "notes",
+                "name",
+                "_document",
+                "document_hash",
+                "phone",
+                "email",
+                "address",
+                "birth_date",
+                "emergency_contact",
+                "occupation",
+                "notes",
             ]
         )
         refreshed = Member.all_objects.get(pk=self.member.pk)

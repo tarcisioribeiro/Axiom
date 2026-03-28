@@ -431,77 +431,77 @@ export default function Dashboard() {
             <CardContent>
               {accountBalances.length > 0 ? (
                 <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('pages.dashboard.columns.account')}</TableHead>
-                      <TableHead className="text-right">
-                        {t('pages.dashboard.columns.currentBalance')}
-                      </TableHead>
-                      <TableHead className="text-right">
-                        {t('pages.dashboard.columns.futureBalance')}
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {accountBalances.map((account) => (
-                      <TableRow key={account.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            <div>{account.account_name}</div>
-                            <div className="text-xs">
-                              {translate('institutions', account.institution_name)}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t('pages.dashboard.columns.account')}</TableHead>
+                        <TableHead className="text-right">
+                          {t('pages.dashboard.columns.currentBalance')}
+                        </TableHead>
+                        <TableHead className="text-right">
+                          {t('pages.dashboard.columns.futureBalance')}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {accountBalances.map((account) => (
+                        <TableRow key={account.id}>
+                          <TableCell className="font-medium">
+                            <div>
+                              <div>{account.account_name}</div>
+                              <div className="text-xs">
+                                {translate('institutions', account.institution_name)}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={cn(
-                              'font-semibold',
-                              account.current_balance >= 0
-                                ? 'text-success'
-                                : 'text-destructive'
-                            )}
-                          >
-                            {formatCurrency(account.current_balance)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div>
+                          </TableCell>
+                          <TableCell className="text-right">
                             <span
                               className={cn(
                                 'font-semibold',
-                                account.future_balance >= 0
+                                account.current_balance >= 0
                                   ? 'text-success'
                                   : 'text-destructive'
                               )}
                             >
-                              {formatCurrency(account.future_balance)}
+                              {formatCurrency(account.current_balance)}
                             </span>
-                            {(account.pending_revenues > 0 ||
-                              account.pending_expenses > 0) && (
-                              <div className="mt-1 text-xs">
-                                {account.pending_revenues > 0 && (
-                                  <span className="text-success">
-                                    +{formatCurrency(account.pending_revenues)}
-                                  </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div>
+                              <span
+                                className={cn(
+                                  'font-semibold',
+                                  account.future_balance >= 0
+                                    ? 'text-success'
+                                    : 'text-destructive'
                                 )}
-                                {account.pending_revenues > 0 &&
-                                  account.pending_expenses > 0 &&
-                                  ' / '}
-                                {account.pending_expenses > 0 && (
-                                  <span className="text-destructive">
-                                    -{formatCurrency(account.pending_expenses)}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                              >
+                                {formatCurrency(account.future_balance)}
+                              </span>
+                              {(account.pending_revenues > 0 ||
+                                account.pending_expenses > 0) && (
+                                <div className="mt-1 text-xs">
+                                  {account.pending_revenues > 0 && (
+                                    <span className="text-success">
+                                      +{formatCurrency(account.pending_revenues)}
+                                    </span>
+                                  )}
+                                  {account.pending_revenues > 0 &&
+                                    account.pending_expenses > 0 &&
+                                    ' / '}
+                                  {account.pending_expenses > 0 && (
+                                    <span className="text-destructive">
+                                      -{formatCurrency(account.pending_expenses)}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               ) : (
                 <div className="py-8 text-center">

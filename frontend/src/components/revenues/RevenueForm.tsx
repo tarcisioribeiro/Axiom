@@ -104,7 +104,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
 
   useEffect(() => {
     if (!revenue && prefillData) {
-      if (prefillData.description !== undefined) setValue('description', prefillData.description);
+      if (prefillData.description !== undefined)
+        setValue('description', prefillData.description);
       if (prefillData.value !== undefined) setValue('value', prefillData.value);
       if (prefillData.date !== undefined) setValue('date', prefillData.date);
     }
