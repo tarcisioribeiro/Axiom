@@ -1821,8 +1821,17 @@ export const FINANCIAL_GOAL_CATEGORIES = [
   { value: 'vehicle', label: 'Veículo' },
   { value: 'retirement', label: 'Aposentadoria' },
   { value: 'health', label: 'Saúde' },
+  { value: 'reduce_expenses', label: 'Reduzir Despesas' },
+  { value: 'increase_revenue', label: 'Aumentar Receitas' },
   { value: 'other', label: 'Outro' },
 ] as const;
+
+export interface GoalComputedProgress {
+  current_value: string;
+  target_value: string;
+  percentage: string;
+  data_source: 'vaults' | 'expenses' | 'revenues';
+}
 
 export interface VaultTransaction {
   id: number;
@@ -2027,6 +2036,9 @@ export interface FinancialGoal {
   is_completed: boolean;
   completed_at?: string;
   notes?: string;
+  linked_expense_category?: string;
+  linked_account?: number | null;
+  computed_progress: GoalComputedProgress;
   created_at: string;
   updated_at: string;
   created_by?: number;
@@ -2046,6 +2058,7 @@ export interface FinancialGoalListItem {
   target_date?: string;
   is_active: boolean;
   is_completed: boolean;
+  computed_progress: GoalComputedProgress;
   created_at: string;
 }
 
@@ -2057,6 +2070,8 @@ export interface FinancialGoalFormData {
   target_date?: string;
   is_active: boolean;
   notes?: string;
+  linked_expense_category?: string;
+  linked_account?: number | null;
 }
 
 export interface FinancialGoalCheckResponse {
@@ -2109,6 +2124,24 @@ export interface NotificationSummary {
   unread_count: number;
 }
 
+export type NotificationChannel = 'in_app' | 'email' | 'both';
+
+export interface NotificationPreference {
+  id: number;
+  uuid: string;
+  notification_type: NotificationType;
+  notification_type_display: string;
+  channel: NotificationChannel;
+  channel_display: string;
+}
+
+export type CreateNotificationPreference = Pick<
+  NotificationPreference,
+  'notification_type' | 'channel'
+>;
+
+export type UpdateNotificationPreference = Pick<NotificationPreference, 'channel'>;
+
 // Budget Types
 export interface Budget {
   id: number;
@@ -2142,6 +2175,14 @@ export interface BudgetStatus {
   member_name: string | null;
   month: number;
   year: number;
+}
+
+export interface BudgetHistory {
+  month: number;
+  year: number;
+  limit_amount: string | null;
+  actual_spent: string;
+  percentage: number;
 }
 
 // Categorization Rule Types

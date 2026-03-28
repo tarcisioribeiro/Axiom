@@ -1,4 +1,11 @@
-import { ArrowLeft, ArrowLeftRight, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowLeftRight,
+  Link2,
+  Plus,
+  RefreshCw,
+  Search,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -9,10 +16,25 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
-import type { BankStatementEntry, BankStatementImport } from '@/types';
+import { expensesService } from '@/services/expenses-service';
+import { revenuesService } from '@/services/revenues-service';
+import type {
+  BankStatementEntry,
+  BankStatementImport,
+  Expense,
+  Revenue,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function ConfidenceBadge({
@@ -25,17 +47,19 @@ function ConfidenceBadge({
     high: 'bg-success/10 text-success border-success/30',
     medium: 'bg-warning/10 text-warning border-warning/30',
     low: 'bg-destructive/10 text-destructive border-destructive/30',
+    manual: 'bg-primary/10 text-primary border-primary/30',
   };
   const labels: Record<string, string> = {
     high: 'Alta',
     medium: 'Média',
     low: 'Baixa',
+    manual: 'Manual',
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[confidence]}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[confidence] ?? ''}`}
     >
-      {labels[confidence]}
+      {labels[confidence] ?? confidence}
     </span>
   );
 }
@@ -73,9 +97,24 @@ export default function BankReconciliationDetail() {
   const [matchLoading, setMatchLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
 
+  // Manual match modal state
+  const [matchingEntry, setMatchingEntry] = useState<BankStatementEntry | null>(null);
+  const [candidates, setCandidates] = useState<(Expense | Revenue)[]>([]);
+  const [candidateSearch, setCandidateSearch] = useState('');
+  const [candidateLoading, setCandidateLoading] = useState(false);
+
   useEffect(() => {
     if (importId) void loadImport(Number(importId));
   }, [importId]);
+
+  // Debounced candidate search
+  useEffect(() => {
+    if (!matchingEntry) return;
+    const timer = setTimeout(() => {
+      void loadCandidates(matchingEntry, candidateSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [candidateSearch, matchingEntry]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadImport(id: number) {
     setLoading(true);
@@ -122,7 +161,6 @@ export default function BankReconciliationDetail() {
         payload as Partial<BankStatementEntry>
       );
 
-      // Refresh import to get updated stats
       if (importData) {
         const updated = await bankReconciliationService.getImport(importData.id);
         setImportData(updated);
@@ -132,6 +170,87 @@ export default function BankReconciliationDetail() {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  async function loadCandidates(entry: BankStatementEntry, search: string) {
+    setCandidateLoading(true);
+    try {
+      const amount = Math.abs(Number(entry.amount));
+      const minValue = (amount * 0.9).toFixed(2);
+      const maxValue = (amount * 1.1).toFixed(2);
+      const entryDate = new Date(entry.date);
+      const dateFrom = new Date(entryDate);
+      dateFrom.setDate(dateFrom.getDate() - 7);
+      const dateTo = new Date(entryDate);
+      dateTo.setDate(dateTo.getDate() + 7);
+
+      const params: Record<string, unknown> = {
+        min_value: minValue,
+        max_value: maxValue,
+        date_from: dateFrom.toISOString().split('T')[0],
+        date_to: dateTo.toISOString().split('T')[0],
+      };
+      if (search) params.search = search;
+
+      if (entry.transaction_type === 'debit') {
+        const results = await expensesService.getAll(params);
+        setCandidates(results);
+      } else {
+        const results = await revenuesService.getAll(params);
+        setCandidates(results);
+      }
+    } catch (err) {
+      toast({ title: getErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setCandidateLoading(false);
+    }
+  }
+
+  async function openManualMatch(entry: BankStatementEntry) {
+    setMatchingEntry(entry);
+    setCandidates([]);
+    setCandidateSearch('');
+    await loadCandidates(entry, '');
+  }
+
+  async function handleManualMatch(candidateId: number) {
+    if (!matchingEntry || !importData) return;
+    setUpdatingId(matchingEntry.id);
+    try {
+      const payload =
+        matchingEntry.transaction_type === 'debit'
+          ? { matched_expense_id: candidateId }
+          : { matched_revenue_id: candidateId };
+
+      await bankReconciliationService.manualMatch(
+        importData.id,
+        matchingEntry.id,
+        payload
+      );
+      setMatchingEntry(null);
+
+      const updated = await bankReconciliationService.getImport(importData.id);
+      setImportData(updated);
+      setEntries(updated.entries ?? []);
+      toast({ title: 'Vinculação manual realizada com sucesso!' });
+    } catch (err) {
+      toast({ title: getErrorMessage(err), variant: 'destructive' });
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  function handleCreateFromEntry(entry: BankStatementEntry) {
+    const prefill = {
+      description: entry.description,
+      value: Math.abs(Number(entry.amount)),
+      date: entry.date,
+    };
+    if (entry.transaction_type === 'debit') {
+      void navigate('/expenses', { state: { prefillExpense: prefill } });
+    } else {
+      void navigate('/revenues', { state: { prefillRevenue: prefill } });
     }
   }
 
@@ -191,13 +310,15 @@ export default function BankReconciliationDetail() {
       key: 'actions',
       label: 'Ações',
       render: (entry) => {
-        if (entry.status !== 'pending') return null;
+        if (entry.status === 'matched' || entry.status === 'ignored') return null;
         const isUpdating = updatingId === entry.id;
         const hasMatch = !!(entry.matched_expense ?? entry.matched_revenue);
+        const isDebit = entry.transaction_type === 'debit';
 
         return (
-          <div className="flex gap-1">
-            {hasMatch && (
+          <div className="flex flex-wrap gap-1">
+            {/* Auto-match confirmation buttons (pending entries with a suggestion) */}
+            {entry.status === 'pending' && hasMatch && (
               <Button
                 size="sm"
                 variant="outline"
@@ -215,22 +336,56 @@ export default function BankReconciliationDetail() {
                 ✓
               </Button>
             )}
+            {entry.status === 'pending' && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                  disabled={isUpdating}
+                  onClick={() => handleUpdateEntry(entry, 'unmatched')}
+                >
+                  ✗
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isUpdating}
+                  onClick={() => handleUpdateEntry(entry, 'ignored')}
+                >
+                  —
+                </Button>
+              </>
+            )}
+
+            {/* Manual match */}
             <Button
               size="sm"
               variant="outline"
-              className="border-destructive/50 text-destructive hover:bg-destructive/10"
+              className="gap-1"
               disabled={isUpdating}
-              onClick={() => handleUpdateEntry(entry, 'unmatched')}
+              title="Vincular manualmente"
+              onClick={() => void openManualMatch(entry)}
             >
-              ✗
+              <Link2 className="h-3 w-3" />
+              Vincular
             </Button>
+
+            {/* Create expense / revenue pre-filled */}
             <Button
               size="sm"
               variant="outline"
+              className="gap-1"
               disabled={isUpdating}
-              onClick={() => handleUpdateEntry(entry, 'ignored')}
+              title={
+                isDebit
+                  ? 'Criar despesa a partir desta entrada'
+                  : 'Criar receita a partir desta entrada'
+              }
+              onClick={() => handleCreateFromEntry(entry)}
             >
-              —
+              <Plus className="h-3 w-3" />
+              {isDebit ? 'Despesa' : 'Receita'}
             </Button>
           </div>
         );
@@ -246,6 +401,9 @@ export default function BankReconciliationDetail() {
     importData.matched_count -
     importData.unmatched_count -
     importData.ignored_count;
+
+  const candidateLabel =
+    matchingEntry?.transaction_type === 'debit' ? 'despesas' : 'receitas';
 
   return (
     <PageContainer>
@@ -307,6 +465,90 @@ export default function BankReconciliationDetail() {
           message: 'Este extrato não possui transações.',
         }}
       />
+
+      {/* Manual Match Modal */}
+      <Dialog
+        open={!!matchingEntry}
+        onOpenChange={(open) => {
+          if (!open) setMatchingEntry(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="h-4 w-4" />
+              Vincular manualmente
+            </DialogTitle>
+            <DialogDescription>
+              Selecione uma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
+              existente para vincular a esta entrada do extrato.
+            </DialogDescription>
+          </DialogHeader>
+
+          {matchingEntry && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <p className="font-medium">{matchingEntry.description}</p>
+              <p className="mt-1 text-muted-foreground">
+                {formatDate(matchingEntry.date)} ·{' '}
+                <span
+                  className={
+                    matchingEntry.transaction_type === 'debit'
+                      ? 'text-destructive'
+                      : 'text-success'
+                  }
+                >
+                  {matchingEntry.transaction_type === 'debit' ? '-' : '+'}
+                  {formatCurrency(Math.abs(Number(matchingEntry.amount)))}
+                </span>
+              </p>
+            </div>
+          )}
+
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder={`Buscar ${candidateLabel} por descrição...`}
+              value={candidateSearch}
+              onChange={(e) => setCandidateSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="max-h-72 space-y-2 overflow-y-auto">
+            {candidateLoading ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Carregando...
+              </p>
+            ) : candidates.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">
+                Nenhuma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
+                encontrada com valor e data próximos.
+              </p>
+            ) : (
+              candidates.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{c.description}</p>
+                    <p className="text-muted-foreground">
+                      {formatDate(c.date)} · {formatCurrency(Math.abs(Number(c.value)))}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={updatingId === matchingEntry?.id}
+                    onClick={() => void handleManualMatch(c.id)}
+                  >
+                    Selecionar
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

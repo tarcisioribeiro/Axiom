@@ -39,6 +39,17 @@ class BankReconciliationService extends BaseService<BankStatementImport, FormDat
       data
     );
   }
+
+  async manualMatch(
+    importId: number,
+    entryId: number,
+    data: { matched_expense_id?: number | null; matched_revenue_id?: number | null }
+  ): Promise<BankStatementEntry> {
+    return apiClient.patch<BankStatementEntry>(
+      `${API_CONFIG.ENDPOINTS.BANK_RECONCILIATION_IMPORTS}${importId}/entries/${entryId}/match/`,
+      data
+    );
+  }
 }
 
 export const bankReconciliationService = new BankReconciliationService();

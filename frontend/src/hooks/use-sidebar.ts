@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 
 interface SidebarStore {
@@ -18,3 +19,17 @@ export const useSidebar = create<SidebarStore>((set) => ({
   open: () => set({ isOpen: true }),
   close: () => set({ isOpen: false }),
 }));
+
+/** Returns true when the viewport is narrower than the md breakpoint (768px). */
+export function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  return isMobile;
+}

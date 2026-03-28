@@ -55,6 +55,7 @@ export default function Revenues() {
     totalRevenues,
     hasActiveFilters,
     columns,
+    prefillRevenueData,
   } = useRevenuesPage();
 
   return (
@@ -158,6 +159,7 @@ export default function Revenues() {
           </DialogHeader>
           <RevenueForm
             revenue={selectedRevenue}
+            prefillData={!selectedRevenue ? prefillRevenueData : undefined}
             accounts={accounts}
             loans={loans}
             onSubmit={handleSubmit}

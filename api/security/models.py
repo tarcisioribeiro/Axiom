@@ -481,3 +481,47 @@ class ActivityLog(models.Model):
             ip_address=ip_address,
             user_agent=user_agent,
         )
+
+
+# ============================================================================
+# DELETION RECORD MODEL
+# ============================================================================
+
+
+class DeletionRecord(models.Model):
+    """
+    Immutable compliance certificate confirming that a record UUID was
+    hard-deleted by the purge_deleted_records command (LGPD/GDPR).
+
+    Not a BaseModel subclass — deletion certificates must never be edited
+    or soft-deleted.
+    """
+
+    record_uuid = models.UUIDField(verbose_name="UUID do Registro")
+    model_name = models.CharField(max_length=200, verbose_name="Modelo")
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Excluído Em (Soft Delete)",
+        help_text="Timestamp do soft-delete original",
+    )
+    purged_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Removido Em (Hard Delete)",
+        help_text="Timestamp em que o registro foi permanentemente removido",
+    )
+
+    class Meta:
+        verbose_name = "Certificado de Remoção"
+        verbose_name_plural = "Certificados de Remoção"
+        ordering = ["-purged_at"]
+        indexes = [
+            models.Index(fields=["record_uuid"]),
+            models.Index(fields=["model_name", "purged_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.model_name} {self.record_uuid} "
+            f"purged at {self.purged_at.strftime('%Y-%m-%dT%H:%M:%SZ')}"
+        )

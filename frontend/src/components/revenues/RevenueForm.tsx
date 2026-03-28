@@ -18,8 +18,15 @@ import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type { Revenue, RevenueFormData, Account, Member, Loan } from '@/types';
 
+export interface RevenuePrefillData {
+  description?: string;
+  value?: number;
+  date?: string;
+}
+
 interface RevenueFormProps {
   revenue?: Revenue;
+  prefillData?: RevenuePrefillData;
   accounts: Account[];
   loans?: Loan[];
   onSubmit: (data: RevenueFormData) => void;
@@ -29,6 +36,7 @@ interface RevenueFormProps {
 
 export const RevenueForm: React.FC<RevenueFormProps> = ({
   revenue,
+  prefillData,
   accounts,
   loans,
   onSubmit,
@@ -93,6 +101,15 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
       setEligibleLoans(filtered);
     }
   }, [loans, currentUserMember]);
+
+  useEffect(() => {
+    if (!revenue && prefillData) {
+      if (prefillData.description !== undefined)
+        setValue('description', prefillData.description);
+      if (prefillData.value !== undefined) setValue('value', prefillData.value);
+      if (prefillData.date !== undefined) setValue('date', prefillData.date);
+    }
+  }, [revenue, prefillData, setValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

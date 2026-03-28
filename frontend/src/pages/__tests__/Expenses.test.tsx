@@ -148,7 +148,7 @@ describe('Expenses page', () => {
     renderExpenses();
 
     await waitFor(() => {
-      expect(screen.getByText('Supermercado')).toBeInTheDocument();
+      expect(screen.getAllByText('Supermercado')[0]).toBeInTheDocument();
     });
   });
 
