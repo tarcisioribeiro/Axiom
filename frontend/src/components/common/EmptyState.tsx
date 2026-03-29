@@ -26,8 +26,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => {
   return (
-    <section
-      role="status"
+    <div
       aria-label={title ?? message}
       className="space-y-md rounded-lg border bg-card p-12 text-center"
     >
@@ -39,6 +38,6 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           {action.label}
         </Button>
       )}
-    </section>
+    </div>
   );
 };

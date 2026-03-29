@@ -286,6 +286,11 @@ const getAllModuleItems = (module: NavModule): NavSubItem[] => {
   return items;
 };
 
+const isPathActive = (href: string, pathname: string): boolean => {
+  if (href === '/') return pathname === '/';
+  return pathname === href || pathname.startsWith(href + '/');
+};
+
 export const Sidebar = () => {
   const location = useLocation();
   const { hasPermission } = useAuthStore();
@@ -326,14 +331,16 @@ export const Sidebar = () => {
   useEffect(() => {
     navModules.forEach((module) => {
       const allItems = getAllModuleItems(module);
-      const isActive = allItems.some((item) => location.pathname === item.href);
+      const isActive = allItems.some((item) =>
+        isPathActive(item.href, location.pathname)
+      );
       if (isActive) {
         setExpandedModule(module.id);
         // Verificar se está em um submódulo
         if (module.subModules) {
           module.subModules.forEach((sub) => {
-            const isSubActive = sub.items.some(
-              (item) => location.pathname === item.href
+            const isSubActive = sub.items.some((item) =>
+              isPathActive(item.href, location.pathname)
             );
             if (isSubActive) {
               setExpandedSubModule(sub.id);
@@ -410,7 +417,7 @@ export const Sidebar = () => {
         >
           {/* Items principais */}
           {filteredNavItems.map((item) => {
-            const isActive = location.pathname === item.href;
+            const isActive = isPathActive(item.href, location.pathname);
 
             return (
               <Link
@@ -436,8 +443,8 @@ export const Sidebar = () => {
           {navModules.map((module) => {
             const isExpanded = isModuleExpanded(module.id);
             const allItems = getAllModuleItems(module);
-            const hasActiveItem = allItems.some(
-              (item) => location.pathname === item.href
+            const hasActiveItem = allItems.some((item) =>
+              isPathActive(item.href, location.pathname)
             );
 
             return (
@@ -478,7 +485,7 @@ export const Sidebar = () => {
                     <div className="ml-4 space-y-1 py-1">
                       {/* Top Items (sem submódulo, ex: Dashboard) */}
                       {module.topItems?.map((item) => {
-                        const isActive = location.pathname === item.href;
+                        const isActive = isPathActive(item.href, location.pathname);
                         return (
                           <Link
                             key={item.href}
@@ -499,8 +506,8 @@ export const Sidebar = () => {
                       {/* Submódulos */}
                       {module.subModules?.map((subModule) => {
                         const isSubExpanded = isSubModuleExpanded(subModule.id);
-                        const hasSubActiveItem = subModule.items.some(
-                          (item) => location.pathname === item.href
+                        const hasSubActiveItem = subModule.items.some((item) =>
+                          isPathActive(item.href, location.pathname)
                         );
 
                         return (
@@ -551,7 +558,10 @@ export const Sidebar = () => {
                               <div className="overflow-hidden">
                                 <div className="ml-4 space-y-1 py-1">
                                   {subModule.items.map((item) => {
-                                    const isActive = location.pathname === item.href;
+                                    const isActive = isPathActive(
+                                      item.href,
+                                      location.pathname
+                                    );
                                     return (
                                       <Link
                                         key={item.href}
@@ -577,7 +587,7 @@ export const Sidebar = () => {
 
                       {/* Items normais (módulos sem submódulos) */}
                       {module.items?.map((item) => {
-                        const isActive = location.pathname === item.href;
+                        const isActive = isPathActive(item.href, location.pathname);
                         return (
                           <Link
                             key={item.href}

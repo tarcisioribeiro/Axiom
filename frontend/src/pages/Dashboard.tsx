@@ -91,6 +91,23 @@ export default function Dashboard() {
   // refetchOnWindowFocus is enabled by default — replaces the manual
   // visibilitychange / focus event listeners that were here before.
 
+  // Compute the earliest date required by the current evolution period so the
+  // API returns only the records needed for the chart — not an arbitrary first
+  // page of 50 items that silently truncates multi-year data.
+  const queryStartDate = useMemo(() => {
+    const today = new Date();
+    switch (evolutionPeriod) {
+      case 'daily':
+        return format(subDays(today, 29), 'yyyy-MM-dd');
+      case 'weekly':
+        return format(subWeeks(today, 7), 'yyyy-MM-dd');
+      case 'monthly':
+        return format(subMonths(today, 5), 'yyyy-MM-dd');
+      case 'yearly':
+        return format(subYears(today, 4), 'yyyy-MM-dd');
+    }
+  }, [evolutionPeriod]);
+
   const statsQuery = useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: () => dashboardService.getStats(),
@@ -98,14 +115,14 @@ export default function Dashboard() {
   });
 
   const expensesQuery = useQuery({
-    queryKey: ['expenses'],
-    queryFn: () => expensesService.getAll(),
+    queryKey: ['expenses', 'dashboard', queryStartDate],
+    queryFn: () => expensesService.getAll({ date_from: queryStartDate }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const revenuesQuery = useQuery({
-    queryKey: ['revenues'],
-    queryFn: () => revenuesService.getAll(),
+    queryKey: ['revenues', 'dashboard', queryStartDate],
+    queryFn: () => revenuesService.getAll({ date_from: queryStartDate }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 

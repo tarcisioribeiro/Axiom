@@ -41,13 +41,13 @@ export const itemVariants: Variants = {
 
 // Card animations
 export const cardVariants: Variants = {
-  initial: { opacity: 0, scale: 0.9, y: 30 },
+  initial: { opacity: 0, scale: 0.95, y: 12 },
   animate: {
     opacity: 1,
     scale: 1,
     y: 0,
     transition: {
-      duration: DURATION.slow,
+      duration: DURATION.normal,
       ease: EASING.bounce,
     },
   },
