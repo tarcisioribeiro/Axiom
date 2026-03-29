@@ -8,11 +8,13 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCommandPaletteStore } from '@/stores/command-palette-store';
 
 export const Header = () => {
   const { logout } = useAuthStore();
   const { toggle: toggleSidebar } = useSidebar();
   const { t } = useTranslation();
+  const openCommandPalette = useCommandPaletteStore((s) => s.open);
 
   return (
     <header className="sticky top-0 z-30 border-b bg-card px-md py-md md:px-lg">
@@ -37,14 +39,10 @@ export const Header = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() =>
-              document.dispatchEvent(
-                new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
-              )
-            }
+            onClick={openCommandPalette}
             className="hover-lift"
-            aria-label="Abrir menu de comandos"
-            title="Menu de Comandos (Ctrl+K)"
+            aria-label={t('layout.openCommandPalette')}
+            title={t('layout.openCommandPalette')}
           >
             <Search className="h-4 w-4" />
           </Button>
