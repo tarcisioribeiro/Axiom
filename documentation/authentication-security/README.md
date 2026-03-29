@@ -198,5 +198,7 @@ Para reportar vulnerabilidades de segurança, entre em contato diretamente com o
 
 ---
 
+[Voltar ao índice da documentação](../README.md)
+
 **Última atualização**: 2026-01-12
 **Versão**: 1.0
