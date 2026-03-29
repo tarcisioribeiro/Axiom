@@ -129,6 +129,16 @@
 
     /* Card hover elevation shadow */
     --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+
+    /* Shadow opacity tokens — theme-aware, used by .shadow-* utilities */
+    --shadow-opacity-soft: 0.08;
+    --shadow-opacity-medium: 0.1;
+    --shadow-opacity-strong: 0.15;
+
+    /* Page height offset tokens */
+    --page-header-offset: 8rem;
+    --page-header-with-filters-offset: 12rem;
+    --page-full-offset: 4rem;
   }
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */
@@ -211,6 +221,11 @@
 
     /* Card hover elevation shadow */
     --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
+
+    /* Shadow opacity tokens — dark theme overrides */
+    --shadow-opacity-soft: 0.4;
+    --shadow-opacity-medium: 0.5;
+    --shadow-opacity-strong: 0.6;
   }
 }
 
@@ -245,29 +260,17 @@
     @apply border border-border/20 bg-card/30 backdrop-blur-md;
   }
 
-  /* Sombras adaptáveis */
+  /* Sombras adaptáveis — usam tokens CSS para suporte a temas futuros */
   .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  .dark .shadow-soft {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, var(--shadow-opacity-soft));
   }
 
   .shadow-medium {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .dark .shadow-medium {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow-opacity-medium));
   }
 
   .shadow-strong {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  }
-
-  .dark .shadow-strong {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, var(--shadow-opacity-strong));
   }
 
   /* Status colors */
@@ -398,20 +401,17 @@
     background-clip: padding-box;
   }
 
-  /* Page heights consistentes */
+  /* Page heights consistentes — usam tokens CSS; ajuste --page-*-offset em :root */
   .page-height {
-    height: calc(100vh - 8rem);
-    height: calc(100dvh - 8rem);
+    height: calc(100dvh - var(--page-header-offset));
   }
 
   .page-height-with-filters {
-    height: calc(100vh - 12rem);
-    height: calc(100dvh - 12rem);
+    height: calc(100dvh - var(--page-header-with-filters-offset));
   }
 
   .full-page-height {
-    height: calc(100vh - 4rem);
-    height: calc(100dvh - 4rem);
+    height: calc(100dvh - var(--page-full-offset));
   }
 
   /* Text emphasis utilities */
@@ -424,7 +424,9 @@
     color: hsl(var(--muted-foreground));
   }
 
-  /* Smooth theme transition - scoped to elements that consume theme tokens */
+  /* Smooth theme transition — scoped to layout and content elements only.
+     SVG internals (path, circle, rect) are intentionally excluded: fill/stroke
+     transitions are not GPU-composited and cause jank on icon-heavy pages. */
   .theme-transitioning,
   .theme-transitioning
     :is(
@@ -459,10 +461,7 @@
       tbody,
       tfoot,
       table,
-      svg,
-      path,
-      circle,
-      rect
+      svg
     ) {
     transition:
       background-color var(--duration-normal) ease,

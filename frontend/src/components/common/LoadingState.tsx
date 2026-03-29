@@ -7,6 +7,7 @@
 
 import { Loader2 } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import {
   SkeletonTable,
@@ -50,6 +51,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   skeletonConfig,
   children,
 }) => {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: 'h-32',
     md: 'h-64',
@@ -67,7 +69,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
     const ariaProps = {
       role: 'status' as const,
       'aria-busy': true,
-      'aria-label': message || 'Carregando conteudo',
+      'aria-label': message || t('common.actions.loadingContent'),
     };
 
     switch (skeleton) {
@@ -112,7 +114,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
         aria-hidden="true"
       />
       {message && <p className="text-sm">{message}</p>}
-      <span className="sr-only">{message || 'Carregando...'}</span>
+      <span className="sr-only">{message || t('common.actions.loadingDefault')}</span>
     </div>
   );
 };

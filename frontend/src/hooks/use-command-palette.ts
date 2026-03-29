@@ -10,6 +10,7 @@ import {
 } from '@/config/commands';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCommandPaletteStore } from '@/stores/command-palette-store';
 
 interface UseCommandPaletteReturn {
   isOpen: boolean;
@@ -55,7 +56,7 @@ interface UseCommandPaletteReturn {
  * ```
  */
 export function useCommandPalette(): UseCommandPaletteReturn {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, open, close: storeClose, toggle } = useCommandPaletteStore();
   const [query, setQueryState] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -80,10 +81,10 @@ export function useCommandPalette(): UseCommandPaletteReturn {
 
   // Callback de fechamento que também reseta o estado
   const close = useCallback(() => {
-    setIsOpen(false);
+    storeClose();
     setQueryState('');
     setSelectedIndex(0);
-  }, []);
+  }, [storeClose]);
 
   // Listener global para Ctrl+K / Cmd+K e atalhos de teclado (N D, N R, T, Q)
   useEffect(() => {
@@ -106,7 +107,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
       // Ctrl+K ou Cmd+K — abre/fecha o palette
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setIsOpen((prev) => !prev);
+        toggle();
         pendingKey = '';
         return;
       }
@@ -164,10 +165,7 @@ export function useCommandPalette(): UseCommandPaletteReturn {
       document.removeEventListener('keydown', handleGlobalKeyDown);
       if (pendingTimeout) clearTimeout(pendingTimeout);
     };
-  }, [navigate, logout, toggleTheme]);
-
-  const open = useCallback(() => setIsOpen(true), []);
-  const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
+  }, [navigate, logout, toggleTheme, toggle]);
 
   const executeCommand = useCallback(
     (command: Command) => {
