@@ -49,6 +49,7 @@ export function RoutineTaskForm({
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<RoutineTaskFormData>({
     resolver: zodResolver(routineTaskSchema),
@@ -91,6 +92,29 @@ export function RoutineTaskForm({
 
   const periodicity = watch('periodicity');
   const isActive = watch('is_active');
+
+  // Sync form values when task prop changes (handles Dialog keeping form mounted)
+  useEffect(() => {
+    if (task) {
+      reset({
+        name: task.name,
+        description: task.description || '',
+        category: task.category,
+        icon: task.icon || null,
+        periodicity: task.periodicity,
+        weekday: task.weekday,
+        day_of_month: task.day_of_month,
+        is_active: task.is_active,
+        target_quantity: task.target_quantity,
+        unit: task.unit,
+        owner: task.owner,
+        default_time: task.default_time || null,
+        daily_occurrences: task.daily_occurrences || 1,
+        interval_hours: task.interval_hours || null,
+        scheduled_times: task.scheduled_times || null,
+      });
+    }
+  }, [task, reset]);
 
   // Load current user member when creating new task
   useEffect(() => {
