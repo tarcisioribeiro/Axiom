@@ -171,21 +171,16 @@ export function DataTable<T>({
       <div className="block overflow-hidden rounded-lg border bg-card md:hidden">
         <div className="divide-y">
           {data.map((item) => (
-            <div
-              key={keyExtractor(item)}
-              className={`space-y-2 px-4 py-3 ${rowClassName ? rowClassName(item) : ''}`}
-            >
+            <div key={keyExtractor(item)} className="space-y-2 px-4 py-3">
               {columns.map((column) => (
                 <div
                   key={column.key}
                   className="flex items-start justify-between gap-2"
                 >
-                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                  <span className="shrink-0 text-xs text-muted-foreground">
                     {column.label}
                   </span>
-                  <span
-                    className={`text-sm font-medium ${getAlignClass(column.align)}`}
-                  >
+                  <span className={`text-sm ${getAlignClass(column.align)}`}>
                     {renderColumnContent(item, column)}
                   </span>
                 </div>
