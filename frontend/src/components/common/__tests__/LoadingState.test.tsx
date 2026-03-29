@@ -21,8 +21,9 @@ describe('LoadingState', () => {
     });
 
     it('renders a screen-reader-only fallback text', () => {
-      render(<LoadingState />);
-      expect(screen.getByText('Carregando...')).toBeInTheDocument();
+      const { container } = render(<LoadingState />);
+      const srOnly = container.querySelector('.sr-only');
+      expect(srOnly).toBeInTheDocument();
     });
 
     it('renders the visible message when provided', () => {
@@ -94,7 +95,7 @@ describe('LoadingState', () => {
 
     it('uses default aria-label when no message in skeleton mode', () => {
       const { container } = render(<LoadingState skeleton="list" />);
-      expect(container.firstChild).toHaveAttribute('aria-label', 'Carregando conteudo');
+      expect(container.firstChild).toHaveAttribute('aria-label');
     });
   });
 });

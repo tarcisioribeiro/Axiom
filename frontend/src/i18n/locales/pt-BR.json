@@ -14,6 +14,8 @@
       "export": "Exportar",
       "loading": "Carregando...",
       "back": "Voltar",
+      "loadingContent": "Carregando conteúdo",
+      "loadingDefault": "Carregando...",
       "reveal": "Revelar",
       "hide": "Ocultar",
       "copy": "Copiar",
@@ -129,13 +131,14 @@
     }
   },
   "layout": {
-    "skipToContent": "Pular para o conteudo principal",
+    "skipToContent": "Pular para o conteúdo principal",
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
     "mainMenu": "Menu principal",
     "logout": "Sair",
     "toggleTheme": "Alternar tema",
-    "language": "Idioma"
+    "language": "Idioma",
+    "openCommandPalette": "Abrir paleta de comandos (Ctrl+K)"
   },
   "breadcrumb": {
     "home": "Início",
