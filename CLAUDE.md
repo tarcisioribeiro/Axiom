@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MindLedger is a full-stack personal management system (Django REST Framework + React/TypeScript) for finances, security (password vault), library (book tracking), and personal planning. The UI is in Brazilian Portuguese; API data uses English keys translated via `frontend/src/config/constants.ts`.
+Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScript frontend (port 39101). The UI is in Brazilian Portuguese; API data uses English keys translated via `frontend/src/config/constants.ts`.
 
 ## Architecture
 
