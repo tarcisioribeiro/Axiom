@@ -14,6 +14,8 @@
       "export": "Export",
       "loading": "Loading...",
       "back": "Back",
+      "loadingContent": "Loading content",
+      "loadingDefault": "Loading...",
       "reveal": "Reveal",
       "hide": "Hide",
       "copy": "Copy",
@@ -135,7 +137,8 @@
     "mainMenu": "Main menu",
     "logout": "Logout",
     "toggleTheme": "Toggle theme",
-    "language": "Language"
+    "language": "Language",
+    "openCommandPalette": "Open command palette (Ctrl+K)"
   },
   "breadcrumb": {
     "home": "Home",
