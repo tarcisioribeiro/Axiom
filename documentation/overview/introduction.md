@@ -48,21 +48,10 @@ Biblioteca pessoal digital com recursos avançados:
 - Metadados completos (ISBN, ano, páginas)
 - Sistema de avaliações e notas
 
-### 4. AI Assistant
-
-Assistente inteligente com busca semântica:
-
-- Busca unificada em todos os módulos
-- Respostas contextualizadas via LLM (Groq)
-- Embeddings locais com sentence-transformers
-- Citação de fontes com score de relevância
-- Interface de chat interativa
-- Suporte multilíngue (incluindo português)
-
 ## Tecnologias Core
 
 ### Backend
-- **Django 5.2.5** - Framework web principal
+- **Django 5.2.12** - Framework web principal
 - **Django REST Framework 3.16.1** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
 - **Sentence Transformers** - Embeddings semânticos
@@ -70,7 +59,7 @@ Assistente inteligente com busca semântica:
 - **Cryptography (Fernet)** - Criptografia de dados
 
 ### Frontend
-- **React 18** - Biblioteca UI
+- **React 19** - Biblioteca UI
 - **TypeScript** - Tipagem estática
 - **TailwindCSS** - Framework CSS
 - **Zustand** - Gerenciamento de estado
@@ -98,17 +87,11 @@ graph TB
         Finance[Módulo Finance]
         Security[Módulo Security]
         Library[Módulo Library]
-        AI[AI Assistant]
     end
 
     subgraph "Dados"
-        DB[(PostgreSQL + pgvector)]
-        Cache[Cache Layer]
-    end
-
-    subgraph "Serviços Externos"
-        Groq[Groq API]
-        ST[Sentence Transformers]
+        DB[(PostgreSQL)]
+        Cache[Redis Cache]
     end
 
     UI --> Store
@@ -118,15 +101,10 @@ graph TB
     Auth --> Finance
     Auth --> Security
     Auth --> Library
-    Auth --> AI
 
     Finance --> DB
     Security --> DB
     Library --> DB
-    AI --> DB
-
-    AI --> Groq
-    AI --> ST
 
     Finance -.-> Cache
     Security -.-> Cache
@@ -182,14 +160,14 @@ O MindLedger é ideal para:
 
 Para começar a usar o MindLedger, consulte:
 
-- [Guia de Instalação](../08-development/instalacao.md)
-- [Configuração Inicial](../08-development/configuracao.md)
-- [Arquitetura do Sistema](../02-architecture/visao-geral.md)
+- [Guia de Instalação](../development/installation.md)
+- [Configuração Inicial](../development/configuration.md)
+- [Arquitetura do Sistema](../architecture/overview.md)
 
 ## Suporte e Comunidade
 
 - **Documentação**: Este repositório de documentação
-- **Issues**: [GitHub Issues](https://github.com/tarcisioribeiro/mindledger/issues)
+- **Issues**: GitLab Issues (repositório interno)
 - **Email**: tarcisio.ribeiro.1840@hotmail.com
 
 ## Licença

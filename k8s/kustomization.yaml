@@ -39,6 +39,7 @@ resources:
   - minio/pvc.yaml
   - minio/deployment.yaml
   - minio/service.yaml
+  - minio/ingress.yaml
   - api/pvc.yaml
   - api/deployment-blue.yaml
   - api/deployment-green.yaml
