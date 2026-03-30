@@ -46,7 +46,7 @@ export function NotificationItem({
   return (
     <button
       className={cn(
-        'flex w-full items-start gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent',
+        'flex w-full items-start gap-3 rounded-md px-4 py-3 text-left transition-colors hover:bg-accent',
         !notification.is_read && 'bg-accent/50'
       )}
       onClick={() => {

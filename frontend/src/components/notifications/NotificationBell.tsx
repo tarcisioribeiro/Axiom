@@ -43,7 +43,11 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
+      <PopoverContent
+        align="end"
+        className="w-[min(calc(100vw-1rem),26rem)] p-0"
+        sideOffset={8}
+      >
         <div className="flex items-center justify-between border-b p-3">
           <h4 className="text-sm font-semibold">Notificações</h4>
           {unreadCount > 0 && (
@@ -64,7 +68,7 @@ export function NotificationBell() {
               Nenhuma notificação
             </div>
           ) : (
-            <div className="p-1">
+            <div className="flex flex-col divide-y divide-border py-1">
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
