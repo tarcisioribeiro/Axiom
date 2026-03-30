@@ -9,22 +9,23 @@ primeiro push.
 ## Visão geral do pipeline
 
 ```
-lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-load → test-e2e → deploy-production → smoke-production
+lint → typecheck → test → build → scan → deploy-staging → smoke-staging → test-load → test-e2e → promote → deploy-production → smoke-production
 ```
 
-| Estágio             | Jobs                                                                                                       | Quando executa           |
-|---------------------|------------------------------------------------------------------------------------------------------------|--------------------------|
-| `lint`              | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`        | todo push / MR           |
-| `typecheck`         | `typecheck:backend`, `typecheck:frontend`                                                                  | todo push / MR           |
-| `test`              | `test:backend`                                                                                             | todo push / MR           |
-| `build`             | `build:api`, `build:frontend`                                                                              | develop / main / tag     |
-| `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                         | develop / main / tag     |
-| `deploy-staging`    | `deploy:staging`                                                                                           | develop                  |
-| `smoke-staging`     | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)      | develop                  |
-| `test-load`         | `test:load` (k6)                                                                                           | develop                  |
-| `test-e2e`          | `test:e2e` (Playwright), `test:backup-restore`                                                             | develop                  |
-| `deploy-production` | `deploy:production` (**manual**)                                                                           | main                     |
-| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)               | main                     |
+| Estágio             | Jobs                                                                                                                                      | Quando executa           |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
+| `lint`              | `lint:backend`, `lint:bandit`, `lint:pip-audit`, `lint:frontend`, `lint:npm-audit`, `lint:commits`, `lint:secrets`, `lint:k8s`           | todo push / MR           |
+| `typecheck`         | `typecheck:backend`, `typecheck:frontend`                                                                                                 | todo push / MR           |
+| `test`              | `test:backend`, `test:frontend`, `build:storybook`                                                                                       | todo push / MR           |
+| `build`             | `build:api`, `build:frontend`                                                                                                             | develop / main / tag     |
+| `scan`              | `scan:api`, `scan:frontend` (Trivy HIGH/CRITICAL)                                                                                        | develop / main / tag     |
+| `deploy-staging`    | `deploy:staging`, `seed:staging`                                                                                                          | develop                  |
+| `smoke-staging`     | `smoke:staging`, `backup:staging`, `deploy:rollback:staging` (auto), `rollback:staging` (**manual**)                                     | develop                  |
+| `test-load`         | `test:load` (k6)                                                                                                                          | develop                  |
+| `test-e2e`          | `test:e2e` (Playwright), `test:backup-restore`                                                                                            | develop                  |
+| `promote`           | `promote:to_main` — abre ou atualiza MR develop→main automaticamente via GitLab API                                                       | develop                  |
+| `deploy-production` | `deploy:production` (**manual**)                                                                                                          | main                     |
+| `smoke-production`  | `smoke:production`, `deploy:rollback:production` (auto), `rollback:production` (**manual**)                                              | main                     |
 
 > Para detalhes sobre os procedimentos de rollback consulte o
 > [Runbook de Rollback](rollback.md).
@@ -60,6 +61,23 @@ Estas variáveis são injetadas automaticamente pelo GitLab em todo job de CI,
 
 Configure estas variáveis **antes do primeiro push** para `develop` ou `main` em
 **Settings → CI/CD → Variables → Add variable**.
+
+---
+
+#### `GITLAB_TOKEN`
+
+Personal Access Token ou Project Access Token do GitLab com escopo `api` e papel
+Developer (ou superior) no projeto. Usado pelo job `promote:to_main` para criar
+ou atualizar o Merge Request develop→main automaticamente via GitLab API.
+
+**Como gerar:** GitLab → User Settings → Access Tokens → Add new token (escopo: `api`)
+
+> **Importante:** NÃO use `$CI_JOB_TOKEN` — ele não tem permissão para criar MRs.
+
+| Configuração | Valor |
+|---|---|
+| Masked | Sim |
+| Protected | Sim |
 
 ---
 
@@ -730,6 +748,7 @@ kubectl apply -f k8s/staging/ingress.yaml
 [ ] Demais recursos de infraestrutura de staging aplicados
 
 Variáveis de CI/CD no GitLab (Settings → CI/CD → Variables):
+[ ] GITLAB_TOKEN
 [ ] KUBECONFIG_CONTENT
 [ ] STAGING_URL
 [ ] PRODUCTION_URL

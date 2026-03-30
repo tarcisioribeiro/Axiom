@@ -18,7 +18,6 @@ Configuração detalhada do ambiente:
 - Geração de chaves de segurança
 - Configuração de portas e serviços
 - Configuração de logging
-- Configuração do AI Assistant
 
 ### 3. [Workflow de Desenvolvimento](./development_workflow.md)
 Comandos e práticas do dia a dia:
@@ -50,7 +49,14 @@ Procedimentos de reversão em caso de falha:
 - Rollback de migrations Django
 - Restauração de backup do banco de dados
 
-### 7. [Solução de Problemas](./troubleshooting.md)
+### 7. [Infraestrutura DNS](./dns_infrastructure.md)
+Configuração de DNS dinâmico e TLS:
+- DuckDNS: domínios de staging e produção
+- cert-manager + Let's Encrypt
+- Ingress nginx: roteamento por path
+- Verificação de certificados e renovação
+
+### 8. [Solução de Problemas](./troubleshooting.md)
 Diagnóstico e resolução de problemas comuns:
 - Problemas com Docker
 - Erros de banco de dados
@@ -58,7 +64,6 @@ Diagnóstico e resolução de problemas comuns:
 - Problemas de autenticação
 - Erros de criptografia
 - Problemas de CORS
-- Troubleshooting do AI Assistant
 
 ## Início Rápido
 
@@ -84,7 +89,6 @@ MindLedger/
 │   ├── transfers/         # Transferências
 │   ├── security/          # Senhas
 │   ├── library/           # Biblioteca de livros
-│   ├── ai_assistant/      # Assistente de IA (RAG)
 │   └── app/               # Configurações centrais
 ├── frontend/              # Frontend React + TypeScript
 │   ├── src/
@@ -107,9 +111,6 @@ MindLedger/
 - **Redis 7** - Cache semântico
 - **JWT** - Autenticação via cookies HttpOnly
 - **Fernet** - Criptografia de dados sensíveis
-- **Groq API** - LLM para geração de texto
-- **sentence-transformers** - Embeddings locais
-
 ### Frontend
 - **React 19** - Biblioteca UI
 - **TypeScript 5.9** - Tipagem estática
@@ -135,24 +136,25 @@ MindLedger/
 | Frontend | 39101 | `FRONTEND_PORT` |
 | Backend API | 39100 | `API_PORT` |
 | PostgreSQL | 39102 | `DB_PORT` |
-| Redis | 6379 | `REDIS_PORT` |
+| Redis | 39103 | `REDIS_PORT` |
+| MinIO API | 39105 | — |
+| MinIO Console | 39106 | — |
 
 ## Links Úteis
 
-- **Repositório**: [GitHub MindLedger](https://github.com/seu-usuario/MindLedger)
 - **Frontend**: http://localhost:39101
 - **Backend API**: http://localhost:39100
 - **Django Admin**: http://localhost:39100/admin
-- **API Docs**: http://localhost:39100/api/v1/
-- **Groq Console**: https://console.groq.com
+- **API Docs (Swagger)**: http://localhost:39100/api/docs/
+- **MinIO Console**: http://localhost:39106
 
 ## Suporte
 
 Se você encontrar problemas não cobertos nesta documentação:
 
 1. Verifique a [Solução de Problemas](./troubleshooting.md)
-2. Consulte os logs: `docker-compose logs -f`
-3. Abra uma issue no GitHub com detalhes do erro
+2. Consulte os logs: `docker compose logs -f`
+3. Abra uma issue no GitLab com detalhes do erro
 4. Entre em contato com a equipe de desenvolvimento
 
 ## Contribuindo para a Documentação
