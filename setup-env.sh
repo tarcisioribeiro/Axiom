@@ -112,6 +112,11 @@ if ! python3 -c "import cryptography" &> /dev/null; then
     pip3 install cryptography --quiet
 fi
 
+# Escapa $ como $$ para compatibilidade com Docker Compose (.env interpreta $ como variável)
+esc() {
+    printf '%s' "$1" | sed 's/\$/\$\$/g'
+}
+
 # Função para gerar SECRET_KEY do Django
 generate_secret_key() {
     python3 -c "import secrets; print(''.join(secrets.choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)))"
@@ -306,63 +311,63 @@ cat > .env << EOF
 # ============================================================================
 # DATABASE (PostgreSQL)
 # ============================================================================
-DB_HOST=$DB_HOST
-DB_PORT=$DB_PORT
-DB_NAME=$DB_NAME
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
+DB_HOST=$(esc "$DB_HOST")
+DB_PORT=$(esc "$DB_PORT")
+DB_NAME=$(esc "$DB_NAME")
+DB_USER=$(esc "$DB_USER")
+DB_PASSWORD=$(esc "$DB_PASSWORD")
 
 # ============================================================================
 # DJANGO (Backend API)
 # ============================================================================
-SECRET_KEY=$SECRET_KEY
-DEBUG=$DEBUG
-ALLOWED_HOSTS=$ALLOWED_HOSTS
-CORS_ALLOWED_ORIGINS=$CORS_ALLOWED_ORIGINS
+SECRET_KEY=$(esc "$SECRET_KEY")
+DEBUG=$(esc "$DEBUG")
+ALLOWED_HOSTS=$(esc "$ALLOWED_HOSTS")
+CORS_ALLOWED_ORIGINS=$(esc "$CORS_ALLOWED_ORIGINS")
 
 # ============================================================================
 # DJANGO SUPERUSER
 # ============================================================================
-DJANGO_SUPERUSER_USERNAME=$DJANGO_SUPERUSER_USERNAME
-DJANGO_SUPERUSER_EMAIL=$DJANGO_SUPERUSER_EMAIL
-DJANGO_SUPERUSER_PASSWORD=$DJANGO_SUPERUSER_PASSWORD
+DJANGO_SUPERUSER_USERNAME=$(esc "$DJANGO_SUPERUSER_USERNAME")
+DJANGO_SUPERUSER_EMAIL=$(esc "$DJANGO_SUPERUSER_EMAIL")
+DJANGO_SUPERUSER_PASSWORD=$(esc "$DJANGO_SUPERUSER_PASSWORD")
 
 # ============================================================================
 # ENCRYPTION
 # ============================================================================
-ENCRYPTION_KEY=$ENCRYPTION_KEY
+ENCRYPTION_KEY=$(esc "$ENCRYPTION_KEY")
 
 # ============================================================================
 # LOGGING
 # ============================================================================
-LOG_FORMAT=$LOG_FORMAT
-LOG_LEVEL=$LOG_LEVEL
+LOG_FORMAT=$(esc "$LOG_FORMAT")
+LOG_LEVEL=$(esc "$LOG_LEVEL")
 
 # ============================================================================
 # APPLICATION PORTS
 # ============================================================================
-API_PORT=$API_PORT
-FRONTEND_PORT=$FRONTEND_PORT
+API_PORT=$(esc "$API_PORT")
+FRONTEND_PORT=$(esc "$FRONTEND_PORT")
 
 # ============================================================================
 # FRONTEND CONFIGURATION
 # ============================================================================
-VITE_API_BASE_URL=$VITE_API_BASE_URL
+VITE_API_BASE_URL=$(esc "$VITE_API_BASE_URL")
 
 # ============================================================================
 # SECURITY SETTINGS
 # ============================================================================
-SECURE_SSL_REDIRECT=$SECURE_SSL_REDIRECT
-SESSION_COOKIE_SECURE=$SESSION_COOKIE_SECURE
-CSRF_COOKIE_SECURE=$CSRF_COOKIE_SECURE
+SECURE_SSL_REDIRECT=$(esc "$SECURE_SSL_REDIRECT")
+SESSION_COOKIE_SECURE=$(esc "$SESSION_COOKIE_SECURE")
+CSRF_COOKIE_SECURE=$(esc "$CSRF_COOKIE_SECURE")
 
 # ============================================================================
 # BACKUP CONFIGURATION
 # ============================================================================
-BACKUP_DIR=$BACKUP_DIR
+BACKUP_DIR=$(esc "$BACKUP_DIR")
 # AES-256 passphrase para criptografia dos backups.
 # Para rotacionar: incremente BACKUP_KEY_VERSION e use rekey-backups.sh.
-BACKUP_ENCRYPTION_KEY=$BACKUP_ENCRYPTION_KEY
+BACKUP_ENCRYPTION_KEY=$(esc "$BACKUP_ENCRYPTION_KEY")
 BACKUP_KEY_VERSION=v1
 # Chaves históricas (adicionar ao rotacionar):
 # BACKUP_ENCRYPTION_KEY_V1=<chave-anterior>
@@ -370,26 +375,26 @@ BACKUP_KEY_VERSION=v1
 # ============================================================================
 # MinIO / S3 Object Storage
 # ============================================================================
-MINIO_ROOT_USER=$MINIO_ROOT_USER
-MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
-MINIO_BUCKET_NAME=$MINIO_BUCKET_NAME
-MINIO_ENDPOINT=$MINIO_ENDPOINT
-MINIO_EXTERNAL_ENDPOINT=$MINIO_EXTERNAL_ENDPOINT
-MINIO_USE_SSL=$MINIO_USE_SSL
-MINIO_PORT=$MINIO_PORT
-MINIO_CONSOLE_PORT=$MINIO_CONSOLE_PORT
+MINIO_ROOT_USER=$(esc "$MINIO_ROOT_USER")
+MINIO_ROOT_PASSWORD=$(esc "$MINIO_ROOT_PASSWORD")
+MINIO_BUCKET_NAME=$(esc "$MINIO_BUCKET_NAME")
+MINIO_ENDPOINT=$(esc "$MINIO_ENDPOINT")
+MINIO_EXTERNAL_ENDPOINT=$(esc "$MINIO_EXTERNAL_ENDPOINT")
+MINIO_USE_SSL=$(esc "$MINIO_USE_SSL")
+MINIO_PORT=$(esc "$MINIO_PORT")
+MINIO_CONSOLE_PORT=$(esc "$MINIO_CONSOLE_PORT")
 
 # ============================================================================
 # REDIS
 # ============================================================================
 # Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
-REDIS_PASSWORD=$REDIS_PASSWORD
+REDIS_PASSWORD=$(esc "$REDIS_PASSWORD")
 
 # ============================================================================
 # DEVELOPMENT SETTINGS
 # ============================================================================
-ENABLE_DEBUG_TOOLBAR=$ENABLE_DEBUG_TOOLBAR
-SHOW_SQL_QUERIES=$SHOW_SQL_QUERIES
+ENABLE_DEBUG_TOOLBAR=$(esc "$ENABLE_DEBUG_TOOLBAR")
+SHOW_SQL_QUERIES=$(esc "$SHOW_SQL_QUERIES")
 EOF
 
 print_success "Arquivo .env criado com sucesso!"
