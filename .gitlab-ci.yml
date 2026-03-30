@@ -1374,7 +1374,9 @@ promote:to_main:
       project_id   = os.environ["CI_PROJECT_ID"]
       api_url      = os.environ["CI_API_V4_URL"]
       pipeline_url = os.environ.get("CI_PIPELINE_URL", "")
+      pipeline_id  = os.environ.get("CI_PIPELINE_ID", "")
       commit_sha   = os.environ.get("CI_COMMIT_SHORT_SHA", "")
+      commit_title = os.environ.get("CI_COMMIT_TITLE", "")
 
       if not token:
           print("ERROR: GITLAB_TOKEN is not set.")
@@ -1417,6 +1419,14 @@ promote:to_main:
 
       # ── 2. Create the promotion MR ───────────────────────────────────────────
       print("No open MR found — creating develop → main MR...")
+      from datetime import datetime, timezone
+      date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+      # Build a descriptive title: date + last commit subject + SHA + pipeline ID
+      title_suffix = f" · {commit_title}" if commit_title else ""
+      mr_title = f"chore(release): promote develop → main — {date_str} ({commit_sha}){title_suffix}"
+      # Truncate to GitLab's 255-char MR title limit
+      if len(mr_title) > 255:
+          mr_title = mr_title[:252] + "..."
       description = (
           "## Promoção automática\n\n"
           "Esta MR foi criada automaticamente pelo pipeline de CI/CD após todos "
@@ -1428,7 +1438,7 @@ promote:to_main:
           mr = api_call("POST", "/merge_requests", {
               "source_branch":        "develop",
               "target_branch":        "main",
-              "title":                "Auto MR: develop -> main",
+              "title":                mr_title,
               "description":          description,
               "remove_source_branch": False,
               "squash":               False,
