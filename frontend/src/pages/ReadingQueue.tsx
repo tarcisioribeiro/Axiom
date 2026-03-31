@@ -159,7 +159,7 @@ export default function ReadingQueue() {
 
   return (
     <PageContainer>
-      <PageHeader title={t('pages.readingQueue.title')} />
+      <PageHeader title={t('pages.readingQueue.title')} icon={<BookOpen />} />
 
       {books.length === 0 ? (
         <EmptyState
