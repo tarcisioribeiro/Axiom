@@ -195,6 +195,7 @@ export default function Transfers() {
         keyExtractor={(transfer) => transfer.id}
         isLoading={isLoading}
         emptyState={{
+          icon: <ArrowLeftRight className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.transfers.emptyState'),
         }}
         actions={(transfer) => (

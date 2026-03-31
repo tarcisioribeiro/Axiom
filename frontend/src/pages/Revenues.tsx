@@ -102,7 +102,10 @@ export default function Revenues() {
         columns={columns}
         keyExtractor={(revenue) => revenue.id}
         isLoading={isLoading}
-        emptyState={{ message: t('pages.revenues.emptyState') }}
+        emptyState={{
+          icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.revenues.emptyState'),
+        }}
         actions={(revenue) => (
           <div className="flex items-center justify-end gap-2">
             {revenue.received && (

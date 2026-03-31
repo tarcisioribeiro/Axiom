@@ -321,6 +321,7 @@ export default function Accounts() {
         keyExtractor={(account) => account.id}
         isLoading={isLoading}
         emptyState={{
+          icon: <Wallet className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.accounts.emptyState'),
         }}
         actions={(account) => (

@@ -872,7 +872,10 @@ export default function Vaults() {
         columns={columns}
         keyExtractor={(vault) => vault.id}
         isLoading={isLoading}
-        emptyState={{ message: t('pages.vaults.emptyState') }}
+        emptyState={{
+          icon: <Vault className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.vaults.emptyState'),
+        }}
       />
 
       {/* Create/Edit Dialog */}
