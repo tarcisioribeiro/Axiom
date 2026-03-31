@@ -103,7 +103,10 @@ export default function Expenses() {
         columns={columns}
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading}
-        emptyState={{ message: t('pages.expenses.emptyState') }}
+        emptyState={{
+          icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.expenses.emptyState'),
+        }}
         actions={(expense) => (
           <div className="flex items-center justify-end gap-2">
             {expense.payed && (
