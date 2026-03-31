@@ -465,6 +465,7 @@ export default function CreditCardBills() {
         keyExtractor={(bill) => bill.id}
         isLoading={isLoading}
         emptyState={{
+          icon: <Receipt className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.creditCardBills.emptyState'),
         }}
         actions={(bill) => (

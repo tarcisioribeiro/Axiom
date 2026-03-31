@@ -327,6 +327,7 @@ export default function StoredCards() {
           keyExtractor={(card) => card.id}
           isLoading={isLoading}
           emptyState={{
+            icon: <CreditCardIcon className="h-12 w-12 text-muted-foreground" />,
             message: t('pages.storedCards.emptySearch'),
           }}
           actions={(card) => (

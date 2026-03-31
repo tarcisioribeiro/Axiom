@@ -352,6 +352,7 @@ export default function StoredAccounts() {
           keyExtractor={(acc) => acc.id}
           isLoading={isLoading}
           emptyState={{
+            icon: <Building2 className="h-12 w-12 text-muted-foreground" />,
             message: t('pages.storedAccounts.emptySearch'),
           }}
           actions={(acc) => (
