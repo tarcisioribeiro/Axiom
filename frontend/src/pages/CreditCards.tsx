@@ -653,7 +653,10 @@ export default function CreditCards() {
             columns={billColumns}
             keyExtractor={(b) => b.id}
             isLoading={billsLoading}
-            emptyState={{ message: t('pages.creditCardBills.emptyState') }}
+            emptyState={{
+              icon: <Receipt className="h-12 w-12 text-muted-foreground" />,
+              message: t('pages.creditCardBills.emptyState'),
+            }}
             actions={(bill) => (
               <div className="flex items-center justify-end gap-1">
                 {bill.status === 'paid' && (
