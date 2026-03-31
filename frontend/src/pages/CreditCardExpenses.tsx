@@ -761,6 +761,9 @@ export default function CreditCardExpenses() {
                       keyExtractor={(installment) => installment.id}
                       isLoading={false}
                       emptyState={{
+                        icon: (
+                          <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+                        ),
                         message: t('pages.creditCardExpenses.noInstallments'),
                       }}
                       actions={(installment) => {
@@ -837,6 +840,7 @@ export default function CreditCardExpenses() {
           keyExtractor={(installment) => installment.id}
           isLoading={isLoading}
           emptyState={{
+            icon: <ShoppingCart className="h-12 w-12 text-muted-foreground" />,
             message: t('pages.creditCardExpenses.emptyState'),
           }}
           actions={(installment) => {

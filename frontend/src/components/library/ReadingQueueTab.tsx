@@ -13,7 +13,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical } from 'lucide-react';
+import { BookOpen, GripVertical } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -158,6 +158,7 @@ export function ReadingQueueTab() {
   if (books.length === 0) {
     return (
       <EmptyState
+        icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
         title={t('pages.readingQueue.emptyTitle')}
         message={t('pages.readingQueue.emptyDesc')}
       />
