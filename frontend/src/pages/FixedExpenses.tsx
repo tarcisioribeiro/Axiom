@@ -216,7 +216,10 @@ export default function FixedExpenses() {
         columns={columns}
         keyExtractor={(item) => item.id}
         isLoading={isLoading}
-        emptyState={{ message: t('pages.fixedExpenses.emptyState') }}
+        emptyState={{
+          icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.fixedExpenses.emptyState'),
+        }}
         actions={(item) => (
           <div className="flex items-center justify-end gap-2">
             <Button

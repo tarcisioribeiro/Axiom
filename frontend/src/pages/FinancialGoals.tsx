@@ -487,7 +487,10 @@ export default function FinancialGoals() {
         columns={columns}
         keyExtractor={(goal) => goal.id}
         isLoading={isLoading}
-        emptyState={{ message: t('pages.financialGoals.emptyState') }}
+        emptyState={{
+          icon: <Target className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.financialGoals.emptyState'),
+        }}
       />
 
       {/* Create/Edit Dialog */}
