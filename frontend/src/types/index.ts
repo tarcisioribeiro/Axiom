@@ -1083,6 +1083,7 @@ export interface Author {
   id: number;
   uuid: string;
   name: string;
+  photo?: string | null;
   birth_year?: number | null;
   birth_era?: Era;
   birth_era_display?: string;

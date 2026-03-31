@@ -1,4 +1,13 @@
-import { Plus, Edit, Trash2, BookOpen, User, UserPen, Calendar } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  BookOpen,
+  User,
+  UserPen,
+  Calendar,
+  UserCircle,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +45,7 @@ export default function Authors() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -62,11 +72,13 @@ export default function Authors() {
 
   const handleCreate = () => {
     setSelectedAuthor(undefined);
+    setPendingPhotoFile(null);
     setIsDialogOpen(true);
   };
 
   const handleEdit = (author: Author) => {
     setSelectedAuthor(author);
+    setPendingPhotoFile(null);
     setIsDialogOpen(true);
   };
 
@@ -100,18 +112,22 @@ export default function Authors() {
   const handleSubmit = async (data: AuthorFormData) => {
     try {
       setIsSubmitting(true);
+      let author: Author;
       if (selectedAuthor) {
-        await authorsService.update(selectedAuthor.id, data);
+        author = await authorsService.update(selectedAuthor.id, data);
         toast({
           title: t('pages.authors.updated'),
           description: t('pages.authors.updatedDesc'),
         });
       } else {
-        await authorsService.create(data);
+        author = await authorsService.create(data);
         toast({
           title: t('pages.authors.created'),
           description: t('pages.authors.createdDesc'),
         });
+      }
+      if (pendingPhotoFile) {
+        await authorsService.uploadPhoto(author.id, pendingPhotoFile);
       }
       setIsDialogOpen(false);
       void loadAuthors();
@@ -170,13 +186,26 @@ export default function Authors() {
             <Card key={author.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{author.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {author.nationality_display}
-                    </CardDescription>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    {author.photo ? (
+                      <img
+                        src={author.photo}
+                        alt={author.name}
+                        className="h-12 w-12 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <UserCircle className="h-7 w-7 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg">{author.name}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {author.nationality_display}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -248,6 +277,7 @@ export default function Authors() {
             author={selectedAuthor}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
+            onPhotoSelect={setPendingPhotoFile}
             isLoading={isSubmitting}
           />
         </DialogContent>

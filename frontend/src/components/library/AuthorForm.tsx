@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { Loader2, UserCircle, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ interface AuthorFormProps {
   author?: Author;
   onSubmit: (data: AuthorFormData) => void;
   onCancel: () => void;
+  onPhotoSelect?: (file: File | null) => void;
   isLoading?: boolean;
 }
 
@@ -31,8 +32,14 @@ export function AuthorForm({
   author,
   onSubmit,
   onCancel,
+  onPhotoSelect,
   isLoading = false,
 }: AuthorFormProps) {
+  const [photoPreview, setPhotoPreview] = useState<string | null>(
+    author?.photo ?? null
+  );
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const {
     register,
     handleSubmit,
@@ -81,9 +88,65 @@ export function AuthorForm({
     void loadCurrentUserMember();
   }, [author, setValue]);
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+      onPhotoSelect?.(file);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    onPhotoSelect?.(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4">
+        <div className="flex flex-col items-center gap-sm">
+          <div className="relative">
+            {photoPreview ? (
+              <img
+                src={photoPreview}
+                alt="Foto do autor"
+                className="h-24 w-24 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+                <UserCircle className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+                aria-label="Remover foto"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+              id="author-photo"
+            />
+            <label
+              htmlFor="author-photo"
+              className="cursor-pointer text-sm text-primary underline-offset-4 hover:underline"
+            >
+              {photoPreview ? 'Trocar foto' : 'Adicionar foto'}
+            </label>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="name">Nome *</Label>
           <Input id="name" {...register('name')} placeholder="Nome completo do autor" />
