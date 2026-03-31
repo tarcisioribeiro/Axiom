@@ -191,7 +191,7 @@ export default function PasswordImport() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader title={t('pages.passwordImport.title')} />
+        <PageHeader title={t('pages.passwordImport.title')} icon={<FileUp />} />
 
         {/* Upload step */}
         {step === 'upload' && (
