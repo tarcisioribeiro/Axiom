@@ -297,7 +297,7 @@ export default function CategorizationRules() {
 
   return (
     <PageContainer>
-      <PageHeader title="Regras de Categorização">
+      <PageHeader title="Regras de Categorização" icon={<Tag />}>
         <Button
           variant="outline"
           onClick={() => applyMutation.mutate()}
