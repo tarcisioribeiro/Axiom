@@ -114,6 +114,9 @@ class Author(BaseModel):
         verbose_name="Nacionalidade",
     )
     biography = models.TextField(null=True, blank=True, verbose_name="Biografia")
+    photo = models.ImageField(
+        upload_to="library/authors/", null=True, blank=True, verbose_name="Foto"
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

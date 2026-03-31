@@ -53,6 +53,7 @@ class AuthorSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "name",
+            "photo",
             "birth_year",
             "birth_era",
             "birth_era_display",
@@ -98,6 +99,7 @@ class AuthorCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "photo",
             "birth_year",
             "birth_era",
             "death_year",
