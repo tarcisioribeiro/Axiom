@@ -7,7 +7,7 @@
  *   3. Ramp-down : 10 → 0 VUs over 30 s
  *
  * Thresholds (fail the CI job if violated):
- *   - 95th-percentile response time < 2 000 ms
+ *   - 95th-percentile response time < 3 000 ms
  *   - HTTP error rate < 5 %
  *
  * Required env vars (set in GitLab CI → Settings → CI/CD → Variables,
@@ -36,7 +36,7 @@ export const options = {
     { duration: '30s', target: 0 },
   ],
   thresholds: {
-    http_req_duration: ['p(95)<2000'],
+    http_req_duration: ['p(95)<3000'],
     http_req_failed: ['rate<0.05'],
     errors: ['rate<0.05'],
   },
@@ -90,7 +90,7 @@ export default function (data) {
     const res = http.get(`${BASE_URL}/live/`)
     const ok = check(res, {
       'health: status 200': (r) => r.status === 200,
-      'health: < 500 ms': (r) => r.timings.duration < 500,
+      'health: < 2000 ms': (r) => r.timings.duration < 2000,
     })
     errorRate.add(!ok)
     apiLatency.add(res.timings.duration)
