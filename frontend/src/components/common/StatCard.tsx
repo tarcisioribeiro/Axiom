@@ -11,6 +11,7 @@ import React, { useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
+import { cn } from '@/lib/utils';
 
 interface StatCardProps {
   title: string;
@@ -52,9 +53,18 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const variantClasses = {
     default: '',
-    success: 'border-success/50 bg-success/5',
-    warning: 'border-warning/50 bg-warning/5',
-    danger: 'border-destructive/50 bg-destructive/5',
+    success: 'border-success/40 bg-success/[0.04]',
+    warning: 'border-warning/40 bg-warning/[0.04]',
+    danger: 'border-destructive/40 bg-destructive/[0.04]',
+  };
+
+  const iconBadgeClasses = {
+    default: 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20',
+    success:
+      'bg-success/12 text-[hsl(var(--success))] ring-1 ring-inset ring-success/25',
+    warning:
+      'bg-warning/12 text-[hsl(var(--warning))] ring-1 ring-inset ring-warning/25',
+    danger: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   };
 
   // Parse numeric value for counter animation.
@@ -101,15 +111,21 @@ export const StatCard: React.FC<StatCardProps> = ({
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
           {icon && (
             <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ duration: 0.3 }}
+              whileHover={{ scale: 1.05, rotate: 4 }}
+              transition={{ duration: 0.25 }}
+              className={cn(
+                'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
+                iconBadgeClasses[variant]
+              )}
             >
               {icon}
             </motion.div>
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{displayValue}</div>
+          <div className="text-2xl font-bold tabular-nums tracking-tight">
+            {displayValue}
+          </div>
           {trend && (
             <div className="mt-sm flex items-center gap-xs">
               <motion.div
