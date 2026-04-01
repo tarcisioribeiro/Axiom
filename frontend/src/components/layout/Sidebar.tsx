@@ -383,19 +383,19 @@ export const Sidebar = () => {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 md:sticky md:top-0',
-          'h-screen w-72 border-r bg-card p-4',
+          'h-screen w-72 border-r border-border/50 bg-card p-4',
           'flex flex-col',
           'transform transition-transform duration-300 ease-in-out md:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg">
-                <img src={icon} alt="MindLedger" className="h-10 w-10 object-contain" />
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border/50">
+                <img src={icon} alt="MindLedger" className="h-9 w-9 object-contain" />
               </div>
-              <span className="bg-gradient-primary bg-clip-text text-xl font-bold text-transparent">
+              <span className="bg-gradient-primary bg-clip-text text-lg font-bold tracking-tight text-transparent">
                 MindLedger
               </span>
             </Link>
@@ -424,10 +424,10 @@ export const Sidebar = () => {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-4 py-3 transition-colors',
+                  'relative flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors duration-150',
                   isActive
-                    ? 'bg-primary font-medium text-primary-foreground'
-                    : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                    ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                    : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
                 )}
               >
                 {item.icon}
@@ -437,7 +437,7 @@ export const Sidebar = () => {
           })}
 
           {/* Divisória */}
-          <div className="my-2 border-t" />
+          <div className="my-2 border-t border-border/40" />
 
           {/* Módulos com submenus */}
           {navModules.map((module) => {
@@ -455,10 +455,10 @@ export const Sidebar = () => {
                   aria-expanded={isExpanded}
                   aria-controls={`module-${module.id}`}
                   className={cn(
-                    'flex w-full items-center gap-3 rounded-lg px-4 py-3 transition-all duration-200',
+                    'flex w-full items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200',
                     hasActiveItem
-                      ? 'bg-accent font-medium text-accent-foreground'
-                      : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                      ? 'font-medium text-primary'
+                      : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
                   )}
                 >
                   {module.icon}
@@ -491,10 +491,10 @@ export const Sidebar = () => {
                             key={item.href}
                             to={item.href}
                             className={cn(
-                              'flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
+                              'relative flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
                               isActive
-                                ? 'bg-primary font-medium text-primary-foreground'
-                                : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                                ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                                : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
                             )}
                           >
                             {item.icon}
@@ -567,10 +567,10 @@ export const Sidebar = () => {
                                         key={item.href}
                                         to={item.href}
                                         className={cn(
-                                          'flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-all duration-150',
+                                          'relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-all duration-150',
                                           isActive
-                                            ? 'bg-primary font-medium text-primary-foreground'
-                                            : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                                            ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                                            : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
                                         )}
                                       >
                                         {item.icon}
@@ -593,10 +593,10 @@ export const Sidebar = () => {
                             key={item.href}
                             to={item.href}
                             className={cn(
-                              'flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
+                              'relative flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
                               isActive
-                                ? 'bg-primary font-medium text-primary-foreground'
-                                : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                                ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+                                : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
                             )}
                           >
                             {item.icon}

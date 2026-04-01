@@ -17,7 +17,7 @@ export const Header = () => {
   const openCommandPalette = useCommandPaletteStore((s) => s.open);
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-card px-md py-md md:px-lg">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-card/80 px-md py-md backdrop-blur-md md:px-lg">
       <div className="flex items-center justify-between">
         {/* Botão Hamburger (apenas mobile) */}
         <Button
