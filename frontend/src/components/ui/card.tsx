@@ -4,14 +4,15 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'rounded-lg border bg-card text-card-foreground shadow transition-shadow',
+  'rounded-lg border border-border/70 bg-card text-card-foreground shadow-soft transition-all duration-200',
   {
     variants: {
       variant: {
-        default: '',
-        interactive: 'hover:shadow-medium cursor-pointer',
+        default: 'hover:border-border/80',
+        interactive:
+          'cursor-pointer hover:-translate-y-px hover:shadow-medium hover:border-primary/20',
         elevated: 'shadow-medium',
-        flat: 'shadow-none',
+        flat: 'shadow-none border-transparent',
       },
     },
     defaultVariants: {
@@ -36,7 +37,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('flex flex-col space-y-1.5 p-6', className)}
+    className={cn('flex flex-col space-y-1.5 px-6 py-5', className)}
     {...props}
   />
 ));
