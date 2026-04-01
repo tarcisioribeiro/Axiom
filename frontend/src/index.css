@@ -239,6 +239,11 @@
       'rlig' 1,
       'calt' 1;
   }
+  h1,
+  h2,
+  h3 {
+    @apply tracking-tight;
+  }
 }
 
 @layer utilities {
@@ -337,8 +342,8 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 4px;
+    height: 4px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -422,6 +427,17 @@
 
   .text-subtle {
     color: hsl(var(--muted-foreground));
+  }
+
+  /* Numeric / financial values — alinha dígitos e evita pulos visuais */
+  .numeric {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Separador interno de seção — mais sutil que border padrão */
+  .divider {
+    @apply border-border/40;
   }
 
   /* Smooth theme transition — scoped to layout and content elements only.

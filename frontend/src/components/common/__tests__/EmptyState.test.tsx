@@ -40,12 +40,12 @@ describe('EmptyState', () => {
   it('renders icon when provided', () => {
     render(<EmptyState icon={<svg data-testid="test-icon" />} message="Nenhum item" />);
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-container')).toBeInTheDocument();
   });
 
   it('does not render icon container when icon is not provided', () => {
-    const { container } = render(<EmptyState message="Nenhum item" />);
-    // No flex justify-center wrapper for icon
-    expect(container.querySelector('.flex.justify-center')).not.toBeInTheDocument();
+    render(<EmptyState message="Nenhum item" />);
+    expect(screen.queryByTestId('icon-container')).not.toBeInTheDocument();
   });
 
   it('renders an action button when action prop is provided', () => {

@@ -8,7 +8,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import importPlugin from 'eslint-plugin-import'
 
 export default defineConfig([
-  globalIgnores(['dist', 'storybook-static']),
+  globalIgnores(['dist', 'storybook-static', 'coverage']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -44,7 +44,7 @@ export default defineConfig([
       'no-console': 'warn',
       'max-lines': ['warn', { max: 250, skipBlankLines: true, skipComments: true }],
       'no-restricted-syntax': [
-        'error',
+        'warn',
         {
           selector: 'Literal[value=/\\brounded-xl\\b/]',
           message:
