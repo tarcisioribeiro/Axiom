@@ -1651,3 +1651,245 @@ class RedeemShareTokenView(APIView):
                 "uses_remaining": token_obj.max_uses - token_obj.use_count,
             }
         )
+
+
+# ============================================================================
+# VAULT EXPORT VIEW
+# ============================================================================
+
+
+class VaultExportZipView(VaultLockedMixin, APIView):
+    """
+    GET /api/v1/security/vault/export/
+
+    Exporta todos os dados do cofre como ZIP:
+    - passwords.csv
+    - stored_cards.csv
+    - stored_accounts.csv
+    - archives/<id>_<filename>  — arquivos reais lidos do storage (MinIO ou local)
+    - archives/<id>_<title>.txt — conteúdo de texto descriptografado (quando aplicável)
+
+    Requer cofre desbloqueado (VaultLockedMixin).
+    Funciona tanto com MinIO (Docker/K8s) quanto com filesystem local (testes).
+    """
+
+    # GlobalDefaultPermission is omitted — it requires a queryset/model to derive
+    # Django model permissions, but this view aggregates several models and scopes
+    # results to request.user. IsAuthenticated + VaultLockedMixin are sufficient.
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def _safe_name(value: str) -> str:
+        """Remove characters unsafe for ZIP entry names."""
+        import re
+
+        return re.sub(r'[\\/*?:"<>|]', "_", value).strip()
+
+    def get(self, request):
+        import csv
+        import io
+        import zipfile
+
+        from django.http import HttpResponse
+
+        from members.models import Member
+
+        try:
+            member = Member.objects.get(user=request.user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"detail": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        buffer = io.BytesIO()
+
+        with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            # ------------------------------------------------------------------
+            # passwords.csv
+            # ------------------------------------------------------------------
+            passwords = Password.objects.filter(owner=member, is_deleted=False).only(
+                "id",
+                "title",
+                "username",
+                "site",
+                "category",
+                "notes",
+                "last_password_change",
+                "_password",
+            )
+            pw_buf = io.StringIO()
+            pw_writer = csv.writer(pw_buf)
+            pw_writer.writerow(
+                [
+                    "Título",
+                    "Usuário",
+                    "Senha",
+                    "Site",
+                    "Categoria",
+                    "Observações",
+                    "Última Alteração",
+                ]
+            )
+            for pw in passwords:
+                try:
+                    decrypted = pw.password or ""
+                except Exception:
+                    decrypted = "[erro ao descriptografar]"
+                pw_writer.writerow(
+                    [
+                        pw.title,
+                        pw.username,
+                        decrypted,
+                        pw.site or "",
+                        pw.category,
+                        pw.notes or "",
+                        (
+                            pw.last_password_change.strftime("%Y-%m-%d")
+                            if pw.last_password_change
+                            else ""
+                        ),
+                    ]
+                )
+            zf.writestr("passwords.csv", pw_buf.getvalue())
+
+            # ------------------------------------------------------------------
+            # stored_cards.csv
+            # ------------------------------------------------------------------
+            cards = StoredCreditCard.objects.filter(owner=member, is_deleted=False)
+            cards_buf = io.StringIO()
+            cards_writer = csv.writer(cards_buf)
+            cards_writer.writerow(
+                [
+                    "Nome",
+                    "Titular",
+                    "Bandeira",
+                    "Número do Cartão",
+                    "CVV",
+                    "Validade",
+                    "Observações",
+                ]
+            )
+            for card in cards:
+                try:
+                    card_number = card.card_number or ""
+                except Exception:
+                    card_number = "[erro]"
+                try:
+                    cvv = card.security_code or ""
+                except Exception:
+                    cvv = "[erro]"
+                cards_writer.writerow(
+                    [
+                        card.name,
+                        card.cardholder_name,
+                        (
+                            card.get_flag_display()
+                            if hasattr(card, "get_flag_display")
+                            else card.flag
+                        ),
+                        card_number,
+                        cvv,
+                        f"{card.expiration_month:02d}/{card.expiration_year}",
+                        card.notes or "",
+                    ]
+                )
+            zf.writestr("stored_cards.csv", cards_buf.getvalue())
+
+            # ------------------------------------------------------------------
+            # stored_accounts.csv
+            # ------------------------------------------------------------------
+            accounts = StoredBankAccount.objects.filter(owner=member, is_deleted=False)
+            acc_buf = io.StringIO()
+            acc_writer = csv.writer(acc_buf)
+            acc_writer.writerow(
+                [
+                    "Nome",
+                    "Instituição",
+                    "Tipo",
+                    "Agência",
+                    "Número da Conta",
+                    "Senha",
+                    "Senha Digital",
+                    "Observações",
+                ]
+            )
+            for acc in accounts:
+                try:
+                    acc_number = acc.account_number or ""
+                except Exception:
+                    acc_number = "[erro]"
+                try:
+                    acc_password = acc.password or ""
+                except Exception:
+                    acc_password = ""
+                try:
+                    acc_digital = acc.digital_password or ""
+                except Exception:
+                    acc_digital = ""
+                acc_writer.writerow(
+                    [
+                        acc.name,
+                        acc.institution_name,
+                        (
+                            acc.get_account_type_display()
+                            if hasattr(acc, "get_account_type_display")
+                            else acc.account_type
+                        ),
+                        acc.agency or "",
+                        acc_number,
+                        acc_password,
+                        acc_digital,
+                        acc.notes or "",
+                    ]
+                )
+            zf.writestr("stored_accounts.csv", acc_buf.getvalue())
+
+            # ------------------------------------------------------------------
+            # archives/ — arquivos reais e conteúdo de texto descriptografado
+            # Usa archive.encrypted_file.open("rb") — a abstração de storage do
+            # Django funciona tanto com MinIO (Docker/K8s) quanto com filesystem
+            # local (testes), sem nenhuma diferença no código.
+            # ------------------------------------------------------------------
+            archives = Archive.objects.filter(owner=member, is_deleted=False)
+            for arch in archives:
+                safe_title = self._safe_name(arch.title)
+                prefix = f"archives/{arch.id}_{safe_title}"
+
+                if arch.has_file_content():
+                    # Arquivo armazenado no storage (MinIO ou local)
+                    original_name = (
+                        arch.file_name or arch.encrypted_file.name.split("/")[-1]
+                    )
+                    safe_filename = self._safe_name(original_name)
+                    zip_path = f"{prefix}/{safe_filename}"
+                    try:
+                        with arch.encrypted_file.open("rb") as f:
+                            zf.writestr(zip_path, f.read())
+                    except Exception:
+                        # Arquivo inacessível — registrar placeholder em vez de
+                        # abortar o export inteiro
+                        zf.writestr(
+                            f"{prefix}/ERRO_{safe_filename}.txt",
+                            f"Não foi possível recuperar o arquivo: {original_name}\n",
+                        )
+
+                if arch.has_text_content():
+                    # Conteúdo de texto descriptografado pelo VaultEncryptedField
+                    zip_path = f"{prefix}/{safe_title}.txt"
+                    try:
+                        text = arch.text_content or ""
+                        zf.writestr(zip_path, text.encode("utf-8"))
+                    except Exception:
+                        zf.writestr(
+                            f"{prefix}/ERRO_{safe_title}.txt",
+                            "Não foi possível descriptografar o conteúdo de texto.\n",
+                        )
+
+        buffer.seek(0)
+        timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"mindledger_vault_{timestamp}.zip"
+
+        response = HttpResponse(buffer.read(), content_type="application/zip")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response

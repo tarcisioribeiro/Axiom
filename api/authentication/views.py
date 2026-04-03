@@ -11,6 +11,7 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .throttles import RegisterRateThrottle
 
@@ -294,6 +295,51 @@ def create_user_with_member(request: Request) -> Response:
             member.document = document_clean
             member.save()
 
+            # Enviar email de verificação se tiver email
+            if email and hasattr(member, "email_verification_token"):
+                import uuid as _uuid_mod
+
+                from django.conf import settings
+                from django.core.mail import send_mail
+                from django.template.loader import render_to_string
+                from django.utils import timezone
+
+                _token = _uuid_mod.uuid4()
+                member.email_verification_token = _token
+                member.email_verification_sent_at = timezone.now()
+                member.save(
+                    update_fields=[
+                        "email_verification_token",
+                        "email_verification_sent_at",
+                    ]
+                )
+                try:
+                    _verification_url = (
+                        f"{getattr(settings, 'SITE_URL', '')}/verify-email/{_token}/"
+                    )
+                    _html_message = render_to_string(
+                        "email/email_verification.html",
+                        {
+                            "user": user,
+                            "verification_url": _verification_url,
+                            "app_name": "MindLedger",
+                        },
+                    )
+                    send_mail(
+                        subject="Confirme seu email — MindLedger",
+                        message=f"Confirme em: {_verification_url}",
+                        from_email=getattr(
+                            settings,
+                            "DEFAULT_FROM_EMAIL",
+                            "noreply@mindledger.app",
+                        ),
+                        recipient_list=[email],
+                        html_message=_html_message,
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass  # não bloquear o cadastro por falha de email
+
             logger.info(f"Novo usuario registrado: {username}")
 
             return Response(
@@ -312,3 +358,320 @@ def create_user_with_member(request: Request) -> Response:
             {"error": "Erro ao criar usuario. Tente novamente."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# ============================================================================
+# PASSWORD RESET VIEWS
+# ============================================================================
+
+
+class PasswordResetRequestView(APIView):
+    """
+    POST /api/v1/users/password-reset/
+
+    Solicita redefinição de senha. Envia e-mail com link de reset.
+    Retorna 200 mesmo se o e-mail não existir (anti-enumeração).
+    """
+
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request: Request) -> Response:
+        import logging
+
+        from django.conf import settings
+        from django.contrib.auth.tokens import PasswordResetTokenGenerator
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+
+        logger = logging.getLogger("expenselit.audit")
+
+        email = (request.data.get("email") or "").strip().lower()
+        if not email:
+            return Response(
+                {
+                    "message": (
+                        "Se este e-mail estiver cadastrado, "
+                        "você receberá um link em breve."
+                    )
+                }
+            )
+
+        try:
+            user = User.objects.get(email__iexact=email, is_active=True)
+        except User.DoesNotExist:
+            # Anti-enumeração: retorna 200 mesmo sem usuário
+            return Response(
+                {
+                    "message": (
+                        "Se este e-mail estiver cadastrado, "
+                        "você receberá um link em breve."
+                    )
+                }
+            )
+
+        token_generator = PasswordResetTokenGenerator()
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = token_generator.make_token(user)
+        site_url = getattr(settings, "SITE_URL", "")
+        reset_url = f"{site_url}/reset-password/{uid}/{token}/"
+
+        try:
+            html_message = render_to_string(
+                "email/password_reset.html",
+                {"user": user, "reset_url": reset_url, "app_name": "MindLedger"},
+            )
+            send_mail(
+                subject="Redefinição de senha — MindLedger",
+                message=f"Acesse o link para redefinir sua senha: {reset_url}",
+                from_email=getattr(
+                    settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app"
+                ),
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=True,
+            )
+        except Exception:
+            logger.warning("Falha ao enviar e-mail de reset de senha para %s", email)
+
+        return Response(
+            {
+                "message": (
+                    "Se este e-mail estiver cadastrado, "
+                    "você receberá um link em breve."
+                )
+            }
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/v1/users/password-reset/confirm/
+
+    Confirma a redefinição de senha usando uid + token gerados pelo Django.
+    Body: { "uid": "...", "token": "...", "new_password": "...",
+            "confirm_password": "..." }
+    """
+
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request: Request) -> Response:
+        from django.contrib.auth.tokens import PasswordResetTokenGenerator
+        from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
+
+        uid = (request.data.get("uid") or "").strip()
+        token = (request.data.get("token") or "").strip()
+        new_password = request.data.get("new_password", "")
+        confirm_password = request.data.get("confirm_password", "")
+
+        if not all([uid, token, new_password, confirm_password]):
+            return Response(
+                {"error": "Todos os campos são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"error": "As senhas não coincidem."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user_pk = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_pk, is_active=True)
+        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+            return Response(
+                {"error": "Link inválido ou expirado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token_generator = PasswordResetTokenGenerator()
+        if not token_generator.check_token(user, token):
+            return Response(
+                {"error": "Link inválido ou expirado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as e:
+            return Response(
+                {"error": "Senha inválida.", "details": list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"message": "Senha redefinida com sucesso."})
+
+
+# ============================================================================
+# EMAIL VERIFICATION VIEWS
+# ============================================================================
+
+
+class EmailVerificationSendView(APIView):
+    """
+    POST /api/v1/users/email-verification/send/
+
+    Envia (ou reenvia) o e-mail de verificação para o usuário autenticado.
+    Requer que o member tenha um e-mail cadastrado e que o model Member
+    possua os campos email_verified / email_verification_token.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        import logging
+        import uuid
+
+        from django.conf import settings
+        from django.core.mail import send_mail
+        from django.template.loader import render_to_string
+        from django.utils import timezone
+
+        from members.models import Member
+
+        logger = logging.getLogger("expenselit.audit")
+
+        auth_user = cast(User, request.user)
+        try:
+            member = Member.objects.get(user=auth_user, is_deleted=False)
+        except Member.DoesNotExist:
+            return Response(
+                {"error": "Perfil de membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not hasattr(member, "email_verified"):
+            return Response(
+                {"error": "Verificação de e-mail não disponível."},
+                status=status.HTTP_501_NOT_IMPLEMENTED,
+            )
+
+        email = member.email or auth_user.email
+        if not email:
+            return Response(
+                {"error": "Nenhum e-mail cadastrado para este perfil."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if member.email_verified:
+            return Response({"message": "E-mail já verificado."})
+
+        token = uuid.uuid4()
+        member.email_verification_token = token
+        member.email_verification_sent_at = timezone.now()
+        member.save(
+            update_fields=["email_verification_token", "email_verification_sent_at"]
+        )
+
+        site_url = getattr(settings, "SITE_URL", "")
+        verification_url = f"{site_url}/verify-email/{token}/"
+
+        try:
+            html_message = render_to_string(
+                "email/email_verification.html",
+                {
+                    "user": request.user,
+                    "verification_url": verification_url,
+                    "app_name": "MindLedger",
+                },
+            )
+            send_mail(
+                subject="Confirme seu e-mail — MindLedger",
+                message=f"Confirme seu e-mail em: {verification_url}",
+                from_email=getattr(
+                    settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app"
+                ),
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=True,
+            )
+        except Exception:
+            logger.warning(
+                "Falha ao enviar e-mail de verificação para user %s", request.user.id
+            )
+
+        return Response(
+            {
+                "message": (
+                    "E-mail de verificação enviado. " "Verifique sua caixa de entrada."
+                )
+            }
+        )
+
+
+class EmailVerificationConfirmView(APIView):
+    """
+    GET /api/v1/users/email-verification/confirm/?token=<uuid>
+
+    Confirma o e-mail do usuário usando o token enviado por e-mail.
+    Valida expiração de 48 horas.
+    """
+
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request: Request) -> Response:
+        from django.utils import timezone
+
+        from members.models import Member
+
+        token = (request.query_params.get("token") or "").strip()
+        if not token:
+            return Response(
+                {"error": "Token ausente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            member = Member.objects.get(
+                email_verification_token=token, is_deleted=False
+            )
+        except (Member.DoesNotExist, Exception):
+            return Response(
+                {"error": "Token inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not hasattr(member, "email_verified"):
+            return Response(
+                {"error": "Verificação de e-mail não disponível."},
+                status=status.HTTP_501_NOT_IMPLEMENTED,
+            )
+
+        if member.email_verified:
+            return Response({"message": "E-mail já verificado anteriormente."})
+
+        sent_at = member.email_verification_sent_at
+        if sent_at is None:
+            return Response(
+                {"error": "Token inválido ou expirado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        elapsed = timezone.now() - sent_at
+        if elapsed.total_seconds() > 172800:  # 48 horas
+            return Response(
+                {"error": "Token expirado. Solicite um novo e-mail de verificação."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        member.email_verified = True
+        member.email_verification_token = None
+        member.email_verification_sent_at = None
+        member.save(
+            update_fields=[
+                "email_verified",
+                "email_verification_token",
+                "email_verification_sent_at",
+            ]
+        )
+
+        return Response({"message": "E-mail verificado com sucesso!"})

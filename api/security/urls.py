@@ -29,11 +29,13 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
+    VaultExportZipView,
     VaultHealthReportView,
 )
 
 urlpatterns = [
     # Vault config (senha mestre)
+    path("vault/export/", VaultExportZipView.as_view(), name="vault-export-zip"),
     path("vault/status/", VaultStatusView.as_view(), name="vault-status"),
     path("vault/setup/", VaultSetupView.as_view(), name="vault-setup"),
     path("vault/unlock/", VaultUnlockView.as_view(), name="vault-unlock"),
