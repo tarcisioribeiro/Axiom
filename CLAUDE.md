@@ -19,7 +19,7 @@ MindLedger/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation
 
 **Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances.
 
@@ -61,7 +61,7 @@ MindLedger/
 
 **API Client**: `services/api-client.ts` wraps axios. Cookies sent automatically (`withCredentials: true`). Base URL resolved dynamically at runtime from `window.location.hostname` (matching browser host to avoid SameSite cookie issues), falling back to `VITE_API_BASE_URL`. Auto-refresh on 401 except auth endpoints. Custom error classes: `AuthenticationError`, `ValidationError` (exposes `.errors` field map), `NotFoundError`, `PermissionError`.
 
-**State**: Zustand for auth (`stores/auth-store.ts` — manages user, permissions, `hasPermission()`, `hasSystemAccess()`) and toast notifications (via `hooks/use-toast.ts`). React Hook Form + Zod for forms. Local state for component data.
+**State**: Zustand stores: `auth-store.ts` (user, permissions, `hasPermission()`, `hasSystemAccess()`), `notifications-store.ts` (notification list/unread count), `command-palette-store.ts` (palette open state). Toast state lives in `hooks/use-toast.ts`. React Hook Form + Zod for forms. Local state for component data.
 
 **Translation System**: `config/translations.ts` contains `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for all domain terms. `autoTranslate()` searches all sections. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before.
 
@@ -69,11 +69,11 @@ MindLedger/
 
 **Other Key Hooks**: `use-theme.ts` (dark/light Dracula/Alucard themes with localStorage), `use-toast.ts` (max 3 visible, 5s auto-dismiss), `use-alert-dialog.tsx` (confirmation dialogs), `use-vault-status.ts` (vault lock/unlock state), `use-sidebar.ts`, `use-breadcrumb.ts`, `use-command-palette.ts`.
 
-**Utility Library** (`lib/`): `utils.ts` — `cn()` (Tailwind merge), date/timezone helpers; `formatters.ts` — `formatCurrency()` (BRL), `formatDate()`, percentage/number formatting; `validations.ts` — shared Zod schemas; `logger.ts` — dev-only console logger (silent in production); `chart-colors.ts` / `chart-formatters.ts` — theme-aware chart utilities.
+**Utility Library** (`lib/`): `utils.ts` — `cn()` (Tailwind merge), date/timezone helpers; `formatters.ts` — `formatCurrency()` (BRL), `formatDate()`, percentage/number formatting; `validations.ts` — shared Zod schemas; `logger.ts` — dev-only console logger (silent in production); `chart-colors.ts` / `chart-formatters.ts` — theme-aware chart utilities; `animations/` — Framer Motion variants (`cardVariants`, etc.), shared transitions, and animation hooks (`useCounter` for number counter animations) — import from `@/lib/animations`.
 
 **Routing**: `ProtectedRoute` HOC wraps authenticated pages. All protected pages are lazy-loaded (`React.lazy()` + `Suspense`). Public routes (/login, /register) redirect to home if already authenticated.
 
-**Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`.
+**Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`, `ExportModal` (date-range export dialog), `AnimatedPage` (page-level Framer Motion wrapper).
 
 **Import alias**: `@/` → `frontend/src/`
 
@@ -136,6 +136,11 @@ npm run typecheck        # TypeScript type check only (no build)
 npm run test -- --run                         # All tests (single run)
 npm run test -- --run -t "test name"          # Single test by name
 npm run test:coverage                         # With coverage report
+npm run test:e2e                              # Playwright E2E tests (config exists, no tests yet)
+
+# Storybook
+npm run storybook                             # Dev server at port 6006
+npm run build:storybook                       # Build static Storybook
 ```
 
 **Testing stack**: Vitest 4 + @testing-library/react v16 + happy-dom. Config in `vitest.config.ts`. Setup file: `src/test/setup.ts`. `globals: false` — test files must explicitly import `{ describe, it, expect, vi }` from `'vitest'`. Pre-push hook runs `npm run test:coverage` automatically.
@@ -303,6 +308,7 @@ Key testing conventions:
 - `BACKUP_ENCRYPTION_KEY_PREVIOUS`: previous Fernet key kept after a rotation — set this so `vault_recovery` can report its presence as a fallback hint; clear it once you confirm all fields decrypted correctly with the new key
 - `DB_USER`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL credentials
 - `VITE_API_BASE_URL`: Backend URL (default: `http://localhost:39100`)
+- `VITE_SENTRY_DSN`: Sentry DSN for frontend error tracking (optional — Sentry is silently disabled when unset)
 - `DB_HOST`: `db` for Docker, `localhost` for local
 
 ## Key Rotation
