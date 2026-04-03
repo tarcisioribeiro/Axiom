@@ -51,6 +51,15 @@ Biblioteca pessoal digital com recursos avançados:
 ## Tecnologias Core
 
 ### Backend
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2-092E20?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-3.16-ff1709?style=flat-square&logo=django&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-HttpOnly_Cookies-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Fernet](https://img.shields.io/badge/Fernet-Field_Encryption-FFD43B?style=flat-square&logo=python&logoColor=black)
+
 - **Django 5.2.12** - Framework web principal
 - **Django REST Framework 3.16.1** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
@@ -59,17 +68,45 @@ Biblioteca pessoal digital com recursos avançados:
 - **Cryptography (Fernet)** - Criptografia de dados
 
 ### Frontend
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Radix UI](https://img.shields.io/badge/Radix_UI-primitives-161618?style=flat-square&logo=radixui&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-state_management-443E38?style=flat-square)
+![React Router](https://img.shields.io/badge/React_Router-v7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-animations-0055FF?style=flat-square&logo=framer&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-charts-22B5BF?style=flat-square)
+![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?style=flat-square&logo=reactquery&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-validation-3E67B1?style=flat-square)
+
 - **React 19** - Biblioteca UI
-- **TypeScript** - Tipagem estática
-- **TailwindCSS** - Framework CSS
-- **Zustand** - Gerenciamento de estado
+- **TypeScript 5.9** - Tipagem estática
+- **Vite 7** - Build tool e dev server
+- **TailwindCSS 3** - Framework CSS
+- **Radix UI** - Componentes primitivos acessíveis
+- **Zustand** - Gerenciamento de estado global
 - **React Router v7** - Roteamento
+- **Framer Motion** - Animações
 - **Recharts** - Visualização de dados
+- **TanStack Query v5** - Cache e sincronização de dados do servidor
+- **Zod** - Validação de formulários (com React Hook Form)
 
 ### Infraestrutura
+
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-reverse_proxy-009639?style=flat-square&logo=nginx&logoColor=white)
+![MinIO](https://img.shields.io/badge/MinIO-object_storage-C72E49?style=flat-square&logo=minio&logoColor=white)
+![Sentry](https://img.shields.io/badge/Sentry-error_tracking-362D59?style=flat-square&logo=sentry&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-metrics-E6522C?style=flat-square&logo=prometheus&logoColor=white)
+
 - **Docker & Docker Compose** - Containerização
-- **Nginx** (opcional) - Proxy reverso
-- **JWT** - Autenticação baseada em tokens
+- **Nginx** - Proxy reverso e servidor de assets do frontend
+- **MinIO** - Armazenamento de objetos (mídia)
+- **Sentry** - Error tracking (frontend, via `VITE_SENTRY_DSN`)
+- **Prometheus** - Coleta de métricas (via django-prometheus)
+- **JWT** - Autenticação baseada em tokens (HttpOnly cookies)
 
 ## Arquitetura de Alto Nível
 
