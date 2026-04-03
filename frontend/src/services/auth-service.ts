@@ -237,6 +237,73 @@ class AuthService {
   }
 
   /**
+   * Solicita redefinição de senha via e-mail.
+   * Retorna 200 independente de o e-mail existir (anti-enumeração).
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PASSWORD_RESET_REQUEST}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }
+    );
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Confirma redefinição de senha com uid + token do link enviado por e-mail.
+   */
+  async confirmPasswordReset(
+    uid: string,
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PASSWORD_RESET_CONFIRM}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid,
+          token,
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      }
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? 'Erro ao redefinir senha.');
+    }
+  }
+
+  /**
+   * Reenvia e-mail de verificação para o usuário autenticado.
+   */
+  async sendEmailVerification(): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(
+      API_CONFIG.ENDPOINTS.EMAIL_VERIFICATION_SEND
+    );
+  }
+
+  /**
+   * Confirma o token de verificação de e-mail.
+   */
+  async confirmEmailVerification(token: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMAIL_VERIFICATION_CONFIRM}?token=${token}`
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { detail?: string };
+      throw new Error(data.detail ?? 'Token inválido ou expirado.');
+    }
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
    * Verifica se o usuario tem acesso ao sistema.
    *
    * Usuarios devem pertencer ao grupo "Membros" para ter acesso.

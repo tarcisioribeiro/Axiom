@@ -7,6 +7,10 @@ from .cookie_auth import (
     logout_view,
 )
 from .views import (
+    EmailVerificationConfirmView,
+    EmailVerificationSendView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
     create_user_with_member,
     get_available_users,
     get_current_user,
@@ -35,4 +39,24 @@ urlpatterns = [
     path("user/permissions/", get_user_permissions, name="user-permissions"),
     path("users/available/", get_available_users, name="available-users"),
     path("users/register/", create_user_with_member, name="register-user"),
+    path(
+        "users/password-reset/",
+        PasswordResetRequestView.as_view(),
+        name="password-reset-request",
+    ),
+    path(
+        "users/password-reset/confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
+    path(
+        "users/email-verification/send/",
+        EmailVerificationSendView.as_view(),
+        name="email-verification-send",
+    ),
+    path(
+        "users/email-verification/confirm/",
+        EmailVerificationConfirmView.as_view(),
+        name="email-verification-confirm",
+    ),
 ]

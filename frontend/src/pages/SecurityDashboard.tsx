@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Key, CreditCard, Wallet, Archive } from 'lucide-react';
+import { Shield, Key, CreditCard, Wallet, Archive, Download } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -8,15 +9,21 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { securityDashboardService } from '@/services/security-dashboard-service';
+import { vaultConfigService } from '@/services/security-vault-service';
+import { getErrorMessage } from '@/utils/error-utils';
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
 
 export default function SecurityDashboard() {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['securityDashboard'],
@@ -27,6 +34,25 @@ export default function SecurityDashboard() {
   const COLORS = useChartColors();
   const strengthColors = usePasswordStrengthColors();
 
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await vaultConfigService.exportVaultZip();
+      toast({
+        title: t('pages.securityDashboard.exportVaultSuccess'),
+        description: t('pages.securityDashboard.exportVaultSuccessDesc'),
+      });
+    } catch (err) {
+      toast({
+        title: t('pages.securityDashboard.exportVaultError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingState fullScreen />;
   }
@@ -34,7 +60,21 @@ export default function SecurityDashboard() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader title={t('pages.securityDashboard.title')} icon={<Shield />} />
+        <div className="flex items-center justify-between">
+          <PageHeader title={t('pages.securityDashboard.title')} icon={<Shield />} />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isExporting}
+            onClick={() => void handleExport()}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {isExporting
+              ? t('common.actions.loading')
+              : t('pages.securityDashboard.exportVault')}
+          </Button>
+        </div>
 
         {/* Métricas Principais - Grid 2x2 */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
