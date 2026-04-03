@@ -11,10 +11,13 @@ import { AlertDialogProvider } from './components/providers/AlertDialogProvider'
 import { Toaster } from './components/ui/toaster';
 import { queryClient } from './lib/query-client';
 // Eager load (páginas públicas carregadas imediatamente)
+import ForgotPassword from './pages/ForgotPassword';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import ShareCredential from './pages/ShareCredential';
 import Unauthorized from './pages/Unauthorized';
+import VerifyEmail from './pages/VerifyEmail';
 import { useAuthStore } from './stores/auth-store';
 
 // Lazy load (páginas protegidas carregadas sob demanda)
@@ -92,6 +95,15 @@ function AnimatedRoutes() {
         />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/share/:token" element={<ShareCredential />} />
+        <Route
+          path="/forgot-password"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <ForgotPassword />}
+        />
+        <Route
+          path="/reset-password/:uid/:token"
+          element={isAuthenticated ? <Navigate to="/" replace /> : <ResetPassword />}
+        />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Protected routes */}
         <Route
