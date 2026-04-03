@@ -73,6 +73,7 @@ Guias para desenvolvedores.
 - **[Deploy e CI/CD](development/deploy.md)** - Variáveis GitLab, k3s e pipeline completo
 - **[Rollback](development/rollback.md)** - Procedimentos de reversão
 - **[Troubleshooting](development/troubleshooting.md)** - Solução de problemas comuns
+- **[Funcionalidades Pendentes](development/pending_features.md)** - O que está parcialmente implementado e como completar (email, reset de senha, 2FA, export ZIP, etc.)
 
 ## 🚀 Início Rápido
 

@@ -187,6 +187,20 @@ if [ "$MODE" == "auto" ]; then
 
     REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
 
+    # Email — deixar como placeholder; o usuário deve configurar manualmente
+    EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend"
+    EMAIL_HOST="smtp.example.com"
+    EMAIL_PORT="587"
+    EMAIL_USE_TLS="True"
+    EMAIL_USE_SSL="False"
+    EMAIL_HOST_USER="your-smtp-username@example.com"
+    EMAIL_HOST_PASSWORD="your-smtp-password-here"
+    DEFAULT_FROM_EMAIL="MindLedger <noreply@mindledger.app>"
+    SITE_URL="http://localhost:39101"
+
+    GUNICORN_WORKERS="4"
+    GUNICORN_TIMEOUT="120"
+
 else
     # Modo interativo
     read -p "Host do banco de dados [db]: " DB_HOST
@@ -296,6 +310,40 @@ else
         REDIS_PASSWORD="$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")"
         print_info "Senha do Redis gerada automaticamente"
     fi
+
+    print_header "Configuração de E-mail (Redefinição de Senha / Verificação)"
+
+    print_info "Para desenvolvimento, use o backend console (imprime e-mails no terminal)."
+    print_info "Para produção, configure um servidor SMTP real."
+    read -p "Backend de e-mail [django.core.mail.backends.console.EmailBackend]: " EMAIL_BACKEND
+    EMAIL_BACKEND=${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+
+    read -p "Host SMTP [smtp.example.com]: " EMAIL_HOST
+    EMAIL_HOST=${EMAIL_HOST:-smtp.example.com}
+
+    read -p "Porta SMTP [587]: " EMAIL_PORT
+    EMAIL_PORT=${EMAIL_PORT:-587}
+
+    read -p "Usar TLS [True]: " EMAIL_USE_TLS
+    EMAIL_USE_TLS=${EMAIL_USE_TLS:-True}
+
+    EMAIL_USE_SSL="False"
+
+    read -p "Usuário SMTP: " EMAIL_HOST_USER
+    EMAIL_HOST_USER=${EMAIL_HOST_USER:-your-smtp-username@example.com}
+
+    read -sp "Senha SMTP: " EMAIL_HOST_PASSWORD
+    echo
+    EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-your-smtp-password-here}
+
+    read -p "Remetente padrão [MindLedger <noreply@mindledger.app>]: " DEFAULT_FROM_EMAIL
+    DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-MindLedger <noreply@mindledger.app>}
+
+    read -p "URL pública do site (usada em links de e-mail) [http://localhost:39101]: " SITE_URL
+    SITE_URL=${SITE_URL:-http://localhost:39101}
+
+    GUNICORN_WORKERS="4"
+    GUNICORN_TIMEOUT="120"
 fi
 
 # Criar arquivo .env
@@ -389,6 +437,28 @@ MINIO_CONSOLE_PORT=$(esc "$MINIO_CONSOLE_PORT")
 # ============================================================================
 # Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 REDIS_PASSWORD=$(esc "$REDIS_PASSWORD")
+
+# ============================================================================
+# EMAIL (Redefinição de senha / Verificação de e-mail)
+# Para desenvolvimento: EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+# Para produção: configure um servidor SMTP real.
+# ============================================================================
+EMAIL_BACKEND=$(esc "$EMAIL_BACKEND")
+EMAIL_HOST=$(esc "$EMAIL_HOST")
+EMAIL_PORT=$(esc "$EMAIL_PORT")
+EMAIL_USE_TLS=$(esc "$EMAIL_USE_TLS")
+EMAIL_USE_SSL=$(esc "$EMAIL_USE_SSL")
+EMAIL_HOST_USER=$(esc "$EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD=$(esc "$EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL=$(esc "$DEFAULT_FROM_EMAIL")
+# URL pública do frontend — usada em links de e-mail (reset de senha, verificação)
+SITE_URL=$(esc "$SITE_URL")
+
+# ============================================================================
+# GUNICORN (Production Server)
+# ============================================================================
+GUNICORN_WORKERS=$(esc "$GUNICORN_WORKERS")
+GUNICORN_TIMEOUT=$(esc "$GUNICORN_TIMEOUT")
 
 # ============================================================================
 # DEVELOPMENT SETTINGS

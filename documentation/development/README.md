@@ -65,6 +65,16 @@ Diagnóstico e resolução de problemas comuns:
 - Erros de criptografia
 - Problemas de CORS
 
+### 9. [Funcionalidades Pendentes](./pending_features.md)
+Funcionalidades com infraestrutura parcial que precisam de implementação ou configuração:
+- Notificações por email (configuração SMTP)
+- Reset de senha
+- Confirmação de email no cadastro
+- Export ZIP do módulo Security
+- Import de extrato bancário (fluxo frontend)
+- Vault Health Report (página frontend)
+- 2FA / Autenticação de dois fatores
+
 ## Início Rápido
 
 Se você está começando agora, siga esta sequência:
