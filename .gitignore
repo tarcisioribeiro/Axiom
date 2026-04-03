@@ -113,6 +113,7 @@ coverage/
 .nyc_output/
 *.cover
 .hypothesis/
+e2e-results/
 
 # Certificates and keys
 *.pem
@@ -126,6 +127,3 @@ tmp/
 temp/
 *.tmp
 *.temp
-
-# Claude Files
-.claude/
