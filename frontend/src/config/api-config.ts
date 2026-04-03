@@ -41,6 +41,10 @@ export const API_CONFIG = {
     VERIFY_TOKEN: '/api/v1/authentication/token/verify/',
     REGISTER: '/api/v1/users/register/',
     USER_PERMISSIONS: '/api/v1/user/permissions/',
+    PASSWORD_RESET_REQUEST: '/api/v1/users/password-reset/',
+    PASSWORD_RESET_CONFIRM: '/api/v1/users/password-reset/confirm/',
+    EMAIL_VERIFICATION_SEND: '/api/v1/users/email-verification/send/',
+    EMAIL_VERIFICATION_CONFIRM: '/api/v1/users/email-verification/confirm/',
 
     // Resources
     ACCOUNTS: '/api/v1/accounts/',
@@ -73,6 +77,7 @@ export const API_CONFIG = {
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
+    SECURITY_VAULT_EXPORT: '/api/v1/security/vault/export/',
     PASSWORD_IMPORT_PREVIEW: '/api/v1/security/passwords/import/preview/',
     PASSWORD_IMPORT_CONFIRM: '/api/v1/security/passwords/import/confirm/',
     PASSWORD_SHARE_TOKENS: '/api/v1/security/passwords/:id/share-tokens/',

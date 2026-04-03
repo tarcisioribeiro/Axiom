@@ -63,6 +63,15 @@ class Member(BaseModel):
     email = models.CharField(
         max_length=200, blank=True, null=True, verbose_name="Email"
     )
+    email_verified = models.BooleanField(
+        default=False, verbose_name="E-mail Verificado"
+    )
+    email_verification_token = models.UUIDField(
+        null=True, blank=True, verbose_name="Token de Verificação de E-mail"
+    )
+    email_verification_sent_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Envio do Token de Verificação"
+    )
     sex = models.CharField(max_length=200, choices=SEX_OPTION, verbose_name="Sexo")
     user = models.OneToOneField(
         User,

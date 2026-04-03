@@ -31,6 +31,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   PiggyBank,
+  FileDown,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +41,7 @@ import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
+import { StatementExportModal } from '@/components/common/StatementExportModal';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -79,6 +81,7 @@ export default function Dashboard() {
   // Filter state
   const [selectedCard, setSelectedCard] = useState<string>('all');
   const [selectedBill, setSelectedBill] = useState<string>('all');
+  const [statementModalOpen, setStatementModalOpen] = useState(false);
   const [evolutionPeriod, setEvolutionPeriod] = useState<
     'daily' | 'weekly' | 'monthly' | 'yearly'
   >('daily');
@@ -426,7 +429,20 @@ export default function Dashboard() {
   return (
     <AnimatedPage>
       <div className="space-y-6 px-sm py-md md:px-4 md:py-8">
-        <PageHeader title={t('pages.dashboard.title')} icon={<LayoutDashboard />} />
+        <PageHeader
+          title={t('pages.dashboard.title')}
+          icon={<LayoutDashboard />}
+          action={{
+            label: 'Exportar Extrato',
+            icon: <FileDown className="h-4 w-4" />,
+            onClick: () => setStatementModalOpen(true),
+          }}
+        />
+
+        <StatementExportModal
+          open={statementModalOpen}
+          onOpenChange={setStatementModalOpen}
+        />
 
         {/* Alertas Financeiros */}
         {financialAlerts.length > 0 && (
