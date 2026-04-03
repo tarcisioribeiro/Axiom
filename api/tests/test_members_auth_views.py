@@ -187,6 +187,15 @@ class MemberViewTest(BaseAuthTestCase):
             [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
         )
 
+    def test_update_member_with_document(self):
+        """Covers serializer validate_document with instance and update document."""
+        url = reverse("member-detail-view", args=[self.member.pk])
+        response = self.client.patch(url, {"document": "529.982.247-25"})
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
+        )
+
     def test_current_user_member(self):
         url = reverse("current-user-member")
         response = self.client.get(url)

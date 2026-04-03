@@ -195,7 +195,46 @@
       "submit": "Entrar",
       "loading": "Entrando...",
       "noAccount": "Não tem uma conta?",
-      "register": "Cadastre-se"
+      "register": "Cadastre-se",
+      "forgotPassword": "Esqueci minha senha"
+    },
+    "forgotPassword": {
+      "title": "Esqueci minha senha",
+      "description": "Digite seu e-mail e enviaremos um link para redefinir sua senha.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "submit": "Enviar link",
+      "loading": "Enviando...",
+      "successTitle": "Link enviado!",
+      "successDesc": "Se este e-mail estiver cadastrado, você receberá as instruções em breve. Verifique também a caixa de spam.",
+      "backToLogin": "Voltar para o login",
+      "errorTitle": "Erro ao enviar"
+    },
+    "resetPassword": {
+      "title": "Redefinir senha",
+      "description": "Digite e confirme sua nova senha.",
+      "newPassword": "Nova senha",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmar nova senha",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Redefinir senha",
+      "loading": "Redefinindo...",
+      "successTitle": "Senha redefinida!",
+      "successDesc": "Sua senha foi alterada com sucesso. Você já pode fazer login.",
+      "goToLogin": "Ir para o login",
+      "invalidLink": "Link inválido ou expirado",
+      "invalidLinkDesc": "Solicite um novo link de redefinição de senha.",
+      "errorTitle": "Erro ao redefinir"
+    },
+    "verifyEmail": {
+      "title": "Verificação de e-mail",
+      "verifying": "Verificando seu e-mail...",
+      "successTitle": "E-mail verificado!",
+      "successDesc": "Seu e-mail foi confirmado com sucesso.",
+      "goToHome": "Ir para o início",
+      "errorTitle": "Link inválido ou expirado",
+      "errorDesc": "Solicite um novo e-mail de verificação nas configurações da sua conta.",
+      "backToLogin": "Voltar para o login"
     },
     "register": {
       "subtitle": "Crie sua conta",
@@ -969,7 +1008,12 @@
       "itemCount_one": "{{count}} item",
       "itemCount_other": "{{count}} itens",
       "passwordCount_one": "{{count}} senha",
-      "passwordCount_other": "{{count}} senhas"
+      "passwordCount_other": "{{count}} senhas",
+      "exportVault": "Exportar cofre",
+      "exportVaultDesc": "Baixar senhas, cartões e contas em arquivo ZIP",
+      "exportVaultSuccess": "Exportação iniciada",
+      "exportVaultSuccessDesc": "O download do arquivo ZIP foi iniciado.",
+      "exportVaultError": "Erro ao exportar cofre"
     },
     "passwords": {
       "title": "Senhas",
