@@ -25,6 +25,28 @@ class BooksService extends BaseService<Book, BookFormData> {
   async reorderQueue(items: { id: number; priority: number }[]): Promise<void> {
     await apiClient.patch<{ detail: string }>(API_CONFIG.ENDPOINTS.BOOK_REORDER, items);
   }
+
+  async uploadBookFile(
+    id: number,
+    file: File
+  ): Promise<{ detail: string; name: string }> {
+    const formData = new FormData();
+    formData.append('book_file', file);
+    return apiClient.patch<{ detail: string; name: string }>(
+      `${API_CONFIG.ENDPOINTS.BOOK_FILE}${id}/file/`,
+      formData
+    );
+  }
+
+  async getBookFileUrl(id: number): Promise<{ url: string; name: string }> {
+    return apiClient.get<{ url: string; name: string }>(
+      `${API_CONFIG.ENDPOINTS.BOOK_FILE}${id}/file/`
+    );
+  }
+
+  async deleteBookFile(id: number): Promise<void> {
+    await apiClient.delete(`${API_CONFIG.ENDPOINTS.BOOK_FILE}${id}/file/`);
+  }
 }
 
 export const booksService = new BooksService();

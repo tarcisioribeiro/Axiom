@@ -8,6 +8,8 @@ import {
   FileText,
   Highlighter,
   MoreHorizontal,
+  Download,
+  BookText,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -184,7 +186,11 @@ export default function Books() {
     }
   };
 
-  const handleSubmit = async (data: BookFormData, coverFile?: File | null) => {
+  const handleSubmit = async (
+    data: BookFormData,
+    coverFile?: File | null,
+    bookFile?: File | null
+  ) => {
     try {
       setIsSubmitting(true);
       let saved: Book;
@@ -204,6 +210,9 @@ export default function Books() {
       if (coverFile) {
         await booksService.uploadCover(saved.id, coverFile);
       }
+      if (bookFile && data.media_type === 'Dig') {
+        await booksService.uploadBookFile(saved.id, bookFile);
+      }
       setIsFormOpen(false);
       void loadData();
     } catch (error: unknown) {
@@ -215,6 +224,27 @@ export default function Books() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDownloadFile = async (book: Book) => {
+    try {
+      const { url } = await booksService.getBookFileUrl(book.id);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = book.title;
+      a.target = '_blank';
+      a.click();
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao baixar arquivo',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleOpenReader = (book: Book) => {
+    window.open(`/library/reader/${book.id}`, '_blank');
   };
 
   const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
@@ -398,6 +428,20 @@ export default function Books() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            {book.media_type === 'Dig' && book.book_file && (
+                              <DropdownMenuItem onClick={() => handleOpenReader(book)}>
+                                <BookText className="mr-2 h-4 w-4" />
+                                Abrir Leitor
+                              </DropdownMenuItem>
+                            )}
+                            {book.media_type === 'Dig' && book.book_file && (
+                              <DropdownMenuItem
+                                onClick={() => void handleDownloadFile(book)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Baixar Arquivo
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'readings')}
                             >
