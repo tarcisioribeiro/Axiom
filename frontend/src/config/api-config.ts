@@ -93,6 +93,8 @@ export const API_CONFIG = {
     READING_GOALS: '/api/v1/library/reading-goals/',
     READING_QUEUE: '/api/v1/library/reading-queue/',
     BOOK_REORDER: '/api/v1/library/reading-queue/reorder/',
+    BOOK_FILE: '/api/v1/library/books/',
+    BOOK_FILE_STREAM: '/api/v1/library/books/',
     BOOK_HIGHLIGHTS: '/api/v1/library/highlights/',
     BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
 
