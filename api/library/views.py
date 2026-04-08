@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db import transaction
 from django.db.models import Avg, Count, F, Q, Sum
+from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -294,6 +295,160 @@ class BookDetailView(BaseRetrieveUpdateDestroyView):
             instance.id,
             f"Deletou livro: {instance.title}",
         )
+
+
+# ============================================================================
+# BOOK FILE VIEW
+# ============================================================================
+
+
+class BookFileView(APIView):
+    """Gerencia o arquivo (EPUB/PDF) de um livro digital."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Book.objects.all()
+
+    def _get_book(self, request, pk):
+        try:
+            return Book.objects.get(
+                pk=pk,
+                owner__user=request.user,
+                deleted_at__isnull=True,
+            )
+        except Book.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        """Retorna a URL presignada para download do arquivo."""
+        book = self._get_book(request, pk)
+        if not book:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not book.book_file:
+            return Response(
+                {"detail": "Este livro não possui arquivo anexado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        url = book.book_file.url
+        return Response({"url": url, "name": book.book_file.name.split("/")[-1]})
+
+    def patch(self, request, pk):
+        """Faz upload ou substituição do arquivo do livro."""
+        book = self._get_book(request, pk)
+        if not book:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if book.media_type != "Dig":
+            return Response(
+                {"detail": "Upload de arquivo só é permitido para livros digitais."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        uploaded_file = request.FILES.get("book_file")
+        if not uploaded_file:
+            return Response(
+                {"detail": "Nenhum arquivo enviado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        ext = (
+            uploaded_file.name.rsplit(".", 1)[-1].lower()
+            if "." in uploaded_file.name
+            else ""
+        )
+        if ext not in ("epub", "pdf"):
+            return Response(
+                {"detail": "Apenas arquivos EPUB ou PDF são permitidos."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if book.book_file:
+            book.book_file.delete(save=False)
+
+        book.book_file = uploaded_file
+        book.updated_by = request.user
+        book.save(update_fields=["book_file", "updated_at", "updated_by"])
+        log_activity(
+            request,
+            "update",
+            "Book",
+            book.id,
+            f"Fez upload do arquivo do livro: {book.title}",
+        )
+        file_name = book.book_file.name.split("/")[-1]
+        return Response({"detail": "Arquivo enviado com sucesso.", "name": file_name})
+
+    def delete(self, request, pk):
+        """Remove o arquivo do livro."""
+        book = self._get_book(request, pk)
+        if not book:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not book.book_file:
+            return Response(
+                {"detail": "Este livro não possui arquivo anexado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        book.book_file.delete(save=False)
+        book.book_file = None
+        book.updated_by = request.user
+        book.save(update_fields=["book_file", "updated_at", "updated_by"])
+        log_activity(
+            request,
+            "delete",
+            "Book",
+            book.id,
+            f"Removeu arquivo do livro: {book.title}",
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ============================================================================
+# BOOK FILE STREAM VIEW
+# ============================================================================
+
+
+class BookFileStreamView(APIView):
+    """Faz proxy do arquivo do livro via Django, contornando CORS do MinIO."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
+
+    def _get_book(self, request, pk):
+        try:
+            return Book.objects.get(
+                pk=pk,
+                owner__user=request.user,
+                deleted_at__isnull=True,
+            )
+        except Book.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        book = self._get_book(request, pk)
+        if not book:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not book.book_file:
+            return Response(
+                {"detail": "Este livro não possui arquivo anexado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        filename = book.book_file.name.split("/")[-1]
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        content_type = "application/epub+zip" if ext == "epub" else "application/pdf"
+        file_obj = book.book_file.open("rb")
+        response = FileResponse(file_obj, content_type=content_type)
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
 
 
 # ============================================================================

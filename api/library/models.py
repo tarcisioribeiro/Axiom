@@ -61,6 +61,12 @@ LITERARY_TYPES = (
 
 MEDIA_TYPE = (("Dig", "Digital"), ("Phi", "Física"))
 
+
+def book_file_upload_to(instance, filename):
+    """Armazena em pasta exclusiva por pk, preservando o nome original do arquivo."""
+    return f"library/books/{instance.pk}/{filename}"
+
+
 HIGHLIGHT_TYPE_CHOICES = (
     ("quote", "Citação"),
     ("note", "Nota"),
@@ -231,6 +237,12 @@ class Book(BaseModel):
         blank=True,
         verbose_name="Capa",
     )
+    book_file = models.FileField(
+        upload_to=book_file_upload_to,
+        null=True,
+        blank=True,
+        verbose_name="Arquivo do Livro",
+    )
     read_status = models.CharField(
         max_length=20,
         choices=READ_STATUS_CHOICES,
@@ -333,6 +345,11 @@ class Reading(BaseModel):
         verbose_name="Páginas Lidas",
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Observações")
+    current_page = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Página Atual",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

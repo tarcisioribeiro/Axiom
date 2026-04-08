@@ -25,6 +25,14 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    // Force a single pdfjs-dist instance across the entire bundle.
+    // react-pdf ships its own nested pdfjs-dist (5.4.296), while the project
+    // uses 5.6.205. pdfjs performs an apiVersion handshake between main and
+    // worker at load time; if the versions differ the PDF silently fails.
+    // dedupe ensures every import of 'pdfjs-dist' resolves to the project-root
+    // copy (5.6.205), making the worker URL generated in BookReader.tsx match
+    // the pdfjs instance used by react-pdf at runtime.
+    dedupe: ['pdfjs-dist'],
   },
   server: {
     port: 3000,
