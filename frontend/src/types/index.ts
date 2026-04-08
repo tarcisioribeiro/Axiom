@@ -1145,6 +1145,7 @@ export interface Book {
   uuid: string;
   title: string;
   cover?: string | null;
+  book_file?: string | null;
   authors?: number[];
   authors_names: string[];
   pages: number;
@@ -1228,6 +1229,7 @@ export interface Reading {
   reading_time: number;
   pages_read: number;
   notes?: string;
+  current_page?: number | null;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -1240,6 +1242,7 @@ export interface ReadingFormData {
   reading_time: number;
   pages_read: number;
   notes?: string;
+  current_page?: number | null;
   owner: number;
 }
 
