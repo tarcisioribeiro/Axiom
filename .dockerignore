@@ -11,10 +11,7 @@ LICENSE
 docs/
 
 # CI/CD
-.github/
 .gitlab-ci.yml
-.travis.yml
-.circleci/
 
 # IDE
 .vscode/

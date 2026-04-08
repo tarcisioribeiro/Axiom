@@ -48,6 +48,7 @@ const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
 const Books = lazy(() => import('./pages/Books'));
 const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
+const BookReader = lazy(() => import('./pages/BookReader'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -397,6 +398,20 @@ function AnimatedRoutes() {
             }
           />
         </Route>
+
+        {/* Book Reader — protected but without Layout (fullscreen) */}
+        <Route
+          path="/library/reader/:bookId"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingFallback />}>
+                  <BookReader />
+                </Suspense>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

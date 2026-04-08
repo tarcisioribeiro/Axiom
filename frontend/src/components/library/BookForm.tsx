@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ImagePlus, Loader2, X } from 'lucide-react';
+import { FileText, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -28,7 +28,11 @@ interface BookFormProps {
   book?: Book;
   authors: Author[];
   publishers: Publisher[];
-  onSubmit: (data: BookFormData, coverFile?: File | null) => void;
+  onSubmit: (
+    data: BookFormData,
+    coverFile?: File | null,
+    bookFile?: File | null
+  ) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -44,7 +48,18 @@ export function BookForm({
   const [selectedAuthors, setSelectedAuthors] = useState<number[]>(book?.authors || []);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(book?.cover || null);
+  const [bookFile, setBookFile] = useState<File | null>(null);
+  const [bookFileName, setBookFileName] = useState<string | null>(() => {
+    if (!book?.book_file) return null;
+    try {
+      const pathname = new URL(book.book_file).pathname;
+      return decodeURIComponent(pathname.split('/').pop() ?? '') || null;
+    } catch {
+      return null;
+    }
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bookFileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -133,9 +148,24 @@ export function BookForm({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleBookFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBookFile(file);
+    setBookFileName(file.name);
+  };
+
+  const handleRemoveBookFile = () => {
+    setBookFile(null);
+    setBookFileName(null);
+    if (bookFileInputRef.current) bookFileInputRef.current.value = '';
+  };
+
+  const mediaType = watch('media_type');
+
   return (
     <form
-      onSubmit={handleSubmit((data) => onSubmit(data, coverFile))}
+      onSubmit={handleSubmit((data) => onSubmit(data, coverFile, bookFile))}
       className="space-y-4"
     >
       {/* Cover Image */}
@@ -184,6 +214,51 @@ export function BookForm({
           </div>
         </div>
       </div>
+
+      {/* Book File Upload (Digital only) */}
+      {mediaType === 'Dig' && (
+        <div>
+          <Label>Arquivo do Livro (EPUB ou PDF)</Label>
+          <div className="mt-2 flex items-center gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-muted px-3 py-2">
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="truncate text-sm text-muted-foreground">
+                {bookFileName ?? 'Nenhum arquivo selecionado'}
+              </span>
+              {bookFileName && (
+                <button
+                  type="button"
+                  onClick={handleRemoveBookFile}
+                  className="ml-auto shrink-0 rounded-full p-0.5 hover:bg-background"
+                  aria-label="Remover arquivo"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <input
+              ref={bookFileInputRef}
+              type="file"
+              accept=".epub,.pdf"
+              className="hidden"
+              onChange={handleBookFileChange}
+              id="book-file-upload"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => bookFileInputRef.current?.click()}
+            >
+              <Upload className="mr-1 h-3 w-3" />
+              {bookFileName ? 'Trocar' : 'Selecionar'}
+            </Button>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Apenas arquivos .epub ou .pdf. O arquivo é enviado após salvar o livro.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
@@ -341,7 +416,7 @@ export function BookForm({
         <div>
           <Label htmlFor="media_type">Tipo de Mídia</Label>
           <Select
-            value={watch('media_type') || undefined}
+            value={mediaType || undefined}
             onValueChange={(value) => setValue('media_type', value)}
           >
             <SelectTrigger>

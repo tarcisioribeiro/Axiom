@@ -226,6 +226,7 @@ class BookSerializer(serializers.ModelSerializer):
             "read_status",
             "read_status_display",
             "reading_priority",
+            "book_file",
             "has_summary",
             "total_pages_read",
             "reading_progress",
@@ -321,6 +322,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "cover",
+            "book_file",
             "authors",
             "pages",
             "publisher",
@@ -414,6 +416,7 @@ class ReadingSerializer(serializers.ModelSerializer):
             "reading_time",
             "pages_read",
             "notes",
+            "current_page",
             "owner",
             "owner_name",
             "created_at",
@@ -434,6 +437,7 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
             "reading_time",
             "pages_read",
             "notes",
+            "current_page",
             "owner",
         ]
 

@@ -4,6 +4,8 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     AuthorDetailView,
     AuthorListCreateView,
     BookDetailView,
+    BookFileStreamView,
+    BookFileView,
     BookHighlightDetailView,
     BookHighlightExportView,
     BookHighlightListCreateView,
@@ -41,6 +43,12 @@ urlpatterns = [
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    path("books/<int:pk>/file/", BookFileView.as_view(), name="book-file"),
+    path(
+        "books/<int:pk>/file/stream/",
+        BookFileStreamView.as_view(),
+        name="book-file-stream",
+    ),
     # Reading Queue
     path("reading-queue/", BookReadingQueueView.as_view(), name="reading-queue"),
     path(
