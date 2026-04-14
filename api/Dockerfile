@@ -5,7 +5,7 @@
 FROM python:3.12-slim AS base
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     postgresql-client \
@@ -48,7 +48,7 @@ RUN black --check . && isort --check . && flake8 .
 # (build-essential brings linux-libc-dev with kernel CVEs not needed at runtime)
 FROM python:3.12-slim AS production
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     postgresql-client \
     netcat-openbsd \
     curl \
