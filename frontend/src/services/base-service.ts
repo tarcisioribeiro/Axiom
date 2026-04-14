@@ -67,6 +67,24 @@ export abstract class BaseService<
   }
 
   /**
+   * Lista todos os recursos percorrendo todas as paginas automaticamente.
+   * Util quando o total de registros pode exceder o PAGE_SIZE do backend (50).
+   */
+  async getAllPages(params?: Record<string, unknown>): Promise<T[]> {
+    const first = await apiClient.get<PaginatedResponse<T>>(this.endpoint, params);
+    const results = [...first.results];
+
+    let nextUrl = first.next;
+    while (nextUrl) {
+      const page = await apiClient.get<PaginatedResponse<T>>(nextUrl);
+      results.push(...page.results);
+      nextUrl = page.next;
+    }
+
+    return results;
+  }
+
+  /**
    * Busca um recurso por ID.
    */
   async getById(id: string | number): Promise<T> {
