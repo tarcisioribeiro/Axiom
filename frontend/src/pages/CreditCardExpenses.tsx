@@ -6,6 +6,7 @@ import {
   ShoppingCart,
   Calendar,
   DollarSign,
+  Link2,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -73,6 +74,11 @@ export default function CreditCardExpenses() {
     CreditCardInstallment | undefined
   >();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [assigningInstallment, setAssigningInstallment] = useState<
+    CreditCardInstallment | undefined
+  >();
+  const [selectedAssignBillId, setSelectedAssignBillId] = useState<string>('');
+  const [isAssignBillDialogOpen, setIsAssignBillDialogOpen] = useState(false);
   const [cardFilter, setCardFilter] = useState<string>('all');
   const [billFilter, setBillFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -293,7 +299,7 @@ export default function CreditCardExpenses() {
             card,
             label: bill
               ? `${TRANSLATIONS.months[bill.month as keyof typeof TRANSLATIONS.months]}/${bill.year}`
-              : 'Sem Fatura',
+              : t('pages.creditCardExpenses.orphanBillLabel'),
             period: bill
               ? `${formatDate(bill.invoice_beginning_date, 'dd/MM')} a ${formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')}`
               : '',
@@ -454,6 +460,46 @@ export default function CreditCardExpenses() {
         description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
+      void loadData(true);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getEligibleBills = (installment: CreditCardInstallment): CreditCardBill[] => {
+    const dueDate = new Date(installment.due_date);
+    return bills.filter((bill) => {
+      if (bill.credit_card !== installment.card_id) return false;
+      const start = new Date(bill.invoice_beginning_date);
+      const end = new Date(bill.invoice_ending_date);
+      return dueDate >= start && dueDate <= end;
+    });
+  };
+
+  const handleOpenAssignBill = (installment: CreditCardInstallment) => {
+    setAssigningInstallment(installment);
+    setSelectedAssignBillId('');
+    setIsAssignBillDialogOpen(true);
+  };
+
+  const handleAssignBill = async () => {
+    if (!assigningInstallment || !selectedAssignBillId) return;
+    try {
+      setIsSubmitting(true);
+      await creditCardInstallmentsService.update(assigningInstallment.id, {
+        bill: parseInt(selectedAssignBillId),
+      });
+      toast({
+        title: t('pages.creditCardExpenses.installmentLinked'),
+        description: t('pages.creditCardExpenses.installmentLinkedDesc'),
+      });
+      setIsAssignBillDialogOpen(false);
       void loadData(true);
     } catch (error: unknown) {
       toast({
@@ -719,7 +765,9 @@ export default function CreditCardExpenses() {
                       <div>
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Calendar className="h-5 w-5 text-primary" />
-                          {t('pages.creditCardExpenses.billLabel', { label })}
+                          {key === 'sem-fatura'
+                            ? label
+                            : t('pages.creditCardExpenses.billLabel', { label })}
                         </CardTitle>
                         {period && (
                           <p className="mt-1 text-sm">
@@ -770,6 +818,7 @@ export default function CreditCardExpenses() {
                         const purchase = purchases.find(
                           (p) => p.id === installment.purchase
                         );
+                        const isOrphan = !installment.bill;
                         return (
                           <div className="flex items-center justify-end gap-2">
                             {purchase && (
@@ -783,6 +832,20 @@ export default function CreditCardExpenses() {
                                   user
                                 )}
                               />
+                            )}
+                            {isOrphan && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenAssignBill(installment)}
+                                aria-label={t('pages.creditCardExpenses.assignBillBtn')}
+                                title={t('pages.creditCardExpenses.assignBillBtn')}
+                              >
+                                <Link2
+                                  className="h-4 w-4 text-primary"
+                                  aria-hidden="true"
+                                />
+                              </Button>
                             )}
                             <Button
                               variant="ghost"
@@ -929,6 +992,82 @@ export default function CreditCardExpenses() {
               isLoading={isSubmitting}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAssignBillDialogOpen} onOpenChange={setIsAssignBillDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('pages.creditCardExpenses.assignBillTitle')}</DialogTitle>
+            <DialogDescription>
+              {assigningInstallment && (
+                <>
+                  {t('pages.creditCardExpenses.assignBillDesc')}{' '}
+                  <span className="font-medium">
+                    {formatDate(assigningInstallment.due_date, 'dd/MM/yyyy')}
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {assigningInstallment &&
+            (() => {
+              const eligibleBills = getEligibleBills(assigningInstallment);
+              return (
+                <div className="space-y-4">
+                  {eligibleBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('pages.creditCardExpenses.noEligibleBills')}
+                    </p>
+                  ) : (
+                    <Select
+                      value={selectedAssignBillId}
+                      onValueChange={setSelectedAssignBillId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('pages.creditCardExpenses.allBills')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eligibleBills.map((bill) => (
+                          <SelectItem key={bill.id} value={bill.id.toString()}>
+                            {
+                              TRANSLATIONS.months[
+                                bill.month as keyof typeof TRANSLATIONS.months
+                              ]
+                            }
+                            /{bill.year} (
+                            {formatDate(bill.invoice_beginning_date, 'dd/MM')}
+                            {' – '}
+                            {formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAssignBillDialogOpen(false)}
+                      disabled={isSubmitting}
+                    >
+                      {t('common.actions.cancel')}
+                    </Button>
+                    <Button
+                      onClick={() => void handleAssignBill()}
+                      disabled={
+                        !selectedAssignBillId ||
+                        isSubmitting ||
+                        eligibleBills.length === 0
+                      }
+                    >
+                      {t('pages.creditCardExpenses.assignBillBtn')}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
         </DialogContent>
       </Dialog>
     </PageContainer>

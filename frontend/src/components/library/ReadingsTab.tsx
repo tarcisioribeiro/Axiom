@@ -49,8 +49,8 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
     try {
       setLoading(true);
       const [readingsData, booksData] = await Promise.all([
-        readingsService.getAll(),
-        booksService.getAll(),
+        readingsService.getAllPages(),
+        booksService.getAllPages(),
       ]);
       setReadings(readingsData);
       setBooks(booksData);
