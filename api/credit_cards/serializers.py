@@ -351,6 +351,30 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Valor deve ser maior que zero")
         return value
 
+    def validate(self, data):
+        new_bill = data.get("bill")
+        if new_bill is not None and self.instance is not None:
+            old_bill = self.instance.bill
+            if new_bill != old_bill:
+                due_date = self.instance.due_date
+                if not (
+                    new_bill.invoice_beginning_date
+                    <= due_date
+                    <= new_bill.invoice_ending_date
+                ):
+                    raise serializers.ValidationError(
+                        {
+                            "bill": (
+                                "A data de vencimento da parcela "
+                                f"({due_date}) não está dentro do período "
+                                f"desta fatura "
+                                f"({new_bill.invoice_beginning_date} a "
+                                f"{new_bill.invoice_ending_date})."
+                            )
+                        }
+                    )
+        return data
+
     @transaction.atomic
     def update(self, instance, validated_data):
         """
