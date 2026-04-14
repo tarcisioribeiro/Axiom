@@ -23,7 +23,7 @@ MindLedger/
 
 **Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances.
 
-**Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`.
+**Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`. The same file also defines shared choice tuples reused across apps: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
 **View Pattern**: Uses DRF generic views (not ViewSets). Base mixins `BaseListCreateView` / `BaseRetrieveUpdateDestroyView` in `app/base_views.py` already include `IsAuthenticated` + `GlobalDefaultPermission`. Each resource has two views:
 - `ResourceCreateListView(BaseListCreateView)` — GET list + POST create
@@ -63,7 +63,9 @@ MindLedger/
 
 **State**: Zustand stores: `auth-store.ts` (user, permissions, `hasPermission()`, `hasSystemAccess()`), `notifications-store.ts` (notification list/unread count), `command-palette-store.ts` (palette open state). Toast state lives in `hooks/use-toast.ts`. React Hook Form + Zod for forms. Local state for component data.
 
-**Translation System**: `config/translations.ts` contains `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for all domain terms. `autoTranslate()` searches all sections. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before.
+**Translation System**: Two separate layers:
+- `config/translations.ts` — API data translation: `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for domain enum values (expense categories, status labels, etc.). `autoTranslate()` searches all sections. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before. `lib/helpers.ts` provides `translateCategory(category, 'expense'|'revenue')` as a convenience wrapper, plus `groupByProperty<T>(array, property)` for grouping arrays.
+- `i18n/` — UI text localization via react-i18next. Locale files at `i18n/locales/pt-BR.json` (default) and `i18n/locales/en-US.json`. Language persisted in localStorage key `mindledger-lang`. Use the `LanguageSelector` component (`components/common/LanguageSelector.tsx`) to switch languages.
 
 **CRUD Hook**: `hooks/use-crud-page.ts` encapsulates load/create/update/delete with loading states and toast notifications.
 
@@ -73,7 +75,9 @@ MindLedger/
 
 **Routing**: `ProtectedRoute` HOC wraps authenticated pages. All protected pages are lazy-loaded (`React.lazy()` + `Suspense`). Public routes (/login, /register) redirect to home if already authenticated.
 
-**Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`, `ExportModal` (date-range export dialog), `AnimatedPage` (page-level Framer Motion wrapper).
+**Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`, `ExportModal` (date-range export dialog), `StatementExportModal` (statement-specific export), `AnimatedPage` (page-level Framer Motion wrapper), `IconButton` (icon + tooltip button), `ErrorBoundary` (React error boundary), `LanguageSelector`, `ThemeToggle`.
+
+**UI Primitives** (`components/ui/`): Radix UI-based low-level components wrapped with project styling — `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`. Use these for building feature components.
 
 **Import alias**: `@/` → `frontend/src/`
 
