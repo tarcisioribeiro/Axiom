@@ -593,6 +593,450 @@
     --shadow-opacity-medium: 0.45;
     --shadow-opacity-strong: 0.55;
   }
+
+  /* ── Catppuccin Latte (Light Variant) ── */
+  :root[data-light-theme='catppuccin-latte'] {
+    color-scheme: light;
+
+    --background: 220 23% 95%;
+    --foreground: 234 16% 36%;
+
+    --card: 220 23% 97%;
+    --card-foreground: 234 16% 36%;
+
+    --popover: 220 23% 97%;
+    --popover-foreground: 234 16% 36%;
+
+    /* Primary — Mauve (#8839EF) */
+    --primary: 266 85% 58%;
+    --primary-foreground: 220 23% 95%;
+
+    /* Secondary — Selection (#CCD0DA) */
+    --secondary: 220 14% 83%;
+    --secondary-foreground: 234 16% 36%;
+
+    --muted: 220 14% 89%;
+    --muted-foreground: 228 10% 56%;
+
+    /* Accent — Pink (#EA76CB) */
+    --accent: 316 73% 69%;
+    --accent-foreground: 234 16% 36%;
+
+    /* Destructive — Red (#D20F39) */
+    --destructive: 347 87% 44%;
+    --destructive-foreground: 220 23% 95%;
+
+    /* Success — Green (#40A02B) */
+    --success: 109 58% 40%;
+    --success-foreground: 220 23% 95%;
+
+    /* Warning — Yellow (#DF8E1D) */
+    --warning: 35 78% 44%;
+    --warning-foreground: 220 23% 95%;
+
+    /* Info — Teal (#179299) */
+    --info: 183 74% 35%;
+    --info-foreground: 220 23% 95%;
+
+    --border: 220 14% 76%;
+    --input: 220 14% 76%;
+    --ring: 266 85% 58%;
+
+    --category-finance: 109 58% 40%;
+    --category-health: 183 74% 35%;
+    --category-studies: 234 60% 45%;
+    --category-spiritual: 316 73% 48%;
+    --category-exercise: 22 99% 47%;
+    --category-nutrition: 35 78% 42%;
+    --category-work: 228 10% 46%;
+    --category-leisure: 347 87% 44%;
+
+    --on-primary: 220 23% 95%;
+    --on-secondary: 234 16% 36%;
+    --on-accent: 234 16% 36%;
+    --on-success: 220 23% 95%;
+    --on-warning: 220 23% 95%;
+    --on-destructive: 220 23% 95%;
+    --on-info: 220 23% 95%;
+
+    --border-subtle: 220 14% 91%;
+    --star: 35 78% 42%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.08;
+    --shadow-opacity-strong: 0.12;
+  }
+
+  /* ── Rosé Pine Dawn (Light Variant) ── */
+  :root[data-light-theme='rose-pine-dawn'] {
+    color-scheme: light;
+
+    --background: 35 61% 95%;
+    --foreground: 245 20% 40%;
+
+    --card: 35 55% 97%;
+    --card-foreground: 245 20% 40%;
+
+    --popover: 35 55% 97%;
+    --popover-foreground: 245 20% 40%;
+
+    /* Primary — Iris (#907AA9) */
+    --primary: 277 24% 57%;
+    --primary-foreground: 35 61% 95%;
+
+    /* Secondary — Selection (#DFDAD9) */
+    --secondary: 12 8% 86%;
+    --secondary-foreground: 245 20% 40%;
+
+    --muted: 29 39% 92%;
+    --muted-foreground: 271 9% 52%;
+
+    /* Accent — Rose (#D7827E) */
+    --accent: 3 47% 55%;
+    --accent-foreground: 35 61% 95%;
+
+    /* Destructive — Love (#B4637A) */
+    --destructive: 343 35% 48%;
+    --destructive-foreground: 35 61% 95%;
+
+    /* Success — Pine (#286983) */
+    --success: 197 53% 34%;
+    --success-foreground: 35 61% 95%;
+
+    /* Warning — Gold (#EA9D34) */
+    --warning: 35 81% 48%;
+    --warning-foreground: 35 61% 95%;
+
+    /* Info — Foam (#56949F) */
+    --info: 189 30% 40%;
+    --info-foreground: 35 61% 95%;
+
+    --border: 12 8% 78%;
+    --input: 12 8% 78%;
+    --ring: 277 24% 57%;
+
+    --category-finance: 197 53% 34%;
+    --category-health: 189 30% 40%;
+    --category-studies: 245 20% 38%;
+    --category-spiritual: 277 24% 48%;
+    --category-exercise: 35 81% 45%;
+    --category-nutrition: 35 90% 40%;
+    --category-work: 271 9% 45%;
+    --category-leisure: 343 35% 48%;
+
+    --on-primary: 35 61% 95%;
+    --on-secondary: 245 20% 40%;
+    --on-accent: 35 61% 95%;
+    --on-success: 35 61% 95%;
+    --on-warning: 35 61% 95%;
+    --on-destructive: 35 61% 95%;
+    --on-info: 35 61% 95%;
+
+    --border-subtle: 12 8% 90%;
+    --star: 35 81% 45%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.08;
+    --shadow-opacity-strong: 0.12;
+  }
+
+  /* ── Everforest Light (Light Variant) ── */
+  :root[data-light-theme='everforest-light'] {
+    color-scheme: light;
+
+    --background: 48 39% 92%;
+    --foreground: 202 11% 40%;
+
+    --card: 48 39% 94%;
+    --card-foreground: 202 11% 40%;
+
+    --popover: 48 39% 94%;
+    --popover-foreground: 202 11% 40%;
+
+    /* Primary — Blue (#3A94C5) */
+    --primary: 201 55% 50%;
+    --primary-foreground: 48 39% 92%;
+
+    /* Secondary — Selection (#E0DCC7) */
+    --secondary: 48 27% 83%;
+    --secondary-foreground: 202 11% 40%;
+
+    --muted: 48 27% 87%;
+    --muted-foreground: 102 7% 52%;
+
+    /* Accent — Purple (#DF69BA) */
+    --accent: 319 65% 52%;
+    --accent-foreground: 48 39% 92%;
+
+    /* Destructive — Red (#F85552) */
+    --destructive: 1 72% 52%;
+    --destructive-foreground: 48 39% 92%;
+
+    /* Success — Green (#8DA101) */
+    --success: 67 99% 32%;
+    --success-foreground: 48 39% 92%;
+
+    /* Warning — Orange (#F57D26) */
+    --warning: 25 91% 48%;
+    --warning-foreground: 48 39% 92%;
+
+    /* Info — Aqua (#35A77C) */
+    --info: 157 52% 43%;
+    --info-foreground: 48 39% 92%;
+
+    --border: 48 27% 74%;
+    --input: 48 27% 74%;
+    --ring: 201 55% 50%;
+
+    --category-finance: 67 99% 32%;
+    --category-health: 157 52% 43%;
+    --category-studies: 201 55% 40%;
+    --category-spiritual: 319 65% 46%;
+    --category-exercise: 25 91% 45%;
+    --category-nutrition: 43 100% 38%;
+    --category-work: 102 7% 44%;
+    --category-leisure: 1 72% 48%;
+
+    --on-primary: 48 39% 92%;
+    --on-secondary: 202 11% 40%;
+    --on-accent: 48 39% 92%;
+    --on-success: 48 39% 92%;
+    --on-warning: 48 39% 92%;
+    --on-destructive: 48 39% 92%;
+    --on-info: 48 39% 92%;
+
+    --border-subtle: 48 27% 87%;
+    --star: 43 100% 38%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.09;
+    --shadow-opacity-strong: 0.13;
+  }
+
+  /* ── Gruvbox Light (Light Variant) ── */
+  :root[data-light-theme='gruvbox-light'] {
+    color-scheme: light;
+
+    --background: 46 79% 88%;
+    --foreground: 8 5% 22%;
+
+    --card: 46 79% 90%;
+    --card-foreground: 8 5% 22%;
+
+    --popover: 46 79% 90%;
+    --popover-foreground: 8 5% 22%;
+
+    /* Primary — Yellow (#D79921) */
+    --primary: 40 74% 42%;
+    --primary-foreground: 8 5% 22%;
+
+    /* Secondary — Selection (#D5C4A1) */
+    --secondary: 41 38% 73%;
+    --secondary-foreground: 8 5% 22%;
+
+    --muted: 41 38% 78%;
+    --muted-foreground: 30 12% 44%;
+
+    /* Accent — Purple (#B16286) */
+    --accent: 333 34% 48%;
+    --accent-foreground: 46 79% 88%;
+
+    /* Destructive — Red (#CC241D) */
+    --destructive: 2 75% 46%;
+    --destructive-foreground: 46 79% 88%;
+
+    /* Success — Green (#98971A) */
+    --success: 60 71% 35%;
+    --success-foreground: 46 79% 88%;
+
+    /* Warning — Orange (#D65D0E) */
+    --warning: 24 88% 45%;
+    --warning-foreground: 46 79% 88%;
+
+    /* Info — Aqua (#689D6A) */
+    --info: 122 21% 43%;
+    --info-foreground: 46 79% 88%;
+
+    --border: 41 38% 65%;
+    --input: 41 38% 65%;
+    --ring: 40 74% 42%;
+
+    --category-finance: 60 71% 35%;
+    --category-health: 122 21% 43%;
+    --category-studies: 183 33% 38%;
+    --category-spiritual: 333 34% 46%;
+    --category-exercise: 24 88% 45%;
+    --category-nutrition: 40 74% 38%;
+    --category-work: 30 12% 42%;
+    --category-leisure: 2 75% 46%;
+
+    --on-primary: 8 5% 22%;
+    --on-secondary: 8 5% 22%;
+    --on-accent: 46 79% 88%;
+    --on-success: 46 79% 88%;
+    --on-warning: 46 79% 88%;
+    --on-destructive: 46 79% 88%;
+    --on-info: 46 79% 88%;
+
+    --border-subtle: 41 38% 80%;
+    --star: 40 74% 38%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.15);
+    --shadow-opacity-soft: 0.07;
+    --shadow-opacity-medium: 0.1;
+    --shadow-opacity-strong: 0.15;
+  }
+
+  /* ── Solarized Light (Light Variant) ── */
+  :root[data-light-theme='solarized-light'] {
+    color-scheme: light;
+
+    --background: 44 87% 94%;
+    --foreground: 194 13% 40%;
+
+    --card: 44 87% 96%;
+    --card-foreground: 194 13% 40%;
+
+    --popover: 44 87% 96%;
+    --popover-foreground: 194 13% 40%;
+
+    /* Primary — Blue (#268BD2) */
+    --primary: 205 69% 49%;
+    --primary-foreground: 44 87% 94%;
+
+    /* Secondary — Selection (#EEE8D5) */
+    --secondary: 44 47% 88%;
+    --secondary-foreground: 194 13% 40%;
+
+    --muted: 44 47% 91%;
+    --muted-foreground: 180 8% 50%;
+
+    /* Accent — Magenta (#D33682) */
+    --accent: 331 64% 46%;
+    --accent-foreground: 44 87% 94%;
+
+    /* Destructive — Red (#DC322F) */
+    --destructive: 1 70% 46%;
+    --destructive-foreground: 44 87% 94%;
+
+    /* Success — Green (#859900) */
+    --success: 68 100% 30%;
+    --success-foreground: 44 87% 94%;
+
+    /* Warning — Yellow (#B58900) */
+    --warning: 45 100% 35%;
+    --warning-foreground: 44 87% 94%;
+
+    /* Info — Cyan (#2AA198) */
+    --info: 175 59% 40%;
+    --info-foreground: 44 87% 94%;
+
+    --border: 44 47% 80%;
+    --input: 44 47% 80%;
+    --ring: 205 69% 49%;
+
+    --category-finance: 68 100% 30%;
+    --category-health: 175 59% 40%;
+    --category-studies: 205 69% 42%;
+    --category-spiritual: 331 64% 44%;
+    --category-exercise: 18 80% 40%;
+    --category-nutrition: 45 100% 32%;
+    --category-work: 194 13% 38%;
+    --category-leisure: 1 70% 46%;
+
+    --on-primary: 44 87% 94%;
+    --on-secondary: 194 13% 40%;
+    --on-accent: 44 87% 94%;
+    --on-success: 44 87% 94%;
+    --on-warning: 44 87% 94%;
+    --on-destructive: 44 87% 94%;
+    --on-info: 44 87% 94%;
+
+    --border-subtle: 44 47% 90%;
+    --star: 45 100% 35%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.1);
+    --shadow-opacity-soft: 0.06;
+    --shadow-opacity-medium: 0.08;
+    --shadow-opacity-strong: 0.12;
+  }
+
+  /* ── Nord Light (Light Variant) ── */
+  :root[data-light-theme='nord-light'] {
+    color-scheme: light;
+
+    --background: 218 27% 94%;
+    --foreground: 220 17% 22%;
+
+    --card: 218 27% 96%;
+    --card-foreground: 220 17% 22%;
+
+    --popover: 218 27% 96%;
+    --popover-foreground: 220 17% 22%;
+
+    /* Primary — Blue (#5E81AC) */
+    --primary: 213 32% 46%;
+    --primary-foreground: 218 27% 94%;
+
+    /* Secondary — Selection (#D8DEE9) */
+    --secondary: 219 26% 81%;
+    --secondary-foreground: 220 17% 22%;
+
+    --muted: 219 26% 87%;
+    --muted-foreground: 220 16% 40%;
+
+    /* Accent — Purple (#B48EAD) */
+    --accent: 311 20% 50%;
+    --accent-foreground: 218 27% 94%;
+
+    /* Destructive — Red (#BF616A) */
+    --destructive: 354 40% 46%;
+    --destructive-foreground: 218 27% 94%;
+
+    /* Success — Green (#A3BE8C darkened) */
+    --success: 92 35% 38%;
+    --success-foreground: 218 27% 94%;
+
+    /* Warning — Yellow (#EBCB8B darkened) */
+    --warning: 40 55% 40%;
+    --warning-foreground: 218 27% 94%;
+
+    /* Info — Cyan (#88C0D0 darkened) */
+    --info: 193 45% 38%;
+    --info-foreground: 218 27% 94%;
+
+    --border: 219 26% 74%;
+    --input: 219 26% 74%;
+    --ring: 213 32% 46%;
+
+    --category-finance: 92 35% 38%;
+    --category-health: 193 45% 38%;
+    --category-studies: 213 32% 42%;
+    --category-spiritual: 311 25% 44%;
+    --category-exercise: 16 55% 42%;
+    --category-nutrition: 40 55% 38%;
+    --category-work: 220 16% 38%;
+    --category-leisure: 354 40% 46%;
+
+    --on-primary: 218 27% 94%;
+    --on-secondary: 220 17% 22%;
+    --on-accent: 218 27% 94%;
+    --on-success: 218 27% 94%;
+    --on-warning: 218 27% 94%;
+    --on-destructive: 218 27% 94%;
+    --on-info: 218 27% 94%;
+
+    --border-subtle: 219 26% 88%;
+    --star: 40 55% 38%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --shadow-opacity-soft: 0.05;
+    --shadow-opacity-medium: 0.07;
+    --shadow-opacity-strong: 0.1;
+  }
 }
 
 @layer base {

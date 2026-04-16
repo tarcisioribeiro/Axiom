@@ -13,9 +13,10 @@ const mockUseTheme = useTheme as ReturnType<typeof vi.fn>;
 
 const baseThemeMock = {
   toggle: vi.fn(),
-  setTheme: vi.fn(),
   setDarkVariant: vi.fn(),
+  setLightVariant: vi.fn(),
   darkVariant: 'dracula' as const,
+  lightVariant: 'alucard' as const,
 };
 
 describe('ThemeToggle', () => {
@@ -50,7 +51,8 @@ describe('ThemeToggle', () => {
     mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: false });
     render(<ThemeToggle />);
     await user.click(screen.getByRole('button'));
-    expect(screen.getByText('Alucard (Claro)')).toBeInTheDocument();
+    expect(screen.getByText('Alucard')).toBeInTheDocument();
+    expect(screen.getByText('Catppuccin Latte')).toBeInTheDocument();
     expect(screen.getByText('Dracula')).toBeInTheDocument();
     expect(screen.getByText('Catppuccin Mocha')).toBeInTheDocument();
     expect(screen.getByText('Tokyo Night')).toBeInTheDocument();
@@ -59,18 +61,18 @@ describe('ThemeToggle', () => {
     expect(screen.getByText('Flat Remix')).toBeInTheDocument();
   });
 
-  it('calls setTheme("light") when Alucard option is clicked', async () => {
+  it('calls setLightVariant("alucard") when Alucard option is clicked', async () => {
     const user = userEvent.setup();
-    const setThemeFn = vi.fn();
+    const setLightVariantFn = vi.fn();
     mockUseTheme.mockReturnValue({
       ...baseThemeMock,
       isDark: true,
-      setTheme: setThemeFn,
+      setLightVariant: setLightVariantFn,
     });
     render(<ThemeToggle />);
     await user.click(screen.getByRole('button'));
-    await user.click(screen.getByText('Alucard (Claro)'));
-    expect(setThemeFn).toHaveBeenCalledWith('light');
+    await user.click(screen.getByText('Alucard'));
+    expect(setLightVariantFn).toHaveBeenCalledWith('alucard');
   });
 
   it('calls setDarkVariant when a dark variant is clicked', async () => {
@@ -113,9 +115,7 @@ describe('ThemeToggle', () => {
     mockUseTheme.mockReturnValue({ ...baseThemeMock, isDark: false });
     render(<ThemeToggle />);
     await user.click(screen.getByRole('button'));
-    const alucardItem = screen
-      .getByText('Alucard (Claro)')
-      .closest('[role="menuitem"]');
+    const alucardItem = screen.getByText('Alucard').closest('[role="menuitem"]');
     expect(alucardItem).toBeInTheDocument();
   });
 });
