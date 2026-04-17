@@ -1,4 +1,14 @@
-import { BookMarked, Download, Edit, Highlighter, Plus, Trash2 } from 'lucide-react';
+import {
+  BookMarked,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Edit,
+  Filter,
+  Highlighter,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +26,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -249,10 +265,15 @@ export default function Highlights() {
   const [ownerId, setOwnerId] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const [filterColor, setFilterColor] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<BookHighlight | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const PAGE_SIZE = 30;
 
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -340,14 +361,15 @@ export default function Highlights() {
     }
   };
 
-  const handleExportAll = async () => {
+  const handleExport = async (format: 'markdown' | 'json' | 'csv') => {
     try {
       setIsExporting(true);
-      const blob = await bookHighlightsService.exportMarkdown();
+      const blob = await bookHighlightsService.exportAs(format);
+      const ext = format === 'markdown' ? 'md' : format;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'destaques.md';
+      a.download = `destaques.${ext}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
@@ -361,15 +383,26 @@ export default function Highlights() {
     }
   };
 
-  // Client-side filtering
-  const filtered = searchTerm
-    ? highlights.filter(
-        (h) =>
-          h.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          h.book_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (h.chapter ?? '').toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : highlights;
+  const filtered = highlights.filter((h) => {
+    if (filterType && h.highlight_type !== filterType) return false;
+    if (filterColor && h.color !== filterColor) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      return (
+        h.text.toLowerCase().includes(q) ||
+        h.book_title.toLowerCase().includes(q) ||
+        (h.chapter ?? '').toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedHighlights = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
 
   if (isLoading) return <LoadingState />;
 
@@ -385,23 +418,73 @@ export default function Highlights() {
         }}
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <SearchInput
           placeholder="Buscar destaques..."
           value={searchTerm}
-          onValueChange={setSearchTerm}
+          onValueChange={(v) => {
+            setSearchTerm(v);
+            setCurrentPage(1);
+          }}
           className="max-w-sm"
         />
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <Select
+          value={filterType || 'all'}
+          onValueChange={(v) => {
+            setFilterType(v === 'all' ? '' : v);
+            setCurrentPage(1);
+          }}
+        >
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            <SelectItem value="quote">Citação</SelectItem>
+            <SelectItem value="note">Nota</SelectItem>
+            <SelectItem value="idea">Ideia</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterColor || 'all'}
+          onValueChange={(v) => {
+            setFilterColor(v === 'all' ? '' : v);
+            setCurrentPage(1);
+          }}
+        >
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Cor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as cores</SelectItem>
+            <SelectItem value="yellow">Amarelo</SelectItem>
+            <SelectItem value="green">Verde</SelectItem>
+            <SelectItem value="blue">Azul</SelectItem>
+            <SelectItem value="pink">Rosa</SelectItem>
+            <SelectItem value="orange">Laranja</SelectItem>
+          </SelectContent>
+        </Select>
         {highlights.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void handleExportAll()}
-            disabled={isExporting}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exportando...' : 'Exportar MD'}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isExporting}>
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exportando...' : 'Exportar'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => void handleExport('markdown')}>
+                Markdown (.md)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void handleExport('json')}>
+                JSON (.json)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void handleExport('csv')}>
+                CSV (.csv)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
@@ -415,16 +498,46 @@ export default function Highlights() {
           }
         />
       ) : (
-        <div className="space-y-3">
-          {filtered.map((h) => (
-            <HighlightCard
-              key={h.id}
-              highlight={h}
-              onEdit={handleEdit}
-              onDelete={(id) => void handleDelete(id)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="space-y-3">
+            {pagedHighlights.map((h) => (
+              <HighlightCard
+                key={h.id}
+                highlight={h}
+                onEdit={handleEdit}
+                onDelete={(id) => void handleDelete(id)}
+              />
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                {filtered.length} destaque{filtered.length !== 1 ? 's' : ''} — página{' '}
+                {safePage} de {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
