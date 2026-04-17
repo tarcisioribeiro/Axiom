@@ -15,6 +15,8 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Star,
+  Flame,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -58,8 +60,8 @@ export default function LibraryDashboard() {
     <PageContainer>
       <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
 
-      {/* Métricas Principais - Grid 4 colunas */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Métricas Principais - Grid 5 colunas */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -114,9 +116,23 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.total_pages_read || 0}</div>
+            <p className="mt-1 text-xs">páginas lidas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.averageRating')}
+            </CardTitle>
+            <Star className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
+            </div>
             <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.average')}{' '}
-              {stats?.average_rating?.toFixed(1) || 0} ★
+              {t('pages.libraryDashboard.averageRatingDesc')}
             </p>
           </CardContent>
         </Card>
@@ -358,7 +374,113 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      {/* Row 5: Comparativo mensal + Top 3 gêneros por tempo */}
+      {/* Row 5: Estatísticas de sessão */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.totalSessions')}
+            </CardTitle>
+            <BookOpen className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_sessions || 0}</div>
+            <p className="mt-1 text-xs">
+              {t('pages.libraryDashboard.totalSessionsDesc')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.avgPerSession')}
+            </CardTitle>
+            <FileText className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.avg_pages_per_session || 0}
+            </div>
+            <p className="mt-1 text-xs">
+              {t('pages.libraryDashboard.avgPerSessionDesc')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.longestSession')}
+            </CardTitle>
+            <Zap className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.longest_session_pages || 0}
+            </div>
+            <p className="mt-1 text-xs">
+              {t('pages.libraryDashboard.longestSessionDesc')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.currentStreak')}
+            </CardTitle>
+            <Flame className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.reading_streak?.current_streak || 0}
+            </div>
+            <p className="mt-1 text-xs">
+              {t('pages.libraryDashboard.currentStreakDesc')}
+              {(stats?.reading_streak?.longest_streak ?? 0) > 0 && (
+                <>
+                  {' '}
+                  ·{' '}
+                  {t('pages.libraryDashboard.longestStreak', {
+                    days: stats!.reading_streak.longest_streak,
+                  })}
+                </>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.mostProductiveDay')}
+            </CardTitle>
+            <CalendarClock className="h-4 w-4" />
+          </CardHeader>
+          <CardContent>
+            {stats?.most_productive_day ? (
+              <>
+                <div className="text-2xl font-bold">
+                  {stats.most_productive_day.weekday_display}
+                </div>
+                <p className="mt-1 text-xs">
+                  {t('pages.libraryDashboard.mostProductiveDayDesc', {
+                    pages: stats.most_productive_day.total_pages,
+                    sessions: stats.most_productive_day.session_count,
+                  })}
+                </p>
+              </>
+            ) : (
+              <div className="mt-1 text-sm">
+                {t('pages.libraryDashboard.noProductiveDay')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 6: Comparativo mensal + Top 3 gêneros por tempo */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Comparativo mensal */}
         <Card>
@@ -670,14 +792,16 @@ export default function LibraryDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card: Distribuições (Idioma e Mídia) */}
+        {/* Card: Distribuições (Idioma, Mídia e Tipo Literário) */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.distributions')}</CardTitle>
-            <p className="text-sm">{t('pages.libraryDashboard.distributionsDesc')}</p>
+            <p className="text-sm">
+              {t('pages.libraryDashboard.distributionsDescExtended')}
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* Seção: Por Idioma */}
               <div>
                 <h4 className="mb-3 text-sm font-semibold">
@@ -709,6 +833,24 @@ export default function LibraryDashboard() {
                   formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
                   colors={COLORS.slice(3)}
                   emptyMessage={t('pages.libraryDashboard.noMediaDefined')}
+                  lockChartType="pie"
+                  height={200}
+                />
+              </div>
+
+              {/* Seção: Por Tipo Literário */}
+              <div>
+                <h4 className="mb-3 text-sm font-semibold">
+                  {t('pages.libraryDashboard.byLiteraryType')}
+                </h4>
+                <ChartContainer
+                  chartId="library-literary-type-distribution"
+                  data={stats?.books_by_literary_type || []}
+                  dataKey="count"
+                  nameKey="literary_type_display"
+                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  colors={COLORS.slice(1)}
+                  emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
                   height={200}
                 />

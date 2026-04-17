@@ -7,6 +7,7 @@ from library.models import (
     Author,
     Book,
     BookHighlight,
+    LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
@@ -205,6 +206,9 @@ class BookSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "title",
+            "isbn",
+            "series_name",
+            "series_order",
             "cover",
             "authors",
             "authors_names",
@@ -245,7 +249,7 @@ class BookSerializer(serializers.ModelSerializer):
         return [author.name for author in obj.authors.all()]
 
     def get_has_summary(self, obj):
-        return hasattr(obj, "summary")
+        return obj.summaries.filter(deleted_at__isnull=True).exists()
 
     def get_total_pages_read(self, obj):
         total = sum(r.pages_read for r in obj.readings.filter(deleted_at__isnull=True))
@@ -321,6 +325,9 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+            "isbn",
+            "series_name",
+            "series_order",
             "cover",
             "book_file",
             "authors",
@@ -493,6 +500,68 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
 # ============================================================================
 
 
+class LiteraryTypeGoalSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de metas por tipo literário."""
+
+    literary_type_display = serializers.CharField(
+        source="get_literary_type_display", read_only=True
+    )
+    books_read_this_year = serializers.SerializerMethodField()
+    progress_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LiteraryTypeGoal
+        fields = [
+            "id",
+            "uuid",
+            "literary_type",
+            "literary_type_display",
+            "goal_count",
+            "books_read_this_year",
+            "progress_percentage",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_books_read_this_year(self, obj):
+        return obj.books_read_this_year
+
+    def get_progress_percentage(self, obj):
+        return obj.progress_percentage
+
+
+class LiteraryTypeGoalCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de metas por tipo literário."""
+
+    class Meta:
+        model = LiteraryTypeGoal
+        fields = ["id", "reading_goal", "literary_type", "goal_count"]
+
+    def validate(self, data):
+        reading_goal = data.get("reading_goal")
+        literary_type = data.get("literary_type")
+        instance = self.instance
+        if reading_goal and literary_type:
+            qs = LiteraryTypeGoal.objects.filter(
+                reading_goal=reading_goal,
+                literary_type=literary_type,
+                deleted_at__isnull=True,
+            )
+            if instance:
+                qs = qs.exclude(pk=instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {
+                        "literary_type": (
+                            f"Já existe uma meta para '{literary_type}'"
+                            " nessa meta de leitura."
+                        )
+                    }
+                )
+        return data
+
+
 class ReadingGoalSerializer(serializers.ModelSerializer):
     """Serializer para visualização de metas de leitura."""
 
@@ -500,6 +569,8 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
     books_read_this_year = serializers.SerializerMethodField()
     pages_read_this_year = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
+    pages_progress_percentage = serializers.SerializerMethodField()
+    literary_type_goals = LiteraryTypeGoalSerializer(many=True, read_only=True)
 
     class Meta:
         model = ReadingGoal
@@ -508,9 +579,12 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
             "uuid",
             "year",
             "books_goal",
+            "pages_goal",
             "books_read_this_year",
             "pages_read_this_year",
             "progress_percentage",
+            "pages_progress_percentage",
+            "literary_type_goals",
             "owner",
             "owner_name",
             "created_at",
@@ -527,13 +601,16 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
     def get_progress_percentage(self, obj):
         return obj.progress_percentage
 
+    def get_pages_progress_percentage(self, obj):
+        return obj.pages_progress_percentage
+
 
 class ReadingGoalCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criação/atualização de metas de leitura."""
 
     class Meta:
         model = ReadingGoal
-        fields = ["id", "year", "books_goal", "owner"]
+        fields = ["id", "year", "books_goal", "pages_goal", "owner"]
 
     def validate(self, data):
         """Garante uma única meta ativa por ano por usuário."""

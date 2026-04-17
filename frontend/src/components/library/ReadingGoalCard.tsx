@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import type { ReadingGoalFormData } from '@/lib/validations';
+import { literaryTypeGoalsService } from '@/services/literary-type-goals-service';
 import { readingGoalsService } from '@/services/reading-goals-service';
-import type { ReadingGoal } from '@/types';
+import type { LiteraryTypeGoal, ReadingGoal } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-import { ReadingGoalModal } from './ReadingGoalModal';
+import { ReadingGoalModal, type LiteraryTypeGoalDraft } from './ReadingGoalModal';
 
 // ─── SVG Circular Progress ────────────────────────────────────────────────────
 
@@ -32,13 +33,10 @@ function CircularProgress({
   const offset = circumference * (1 - Math.min(percentage, 100) / 100);
 
   const trackColor = 'hsl(var(--muted))';
-  const progressColor = isCompleted
-    ? 'hsl(var(--chart-2))' // green-ish when done
-    : 'hsl(var(--primary))';
+  const progressColor = isCompleted ? 'hsl(var(--chart-2))' : 'hsl(var(--primary))';
 
   return (
     <svg width={size} height={size} className="-rotate-90">
-      {/* Track */}
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -47,7 +45,6 @@ function CircularProgress({
         stroke={trackColor}
         strokeWidth={strokeWidth}
       />
-      {/* Progress */}
       <motion.circle
         cx={size / 2}
         cy={size / 2}
@@ -134,16 +131,48 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
     }
   };
 
-  const handleSubmit = async (data: ReadingGoalFormData) => {
+  const handleSubmit = async (
+    data: ReadingGoalFormData,
+    ltgDrafts: LiteraryTypeGoalDraft[]
+  ) => {
     try {
       setIsSaving(true);
-      if (goal) {
-        const updated = await readingGoalsService.update(goal.id, data);
-        setGoal(updated);
-      } else {
-        const created = await readingGoalsService.create(data);
-        setGoal(created);
-      }
+
+      // 1. Save/update the base ReadingGoal
+      const saved = goal
+        ? await readingGoalsService.update(goal.id, data)
+        : await readingGoalsService.create(data);
+
+      const readingGoalId = saved.id;
+      const existingLtgs: LiteraryTypeGoal[] = goal?.literary_type_goals ?? [];
+
+      // 2. Compute diff between existing and new drafts
+      const draftsWithId = ltgDrafts.filter((d) => d.id !== undefined);
+      const draftsNew = ltgDrafts.filter((d) => d.id === undefined);
+      const draftIds = new Set(draftsWithId.map((d) => d.id));
+      const toDelete = existingLtgs.filter((e) => !draftIds.has(e.id));
+
+      await Promise.all([
+        ...toDelete.map((e) => literaryTypeGoalsService.delete(e.id)),
+        ...draftsWithId.map((d) =>
+          literaryTypeGoalsService.update(d.id!, {
+            reading_goal: readingGoalId,
+            literary_type: d.literary_type,
+            goal_count: d.goal_count,
+          })
+        ),
+        ...draftsNew.map((d) =>
+          literaryTypeGoalsService.create({
+            reading_goal: readingGoalId,
+            literary_type: d.literary_type,
+            goal_count: d.goal_count,
+          })
+        ),
+      ]);
+
+      // 3. Reload goal to get fresh literary_type_goals from API
+      await loadGoal();
+
       toast({
         title: goal ? 'Meta atualizada!' : 'Meta criada!',
         description: `Meta de ${data.books_goal} livros para ${data.year}.`,
@@ -166,6 +195,9 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   const booksGoal = goal?.books_goal ?? 0;
   const progress = goal?.progress_percentage ?? 0;
   const pagesRead = goal?.pages_read_this_year ?? 0;
+  const pagesGoal = goal?.pages_goal ?? 0;
+  const pagesProgress = goal?.pages_progress_percentage ?? 0;
+  const ltgs = goal?.literary_type_goals ?? [];
 
   return (
     <>
@@ -240,6 +272,51 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
                 </span>
                 <span>{pagesRead.toLocaleString('pt-BR')} páginas</span>
               </div>
+
+              {/* Pages goal progress (when set) */}
+              {pagesGoal > 0 && (
+                <div className="w-full space-y-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Páginas</span>
+                    <span>
+                      {pagesRead.toLocaleString('pt-BR')} /{' '}
+                      {pagesGoal.toLocaleString('pt-BR')} ({pagesProgress.toFixed(0)}%)
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${Math.min(pagesProgress, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Literary type goals progress */}
+              {ltgs.length > 0 && (
+                <div className="w-full space-y-1.5 border-t pt-2">
+                  <p className="text-xs font-medium text-muted-foreground">Por tipo:</p>
+                  {ltgs.map((ltg) => (
+                    <div key={ltg.id} className="space-y-0.5">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{ltg.literary_type_display}</span>
+                        <span>
+                          {ltg.books_read_this_year}/{ltg.goal_count} (
+                          {ltg.progress_percentage.toFixed(0)}%)
+                        </span>
+                      </div>
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary/70 transition-all"
+                          style={{
+                            width: `${Math.min(ltg.progress_percentage, 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Celebration message */}
               {isCompleted && (
