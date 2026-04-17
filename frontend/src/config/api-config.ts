@@ -97,6 +97,7 @@ export const API_CONFIG = {
     BOOK_FILE_STREAM: '/api/v1/library/books/',
     BOOK_HIGHLIGHTS: '/api/v1/library/highlights/',
     BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
+    LITERARY_TYPE_GOALS: '/api/v1/library/literary-type-goals/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
