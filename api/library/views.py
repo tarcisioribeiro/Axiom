@@ -1,7 +1,11 @@
+import csv
+import io
+import json
 from datetime import timedelta
 
+from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Avg, Count, F, Q, Sum
+from django.db.models import Avg, Count, F, Max, Q, Sum
 from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import status
@@ -17,6 +21,7 @@ from library.models import (
     Author,
     Book,
     BookHighlight,
+    LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
@@ -30,6 +35,8 @@ from library.serializers import (
     BookHighlightSerializer,
     BookReorderItemSerializer,
     BookSerializer,
+    LiteraryTypeGoalCreateUpdateSerializer,
+    LiteraryTypeGoalSerializer,
     PublisherCreateUpdateSerializer,
     PublisherSerializer,
     ReadingCreateUpdateSerializer,
@@ -235,11 +242,28 @@ class BookListCreateView(BaseListCreateView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
-        return (
+        qs = (
             Book.objects.filter(owner__user=self.request.user, deleted_at__isnull=True)
             .select_related("owner", "publisher")
             .prefetch_related("authors", "readings")
         )
+        params = self.request.query_params
+        if read_status := params.get("read_status"):
+            qs = qs.filter(read_status=read_status)
+        if genre := params.get("genre"):
+            qs = qs.filter(genre=genre)
+        if language := params.get("language"):
+            qs = qs.filter(language=language)
+        if author_id := params.get("author"):
+            qs = qs.filter(authors__id=author_id)
+        if search := params.get("search"):
+            qs = qs.filter(
+                Q(title__icontains=search)
+                | Q(authors__name__icontains=search)
+                | Q(publisher__name__icontains=search)
+                | Q(synopsis__icontains=search)
+            ).distinct()
+        return qs
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -533,9 +557,17 @@ class ReadingListCreateView(BaseListCreateView):
     queryset = Reading.objects.all()
 
     def get_queryset(self):
-        return Reading.objects.filter(
+        qs = Reading.objects.filter(
             owner__user=self.request.user, deleted_at__isnull=True
         ).select_related("owner", "book")
+        params = self.request.query_params
+        if book_id := params.get("book"):
+            qs = qs.filter(book_id=book_id)
+        if date_from := params.get("date_from"):
+            qs = qs.filter(reading_date__gte=date_from)
+        if date_to := params.get("date_to"):
+            qs = qs.filter(reading_date__lte=date_to)
+        return qs
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -673,6 +705,82 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
 
 
 # ============================================================================
+# LITERARY TYPE GOAL VIEWS
+# ============================================================================
+
+
+class LiteraryTypeGoalListCreateView(BaseListCreateView):
+    """Lista ou cria metas por tipo literário para uma ReadingGoal."""
+
+    queryset = LiteraryTypeGoal.objects.all()
+
+    def get_queryset(self):
+        qs = LiteraryTypeGoal.objects.filter(
+            reading_goal__owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("reading_goal")
+        if reading_goal_id := self.request.query_params.get("reading_goal"):
+            qs = qs.filter(reading_goal_id=reading_goal_id)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return LiteraryTypeGoalCreateUpdateSerializer
+        return LiteraryTypeGoalSerializer
+
+    def perform_create(self, serializer):
+        goal = serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
+        log_activity(
+            self.request,
+            "create",
+            "LiteraryTypeGoal",
+            goal.id,
+            f"Criou meta de {goal.literary_type}: {goal.goal_count}",
+        )
+
+
+class LiteraryTypeGoalDetailView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta uma meta por tipo literário."""
+
+    queryset = LiteraryTypeGoal.objects.all()
+
+    def get_queryset(self):
+        return LiteraryTypeGoal.objects.filter(
+            reading_goal__owner__user=self.request.user,
+            deleted_at__isnull=True,
+        ).select_related("reading_goal")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return LiteraryTypeGoalCreateUpdateSerializer
+        return LiteraryTypeGoalSerializer
+
+    def perform_update(self, serializer):
+        goal = serializer.save(updated_by=self.request.user)
+        log_activity(
+            self.request,
+            "update",
+            "LiteraryTypeGoal",
+            goal.id,
+            f"Atualizou meta de {goal.literary_type}: {goal.goal_count}",
+        )
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = instance.updated_at
+        instance.deleted_by = self.request.user
+        instance.save()
+        log_activity(
+            self.request,
+            "delete",
+            "LiteraryTypeGoal",
+            instance.id,
+            f"Deletou meta de {instance.literary_type}",
+        )
+
+
+# ============================================================================
 # READING QUEUE VIEWS
 # ============================================================================
 
@@ -795,10 +903,15 @@ class LibraryDashboardStatsView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    CACHE_TTL = 120  # 2 minutos
 
     def get(self, request):
         """Calcula estatísticas do módulo de leitura."""
         user = request.user
+        cache_key = f"library_dashboard_stats_{user.id}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
 
         # Querysets filtrados por owner e não deletados
         books_qs = Book.objects.filter(owner__user=user, deleted_at__isnull=True)
@@ -1129,6 +1242,90 @@ class LibraryDashboardStatsView(APIView):
                     {"rating_range": range_label, "count": count}
                 )
 
+        # Total de sessões de leitura
+        total_sessions = readings_qs.count()
+
+        # Média de páginas por sessão
+        avg_pages_per_session = round(
+            float(readings_qs.aggregate(avg=Avg("pages_read"))["avg"] or 0), 1
+        )
+
+        # Maior sessão (máximo de páginas em uma única sessão)
+        longest_session_pages = readings_qs.aggregate(mx=Max("pages_read"))["mx"] or 0
+
+        # Dia da semana mais produtivo
+        from django.db.models.functions import ExtractIsoWeekDay
+
+        weekday_stats = list(
+            readings_qs.annotate(weekday=ExtractIsoWeekDay("reading_date"))
+            .values("weekday")
+            .annotate(total_pages=Sum("pages_read"), session_count=Count("id"))
+            .order_by("-total_pages")
+        )
+        # ExtractIsoWeekDay: 1=Segunda, 7=Domingo
+        WEEKDAY_NAMES = {
+            1: "Segunda",
+            2: "Terça",
+            3: "Quarta",
+            4: "Quinta",
+            5: "Sexta",
+            6: "Sábado",
+            7: "Domingo",
+        }
+        most_productive_day = None
+        if weekday_stats:
+            top = weekday_stats[0]
+            most_productive_day = {
+                "weekday": top["weekday"],
+                "weekday_display": WEEKDAY_NAMES.get(top["weekday"], "?"),
+                "total_pages": top["total_pages"],
+                "session_count": top["session_count"],
+            }
+
+        # Sequência de leitura (streak de dias consecutivos)
+        reading_dates = set(
+            readings_qs.values_list("reading_date", flat=True).distinct()
+        )
+        today = timezone.now().date()
+        current_streak = 0
+        check_date = today
+        while check_date in reading_dates:
+            current_streak += 1
+            check_date -= timedelta(days=1)
+
+        longest_streak = 0
+        if reading_dates:
+            sorted_dates = sorted(reading_dates)
+            streak = 1
+            max_streak = 1
+            for i in range(1, len(sorted_dates)):
+                delta = (sorted_dates[i] - sorted_dates[i - 1]).days
+                if delta == 1:
+                    streak += 1
+                    max_streak = max(max_streak, streak)
+                elif delta > 1:
+                    streak = 1
+            longest_streak = max_streak
+
+        reading_streak = {
+            "current_streak": current_streak,
+            "longest_streak": longest_streak,
+        }
+
+        # Livros por tipo literário
+        from library.models import LITERARY_TYPES
+
+        books_by_literary_type = list(
+            books_qs.values("literarytype")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        literary_type_dict = dict(LITERARY_TYPES)
+        for item in books_by_literary_type:
+            item["literary_type_display"] = literary_type_dict.get(
+                item["literarytype"], item["literarytype"]
+            )
+
         stats = {
             "total_books": total_books,
             "total_authors": total_authors,
@@ -1141,7 +1338,6 @@ class LibraryDashboardStatsView(APIView):
             "books_by_genre": books_by_genre,
             "recent_readings": recent_readings,
             "top_rated_books": top_rated_books,
-            # Novos campos
             "total_reading_time_hours": total_reading_time_hours,
             "average_pages_per_book": average_pages_per_book,
             "books_by_language": books_by_language,
@@ -1152,13 +1348,19 @@ class LibraryDashboardStatsView(APIView):
             "reading_timeline": reading_timeline,
             "top_authors": top_authors,
             "rating_distribution": rating_distribution,
-            # Novos campos — Issue #18
             "avg_speed_pages_per_hour": avg_speed_pages_per_hour,
             "current_reading_book": current_reading_book,
             "monthly_comparison": monthly_comparison,
             "top_genres_by_time": top_genres_by_time,
+            "total_sessions": total_sessions,
+            "avg_pages_per_session": avg_pages_per_session,
+            "longest_session_pages": longest_session_pages,
+            "most_productive_day": most_productive_day,
+            "reading_streak": reading_streak,
+            "books_by_literary_type": books_by_literary_type,
         }
 
+        cache.set(cache_key, stats, self.CACHE_TTL)
         return Response(stats)
 
 
@@ -1177,14 +1379,15 @@ class BookHighlightListCreateView(BaseListCreateView):
             owner__user=self.request.user, deleted_at__isnull=True
         ).select_related("owner", "book", "summary")
 
-        book_id = self.request.query_params.get("book")
-        if book_id:
+        params = self.request.query_params
+        if book_id := params.get("book"):
             qs = qs.filter(book_id=book_id)
-
-        search = self.request.query_params.get("search")
-        if search:
+        if search := params.get("search"):
             qs = qs.filter(text__icontains=search)
-
+        if highlight_type := params.get("highlight_type"):
+            qs = qs.filter(highlight_type=highlight_type)
+        if color := params.get("color"):
+            qs = qs.filter(color=color)
         return qs
 
     def get_serializer_class(self):
@@ -1266,7 +1469,62 @@ class BookHighlightExportView(APIView):
             qs = qs.filter(book_id=book_id)
 
         qs = qs.order_by("book__title", "page_number", "created_at")
+        export_format = request.query_params.get("format", "markdown").lower()
 
+        safe_book_suffix = ""
+        if book_id:
+            try:
+                book_obj = Book.objects.get(pk=book_id, owner__user=request.user)
+                safe_book_suffix = "_" + book_obj.title[:40].replace(" ", "_").replace(
+                    "/", "-"
+                )
+            except Book.DoesNotExist:
+                pass
+
+        if export_format == "json":
+            data = [
+                {
+                    "book": h.book.title,
+                    "type": h.get_highlight_type_display(),
+                    "color": h.get_color_display(),
+                    "page": h.page_number,
+                    "chapter": h.chapter,
+                    "text": h.text,
+                    "created_at": h.created_at.isoformat(),
+                }
+                for h in qs
+            ]
+            content = json.dumps(data, ensure_ascii=False, indent=2)
+            filename = f"destaques{safe_book_suffix}.json"
+            response = HttpResponse(
+                content, content_type="application/json; charset=utf-8"
+            )
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+
+        if export_format == "csv":
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(["Livro", "Tipo", "Cor", "Página", "Capítulo", "Texto"])
+            for h in qs:
+                writer.writerow(
+                    [
+                        h.book.title,
+                        h.get_highlight_type_display(),
+                        h.get_color_display(),
+                        h.page_number or "",
+                        h.chapter or "",
+                        h.text,
+                    ]
+                )
+            filename = f"destaques{safe_book_suffix}.csv"
+            response = HttpResponse(
+                output.getvalue(), content_type="text/csv; charset=utf-8"
+            )
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+
+        # Default: markdown
         lines = []
         current_book_id = None
         for h in qs:
@@ -1291,15 +1549,7 @@ class BookHighlightExportView(APIView):
             lines.append("")
 
         content = "\n".join(lines)
-        filename = "destaques.md"
-        if book_id:
-            try:
-                book = Book.objects.get(pk=book_id, owner__user=request.user)
-                safe_title = book.title[:40].replace(" ", "_").replace("/", "-")
-                filename = f"destaques_{safe_title}.md"
-            except Book.DoesNotExist:
-                pass
-
+        filename = f"destaques{safe_book_suffix}.md"
         response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response

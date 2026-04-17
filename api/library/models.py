@@ -182,7 +182,7 @@ class Publisher(BaseModel):
 class Book(BaseModel):
     """Modelo para livros."""
 
-    title = models.CharField(max_length=200, verbose_name="Título", unique=True)
+    title = models.CharField(max_length=200, verbose_name="Título")
     authors = models.ManyToManyField(
         Author, related_name="books", verbose_name="Autor(es)"
     )
@@ -249,6 +249,23 @@ class Book(BaseModel):
         default="to_read",
         verbose_name="Status de Leitura",
     )
+    isbn = models.CharField(
+        max_length=13,
+        blank=True,
+        null=True,
+        verbose_name="ISBN",
+    )
+    series_name = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        verbose_name="Série",
+    )
+    series_order = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Volume da Série",
+    )
     reading_priority = models.IntegerField(
         null=True,
         blank=True,
@@ -265,6 +282,7 @@ class Book(BaseModel):
         verbose_name = "Livro"
         verbose_name_plural = "Livros"
         ordering = ["-created_at"]
+        unique_together = [["title", "owner"]]
 
     def __str__(self):
         return self.title
@@ -281,17 +299,15 @@ class Summary(BaseModel):
     title = models.CharField(
         max_length=200,
         verbose_name="Título",
-        unique=True,
         null=False,
         blank=False,
-        default="Livro",
+        default="Resumo",
     )
-    book = models.OneToOneField(
+    book = models.ForeignKey(
         Book,
         on_delete=models.PROTECT,
-        related_name="summary",
+        related_name="summaries",
         verbose_name="Livro",
-        unique=True,
     )
     text = models.TextField(
         verbose_name="Texto", help_text="Resumo em formato Markdown"
@@ -311,9 +327,10 @@ class Summary(BaseModel):
         verbose_name = "Resumo"
         verbose_name_plural = "Resumos"
         ordering = ["-created_at"]
+        unique_together = [["title", "book", "owner"]]
 
     def __str__(self):
-        return f"Resumo de '{self.title}'"
+        return f"{self.title} — {self.book.title}"
 
 
 # ============================================================================
@@ -406,6 +423,9 @@ class ReadingGoal(BaseModel):
 
     year = models.PositiveIntegerField(verbose_name="Ano")
     books_goal = models.PositiveIntegerField(verbose_name="Meta de Livros", default=12)
+    pages_goal = models.PositiveIntegerField(
+        verbose_name="Meta de Páginas", default=0, blank=True
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -453,6 +473,71 @@ class ReadingGoal(BaseModel):
         if self.books_goal == 0:
             return 0.0
         return round(min((self.books_read_this_year / self.books_goal) * 100, 100.0), 1)
+
+    @property
+    def pages_progress_percentage(self):
+        """Porcentagem de progresso em direção à meta de páginas."""
+        if self.pages_goal == 0:
+            return 0.0
+        return round(min((self.pages_read_this_year / self.pages_goal) * 100, 100.0), 1)
+
+
+# ============================================================================
+# LITERARY TYPE GOAL MODEL
+# ============================================================================
+
+
+class LiteraryTypeGoal(BaseModel):
+    """Meta anual por tipo literário, vinculada a uma ReadingGoal."""
+
+    reading_goal = models.ForeignKey(
+        ReadingGoal,
+        on_delete=models.CASCADE,
+        related_name="literary_type_goals",
+        verbose_name="Meta de Leitura",
+    )
+    literary_type = models.CharField(
+        max_length=200,
+        choices=LITERARY_TYPES,
+        verbose_name="Tipo Literário",
+    )
+    goal_count = models.PositiveIntegerField(
+        verbose_name="Meta (quantidade)",
+        default=1,
+    )
+
+    class Meta:
+        verbose_name = "Meta por Tipo Literário"
+        verbose_name_plural = "Metas por Tipo Literário"
+        unique_together = [("reading_goal", "literary_type")]
+        ordering = ["literary_type"]
+
+    def __str__(self):
+        return (
+            f"Meta {self.reading_goal.year} — "
+            f"{self.get_literary_type_display()}: {self.goal_count}"
+        )
+
+    @property
+    def books_read_this_year(self):
+        return (
+            Book.objects.filter(
+                owner=self.reading_goal.owner,
+                read_status="read",
+                literarytype=self.literary_type,
+                deleted_at__isnull=True,
+                readings__deleted_at__isnull=True,
+                readings__reading_date__year=self.reading_goal.year,
+            )
+            .distinct()
+            .count()
+        )
+
+    @property
+    def progress_percentage(self):
+        if self.goal_count == 0:
+            return 0.0
+        return round(min((self.books_read_this_year / self.goal_count) * 100, 100.0), 1)
 
 
 # ============================================================================

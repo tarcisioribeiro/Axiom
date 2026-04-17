@@ -614,6 +614,14 @@ export const publisherSchema = z.object({
 
 export const bookSchema = z.object({
   title: z.string().min(1, requiredError('Título')).max(300, maxError('Título', 300)),
+  isbn: z.string().max(13, maxError('ISBN', 13)).optional().or(z.literal('')),
+  series_name: z.string().max(200, maxError('Série', 200)).optional().or(z.literal('')),
+  series_order: z
+    .number({ message: numberError('Volume da série') })
+    .int()
+    .positive()
+    .nullable()
+    .optional(),
   authors: z
     .array(z.number({ message: 'Autor inválido' }))
     .min(1, 'Selecione pelo menos um autor'),
@@ -878,6 +886,11 @@ export const readingGoalSchema = z.object({
     .int('Meta deve ser um número inteiro')
     .min(1, 'Meta deve ser pelo menos 1 livro')
     .max(365, 'Meta não pode exceder 365 livros'),
+  pages_goal: z
+    .number({ message: numberError('Meta de páginas') })
+    .int('Meta deve ser um número inteiro')
+    .min(0, 'Meta não pode ser negativa')
+    .max(100000, 'Meta muito alta'),
   owner: z
     .number({ message: 'Proprietário inválido' })
     .int()

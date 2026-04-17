@@ -1144,6 +1144,9 @@ export interface Book {
   id: number;
   uuid: string;
   title: string;
+  isbn?: string | null;
+  series_name?: string | null;
+  series_order?: number | null;
   cover?: string | null;
   book_file?: string | null;
   authors?: number[];
@@ -1181,6 +1184,9 @@ export interface Book {
 
 export interface BookFormData {
   title: string;
+  isbn?: string;
+  series_name?: string;
+  series_order?: number | null;
   authors: number[];
   pages: number;
   publisher: number;
@@ -1246,14 +1252,35 @@ export interface ReadingFormData {
   owner: number;
 }
 
+export interface LiteraryTypeGoal {
+  id: number;
+  uuid: string;
+  literary_type: 'book' | 'collection' | 'magazine' | 'article' | 'essay';
+  literary_type_display: string;
+  goal_count: number;
+  books_read_this_year: number;
+  progress_percentage: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LiteraryTypeGoalFormData {
+  reading_goal: number;
+  literary_type: string;
+  goal_count: number;
+}
+
 export interface ReadingGoal {
   id: number;
   uuid: string;
   year: number;
   books_goal: number;
+  pages_goal: number;
   books_read_this_year: number;
   pages_read_this_year: number;
   progress_percentage: number;
+  pages_progress_percentage: number;
+  literary_type_goals: LiteraryTypeGoal[];
   owner: number;
   owner_name: string;
   created_at: string;
@@ -1263,6 +1290,7 @@ export interface ReadingGoal {
 export interface ReadingGoalFormData {
   year: number;
   books_goal: number;
+  pages_goal: number;
   owner: number;
 }
 
