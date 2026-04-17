@@ -72,6 +72,9 @@ export function BookForm({
     defaultValues: book
       ? {
           title: book.title,
+          isbn: book.isbn || '',
+          series_name: book.series_name || '',
+          series_order: book.series_order ?? null,
           authors: book.authors,
           pages: book.pages,
           publisher: book.publisher,
@@ -88,6 +91,9 @@ export function BookForm({
         }
       : {
           title: '',
+          isbn: '',
+          series_name: '',
+          series_order: null,
           authors: [],
           pages: 0,
           publisher: 0,
@@ -268,6 +274,53 @@ export function BookForm({
             <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
+
+        <div>
+          <Label htmlFor="isbn">ISBN</Label>
+          <Input
+            id="isbn"
+            {...register('isbn')}
+            placeholder="Ex: 9788535902778"
+            maxLength={13}
+          />
+          {errors.isbn && (
+            <p className="mt-1 text-sm text-destructive">{errors.isbn.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="series_name">Série</Label>
+          <Input
+            id="series_name"
+            {...register('series_name')}
+            placeholder="Ex: O Senhor dos Anéis"
+          />
+          {errors.series_name && (
+            <p className="mt-1 text-sm text-destructive">
+              {errors.series_name.message}
+            </p>
+          )}
+        </div>
+
+        {watch('series_name') && (
+          <div>
+            <Label htmlFor="series_order">Volume</Label>
+            <Input
+              id="series_order"
+              type="number"
+              min="1"
+              {...register('series_order', {
+                setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
+              })}
+              placeholder="Ex: 1"
+            />
+            {errors.series_order && (
+              <p className="mt-1 text-sm text-destructive">
+                {errors.series_order.message}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="col-span-2">
           <Label>Autores *</Label>

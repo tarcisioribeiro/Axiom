@@ -84,8 +84,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
   };
 
   const handleCreateOpen = () => {
-    const readBooks = books.filter((b) => b.read_status === 'read');
-    if (readBooks.length === 0) {
+    if (books.length === 0) {
       toast({
         title: t('common.messages.actionDenied'),
         description: t('pages.summaries.noBookMsg'),
@@ -173,7 +172,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
       s.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const readBooks = books.filter((b) => b.read_status === 'read');
+  const readBooks = books;
 
   if (loading) return <LoadingState />;
 
@@ -292,7 +291,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
 
       {/* Create dialog */}
       <Dialog
-        open={isCreateOpen && readBooks.length > 0}
+        open={isCreateOpen && books.length > 0}
         onOpenChange={(open) => {
           if (!open) onCreateClose();
         }}

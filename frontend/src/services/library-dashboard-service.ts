@@ -101,6 +101,24 @@ export interface LibraryDashboardStats {
     total_time_hours: number;
     total_pages: number;
   }>;
+  total_sessions: number;
+  avg_pages_per_session: number;
+  longest_session_pages: number;
+  most_productive_day: {
+    weekday: number;
+    weekday_display: string;
+    total_pages: number;
+    session_count: number;
+  } | null;
+  reading_streak: {
+    current_streak: number;
+    longest_streak: number;
+  };
+  books_by_literary_type: Array<{
+    literarytype: string;
+    literary_type_display: string;
+    count: number;
+  }>;
 }
 
 class LibraryDashboardService {

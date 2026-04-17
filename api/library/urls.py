@@ -13,6 +13,8 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     BookReadingQueueView,
     BookReorderView,
     LibraryDashboardStatsView,
+    LiteraryTypeGoalDetailView,
+    LiteraryTypeGoalListCreateView,
     PublisherDetailView,
     PublisherListCreateView,
     ReadingDetailView,
@@ -72,6 +74,17 @@ urlpatterns = [
         "reading-goals/<int:pk>/",
         ReadingGoalDetailView.as_view(),
         name="reading-goal-detail",
+    ),
+    # Literary Type Goals
+    path(
+        "literary-type-goals/",
+        LiteraryTypeGoalListCreateView.as_view(),
+        name="literary-type-goal-list-create",
+    ),
+    path(
+        "literary-type-goals/<int:pk>/",
+        LiteraryTypeGoalDetailView.as_view(),
+        name="literary-type-goal-detail",
     ),
     # Book Highlights
     path(

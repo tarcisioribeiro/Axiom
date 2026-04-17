@@ -10,6 +10,9 @@ import {
   MoreHorizontal,
   Download,
   BookText,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +41,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -51,7 +61,10 @@ import { authorsService } from '@/services/authors-service';
 import { booksService } from '@/services/books-service';
 import { publishersService } from '@/services/publishers-service';
 import type { Book, BookFormData, Author, Publisher } from '@/types';
+import { BOOK_GENRES, READ_STATUS } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const PAGE_SIZE = 20;
 
 type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
 
@@ -95,6 +108,9 @@ export default function Books() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterGenre, setFilterGenre] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Form dialog (create / edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -249,16 +265,20 @@ export default function Books() {
 
   const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
 
-  // Sort: by read_status first (reading → to_read → read), then by reading_priority ascending (null last)
   const filteredBooks = books
-    .filter(
-      (book) =>
-        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.authors_names.some((a) =>
-          a.toLowerCase().includes(searchTerm.toLowerCase())
-        ) ||
-        book.publisher_name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((book) => {
+      if (filterStatus && book.read_status !== filterStatus) return false;
+      if (filterGenre && book.genre !== filterGenre) return false;
+      if (searchTerm) {
+        const q = searchTerm.toLowerCase();
+        return (
+          book.title.toLowerCase().includes(q) ||
+          book.authors_names.some((a) => a.toLowerCase().includes(q)) ||
+          book.publisher_name.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    })
     .sort((a, b) => {
       const statusDiff =
         (STATUS_ORDER[a.read_status] ?? 3) - (STATUS_ORDER[b.read_status] ?? 3);
@@ -268,6 +288,15 @@ export default function Books() {
       if (b.reading_priority === null) return -1;
       return a.reading_priority - b.reading_priority;
     });
+
+  const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedBooks = filteredBooks.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  const handleFilterChange = () => setCurrentPage(1);
 
   if (isLoading) return <LoadingState />;
 
@@ -283,12 +312,56 @@ export default function Books() {
         }}
       />
 
-      <SearchInput
-        placeholder={t('pages.books.searchPlaceholder')}
-        value={searchTerm}
-        onValueChange={setSearchTerm}
-        className="max-w-sm"
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <SearchInput
+          placeholder={t('pages.books.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={(v) => {
+            setSearchTerm(v);
+            handleFilterChange();
+          }}
+          className="max-w-sm"
+        />
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <Select
+          value={filterStatus || 'all'}
+          onValueChange={(v) => {
+            setFilterStatus(v === 'all' ? '' : v);
+            handleFilterChange();
+          }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {READ_STATUS.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterGenre || 'all'}
+          onValueChange={(v) => {
+            setFilterGenre(v === 'all' ? '' : v);
+            handleFilterChange();
+          }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Gênero" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os gêneros</SelectItem>
+            {BOOK_GENRES.map((g) => (
+              <SelectItem key={g.value} value={g.value}>
+                {g.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {filteredBooks.length === 0 ? (
         <EmptyState
@@ -327,7 +400,7 @@ export default function Books() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBooks.map((book) => {
+              {pagedBooks.map((book) => {
                 const pb = priorityBadge(book.reading_priority);
                 return (
                   <TableRow
@@ -490,6 +563,36 @@ export default function Books() {
               })}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {filteredBooks.length} livro{filteredBooks.length !== 1 ? 's' : ''} — página{' '}
+            {safePage} de {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
