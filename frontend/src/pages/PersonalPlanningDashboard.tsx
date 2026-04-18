@@ -13,6 +13,8 @@ import {
   SmilePlus,
   Angry,
   Activity,
+  Lightbulb,
+  BarChart3,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -37,6 +39,12 @@ export default function PersonalPlanningDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['personalPlanningDashboard'],
     queryFn: () => personalPlanningDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: analytics } = useQuery({
+    queryKey: ['personalPlanningAnalytics'],
+    queryFn: () => personalPlanningDashboardService.getAnalytics(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -328,6 +336,68 @@ export default function PersonalPlanningDashboard() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Grid 6: Analytics — Desempenho por Dia da Semana */}
+      {analytics && (
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                {t('pages.planningDashboard.weekdayAnalytics')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {analytics.completion_by_weekday.map((day) => (
+                  <div key={day.weekday} className="flex items-center gap-3">
+                    <span className="w-28 shrink-0 text-sm text-muted-foreground">
+                      {day.weekday_display.slice(0, 3)}
+                    </span>
+                    <div className="flex flex-1 items-center gap-2">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${day.rate ?? 0}%` }}
+                        />
+                      </div>
+                      <span className="w-10 text-right text-sm font-medium">
+                        {day.rate !== null ? `${day.rate.toFixed(0)}%` : '—'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {t('pages.planningDashboard.analyticsPeriod', {
+                  days: analytics.period_days,
+                })}
+              </p>
+            </CardContent>
+          </Card>
+
+          {analytics.insights.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5" />
+                  {t('pages.planningDashboard.insights')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {analytics.insights.map((insight, i) => (
+                    <li key={i} className="flex gap-2 text-sm leading-relaxed">
+                      <span className="mt-0.5 shrink-0 text-primary">•</span>
+                      <span>{insight}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </PageContainer>
   );

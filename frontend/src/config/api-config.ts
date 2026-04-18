@@ -107,6 +107,7 @@ export const API_CONFIG = {
     ROUTINE_TEMPLATES_IMPORT: '/api/v1/personal-planning/routine-templates/import/',
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
+    PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',

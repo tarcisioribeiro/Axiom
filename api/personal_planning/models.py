@@ -48,6 +48,13 @@ GOAL_TYPE_CHOICES = (
     ("custom", "Personalizado"),
 )
 
+PRIORITY_CHOICES = (
+    ("low", "Baixa"),
+    ("medium", "Média"),
+    ("high", "Alta"),
+    ("critical", "Crítica"),
+)
+
 GOAL_STATUS_CHOICES = (
     ("active", "Ativo"),
     ("completed", "Concluído"),
@@ -190,6 +197,17 @@ class RoutineTask(BaseModel):
         default=None,
         verbose_name="Horários Programados",
         help_text='Lista de horários específicos ["08:00", "14:00", "20:00"]',
+    )
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="medium",
+        verbose_name="Prioridade",
+    )
+    allowed_skips_per_month = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Faltas Permitidas por Mês",
+        help_text="Quantas faltas por mes sem quebrar o streak (0 = sem tolerancia)",
     )
     owner = models.ForeignKey(
         "members.Member",
@@ -415,6 +433,12 @@ class Goal(BaseModel):
     start_date = models.DateField(
         null=False, blank=False, default=timezone.now, verbose_name="Data de Inicio"
     )
+    deadline = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Prazo",
+        help_text="Data limite para concluir o objetivo",
+    )
     end_date = models.DateField(null=True, blank=True, verbose_name="Data de Conclusao")
     status = models.CharField(
         max_length=20,
@@ -448,39 +472,61 @@ class Goal(BaseModel):
 
         today = timezone.now().date()
 
-        # Para objetivos do tipo consecutive_days ou avoid_habit
-        if self.goal_type in ("consecutive_days", "avoid_habit"):
+        # Para objetivos do tipo consecutive_days
+        if self.goal_type == "consecutive_days":
             if self.related_task:
-                # Contar dias consecutivos em que a tarefa foi completada
-                # começando de hoje e voltando no tempo
                 consecutive_days = 0
                 check_date = today
 
                 while check_date >= self.start_date:
-                    # Verificar se a tarefa foi completada neste dia
-                    completed_instance = TaskInstance.objects.filter(
-                        template=self.related_task,
-                        scheduled_date=check_date,
-                        status="completed",
-                        owner=self.owner,
-                        deleted_at__isnull=True,
-                    ).exists()
-
-                    # Verificar se a tarefa deveria aparecer neste dia
                     should_appear = self.related_task.should_appear_on_date(check_date)
-
                     if should_appear:
+                        completed_instance = TaskInstance.objects.filter(
+                            template=self.related_task,
+                            scheduled_date=check_date,
+                            status="completed",
+                            owner=self.owner,
+                            deleted_at__isnull=True,
+                        ).exists()
                         if completed_instance:
                             consecutive_days += 1
                         else:
-                            # Quebrou a sequência
                             break
-
                     check_date -= timedelta(days=1)
 
                 return consecutive_days
             else:
-                # Sem tarefa relacionada, usar days_active
+                return self.days_active
+
+        # Para objetivos do tipo avoid_habit (evitar um hábito)
+        # Conta dias consecutivos desde start_date em que a tarefa NÃO foi completada
+        if self.goal_type == "avoid_habit":
+            if self.related_task:
+                consecutive_days = 0
+                check_date = today
+
+                while check_date >= self.start_date:
+                    should_appear = self.related_task.should_appear_on_date(check_date)
+                    if should_appear:
+                        completed_instance = TaskInstance.objects.filter(
+                            template=self.related_task,
+                            scheduled_date=check_date,
+                            status="completed",
+                            owner=self.owner,
+                            deleted_at__isnull=True,
+                        ).exists()
+                        if completed_instance:
+                            # Hábito foi praticado — sequência quebrada
+                            break
+                        else:
+                            consecutive_days += 1
+                    else:
+                        # Dia sem agenda: conta como dia limpo
+                        consecutive_days += 1
+                    check_date -= timedelta(days=1)
+
+                return consecutive_days
+            else:
                 return self.days_active
 
         # Para objetivos do tipo total_days
@@ -506,15 +552,18 @@ class Goal(BaseModel):
         return self.current_value
 
     @property
+    def days_until_deadline(self):
+        """Dias restantes até o prazo. Negativo se já passou."""
+        if not self.deadline:
+            return None
+        return (self.deadline - timezone.now().date()).days
+
+    @property
     def progress_percentage(self):
         """Calcula percentual de progresso do objetivo."""
         if self.target_value == 0:
             return 0.0
-        # Usar o valor calculado automaticamente para tipos que suportam
-        if (
-            self.goal_type in ("consecutive_days", "avoid_habit", "total_days")
-            and self.related_task
-        ):
+        if self.goal_type in ("consecutive_days", "avoid_habit", "total_days"):
             return min((self.calculated_current_value / self.target_value) * 100, 100.0)
         return min((self.current_value / self.target_value) * 100, 100.0)
 
@@ -609,6 +658,12 @@ class TaskInstance(BaseModel):
         max_length=50, choices=TASK_CATEGORY_CHOICES, verbose_name="Categoria"
     )
     icon = models.CharField(max_length=50, null=True, blank=True, verbose_name="Ícone")
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="medium",
+        verbose_name="Prioridade",
+    )
 
     # Agendamento
     scheduled_date = models.DateField(verbose_name="Data Programada")
