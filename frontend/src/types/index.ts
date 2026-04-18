@@ -770,6 +770,7 @@ export interface TimeSeriesData {
 export interface VaultStatus {
   is_configured: boolean;
   is_unlocked: boolean;
+  expires_at: string | null;
 }
 
 export interface VaultSetupData {
