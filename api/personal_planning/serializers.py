@@ -20,6 +20,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     weekday_display = serializers.CharField(
         source="get_weekday_display", read_only=True
     )
+    priority_display = serializers.CharField(
+        source="get_priority_display", read_only=True
+    )
     completion_rate = serializers.SerializerMethodField()
     total_completions = serializers.SerializerMethodField()
 
@@ -39,6 +42,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "weekday_display",
             "day_of_month",
             "is_active",
+            "priority",
+            "priority_display",
+            "allowed_skips_per_month",
             "target_quantity",
             "unit",
             "custom_weekdays",
@@ -97,6 +103,8 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "weekday",
             "day_of_month",
             "is_active",
+            "priority",
+            "allowed_skips_per_month",
             "target_quantity",
             "unit",
             "owner",
@@ -138,6 +146,7 @@ class GoalSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.ReadOnlyField()
     days_active = serializers.ReadOnlyField()
     calculated_current_value = serializers.ReadOnlyField()
+    days_until_deadline = serializers.ReadOnlyField()
 
     class Meta:
         model = Goal
@@ -154,6 +163,8 @@ class GoalSerializer(serializers.ModelSerializer):
             "current_value",
             "calculated_current_value",
             "start_date",
+            "deadline",
+            "days_until_deadline",
             "end_date",
             "status",
             "status_display",
@@ -181,6 +192,7 @@ class GoalCreateUpdateSerializer(serializers.ModelSerializer):
             "target_value",
             "current_value",
             "start_date",
+            "deadline",
             "end_date",
             "status",
             "owner",
@@ -240,6 +252,13 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
     time_display = serializers.ReadOnlyField()
     is_overdue = serializers.ReadOnlyField()
 
+    priority_display = serializers.SerializerMethodField()
+
+    def get_priority_display(self, obj):
+        from personal_planning.models import PRIORITY_CHOICES
+
+        return dict(PRIORITY_CHOICES).get(obj.priority, obj.priority)
+
     class Meta:
         model = TaskInstance
         fields = [
@@ -252,6 +271,8 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
             "category",
             "category_display",
             "icon",
+            "priority",
+            "priority_display",
             "scheduled_date",
             "scheduled_time",
             "time_display",

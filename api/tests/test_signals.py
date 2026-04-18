@@ -805,13 +805,15 @@ class GoalProgressSignalTest(TestCase):
         self.task = self._make_task(self.member)
         self.goal = self._make_goal(self.member, self.task)
 
-    def test_goal_current_value_incremented_on_task_completion(self):
+    def test_goal_status_unchanged_when_target_not_reached(self):
+        # Signal now uses calculated_current_value; current_value field is not
+        # incremented directly. The goal stays active while below target.
         instance = self._make_instance(self.task, self.member, status="pending")
         instance.status = "completed"
         instance.save()
 
         self.goal.refresh_from_db()
-        self.assertEqual(self.goal.current_value, 1)
+        self.assertEqual(self.goal.status, "active")
 
     def test_goal_not_updated_when_instance_not_completed(self):
         instance = self._make_instance(self.task, self.member, status="pending")

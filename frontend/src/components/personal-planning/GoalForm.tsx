@@ -61,6 +61,7 @@ export function GoalForm({
           target_value: goal.target_value,
           current_value: goal.current_value,
           start_date: goal.start_date,
+          deadline: goal.deadline || '',
           end_date: goal.end_date || '',
           status: goal.status,
           owner: goal.owner,
@@ -73,6 +74,7 @@ export function GoalForm({
           target_value: 30,
           current_value: 0,
           start_date: formatLocalDate(new Date()),
+          deadline: '',
           end_date: '',
           status: 'active',
           owner: 0,
@@ -219,6 +221,20 @@ export function GoalForm({
           />
           {errors.start_date && (
             <p className="mt-1 text-sm text-destructive">{errors.start_date.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="deadline">Prazo</Label>
+          <DatePicker
+            value={watch('deadline') ?? ''}
+            onChange={(date) =>
+              setValue('deadline', date ? formatLocalDate(date) : null)
+            }
+            placeholder="Selecione o prazo (opcional)"
+          />
+          {errors.deadline && (
+            <p className="mt-1 text-sm text-destructive">{errors.deadline.message}</p>
           )}
         </div>
 

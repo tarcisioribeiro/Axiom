@@ -234,6 +234,23 @@ export default function RoutineTasks() {
       ),
     },
     {
+      key: 'priority',
+      label: t('pages.routineTasks.columns.priority'),
+      render: (task) => {
+        const priorityColors: Record<string, string> = {
+          low: 'bg-muted text-muted-foreground',
+          medium: 'bg-info',
+          high: 'bg-warning',
+          critical: 'bg-destructive',
+        };
+        return (
+          <Badge className={priorityColors[task.priority] ?? 'bg-muted'}>
+            {task.priority_display}
+          </Badge>
+        );
+      },
+    },
+    {
       key: 'is_active',
       label: t('pages.routineTasks.columns.status'),
       render: (task) => (

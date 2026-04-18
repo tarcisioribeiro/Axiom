@@ -1508,7 +1508,10 @@
       "activeDays": "dias ativos",
       "habitConsistency": "Consistência de Hábitos",
       "recentReflections": "Reflexões Recentes",
-      "noData": "Nenhum dado disponível"
+      "noData": "Nenhum dado disponível",
+      "weekdayAnalytics": "Desempenho por Dia da Semana",
+      "analyticsPeriod": "Baseado nos últimos {{days}} dias",
+      "insights": "Insights de Hábitos"
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -1537,7 +1540,8 @@
         "frequency": "Periodicidade",
         "goal": "Meta",
         "completionRate": "Taxa de Cumprimento",
-        "status": "Status"
+        "status": "Status",
+        "priority": "Prioridade"
       },
       "loadError": "Erro ao carregar dados",
       "saveError": "Erro ao salvar",
@@ -1594,8 +1598,12 @@
         "relatedTask": "Tarefa Relacionada",
         "progress": "Progresso",
         "status": "Status",
-        "activeDays": "Dias Ativos"
+        "activeDays": "Dias Ativos",
+        "deadline": "Prazo"
       },
+      "deadlineDays": "{{days}} dias",
+      "deadlineToday": "Hoje!",
+      "deadlineOverdue": "{{days}} dias atrás",
       "recalculatedDesc": "Progresso atualizado para {{days}} dias.",
       "loadError": "Erro ao carregar dados",
       "saveError": "Erro ao salvar",

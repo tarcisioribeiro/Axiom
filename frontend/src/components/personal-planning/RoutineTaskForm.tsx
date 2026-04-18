@@ -26,6 +26,7 @@ import {
   TASK_CATEGORIES,
   PERIODICITY_CHOICES,
   WEEKDAY_CHOICES,
+  PRIORITY_CHOICES,
   type RoutineTask,
 } from '@/types';
 
@@ -63,6 +64,8 @@ export function RoutineTaskForm({
           weekday: task.weekday,
           day_of_month: task.day_of_month,
           is_active: task.is_active,
+          priority: task.priority ?? 'medium',
+          allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
           target_quantity: task.target_quantity,
           unit: task.unit,
           owner: task.owner,
@@ -80,6 +83,8 @@ export function RoutineTaskForm({
           weekday: undefined,
           day_of_month: undefined,
           is_active: true,
+          priority: 'medium' as const,
+          allowed_skips_per_month: 0,
           target_quantity: 1,
           unit: 'vez',
           owner: 0,
@@ -105,6 +110,8 @@ export function RoutineTaskForm({
         weekday: task.weekday,
         day_of_month: task.day_of_month,
         is_active: task.is_active,
+        priority: task.priority ?? 'medium',
+        allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
         target_quantity: task.target_quantity,
         unit: task.unit,
         owner: task.owner,
@@ -544,6 +551,51 @@ export function RoutineTaskForm({
               </p>
             )}
           </div>
+        </div>
+
+        <div>
+          <Label htmlFor="priority">Prioridade</Label>
+          <Select
+            value={watch('priority') ?? 'medium'}
+            onValueChange={(value) =>
+              setValue('priority', value as 'low' | 'medium' | 'high' | 'critical')
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITY_CHOICES.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.priority && (
+            <p className="mt-1 text-sm text-destructive">{errors.priority.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="allowed_skips_per_month">Faltas Toleradas/Mês</Label>
+          <Input
+            id="allowed_skips_per_month"
+            type="number"
+            min="0"
+            max="31"
+            {...register('allowed_skips_per_month', {
+              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+            })}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Quantas faltas são toleradas por mês sem quebrar o streak
+          </p>
+          {errors.allowed_skips_per_month && (
+            <p className="mt-1 text-sm text-destructive">
+              {errors.allowed_skips_per_month.message}
+            </p>
+          )}
         </div>
 
         <div className="col-span-2 flex items-center space-x-2">
