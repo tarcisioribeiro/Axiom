@@ -739,12 +739,11 @@ export const routineTaskSchema = z
       .optional()
       .nullable(),
     is_active: z.boolean(),
-    priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
+    priority: z.enum(['low', 'medium', 'high', 'critical']),
     allowed_skips_per_month: z
       .number()
       .min(0, 'Valor mínimo é 0')
-      .max(31, 'Valor máximo é 31')
-      .default(0),
+      .max(31, 'Valor máximo é 31'),
     target_quantity: z
       .number()
       .min(1, positiveError('Quantidade alvo'))
