@@ -263,13 +263,17 @@ export default function Goals() {
         const overdue = days !== null && days !== undefined && days < 0;
         return (
           <div className="flex items-center gap-1">
-            <Clock className={`h-3 w-3 ${overdue ? 'text-destructive' : urgent ? 'text-warning' : 'text-muted-foreground'}`} />
-            <span className={`text-sm ${overdue ? 'text-destructive font-medium' : urgent ? 'text-warning font-medium' : ''}`}>
+            <Clock
+              className={`h-3 w-3 ${overdue ? 'text-destructive' : urgent ? 'text-warning' : 'text-muted-foreground'}`}
+            />
+            <span
+              className={`text-sm ${overdue ? 'font-medium text-destructive' : urgent ? 'font-medium text-warning' : ''}`}
+            >
               {overdue
                 ? t('pages.goals.deadlineOverdue', { days: Math.abs(days ?? 0) })
                 : days === 0
-                ? t('pages.goals.deadlineToday')
-                : t('pages.goals.deadlineDays', { days })}
+                  ? t('pages.goals.deadlineToday')
+                  : t('pages.goals.deadlineDays', { days })}
             </span>
           </div>
         );

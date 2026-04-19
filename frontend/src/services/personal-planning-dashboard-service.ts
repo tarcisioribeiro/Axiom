@@ -1,4 +1,7 @@
-import type { PersonalPlanningAnalytics, PersonalPlanningDashboardStats } from '@/types';
+import type {
+  PersonalPlanningAnalytics,
+  PersonalPlanningDashboardStats,
+} from '@/types';
 
 import { apiClient } from './api-client';
 
