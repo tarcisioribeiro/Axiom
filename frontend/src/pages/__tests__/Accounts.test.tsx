@@ -60,9 +60,22 @@ vi.mock('react-router-dom', async (importOriginal) => {
 });
 
 vi.mock('@/components/accounts/AccountForm', () => ({
-  AccountForm: ({ onCancel }: { onCancel: () => void }) => (
+  AccountForm: ({
+    onSubmit,
+    onCancel,
+  }: {
+    onSubmit: (data: Record<string, unknown>) => void;
+    onCancel: () => void;
+  }) => (
     <div>
       <span>AccountForm</span>
+      <button
+        onClick={() =>
+          onSubmit({ account_name: 'Conta Editada', account_type: 'checking' })
+        }
+      >
+        Salvar Conta
+      </button>
       <button onClick={onCancel}>Cancelar</button>
     </div>
   ),
@@ -197,6 +210,185 @@ describe('Accounts page', () => {
 
     await waitFor(() => {
       expect(accountsService.delete).toHaveBeenCalledWith(1);
+    });
+  });
+
+  it('opens edit dialog with form when edit button is clicked', async () => {
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const editButtons = screen.getAllByRole('button', { name: /editar/i });
+    await user.click(editButtons[0]);
+
+    expect(screen.getByText('AccountForm')).toBeInTheDocument();
+  });
+
+  it('calls accountsService.create when creating new account', async () => {
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /nova conta/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /nova conta/i }));
+    const saveBtn = await screen.findByText('Salvar Conta');
+    await user.click(saveBtn);
+
+    await waitFor(() => {
+      expect(accountsService.create).toHaveBeenCalled();
+    });
+  });
+
+  it('calls accountsService.update when editing an existing account', async () => {
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const editButtons = screen.getAllByRole('button', { name: /editar/i });
+    await user.click(editButtons[0]);
+
+    const saveBtn = await screen.findByText('Salvar Conta');
+    await user.click(saveBtn);
+
+    await waitFor(() => {
+      expect(accountsService.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ account_name: 'Conta Editada' })
+      );
+    });
+  });
+
+  it('cancels dialog when Cancelar is clicked', async () => {
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /nova conta/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /nova conta/i }));
+    expect(screen.getByText('AccountForm')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Cancelar'));
+    await waitFor(() => {
+      expect(screen.queryByText('AccountForm')).not.toBeInTheDocument();
+    });
+  });
+
+  it('shows error toast when creating account fails', async () => {
+    vi.mocked(accountsService.create).mockRejectedValueOnce(new Error('Server error'));
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /nova conta/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /nova conta/i }));
+    const saveBtn = await screen.findByText('Salvar Conta');
+    await user.click(saveBtn);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' })
+      );
+    });
+  });
+
+  it('shows error toast when updating account fails', async () => {
+    vi.mocked(accountsService.update).mockRejectedValueOnce(new Error('Server error'));
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const editButtons = screen.getAllByRole('button', { name: /editar/i });
+    await user.click(editButtons[0]);
+    const saveBtn = await screen.findByText('Salvar Conta');
+    await user.click(saveBtn);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' })
+      );
+    });
+  });
+
+  it('shows error toast when deleting account fails', async () => {
+    mockShowConfirm.mockResolvedValue(true);
+    vi.mocked(accountsService.delete).mockRejectedValueOnce(new Error('Server error'));
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const deleteButtons = screen.getAllByRole('button', { name: /excluir/i });
+    await user.click(deleteButtons[0]);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' })
+      );
+    });
+  });
+
+  it('shows error toast when loading reconciliation imports fails', async () => {
+    const { bankReconciliationService } =
+      await import('@/services/bank-reconciliation-service');
+    vi.mocked(bankReconciliationService.getAll).mockRejectedValueOnce(
+      new Error('Load error')
+    );
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const reconcileButtons = screen.getAllByRole('button', {
+      name: /concilia/i,
+    });
+    await user.click(reconcileButtons[0]);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' })
+      );
+    });
+
+    // Restore mock
+    vi.mocked(bankReconciliationService.getAll).mockResolvedValue([]);
+  });
+
+  it('opens bank reconciliation dialog when reconciliation button is clicked', async () => {
+    const user = userEvent.setup();
+    renderAccounts();
+
+    await waitFor(() => {
+      expect(screen.getAllByText('Conta Corrente')[0]).toBeInTheDocument();
+    });
+
+    const reconcileButtons = screen.getAllByRole('button', {
+      name: /concilia/i,
+    });
+    await user.click(reconcileButtons[0]);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /importar extrato/i })
+      ).toBeInTheDocument();
     });
   });
 });

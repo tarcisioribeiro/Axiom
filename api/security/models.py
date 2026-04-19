@@ -74,9 +74,23 @@ def _normalize_card_number(value: object) -> str:
     return str(value).replace(" ", "").replace("-", "")
 
 
+def _luhn_check(number: str) -> bool:
+    """Validates a card number string using the Luhn algorithm."""
+    digits = [int(d) for d in reversed(number)]
+    total = sum(
+        d if i % 2 == 0 else (d * 2 - 9 if d * 2 > 9 else d * 2)
+        for i, d in enumerate(digits)
+    )
+    return total % 10 == 0
+
+
 def _validate_card_number(value: str) -> None:
     if not value.isdigit() or len(value) < 13 or len(value) > 19:
         raise ValidationError("Número do cartão inválido.")
+    if not _luhn_check(value):
+        raise ValidationError(
+            "Número do cartão inválido (dígito verificador incorreto)."
+        )
 
 
 def _validate_cvv(value: str) -> None:
@@ -226,7 +240,17 @@ class Archive(BaseModel):
     )
     file_size = models.BigIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    tags = models.CharField(max_length=500, blank=True, null=True)
+    tags = models.JSONField(
+        blank=True,
+        default=list,
+        verbose_name="Tags",
+        help_text="Lista de tags para categorização e busca",
+    )
+    is_file_encrypted = models.BooleanField(
+        default=False,
+        verbose_name="Arquivo Criptografado",
+        help_text="Indica se o arquivo foi criptografado com a vault_key do usuário",
+    )
     owner = models.ForeignKey(
         "members.Member", on_delete=models.PROTECT, related_name="archives"
     )
@@ -375,6 +399,7 @@ ACTION_TYPES = (
     ("login", "Login"),
     ("logout", "Logout"),
     ("failed_login", "Tentativa de Login Falha"),
+    ("failed_vault_unlock", "Tentativa de Desbloqueio do Cofre Falha"),
     ("other", "Outro"),
     ("purge", "Purga de Dados (LGPD/GDPR)"),
     ("shared_reveal", "Acesso via Link Compartilhado"),
@@ -402,6 +427,12 @@ class ActivityLog(models.Model):
         null=True,
         verbose_name="ID do Objeto",
         help_text="ID do objeto afetado",
+    )
+    object_uuid = models.UUIDField(
+        blank=True,
+        null=True,
+        verbose_name="UUID do Objeto",
+        help_text="UUID público do objeto afetado (correlaciona com a API)",
     )
     description = models.TextField(
         verbose_name="Descrição", help_text="Descrição detalhada da ação realizada"
@@ -437,6 +468,7 @@ class ActivityLog(models.Model):
             models.Index(fields=["user", "action"]),
             models.Index(fields=["created_at"]),
             models.Index(fields=["model_name", "object_id"]),
+            models.Index(fields=["object_uuid"]),
         ]
         # Logs não podem ser editados ou excluídos (usar permissões default do Django)
 
@@ -454,30 +486,17 @@ class ActivityLog(models.Model):
         description,
         model_name=None,
         object_id=None,
+        object_uuid=None,
         ip_address=None,
         user_agent=None,
     ):
-        """
-        Método helper para registrar uma ação.
-
-        Args:
-            user: Usuário que realizou a ação
-            action: Tipo de ação (escolha de ACTION_TYPES)
-            description: Descrição detalhada
-            model_name: Nome do modelo afetado (opcional)
-            object_id: ID do objeto afetado (opcional)
-            ip_address: IP de origem (opcional)
-            user_agent: User agent (opcional)
-
-        Returns:
-            ActivityLog: O log criado
-        """
         return cls.objects.create(
             user=user,
             action=action,
             description=description,
             model_name=model_name,
             object_id=object_id,
+            object_uuid=object_uuid,
             ip_address=ip_address,
             user_agent=user_agent,
         )

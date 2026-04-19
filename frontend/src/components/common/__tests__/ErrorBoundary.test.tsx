@@ -105,4 +105,21 @@ describe('ErrorBoundary', () => {
     expect(onError.mock.calls[0][0]).toBeInstanceOf(Error);
     expect(onError.mock.calls[0][0].message).toBe('Test explosion');
   });
+
+  it('reload button calls window.location.reload', async () => {
+    const reloadMock = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { reload: reloadMock },
+      writable: true,
+      configurable: true,
+    });
+    const user = userEvent.setup();
+    render(
+      <ErrorBoundary>
+        <Bomb shouldThrow />
+      </ErrorBoundary>
+    );
+    await user.click(screen.getByRole('button', { name: /recarregar/i }));
+    expect(reloadMock).toHaveBeenCalled();
+  });
 });
