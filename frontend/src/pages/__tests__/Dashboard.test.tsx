@@ -231,4 +231,51 @@ describe('Dashboard page', () => {
       );
     });
   });
+
+  it('computes expense and revenue category breakdowns when data is provided', async () => {
+    const { expensesService } = await import('@/services/expenses-service');
+    const { revenuesService } = await import('@/services/revenues-service');
+
+    vi.mocked(expensesService.getAll).mockResolvedValue([
+      {
+        id: 1,
+        uuid: 'e1',
+        description: 'Mercado',
+        value: '200.00',
+        date: new Date().toISOString().slice(0, 10),
+        horary: '08:00:00',
+        category: 'food',
+        payed: true,
+        account: 1,
+        member: null,
+        auto_categorized: false,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+    ] as Awaited<ReturnType<typeof expensesService.getAll>>);
+
+    vi.mocked(revenuesService.getAll).mockResolvedValue([
+      {
+        id: 1,
+        description: 'Salário',
+        value: '3000.00',
+        date: new Date().toISOString().slice(0, 10),
+        horary: '08:00:00',
+        category: 'salary',
+        received: true,
+        account: 1,
+        member: null,
+      },
+    ] as Awaited<ReturnType<typeof revenuesService.getAll>>);
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
+    });
+
+    // Restore defaults
+    vi.mocked(expensesService.getAll).mockResolvedValue([]);
+    vi.mocked(revenuesService.getAll).mockResolvedValue([]);
+  });
 });

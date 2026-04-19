@@ -1,5 +1,6 @@
 import os
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from security.models import (
@@ -158,12 +159,31 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
             "finance_card",
         ]
 
+    def validate_card_number(self, value):
+        from security.models import _normalize_card_number, _validate_card_number
+
+        normalized = _normalize_card_number(value)
+        try:
+            _validate_card_number(normalized)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+        return value
+
+    def validate_security_code(self, value):
+        from security.models import _validate_cvv
+
+        try:
+            _validate_cvv(str(value).strip())
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+        return value
+
     def create(self, validated_data):
         card_number = validated_data.pop("card_number")
         security_code = validated_data.pop("security_code")
 
         instance = StoredCreditCard(**validated_data)
-        instance.card_number = card_number  # Property setter criptografa
+        instance.card_number = card_number
         instance.security_code = security_code
         instance.save()
         return instance
@@ -405,6 +425,9 @@ class ArchiveSerializer(serializers.ModelSerializer):
     )
     has_text = serializers.SerializerMethodField()
     has_file = serializers.SerializerMethodField()
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=100), required=False, default=list
+    )
 
     class Meta:
         model = Archive
@@ -420,6 +443,7 @@ class ArchiveSerializer(serializers.ModelSerializer):
             "file_size",
             "notes",
             "tags",
+            "is_file_encrypted",
             "has_text",
             "has_file",
             "encrypted_file",
@@ -432,6 +456,7 @@ class ArchiveSerializer(serializers.ModelSerializer):
             "uuid",
             "file_name",
             "file_size",
+            "is_file_encrypted",
             "created_at",
             "updated_at",
         ]
@@ -450,6 +475,15 @@ class ArchiveCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True
     )
     encrypted_file = serializers.FileField(required=False, allow_null=True)
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        default=list,
+    )
+
+    def validate_tags(self, value):
+        """Normaliza tags para minúsculas sem espaços duplicados."""
+        return [tag.strip().lower() for tag in value if tag.strip()]
 
     def validate_encrypted_file(self, value):
         if value is None:
@@ -639,6 +673,7 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "action_display",
             "model_name",
             "object_id",
+            "object_uuid",
             "description",
             "ip_address",
             "user_agent",

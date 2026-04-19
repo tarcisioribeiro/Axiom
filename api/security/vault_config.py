@@ -11,6 +11,10 @@ Endpoints:
 
 import base64
 import logging
+import os
+import re
+from datetime import datetime
+from datetime import timezone as dt_timezone
 from typing import Optional
 
 from django.core.cache import cache
@@ -21,7 +25,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.encryption import DecryptionError, FieldEncryption
+from authentication.throttles import VaultUnlockRateThrottle
 from security.models import (
+    ActivityLog,
     Archive,
     Password,
     StoredBankAccount,
@@ -37,10 +43,16 @@ from security.vault_crypto import (
 
 logger = logging.getLogger(__name__)
 
-# Tempo de sessão do cofre desbloqueado (em segundos)
-VAULT_UNLOCK_TTL = 3600  # 1 hora
+# TTL configurável via variável de ambiente (padrão: 3600s = 1h)
+VAULT_UNLOCK_TTL = int(os.environ.get("VAULT_UNLOCK_TTL", "3600"))
 
 VAULT_CACHE_KEY = "vault_key:{user_id}"
+# Redis key para controle de tentativas falhas de unlock
+VAULT_FAILED_ATTEMPTS_KEY = "vault_failed_attempts:{user_id}"
+# Número máximo de tentativas antes do backoff
+VAULT_MAX_FAILED_ATTEMPTS = 5
+# Bloqueio progressivo após limite: 15 minutos
+VAULT_LOCKOUT_TTL = 900
 
 
 def _cache_key(user_id: int) -> str:
@@ -67,6 +79,40 @@ def _get_vault_key_from_cache(user_id: int) -> Optional[bytes]:
 def _delete_vault_key_from_cache(user_id: int) -> None:
     """Remove a vault_key do Redis (lock do cofre)."""
     cache.delete(_cache_key(user_id))
+
+
+def _get_vault_key_expiry(user_id: int) -> Optional[datetime]:
+    """Retorna o timestamp UTC de expiração da vault_key no Redis, ou None."""
+    try:
+        ttl = cache.ttl(_cache_key(user_id))  # type: ignore[attr-defined]
+    except AttributeError:
+        return None
+    if ttl is None or ttl <= 0:
+        return None
+    return datetime.fromtimestamp(
+        datetime.now(dt_timezone.utc).timestamp() + ttl, tz=dt_timezone.utc
+    )
+
+
+def _failed_attempts_key(user_id: int) -> str:
+    return VAULT_FAILED_ATTEMPTS_KEY.format(user_id=user_id)
+
+
+def _get_failed_attempts(user_id: int) -> int:
+    return int(cache.get(_failed_attempts_key(user_id), 0))
+
+
+def _increment_failed_attempts(user_id: int) -> int:
+    """Incrementa o contador de tentativas falhas. Retorna o novo valor."""
+    key = _failed_attempts_key(user_id)
+    current = int(cache.get(key, 0))
+    new_count = current + 1
+    cache.set(key, new_count, timeout=VAULT_LOCKOUT_TTL)
+    return new_count
+
+
+def _reset_failed_attempts(user_id: int) -> None:
+    cache.delete(_failed_attempts_key(user_id))
 
 
 def _get_member(user):
@@ -151,21 +197,41 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
             logger.error(f"Erro ao re-criptografar conta bancária {acc.id}: {e}")
             raise
 
-    # Archives (text content only — files are not re-encrypted)
+    # Archives — text content and encrypted files
     for archive in Archive.objects.filter(owner=member, deleted_at__isnull=True):
-        if archive._encrypted_text:
-            try:
+        update_fields = []
+        try:
+            if archive._encrypted_text:
                 plaintext = FieldEncryption.decrypt_data(archive._encrypted_text)
                 assert plaintext is not None
                 archive._encrypted_text = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
-                archive.save(update_fields=["_encrypted_text"])
-            except Exception as e:
-                logger.error(
-                    f"Erro ao re-criptografar arquivo de texto {archive.id}: {e}"
-                )
-                raise
+                update_fields.append("_encrypted_text")
+
+            # Re-encrypt binary files that were previously encrypted with the app key
+            if archive.encrypted_file and archive.is_file_encrypted:
+                try:
+                    raw_bytes = archive.encrypted_file.read()
+                    decrypted_bytes = FieldEncryption.decrypt_bytes(raw_bytes)
+                    re_encrypted = FieldEncryption.encrypt_bytes_with_key(
+                        decrypted_bytes, vault_key
+                    )
+                    archive.encrypted_file.seek(0)
+                    archive.encrypted_file.file.write(re_encrypted)
+                    archive.encrypted_file.file.truncate()
+                except Exception as fe:
+                    logger.warning(
+                        "Não foi possível re-criptografar arquivo do archive" " %s: %s",
+                        archive.id,
+                        fe,
+                    )
+
+            if update_fields:
+                archive.save(update_fields=update_fields)
+        except Exception as e:
+            logger.error(f"Erro ao re-criptografar archive {archive.id}: {e}")
+            raise
 
 
 # ============================================================================
@@ -220,6 +286,21 @@ class VaultLockedMixin:
 # ============================================================================
 
 
+def _validate_master_password_complexity(value: str) -> None:
+    """Valida que a senha mestre atende aos critérios mínimos de complexidade."""
+    criteria = [
+        bool(re.search(r"[A-Z]", value)),
+        bool(re.search(r"[a-z]", value)),
+        bool(re.search(r"\d", value)),
+        bool(re.search(r'[!@#$%^&*()\-_=+\[\]{};:\'",.<>?/\\|`~]', value)),
+    ]
+    if sum(criteria) < 3:
+        raise serializers.ValidationError(
+            "A senha mestre deve conter ao menos 3 dos seguintes critérios: "
+            "letra maiúscula, letra minúscula, número, caractere especial."
+        )
+
+
 class VaultSetupSerializer(serializers.Serializer):
     master_password = serializers.CharField(
         min_length=8,
@@ -231,6 +312,10 @@ class VaultSetupSerializer(serializers.Serializer):
         max_length=128,
         write_only=True,
     )
+
+    def validate_master_password(self, value):
+        _validate_master_password_complexity(value)
+        return value
 
     def validate(self, data):
         if data["master_password"] != data["confirm_master_password"]:
@@ -264,6 +349,10 @@ class VaultChangePasswordSerializer(serializers.Serializer):
         max_length=128,
         write_only=True,
     )
+
+    def validate_new_master_password(self, value):
+        _validate_master_password_complexity(value)
+        return value
 
     def validate(self, data):
         if data["new_master_password"] != data["confirm_new_master_password"]:
@@ -306,11 +395,13 @@ class VaultStatusView(APIView):
             is_configured = False
 
         is_unlocked = _get_vault_key_from_cache(request.user.id) is not None
+        expires_at = _get_vault_key_expiry(request.user.id) if is_unlocked else None
 
         return Response(
             {
                 "is_configured": is_configured,
                 "is_unlocked": is_unlocked,
+                "expires_at": expires_at.isoformat() if expires_at else None,
             }
         )
 
@@ -407,12 +498,14 @@ class VaultUnlockView(APIView):
     POST /api/v1/security/vault/unlock/
 
     Desbloqueia o cofre com a senha mestre.
-    A vault_key é armazenada no Redis por 1 hora.
+    A vault_key é armazenada no Redis pelo VAULT_UNLOCK_TTL configurado.
+    Após 5 tentativas incorretas, aplica lockout de 15 minutos.
 
     Body: { "master_password": str }
     """
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [VaultUnlockRateThrottle]
 
     def post(self, request):
         member = _get_member(request.user)
@@ -435,6 +528,20 @@ class VaultUnlockView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # Verificar lockout por tentativas falhas anteriores
+        failed = _get_failed_attempts(request.user.id)
+        if failed >= VAULT_MAX_FAILED_ATTEMPTS:
+            return Response(
+                {
+                    "error": (
+                        "Cofre bloqueado temporariamente após"
+                        f" {VAULT_MAX_FAILED_ATTEMPTS} tentativas incorretas."
+                        " Tente novamente em 15 minutos."
+                    )
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         serializer = VaultUnlockSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         master_password = serializer.validated_data["master_password"]
@@ -447,16 +554,34 @@ class VaultUnlockView(APIView):
                 vault_config.encrypted_vault_key, derived_key
             )
         except DecryptionError:
+            attempts = _increment_failed_attempts(request.user.id)
+            remaining = max(0, VAULT_MAX_FAILED_ATTEMPTS - attempts)
             logger.warning(
                 "Vault unlock failed — wrong master password for user %s "
-                "(vault_config.id=%s, created=%s, updated=%s)",
+                "(attempt=%s, vault_config.id=%s)",
                 request.user.id,
+                attempts,
                 vault_config.id,
-                vault_config.created_at.isoformat(),
-                vault_config.updated_at.isoformat(),
             )
+            ActivityLog.log_action(
+                user=request.user,
+                action="failed_vault_unlock",
+                description=(
+                    f"Tentativa de desbloqueio do cofre falhou (tentativa {attempts})"
+                ),
+                model_name="VaultConfig",
+                object_id=vault_config.id,
+            )
+            msg = "Senha mestre incorreta."
+            if remaining > 0:
+                msg += f" Tentativas restantes antes do bloqueio: {remaining}."
+            else:
+                msg = (
+                    f"Cofre bloqueado temporariamente após {VAULT_MAX_FAILED_ATTEMPTS} "
+                    "tentativas incorretas. Tente novamente em 15 minutos."
+                )
             return Response(
-                {"error": "Senha mestre incorreta."},
+                {"error": msg},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
@@ -466,6 +591,7 @@ class VaultUnlockView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        _reset_failed_attempts(request.user.id)
         _store_vault_key_in_cache(request.user.id, vault_key)
 
         return Response(
@@ -551,7 +677,9 @@ class VaultChangePasswordView(APIView):
         vault_config.encrypted_vault_key = new_encrypted_vault_key
         vault_config.save(update_fields=["salt", "encrypted_vault_key", "updated_at"])
 
-        # Mantém o cofre desbloqueado com a vault_key original
+        # Invalida sessão ativa anterior antes de criar uma nova
+        _delete_vault_key_from_cache(request.user.id)
+        _reset_failed_attempts(request.user.id)
         _store_vault_key_in_cache(request.user.id, vault_key)
 
         return Response({"message": "Senha mestre alterada com sucesso."})

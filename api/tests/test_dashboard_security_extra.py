@@ -141,7 +141,7 @@ class StoredCardRevealViewTest(BaseExtraTestCase):
                 "expiration_month": 6,
                 "expiration_year": 2029,
                 "flag": "MSC",
-                "card_number": "5200000000000000",
+                "card_number": "5555555555554444",
                 "security_code": "456",
                 "owner": self.member.pk,
             },
