@@ -274,3 +274,185 @@ class TransferDetailViewTest(BaseFinalTestCase):
         url = reverse("transfer-detail-view", args=[transfer.pk])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+# ---------------------------------------------------------------------------
+# Revenue export with filters
+# ---------------------------------------------------------------------------
+
+
+class RevenueExportFilterTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from revenues.models import Revenue
+
+        Revenue.objects.create(
+            description="Salário Filtrado",
+            value=Decimal("8000.00"),
+            date=date(2026, 3, 15),
+            horary="09:00:00",
+            category="salary",
+            received=True,
+            account=self.account,
+            created_by=self.user,
+        )
+
+    def test_revenue_export_with_all_filters(self):
+        url = reverse("revenue-export")
+        response = self.client.get(
+            url,
+            {
+                "date_from": "2026-03-01",
+                "date_to": "2026-03-31",
+                "category": "salary",
+                "received": "true",
+                "search": "Salário",
+                "account": [self.account.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_revenue_export_with_date_to_only(self):
+        url = reverse("revenue-export")
+        response = self.client.get(url, {"date_to": "2026-12-31"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_revenue_export_received_false(self):
+        url = reverse("revenue-export")
+        response = self.client.get(url, {"received": "false"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+# ---------------------------------------------------------------------------
+# Expense bulk mark paid — success path
+# ---------------------------------------------------------------------------
+
+
+class ExpenseBulkMarkPaidTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from expenses.models import Expense
+
+        self.expense1 = Expense.objects.create(
+            description="Conta Luz",
+            value=Decimal("150.00"),
+            date=date.today(),
+            horary="10:00:00",
+            category="bills and utilities",
+            payed=False,
+            account=self.account,
+            created_by=self.user,
+        )
+        self.expense2 = Expense.objects.create(
+            description="Conta Água",
+            value=Decimal("80.00"),
+            date=date.today(),
+            horary="10:00:00",
+            category="bills and utilities",
+            payed=False,
+            account=self.account,
+            created_by=self.user,
+        )
+
+    def test_bulk_mark_paid_success(self):
+        url = reverse("expense-bulk-mark-paid")
+        response = self.client.post(
+            url,
+            {"expense_ids": [self.expense1.pk, self.expense2.pk]},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["success"])
+        self.assertEqual(response.data["updated_count"], 2)
+
+
+# ---------------------------------------------------------------------------
+# Expense export with filters
+# ---------------------------------------------------------------------------
+
+
+class ExpenseExportFilterTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from expenses.models import Expense
+
+        Expense.objects.create(
+            description="Mercado Filtrado",
+            value=Decimal("200.00"),
+            date=date(2026, 3, 10),
+            horary="12:00:00",
+            category="food and drink",
+            payed=True,
+            account=self.account,
+            created_by=self.user,
+        )
+
+    def test_expense_export_with_all_filters(self):
+        url = reverse("expense-export")
+        response = self.client.get(
+            url,
+            {
+                "date_from": "2026-03-01",
+                "date_to": "2026-03-31",
+                "category": "food and drink",
+                "payed": "true",
+                "search": "Mercado",
+                "account": [self.account.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_expense_export_date_to_only(self):
+        url = reverse("expense-export")
+        response = self.client.get(url, {"date_to": "2026-12-31"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+# ---------------------------------------------------------------------------
+# Apply categorization rules
+# ---------------------------------------------------------------------------
+
+
+class ApplyCategorizationRulesTest(BaseFinalTestCase):
+    def setUp(self):
+        super().setUp()
+        from expenses.models import CategorizationRule, Expense
+
+        CategorizationRule.objects.create(
+            merchant_contains="amazon",
+            category="shopping",
+            is_active=True,
+            owner=self.user,
+            created_by=self.user,
+        )
+        Expense.objects.create(
+            description="Compra Amazon",
+            merchant="Amazon Store",
+            value=Decimal("99.99"),
+            date=date.today(),
+            horary="10:00:00",
+            category="others",
+            auto_categorized=True,
+            payed=False,
+            account=self.account,
+            created_by=self.user,
+        )
+
+    def test_apply_categorization_rules(self):
+        url = reverse("categorization-rule-apply")
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("updated", response.data)
+        self.assertIn("total_processed", response.data)
+
+
+# ---------------------------------------------------------------------------
+# Bank reconciliation import list
+# ---------------------------------------------------------------------------
+
+
+class BankReconciliationImportListTest(BaseFinalTestCase):
+    def test_import_list_empty(self):
+        url = reverse("bank-reconciliation-import-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

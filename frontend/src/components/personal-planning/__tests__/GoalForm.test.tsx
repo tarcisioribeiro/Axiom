@@ -69,7 +69,11 @@ describe('GoalForm', () => {
 
   it('renders the form with empty defaults for new goal', async () => {
     render(
-      <GoalForm routineTasks={mockRoutineTasks} onSubmit={onSubmit} onCancel={onCancel} />
+      <GoalForm
+        routineTasks={mockRoutineTasks}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
     );
     await waitFor(() => {
       expect(screen.getByLabelText(/Título/i)).toBeInTheDocument();
@@ -104,7 +108,11 @@ describe('GoalForm', () => {
 
   it('shows validation error when title is too short', async () => {
     render(
-      <GoalForm routineTasks={mockRoutineTasks} onSubmit={onSubmit} onCancel={onCancel} />
+      <GoalForm
+        routineTasks={mockRoutineTasks}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
     );
     const titleInput = screen.getByLabelText(/Título/i);
     fireEvent.change(titleInput, { target: { value: 'ab' } });
@@ -120,7 +128,11 @@ describe('GoalForm', () => {
 
   it('calls onCancel when Cancel button is clicked', () => {
     render(
-      <GoalForm routineTasks={mockRoutineTasks} onSubmit={onSubmit} onCancel={onCancel} />
+      <GoalForm
+        routineTasks={mockRoutineTasks}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
     );
     fireEvent.click(screen.getByRole('button', { name: /Cancelar/i }));
     expect(onCancel).toHaveBeenCalledOnce();

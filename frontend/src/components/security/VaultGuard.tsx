@@ -42,9 +42,11 @@ function getStrength(password: string): {
   const met = criteria.filter(Boolean).length;
   const long = password.length >= 12;
 
-  if (password.length < 8) return { score: 1, label: 'Muito fraca', color: 'bg-red-500' };
+  if (password.length < 8)
+    return { score: 1, label: 'Muito fraca', color: 'bg-red-500' };
   if (met < 2) return { score: 2, label: 'Fraca', color: 'bg-orange-500' };
-  if (met === 2 || !long) return { score: 3, label: 'Razoável', color: 'bg-yellow-500' };
+  if (met === 2 || !long)
+    return { score: 3, label: 'Razoável', color: 'bg-yellow-500' };
   if (met === 3) return { score: 4, label: 'Boa', color: 'bg-blue-500' };
   return { score: 5, label: 'Forte', color: 'bg-green-500' };
 }
@@ -67,7 +69,16 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
           />
         ))}
       </div>
-      <p className={cn('text-xs', score >= 4 ? 'text-green-600' : score >= 3 ? 'text-yellow-600' : 'text-red-600')}>
+      <p
+        className={cn(
+          'text-xs',
+          score >= 4
+            ? 'text-green-600'
+            : score >= 3
+              ? 'text-yellow-600'
+              : 'text-red-600'
+        )}
+      >
         {label}
       </p>
     </div>
@@ -81,10 +92,7 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
 function useVaultCountdown(expiresAt: string | null) {
   const [secondsLeft, setSecondsLeft] = useState<number | null>(() => {
     if (!expiresAt) return null;
-    return Math.max(
-      0,
-      Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000)
-    );
+    return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
   });
 
   useEffect(() => {
@@ -135,7 +143,11 @@ function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
           : 'bg-muted text-muted-foreground'
       )}
     >
-      {isWarning ? <AlertTriangle className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+      {isWarning ? (
+        <AlertTriangle className="h-3 w-3" />
+      ) : (
+        <Clock className="h-3 w-3" />
+      )}
       {label}
     </div>
   );
@@ -237,7 +249,8 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
               )}
               {isWeakPassword && (
                 <p className="text-xs text-muted-foreground">
-                  Use ao menos 3 de: maiúsculas, minúsculas, números, caracteres especiais.
+                  Use ao menos 3 de: maiúsculas, minúsculas, números, caracteres
+                  especiais.
                 </p>
               )}
             </div>

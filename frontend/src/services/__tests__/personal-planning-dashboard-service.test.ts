@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { apiClient } from '@/services/api-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
-import type { PersonalPlanningAnalytics, PersonalPlanningDashboardStats } from '@/types';
+import type {
+  PersonalPlanningAnalytics,
+  PersonalPlanningDashboardStats,
+} from '@/types';
 
 vi.mock('@/services/api-client', () => ({
   apiClient: {

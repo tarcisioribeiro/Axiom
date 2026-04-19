@@ -83,7 +83,10 @@ def _delete_vault_key_from_cache(user_id: int) -> None:
 
 def _get_vault_key_expiry(user_id: int) -> Optional[datetime]:
     """Retorna o timestamp UTC de expiração da vault_key no Redis, ou None."""
-    ttl = cache.ttl(_cache_key(user_id))  # type: ignore[attr-defined]
+    try:
+        ttl = cache.ttl(_cache_key(user_id))  # type: ignore[attr-defined]
+    except AttributeError:
+        return None
     if ttl is None or ttl <= 0:
         return None
     return datetime.fromtimestamp(

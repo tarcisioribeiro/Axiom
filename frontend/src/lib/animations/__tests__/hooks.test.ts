@@ -4,12 +4,13 @@ vi.mock('framer-motion', () => ({
     onUpdate?.(end);
     return { stop: vi.fn() };
   }),
+  useInView: vi.fn(() => false),
 }));
 
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { useCounter } from '@/lib/animations/hooks';
+import { useCounter, useScrollAnimation } from '@/lib/animations/hooks';
 
 const mockMatchMedia = (matches: boolean) => {
   Object.defineProperty(window, 'matchMedia', {
@@ -17,6 +18,20 @@ const mockMatchMedia = (matches: boolean) => {
     value: vi.fn().mockReturnValue({ matches }),
   });
 };
+
+describe('useScrollAnimation', () => {
+  it('returns a ref and isInView value', () => {
+    const { result } = renderHook(() => useScrollAnimation());
+    expect(result.current).toHaveProperty('ref');
+    expect(result.current).toHaveProperty('isInView');
+    expect(result.current.isInView).toBe(false);
+  });
+
+  it('accepts once=false parameter without error', () => {
+    const { result } = renderHook(() => useScrollAnimation(false));
+    expect(result.current.isInView).toBe(false);
+  });
+});
 
 describe('useCounter', () => {
   beforeEach(() => {
