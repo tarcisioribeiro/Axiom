@@ -1,4 +1,4 @@
-import { Plus, Trophy, Edit, Trash2, RefreshCw, RotateCcw } from 'lucide-react';
+import { Plus, Trophy, Edit, Trash2, RefreshCw, RotateCcw, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -252,6 +252,32 @@ export default function Goals() {
       render: (goal) => (
         <Badge className={getStatusColor(goal.status)}>{goal.status_display}</Badge>
       ),
+    },
+    {
+      key: 'deadline',
+      label: t('pages.goals.columns.deadline'),
+      render: (goal) => {
+        if (!goal.deadline) return <span className="text-muted-foreground">-</span>;
+        const days = goal.days_until_deadline;
+        const urgent = days !== null && days !== undefined && days <= 7 && days >= 0;
+        const overdue = days !== null && days !== undefined && days < 0;
+        return (
+          <div className="flex items-center gap-1">
+            <Clock
+              className={`h-3 w-3 ${overdue ? 'text-destructive' : urgent ? 'text-warning' : 'text-muted-foreground'}`}
+            />
+            <span
+              className={`text-sm ${overdue ? 'font-medium text-destructive' : urgent ? 'font-medium text-warning' : ''}`}
+            >
+              {overdue
+                ? t('pages.goals.deadlineOverdue', { days: Math.abs(days ?? 0) })
+                : days === 0
+                  ? t('pages.goals.deadlineToday')
+                  : t('pages.goals.deadlineDays', { days })}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: 'days_active',

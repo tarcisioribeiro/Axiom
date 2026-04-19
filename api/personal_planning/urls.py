@@ -8,6 +8,7 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     GoalRecalculateView,
     GoalResetView,
     InstancesForDateView,
+    PersonalPlanningAnalyticsView,
     PersonalPlanningDashboardStatsView,
     RoutineTaskDetailView,
     RoutineTaskHeatmapView,
@@ -26,6 +27,12 @@ urlpatterns = [
         "dashboard/stats/",
         PersonalPlanningDashboardStatsView.as_view(),
         name="personal-planning-dashboard-stats",
+    ),
+    # Analytics
+    path(
+        "analytics/",
+        PersonalPlanningAnalyticsView.as_view(),
+        name="personal-planning-analytics",
     ),
     # Routine Tasks
     path(

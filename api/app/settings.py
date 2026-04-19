@@ -246,6 +246,7 @@ REST_FRAMEWORK = {
         "register": "3/minute",
         "share_token": "10/minute",
         "export": "20/minute",
+        "vault_unlock": "10/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

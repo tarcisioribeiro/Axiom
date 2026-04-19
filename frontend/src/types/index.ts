@@ -770,6 +770,7 @@ export interface TimeSeriesData {
 export interface VaultStatus {
   is_configured: boolean;
   is_unlocked: boolean;
+  expires_at: string | null;
 }
 
 export interface VaultSetupData {
@@ -1446,6 +1447,15 @@ export const MOOD_CHOICES = [
 ] as const;
 
 // Routine Task Types
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export const PRIORITY_CHOICES = [
+  { value: 'low', label: 'Baixa' },
+  { value: 'medium', label: 'Média' },
+  { value: 'high', label: 'Alta' },
+  { value: 'critical', label: 'Crítica' },
+] as const;
+
 export interface RoutineTask {
   id: number;
   uuid: string;
@@ -1471,6 +1481,9 @@ export interface RoutineTask {
   interval_hours?: number | null;
   scheduled_times?: string[] | null;
   is_active: boolean;
+  priority: TaskPriority;
+  priority_display: string;
+  allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
   completion_rate: number;
@@ -1501,6 +1514,8 @@ export interface RoutineTaskFormData {
   interval_hours?: number | null;
   scheduled_times?: string[] | null;
   is_active: boolean;
+  priority: TaskPriority;
+  allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
   owner: number;
@@ -1587,6 +1602,8 @@ export interface Goal {
   current_value: number;
   calculated_current_value?: number;
   start_date: string;
+  deadline?: string | null;
+  days_until_deadline?: number | null;
   end_date?: string;
   status: string;
   status_display: string;
@@ -1606,6 +1623,7 @@ export interface GoalFormData {
   target_value: number;
   current_value: number;
   start_date: string;
+  deadline?: string | null;
   end_date?: string;
   status: string;
   owner: number;
@@ -1656,6 +1674,8 @@ export interface TaskInstance {
   category: string;
   category_display: string;
   icon?: string | null;
+  priority: TaskPriority;
+  priority_display: string;
   scheduled_date: string;
   scheduled_time?: string | null;
   time_display?: string | null;
@@ -1750,6 +1770,20 @@ export interface PersonalPlanningDashboardStats {
   completed_tasks_today: number;
   active_routine_tasks: RoutineTask[];
   recent_reflections: DailyReflection[];
+}
+
+export interface WeekdayAnalytics {
+  weekday: number;
+  weekday_display: string;
+  total: number;
+  completed: number;
+  rate: number | null;
+}
+
+export interface PersonalPlanningAnalytics {
+  period_days: number;
+  completion_by_weekday: WeekdayAnalytics[];
+  insights: string[];
 }
 
 // Fixed Expense Types

@@ -325,8 +325,8 @@ class GoalDetailView(BaseRetrieveUpdateDestroyView):
 
 class GoalRecalculateView(APIView):
     """
-    Recalcula o progresso do objetivo baseado nos dias passados.
-    Para objetivos do tipo 'consecutive_days', atualiza current_value para days_active.
+    Recalcula o progresso do objetivo usando calculated_current_value
+    e atualiza status se a meta foi atingida.
     """
 
     permission_classes = [IsAuthenticated]
@@ -341,38 +341,37 @@ class GoalRecalculateView(APIView):
                 {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Atualiza current_value para dias ativos
-        # (apenas para goal_type consecutive_days)
-        if goal.goal_type == "consecutive_days":
-            goal.current_value = goal.days_active
-            # Verifica se atingiu a meta
-            if goal.current_value >= goal.target_value:
-                goal.status = "completed"
-                goal.end_date = timezone.now().date()
-            goal.save(
-                update_fields=["current_value", "status", "end_date", "updated_at"]
+        if goal.goal_type not in ("consecutive_days", "total_days", "avoid_habit"):
+            return Response(
+                {
+                    "detail": (
+                        "Recálculo automático só está disponível para objetivos "
+                        "de dias consecutivos, total de dias ou evitar hábito."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-            log_activity(
-                request,
-                "update",
-                "Goal",
-                goal.id,
-                f"Recalculou progresso do objetivo: {goal.title}",
-            )
+        current = goal.calculated_current_value
+        update_fields = ["updated_at"]
 
-            serializer = GoalSerializer(goal)
-            return Response(serializer.data)
+        if current >= goal.target_value and goal.status == "active":
+            goal.status = "completed"
+            goal.end_date = timezone.now().date()
+            update_fields += ["status", "end_date"]
 
-        return Response(
-            {
-                "detail": (
-                    "Recálculo automático só está disponível"
-                    " para objetivos de dias consecutivos."
-                )
-            },
-            status=status.HTTP_400_BAD_REQUEST,
+        goal.save(update_fields=update_fields)
+
+        log_activity(
+            request,
+            "update",
+            "Goal",
+            goal.id,
+            f"Recalculou progresso do objetivo: {goal.title}",
         )
+
+        serializer = GoalSerializer(goal)
+        return Response(serializer.data)
 
 
 class GoalResetView(APIView):
@@ -1085,6 +1084,135 @@ class RoutineTaskHeatmapView(APIView):
             )
             current += timedelta(days=1)
         return data
+
+
+class PersonalPlanningAnalyticsView(APIView):
+    """
+    GET /api/v1/personal-planning/analytics/
+
+    Retorna análises de desempenho: distribuição por dia da semana,
+    taxa de conclusão por dia, e insights automáticos de padrões.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    WEEKDAY_NAMES = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado",
+        "Domingo",
+    ]
+
+    def get(self, request):
+        from collections import defaultdict
+
+        user = request.user
+        today = timezone.now().date()
+        ninety_days_ago = today - timedelta(days=90)
+
+        instances = TaskInstance.objects.filter(
+            owner__user=user,
+            scheduled_date__gte=ninety_days_ago,
+            scheduled_date__lte=today,
+            deleted_at__isnull=True,
+        ).values("scheduled_date", "status")
+
+        totals_by_weekday = defaultdict(int)
+        completed_by_weekday = defaultdict(int)
+
+        for inst in instances:
+            wd = inst["scheduled_date"].weekday()
+            totals_by_weekday[wd] += 1
+            if inst["status"] == "completed":
+                completed_by_weekday[wd] += 1
+
+        completion_by_weekday = []
+        for wd in range(7):
+            total = totals_by_weekday[wd]
+            completed = completed_by_weekday[wd]
+            rate = round((completed / total) * 100, 1) if total > 0 else None
+            completion_by_weekday.append(
+                {
+                    "weekday": wd,
+                    "weekday_display": self.WEEKDAY_NAMES[wd],
+                    "total": total,
+                    "completed": completed,
+                    "rate": rate,
+                }
+            )
+
+        insights = self._generate_insights(completion_by_weekday)
+
+        return Response(
+            {
+                "period_days": 90,
+                "completion_by_weekday": completion_by_weekday,
+                "insights": insights,
+            }
+        )
+
+    def _generate_insights(self, by_weekday):
+        insights = []
+        days_with_data = [d for d in by_weekday if d["rate"] is not None]
+
+        if not days_with_data:
+            return insights
+
+        best = max(days_with_data, key=lambda d: d["rate"])
+        worst = min(days_with_data, key=lambda d: d["rate"])
+
+        if best["rate"] >= 75:
+            insights.append(
+                f"Você é muito consistente às {best['weekday_display'].lower()} "
+                f"({best['rate']:.0f}% de cumprimento). Continue assim!"
+            )
+
+        if worst["rate"] is not None and worst["rate"] < 50:
+            insights.append(
+                f"{worst['weekday_display']} é seu dia mais difícil "
+                f"({worst['rate']:.0f}% de cumprimento). "
+                f"Considere reduzir tarefas neste dia."
+            )
+
+        weekends = [
+            d for d in by_weekday if d["weekday"] in (5, 6) and d["rate"] is not None
+        ]
+        weekdays = [d for d in by_weekday if d["weekday"] < 5 and d["rate"] is not None]
+
+        if weekends and weekdays:
+            avg_weekend = sum(d["rate"] for d in weekends) / len(weekends)
+            avg_weekday = sum(d["rate"] for d in weekdays) / len(weekdays)
+            diff = avg_weekday - avg_weekend
+
+            if diff > 20:
+                insights.append(
+                    f"Sua consistência cai {diff:.0f}% nos fins de semana "
+                    f"({avg_weekend:.0f}% vs {avg_weekday:.0f}% nos dias úteis)."
+                )
+            elif diff < -15:
+                insights.append(
+                    f"Você é mais consistente nos fins de semana "
+                    f"({avg_weekend:.0f}% vs {avg_weekday:.0f}% nos dias úteis)."
+                )
+
+        all_rates = [d["rate"] for d in days_with_data]
+        if all_rates:
+            overall = sum(all_rates) / len(all_rates)
+            if overall >= 80:
+                insights.append(
+                    f"Excelente! Sua taxa média de cumprimento nos últimos 90 dias é "
+                    f"{overall:.0f}%."
+                )
+            elif overall < 40:
+                insights.append(
+                    f"Sua taxa média de cumprimento é {overall:.0f}%. "
+                    f"Tente reduzir o número de tarefas para focar no essencial."
+                )
+
+        return insights
 
 
 class TaskInstanceBulkUpdateView(APIView):
