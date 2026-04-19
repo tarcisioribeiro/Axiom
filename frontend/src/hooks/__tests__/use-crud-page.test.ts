@@ -390,6 +390,25 @@ describe('useCrudPage', () => {
     );
   });
 
+  it('handleSubmit (create) shows error toast when API call fails', async () => {
+    vi.mocked(service.create).mockRejectedValueOnce(new Error('Create error'));
+
+    const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => {
+      result.current.handleCreate();
+    });
+
+    await act(async () => {
+      await result.current.handleSubmit({ name: 'Falhou criação' });
+    });
+
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ variant: 'destructive' })
+    );
+  });
+
   it('refresh reloads items from service', async () => {
     const { result } = renderHook(() => useCrudPage(service, { resourceName: 'item' }));
 

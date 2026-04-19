@@ -739,6 +739,11 @@ export const routineTaskSchema = z
       .optional()
       .nullable(),
     is_active: z.boolean(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']),
+    allowed_skips_per_month: z
+      .number()
+      .min(0, 'Valor mínimo é 0')
+      .max(31, 'Valor máximo é 31'),
     target_quantity: z
       .number()
       .min(1, positiveError('Quantidade alvo'))
@@ -830,6 +835,7 @@ export const goalSchema = z.object({
     .positive(positiveError('Meta')),
   current_value: z.number().min(0, 'Valor atual nao pode ser negativo'),
   start_date: z.string().min(1, requiredError('Data de inicio')),
+  deadline: z.string().optional().nullable().or(z.literal('')),
   end_date: z.string().optional().or(z.literal('')),
   status: z.string().min(1, requiredError('Status')),
   owner: z.number().positive(requiredError('Proprietario')),

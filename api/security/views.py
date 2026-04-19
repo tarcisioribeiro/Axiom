@@ -3,7 +3,7 @@ import logging
 import re
 import secrets
 import string
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
@@ -23,7 +23,10 @@ from security.importers import (
     SUPPORTED_FORMATS,
     ImportParseError,
     parse_bitwarden_json,
+    parse_dashlane_csv,
+    parse_keepass_xml,
     parse_lastpass_csv,
+    parse_onepassword_csv,
 )
 from security.models import (
     ACTION_TYPES,
@@ -65,7 +68,7 @@ def get_client_ip(request):
     return _get_trusted_client_ip(request)
 
 
-def log_activity(request, action, model_name, object_id, description):
+def log_activity(request, action, model_name, object_id, description, object_uuid=None):
     """Helper para registrar atividades."""
     ActivityLog.log_action(
         user=request.user,
@@ -73,6 +76,7 @@ def log_activity(request, action, model_name, object_id, description):
         description=description,
         model_name=model_name,
         object_id=object_id,
+        object_uuid=object_uuid,
         ip_address=get_client_ip(request),
         user_agent=request.META.get("HTTP_USER_AGENT", ""),
     )
@@ -111,6 +115,7 @@ class PasswordListCreateView(VaultLockedMixin, BaseListCreateView):
             "Password",
             password.id,
             f"Criou senha: {password.title}",
+            object_uuid=password.uuid,
         )
 
 
@@ -137,6 +142,7 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             "Password",
             password.id,
             f"Atualizou senha: {password.title}",
+            object_uuid=password.uuid,
         )
 
     def perform_destroy(self, instance):
@@ -150,6 +156,7 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             "Password",
             instance.id,
             f"Deletou senha: {instance.title}",
+            object_uuid=instance.uuid,
         )
 
 
@@ -166,13 +173,13 @@ class PasswordRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        # Log da revelação
         log_activity(
             request,
             "reveal",
             "Password",
             instance.id,
             f"Revelou senha: {instance.title}",
+            object_uuid=instance.uuid,
         )
 
         serializer = self.get_serializer(instance)
@@ -626,7 +633,7 @@ class ArchiveDownloadView(APIView):
 # ============================================================================
 
 
-class ActivityLogListView(VaultLockedMixin, generics.ListAPIView):
+class ActivityLogListView(generics.ListAPIView):
     """Lista logs de atividades (somente leitura)."""
 
     permission_classes = [IsAuthenticated, GlobalDefaultPermission]
@@ -935,9 +942,6 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         passwords = list(passwords_qs)
         total = len(passwords)
 
-        if total == 0:
-            return Response(self._empty_report())
-
         cutoff = timezone.now() - timedelta(days=OUTDATED_DAYS_THRESHOLD)
         category_dict = dict(PASSWORD_CATEGORIES)
 
@@ -1033,6 +1037,69 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             "Consultou relatório de saúde do cofre",
         )
 
+        # Analyse stored credit cards
+        card_issues: list[dict] = []
+        today = timezone.now().date()
+        cards_qs = StoredCreditCard.objects.filter(owner=member, is_deleted=False).only(
+            "id", "uuid", "name", "expiration_month", "expiration_year", "flag"
+        )
+        for card in cards_qs:
+            card_issue_list: list[str] = []
+            expiry = date(card.expiration_year, card.expiration_month, 1)
+            if expiry < today.replace(day=1):
+                card_issue_list.append("expired")
+            if card_issue_list:
+                card_issues.append(
+                    {
+                        "id": card.id,
+                        "uuid": str(card.uuid),
+                        "name": card.name,
+                        "flag": card.flag,
+                        "expiration_month": card.expiration_month,
+                        "expiration_year": card.expiration_year,
+                        "issues": card_issue_list,
+                    }
+                )
+
+        # Analyse stored bank accounts
+        account_issues: list[dict] = []
+        accounts_qs = StoredBankAccount.objects.filter(
+            owner=member, is_deleted=False
+        ).only(
+            "id", "uuid", "name", "institution_name", "_password", "_digital_password"
+        )
+        for acc in accounts_qs:
+            acc_issue_list: list[str] = []
+            if not acc._password and not acc._digital_password:
+                acc_issue_list.append("no_password")
+            if acc_issue_list:
+                account_issues.append(
+                    {
+                        "id": acc.id,
+                        "uuid": str(acc.uuid),
+                        "name": acc.name,
+                        "institution_name": acc.institution_name,
+                        "issues": acc_issue_list,
+                    }
+                )
+
+        score = self._calculate_score(
+            total,
+            weak_count,
+            medium_count,
+            duplicate_count,
+            outdated_count,
+            expired_cards=len(card_issues),
+        )
+
+        log_activity(
+            request,
+            "view",
+            "Password",
+            None,
+            "Consultou relatório de saúde do cofre",
+        )
+
         return Response(
             {
                 "score": score,
@@ -1042,12 +1109,18 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
                     "medium": medium_count,
                     "duplicate": duplicate_count,
                     "outdated": outdated_count,
+                    "expired_cards": len(card_issues),
+                    "accounts_without_password": len(account_issues),
                 },
                 "problematic_passwords": problematic,
+                "problematic_cards": card_issues,
+                "problematic_accounts": account_issues,
             }
         )
 
-    def _calculate_score(self, total, weak, medium, duplicates, outdated):
+    def _calculate_score(
+        self, total, weak, medium, duplicates, outdated, expired_cards=0
+    ):
         """
         Calcula pontuação de saúde (0–100).
 
@@ -1057,23 +1130,39 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         Penalidades adicionais (acumulativas):
           duplicada  → -20 pts
           desatualizada → -10 pts
+          cartão vencido → -15 pts (penalidade fixa por cartão)
         """
-        if total == 0:
+        if total == 0 and expired_cards == 0:
             return 100
 
-        strong = total - weak - medium
-        base_points = strong * 100 + medium * 60 + weak * 20
-        penalty = duplicates * 20 + outdated * 10
-        total_points = max(0, base_points - penalty)
-        max_points = total * 100
-        return round(total_points * 100 / max_points)
+        if total > 0:
+            strong = total - weak - medium
+            base_points = strong * 100 + medium * 60 + weak * 20
+            penalty = duplicates * 20 + outdated * 10
+            total_points = max(0, base_points - penalty)
+            max_points = total * 100
+            password_score = round(total_points * 100 / max_points)
+        else:
+            password_score = 100
+
+        card_penalty = min(expired_cards * 15, 30)
+        return max(0, password_score - card_penalty)
 
     def _empty_report(self):
         return {
             "score": 100,
             "total_passwords": 0,
-            "issues_summary": {"weak": 0, "medium": 0, "duplicate": 0, "outdated": 0},
+            "issues_summary": {
+                "weak": 0,
+                "medium": 0,
+                "duplicate": 0,
+                "outdated": 0,
+                "expired_cards": 0,
+                "accounts_without_password": 0,
+            },
             "problematic_passwords": [],
+            "problematic_cards": [],
+            "problematic_accounts": [],
         }
 
 
@@ -1106,13 +1195,13 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
     """
     POST /api/v1/security/passwords/import/preview/
 
-    Parses an export file (Bitwarden JSON or LastPass CSV) in-memory and
-    returns a list of entries for the user to review before importing.
-    The file is NEVER persisted to disk.
+    Parses an export file in-memory and returns a list of entries for the
+    user to review before importing. The file is NEVER persisted to disk.
 
     Request (multipart/form-data):
       file   — the export file
-      format — "bitwarden_json" or "lastpass_csv"
+      format — "bitwarden_json" | "lastpass_csv" | "onepassword_csv" |
+               "dashlane_csv" | "keepass_xml"
 
     Response:
     {
@@ -1162,10 +1251,14 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
         content = file.read()
 
         try:
-            if format_name == "bitwarden_json":
-                entries = parse_bitwarden_json(content)
-            else:
-                entries = parse_lastpass_csv(content)
+            parser_map = {
+                "bitwarden_json": parse_bitwarden_json,
+                "lastpass_csv": parse_lastpass_csv,
+                "onepassword_csv": parse_onepassword_csv,
+                "dashlane_csv": parse_dashlane_csv,
+                "keepass_xml": parse_keepass_xml,
+            }
+            entries = parser_map[format_name](content)
         except ImportParseError as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY

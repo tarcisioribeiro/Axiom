@@ -1441,7 +1441,10 @@
       "activeDays": "active days",
       "habitConsistency": "Habit Consistency",
       "recentReflections": "Recent Reflections",
-      "noData": "No data available"
+      "noData": "No data available",
+      "weekdayAnalytics": "Performance by Day of Week",
+      "analyticsPeriod": "Based on the last {{days}} days",
+      "insights": "Habit Insights"
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -1470,7 +1473,8 @@
         "frequency": "Frequency",
         "goal": "Goal",
         "completionRate": "Completion Rate",
-        "status": "Status"
+        "status": "Status",
+        "priority": "Priority"
       },
       "loadError": "Error loading data",
       "saveError": "Error saving",
@@ -1527,8 +1531,12 @@
         "relatedTask": "Related Task",
         "progress": "Progress",
         "status": "Status",
-        "activeDays": "Active Days"
+        "activeDays": "Active Days",
+        "deadline": "Deadline"
       },
+      "deadlineDays": "{{days}} days",
+      "deadlineToday": "Today!",
+      "deadlineOverdue": "{{days}} days ago",
       "recalculatedDesc": "Progress updated to {{days}} days.",
       "loadError": "Error loading data",
       "saveError": "Error saving",
