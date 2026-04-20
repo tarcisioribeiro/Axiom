@@ -17,6 +17,70 @@ from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 
 
+@receiver(post_save, sender="loans.Loan")
+def generate_loan_installments(sender, instance, created, **kwargs):
+    """Auto-generate LoanInstallment records when a new Loan is created."""
+    if not created:
+        return
+    if not instance.installments or instance.installments <= 1:
+        return
+
+    from loans.models import LoanInstallment
+
+    if LoanInstallment.objects.filter(loan=instance).exists():
+        return
+
+    from calendar import monthrange
+
+    n = instance.installments
+    value_per = (instance.value / Decimal(str(n))).quantize(Decimal("0.01"))
+    start = instance.date
+
+    freq = instance.payment_frequency or "monthly"
+    freq_months = {
+        "monthly": 1,
+        "bimonthly": 2,
+        "quarterly": 3,
+        "semiannual": 6,
+        "annual": 12,
+    }
+    step = freq_months.get(freq, 1)
+
+    installments = []
+    for i in range(1, n + 1):
+        total_months = i * step
+        m = start.month - 1 + total_months
+        y = start.year + m // 12
+        m = m % 12 + 1
+        d = min(start.day, monthrange(y, m)[1])
+        from datetime import date as dt
+
+        due = dt(y, m, d)
+        installments.append(
+            LoanInstallment(
+                loan=instance,
+                installment_number=i,
+                value=value_per,
+                due_date=due,
+                payed=False,
+                created_by=instance.created_by,
+                updated_by=instance.updated_by,
+            )
+        )
+    LoanInstallment.objects.bulk_create(installments)
+
+
+@receiver(post_delete, sender="loans.Loan")
+def nullify_expenses_on_loan_delete(sender, instance, **kwargs):
+    """Nulifica related_loan nas Expenses vinculadas ao deletar um Loan.
+
+    Preserva as despesas — apenas remove o vínculo para evitar órfãos.
+    """
+    from expenses.models import Expense
+
+    Expense.objects.filter(related_loan=instance).update(related_loan=None)
+
+
 def update_loan_payed_value(loan):
     """
     Recalcula o payed_value do empréstimo baseado em todas as receitas
