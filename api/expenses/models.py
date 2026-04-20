@@ -6,6 +6,45 @@ from django.db import models
 from accounts.models import Account
 from app.models import PAYMENT_FREQUENCY_CHOICES, PAYMENT_METHOD_CHOICES, BaseModel
 
+
+class Tag(BaseModel):
+    """
+    Tag customizada para categorização adicional de despesas e receitas.
+    Permite criar visões cruzadas além das categorias fixas.
+    Exemplos: 'filho', 'pet', 'viagem-europa-2025', 'trabalho'.
+    """
+
+    name = models.CharField(max_length=50, null=False, blank=False, verbose_name="Nome")
+    color = models.CharField(
+        max_length=7,
+        default="#6366f1",
+        verbose_name="Cor",
+        help_text="Cor hexadecimal (#RRGGBB)",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tags",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "owner"], name="unique_tag_name_per_owner"
+            )
+        ]
+        indexes = [
+            models.Index(fields=["owner"]),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 EXPENSES_CATEGORIES = (
     ("food and drink", "Comida e bebida"),
     ("bills and services", "Contas e serviços"),
@@ -40,7 +79,7 @@ class Expense(BaseModel):
         null=False, blank=False, verbose_name="Valor", max_digits=10, decimal_places=2
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
-    horary = models.TimeField(verbose_name="Horário", null=False, blank=False)
+    horary = models.TimeField(verbose_name="Horário", null=True, blank=True)
     category = models.CharField(
         verbose_name="Categoria",
         max_length=200,
@@ -145,6 +184,18 @@ class Expense(BaseModel):
         default=False,
         verbose_name="Categorizado Automaticamente",
         help_text="Categoria preenchida automaticamente por uma regra de categorização",
+    )
+    tags: models.ManyToManyField = models.ManyToManyField(
+        "Tag",
+        blank=True,
+        related_name="expenses",
+        verbose_name="Tags",
+    )
+    currency_code = models.CharField(
+        max_length=3,
+        default="BRL",
+        verbose_name="Moeda",
+        help_text="Código ISO 4217 da moeda (ex: BRL, USD, EUR)",
     )
 
     class Meta:
@@ -391,3 +442,86 @@ class CategorizationRule(BaseModel):
 
     def __str__(self):
         return f"{self.merchant_contains} → {self.category}"
+
+
+class ExpenseSplit(BaseModel):
+    """
+    Divisão de uma despesa entre membros.
+
+    Permite registrar a origem real de um gasto compartilhado
+    sem perder o valor total da despesa.
+    Exemplo: jantar de R$300 dividido 50/50 entre cônjuges.
+    """
+
+    expense = models.ForeignKey(
+        Expense,
+        on_delete=models.CASCADE,
+        related_name="splits",
+        verbose_name="Despesa",
+    )
+    member = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        verbose_name="Membro",
+    )
+    description = models.CharField(
+        max_length=255,
+        null=False,
+        blank=False,
+        verbose_name="Descrição",
+    )
+    percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Percentual (%)",
+        help_text=(
+            "Percentual da despesa total (0-100). "
+            "Calculado automaticamente se não informado."
+        ),
+    )
+    value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=False,
+        blank=False,
+        verbose_name="Valor",
+    )
+    payed = models.BooleanField(default=False, verbose_name="Pago")
+
+    class Meta:
+        ordering = ["expense", "member"]
+        verbose_name = "Divisão de Despesa"
+        verbose_name_plural = "Divisões de Despesa"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["expense", "member"],
+                name="unique_expense_split_per_member",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["expense"]),
+            models.Index(fields=["member"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        """Auto-calcula percentage se não informado."""
+        if self.percentage is None and self.expense_id and self.value:
+            expense_value = (
+                Expense.objects.filter(pk=self.expense_id)
+                .values_list("value", flat=True)
+                .first()
+            )
+            if expense_value and expense_value > 0:
+                from decimal import Decimal
+
+                self.percentage = (
+                    self.value / expense_value * Decimal("100")
+                ).quantize(Decimal("0.01"))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.description} - R$ {self.value}"

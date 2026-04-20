@@ -19,6 +19,8 @@ class BudgetSerializer(serializers.ModelSerializer):
             "year",
             "member",
             "member_name",
+            "rollover_enabled",
+            "rollover_amount",
             "created_at",
             "updated_at",
         ]
@@ -52,6 +54,8 @@ class BudgetStatusSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     category = serializers.CharField()
     limit_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    rollover_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    effective_limit = serializers.DecimalField(max_digits=10, decimal_places=2)
     actual_spent = serializers.DecimalField(max_digits=10, decimal_places=2)
     percentage = serializers.FloatField()
     status = serializers.CharField()  # 'ok', 'warning', 'exceeded'

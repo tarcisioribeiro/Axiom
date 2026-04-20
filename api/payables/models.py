@@ -111,3 +111,51 @@ class Payable(BaseModel):
 
     def __str__(self):
         return f"{self.description} - R$ {self.value} ({self.get_status_display()})"
+
+
+class PayableInstallment(BaseModel):
+    """
+    Parcela individual de um valor a pagar.
+
+    Permite parcelamento de dívidas (ex: dentista em 6x).
+    Cada parcela pode ser marcada individualmente como paga.
+    """
+
+    payable = models.ForeignKey(
+        Payable,
+        on_delete=models.CASCADE,
+        related_name="installments",
+        verbose_name="Valor a Pagar",
+    )
+    installment_number = models.PositiveIntegerField(verbose_name="Número da Parcela")
+    value = models.DecimalField(
+        max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Valor"
+    )
+    due_date = models.DateField(verbose_name="Data de Vencimento")
+    payed = models.BooleanField(default=False, verbose_name="Pago")
+    payment_expense = models.ForeignKey(
+        "expenses.Expense",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="payable_installment_payments",
+        verbose_name="Despesa de Pagamento",
+    )
+
+    class Meta:
+        ordering = ["payable", "installment_number"]
+        verbose_name = "Parcela de Valor a Pagar"
+        verbose_name_plural = "Parcelas de Valores a Pagar"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["payable", "installment_number"],
+                name="unique_payable_installment_number",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["payable", "payed"]),
+            models.Index(fields=["due_date"]),
+        ]
+
+    def __str__(self):
+        return f"Parcela {self.installment_number} - {self.payable.description}"

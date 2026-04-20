@@ -62,6 +62,7 @@ repos:
           - djangorestframework==3.16.1
           - cryptography==46.0.5
           - python-dotenv==1.1.1
+          - rapidfuzz==3.14.3
 
   # Commit message linting
   - repo: local

@@ -1,6 +1,33 @@
 from rest_framework import serializers
 
-from loans.models import Loan
+from loans.models import Loan, LoanInstallment
+
+
+class LoanInstallmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanInstallment
+        fields = [
+            "id",
+            "uuid",
+            "loan",
+            "installment_number",
+            "value",
+            "due_date",
+            "payed",
+            "payment_expense",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "loan",
+            "installment_number",
+            "value",
+            "due_date",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class LoanSerializer(serializers.ModelSerializer):

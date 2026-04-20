@@ -144,6 +144,39 @@ export const API_CONFIG = {
 
     // Dashboard
     FINANCIAL_ALERTS: '/api/v1/dashboard/financial-alerts/',
+    DASHBOARD_ANOMALIES: '/api/v1/dashboard/anomalies/',
+    DASHBOARD_LGPD_EXPORT: '/api/v1/dashboard/lgpd-export/',
+    DASHBOARD_IR_REPORT: '/api/v1/dashboard/ir-report/',
+    DASHBOARD_ALERTS_STREAM: '/api/v1/dashboard/alerts/stream/',
+    DASHBOARD_AUDIT_LOG: '/api/v1/dashboard/audit-log/',
+
+    // Fixed Revenues
+    FIXED_REVENUES: '/api/v1/fixed-revenues/',
+    FIXED_REVENUES_GENERATE: '/api/v1/fixed-revenues/generate/',
+    FIXED_REVENUES_STATS: '/api/v1/fixed-revenues/stats/',
+
+    // Fixed Transfers
+    FIXED_TRANSFERS: '/api/v1/fixed-transfers/',
+    FIXED_TRANSFERS_GENERATE: '/api/v1/fixed-transfers/generate/',
+
+    // Tags
+    TAGS: '/api/v1/tags/',
+
+    // Loan sub-resources (use with id)
+    LOAN_INSTALLMENTS: (id: number) => `/api/v1/loans/${id}/installments/`,
+    LOAN_PAYMENT: (id: number) => `/api/v1/loans/${id}/pay/`,
+    LOAN_AMORTIZATION: (id: number) => `/api/v1/loans/${id}/amortization/`,
+
+    // Payable sub-resources (use with id)
+    PAYABLE_INSTALLMENTS: (id: number) => `/api/v1/payables/${id}/installments/`,
+    PAYABLE_PAYMENT: (id: number) => `/api/v1/payables/${id}/pay/`,
+
+    // Expense splits (use with id)
+    EXPENSE_SPLITS: (id: number) => `/api/v1/expenses/${id}/splits/`,
+
+    // Dashboard reconciliation (use with account_id)
+    DASHBOARD_RECONCILIATION: (accountId: number) =>
+      `/api/v1/dashboard/reconciliation/${accountId}/`,
 
     // Export
     EXPENSES_EXPORT: '/api/v1/expenses/export/',

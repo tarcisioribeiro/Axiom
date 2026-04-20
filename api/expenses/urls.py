@@ -61,4 +61,13 @@ urlpatterns = [
         views.CategorizationRuleRetrieveUpdateDestroyView.as_view(),
         name="categorization-rule-detail",
     ),
+    # Tags
+    path("tags/", views.TagListCreateView.as_view(), name="tag-list-create"),
+    path("tags/<int:pk>/", views.TagDetailView.as_view(), name="tag-detail"),
+    # Expense Splits
+    path(
+        "expenses/<int:pk>/splits/",
+        views.ExpenseSplitListCreateView.as_view(),
+        name="expense-splits",
+    ),
 ]

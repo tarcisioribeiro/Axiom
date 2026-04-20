@@ -1,6 +1,33 @@
 from rest_framework import serializers
 
-from payables.models import Payable
+from payables.models import Payable, PayableInstallment
+
+
+class PayableInstallmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PayableInstallment
+        fields = [
+            "id",
+            "uuid",
+            "payable",
+            "installment_number",
+            "value",
+            "due_date",
+            "payed",
+            "payment_expense",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "payable",
+            "installment_number",
+            "value",
+            "due_date",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class PayableSerializer(serializers.ModelSerializer):

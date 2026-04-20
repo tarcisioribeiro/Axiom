@@ -29,6 +29,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -83,6 +84,8 @@ function getDefaultFormData(): BudgetFormData {
     month: now.getMonth() + 1,
     year: now.getFullYear(),
     member: null,
+    rollover_enabled: false,
+    rollover_amount: 0,
   };
 }
 
@@ -143,6 +146,8 @@ export default function Budgets() {
       month: budget.month,
       year: budget.year,
       member: budget.member,
+      rollover_enabled: budget.rollover_enabled,
+      rollover_amount: parseFloat(budget.rollover_amount),
     });
     setIsDialogOpen(true);
   };
@@ -433,6 +438,49 @@ export default function Budgets() {
               </div>
             </div>
 
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <Checkbox
+                id="rollover_enabled"
+                checked={formData.rollover_enabled ?? false}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, rollover_enabled: !!checked }))
+                }
+                className="mt-0.5"
+              />
+              <div>
+                <Label
+                  htmlFor="rollover_enabled"
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  {t('pages.budgets.rollover.enabled')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.budgets.rollover.description')}
+                </p>
+              </div>
+            </div>
+
+            {formData.rollover_enabled && (
+              <div className="space-y-2">
+                <Label htmlFor="rollover_amount">
+                  {t('pages.budgets.rollover.amount')}
+                </Label>
+                <Input
+                  id="rollover_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.rollover_amount ?? 0}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rollover_amount: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                />
+              </div>
+            )}
+
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 type="button"
@@ -570,6 +618,16 @@ function BudgetCard({
           <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
           <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
         </div>
+        {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">
+              {t('pages.budgets.rollover.amount')}
+            </span>
+            <span className="font-medium text-green-600 dark:text-green-400">
+              +{formatCurrency(budget.rollover_amount)}
+            </span>
+          </div>
+        )}
         {budget.member_name && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t('pages.budgets.member')}</span>
