@@ -2,11 +2,17 @@ from django.urls import path
 
 from .views import (
     AccountBalancesView,
+    AccountReconciliationView,
+    AlertsStreamView,
+    AnomalyDetectionView,
+    AuditLogView,
     BalanceForecastView,
     CashFlowForecastView,
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
     FinancialAlertsView,
+    IRReportView,
+    LGPDExportView,
     MonthlyStatementView,
 )
 
@@ -34,4 +40,14 @@ urlpatterns = [
         FinancialAlertsView.as_view(),
         name="financial-alerts",
     ),
+    path("anomalies/", AnomalyDetectionView.as_view(), name="dashboard-anomalies"),
+    path(
+        "reconciliation/<int:account_id>/",
+        AccountReconciliationView.as_view(),
+        name="dashboard-reconciliation",
+    ),
+    path("lgpd-export/", LGPDExportView.as_view(), name="lgpd-export"),
+    path("ir-report/", IRReportView.as_view(), name="ir-report"),
+    path("alerts/stream/", AlertsStreamView.as_view(), name="alerts-stream"),
+    path("audit-log/", AuditLogView.as_view(), name="audit-log"),
 ]

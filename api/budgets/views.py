@@ -18,7 +18,10 @@ from budgets.serializers import (
     BudgetSerializer,
     BudgetStatusSerializer,
 )
+from credit_cards.models import CreditCardBill
 from expenses.models import Expense
+
+BILLS_AND_SERVICES_CATEGORY = "bills and services"
 
 
 class BudgetListCreateView(BaseListCreateView):
@@ -92,12 +95,32 @@ class BudgetStatusView(APIView):
             .values("category")
             .annotate(total=Sum("value"))
         )
-        expense_map = {e["category"]: e["total"] for e in expense_totals}
+        expense_map: dict = {e["category"]: e["total"] for e in expense_totals}
+
+        # Include credit card bill interest/fees in "bills and services" category
+        bill_charges = CreditCardBill.objects.filter(
+            payment_date__month=month,
+            payment_date__year=year,
+            status="paid",
+            is_deleted=False,
+        ).aggregate(
+            total_interest=Sum("interest_charged"),
+            total_late_fee=Sum("late_fee"),
+        )
+        extra_charges = (bill_charges["total_interest"] or Decimal("0")) + (
+            bill_charges["total_late_fee"] or Decimal("0")
+        )
+        if extra_charges > 0:
+            existing = expense_map.get(BILLS_AND_SERVICES_CATEGORY, Decimal("0"))
+            expense_map[BILLS_AND_SERVICES_CATEGORY] = existing + extra_charges
 
         result = []
         for budget in budgets:
             actual_spent = expense_map.get(budget.category, Decimal("0.00"))
-            limit = budget.limit_amount
+            rollover = (
+                budget.rollover_amount if budget.rollover_enabled else Decimal("0")
+            )
+            limit = budget.limit_amount + rollover
             percentage = float(actual_spent / limit * 100) if limit > 0 else 0.0
 
             if percentage >= 100:
@@ -111,7 +134,9 @@ class BudgetStatusView(APIView):
                 {
                     "id": budget.id,
                     "category": budget.category,
-                    "limit_amount": limit,
+                    "limit_amount": budget.limit_amount,
+                    "rollover_amount": rollover,
+                    "effective_limit": limit,
                     "actual_spent": actual_spent,
                     "percentage": round(percentage, 2),
                     "status": budget_status,

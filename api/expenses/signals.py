@@ -4,6 +4,7 @@ Signal para categorização automática de despesas.
 Quando uma despesa é criada com categoria 'others' e merchant preenchido,
 o signal busca a primeira regra ativa do usuário cujo merchant_contains esteja
 contido no merchant (case-insensitive) e aplica a categoria correspondente.
+Utiliza fuzzy matching (rapidfuzz) com score mínimo de 80 para maior cobertura.
 
 Em atualizações:
 - Se a categoria é alterada para 'others', as regras são re-aplicadas.
@@ -14,9 +15,17 @@ Em atualizações:
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+from rapidfuzz import fuzz
+
+FUZZY_MATCH_THRESHOLD = 80
+
 
 def _apply_categorization_rules(user, instance):
-    """Aplica a primeira regra ativa correspondente ao merchant da despesa."""
+    """Aplica a primeira regra ativa correspondente ao merchant da despesa.
+
+    Usa fuzzy matching (partial_ratio >= 80) além de substring exata para maior
+    cobertura em merchants com erros ortográficos ou variações de nome.
+    """
     from expenses.models import CategorizationRule
 
     merchant_lower = instance.merchant.lower()
@@ -25,7 +34,11 @@ def _apply_categorization_rules(user, instance):
     ).order_by("priority", "created_at")
 
     for rule in rules:
-        if rule.merchant_contains.lower() in merchant_lower:
+        rule_lower = rule.merchant_contains.lower()
+        if (
+            rule_lower in merchant_lower
+            or fuzz.partial_ratio(rule_lower, merchant_lower) >= FUZZY_MATCH_THRESHOLD
+        ):
             instance.category = rule.category
             instance.auto_categorized = True
             break

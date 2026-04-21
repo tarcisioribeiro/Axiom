@@ -45,6 +45,21 @@ class Budget(BaseModel):
         verbose_name="Membro",
         related_name="budgets",
     )
+    rollover_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Habilitar Rolagem de Saldo",
+        help_text=(
+            "Quando ativado, o saldo não utilizado do mês anterior"
+            " é somado ao limite do mês atual."
+        ),
+    )
+    rollover_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Saldo Rolado",
+        help_text="Valor não utilizado do mês anterior acumulado neste orçamento.",
+    )
 
     class Meta:
         ordering = ["year", "month", "category"]
