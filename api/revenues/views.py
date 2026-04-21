@@ -1,7 +1,11 @@
 from decimal import Decimal
 
+from django.db.models import Count
+from django.utils import timezone
 from django.utils.timezone import now
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
@@ -9,8 +13,15 @@ from app.export_utils import build_csv_response, build_pdf_response, format_deci
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from revenues.filters import RevenueFilter
-from revenues.models import REVENUES_CATEGORIES, Revenue
-from revenues.serializers import RevenueSerializer
+from revenues.models import REVENUES_CATEGORIES, FixedRevenue, Revenue
+from revenues.serializers import (
+    BulkGenerateRevenuesRequestSerializer,
+    BulkGenerateRevenuesResponseSerializer,
+    FixedRevenueCreateUpdateSerializer,
+    FixedRevenueSerializer,
+    RevenueSerializer,
+)
+from revenues.services import bulk_generate_fixed_revenues, get_fixed_revenues_stats
 
 # Build a lookup dict for category display names
 REVENUES_CATEGORY_LABELS = dict(REVENUES_CATEGORIES)
@@ -104,6 +115,69 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
             instance.delete()
             if account_id:
                 recalculate_account_balance(account_id)
+
+
+class FixedRevenueListCreateView(BaseListCreateView):
+    queryset = FixedRevenue.objects.all()
+
+    def get_queryset(self):
+        return (
+            FixedRevenue.objects.select_related("account", "member")
+            .annotate(total_generated=Count("id"))
+            .order_by("due_day", "description")
+        )
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return FixedRevenueCreateUpdateSerializer
+        return FixedRevenueSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class FixedRevenueDetailView(BaseRetrieveUpdateDestroyView):
+    queryset = FixedRevenue.objects.select_related("account", "member")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return FixedRevenueCreateUpdateSerializer
+        return FixedRevenueSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.save()
+
+
+class BulkGenerateFixedRevenuesView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedRevenue.objects.none()
+
+    def post(self, request):
+        serializer = BulkGenerateRevenuesRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        result = bulk_generate_fixed_revenues(
+            month=serializer.validated_data["month"],
+            revenue_values=serializer.validated_data["revenue_values"],
+            user=request.user,
+        )
+
+        response_serializer = BulkGenerateRevenuesResponseSerializer(result)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class FixedRevenuesStatsView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = FixedRevenue.objects.none()
+
+    def get(self, request):
+        stats = get_fixed_revenues_stats()
+        return Response(stats)
 
 
 class ExportRevenuesView(APIView):

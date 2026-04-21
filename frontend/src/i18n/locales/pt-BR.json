@@ -480,7 +480,39 @@
       "emptySearch": "Nenhum empréstimo encontrado para a pesquisa atual.",
       "emptyState": "Nenhum empréstimo cadastrado. Clique em \"Novo Empréstimo\" para começar.",
       "searchPlaceholder": "Buscar empréstimos...",
-      "noPrerequisitesMsg": "É necessário ter {{missing}} cadastrados antes de criar um empréstimo."
+      "noPrerequisitesMsg": "É necessário ter {{missing}} cadastrados antes de criar um empréstimo.",
+      "installments": {
+        "title": "Parcelas",
+        "emptyState": "Nenhuma parcela gerada para este empréstimo.",
+        "number": "Parcela",
+        "dueDate": "Vencimento",
+        "value": "Valor",
+        "status": "Status",
+        "paid": "Paga",
+        "pending": "Pendente"
+      },
+      "payment": {
+        "title": "Registrar Pagamento",
+        "description": "Registre um pagamento para este empréstimo.",
+        "value": "Valor do Pagamento",
+        "account": "Conta",
+        "date": "Data",
+        "notes": "Observações",
+        "submit": "Registrar Pagamento",
+        "success": "Pagamento registrado com sucesso."
+      },
+      "amortization": {
+        "title": "Tabela de Amortização",
+        "method": "Método",
+        "price": "Tabela Price",
+        "sac": "SAC",
+        "installment": "Parcela",
+        "dueDate": "Vencimento",
+        "payment": "Parcela",
+        "principal": "Amortização",
+        "interest": "Juros",
+        "balance": "Saldo"
+      }
     },
     "members": {
       "title": "Membros",
@@ -680,7 +712,25 @@
       "deletedDesc": "O valor a pagar foi excluído com sucesso.",
       "emptySearch": "Nenhum valor a pagar encontrado para a pesquisa atual.",
       "emptyState": "Nenhum valor a pagar cadastrado. Clique em \"Novo Pagamento\" para começar.",
-      "searchPlaceholder": "Buscar valores a pagar..."
+      "searchPlaceholder": "Buscar valores a pagar...",
+      "installments": {
+        "title": "Parcelas",
+        "emptyState": "Nenhuma parcela gerada.",
+        "number": "Parcela",
+        "dueDate": "Vencimento",
+        "value": "Valor",
+        "paid": "Paga",
+        "pending": "Pendente"
+      },
+      "payment": {
+        "title": "Registrar Pagamento",
+        "value": "Valor",
+        "account": "Conta",
+        "date": "Data",
+        "notes": "Observações",
+        "submit": "Registrar",
+        "success": "Pagamento registrado com sucesso."
+      }
     },
     "budgets": {
       "title": "Orçamentos",
@@ -724,7 +774,86 @@
       },
       "trend": {
         "title": "Tendência de Gastos"
+      },
+      "rollover": {
+        "enabled": "Habilitar rolagem de saldo",
+        "description": "O saldo não utilizado do mês anterior é adicionado ao limite do mês atual.",
+        "amount": "Saldo rolado (R$)"
       }
+    },
+    "fixedRevenues": {
+      "title": "Receitas Fixas Mensais",
+      "newBtn": "Nova Receita Fixa",
+      "editTitle": "Editar Receita Fixa",
+      "newTitle": "Nova Receita Fixa",
+      "editDesc": "Atualize as informações da receita fixa",
+      "newDesc": "Crie um modelo de receita fixa mensal",
+      "deleteTitle": "Excluir receita fixa",
+      "deleteDesc": "Tem certeza que deseja excluir esta receita fixa? Esta ação não pode ser desfeita.",
+      "created": "Receita fixa criada",
+      "createdDesc": "A receita fixa foi criada com sucesso.",
+      "updated": "Receita fixa atualizada",
+      "updatedDesc": "A receita fixa foi atualizada com sucesso.",
+      "deleted": "Receita fixa excluída",
+      "deletedDesc": "A receita fixa foi excluída com sucesso.",
+      "emptyState": "Nenhuma receita fixa encontrada.",
+      "launchSection": "Lançar Receitas do Mês",
+      "launchDesc": "Gere todas as receitas fixas para o mês selecionado",
+      "launchBtn": "Lançar Receitas",
+      "columns": {
+        "description": "Descrição",
+        "defaultAmount": "Valor Padrão",
+        "dueDay": "Dia Recebimento",
+        "account": "Conta",
+        "category": "Categoria",
+        "status": "Status",
+        "generated": "Geradas"
+      }
+    },
+    "fixedTransfers": {
+      "title": "Transferências Fixas",
+      "newBtn": "Nova Transferência Fixa",
+      "editTitle": "Editar Transferência Fixa",
+      "newTitle": "Nova Transferência Fixa",
+      "editDesc": "Atualize as informações da transferência fixa",
+      "newDesc": "Crie um modelo de transferência fixa mensal",
+      "deleteTitle": "Excluir transferência fixa",
+      "deleteDesc": "Tem certeza que deseja excluir esta transferência fixa?",
+      "created": "Transferência fixa criada",
+      "createdDesc": "A transferência fixa foi criada com sucesso.",
+      "updated": "Transferência fixa atualizada",
+      "updatedDesc": "A transferência fixa foi atualizada com sucesso.",
+      "deleted": "Transferência fixa excluída",
+      "deletedDesc": "A transferência fixa foi excluída com sucesso.",
+      "emptyState": "Nenhuma transferência fixa encontrada.",
+      "generateBtn": "Gerar Transferências",
+      "columns": {
+        "description": "Descrição",
+        "value": "Valor",
+        "dueDay": "Dia Execução",
+        "origin": "Origem",
+        "destiny": "Destino",
+        "status": "Status"
+      }
+    },
+    "tags": {
+      "title": "Tags",
+      "newBtn": "Nova Tag",
+      "editTitle": "Editar Tag",
+      "newTitle": "Nova Tag",
+      "editDesc": "Atualize as informações da tag",
+      "newDesc": "Crie uma nova tag para categorizar transações",
+      "deleteTitle": "Excluir tag",
+      "deleteDesc": "Tem certeza que deseja excluir esta tag?",
+      "created": "Tag criada",
+      "createdDesc": "A tag foi criada com sucesso.",
+      "updated": "Tag atualizada",
+      "updatedDesc": "A tag foi atualizada com sucesso.",
+      "deleted": "Tag excluída",
+      "deletedDesc": "A tag foi excluída com sucesso.",
+      "emptyState": "Nenhuma tag criada ainda.",
+      "name": "Nome",
+      "color": "Cor"
     },
     "vaults": {
       "title": "Cofres",
@@ -962,7 +1091,38 @@
       "selectForecastPeriod": "Selecionar período da projeção",
       "selectEvolutionPeriod": "Selecionar período de evolução",
       "selectCard": "Selecionar cartão",
-      "selectBill": "Selecionar fatura"
+      "selectBill": "Selecionar fatura",
+      "anomalies": {
+        "title": "Gastos Anômalos",
+        "subtitle": "Categorias com gastos acima da média histórica",
+        "emptyState": "Nenhuma anomalia detectada.",
+        "currentAmount": "Gasto Atual",
+        "average": "Média",
+        "zScore": "Z-Score"
+      },
+      "lgpdExport": {
+        "title": "Exportar Dados (LGPD)",
+        "description": "Baixe todos os seus dados financeiros em formato JSON.",
+        "btn": "Exportar Meus Dados",
+        "rateLimitMsg": "Exportação limitada a 1 por dia. Tente novamente amanhã.",
+        "success": "Exportação iniciada com sucesso."
+      },
+      "irReport": {
+        "title": "Relatório IR",
+        "description": "Relatório estruturado para declaração de Imposto de Renda.",
+        "year": "Ano",
+        "btn": "Gerar Relatório",
+        "revenues": "Receitas por Categoria",
+        "deductible": "Despesas Dedutíveis",
+        "loans": "Empréstimos"
+      },
+      "reconciliation": {
+        "title": "Reconciliação de Saldo",
+        "systemBalance": "Saldo no Sistema",
+        "statementBalance": "Saldo no Extrato",
+        "difference": "Diferença",
+        "unmatchedEntries": "Entradas Não Conciliadas"
+      }
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",

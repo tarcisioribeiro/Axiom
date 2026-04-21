@@ -5,9 +5,18 @@ import type {
   BalanceForecast,
   CashFlowForecast,
   FinancialAlert,
+  AnomalyAlert,
 } from '@/types';
 
 import { apiClient } from './api-client';
+
+export interface IRReport {
+  year: number;
+  revenues: { category: string; total: number }[];
+  deductible_expenses: { category: string; total: number }[];
+  loans: { description: string; total_paid: number }[];
+  generated_at: string;
+}
 
 interface CreditCardExpensesByCategoryParams {
   card?: number;
@@ -46,6 +55,21 @@ class DashboardService {
 
   async getFinancialAlerts(): Promise<FinancialAlert[]> {
     return apiClient.get<FinancialAlert[]>('/api/v1/dashboard/financial-alerts/');
+  }
+
+  async getAnomalies(): Promise<AnomalyAlert[]> {
+    return apiClient.get<AnomalyAlert[]>('/api/v1/dashboard/anomalies/');
+  }
+
+  async getIRReport(year: number): Promise<IRReport> {
+    return apiClient.get<IRReport>('/api/v1/dashboard/ir-report/', { year } as Record<
+      string,
+      unknown
+    >);
+  }
+
+  async requestLGPDExport(): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>('/api/v1/dashboard/lgpd-export/', null);
   }
 }
 

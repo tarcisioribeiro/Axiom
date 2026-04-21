@@ -9,4 +9,19 @@ urlpatterns = [
         views.LoanRetrieveUpdateDestroyView.as_view(),
         name="loan-detail-view",
     ),
+    path(
+        "loans/<int:pk>/installments/",
+        views.LoanInstallmentListView.as_view(),
+        name="loan-installments",
+    ),
+    path(
+        "loans/<int:pk>/pay/",
+        views.LoanPaymentView.as_view(),
+        name="loan-payment",
+    ),
+    path(
+        "loans/<int:pk>/amortization/",
+        views.LoanAmortizationView.as_view(),
+        name="loan-amortization",
+    ),
 ]

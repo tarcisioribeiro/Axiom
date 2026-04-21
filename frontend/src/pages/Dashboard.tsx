@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   format,
   subMonths,
@@ -32,8 +32,11 @@ import {
   ArrowDownRight,
   PiggyBank,
   FileDown,
+  AlertTriangle,
+  Download,
+  FileText,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -43,6 +46,8 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { StatementExportModal } from '@/components/common/StatementExportModal';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -60,6 +65,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { translate, TRANSLATIONS } from '@/config/constants';
+import { useToast } from '@/hooks/use-toast';
 import { containerVariants, itemVariants } from '@/lib/animations';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
@@ -68,7 +74,7 @@ import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
-import { dashboardService } from '@/services/dashboard-service';
+import { dashboardService, type IRReport } from '@/services/dashboard-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
 
@@ -86,6 +92,10 @@ export default function Dashboard() {
     'daily' | 'weekly' | 'monthly' | 'yearly'
   >('daily');
   const [forecastDays, setForecastDays] = useState<30 | 60 | 90>(30);
+  const [irYear, setIrYear] = useState<number>(new Date().getFullYear() - 1);
+  const [irReport, setIrReport] = useState<IRReport | null>(null);
+  const [showIrReport, setShowIrReport] = useState(false);
+  const { toast } = useToast();
 
   const now = new Date();
 
@@ -187,6 +197,43 @@ export default function Dashboard() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
+  const anomaliesQuery = useQuery({
+    queryKey: ['dashboard', 'anomalies'],
+    queryFn: () => dashboardService.getAnomalies(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const lgpdMutation = useMutation({
+    mutationFn: () => dashboardService.requestLGPDExport(),
+    onSuccess: () => {
+      toast({
+        title: 'Exportação LGPD solicitada',
+        description: 'Você receberá o arquivo em breve.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível solicitar a exportação.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleLoadIRReport = useCallback(async () => {
+    try {
+      const data = await dashboardService.getIRReport(irYear);
+      setIrReport(data);
+      setShowIrReport(true);
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível gerar o relatório IR.',
+        variant: 'destructive',
+      });
+    }
+  }, [irYear, toast]);
+
   // ── Derived data ───────────────────────────────────────────────────────────
   // Arrays are wrapped in useMemo so the `?? []` fallback doesn't create a new
   // reference every render during the loading phase (which would break the
@@ -219,6 +266,11 @@ export default function Dashboard() {
   const financialAlerts = useMemo(
     () => (Array.isArray(financialAlertsQuery.data) ? financialAlertsQuery.data : []),
     [financialAlertsQuery.data]
+  );
+
+  const anomalies = useMemo(
+    () => (Array.isArray(anomaliesQuery.data) ? anomaliesQuery.data : []),
+    [anomaliesQuery.data]
   );
 
   // Overall loading: show full-screen spinner only until the primary stats
@@ -444,10 +496,148 @@ export default function Dashboard() {
           onOpenChange={setStatementModalOpen}
         />
 
+        {/* Ferramentas: LGPD + IR */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => lgpdMutation.mutate()}
+            disabled={lgpdMutation.isPending}
+            className="gap-1"
+          >
+            <Download className="h-4 w-4" />
+            {t('pages.dashboard.lgpdExport.title')}
+          </Button>
+          <div className="flex items-center gap-1">
+            <Select
+              value={String(irYear)}
+              onValueChange={(v) => setIrYear(parseInt(v))}
+            >
+              <SelectTrigger
+                className="h-9 w-28"
+                aria-label={t('pages.dashboard.irReport.year')}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(
+                  (y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  )
+                )}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void handleLoadIRReport()}
+              className="gap-1"
+            >
+              <FileText className="h-4 w-4" />
+              {t('pages.dashboard.irReport.title')}
+            </Button>
+          </div>
+        </div>
+
         {/* Alertas Financeiros */}
         {financialAlerts.length > 0 && (
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <AlertsPanel alerts={financialAlerts} />
+          </motion.div>
+        )}
+
+        {/* Anomalias de Gastos */}
+        {anomalies.length > 0 && (
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                  <CardTitle as="h2">{t('pages.dashboard.anomalies.title')}</CardTitle>
+                </div>
+                <p className="text-sm">{t('pages.dashboard.anomalies.subtitle')}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {anomalies.map((anomaly) => (
+                    <div
+                      key={anomaly.category}
+                      className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/5 p-3"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {translate('expenseCategories', anomaly.category)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {anomaly.message}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">
+                          {formatCurrency(anomaly.current_amount)}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          z={anomaly.z_score.toFixed(1)}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Relatório IR */}
+        {showIrReport && irReport && (
+          <motion.div variants={itemVariants} initial="hidden" animate="visible">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    <CardTitle as="h2">
+                      {t('pages.dashboard.irReport.title')} {irReport.year}
+                    </CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowIrReport(false)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <h3 className="mb-2 font-semibold">
+                      {t('pages.dashboard.irReport.revenues')}
+                    </h3>
+                    {irReport.revenues.map((r) => (
+                      <div key={r.category} className="flex justify-between text-sm">
+                        <span>{translate('expenseCategories', r.category)}</span>
+                        <span>{formatCurrency(r.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <h3 className="mb-2 font-semibold">
+                      {t('pages.dashboard.irReport.deductible')}
+                    </h3>
+                    {irReport.deductible_expenses.map((d) => (
+                      <div key={d.category} className="flex justify-between text-sm">
+                        <span>{translate('expenseCategories', d.category)}</span>
+                        <span>{formatCurrency(d.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 

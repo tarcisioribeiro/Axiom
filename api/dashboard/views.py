@@ -1079,3 +1079,322 @@ class FinancialAlertsView(APIView):
                 }
             )
         return alerts
+
+
+class AnomalyDetectionView(APIView):
+    """Detects spending anomalies using statistical z-score per category."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        from math import sqrt
+
+        user = request.user
+        today = timezone.now().date()
+        current_month = today.month
+        current_year = today.year
+
+        # Current month spending per category
+        current_spending = (
+            Expense.objects.filter(
+                created_by=user,
+                date__month=current_month,
+                date__year=current_year,
+                payed=True,
+                is_deleted=False,
+            )
+            .values("category")
+            .annotate(total=Sum("value"))
+        )
+        current_map = {row["category"]: float(row["total"]) for row in current_spending}
+
+        anomalies = []
+        for category, current_amount in current_map.items():
+            # Collect last 6 months of data (excluding current)
+            history = []
+            for offset in range(1, 7):
+                d = today.replace(day=1)
+                total_months = d.month - offset
+                year = d.year + total_months // 12 if total_months < 0 else d.year
+                month = (
+                    total_months % 12 + 1
+                    if total_months < 0
+                    else total_months % 12 or 12
+                )
+                if total_months <= 0:
+                    year = d.year - 1
+                    month = 12 + total_months
+
+                agg = Expense.objects.filter(
+                    created_by=user,
+                    date__month=month,
+                    date__year=year,
+                    category=category,
+                    payed=True,
+                    is_deleted=False,
+                ).aggregate(total=Sum("value"))
+                if agg["total"]:
+                    history.append(float(agg["total"]))
+
+            if len(history) < 3:
+                continue
+
+            avg = sum(history) / len(history)
+            variance = sum((x - avg) ** 2 for x in history) / len(history)
+            std = sqrt(variance) if variance > 0 else 0
+
+            if std == 0:
+                continue
+
+            z_score = (current_amount - avg) / std
+            if z_score > 1.5:
+                anomalies.append(
+                    {
+                        "category": category,
+                        "current_amount": current_amount,
+                        "average": round(avg, 2),
+                        "std_dev": round(std, 2),
+                        "z_score": round(z_score, 2),
+                        "message": (
+                            f"Gasto em '{category}' está"
+                            f" {round(z_score, 1)}σ acima da média."
+                        ),
+                    }
+                )
+
+        return Response({"anomalies": anomalies})
+
+
+class AccountReconciliationView(APIView):
+    """Compare system balance vs imported bank statement entries."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, account_id):
+        try:
+            account = Account.objects.get(pk=account_id, is_deleted=False)
+        except Account.DoesNotExist:
+            return Response({"detail": "Not found."}, status=404)
+
+        system_balance = float(account.current_balance or 0)
+
+        # Try to use bank_reconciliation entries if available
+        try:
+            from bank_reconciliation.models import BankStatementEntry
+
+            entries = BankStatementEntry.objects.filter(
+                account=account, is_deleted=False
+            )
+            unmatched = entries.filter(matched=False).count()
+            statement_balance = float(
+                entries.aggregate(total=Sum("amount"))["total"] or 0
+            )
+        except Exception:
+            unmatched = 0
+            statement_balance = system_balance
+
+        return Response(
+            {
+                "account_id": account_id,
+                "account_name": account.account_name,
+                "system_balance": system_balance,
+                "statement_balance": statement_balance,
+                "difference": round(system_balance - statement_balance, 2),
+                "unmatched_entries_count": unmatched,
+            }
+        )
+
+
+class LGPDExportView(APIView):
+    """Export all user data as a ZIP file (LGPD compliance)."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        import io
+        import json
+        import zipfile
+        from datetime import datetime
+
+        from django.core.cache import cache
+        from django.http import HttpResponse
+
+        user = request.user
+        rate_key = f"lgpd_export:{user.id}"
+        if cache.get(rate_key):
+            return Response(
+                {"detail": "Exportação limitada a 1 por dia."},
+                status=429,
+            )
+
+        def serialize_qs(qs):
+            result = []
+            for obj in qs.values():
+                row = {}
+                for k, v in obj.items():
+                    if hasattr(v, "isoformat"):
+                        row[k] = v.isoformat()
+                    else:
+                        row[k] = str(v) if v is not None else None
+                result.append(row)
+            return result
+
+        modules = {
+            "expenses": Expense.objects.filter(created_by=user, is_deleted=False),
+            "revenues": Revenue.objects.filter(created_by=user, is_deleted=False),
+            "loans": Loan.objects.filter(created_by=user, is_deleted=False),
+            "payables": Payable.objects.filter(created_by=user, is_deleted=False),
+            "accounts": Account.objects.filter(created_by=user, is_deleted=False),
+        }
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            for name, qs in modules.items():
+                data = serialize_qs(qs)
+                zf.writestr(
+                    f"{name}.json", json.dumps(data, ensure_ascii=False, indent=2)
+                )
+
+        buf.seek(0)
+        cache.set(rate_key, True, 60 * 60 * 24)
+
+        filename = f"mindledger_export_{datetime.now().strftime('%Y%m%d')}.zip"
+        response = HttpResponse(buf.read(), content_type="application/zip")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+
+class IRReportView(APIView):
+    """Structured Income Tax report for a given year."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        year = request.query_params.get("year")
+        if not year:
+            from django.utils import timezone
+
+            year = str(timezone.now().year)
+
+        try:
+            year_int = int(year)
+        except ValueError:
+            return Response({"detail": "year must be a valid integer."}, status=400)
+
+        user = request.user
+
+        revenues_by_category = (
+            Revenue.objects.filter(
+                created_by=user,
+                date__year=year_int,
+                received=True,
+                is_deleted=False,
+            )
+            .values("category")
+            .annotate(total=Sum("value"))
+        )
+
+        deductible_categories = ["health", "education", "donation"]
+        deductible = (
+            Expense.objects.filter(
+                created_by=user,
+                date__year=year_int,
+                payed=True,
+                category__in=deductible_categories,
+                is_deleted=False,
+            )
+            .values("category")
+            .annotate(total=Sum("value"))
+        )
+
+        loans = Loan.objects.filter(
+            created_by=user,
+            date__year=year_int,
+            is_deleted=False,
+        ).values("description", "value", "payed_value", "status")
+
+        return Response(
+            {
+                "year": year_int,
+                "revenues": list(revenues_by_category),
+                "deductible_expenses": list(deductible),
+                "loans": list(loans),
+            }
+        )
+
+
+class AlertsStreamView(APIView):
+    """Server-Sent Events stream for financial alerts."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        import json
+        import time
+
+        from django.http import StreamingHttpResponse
+
+        alerts_view = FinancialAlertsView()
+
+        def event_stream():
+            last_data = None
+            for _ in range(20):  # max 20 iterations (~10 min)
+                try:
+                    response = alerts_view.get(request)
+                    data = json.dumps(response.data)
+                    if data != last_data:
+                        last_data = data
+                        yield f"data: {data}\n\n"
+                    else:
+                        yield ": ping\n\n"
+                except Exception:
+                    yield ": error\n\n"
+                time.sleep(30)
+
+        response = StreamingHttpResponse(
+            event_stream(),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
+
+
+class AuditLogView(APIView):
+    """Return audit log entries for a specific object."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        from django.contrib.contenttypes.models import ContentType
+
+        from app.audit import ChangeLog
+
+        object_type = request.query_params.get("object_type")
+        object_id = request.query_params.get("object_id")
+
+        qs = ChangeLog.objects.filter(user=request.user)
+
+        if object_type:
+            ct = ContentType.objects.filter(model=object_type.lower()).first()
+            if ct:
+                qs = qs.filter(content_type=ct)
+
+        if object_id:
+            qs = qs.filter(object_id=object_id)
+
+        qs = qs.select_related("user", "content_type")[:100]
+
+        data = [
+            {
+                "id": entry.id,
+                "action": entry.action,
+                "object_type": entry.content_type.model if entry.content_type else None,
+                "object_id": entry.object_id,
+                "changes": entry.changes,
+                "timestamp": entry.timestamp.isoformat(),
+                "ip_address": entry.ip_address,
+            }
+            for entry in qs
+        ]
+        return Response({"results": data, "count": len(data)})
