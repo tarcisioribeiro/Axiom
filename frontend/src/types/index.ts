@@ -86,6 +86,9 @@ export interface Expense {
   related_payable?: number | null;
   payable_description?: string;
   auto_categorized: boolean;
+  currency_code?: string;
+  tags?: Tag[];
+  tag_ids?: number[];
   created_at: string;
   updated_at: string;
 }
@@ -135,6 +138,9 @@ export interface Revenue {
   is_transfer_generated?: boolean;
   related_loan?: number | null;
   loan_description?: string;
+  currency_code?: string;
+  tags?: Tag[];
+  tag_ids?: number[];
 }
 
 export interface RevenueFormData {
@@ -451,10 +457,20 @@ export interface Transfer {
   horary: string;
   category: string;
   transfered: boolean;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  currency_code: string;
   origin_account: number;
   origin_account_name?: string;
   destiny_account: number;
   destiny_account_name?: string;
+  transaction_id?: string | null;
+  fee?: string;
+  exchange_rate?: string | null;
+  processed_at?: string | null;
+  confirmation_code?: string | null;
+  notes?: string;
+  receipt?: string | null;
+  member?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -466,8 +482,13 @@ export interface TransferFormData {
   horary: string;
   category: string;
   transfered: boolean;
+  status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  currency_code?: string;
   origin_account: number;
   destiny_account: number;
+  fee?: number;
+  notes?: string;
+  member?: number | null;
 }
 
 // Loan Types
@@ -543,6 +564,7 @@ export interface Payable {
   status: 'active' | 'paid' | 'overdue' | 'cancelled';
   status_display?: string;
   remaining_value?: string;
+  installments?: number;
   created_at: string;
   updated_at: string;
 }
@@ -2218,6 +2240,8 @@ export interface Budget {
   year: number;
   member: number | null;
   member_name?: string | null;
+  rollover_enabled: boolean;
+  rollover_amount: string;
   created_at: string;
   updated_at: string;
 }
@@ -2228,6 +2252,8 @@ export interface BudgetFormData {
   month: number;
   year: number;
   member?: number | null;
+  rollover_enabled?: boolean;
+  rollover_amount?: number;
 }
 
 export interface BudgetStatus {
@@ -2311,4 +2337,192 @@ export interface BankStatementImport {
   error_message?: string | null;
   entries?: BankStatementEntry[];
   created_at: string;
+}
+
+// Tag Types
+export interface Tag {
+  id: number;
+  uuid: string;
+  name: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TagFormData {
+  name: string;
+  color: string;
+}
+
+// ExpenseSplit Types
+export interface ExpenseSplit {
+  id: number;
+  uuid: string;
+  expense: number;
+  member?: number | null;
+  member_name?: string;
+  description: string;
+  percentage?: string | null;
+  value: string;
+  payed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExpenseSplitFormData {
+  description: string;
+  value: number;
+  member?: number | null;
+  payed?: boolean;
+}
+
+// LoanInstallment Types
+export interface LoanInstallment {
+  id: number;
+  uuid: string;
+  loan: number;
+  installment_number: number;
+  value: string;
+  due_date: string;
+  payed: boolean;
+  payment_expense?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// PayableInstallment Types
+export interface PayableInstallment {
+  id: number;
+  uuid: string;
+  payable: number;
+  installment_number: number;
+  value: string;
+  due_date: string;
+  payed: boolean;
+  payment_expense?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// FixedRevenue Types
+export interface FixedRevenue {
+  id: number;
+  uuid: string;
+  description: string;
+  default_value: string;
+  category: string;
+  account: number;
+  account_name?: string;
+  due_day: number;
+  is_active: boolean;
+  allow_value_edit: boolean;
+  member?: number | null;
+  member_name?: string;
+  last_generated_month?: string | null;
+  notes?: string;
+  total_generated?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FixedRevenueFormData {
+  description: string;
+  default_value: number;
+  category: string;
+  account: number;
+  due_day: number;
+  is_active?: boolean;
+  allow_value_edit?: boolean;
+  member?: number | null;
+  notes?: string;
+}
+
+export interface FixedRevenueValue {
+  fixed_revenue_id: number;
+  value: number;
+}
+
+export interface BulkGenerateRevenuesRequest {
+  month: string;
+  revenue_values: FixedRevenueValue[];
+}
+
+export interface BulkGenerateRevenuesResponse {
+  success: boolean;
+  created_count: number;
+  month: string;
+  revenues: Revenue[];
+}
+
+// FixedTransfer Types
+export interface FixedTransfer {
+  id: number;
+  uuid: string;
+  description: string;
+  value: string;
+  category: string;
+  origin_account: number;
+  origin_account_name?: string;
+  destiny_account: number;
+  destiny_account_name?: string;
+  due_day: number;
+  is_active: boolean;
+  fee: string;
+  last_generated_month?: string | null;
+  notes?: string;
+  total_generated?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FixedTransferFormData {
+  description: string;
+  value: number;
+  category: string;
+  origin_account: number;
+  destiny_account: number;
+  due_day: number;
+  is_active?: boolean;
+  fee?: number;
+  notes?: string;
+}
+
+// Anomaly Detection
+export interface AnomalyAlert {
+  category: string;
+  current_amount: number;
+  average: number;
+  std_dev: number;
+  z_score: number;
+  message: string;
+}
+
+// Amortization
+export interface AmortizationEntry {
+  installment: number;
+  due_date: string;
+  payment: string;
+  principal: string;
+  interest: string;
+  balance: string;
+}
+
+export interface AmortizationSchedule {
+  method: 'price' | 'sac';
+  schedule: AmortizationEntry[];
+}
+
+// One-click payment
+export interface LoanPaymentRequest {
+  value: number;
+  account: number;
+  date: string;
+  notes?: string;
+}
+
+export interface PayablePaymentRequest {
+  value: number;
+  account: number;
+  date: string;
+  notes?: string;
 }

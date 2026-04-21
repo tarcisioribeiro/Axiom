@@ -1,6 +1,36 @@
 from rest_framework import serializers
 
-from expenses.models import CategorizationRule, Expense, FixedExpense
+from expenses.models import CategorizationRule, Expense, ExpenseSplit, FixedExpense, Tag
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["id", "uuid", "name", "color", "created_at", "updated_at"]
+        read_only_fields = ["id", "uuid", "created_at", "updated_at"]
+
+
+class ExpenseSplitSerializer(serializers.ModelSerializer):
+    member_name = serializers.CharField(
+        source="member.name", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = ExpenseSplit
+        fields = [
+            "id",
+            "uuid",
+            "expense",
+            "member",
+            "member_name",
+            "description",
+            "percentage",
+            "value",
+            "payed",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "uuid", "percentage", "created_at", "updated_at"]
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
@@ -13,6 +43,14 @@ class ExpenseSerializer(serializers.ModelSerializer):
     )
     payable_description = serializers.CharField(
         source="related_payable.description", read_only=True, allow_null=True
+    )
+    tags = TagSerializer(many=True, read_only=True)
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        source="tags",
     )
 
     class Meta:
@@ -44,6 +82,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "related_payable",
             "payable_description",
             "auto_categorized",
+            "currency_code",
+            "tags",
+            "tag_ids",
             "created_at",
             "updated_at",
         ]

@@ -105,3 +105,6 @@ BILL_STATUS_CHOICES = (
     ("paid", "Paga"),
     ("overdue", "Em atraso"),
 )
+
+# Import ChangeLog so Django's migration framework detects it under the 'app' label
+from app.audit import ChangeLog  # noqa: E402, F401

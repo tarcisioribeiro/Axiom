@@ -1,4 +1,14 @@
-import { Plus, Trash2, Pencil, Download, HandCoins } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Pencil,
+  Download,
+  HandCoins,
+  CreditCard,
+  List,
+  TableProperties,
+} from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -17,11 +27,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { translate } from '@/config/constants';
 import { useLoansPage } from '@/hooks/use-loans-page';
+import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { loanInstallmentsService } from '@/services/loan-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
+import type { AmortizationSchedule, LoanInstallment, Loan } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
 
 const STATUS_VARIANTS: Record<
   string,
@@ -36,6 +59,7 @@ const STATUS_VARIANTS: Record<
 export default function Loans() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const { toast } = useToast();
   const {
     accounts,
     members,
@@ -52,6 +76,88 @@ export default function Loans() {
     handleDelete,
     handleSubmit,
   } = useLoansPage();
+
+  const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
+  const [paymentForm, setPaymentForm] = useState({
+    value: '',
+    account: '',
+    date: '',
+    notes: '',
+  });
+  const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
+
+  const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
+  const [installments, setInstallments] = useState<LoanInstallment[]>([]);
+  const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  const [amortizationLoan, setAmortizationLoan] = useState<Loan | null>(null);
+  const [amortization, setAmortization] = useState<AmortizationSchedule | null>(null);
+  const [amortizationMethod, setAmortizationMethod] = useState<'price' | 'sac'>(
+    'price'
+  );
+  const [isLoadingAmortization, setIsLoadingAmortization] = useState(false);
+
+  const handleOpenInstallments = async (loan: Loan) => {
+    setInstallmentsLoan(loan);
+    setIsLoadingInstallments(true);
+    try {
+      const data = await loanInstallmentsService.getByLoan(loan.id);
+      setInstallments(data);
+    } catch {
+      setInstallments([]);
+    } finally {
+      setIsLoadingInstallments(false);
+    }
+  };
+
+  const handleOpenAmortization = async (
+    loan: Loan,
+    method: 'price' | 'sac' = 'price'
+  ) => {
+    setAmortizationLoan(loan);
+    setAmortizationMethod(method);
+    setIsLoadingAmortization(true);
+    try {
+      const data = await loanInstallmentsService.getAmortization(loan.id, method);
+      setAmortization(data);
+    } catch {
+      setAmortization(null);
+    } finally {
+      setIsLoadingAmortization(false);
+    }
+  };
+
+  const handlePaymentSubmit = async () => {
+    if (!paymentLoan) return;
+    if (!paymentForm.value || !paymentForm.account || !paymentForm.date) {
+      toast({
+        title: t('pages.loans.payment.title'),
+        description: 'Preencha todos os campos obrigatórios.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setIsPaymentSubmitting(true);
+    try {
+      await loanInstallmentsService.pay(paymentLoan.id, {
+        value: parseFloat(paymentForm.value),
+        account: parseInt(paymentForm.account),
+        date: paymentForm.date,
+        notes: paymentForm.notes,
+      });
+      toast({ title: t('pages.loans.payment.success') });
+      setPaymentLoan(null);
+      setPaymentForm({ value: '', account: '', date: '', notes: '' });
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPaymentSubmitting(false);
+    }
+  };
 
   if (isLoading) return <LoadingState />;
 
@@ -143,7 +249,47 @@ export default function Loans() {
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-1 border-t pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-1 border-t pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPaymentForm({
+                      value: '',
+                      account: '',
+                      date: new Date().toISOString().split('T')[0],
+                      notes: '',
+                    });
+                    setPaymentLoan(loan);
+                  }}
+                  title={t('pages.loans.payment.title')}
+                  className="gap-1 text-xs"
+                >
+                  <CreditCard className="h-3 w-3" />
+                  Pagar
+                </Button>
+                {loan.installments > 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void handleOpenInstallments(loan)}
+                    title={t('pages.loans.installments.title')}
+                    className="gap-1 text-xs"
+                  >
+                    <List className="h-3 w-3" />
+                    Parcelas
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleOpenAmortization(loan)}
+                  title={t('pages.loans.amortization.title')}
+                  className="gap-1 text-xs"
+                >
+                  <TableProperties className="h-3 w-3" />
+                  Amortização
+                </Button>
                 <ReceiptButton
                   source={{ type: 'loan', data: loan }}
                   memberName={getMemberDisplayName(loan.benefited_name, user)}
@@ -181,6 +327,7 @@ export default function Loans() {
         </div>
       )}
 
+      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
@@ -199,6 +346,247 @@ export default function Loans() {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog
+        open={!!paymentLoan}
+        onOpenChange={(open) => {
+          if (!open) setPaymentLoan(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('pages.loans.payment.title')}</DialogTitle>
+            <DialogDescription>
+              {paymentLoan?.description} — Saldo:{' '}
+              {paymentLoan
+                ? formatCurrency(
+                    parseFloat(paymentLoan.value) - parseFloat(paymentLoan.payed_value)
+                  )
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Label>{t('pages.loans.payment.value')} *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={paymentForm.value}
+                onChange={(e) =>
+                  setPaymentForm((f) => ({ ...f, value: e.target.value }))
+                }
+                placeholder="0,00"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('pages.loans.payment.account')} *</Label>
+              <Select
+                value={paymentForm.account}
+                onValueChange={(v) => setPaymentForm((f) => ({ ...f, account: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={String(acc.id)}>
+                      {acc.account_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>{t('pages.loans.payment.date')} *</Label>
+              <Input
+                type="date"
+                value={paymentForm.date}
+                onChange={(e) =>
+                  setPaymentForm((f) => ({ ...f, date: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>{t('pages.loans.payment.notes')}</Label>
+              <Input
+                value={paymentForm.notes}
+                onChange={(e) =>
+                  setPaymentForm((f) => ({ ...f, notes: e.target.value }))
+                }
+                placeholder="Observações..."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setPaymentLoan(null)}>
+                {t('common.actions.cancel')}
+              </Button>
+              <Button
+                onClick={() => void handlePaymentSubmit()}
+                disabled={isPaymentSubmitting}
+              >
+                {isPaymentSubmitting
+                  ? t('common.messages.saving')
+                  : t('pages.loans.payment.submit')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Installments Dialog */}
+      <Dialog
+        open={!!installmentsLoan}
+        onOpenChange={(open) => {
+          if (!open) setInstallmentsLoan(null);
+        }}
+      >
+        <DialogContent className="custom-scrollbar max-h-[80vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.loans.installments.title')}</DialogTitle>
+            <DialogDescription>{installmentsLoan?.description}</DialogDescription>
+          </DialogHeader>
+          {isLoadingInstallments ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Carregando...
+            </div>
+          ) : installments.length === 0 ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              {t('pages.loans.installments.emptyState')}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4">
+                      {t('pages.loans.installments.number')}
+                    </th>
+                    <th className="pb-2 pr-4">
+                      {t('pages.loans.installments.dueDate')}
+                    </th>
+                    <th className="pb-2 pr-4 text-right">
+                      {t('pages.loans.installments.value')}
+                    </th>
+                    <th className="pb-2">{t('pages.loans.installments.status')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {installments.map((inst) => (
+                    <tr key={inst.id} className="border-b">
+                      <td className="py-2 pr-4">{inst.installment_number}</td>
+                      <td className="py-2 pr-4">
+                        {formatDate(inst.due_date, 'dd/MM/yyyy')}
+                      </td>
+                      <td className="py-2 pr-4 text-right">
+                        {formatCurrency(inst.value)}
+                      </td>
+                      <td className="py-2">
+                        <Badge variant={inst.payed ? 'secondary' : 'outline'}>
+                          {inst.payed
+                            ? t('pages.loans.installments.paid')
+                            : t('pages.loans.installments.pending')}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Amortization Dialog */}
+      <Dialog
+        open={!!amortizationLoan}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAmortizationLoan(null);
+            setAmortization(null);
+          }
+        }}
+      >
+        <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.loans.amortization.title')}</DialogTitle>
+            <DialogDescription>{amortizationLoan?.description}</DialogDescription>
+          </DialogHeader>
+          <div className="mb-4 flex items-center gap-3">
+            <Label>{t('pages.loans.amortization.method')}:</Label>
+            <div className="flex gap-2">
+              {(['price', 'sac'] as const).map((m) => (
+                <Button
+                  key={m}
+                  size="sm"
+                  variant={amortizationMethod === m ? 'default' : 'outline'}
+                  onClick={() =>
+                    amortizationLoan && void handleOpenAmortization(amortizationLoan, m)
+                  }
+                >
+                  {t(`pages.loans.amortization.${m}`)}
+                </Button>
+              ))}
+            </div>
+          </div>
+          {isLoadingAmortization ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Calculando...
+            </div>
+          ) : !amortization ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Sem dados de amortização.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-3">#</th>
+                    <th className="pb-2 pr-3">
+                      {t('pages.loans.amortization.dueDate')}
+                    </th>
+                    <th className="pb-2 pr-3 text-right">
+                      {t('pages.loans.amortization.payment')}
+                    </th>
+                    <th className="pb-2 pr-3 text-right">
+                      {t('pages.loans.amortization.principal')}
+                    </th>
+                    <th className="pb-2 pr-3 text-right">
+                      {t('pages.loans.amortization.interest')}
+                    </th>
+                    <th className="pb-2 text-right">
+                      {t('pages.loans.amortization.balance')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {amortization.schedule.map((entry) => (
+                    <tr key={entry.installment} className="border-b">
+                      <td className="py-1 pr-3">{entry.installment}</td>
+                      <td className="py-1 pr-3">
+                        {formatDate(entry.due_date, 'dd/MM/yyyy')}
+                      </td>
+                      <td className="py-1 pr-3 text-right">
+                        {formatCurrency(entry.payment)}
+                      </td>
+                      <td className="py-1 pr-3 text-right">
+                        {formatCurrency(entry.principal)}
+                      </td>
+                      <td className="py-1 pr-3 text-right">
+                        {formatCurrency(entry.interest)}
+                      </td>
+                      <td className="py-1 text-right">
+                        {formatCurrency(entry.balance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </PageContainer>

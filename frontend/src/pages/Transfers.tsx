@@ -167,6 +167,33 @@ export default function Transfers() {
       ),
     },
     {
+      key: 'status',
+      label: 'Status',
+      render: (transfer) => {
+        const statusVariants: Record<
+          string,
+          'default' | 'secondary' | 'destructive' | 'outline'
+        > = {
+          pending: 'outline',
+          processing: 'default',
+          completed: 'secondary',
+          failed: 'destructive',
+          cancelled: 'outline',
+        };
+        const statusLabels: Record<string, string> = {
+          pending: 'Pendente',
+          processing: 'Processando',
+          completed: 'Concluída',
+          failed: 'Falhou',
+          cancelled: 'Cancelada',
+        };
+        const s = transfer.status ?? (transfer.transfered ? 'completed' : 'pending');
+        return (
+          <Badge variant={statusVariants[s] ?? 'outline'}>{statusLabels[s] ?? s}</Badge>
+        );
+      },
+    },
+    {
       key: 'date',
       label: t('pages.transfers.columns.date'),
       render: (transfer) => (
