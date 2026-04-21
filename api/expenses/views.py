@@ -19,7 +19,9 @@ from expenses.models import (
     EXPENSES_CATEGORIES,
     CategorizationRule,
     Expense,
+    ExpenseSplit,
     FixedExpense,
+    Tag,
 )
 from expenses.serializers import (
     BulkGenerateRequestSerializer,
@@ -27,8 +29,10 @@ from expenses.serializers import (
     BulkMarkPaidSerializer,
     CategorizationRuleSerializer,
     ExpenseSerializer,
+    ExpenseSplitSerializer,
     FixedExpenseCreateUpdateSerializer,
     FixedExpenseSerializer,
+    TagSerializer,
 )
 from expenses.services import bulk_generate_fixed_expenses, get_fixed_expenses_stats
 
@@ -272,42 +276,63 @@ class ApplyCategorizationRulesView(APIView):
     POST /api/v1/categorization-rules/apply/
 
     Despesas elegíveis: auto_categorized=True ou category='others'.
-    Retorna o número de despesas atualizadas e o total processado.
+    Usa bulk_update para evitar N+1 queries e fuzzy matching para maior cobertura.
+    Retorna o número de despesas atualizadas, o total processado e score por match.
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = CategorizationRule.objects.none()
 
     def post(self, request):
+        from rapidfuzz import fuzz as _fuzz
+
+        THRESHOLD = 80
+
         rules = list(
             CategorizationRule.objects.filter(
                 owner=request.user, is_active=True
-            ).order_by("created_at")
+            ).order_by("priority", "created_at")
         )
 
         if not rules:
             return Response({"updated": 0, "total_processed": 0})
 
-        expenses = Expense.objects.filter(
-            created_by=request.user,
-        ).filter(Q(auto_categorized=True) | Q(category="others"))
+        expenses = list(
+            Expense.objects.filter(
+                created_by=request.user,
+            ).filter(Q(auto_categorized=True) | Q(category="others"))
+        )
 
-        total_processed = expenses.count()
-        updated = 0
+        total_processed = len(expenses)
+        to_update = []
+        match_details = []
 
         for expense in expenses:
             if not expense.merchant:
                 continue
             merchant_lower = expense.merchant.lower()
             for rule in rules:
-                if rule.merchant_contains.lower() in merchant_lower:
+                rule_lower = rule.merchant_contains.lower()
+                score = _fuzz.partial_ratio(rule_lower, merchant_lower)
+                if rule_lower in merchant_lower or score >= THRESHOLD:
                     expense.category = rule.category
                     expense.auto_categorized = True
-                    expense.save(update_fields=["category", "auto_categorized"])
-                    updated += 1
+                    to_update.append(expense)
+                    match_details.append(
+                        {"expense_id": expense.id, "rule_id": rule.id, "score": score}
+                    )
                     break
 
-        return Response({"updated": updated, "total_processed": total_processed})
+        if to_update:
+            Expense.objects.bulk_update(to_update, ["category", "auto_categorized"])
+
+        return Response(
+            {
+                "updated": len(to_update),
+                "total_processed": total_processed,
+                "matches": match_details,
+            }
+        )
 
 
 # Build a lookup dict for category display names
@@ -457,3 +482,78 @@ class ExportExpensesView(APIView):
                 ]
 
         return build_csv_response(rows=_csv_rows(), headers=headers, filename=filename)
+
+
+class TagListCreateView(BaseListCreateView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+    def get_queryset(self):
+        return Tag.objects.filter(owner=self.request.user).order_by("name")
+
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=self.request.user,
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+
+class TagDetailView(BaseRetrieveUpdateDestroyView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+    def get_queryset(self):
+        return Tag.objects.filter(owner=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+class ExpenseSplitListCreateView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = ExpenseSplit.objects.none()
+
+    def get(self, request, pk):
+        expense = Expense.objects.filter(
+            pk=pk, created_by=request.user, is_deleted=False
+        ).first()
+        if not expense:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        splits = ExpenseSplit.objects.filter(expense=expense).select_related("member")
+        serializer = ExpenseSplitSerializer(splits, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, pk):
+        expense = Expense.objects.filter(
+            pk=pk, created_by=request.user, is_deleted=False
+        ).first()
+        if not expense:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        from decimal import Decimal
+
+        data = request.data.copy()
+        data["expense"] = expense.id
+        serializer = ExpenseSplitSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        # Validate total splits don't exceed expense value
+        existing_total = sum(
+            s.value for s in ExpenseSplit.objects.filter(expense=expense)
+        )
+        new_value = Decimal(str(serializer.validated_data["value"]))
+        if existing_total + new_value > expense.value:
+            return Response(
+                {"detail": "Total dos splits excede o valor da despesa."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        split = serializer.save(
+            expense=expense,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        return Response(
+            ExpenseSplitSerializer(split).data, status=status.HTTP_201_CREATED
+        )

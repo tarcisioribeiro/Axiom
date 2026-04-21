@@ -92,6 +92,7 @@ vi.mock('@/services/dashboard-service', () => ({
       daily_breakdown: [],
     }),
     getFinancialAlerts: vi.fn().mockResolvedValue([]),
+    getAnomalies: vi.fn().mockResolvedValue([]),
   },
 }));
 
