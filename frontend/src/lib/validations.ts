@@ -904,3 +904,22 @@ export const readingGoalSchema = z.object({
 });
 
 export type ReadingGoalFormData = z.infer<typeof readingGoalSchema>;
+
+// ============================================================================
+// MARK AS READ SCHEMA
+// ============================================================================
+
+export const markAsReadSchema = z
+  .object({
+    start_date: z.string().min(1, requiredError('Data de início')),
+    end_date: z.string().min(1, requiredError('Data de fim')),
+  })
+  .refine(
+    (data) => !data.start_date || !data.end_date || data.end_date >= data.start_date,
+    {
+      message: 'Data de fim deve ser igual ou posterior à data de início',
+      path: ['end_date'],
+    }
+  );
+
+export type MarkAsReadFormData = z.infer<typeof markAsReadSchema>;
