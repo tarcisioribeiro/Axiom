@@ -10,6 +10,7 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     BookHighlightExportView,
     BookHighlightListCreateView,
     BookListCreateView,
+    BookMarkAsReadView,
     BookReadingQueueView,
     BookReorderView,
     LibraryDashboardStatsView,
@@ -50,6 +51,11 @@ urlpatterns = [
         "books/<int:pk>/file/stream/",
         BookFileStreamView.as_view(),
         name="book-file-stream",
+    ),
+    path(
+        "books/<int:pk>/mark-as-read/",
+        BookMarkAsReadView.as_view(),
+        name="book-mark-as-read",
     ),
     # Reading Queue
     path("reading-queue/", BookReadingQueueView.as_view(), name="reading-queue"),

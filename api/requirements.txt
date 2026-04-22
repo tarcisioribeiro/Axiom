@@ -9,7 +9,7 @@ djangorestframework_simplejwt==5.5.1
 pillow==12.2.0
 psycopg2-binary==2.9.10
 PyJWT==2.12.0
-python-dotenv==1.1.1
+python-dotenv==1.2.2
 sqlparse==0.5.4
 
 # Performance and filtering

@@ -282,7 +282,13 @@ class Book(BaseModel):
         verbose_name = "Livro"
         verbose_name_plural = "Livros"
         ordering = ["-created_at"]
-        unique_together = [["title", "owner"]]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["title", "owner"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_book_title_owner_active",
+            )
+        ]
 
     def __str__(self):
         return self.title
