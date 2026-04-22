@@ -205,7 +205,10 @@ export default function Books() {
   const handleSubmit = async (
     data: BookFormData,
     coverFile?: File | null,
-    bookFile?: File | null
+    bookFile?: File | null,
+    alreadyRead?: boolean,
+    startDate?: string,
+    endDate?: string
   ) => {
     try {
       setIsSubmitting(true);
@@ -228,6 +231,13 @@ export default function Books() {
       }
       if (bookFile && data.media_type === 'Dig') {
         await booksService.uploadBookFile(saved.id, bookFile);
+      }
+      if (alreadyRead && startDate && endDate) {
+        const result = await booksService.markAsRead(saved.id, startDate, endDate);
+        toast({
+          title: 'Leitura registrada',
+          description: `${result.sessions_created} sessões de leitura geradas automaticamente.`,
+        });
       }
       setIsFormOpen(false);
       void loadData();

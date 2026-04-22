@@ -7,9 +7,10 @@ Tests for personal_planning improvements:
 - Corrected signal behavior
 """
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -43,18 +44,18 @@ class GoalDeadlineTest(BasePlanningImprovementsTestCase):
             title="Deadline Goal",
             goal_type="total_days",
             target_value=30,
-            start_date=date.today(),
+            start_date=now().date(),
             owner=self.member,
         )
 
     def test_goal_can_be_created_with_deadline(self):
-        deadline = date.today() + timedelta(days=30)
+        deadline = now().date() + timedelta(days=30)
         url = "/api/v1/personal-planning/goals/"
         data = {
             "title": "Goal with Deadline",
             "goal_type": "total_days",
             "target_value": 30,
-            "start_date": date.today().isoformat(),
+            "start_date": now().date().isoformat(),
             "deadline": deadline.isoformat(),
             "status": "active",
             "owner": self.member.id,
@@ -63,7 +64,7 @@ class GoalDeadlineTest(BasePlanningImprovementsTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_goal_list_includes_deadline_and_days_until_deadline(self):
-        deadline = date.today() + timedelta(days=10)
+        deadline = now().date() + timedelta(days=10)
         self.goal.deadline = deadline
         self.goal.save()
 
@@ -79,7 +80,7 @@ class GoalDeadlineTest(BasePlanningImprovementsTestCase):
         self.assertIsNone(goal_data["days_until_deadline"])
 
     def test_days_until_deadline_negative_when_overdue(self):
-        self.goal.deadline = date.today() - timedelta(days=5)
+        self.goal.deadline = now().date() - timedelta(days=5)
         self.goal.save()
 
         response = self.client.get("/api/v1/personal-planning/goals/")
@@ -101,7 +102,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             goal_type="avoid_habit",
             related_task=self.task,
             target_value=30,
-            start_date=date.today() - timedelta(days=5),
+            start_date=now().date() - timedelta(days=5),
             owner=self.member,
         )
 
@@ -117,7 +118,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             template=self.task,
             task_name=self.task.name,
             category=self.task.category,
-            scheduled_date=date.today(),
+            scheduled_date=now().date(),
             occurrence_index=0,
             status="completed",
             owner=self.member,
@@ -132,7 +133,7 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             template=self.task,
             task_name=self.task.name,
             category=self.task.category,
-            scheduled_date=date.today(),
+            scheduled_date=now().date(),
             occurrence_index=0,
             status="pending",
             owner=self.member,
@@ -199,7 +200,7 @@ class TaskInstancePrioritySnapshotTest(BasePlanningImprovementsTestCase):
         )
         from personal_planning.services.instance_generator import InstanceGenerator
 
-        instances = InstanceGenerator.generate_for_date(self.member, date.today())
+        instances = InstanceGenerator.generate_for_date(self.member, now().date())
         task_instances = [i for i in instances if i.template_id == task.id]
         self.assertTrue(len(task_instances) > 0)
         self.assertEqual(task_instances[0].priority, "high")
@@ -256,7 +257,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             goal_type="total_days",
             related_task=self.task,
             target_value=10,
-            start_date=date.today(),
+            start_date=now().date(),
             owner=self.member,
         )
         response = self.client.post(
@@ -270,7 +271,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             goal_type="avoid_habit",
             related_task=self.task,
             target_value=10,
-            start_date=date.today(),
+            start_date=now().date(),
             owner=self.member,
         )
         response = self.client.post(
@@ -283,7 +284,7 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             title="Custom Goal",
             goal_type="custom",
             target_value=10,
-            start_date=date.today(),
+            start_date=now().date(),
             owner=self.member,
         )
         response = self.client.post(

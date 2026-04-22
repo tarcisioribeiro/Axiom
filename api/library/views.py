@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Avg, Count, F, Max, Q, Sum
+from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Q, Sum
 from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import status
@@ -37,6 +37,7 @@ from library.serializers import (
     BookSerializer,
     LiteraryTypeGoalCreateUpdateSerializer,
     LiteraryTypeGoalSerializer,
+    MarkAsReadSerializer,
     PublisherCreateUpdateSerializer,
     PublisherSerializer,
     ReadingCreateUpdateSerializer,
@@ -46,6 +47,15 @@ from library.serializers import (
     SummaryCreateUpdateSerializer,
     SummarySerializer,
 )
+
+READING_SPEED_FALLBACK = {
+    "book": 2.0,
+    "collection": 2.0,
+    "magazine": 1.0,
+    "article": 3.0,
+    "essay": 4.0,
+}
+DEFAULT_READING_SPEED = 2.0
 
 
 def log_activity(request, action, model_name, object_id, description):
@@ -473,6 +483,117 @@ class BookFileStreamView(APIView):
         response = FileResponse(file_obj, content_type=content_type)
         response["Content-Disposition"] = f'inline; filename="{filename}"'
         return response
+
+
+# ============================================================================
+# BOOK MARK AS READ VIEW
+# ============================================================================
+
+
+class BookMarkAsReadView(APIView):
+    """Marca um livro como lido e gera sessões de leitura por dia."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
+
+    def _get_book(self, request, pk):
+        try:
+            return Book.objects.get(
+                pk=pk,
+                owner__user=request.user,
+                deleted_at__isnull=True,
+            )
+        except Book.DoesNotExist:
+            return None
+
+    def post(self, request, pk):
+        book = self._get_book(request, pk)
+        if not book:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if book.readings.filter(deleted_at__isnull=True).exists():
+            return Response(
+                {"detail": "Este livro já possui sessões de leitura registradas."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MarkAsReadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        start_date = serializer.validated_data["start_date"]
+        end_date = serializer.validated_data["end_date"]
+        days = (end_date - start_date).days + 1
+
+        avg_min_per_page = self._get_avg_minutes_per_page(
+            book.literarytype, request.user
+        )
+
+        pages_base = book.pages // days
+        remainder = book.pages % days
+
+        with transaction.atomic():
+            readings = []
+            for i in range(days):
+                day = start_date + timedelta(days=i)
+                is_last = i == days - 1
+                pages = pages_base + (remainder if is_last else 0)
+                if pages == 0:
+                    continue
+                reading_time = max(1, round(pages * avg_min_per_page))
+                readings.append(
+                    Reading(
+                        book=book,
+                        reading_date=day,
+                        pages_read=pages,
+                        reading_time=reading_time,
+                        owner=request.user.member,
+                        created_by=request.user,
+                        updated_by=request.user,
+                    )
+                )
+            Reading.objects.bulk_create(readings)
+            book.read_status = "read"
+            book.updated_by = request.user
+            book.save(update_fields=["read_status", "updated_at", "updated_by"])
+
+        cache.delete(f"library_dashboard_stats_{request.user.id}")
+
+        log_activity(
+            request,
+            "update",
+            "Book",
+            book.id,
+            f"Marcou '{book.title}' como lido com {len(readings)} sessões geradas.",
+        )
+
+        return Response(
+            {"sessions_created": len(readings)},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def _get_avg_minutes_per_page(self, literarytype, user):
+        readings_qs = Reading.objects.filter(
+            deleted_at__isnull=True,
+            pages_read__gt=0,
+            reading_time__gt=0,
+            book__literarytype=literarytype,
+            owner=user.member,
+        ).annotate(
+            min_per_page=ExpressionWrapper(
+                F("reading_time") * 1.0 / F("pages_read"),
+                output_field=FloatField(),
+            )
+        )
+
+        count = readings_qs.count()
+        if count == 0:
+            return READING_SPEED_FALLBACK.get(literarytype, DEFAULT_READING_SPEED)
+
+        total = sum(r.min_per_page for r in readings_qs)
+        return total / count
 
 
 # ============================================================================

@@ -356,6 +356,19 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             data["rating"] = None
         return super().to_internal_value(data)
 
+    def validate(self, data):
+        title = data.get("title", getattr(self.instance, "title", None))
+        owner = data.get("owner", getattr(self.instance, "owner", None))
+        if title and owner:
+            qs = Book.objects.filter(title=title, owner=owner, deleted_at__isnull=True)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {"title": "Você já possui um livro com este título."}
+                )
+        return data
+
 
 # ============================================================================
 # SUMMARY SERIALIZERS
@@ -690,3 +703,24 @@ class BookHighlightCreateUpdateSerializer(serializers.ModelSerializer):
             "summary",
             "owner",
         ]
+
+
+# ============================================================================
+# MARK AS READ SERIALIZER
+# ============================================================================
+
+
+class MarkAsReadSerializer(serializers.Serializer):
+    start_date = serializers.DateField(required=True)
+    end_date = serializers.DateField(required=True)
+
+    def validate(self, data):
+        if data["end_date"] < data["start_date"]:
+            raise serializers.ValidationError(
+                {
+                    "end_date": (
+                        "A data de fim deve ser igual ou posterior à data de início."
+                    )
+                }
+            )
+        return data
