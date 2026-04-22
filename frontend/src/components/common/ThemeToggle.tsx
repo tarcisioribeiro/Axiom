@@ -42,6 +42,7 @@ const DARK_VARIANTS: DarkVariantOption[] = [
   { id: 'gruvbox-dark', label: 'Gruvbox Dark', primary: '#FE8019', bg: '#282828' },
   { id: 'cyberpunk', label: 'Cyberpunk', primary: '#FF00FF', bg: '#0D0D1A' },
   { id: 'flat-remix', label: 'Flat Remix', primary: '#5294E2', bg: '#383C4A' },
+  { id: 'everforest', label: 'Everforest', primary: '#7FBBB3', bg: '#2D353B' },
 ];
 
 const LIGHT_VARIANTS: LightVariantOption[] = [

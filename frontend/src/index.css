@@ -594,6 +594,80 @@
     --shadow-opacity-strong: 0.55;
   }
 
+  /* ── Everforest (Dark Variant) ── */
+  .dark[data-dark-theme='everforest'] {
+    color-scheme: dark;
+
+    --background: 205 14% 20%;
+    --foreground: 41 32% 75%;
+
+    --card: 205 12% 23%;
+    --card-foreground: 41 32% 75%;
+
+    --popover: 205 12% 23%;
+    --popover-foreground: 41 32% 75%;
+
+    /* Primary — Teal (#7FBBB3) */
+    --primary: 172 31% 62%;
+    --primary-foreground: 205 14% 20%;
+
+    /* Secondary — Selection (#3D4841) */
+    --secondary: 142 8% 26%;
+    --secondary-foreground: 41 32% 75%;
+
+    --muted: 205 12% 22%;
+    --muted-foreground: 111 5% 49%;
+
+    /* Accent — Pink (#D699B6) */
+    --accent: 331 43% 72%;
+    --accent-foreground: 205 14% 20%;
+
+    /* Destructive — Red (#E67E80) */
+    --destructive: 359 68% 70%;
+    --destructive-foreground: 205 14% 20%;
+
+    /* Success — Green (#A7C080) */
+    --success: 83 34% 63%;
+    --success-foreground: 205 14% 20%;
+
+    /* Warning — Yellow (#DBBC7F) */
+    --warning: 40 56% 68%;
+    --warning-foreground: 205 14% 20%;
+
+    /* Info — Aqua (#83C092) */
+    --info: 135 33% 63%;
+    --info-foreground: 205 14% 20%;
+
+    --border: 205 10% 32%;
+    --input: 205 10% 32%;
+    --ring: 172 31% 62%;
+
+    --category-finance: 83 34% 63%;
+    --category-health: 135 33% 63%;
+    --category-studies: 172 31% 62%;
+    --category-spiritual: 331 43% 72%;
+    --category-exercise: 19 70% 68%;
+    --category-nutrition: 40 56% 68%;
+    --category-work: 111 5% 49%;
+    --category-leisure: 359 68% 70%;
+
+    --on-primary: 205 14% 20%;
+    --on-secondary: 41 32% 75%;
+    --on-accent: 205 14% 20%;
+    --on-success: 205 14% 20%;
+    --on-warning: 205 14% 20%;
+    --on-destructive: 205 14% 20%;
+    --on-info: 205 14% 20%;
+
+    --border-subtle: 205 14% 17%;
+    --star: 40 56% 60%;
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
+    --shadow-opacity-soft: 0.35;
+    --shadow-opacity-medium: 0.45;
+    --shadow-opacity-strong: 0.55;
+  }
+
   /* ── Catppuccin Latte (Light Variant) ── */
   :root[data-light-theme='catppuccin-latte'] {
     color-scheme: light;

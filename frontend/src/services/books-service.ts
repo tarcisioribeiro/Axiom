@@ -47,6 +47,18 @@ class BooksService extends BaseService<Book, BookFormData> {
   async deleteBookFile(id: number): Promise<void> {
     await apiClient.delete(`${API_CONFIG.ENDPOINTS.BOOK_FILE}${id}/file/`);
   }
+
+  async markAsRead(
+    id: number,
+    startDate: string,
+    endDate: string
+  ): Promise<{ sessions_created: number }> {
+    const response = await apiClient.post<{ sessions_created: number }>(
+      `${API_CONFIG.ENDPOINTS.BOOKS}${id}/mark-as-read/`,
+      { start_date: startDate, end_date: endDate }
+    );
+    return response;
+  }
 }
 
 export const booksService = new BooksService();
