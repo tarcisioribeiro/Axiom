@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +32,10 @@ interface BookFormProps {
   onSubmit: (
     data: BookFormData,
     coverFile?: File | null,
-    bookFile?: File | null
+    bookFile?: File | null,
+    alreadyRead?: boolean,
+    startDate?: string,
+    endDate?: string
   ) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -58,6 +62,9 @@ export function BookForm({
       return null;
     }
   });
+  const [alreadyRead, setAlreadyRead] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bookFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,7 +178,9 @@ export function BookForm({
 
   return (
     <form
-      onSubmit={handleSubmit((data) => onSubmit(data, coverFile, bookFile))}
+      onSubmit={handleSubmit((data) =>
+        onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate)
+      )}
       className="space-y-4"
     >
       {/* Cover Image */}
@@ -512,7 +521,54 @@ export function BookForm({
           )}
         </div>
 
-        {watch('read_status') === 'read' && (
+        {!book && (
+          <div className="col-span-2 space-y-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="already-read"
+                checked={alreadyRead}
+                onCheckedChange={(checked) => {
+                  setAlreadyRead(checked === true);
+                  if (!checked) {
+                    setStartDate('');
+                    setEndDate('');
+                  }
+                }}
+              />
+              <Label htmlFor="already-read" className="cursor-pointer font-normal">
+                Já li este livro
+              </Label>
+            </div>
+
+            {alreadyRead && (
+              <div className="grid grid-cols-2 gap-4 rounded-md border p-3">
+                <div>
+                  <Label>Data de início *</Label>
+                  <DatePicker
+                    value={startDate}
+                    onChange={(date) => setStartDate(date ? formatLocalDate(date) : '')}
+                    placeholder="Quando começou a ler"
+                  />
+                </div>
+                <div>
+                  <Label>Data de fim *</Label>
+                  <DatePicker
+                    value={endDate}
+                    onChange={(date) => setEndDate(date ? formatLocalDate(date) : '')}
+                    placeholder="Quando terminou de ler"
+                  />
+                  {endDate && startDate && endDate < startDate && (
+                    <p className="mt-1 text-sm text-destructive">
+                      Data de fim deve ser posterior à data de início
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {(watch('read_status') === 'read' || alreadyRead) && (
           <div>
             <Label htmlFor="rating">Avaliação</Label>
             <StarRating

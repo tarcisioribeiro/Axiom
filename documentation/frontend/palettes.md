@@ -80,6 +80,22 @@
 | Red        | `#FF003C` |
 | Orange     | `#FF6600` |
 
+## Everforest (Dark Theme)
+
+| Role       | Hex       |
+|------------|-----------|
+| Background | `#2D353B` |
+| Foreground | `#D3C6AA` |
+| Selection  | `#3D4841` |
+| Comment    | `#7A8478` |
+| Teal       | `#7FBBB3` |
+| Pink       | `#D699B6` |
+| Green      | `#A7C080` |
+| Yellow     | `#DBBC7F` |
+| Aqua       | `#83C092` |
+| Red        | `#E67E80` |
+| Orange     | `#DBBC7F` |
+
 ## Flat Remix (Dark Theme)
 
 | Role       | Hex       |
