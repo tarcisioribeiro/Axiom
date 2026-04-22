@@ -1,22 +1,23 @@
+import calendar
+import os
 from datetime import date, time, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth.models import Permission, User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from cryptography.fernet import Fernet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 # Models
 from accounts.models import Account
+from credit_cards.models import CreditCard, CreditCardBill
 from expenses.models import Expense, FixedExpense
-
-# from credit_cards.models import CreditCard
 from members.models import Member
 from revenues.models import Revenue
-
-# import json
 
 
 class BaseAPITestCase(APITestCase):
@@ -407,7 +408,13 @@ class CashFlowForecastViewTest(BaseAPITestCase):
 
     URL = "/api/v1/dashboard/cash-flow-forecast/"
 
+    _TEST_FERNET_KEY = Fernet.generate_key().decode()
+
     def setUp(self):
+        self._enc_patcher = patch.dict(
+            os.environ, {"ENCRYPTION_KEY": self._TEST_FERNET_KEY}
+        )
+        self._enc_patcher.start()
         super().setUp()
         # Limpa o cache Redis entre testes para evitar interferencia
         from django.core.cache import cache
@@ -416,6 +423,56 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         # Segunda conta para testes que precisam de contas diferentes
         self.account2 = Account.objects.create(
             account_name="SIC", account_type="CS", is_active=True
+        )
+
+    def tearDown(self):
+        self._enc_patcher.stop()
+        super().tearDown()
+
+    def _make_credit_card(self):
+        from app.encryption import FieldEncryption
+
+        card = CreditCard(
+            name="Cartao Teste",
+            on_card_name="TEST USER",
+            flag="VSA",
+            associated_account=self.account,
+            credit_limit=Decimal("5000.00"),
+            max_limit=Decimal("5000.00"),
+            closing_day=15,
+            due_day=10,
+            validation_date=date(2030, 1, 1),
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        card._security_code = FieldEncryption.encrypt_data("123")
+        card._card_number = FieldEncryption.encrypt_data("4111111111111111")
+        card.save()
+        return card
+
+    def _make_credit_card_bill(
+        self,
+        card,
+        due_date,
+        total_amount,
+        paid_amount=Decimal("0.00"),
+        status_value="open",
+    ):
+        year_str = str(due_date.year)
+        month_str = calendar.month_abbr[due_date.month]
+        return CreditCardBill.objects.create(
+            credit_card=card,
+            year=year_str,
+            month=month_str,
+            invoice_beginning_date=due_date - timedelta(days=30),
+            invoice_ending_date=due_date - timedelta(days=1),
+            due_date=due_date,
+            closed=status_value != "open",
+            total_amount=total_amount,
+            minimum_payment=Decimal("50.00"),
+            paid_amount=paid_amount,
+            status=status_value,
+            created_by=self.user,
         )
 
     def _make_expense(self, delta_days, value, payed=False, **kwargs):
@@ -609,3 +666,121 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         day_5 = breakdown[5]
         # Apenas o lancamento avulso (800), nao deve somar mais 800 do template
         self.assertAlmostEqual(day_5["expenses"], 800.00, places=2)
+
+    def test_unpaid_credit_card_bill_included_in_projection(self):
+        """Fatura de cartao nao paga com vencimento no periodo deve aparecer."""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("2000.00")
+        )
+        card = self._make_credit_card()
+        due_date = date.today() + timedelta(days=5)
+        self._make_credit_card_bill(
+            card, due_date=due_date, total_amount=Decimal("600.00")
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        day_5 = breakdown[5]
+        self.assertAlmostEqual(day_5["expenses"], 600.00, places=2)
+        self.assertAlmostEqual(day_5["balance"], 1400.00, places=2)
+
+    def test_paid_credit_card_bill_excluded_from_projection(self):
+        """Fatura com status 'paid' nao deve entrar na projecao"""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("2000.00")
+        )
+        card = self._make_credit_card()
+        due_date = date.today() + timedelta(days=5)
+        self._make_credit_card_bill(
+            card,
+            due_date=due_date,
+            total_amount=Decimal("600.00"),
+            paid_amount=Decimal("600.00"),
+            status_value="paid",
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[5]["expenses"], 0.00, places=2)
+        self.assertAlmostEqual(breakdown[5]["balance"], 2000.00, places=2)
+
+    def test_partially_paid_credit_card_bill_shows_remaining(self):
+        """Fatura parcialmente paga deve incluir apenas o saldo devedor"""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("2000.00")
+        )
+        card = self._make_credit_card()
+        due_date = date.today() + timedelta(days=5)
+        self._make_credit_card_bill(
+            card,
+            due_date=due_date,
+            total_amount=Decimal("600.00"),
+            paid_amount=Decimal("200.00"),
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[5]["expenses"], 400.00, places=2)
+        self.assertAlmostEqual(breakdown[5]["balance"], 1600.00, places=2)
+
+    def test_credit_card_bill_without_due_date_excluded(self):
+        """Fatura sem data de vencimento nao deve entrar na projecao"""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("2000.00")
+        )
+        card = self._make_credit_card()
+        CreditCardBill.objects.create(
+            credit_card=card,
+            year="2026",
+            month="Apr",
+            invoice_beginning_date=date.today() - timedelta(days=30),
+            invoice_ending_date=date.today() - timedelta(days=1),
+            due_date=None,
+            closed=False,
+            total_amount=Decimal("500.00"),
+            minimum_payment=Decimal("50.00"),
+            paid_amount=Decimal("0.00"),
+            status="open",
+            created_by=self.user,
+        )
+
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        total_expenses = response.data["total_expenses"]  # type: ignore
+        self.assertAlmostEqual(total_expenses, 0.00, places=2)
+
+    def test_credit_card_bill_outside_window_excluded(self):
+        """Fatura com vencimento fora da janela de projecao nao deve aparecer"""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("2000.00")
+        )
+        card = self._make_credit_card()
+        due_date = date.today() + timedelta(days=45)
+        self._make_credit_card_bill(
+            card, due_date=due_date, total_amount=Decimal("600.00")
+        )
+
+        response = self.client.get(self.URL, {"days": 30})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        total_expenses = response.data["total_expenses"]  # type: ignore
+        self.assertAlmostEqual(total_expenses, 0.00, places=2)
+
+    def test_multiple_credit_card_bills_same_due_date_summed(self):
+        """Varias faturas com o mesmo vencimento devem ser somadas"""
+        Account.objects.filter(pk=self.account.pk).update(
+            current_balance=Decimal("3000.00")
+        )
+        card = self._make_credit_card()
+        due_date = date.today() + timedelta(days=7)
+        self._make_credit_card_bill(
+            card, due_date=due_date, total_amount=Decimal("400.00")
+        )
+        card2 = self._make_credit_card()
+        self._make_credit_card_bill(
+            card2, due_date=due_date, total_amount=Decimal("300.00")
+        )
+
+        response = self.client.get(self.URL)
+        breakdown = response.data["daily_breakdown"]  # type: ignore
+        self.assertAlmostEqual(breakdown[7]["expenses"], 700.00, places=2)
+        self.assertAlmostEqual(breakdown[7]["balance"], 2300.00, places=2)
