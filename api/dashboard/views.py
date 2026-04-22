@@ -648,6 +648,9 @@ class CashFlowForecastView(APIView):
         # Despesas fixas ainda nao geradas como lancamentos avulsos
         self._add_ungenerated_fixed_expenses(today, end_date, expenses_by_date)
 
+        # Faturas de cartão de crédito não pagas com vencimento no periodo
+        self._add_credit_card_bills(today, end_date, expenses_by_date)
+
         # Construir serie diaria (dia 0 = hoje com saldo atual)
         running_balance = current_balance
         daily_breakdown = [
@@ -764,6 +767,28 @@ class CashFlowForecastView(APIView):
                 if today <= due_date <= end_date:
                     prev = expenses_by_date.get(due_date, Decimal("0.00"))
                     expenses_by_date[due_date] = prev + fe.default_value
+
+    def _add_credit_card_bills(
+        self, today: date, end_date: date, expenses_by_date: dict
+    ) -> None:
+        """
+        Adiciona o saldo devedor das faturas de cartao de credito nao pagas
+        ao dicionario de despesas, agrupado pela data de vencimento.
+        """
+        bills = CreditCardBill.objects.filter(
+            credit_card__created_by=self._user,
+            due_date__isnull=False,
+            due_date__gte=today,
+            due_date__lte=end_date,
+        ).exclude(status="paid")
+
+        for bill in bills:
+            remaining = (bill.total_amount or Decimal("0.00")) - (
+                bill.paid_amount or Decimal("0.00")
+            )
+            if remaining > Decimal("0.00"):
+                prev = expenses_by_date.get(bill.due_date, Decimal("0.00"))
+                expenses_by_date[bill.due_date] = prev + remaining
 
 
 class FinancialAlertsView(APIView):
