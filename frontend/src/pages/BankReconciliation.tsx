@@ -1,5 +1,6 @@
 import { ArrowLeftRight, FileUp, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -33,21 +35,17 @@ import type { Account, BankStatementImport } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }) {
+  const { t } = useTranslation();
   const variants: Record<string, string> = {
     completed: 'bg-success/10 text-success border-success/30',
     processing: 'bg-warning/10 text-warning border-warning/30',
     failed: 'bg-destructive/10 text-destructive border-destructive/30',
   };
-  const labels: Record<string, string> = {
-    completed: 'Concluído',
-    processing: 'Processando',
-    failed: 'Falhou',
-  };
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
     >
-      {labels[status] ?? status}
+      {t(`pages.bankReconciliation.statuses.${status}`, { defaultValue: status })}
     </span>
   );
 }
@@ -63,6 +61,7 @@ function UploadDialog({
   accounts: Account[];
   onSuccess: (imp: BankStatementImport) => void;
 }) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [accountId, setAccountId] = useState('');
@@ -78,13 +77,19 @@ function UploadDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file || !accountId) {
-      toast({ title: 'Preencha todos os campos.', variant: 'destructive' });
+      toast({
+        title: t('pages.bankReconciliation.upload.fillRequired'),
+        variant: 'destructive',
+      });
       return;
     }
 
     const format = detectFormat(file.name);
     if (!format) {
-      toast({ title: 'Formato inválido. Use OFX ou CSV.', variant: 'destructive' });
+      toast({
+        title: t('pages.bankReconciliation.upload.invalidFormat'),
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -105,7 +110,7 @@ function UploadDialog({
         onSuccess(imported);
       }
 
-      toast({ title: 'Extrato importado com sucesso!' });
+      toast({ title: t('pages.bankReconciliation.upload.success') });
       onClose();
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
@@ -118,11 +123,16 @@ function UploadDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Importar Extrato Bancário</DialogTitle>
+          <DialogTitle>{t('pages.bankReconciliation.upload.title')}</DialogTitle>
+          <DialogDescription>
+            {t('pages.bankReconciliation.upload.desc')}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="upload-file">Arquivo (.ofx ou .csv)</Label>
+            <Label htmlFor="upload-file">
+              {t('pages.bankReconciliation.upload.fileLabel')}
+            </Label>
             <input
               id="upload-file"
               type="file"
@@ -132,18 +142,23 @@ function UploadDialog({
             />
             {file && (
               <p className="text-xs text-muted-foreground">
-                {file.name} — formato detectado:{' '}
+                {file.name} — {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
                 <strong>
-                  {detectFormat(file.name).toUpperCase() || 'desconhecido'}
+                  {detectFormat(file.name).toUpperCase() ||
+                    t('pages.bankReconciliation.upload.unknownFormat')}
                 </strong>
               </p>
             )}
           </div>
           <div className="space-y-sm">
-            <Label htmlFor="upload-account">Conta</Label>
+            <Label htmlFor="upload-account">
+              {t('pages.bankReconciliation.upload.accountLabel')}
+            </Label>
             <Select value={accountId} onValueChange={setAccountId}>
               <SelectTrigger id="upload-account">
-                <SelectValue placeholder="Selecione a conta" />
+                <SelectValue
+                  placeholder={t('pages.bankReconciliation.upload.accountPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((acc) => (
@@ -162,10 +177,12 @@ function UploadDialog({
               onClick={onClose}
               disabled={loading}
             >
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Importando...' : 'Importar'}
+              {loading
+                ? t('pages.bankReconciliation.upload.importing')
+                : t('pages.bankReconciliation.upload.importBtn')}
             </Button>
           </DialogFooter>
         </form>
@@ -175,6 +192,7 @@ function UploadDialog({
 }
 
 export default function BankReconciliation() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -213,53 +231,53 @@ export default function BankReconciliation() {
   const columns: Column<BankStatementImport>[] = [
     {
       key: 'original_filename',
-      label: 'Arquivo',
+      label: t('pages.bankReconciliation.columns.file'),
       render: (imp) => <span className="font-medium">{imp.original_filename}</span>,
     },
     {
       key: 'file_format',
-      label: 'Formato',
+      label: t('pages.bankReconciliation.columns.format'),
       render: (imp) => <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>,
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('pages.bankReconciliation.columns.status'),
       render: (imp) => <ImportStatusBadge status={imp.status} />,
     },
     {
       key: 'total_entries',
-      label: 'Entradas',
+      label: t('pages.bankReconciliation.columns.entries'),
       render: (imp) => imp.total_entries,
     },
     {
       key: 'matched_count',
-      label: 'Conciliados',
+      label: t('pages.bankReconciliation.columns.matched'),
       render: (imp) => (
         <span className="font-medium text-success">{imp.matched_count}</span>
       ),
     },
     {
       key: 'unmatched_count',
-      label: 'Divergências',
+      label: t('pages.bankReconciliation.columns.divergences'),
       render: (imp) => (
         <span className="font-medium text-destructive">{imp.unmatched_count}</span>
       ),
     },
     {
       key: 'created_at',
-      label: 'Importado em',
+      label: t('pages.bankReconciliation.columns.importedAt'),
       render: (imp) => formatDate(imp.created_at),
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('pages.bankReconciliation.columns.actions'),
       render: (imp) => (
         <Button
           variant="outline"
           size="sm"
           onClick={() => navigate(`/bank-reconciliation/${imp.id}`)}
         >
-          Ver
+          {t('pages.bankReconciliation.viewBtn')}
         </Button>
       ),
     },
@@ -270,10 +288,10 @@ export default function BankReconciliation() {
   return (
     <PageContainer>
       <PageHeader
-        title="Conciliação Bancária"
+        title={t('pages.bankReconciliation.title')}
         icon={<ArrowLeftRight />}
         action={{
-          label: 'Importar Extrato',
+          label: t('pages.bankReconciliation.importBtn'),
           icon: <FileUp className="h-4 w-4" />,
           onClick: () => setUploadOpen(true),
         }}
@@ -281,12 +299,12 @@ export default function BankReconciliation() {
 
       <div className="mb-lg mt-lg grid grid-cols-1 gap-md sm:grid-cols-2">
         <StatCard
-          title="Total de Importações"
+          title={t('pages.bankReconciliation.totalImports')}
           value={imports.length}
           icon={<ArrowLeftRight className="h-4 w-4 text-muted-foreground" />}
         />
         <StatCard
-          title="Última Importação"
+          title={t('pages.bankReconciliation.lastImport')}
           value={lastImportDate}
           icon={<RefreshCw className="h-4 w-4 text-muted-foreground" />}
         />
@@ -294,11 +312,11 @@ export default function BankReconciliation() {
 
       {imports.length === 0 ? (
         <EmptyState
-          title="Nenhum extrato importado"
-          message="Clique em 'Importar Extrato' para começar."
+          title={t('pages.bankReconciliation.emptyTitle')}
+          message={t('pages.bankReconciliation.emptyMessage')}
           icon={<ArrowLeftRight className="h-8 w-8" />}
           action={{
-            label: 'Importar Extrato',
+            label: t('pages.bankReconciliation.importBtn'),
             onClick: () => setUploadOpen(true),
           }}
         />
@@ -309,8 +327,8 @@ export default function BankReconciliation() {
           keyExtractor={(imp) => imp.id}
           emptyState={{
             icon: <ArrowLeftRight className="h-12 w-12" />,
-            title: 'Nenhum extrato importado',
-            message: 'Clique em Importar Extrato para começar.',
+            title: t('pages.bankReconciliation.emptyTitle'),
+            message: t('pages.bankReconciliation.emptyMessage'),
           }}
         />
       )}

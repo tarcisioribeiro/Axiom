@@ -30,6 +30,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -282,7 +283,9 @@ export default function Vaults() {
       });
       toast({
         title: t('pages.vaults.depositSuccess'),
-        description: `${t('pages.vaults.depositSuccess')}: ${formatCurrency(amount)}`,
+        description: t('pages.vaults.depositSuccessDesc', {
+          amount: formatCurrency(amount),
+        }),
       });
       setIsDepositDialogOpen(false);
       setOperationAmount('');
@@ -319,7 +322,9 @@ export default function Vaults() {
       });
       toast({
         title: t('pages.vaults.withdrawSuccess'),
-        description: `${t('pages.vaults.withdrawSuccess')}: ${formatCurrency(amount)}`,
+        description: t('pages.vaults.withdrawSuccessDesc', {
+          amount: formatCurrency(amount),
+        }),
       });
       setIsWithdrawDialogOpen(false);
       setOperationAmount('');
@@ -342,7 +347,9 @@ export default function Vaults() {
       if (response.yield_applied > 0) {
         toast({
           title: t('pages.vaults.yieldApplied'),
-          description: `${t('pages.vaults.yieldApplied')}: ${formatCurrency(response.yield_applied)}`,
+          description: t('pages.vaults.yieldAppliedDesc', {
+            amount: formatCurrency(response.yield_applied),
+          }),
         });
       } else {
         toast({
@@ -642,7 +649,7 @@ export default function Vaults() {
       setSimResults(data.scenarios);
     } catch (err) {
       toast({
-        title: 'Erro na simulação',
+        title: t('pages.vaultSimulator.simulationError'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -954,15 +961,16 @@ export default function Vaults() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="is_active"
                 checked={formData.is_active}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_active: e.target.checked })
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, is_active: checked === true })
                 }
               />
-              <Label htmlFor="is_active">{t('pages.vaults.activeVault')}</Label>
+              <Label htmlFor="is_active" className="cursor-pointer">
+                {t('pages.vaults.activeVault')}
+              </Label>
             </div>
           </div>
           <DialogFooter>
@@ -1496,18 +1504,17 @@ export default function Vaults() {
                     />
                   </div>
                   <div className="col-span-2 flex items-center gap-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="contrib_active"
                       checked={contributionFormData.is_active}
-                      onChange={(e) =>
+                      onCheckedChange={(checked) =>
                         setContributionFormData({
                           ...contributionFormData,
-                          is_active: e.target.checked,
+                          is_active: checked === true,
                         })
                       }
                     />
-                    <Label htmlFor="contrib_active">
+                    <Label htmlFor="contrib_active" className="cursor-pointer">
                       {t('pages.vaults.recurringContributions.fields.isActive')}
                     </Label>
                   </div>
@@ -1644,9 +1651,7 @@ export default function Vaults() {
               <TrendingUp className="h-5 w-5" />
               {t('pages.vaultSimulator.title')} — {simulatorVault?.description}
             </DialogTitle>
-            <DialogDescription>
-              Simule o crescimento deste cofre com diferentes parâmetros.
-            </DialogDescription>
+            <DialogDescription>{t('pages.vaults.simulatorDesc')}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -1750,7 +1755,9 @@ export default function Vaults() {
               {simChartData.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">
-                    Saldo final após {simResults[0].months} meses
+                    {t('pages.vaults.simulatorFinalBalance', {
+                      months: simResults[0].months,
+                    })}
                   </p>
                   <div className="flex h-16 items-end gap-0.5">
                     {simChartData
