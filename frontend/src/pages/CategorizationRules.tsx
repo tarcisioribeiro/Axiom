@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Plus, Tag, Trash2, Wand2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -13,6 +14,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -45,6 +48,7 @@ function RuleForm({
   onCancel: () => void;
   isLoading?: boolean;
 }) {
+  const { t } = useTranslation();
   const [merchantContains, setMerchantContains] = useState(
     rule?.merchant_contains ?? ''
   );
@@ -66,25 +70,30 @@ function RuleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-md">
       <div className="space-y-sm">
-        <Label htmlFor="merchant_contains">Estabelecimento contém</Label>
+        <Label htmlFor="merchant_contains">
+          {t('pages.categorizationRules.form.merchantContains')} *
+        </Label>
         <Input
           id="merchant_contains"
-          placeholder="Ex: McDonald, Uber, Netflix"
+          placeholder={t('pages.categorizationRules.form.merchantContainsPlaceholder')}
           value={merchantContains}
           onChange={(e) => setMerchantContains(e.target.value)}
           required
         />
         <p className="text-xs text-muted-foreground">
-          Texto buscado no campo "Estabelecimento" da despesa (sem distinção de
-          maiúsculas).
+          {t('pages.categorizationRules.form.merchantContainsHint')}
         </p>
       </div>
 
       <div className="space-y-sm">
-        <Label htmlFor="category">Categoria</Label>
+        <Label htmlFor="category">
+          {t('pages.categorizationRules.form.category')} *
+        </Label>
         <Select value={category} onValueChange={setCategory} required>
           <SelectTrigger id="category">
-            <SelectValue placeholder="Selecione uma categoria" />
+            <SelectValue
+              placeholder={t('pages.categorizationRules.form.categoryPlaceholder')}
+            />
           </SelectTrigger>
           <SelectContent>
             {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
@@ -97,16 +106,17 @@ function RuleForm({
       </div>
 
       <div className="space-y-sm">
-        <Label htmlFor="priority">Prioridade</Label>
+        <Label htmlFor="priority">{t('pages.categorizationRules.form.priority')}</Label>
         <Input
           id="priority"
           type="number"
           min={1}
+          step={1}
           value={priority}
           onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
         />
         <p className="text-xs text-muted-foreground">
-          Menor valor = maior prioridade. Regras com valor menor são avaliadas primeiro.
+          {t('pages.categorizationRules.form.priorityHint')}
         </p>
       </div>
 
@@ -117,26 +127,31 @@ function RuleForm({
           onCheckedChange={(checked) => setIsActive(checked === true)}
         />
         <Label htmlFor="is_active" className="cursor-pointer">
-          Regra ativa
+          {t('pages.categorizationRules.form.isActive')}
         </Label>
       </div>
 
-      <div className="flex justify-end gap-sm pt-sm">
+      <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading || !merchantContains.trim() || !category}
         >
-          {isLoading ? 'Salvando...' : rule ? 'Salvar Alterações' : 'Criar Regra'}
+          {isLoading
+            ? t('common.actions.saving')
+            : rule
+              ? t('common.actions.save')
+              : t('pages.categorizationRules.newBtn')}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
 
 export default function CategorizationRules() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
@@ -157,12 +172,15 @@ export default function CategorizationRules() {
       categorizationRulesService.create(data),
     onSuccess: () => {
       void invalidate();
-      toast({ title: 'Regra de categorização criada com sucesso' });
+      toast({
+        title: t('pages.categorizationRules.created'),
+        description: t('pages.categorizationRules.createdDesc'),
+      });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.categorizationRules.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -174,12 +192,15 @@ export default function CategorizationRules() {
       categorizationRulesService.update(id, data),
     onSuccess: () => {
       void invalidate();
-      toast({ title: 'Regra de categorização atualizada com sucesso' });
+      toast({
+        title: t('pages.categorizationRules.updated'),
+        description: t('pages.categorizationRules.updatedDesc'),
+      });
       setIsDialogOpen(false);
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.categorizationRules.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -190,11 +211,14 @@ export default function CategorizationRules() {
     mutationFn: (id: number) => categorizationRulesService.delete(id),
     onSuccess: () => {
       void invalidate();
-      toast({ title: 'Regra de categorização excluída' });
+      toast({
+        title: t('pages.categorizationRules.deleted'),
+        description: t('pages.categorizationRules.deletedDesc'),
+      });
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Erro ao excluir',
+        title: t('pages.categorizationRules.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -205,13 +229,15 @@ export default function CategorizationRules() {
     mutationFn: () => categorizationRulesService.applyRules(),
     onSuccess: (result) => {
       toast({
-        title: 'Regras aplicadas',
-        description: `${result.updated} despesa(s) categorizada(s) automaticamente.`,
+        title: t('pages.categorizationRules.applied'),
+        description: t('pages.categorizationRules.appliedDesc', {
+          count: result.updated,
+        }),
       });
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Erro ao aplicar regras',
+        title: t('pages.categorizationRules.applyError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -230,10 +256,10 @@ export default function CategorizationRules() {
 
   async function handleDelete(id: number) {
     const confirmed = await showConfirm({
-      title: 'Excluir regra',
-      description: 'Tem certeza que deseja excluir esta regra de categorização?',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.categorizationRules.deleteTitle'),
+      description: t('pages.categorizationRules.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (confirmed) deleteMutation.mutate(id);
@@ -252,14 +278,14 @@ export default function CategorizationRules() {
   const columns: Column<CategorizationRule>[] = [
     {
       key: 'merchant_contains',
-      label: 'Estabelecimento contém',
+      label: t('pages.categorizationRules.columns.merchantContains'),
       render: (rule) => (
         <span className="font-mono text-sm">{rule.merchant_contains}</span>
       ),
     },
     {
       key: 'category',
-      label: 'Categoria',
+      label: t('pages.categorizationRules.columns.category'),
       render: (rule) => (
         <Badge variant="secondary">
           {translate('expenseCategories', rule.category)}
@@ -268,23 +294,27 @@ export default function CategorizationRules() {
     },
     {
       key: 'is_active',
-      label: 'Status',
+      label: t('pages.categorizationRules.columns.status'),
       render: (rule) =>
         rule.is_active ? (
-          <Badge variant="success">Ativa</Badge>
+          <Badge variant="success">
+            {t('pages.categorizationRules.form.statusActive')}
+          </Badge>
         ) : (
-          <Badge variant="outline">Inativa</Badge>
+          <Badge variant="outline">
+            {t('pages.categorizationRules.form.statusInactive')}
+          </Badge>
         ),
     },
     {
       key: 'priority',
-      label: 'Prioridade',
+      label: t('pages.categorizationRules.columns.priority'),
       sortable: true,
       render: (rule) => <span className="text-sm tabular-nums">{rule.priority}</span>,
     },
     {
       key: 'created_at',
-      label: 'Criada em',
+      label: t('pages.categorizationRules.columns.createdAt'),
       render: (rule) => (
         <span className="text-sm text-muted-foreground">
           {formatDateTime(rule.created_at)}
@@ -297,26 +327,28 @@ export default function CategorizationRules() {
 
   return (
     <PageContainer>
-      <PageHeader title="Regras de Categorização" icon={<Tag />}>
+      <PageHeader title={t('pages.categorizationRules.title')} icon={<Tag />}>
         <Button
           variant="outline"
           onClick={() => applyMutation.mutate()}
           disabled={applyMutation.isPending || rules.length === 0}
         >
           <Wand2 className="mr-2 h-4 w-4" />
-          {applyMutation.isPending ? 'Aplicando...' : 'Aplicar Regras'}
+          {applyMutation.isPending
+            ? t('pages.categorizationRules.applying')
+            : t('pages.categorizationRules.applyBtn')}
         </Button>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Nova Regra
+          {t('pages.categorizationRules.newBtn')}
         </Button>
       </PageHeader>
 
       {rules.length === 0 ? (
         <EmptyState
           icon={<Tag className="h-12 w-12" />}
-          title="Nenhuma regra cadastrada"
-          message="Crie regras para categorizar automaticamente suas despesas com base no estabelecimento."
+          title={t('pages.categorizationRules.emptyTitle')}
+          message={t('pages.categorizationRules.emptyMessage')}
         />
       ) : (
         <DataTable
@@ -329,19 +361,21 @@ export default function CategorizationRules() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleEdit(rule)}
-                title="Editar"
+                title={t('common.actions.edit')}
+                aria-label={t('common.actions.edit')}
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => void handleDelete(rule.id)}
-                title="Excluir"
+                title={t('common.actions.delete')}
+                aria-label={t('common.actions.delete')}
                 className="text-destructive hover:text-destructive"
                 disabled={deleteMutation.isPending}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           )}
@@ -352,8 +386,15 @@ export default function CategorizationRules() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {selectedItem ? 'Editar Regra' : 'Nova Regra de Categorização'}
+              {selectedItem
+                ? t('pages.categorizationRules.editTitle')
+                : t('pages.categorizationRules.newTitle')}
             </DialogTitle>
+            <DialogDescription>
+              {selectedItem
+                ? t('pages.categorizationRules.editDesc')
+                : t('pages.categorizationRules.newDesc')}
+            </DialogDescription>
           </DialogHeader>
           <RuleForm
             rule={selectedItem}
