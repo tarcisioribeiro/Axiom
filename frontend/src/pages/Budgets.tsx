@@ -34,6 +34,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -331,9 +332,15 @@ export default function Budgets() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="6">6 meses</SelectItem>
-                  <SelectItem value="12">12 meses</SelectItem>
-                  <SelectItem value="24">24 meses</SelectItem>
+                  <SelectItem value="6">
+                    {t('pages.budgets.trend.monthsOption', { count: 6 })}
+                  </SelectItem>
+                  <SelectItem value="12">
+                    {t('pages.budgets.trend.monthsOption', { count: 12 })}
+                  </SelectItem>
+                  <SelectItem value="24">
+                    {t('pages.budgets.trend.monthsOption', { count: 24 })}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -362,7 +369,7 @@ export default function Budgets() {
                 }
               >
                 <SelectTrigger id="category">
-                  <SelectValue placeholder="Selecione a categoria" />
+                  <SelectValue placeholder={t('common.fields.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent>
                   {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
@@ -481,7 +488,7 @@ export default function Budgets() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -496,7 +503,7 @@ export default function Budgets() {
                     ? t('common.actions.save')
                     : t('common.actions.create')}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -520,6 +527,7 @@ const MONTH_SHORT = [
 ];
 
 function BudgetTrendChart({ category, months }: { category: string; months: number }) {
+  const { t } = useTranslation();
   const colors = useSemanticColors();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ['budgets', 'history', category, months],
@@ -531,7 +539,7 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        Carregando...
+        {t('common.actions.loading')}
       </div>
     );
   }
@@ -549,10 +557,13 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
   if (!hasAnyData) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        Nenhum dado encontrado para esta categoria no período selecionado.
+        {t('pages.budgets.trend.noData')}
       </div>
     );
   }
+
+  const labelActualSpent = t('pages.budgets.trend.actualSpent');
+  const labelLimit = t('pages.budgets.trend.limit');
 
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -566,11 +577,13 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
         <Tooltip
           formatter={(value: number, name: string) => [
             formatCurrencyBR(value),
-            name === 'actual_spent' ? 'Gasto real' : 'Limite',
+            name === 'actual_spent' ? labelActualSpent : labelLimit,
           ]}
         />
         <Legend
-          formatter={(value) => (value === 'actual_spent' ? 'Gasto real' : 'Limite')}
+          formatter={(value) =>
+            value === 'actual_spent' ? labelActualSpent : labelLimit
+          }
         />
         <Bar dataKey="actual_spent" fill={colors.info} radius={[3, 3, 0, 0]} />
         <Line
@@ -610,7 +623,7 @@ function BudgetCard({
             {monthLabel}/{budget.year}
           </p>
         </div>
-        <Badge variant="outline">Orçamento</Badge>
+        <Badge variant="outline">{t('pages.budgets.badgeLabel')}</Badge>
       </div>
 
       <div className="space-y-1 text-sm">

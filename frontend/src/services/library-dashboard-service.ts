@@ -74,6 +74,13 @@ export interface LibraryDashboardStats {
     remaining_pages: number;
     estimated_days_to_finish: number | null;
   } | null;
+  current_reading_books: Array<{
+    title: string;
+    total_pages: number;
+    pages_read: number;
+    remaining_pages: number;
+    estimated_days_to_finish: number | null;
+  }>;
   monthly_comparison: {
     current_month: {
       year: number;
@@ -118,6 +125,12 @@ export interface LibraryDashboardStats {
     literarytype: string;
     literary_type_display: string;
     count: number;
+  }>;
+  reading_by_time_of_day: Array<{
+    time_of_day: string;
+    time_of_day_display: string;
+    session_count: number;
+    total_pages: number;
   }>;
 }
 

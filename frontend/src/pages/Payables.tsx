@@ -15,6 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -107,7 +108,7 @@ export default function Payables() {
     if (!paymentForm.value || !paymentForm.account || !paymentForm.date) {
       toast({
         title: t('pages.payables.payment.title'),
-        description: 'Preencha todos os campos obrigatórios.',
+        description: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -120,7 +121,10 @@ export default function Payables() {
         date: paymentForm.date,
         notes: paymentForm.notes,
       });
-      toast({ title: t('pages.payables.payment.success') });
+      toast({
+        title: t('pages.payables.payment.success'),
+        description: t('pages.payables.payment.successDesc'),
+      });
       setPaymentPayable(null);
       setPaymentForm({ value: '', account: '', date: '', notes: '' });
     } catch (error: unknown) {
@@ -187,17 +191,17 @@ export default function Payables() {
 
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Valor Total:</span>
+                  <span>{t('pages.payables.totalValue')}</span>
                   <span className="font-medium">{formatCurrency(payable.value)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Valor Pago:</span>
+                  <span>{t('pages.payables.paidValue')}</span>
                   <span className="font-medium">
                     {formatCurrency(payable.paid_value)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Saldo Restante:</span>
+                  <span>{t('pages.payables.remainingBalance')}</span>
                   <span className="font-medium text-destructive">
                     {formatCurrency(
                       parseFloat(payable.value) - parseFloat(payable.paid_value)
@@ -205,14 +209,14 @@ export default function Payables() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Data de Registro:</span>
+                  <span>{t('pages.payables.registrationDate')}</span>
                   <span className="font-medium">
                     {formatDate(payable.date, 'dd/MM/yyyy')}
                   </span>
                 </div>
                 {payable.due_date && (
                   <div className="flex justify-between">
-                    <span>Vencimento:</span>
+                    <span>{t('pages.loans.dueDate')}</span>
                     <span className="font-medium">
                       {formatDate(payable.due_date, 'dd/MM/yyyy')}
                     </span>
@@ -220,7 +224,7 @@ export default function Payables() {
                 )}
                 {payable.member_name && (
                   <div className="flex justify-between">
-                    <span>Responsável:</span>
+                    <span>{t('pages.payables.responsible')}</span>
                     <span className="font-medium">{payable.member_name}</span>
                   </div>
                 )}
@@ -243,7 +247,7 @@ export default function Payables() {
                   className="gap-1 text-xs"
                 >
                   <CreditCard className="h-3 w-3" />
-                  Pagar
+                  {t('pages.payables.payBtn')}
                 </Button>
                 {(payable.installments ?? 0) > 0 && (
                   <Button
@@ -254,7 +258,7 @@ export default function Payables() {
                     className="gap-1 text-xs"
                   >
                     <List className="h-3 w-3" />
-                    Parcelas
+                    {t('pages.payables.installmentsBtn')}
                   </Button>
                 )}
                 <ReceiptButton
@@ -322,7 +326,7 @@ export default function Payables() {
           <DialogHeader>
             <DialogTitle>{t('pages.payables.payment.title')}</DialogTitle>
             <DialogDescription>
-              {paymentPayable?.description} — Saldo:{' '}
+              {paymentPayable?.description} — {t('pages.payables.remainingBalance')}{' '}
               {paymentPayable
                 ? formatCurrency(
                     parseFloat(paymentPayable.value) -
@@ -351,7 +355,7 @@ export default function Payables() {
                 onValueChange={(v) => setPaymentForm((f) => ({ ...f, account: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a conta" />
+                  <SelectValue placeholder={t('common.fields.selectAccount')} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((acc) => (
@@ -379,10 +383,10 @@ export default function Payables() {
                 onChange={(e) =>
                   setPaymentForm((f) => ({ ...f, notes: e.target.value }))
                 }
-                placeholder="Observações..."
+                placeholder={t('common.fields.notes')}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button variant="outline" onClick={() => setPaymentPayable(null)}>
                 {t('common.actions.cancel')}
               </Button>
@@ -391,10 +395,10 @@ export default function Payables() {
                 disabled={isPaymentSubmitting}
               >
                 {isPaymentSubmitting
-                  ? t('common.messages.saving')
+                  ? t('common.actions.saving')
                   : t('pages.payables.payment.submit')}
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
@@ -413,7 +417,7 @@ export default function Payables() {
           </DialogHeader>
           {isLoadingInstallments ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando...
+              {t('common.actions.loading')}
             </div>
           ) : installments.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">

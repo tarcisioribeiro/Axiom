@@ -688,6 +688,16 @@ class ReadingListCreateView(BaseListCreateView):
             qs = qs.filter(reading_date__gte=date_from)
         if date_to := params.get("date_to"):
             qs = qs.filter(reading_date__lte=date_to)
+        if search := params.get("search"):
+            qs = qs.filter(
+                Q(book__title__icontains=search) | Q(notes__icontains=search)
+            )
+        if genre := params.get("genre"):
+            qs = qs.filter(book__genre=genre)
+        if author_id := params.get("author"):
+            qs = qs.filter(book__authors__id=author_id)
+        if time_of_day := params.get("time_of_day"):
+            qs = qs.filter(time_of_day=time_of_day)
         return qs
 
     def get_serializer_class(self):
@@ -934,8 +944,30 @@ class BookReadingQueueView(APIView):
         without_priority = [b for b in books if b.reading_priority is None]
         ordered = with_priority + without_priority
 
+        # Calcular avg_pages_per_day dos últimos 30 dias para estimar conclusão
+        thirty_days_ago = (timezone.now() - timedelta(days=30)).date()
+        readings_qs = Reading.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        )
+        last_30_pages = (
+            readings_qs.filter(reading_date__gte=thirty_days_ago).aggregate(
+                total=Sum("pages_read")
+            )["total"]
+            or 0
+        )
+        avg_pages_per_day = last_30_pages / 30
+
         serializer = BookSerializer(ordered, many=True)
-        return Response({"results": serializer.data, "count": len(ordered)})
+        data = serializer.data
+
+        # Injetar estimated_days_to_finish em cada livro da fila
+        for i, book in enumerate(ordered):
+            estimated_days = None
+            if avg_pages_per_day > 0:
+                estimated_days = max(1, round(book.pages / avg_pages_per_day))
+            data[i]["estimated_days_to_finish"] = estimated_days
+
+        return Response({"results": data, "count": len(ordered)})
 
 
 class BookReorderView(APIView):
@@ -1079,11 +1111,19 @@ class LibraryDashboardStatsView(APIView):
         else:
             avg_speed_pages_per_hour = 0.0
 
-        # Livro atual em leitura + estimativa de conclusão
+        # Todos os livros em leitura + estimativa de conclusão por livro
+        thirty_days_ago = (timezone.now() - timedelta(days=30)).date()
+        last_30_pages = (
+            readings_qs.filter(reading_date__gte=thirty_days_ago).aggregate(
+                total=Sum("pages_read")
+            )["total"]
+            or 0
+        )
+        avg_pages_per_day = last_30_pages / 30
+
+        current_reading_books = []
         current_reading_book = None
-        current_book_qs = books_qs.filter(read_status="reading").order_by("-updated_at")
-        if current_book_qs.exists():
-            book = current_book_qs.first()
+        for book in books_qs.filter(read_status="reading").order_by("-updated_at"):
             pages_read_so_far = (
                 readings_qs.filter(book=book).aggregate(total=Sum("pages_read"))[
                     "total"
@@ -1091,26 +1131,19 @@ class LibraryDashboardStatsView(APIView):
                 or 0
             )
             remaining_pages = max(0, book.pages - pages_read_so_far)
-            current_reading_book = {
+            estimated_days = None
+            if avg_pages_per_day > 0 and remaining_pages > 0:
+                estimated_days = max(1, round(remaining_pages / avg_pages_per_day))
+            book_data = {
                 "title": book.title,
                 "total_pages": book.pages,
                 "pages_read": pages_read_so_far,
                 "remaining_pages": remaining_pages,
-                "estimated_days_to_finish": None,
+                "estimated_days_to_finish": estimated_days,
             }
-            # Ritmo dos últimos 30 dias (todas as sessões do usuário)
-            thirty_days_ago = (timezone.now() - timedelta(days=30)).date()
-            last_30_pages = (
-                readings_qs.filter(reading_date__gte=thirty_days_ago).aggregate(
-                    total=Sum("pages_read")
-                )["total"]
-                or 0
-            )
-            avg_pages_per_day = last_30_pages / 30
-            if avg_pages_per_day > 0 and remaining_pages > 0:
-                current_reading_book["estimated_days_to_finish"] = max(
-                    1, round(remaining_pages / avg_pages_per_day)
-                )
+            current_reading_books.append(book_data)
+            if current_reading_book is None:
+                current_reading_book = book_data
 
         # Comparação mensal: mês atual vs mês anterior
         now = timezone.now()
@@ -1447,6 +1480,28 @@ class LibraryDashboardStatsView(APIView):
                 item["literarytype"], item["literarytype"]
             )
 
+        # Leituras por período do dia
+        from library.models import TIME_OF_DAY_CHOICES
+
+        reading_by_time_of_day = []
+        for tod_value, tod_display in TIME_OF_DAY_CHOICES:
+            count = readings_qs.filter(time_of_day=tod_value).count()
+            total_pages_tod = (
+                readings_qs.filter(time_of_day=tod_value).aggregate(
+                    total=Sum("pages_read")
+                )["total"]
+                or 0
+            )
+            if count > 0:
+                reading_by_time_of_day.append(
+                    {
+                        "time_of_day": tod_value,
+                        "time_of_day_display": tod_display,
+                        "session_count": count,
+                        "total_pages": total_pages_tod,
+                    }
+                )
+
         stats = {
             "total_books": total_books,
             "total_authors": total_authors,
@@ -1471,6 +1526,7 @@ class LibraryDashboardStatsView(APIView):
             "rating_distribution": rating_distribution,
             "avg_speed_pages_per_hour": avg_speed_pages_per_hour,
             "current_reading_book": current_reading_book,
+            "current_reading_books": current_reading_books,
             "monthly_comparison": monthly_comparison,
             "top_genres_by_time": top_genres_by_time,
             "total_sessions": total_sessions,
@@ -1479,6 +1535,7 @@ class LibraryDashboardStatsView(APIView):
             "most_productive_day": most_productive_day,
             "reading_streak": reading_streak,
             "books_by_literary_type": books_by_literary_type,
+            "reading_by_time_of_day": reading_by_time_of_day,
         }
 
         cache.set(cache_key, stats, self.CACHE_TTL)

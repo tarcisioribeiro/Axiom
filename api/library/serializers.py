@@ -229,6 +229,7 @@ class BookSerializer(serializers.ModelSerializer):
             "rating",
             "read_status",
             "read_status_display",
+            "pause_reason",
             "reading_priority",
             "book_file",
             "has_summary",
@@ -342,6 +343,7 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
             "media_type",
             "rating",
             "read_status",
+            "pause_reason",
             "reading_priority",
             "owner",
         ]
@@ -424,6 +426,9 @@ class ReadingSerializer(serializers.ModelSerializer):
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
     book_title = serializers.CharField(source="book.title", read_only=True)
+    time_of_day_display = serializers.CharField(
+        source="get_time_of_day_display", read_only=True
+    )
 
     class Meta:
         model = Reading
@@ -437,6 +442,8 @@ class ReadingSerializer(serializers.ModelSerializer):
             "pages_read",
             "notes",
             "current_page",
+            "time_of_day",
+            "time_of_day_display",
             "owner",
             "owner_name",
             "created_at",
@@ -458,6 +465,7 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
             "pages_read",
             "notes",
             "current_page",
+            "time_of_day",
             "owner",
         ]
 
@@ -591,6 +599,7 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "year",
+            "name",
             "books_goal",
             "pages_goal",
             "books_read_this_year",
@@ -623,25 +632,7 @@ class ReadingGoalCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingGoal
-        fields = ["id", "year", "books_goal", "pages_goal", "owner"]
-
-    def validate(self, data):
-        """Garante uma única meta ativa por ano por usuário."""
-        owner = data.get("owner")
-        year = data.get("year")
-        instance = self.instance
-
-        if owner and year:
-            qs = ReadingGoal.objects.filter(
-                owner=owner, year=year, deleted_at__isnull=True
-            )
-            if instance:
-                qs = qs.exclude(pk=instance.pk)
-            if qs.exists():
-                raise serializers.ValidationError(
-                    {"year": f"Já existe uma meta de leitura para o ano {year}."}
-                )
-        return data
+        fields = ["id", "year", "name", "books_goal", "pages_goal", "owner"]
 
 
 # ============================================================================
