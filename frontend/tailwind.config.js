@@ -15,19 +15,36 @@ export default {
     },
     extend: {
       fontFamily: {
+        /* Body text — SF Pro Text on macOS, Segoe UI on Windows, system-ui elsewhere */
         sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
           'system-ui',
+          'Segoe UI',
+          'Helvetica Neue',
+          'sans-serif',
+        ],
+        /* Display / headings — SF Pro Rounded on macOS 11+, Segoe UI on Windows */
+        display: [
+          'ui-rounded',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',
-          'Roboto',
-          'Oxygen',
-          'Ubuntu',
-          'Cantarell',
-          'Fira Sans',
-          'Droid Sans',
+          'system-ui',
           'Helvetica Neue',
           'sans-serif',
+        ],
+        /* Monospace — SF Mono on macOS, Cascadia Code on Windows 11, JetBrains Mono fallback */
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'SF Mono',
+          'Cascadia Code',
+          'Cascadia Mono',
+          'JetBrains Mono',
+          'Consolas',
+          'Liberation Mono',
+          'monospace',
         ],
       },
       colors: {
@@ -165,10 +182,10 @@ export default {
         },
       },
       animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-overlay-hide': 'dialog-overlay-hide 150ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-show': 'dialog-content-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
-        'dialog-content-hide': 'dialog-content-hide 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-overlay-show': 'dialog-overlay-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-overlay-hide': 'dialog-overlay-hide 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-content-show': 'dialog-content-show 250ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-content-hide': 'dialog-content-hide 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-up-fade': 'slide-up-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-down-fade': 'slide-down-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
@@ -178,6 +195,7 @@ export default {
         fast: 'var(--duration-fast)',
         normal: 'var(--duration-normal)',
         slow: 'var(--duration-slow)',
+        250: '250ms',
       },
       transitionTimingFunction: {
         spring: 'var(--ease-spring)',

@@ -15,6 +15,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+const TIME_OF_DAY_OPTIONS = [
+  { value: 'morning', label: 'Manhã' },
+  { value: 'afternoon', label: 'Tarde' },
+  { value: 'evening', label: 'Noite' },
+  { value: 'dawn', label: 'Madrugada' },
+] as const;
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { readingSchema, type ReadingFormData } from '@/lib/validations';
@@ -51,6 +57,8 @@ export function ReadingForm({
           reading_date: reading.reading_date,
           reading_time: reading.reading_time,
           notes: reading.notes || '',
+          current_page: reading.current_page ?? null,
+          time_of_day: reading.time_of_day ?? null,
           owner: reading.owner,
         }
       : {
@@ -59,6 +67,8 @@ export function ReadingForm({
           reading_date: formatLocalDate(new Date()),
           reading_time: 0,
           notes: '',
+          current_page: null,
+          time_of_day: null,
           owner: 0,
         },
   });
@@ -162,6 +172,47 @@ export function ReadingForm({
               {errors.reading_time.message}
             </p>
           )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="current_page">Página Atual</Label>
+            <Input
+              id="current_page"
+              type="number"
+              min="1"
+              placeholder="Opcional"
+              {...register('current_page', {
+                setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
+              })}
+            />
+            {errors.current_page && (
+              <p className="mt-1 text-sm text-destructive">
+                {errors.current_page.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="time_of_day">Período do Dia</Label>
+            <Select
+              value={watch('time_of_day') ?? ''}
+              onValueChange={(value) =>
+                setValue('time_of_day', value === '' ? null : value)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Opcional" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_OF_DAY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-2">

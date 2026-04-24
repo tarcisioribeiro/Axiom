@@ -259,7 +259,7 @@ export default function Archives() {
   const filteredArchives = archives.filter(
     (arc) =>
       arc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      arc.tags?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      arc.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
       arc.file_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -391,21 +391,18 @@ export default function Archives() {
                     </div>
                     <span>{formatFileSize(arc.file_size)}</span>
                   </div>
-                  {arc.tags && (
+                  {arc.tags && arc.tags.length > 0 && (
                     <div className="flex items-center gap-2">
                       <Tag className="h-4 w-4 flex-shrink-0" />
                       <div className="flex flex-wrap gap-1">
-                        {arc.tags
-                          .split(',')
-                          .slice(0, 3)
-                          .map((tag, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {tag.trim()}
-                            </Badge>
-                          ))}
-                        {arc.tags.split(',').length > 3 && (
+                        {arc.tags.slice(0, 3).map((tag, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {arc.tags.length > 3 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{arc.tags.split(',').length - 3}
+                            +{arc.tags.length - 3}
                           </Badge>
                         )}
                       </div>
