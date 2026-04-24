@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Library,
@@ -17,6 +17,10 @@ import {
   Minus,
   Star,
   Flame,
+  Download,
+  Moon,
+  Sun,
+  Sunset,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,13 +28,12 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
+  Cell,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
-import { ChartContainer, EnhancedTooltip } from '@/components/charts';
+import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -52,148 +55,197 @@ export default function LibraryDashboard() {
 
   const COLORS = useChartColors();
 
+  const exportCSV = () => {
+    if (!stats) return;
+    const rows: string[][] = [
+      ['Métrica', 'Valor'],
+      ['Total de Livros', String(stats.total_books)],
+      ['Total de Autores', String(stats.total_authors)],
+      ['Total de Editoras', String(stats.total_publishers)],
+      ['Livros Lendo', String(stats.books_reading)],
+      ['Livros Para Ler', String(stats.books_to_read)],
+      ['Livros Lidos', String(stats.books_read)],
+      ['Avaliação Média', String(stats.average_rating)],
+      ['Total de Páginas Lidas', String(stats.total_pages_read)],
+      ['Horas de Leitura', String(stats.total_reading_time_hours)],
+      ['Velocidade (pág/hora)', String(stats.avg_speed_pages_per_hour)],
+      ['Total de Sessões', String(stats.total_sessions)],
+      ['Média de Páginas por Sessão', String(stats.avg_pages_per_session)],
+      ['Maior Sessão (páginas)', String(stats.longest_session_pages)],
+      ['Streak Atual (dias)', String(stats.reading_streak.current_streak)],
+      ['Maior Streak (dias)', String(stats.reading_streak.longest_streak)],
+      [],
+      ['Período do Dia', 'Sessões', 'Páginas'],
+      ...(stats.reading_by_time_of_day || []).map((item) => [
+        item.time_of_day_display,
+        String(item.session_count),
+        String(item.total_pages),
+      ]),
+      [],
+      ['Gênero', 'Quantidade de Livros'],
+      ...stats.books_by_genre.map((g) => [g.genre_display, String(g.count)]),
+    ];
+    const csv = rows.map((r) => r.map((cell) => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `biblioteca_stats_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) {
     return <LoadingState fullScreen />;
   }
 
+  const timeOfDayIcons: Record<string, React.ReactNode> = {
+    morning: <Sun className="h-4 w-4 text-yellow-500" />,
+    afternoon: <Sunset className="h-4 w-4 text-orange-500" />,
+    evening: <Moon className="h-4 w-4 text-blue-400" />,
+    dawn: <Moon className="h-4 w-4 text-indigo-500" />,
+  };
+
   return (
     <PageContainer>
-      <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
-
-      {/* Métricas Principais - Grid 5 colunas */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.books')}
-            </CardTitle>
-            <BookOpen className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_books || 0}</div>
-            <p className="mt-1 text-xs">
-              {stats?.total_books === 1 ? 'livro cadastrado' : 'livros cadastrados'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.authors')}
-            </CardTitle>
-            <User className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_authors || 0}</div>
-            <p className="mt-1 text-xs">
-              {stats?.total_authors === 1 ? 'autor' : 'autores'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.publishers')}
-            </CardTitle>
-            <Building2 className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_publishers || 0}</div>
-            <p className="mt-1 text-xs">
-              {stats?.total_publishers === 1 ? 'editora' : 'editoras'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.pagesRead')}
-            </CardTitle>
-            <FileText className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_pages_read || 0}</div>
-            <p className="mt-1 text-xs">páginas lidas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.averageRating')}
-            </CardTitle>
-            <Star className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
-            </div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.averageRatingDesc')}
-            </p>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
+        <button
+          onClick={exportCSV}
+          className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
+          title="Exportar estatísticas em CSV"
+        >
+          <Download className="h-4 w-4" />
+          Exportar CSV
+        </button>
       </div>
 
-      {/* Progresso de Leitura - Grid 4 colunas (status + meta anual) */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.reading')}
-            </CardTitle>
-            <BookMarked className="h-4 w-4 text-info" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-info">
-              {stats?.books_reading || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {stats?.books_reading === 1
-                ? 'livro em andamento'
-                : 'livros em andamento'}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Block 1: Métricas + Status de Leitura (esquerda) | Meta de Leitura (direita) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="flex flex-col gap-4 lg:col-span-2">
+          {/* Métricas Principais */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.overview')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <BookOpen className="h-4 w-4" />
+                    <span className="text-xs">{t('pages.libraryDashboard.books')}</span>
+                  </div>
+                  <span className="text-2xl font-bold">{stats?.total_books || 0}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.libraryDashboard.authors')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {stats?.total_authors || 0}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.libraryDashboard.publishers')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {stats?.total_publishers || 0}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.libraryDashboard.pagesRead')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {stats?.total_pages_read || 0}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Star className="h-4 w-4" />
+                    <span className="text-xs">
+                      {t('pages.libraryDashboard.averageRating')}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-bold">
+                    {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.toRead')}
-            </CardTitle>
-            <BookOpen className="h-4 w-4 text-warning" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">
-              {stats?.books_to_read || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {stats?.books_to_read === 1 ? 'livro na fila' : 'livros na fila'}
-            </p>
-          </CardContent>
-        </Card>
+          {/* Status de Leitura */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.readingStatus')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BookMarked className="h-5 w-5 text-info" />
+                  <span className="text-sm font-medium">
+                    {t('pages.libraryDashboard.reading')}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-info">
+                    {stats?.books_reading || 0}
+                  </span>
+                  <p className="text-xs text-muted-foreground">em andamento</p>
+                </div>
+              </div>
+              <div className="border-t" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="h-5 w-5 text-warning" />
+                  <span className="text-sm font-medium">
+                    {t('pages.libraryDashboard.toRead')}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-warning">
+                    {stats?.books_to_read || 0}
+                  </span>
+                  <p className="text-xs text-muted-foreground">na fila</p>
+                </div>
+              </div>
+              <div className="border-t" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BookCheck className="h-5 w-5 text-success" />
+                  <span className="text-sm font-medium">
+                    {t('pages.libraryDashboard.read')}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-success">
+                    {stats?.books_read || 0}
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.books_read === 1 ? 'completo' : 'completos'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.read')}
-            </CardTitle>
-            <BookCheck className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">
-              {stats?.books_read || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {stats?.books_read === 1 ? 'livro completo' : 'livros completos'}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Meta Anual */}
+        {/* Meta de Leitura */}
         <ReadingGoalCard
           onGoalChange={() =>
             queryClient.invalidateQueries({ queryKey: ['libraryDashboard'] })
@@ -201,288 +253,229 @@ export default function LibraryDashboard() {
         />
       </div>
 
-      {/* Row 3: Novas Estatísticas - Grid 4 colunas */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Tempo Total de Leitura */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.readingTime')}
-            </CardTitle>
-            <Clock className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.total_reading_time_hours || 0}h
-            </div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.readingTimeTotal')}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Card 2: Média de Páginas por Livro */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.avgPerBook')}
-            </CardTitle>
-            <FileText className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.average_pages_per_book?.toFixed(0) || 0}
-            </div>
-            <p className="mt-1 text-xs">{t('pages.libraryDashboard.pagesPerBook')}</p>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Autor Mais Lido */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.mostReadAuthor')}
-            </CardTitle>
-            <User className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            {stats?.most_read_author ? (
-              <>
-                <div
-                  className="truncate text-lg font-bold"
-                  title={stats.most_read_author.name}
-                >
-                  {stats.most_read_author.name}
-                </div>
-                <p className="mt-1 text-xs">
-                  {stats.most_read_author.books_count}{' '}
-                  {stats.most_read_author.books_count === 1
-                    ? 'livro lido'
-                    : 'livros lidos'}
-                </p>
-              </>
-            ) : (
-              <div className="text-sm">{t('pages.libraryDashboard.noAuthor')}</div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Editora Mais Lida */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.mostReadPublisher')}
-            </CardTitle>
-            <Building2 className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            {stats?.most_read_publisher ? (
-              <>
-                <div
-                  className="truncate text-lg font-bold"
-                  title={stats.most_read_publisher.name}
-                >
-                  {stats.most_read_publisher.name}
-                </div>
-                <p className="mt-1 text-xs">
-                  {stats.most_read_publisher.books_count}{' '}
-                  {stats.most_read_publisher.books_count === 1
-                    ? 'livro lido'
-                    : 'livros lidos'}
-                </p>
-              </>
-            ) : (
-              <div className="text-sm">{t('pages.libraryDashboard.noAuthor')}</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 4: Velocidade de leitura + Previsão de conclusão */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Velocidade média */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.avgSpeed')}
-            </CardTitle>
-            <Zap className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            {stats?.avg_speed_pages_per_hour && stats.avg_speed_pages_per_hour > 0 ? (
-              <>
-                <div className="text-2xl font-bold">
-                  {stats.avg_speed_pages_per_hour}
-                </div>
-                <p className="mt-1 text-xs">
-                  {t('pages.libraryDashboard.avgSpeedDesc')}
-                </p>
-              </>
-            ) : (
-              <div className="mt-1 text-sm">
-                {t('pages.libraryDashboard.avgSpeedNoData')}
+      {/* Block 2: Estatísticas Gerais */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium">Estatísticas Gerais</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.readingTime')}
+                </span>
               </div>
-            )}
+              <span className="text-2xl font-bold">
+                {stats?.total_reading_time_hours || 0}h
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.readingTimeTotal')}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.avgPerBook')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {stats?.average_pages_per_book?.toFixed(0) || 0}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.pagesPerBook')}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.mostReadAuthor')}
+                </span>
+              </div>
+              {stats?.most_read_author ? (
+                <>
+                  <span
+                    className="truncate text-lg font-bold"
+                    title={stats.most_read_author.name}
+                  >
+                    {stats.most_read_author.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {stats.most_read_author.books_count}{' '}
+                    {stats.most_read_author.books_count === 1
+                      ? 'livro lido'
+                      : 'livros lidos'}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.libraryDashboard.noAuthor')}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Building2 className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.mostReadPublisher')}
+                </span>
+              </div>
+              {stats?.most_read_publisher ? (
+                <>
+                  <span
+                    className="truncate text-lg font-bold"
+                    title={stats.most_read_publisher.name}
+                  >
+                    {stats.most_read_publisher.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {stats.most_read_publisher.books_count}{' '}
+                    {stats.most_read_publisher.books_count === 1
+                      ? 'livro lido'
+                      : 'livros lidos'}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  {t('pages.libraryDashboard.noAuthor')}
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Block 3: Sessões & Ritmo | Previsão de Conclusão */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Sessões & Ritmo */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Sessões & Ritmo</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {(
+              [
+                {
+                  icon: <Zap className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.avgSpeed'),
+                  value:
+                    stats?.avg_speed_pages_per_hour &&
+                    stats.avg_speed_pages_per_hour > 0
+                      ? `${stats.avg_speed_pages_per_hour} pág/h`
+                      : '—',
+                },
+                {
+                  icon: <BookOpen className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.totalSessions'),
+                  value: stats?.total_sessions || 0,
+                },
+                {
+                  icon: <FileText className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.avgPerSession'),
+                  value: `${stats?.avg_pages_per_session || 0} págs`,
+                },
+                {
+                  icon: <Zap className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.longestSession'),
+                  value: `${stats?.longest_session_pages || 0} págs`,
+                },
+                {
+                  icon: <Flame className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.currentStreak'),
+                  value: `${stats?.reading_streak?.current_streak || 0} dias`,
+                },
+                {
+                  icon: <CalendarClock className="h-4 w-4" />,
+                  label: t('pages.libraryDashboard.mostProductiveDay'),
+                  value: stats?.most_productive_day?.weekday_display || '—',
+                },
+              ] as { icon: React.ReactNode; label: string; value: React.ReactNode }[]
+            ).map(({ icon, label, value }, i, arr) => (
+              <div key={label}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    {icon}
+                    <span className="text-sm">{label}</span>
+                  </div>
+                  <span className="text-sm font-semibold">{value}</span>
+                </div>
+                {i < arr.length - 1 && <div className="mt-3 border-t" />}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* Previsão de conclusão */}
+        {/* Previsão de Conclusão — todos os livros em leitura */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.completionEstimate')}
             </CardTitle>
-            <CalendarClock className="h-4 w-4" />
           </CardHeader>
           <CardContent>
-            {!stats?.current_reading_book ? (
-              <div className="mt-1 text-sm">
+            {!stats?.current_reading_books ||
+            stats.current_reading_books.length === 0 ? (
+              <div className="flex h-full items-center justify-center py-8 text-sm text-muted-foreground">
                 {t('pages.libraryDashboard.completionNoBook')}
               </div>
-            ) : stats.current_reading_book.estimated_days_to_finish === null ? (
-              <>
-                <div
-                  className="truncate text-sm font-medium"
-                  title={stats.current_reading_book.title}
-                >
-                  {t('pages.libraryDashboard.currentBook', {
-                    title: stats.current_reading_book.title,
-                  })}
-                </div>
-                <p className="mt-1 text-xs">
-                  {t('pages.libraryDashboard.completionNoPace')}
-                </p>
-              </>
             ) : (
-              <>
-                <div className="text-2xl font-bold">
-                  {t('pages.libraryDashboard.completionDays', {
-                    days: stats.current_reading_book.estimated_days_to_finish,
-                  })}
-                </div>
-                <p
-                  className="mt-1 truncate text-xs"
-                  title={stats.current_reading_book.title}
-                >
-                  {t('pages.libraryDashboard.currentBook', {
-                    title: stats.current_reading_book.title,
-                  })}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 5: Estatísticas de sessão */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.totalSessions')}
-            </CardTitle>
-            <BookOpen className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_sessions || 0}</div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.totalSessionsDesc')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.avgPerSession')}
-            </CardTitle>
-            <FileText className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.avg_pages_per_session || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.avgPerSessionDesc')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.longestSession')}
-            </CardTitle>
-            <Zap className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.longest_session_pages || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.longestSessionDesc')}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.currentStreak')}
-            </CardTitle>
-            <Flame className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats?.reading_streak?.current_streak || 0}
-            </div>
-            <p className="mt-1 text-xs">
-              {t('pages.libraryDashboard.currentStreakDesc')}
-              {(stats?.reading_streak?.longest_streak ?? 0) > 0 && (
-                <>
-                  {' '}
-                  ·{' '}
-                  {t('pages.libraryDashboard.longestStreak', {
-                    days: stats!.reading_streak.longest_streak,
-                  })}
-                </>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.mostProductiveDay')}
-            </CardTitle>
-            <CalendarClock className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            {stats?.most_productive_day ? (
-              <>
-                <div className="text-2xl font-bold">
-                  {stats.most_productive_day.weekday_display}
-                </div>
-                <p className="mt-1 text-xs">
-                  {t('pages.libraryDashboard.mostProductiveDayDesc', {
-                    pages: stats.most_productive_day.total_pages,
-                    sessions: stats.most_productive_day.session_count,
-                  })}
-                </p>
-              </>
-            ) : (
-              <div className="mt-1 text-sm">
-                {t('pages.libraryDashboard.noProductiveDay')}
+              <div className="flex flex-col gap-3">
+                {stats.current_reading_books.map((book, i, arr) => (
+                  <div key={book.title}>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-start gap-2">
+                        <BookMarked className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+                        <p className="truncate text-sm font-medium" title={book.title}>
+                          {book.title}
+                        </p>
+                      </div>
+                      <div className="ml-6 flex flex-col gap-0.5">
+                        {book.estimated_days_to_finish !== null ? (
+                          <div className="flex flex-wrap items-baseline gap-2">
+                            <span className="text-lg font-bold">
+                              ~{book.estimated_days_to_finish}{' '}
+                              {book.estimated_days_to_finish === 1 ? 'dia' : 'dias'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              previsão:{' '}
+                              {format(
+                                addDays(new Date(), book.estimated_days_to_finish),
+                                'dd/MM/yyyy',
+                                { locale: ptBR }
+                              )}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {t('pages.libraryDashboard.completionNoPace')}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          {book.pages_read} / {book.total_pages} págs
+                          {book.total_pages > 0 && (
+                            <>
+                              {' '}
+                              · {Math.round((book.pages_read / book.total_pages) * 100)}
+                              %
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    {i < arr.length - 1 && <div className="mt-3 border-t" />}
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Row 6: Comparativo mensal + Top 3 gêneros por tempo */}
+      {/* Block 4: Comparativo Mensal (barras independentes) + Top 3 Gêneros */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Comparativo mensal */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
@@ -494,91 +487,90 @@ export default function LibraryDashboard() {
             {stats?.monthly_comparison &&
               (() => {
                 const mc = stats.monthly_comparison;
-                const chartData = [
+                const currLabel = t('pages.libraryDashboard.currentMonth');
+                const prevLabel = t('pages.libraryDashboard.previousMonth');
+
+                const metrics = [
                   {
-                    name: t('pages.libraryDashboard.monthlyPages'),
-                    [t('pages.libraryDashboard.currentMonth')]:
-                      mc.current_month.pages_read,
-                    [t('pages.libraryDashboard.previousMonth')]:
-                      mc.previous_month.pages_read,
+                    label: t('pages.libraryDashboard.monthlyPages'),
+                    unit: t('pages.libraryDashboard.pages'),
+                    curr: mc.current_month.pages_read,
+                    prev: mc.previous_month.pages_read,
+                    change: mc.changes.pages_read,
                   },
                   {
-                    name: t('pages.libraryDashboard.monthlyHours'),
-                    [t('pages.libraryDashboard.currentMonth')]:
-                      mc.current_month.reading_time_hours,
-                    [t('pages.libraryDashboard.previousMonth')]:
-                      mc.previous_month.reading_time_hours,
+                    label: t('pages.libraryDashboard.monthlyHours'),
+                    unit: t('pages.libraryDashboard.hours'),
+                    curr: mc.current_month.reading_time_hours,
+                    prev: mc.previous_month.reading_time_hours,
+                    change: mc.changes.reading_time_hours,
                   },
                   {
-                    name: t('pages.libraryDashboard.monthlyBooks'),
-                    [t('pages.libraryDashboard.currentMonth')]:
-                      mc.current_month.books_completed,
-                    [t('pages.libraryDashboard.previousMonth')]:
-                      mc.previous_month.books_completed,
+                    label: t('pages.libraryDashboard.monthlyBooks'),
+                    unit: '',
+                    curr: mc.current_month.books_completed,
+                    prev: mc.previous_month.books_completed,
+                    change: mc.changes.books_completed,
                   },
                 ];
-                const currKey = t('pages.libraryDashboard.currentMonth');
-                const prevKey = t('pages.libraryDashboard.previousMonth');
+
                 return (
-                  <div className="space-y-4">
-                    <ResponsiveContainer width="100%" height={220}>
-                      <BarChart
-                        data={chartData}
-                        margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<EnhancedTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey={currKey} fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey={prevKey} fill={COLORS[2]} radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                    {/* Variações percentuais */}
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      {(
-                        [
-                          {
-                            label: t('pages.libraryDashboard.monthlyPages'),
-                            change: mc.changes.pages_read,
-                          },
-                          {
-                            label: t('pages.libraryDashboard.monthlyHours'),
-                            change: mc.changes.reading_time_hours,
-                          },
-                          {
-                            label: t('pages.libraryDashboard.monthlyBooks'),
-                            change: mc.changes.books_completed,
-                          },
-                        ] as { label: string; change: number | null }[]
-                      ).map(({ label, change }) => (
-                        <div key={label} className="rounded-md bg-muted/50 p-2">
-                          <p className="text-xs font-medium">{label}</p>
+                  <div className="grid grid-cols-3 gap-4">
+                    {metrics.map(({ label, unit, curr, prev, change }) => {
+                      const data = [
+                        { name: currLabel, value: curr },
+                        { name: prevLabel, value: prev },
+                      ];
+                      return (
+                        <div key={label} className="flex flex-col items-center gap-2">
+                          <p className="text-xs font-semibold">{label}</p>
+                          <ResponsiveContainer width="100%" height={130}>
+                            <BarChart
+                              data={data}
+                              margin={{ top: 5, right: 4, bottom: 5, left: 4 }}
+                            >
+                              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                              <YAxis hide domain={[0, 'auto']} />
+                              <Tooltip
+                                formatter={(value) => [
+                                  `${String(value)}${unit ? ' ' + unit : ''}`,
+                                  label,
+                                ]}
+                              />
+                              <Bar
+                                dataKey="value"
+                                radius={[4, 4, 0, 0]}
+                                maxBarSize={40}
+                              >
+                                <Cell fill={COLORS[0]} />
+                                <Cell fill={COLORS[2]} fillOpacity={0.7} />
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
                           {change === null ? (
-                            <div className="flex items-center justify-center gap-1 text-xs">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Minus className="h-3 w-3" />
                               <span>—</span>
                             </div>
                           ) : change > 0 ? (
-                            <div className="flex items-center justify-center gap-1 text-xs text-success">
+                            <div className="flex items-center gap-1 text-xs text-success">
                               <TrendingUp className="h-3 w-3" />
                               <span>+{change}%</span>
                             </div>
                           ) : change < 0 ? (
-                            <div className="flex items-center justify-center gap-1 text-xs text-destructive">
+                            <div className="flex items-center gap-1 text-xs text-destructive">
                               <TrendingDown className="h-3 w-3" />
                               <span>{change}%</span>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-center gap-1 text-xs">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Minus className="h-3 w-3" />
                               <span>0%</span>
                             </div>
                           )}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
@@ -679,9 +671,8 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      {/* Row 5: Timeline e Top Autores */}
+      {/* Timeline e Top Autores */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Gráfico: Timeline de Leituras (Line) */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
@@ -745,7 +736,7 @@ export default function LibraryDashboard() {
           </CardContent>
         </Card>
 
-        {/* Gráfico: Top 5 Autores (Horizontal Bar) */}
+        {/* Top 5 Autores */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.topAuthors')}</CardTitle>
@@ -767,9 +758,8 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      {/* Row 6: Ratings e Distribuições */}
+      {/* Ratings e Distribuições */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Gráfico: Distribuição de Ratings (Vertical Bar) */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
@@ -792,7 +782,7 @@ export default function LibraryDashboard() {
           </CardContent>
         </Card>
 
-        {/* Card: Distribuições (Idioma, Mídia e Tipo Literário) */}
+        {/* Distribuições (Idioma, Mídia e Tipo Literário) */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.distributions')}</CardTitle>
@@ -802,7 +792,6 @@ export default function LibraryDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {/* Seção: Por Idioma */}
               <div>
                 <h4 className="mb-3 text-sm font-semibold">
                   {t('pages.libraryDashboard.byLanguage')}
@@ -819,8 +808,6 @@ export default function LibraryDashboard() {
                   height={200}
                 />
               </div>
-
-              {/* Seção: Por Tipo de Mídia */}
               <div>
                 <h4 className="mb-3 text-sm font-semibold">
                   {t('pages.libraryDashboard.byMediaType')}
@@ -837,8 +824,6 @@ export default function LibraryDashboard() {
                   height={200}
                 />
               </div>
-
-              {/* Seção: Por Tipo Literário */}
               <div>
                 <h4 className="mb-3 text-sm font-semibold">
                   {t('pages.libraryDashboard.byLiteraryType')}
@@ -860,45 +845,96 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      {/* Leituras Recentes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('pages.libraryDashboard.recentReadings')}</CardTitle>
-          <p className="text-sm">{t('pages.libraryDashboard.recentReadingsDesc')}</p>
-        </CardHeader>
-        <CardContent>
-          {!stats || stats.recent_readings.length === 0 ? (
-            <div className="flex h-32 items-center justify-center">
-              {t('pages.libraryDashboard.noReadings')}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {stats.recent_readings.map((reading, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
-                >
-                  <div className="flex items-center gap-3">
-                    <BookOpen className="h-5 w-5" />
-                    <div>
-                      <p className="text-sm font-medium">{reading.book_title}</p>
-                      <p className="text-xs">
-                        {reading.pages_read}{' '}
-                        {reading.pages_read === 1 ? 'página' : 'páginas'}
-                      </p>
+      {/* Período do Dia + Leituras Recentes */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Quando você mais lê */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quando você mais lê</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Distribuição das sessões por período do dia
+            </p>
+          </CardHeader>
+          <CardContent>
+            {!stats || (stats.reading_by_time_of_day || []).length === 0 ? (
+              <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+                Registre o período nas suas sessões de leitura
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.reading_by_time_of_day.map((item) => {
+                  const total = stats.reading_by_time_of_day.reduce(
+                    (s, i) => s + i.session_count,
+                    0
+                  );
+                  const pct = total > 0 ? (item.session_count / total) * 100 : 0;
+                  return (
+                    <div key={item.time_of_day} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          {timeOfDayIcons[item.time_of_day]}
+                          <span>{item.time_of_day_display}</span>
+                        </div>
+                        <span className="text-muted-foreground">
+                          {item.session_count}{' '}
+                          {item.session_count === 1 ? 'sessão' : 'sessões'} ·{' '}
+                          {item.total_pages} pág.
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Leituras Recentes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('pages.libraryDashboard.recentReadings')}</CardTitle>
+            <p className="text-sm">{t('pages.libraryDashboard.recentReadingsDesc')}</p>
+          </CardHeader>
+          <CardContent>
+            {!stats || stats.recent_readings.length === 0 ? (
+              <div className="flex h-32 items-center justify-center">
+                {t('pages.libraryDashboard.noReadings')}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.recent_readings.map((reading, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="h-5 w-5" />
+                      <div>
+                        <p className="text-sm font-medium">{reading.book_title}</p>
+                        <p className="text-xs">
+                          {reading.pages_read}{' '}
+                          {reading.pages_read === 1 ? 'página' : 'páginas'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs">
+                      {format(new Date(reading.reading_date), "dd 'de' MMM", {
+                        locale: ptBR,
+                      })}
+                    </span>
                   </div>
-                  <span className="text-xs">
-                    {format(new Date(reading.reading_date), "dd 'de' MMM", {
-                      locale: ptBR,
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </PageContainer>
   );
 }

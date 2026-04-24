@@ -93,6 +93,131 @@ function CelebrationBurst() {
   );
 }
 
+// ─── Single Goal Panel ────────────────────────────────────────────────────────
+
+interface GoalPanelProps {
+  goal: ReadingGoal;
+  onEdit: () => void;
+  showCelebration: boolean;
+}
+
+function GoalPanel({ goal, onEdit, showCelebration }: GoalPanelProps) {
+  const isCompleted = goal.progress_percentage >= 100;
+  const ltgs = goal.literary_type_goals ?? [];
+
+  return (
+    <div className="relative space-y-3">
+      {showCelebration && <CelebrationBurst />}
+
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">
+          {goal.name ? goal.name : `Meta ${goal.year}`}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onEdit}
+          title="Editar meta"
+        >
+          <Pencil className="h-3 w-3" />
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="relative flex items-center justify-center">
+          <CircularProgress
+            percentage={goal.progress_percentage}
+            size={100}
+            strokeWidth={8}
+            isCompleted={isCompleted}
+          />
+          <div className="absolute flex flex-col items-center">
+            {isCompleted ? (
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 200 }}
+              >
+                <Trophy className="h-5 w-5 text-yellow-500" />
+              </motion.div>
+            ) : (
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="text-base font-bold leading-tight">
+              {goal.progress_percentage.toFixed(0)}%
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {goal.books_read_this_year}/{goal.books_goal}
+            </span>
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>
+              {goal.books_read_this_year === 1
+                ? '1 livro lido'
+                : `${goal.books_read_this_year} livros lidos`}
+            </span>
+            <span>{goal.pages_read_this_year.toLocaleString('pt-BR')} pág.</span>
+          </div>
+
+          {goal.pages_goal > 0 && (
+            <div className="space-y-0.5">
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>Páginas</span>
+                <span>
+                  {goal.pages_read_this_year.toLocaleString('pt-BR')} /{' '}
+                  {goal.pages_goal.toLocaleString('pt-BR')} (
+                  {goal.pages_progress_percentage.toFixed(0)}%)
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min(goal.pages_progress_percentage, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {ltgs.length > 0 && (
+            <div className="space-y-1 border-t pt-1">
+              {ltgs.map((ltg) => (
+                <div key={ltg.id} className="space-y-0.5">
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span>{ltg.literary_type_display}</span>
+                    <span>
+                      {ltg.books_read_this_year}/{ltg.goal_count}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary/70 transition-all"
+                      style={{ width: `${Math.min(ltg.progress_percentage, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isCompleted && (
+        <motion.p
+          className="text-center text-xs font-medium text-yellow-600 dark:text-yellow-400"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          🎉 Meta atingida! Parabéns!
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface ReadingGoalCardProps {
@@ -100,35 +225,47 @@ interface ReadingGoalCardProps {
 }
 
 export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
-  const [goal, setGoal] = useState<ReadingGoal | null>(null);
+  const [goals, setGoals] = useState<ReadingGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<ReadingGoal | undefined>();
+  const [celebrationId, setCelebrationId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
-    void loadGoal();
+    void loadGoals();
   }, []);
 
-  const loadGoal = async () => {
+  const loadGoals = async () => {
     try {
       setIsLoading(true);
-      const goals = await readingGoalsService.getAll({ year: currentYear });
-      const yearGoal = goals.find((g) => g.year === currentYear) ?? null;
-      setGoal(yearGoal);
+      const data = await readingGoalsService.getAll({ year: currentYear });
+      const yearGoals = data.filter((g) => g.year === currentYear);
+      setGoals(yearGoals);
 
-      if (yearGoal && yearGoal.progress_percentage >= 100) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1200);
+      const completed = yearGoals.find((g) => g.progress_percentage >= 100);
+      if (completed) {
+        setCelebrationId(completed.id);
+        setTimeout(() => setCelebrationId(null), 1200);
       }
     } catch {
-      // silently fail — goal is optional
+      // silently fail — goals are optional
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openNewGoal = () => {
+    setEditingGoal(undefined);
+    setIsModalOpen(true);
+  };
+
+  const openEditGoal = (goal: ReadingGoal) => {
+    setEditingGoal(goal);
+    setIsModalOpen(true);
   };
 
   const handleSubmit = async (
@@ -138,15 +275,13 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
     try {
       setIsSaving(true);
 
-      // 1. Save/update the base ReadingGoal
-      const saved = goal
-        ? await readingGoalsService.update(goal.id, data)
+      const saved = editingGoal
+        ? await readingGoalsService.update(editingGoal.id, data)
         : await readingGoalsService.create(data);
 
       const readingGoalId = saved.id;
-      const existingLtgs: LiteraryTypeGoal[] = goal?.literary_type_goals ?? [];
+      const existingLtgs: LiteraryTypeGoal[] = editingGoal?.literary_type_goals ?? [];
 
-      // 2. Compute diff between existing and new drafts
       const draftsWithId = ltgDrafts.filter((d) => d.id !== undefined);
       const draftsNew = ltgDrafts.filter((d) => d.id === undefined);
       const draftIds = new Set(draftsWithId.map((d) => d.id));
@@ -170,11 +305,10 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
         ),
       ]);
 
-      // 3. Reload goal to get fresh literary_type_goals from API
-      await loadGoal();
+      await loadGoals();
 
       toast({
-        title: goal ? 'Meta atualizada!' : 'Meta criada!',
+        title: editingGoal ? 'Meta atualizada!' : 'Meta criada!',
         description: `Meta de ${data.books_goal} livros para ${data.year}.`,
       });
       setIsModalOpen(false);
@@ -190,46 +324,23 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
     }
   };
 
-  const isCompleted = (goal?.progress_percentage ?? 0) >= 100;
-  const booksRead = goal?.books_read_this_year ?? 0;
-  const booksGoal = goal?.books_goal ?? 0;
-  const progress = goal?.progress_percentage ?? 0;
-  const pagesRead = goal?.pages_read_this_year ?? 0;
-  const pagesGoal = goal?.pages_goal ?? 0;
-  const pagesProgress = goal?.pages_progress_percentage ?? 0;
-  const ltgs = goal?.literary_type_goals ?? [];
-
   return (
     <>
       <Card className="relative overflow-hidden">
-        {showCelebration && <CelebrationBurst />}
-
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
-            Meta de Leitura {currentYear}
+            Metas de Leitura {currentYear}
           </CardTitle>
           <div className="flex items-center gap-1">
-            {goal ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setIsModalOpen(true)}
-                title="Editar meta"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setIsModalOpen(true)}
-                title="Definir meta"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={openNewGoal}
+              title="Nova meta"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
             <Target className="h-4 w-4 text-muted-foreground" />
           </div>
         </CardHeader>
@@ -239,95 +350,17 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
             <div className="flex h-[140px] items-center justify-center">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
-          ) : goal ? (
-            <div className="flex flex-col items-center gap-3">
-              {/* Circular progress */}
-              <div className="relative flex items-center justify-center">
-                <CircularProgress percentage={progress} isCompleted={isCompleted} />
-                <div className="absolute flex flex-col items-center">
-                  {isCompleted ? (
-                    <motion.div
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 200 }}
-                    >
-                      <Trophy className="h-7 w-7 text-yellow-500" />
-                    </motion.div>
-                  ) : (
-                    <BookOpen className="h-5 w-5 text-muted-foreground" />
-                  )}
-                  <span className="text-xl font-bold leading-tight">
-                    {progress.toFixed(0)}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {booksRead}/{booksGoal}
-                  </span>
+          ) : goals.length > 0 ? (
+            <div className="divide-y">
+              {goals.map((goal) => (
+                <div key={goal.id} className="py-3 first:pt-0 last:pb-0">
+                  <GoalPanel
+                    goal={goal}
+                    onEdit={() => openEditGoal(goal)}
+                    showCelebration={celebrationId === goal.id}
+                  />
                 </div>
-              </div>
-
-              {/* Stats row */}
-              <div className="flex w-full items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {booksRead === 1 ? '1 livro lido' : `${booksRead} livros lidos`}
-                </span>
-                <span>{pagesRead.toLocaleString('pt-BR')} páginas</span>
-              </div>
-
-              {/* Pages goal progress (when set) */}
-              {pagesGoal > 0 && (
-                <div className="w-full space-y-1">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Páginas</span>
-                    <span>
-                      {pagesRead.toLocaleString('pt-BR')} /{' '}
-                      {pagesGoal.toLocaleString('pt-BR')} ({pagesProgress.toFixed(0)}%)
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.min(pagesProgress, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Literary type goals progress */}
-              {ltgs.length > 0 && (
-                <div className="w-full space-y-1.5 border-t pt-2">
-                  <p className="text-xs font-medium text-muted-foreground">Por tipo:</p>
-                  {ltgs.map((ltg) => (
-                    <div key={ltg.id} className="space-y-0.5">
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{ltg.literary_type_display}</span>
-                        <span>
-                          {ltg.books_read_this_year}/{ltg.goal_count} (
-                          {ltg.progress_percentage.toFixed(0)}%)
-                        </span>
-                      </div>
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary/70 transition-all"
-                          style={{
-                            width: `${Math.min(ltg.progress_percentage, 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Celebration message */}
-              {isCompleted && (
-                <motion.p
-                  className="text-center text-xs font-medium text-yellow-600 dark:text-yellow-400"
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  🎉 Meta atingida! Parabéns!
-                </motion.p>
-              )}
+              ))}
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4">
@@ -335,7 +368,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
               <p className="text-center text-sm text-muted-foreground">
                 Defina uma meta de leitura para {currentYear}
               </p>
-              <Button size="sm" variant="outline" onClick={() => setIsModalOpen(true)}>
+              <Button size="sm" variant="outline" onClick={openNewGoal}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
                 Definir meta
               </Button>
@@ -348,7 +381,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
-        goal={goal ?? undefined}
+        goal={editingGoal}
         isLoading={isSaving}
       />
     </>

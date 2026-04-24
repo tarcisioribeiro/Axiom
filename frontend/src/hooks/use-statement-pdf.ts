@@ -72,39 +72,43 @@ export function useStatementPdf(): UseStatementPdfReturn {
 
         // ── Build unified transaction list, sorted by date desc ───────────────
         const transactions: StatementTransaction[] = [
-          ...expenses.map((e) => ({
-            id: e.id,
-            date: formatStatementDate(e.date),
-            description: e.description,
-            category: translate('expenseCategories', e.category),
-            account_name: e.account_name ?? '',
-            value: e.value,
-            type: 'expense' as const,
-            is_transfer: !!e.related_transfer,
-          })),
-          ...revenues.map((r) => ({
-            id: r.id,
-            date: formatStatementDate(r.date),
-            description: r.description,
-            category: translate('revenueCategories', r.category),
-            account_name: r.account_name ?? '',
-            value: r.value,
-            type: 'revenue' as const,
-            is_transfer: !!r.related_transfer,
-          })),
+          ...expenses
+            .filter((e) => !e.related_transfer)
+            .map((e) => ({
+              id: e.id,
+              date: formatStatementDate(e.date),
+              description: e.description,
+              category: translate('expenseCategories', e.category),
+              account_name: e.account_name ?? '',
+              value: e.value,
+              type: 'expense' as const,
+              is_transfer: false,
+            })),
+          ...revenues
+            .filter((r) => !r.related_transfer)
+            .map((r) => ({
+              id: r.id,
+              date: formatStatementDate(r.date),
+              description: r.description,
+              category: translate('revenueCategories', r.category),
+              account_name: r.account_name ?? '',
+              value: r.value,
+              type: 'revenue' as const,
+              is_transfer: false,
+            })),
         ].sort((a, b) => {
           // Parse back dd/MM/yyyy → comparable string yyyy-MM-dd
           const toComparable = (d: string) => d.split('/').reverse().join('-');
           return toComparable(b.date).localeCompare(toComparable(a.date));
         });
 
-        // ── Totals ────────────────────────────────────────────────────────────
+        // ── Totals (excluindo transferências) ─────────────────────────────────
         const totalRevenues = revenues
-          .filter((r) => r.received)
+          .filter((r) => r.received && !r.related_transfer)
           .reduce((sum, r) => sum + parseFloat(r.value), 0);
 
         const totalExpenses = expenses
-          .filter((e) => e.payed)
+          .filter((e) => e.payed && !e.related_transfer)
           .reduce((sum, e) => sum + parseFloat(e.value), 0);
 
         const netBalance = totalRevenues - totalExpenses;

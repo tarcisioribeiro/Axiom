@@ -24,6 +24,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -132,7 +133,7 @@ export default function Loans() {
     if (!paymentForm.value || !paymentForm.account || !paymentForm.date) {
       toast({
         title: t('pages.loans.payment.title'),
-        description: 'Preencha todos os campos obrigatórios.',
+        description: t('common.messages.fillRequired'),
         variant: 'destructive',
       });
       return;
@@ -145,7 +146,10 @@ export default function Loans() {
         date: paymentForm.date,
         notes: paymentForm.notes,
       });
-      toast({ title: t('pages.loans.payment.success') });
+      toast({
+        title: t('pages.loans.payment.success'),
+        description: t('pages.loans.payment.successDesc'),
+      });
       setPaymentLoan(null);
       setPaymentForm({ value: '', account: '', date: '', notes: '' });
     } catch (error: unknown) {
@@ -210,17 +214,17 @@ export default function Loans() {
 
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Valor Total:</span>
+                  <span>{t('pages.loans.totalValue')}</span>
                   <span className="font-medium">{formatCurrency(loan.value)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Valor Pago:</span>
+                  <span>{t('pages.loans.paidValue')}</span>
                   <span className="font-medium">
                     {formatCurrency(loan.payed_value)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Saldo:</span>
+                  <span>{t('pages.loans.remainingBalance')}</span>
                   <span className="font-medium text-destructive">
                     {formatCurrency(
                       parseFloat(loan.value) - parseFloat(loan.payed_value)
@@ -228,20 +232,20 @@ export default function Loans() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Beneficiado:</span>
+                  <span>{t('pages.loans.beneficiary')}</span>
                   <span className="font-medium">{loan.benefited_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Credor:</span>
+                  <span>{t('pages.loans.creditor')}</span>
                   <span className="font-medium">{loan.creditor_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Parcelas:</span>
+                  <span>{t('pages.loans.installmentsLabel')}</span>
                   <span className="font-medium">{loan.installments}x</span>
                 </div>
                 {loan.due_date && (
                   <div className="flex justify-between">
-                    <span>Vencimento:</span>
+                    <span>{t('pages.loans.dueDate')}</span>
                     <span className="font-medium">
                       {formatDate(loan.due_date, 'dd/MM/yyyy')}
                     </span>
@@ -266,7 +270,7 @@ export default function Loans() {
                   className="gap-1 text-xs"
                 >
                   <CreditCard className="h-3 w-3" />
-                  Pagar
+                  {t('pages.loans.payBtn')}
                 </Button>
                 {loan.installments > 1 && (
                   <Button
@@ -277,7 +281,7 @@ export default function Loans() {
                     className="gap-1 text-xs"
                   >
                     <List className="h-3 w-3" />
-                    Parcelas
+                    {t('pages.loans.installments.title')}
                   </Button>
                 )}
                 <Button
@@ -288,7 +292,7 @@ export default function Loans() {
                   className="gap-1 text-xs"
                 >
                   <TableProperties className="h-3 w-3" />
-                  Amortização
+                  {t('pages.loans.amortizationBtn')}
                 </Button>
                 <ReceiptButton
                   source={{ type: 'loan', data: loan }}
@@ -360,7 +364,7 @@ export default function Loans() {
           <DialogHeader>
             <DialogTitle>{t('pages.loans.payment.title')}</DialogTitle>
             <DialogDescription>
-              {paymentLoan?.description} — Saldo:{' '}
+              {paymentLoan?.description} — {t('pages.loans.remainingBalance')}{' '}
               {paymentLoan
                 ? formatCurrency(
                     parseFloat(paymentLoan.value) - parseFloat(paymentLoan.payed_value)
@@ -388,7 +392,7 @@ export default function Loans() {
                 onValueChange={(v) => setPaymentForm((f) => ({ ...f, account: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione a conta" />
+                  <SelectValue placeholder={t('common.fields.selectAccount')} />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((acc) => (
@@ -416,10 +420,10 @@ export default function Loans() {
                 onChange={(e) =>
                   setPaymentForm((f) => ({ ...f, notes: e.target.value }))
                 }
-                placeholder="Observações..."
+                placeholder={t('common.fields.notes')}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <DialogFooter>
               <Button variant="outline" onClick={() => setPaymentLoan(null)}>
                 {t('common.actions.cancel')}
               </Button>
@@ -428,10 +432,10 @@ export default function Loans() {
                 disabled={isPaymentSubmitting}
               >
                 {isPaymentSubmitting
-                  ? t('common.messages.saving')
+                  ? t('common.actions.saving')
                   : t('pages.loans.payment.submit')}
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
@@ -450,7 +454,7 @@ export default function Loans() {
           </DialogHeader>
           {isLoadingInstallments ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Carregando...
+              {t('common.actions.loading')}
             </div>
           ) : installments.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
@@ -533,11 +537,11 @@ export default function Loans() {
           </div>
           {isLoadingAmortization ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Calculando...
+              {t('pages.loans.amortization.loading')}
             </div>
           ) : !amortization ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
-              Sem dados de amortização.
+              {t('pages.loans.amortization.noData')}
             </div>
           ) : (
             <div className="overflow-x-auto">

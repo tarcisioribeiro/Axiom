@@ -724,13 +724,30 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         self.assertAlmostEqual(breakdown[5]["balance"], 1600.00, places=2)
 
     def test_credit_card_bill_without_due_date_excluded(self):
-        """Fatura sem data de vencimento nao deve entrar na projecao"""
+        """Fatura sem data de vencimento e cartao sem due_day nao entra na projecao."""
         Account.objects.filter(pk=self.account.pk).update(
             current_balance=Decimal("2000.00")
         )
-        card = self._make_credit_card()
+        from app.encryption import FieldEncryption
+
+        card_no_due_day = CreditCard(
+            name="Cartao Sem Vencimento",
+            on_card_name="TEST USER",
+            flag="VSA",
+            associated_account=self.account,
+            credit_limit=Decimal("5000.00"),
+            max_limit=Decimal("5000.00"),
+            closing_day=15,
+            due_day=None,
+            validation_date=date(2030, 1, 1),
+            created_by=self.user,
+            updated_by=self.user,
+        )
+        card_no_due_day._security_code = FieldEncryption.encrypt_data("123")
+        card_no_due_day._card_number = FieldEncryption.encrypt_data("4111111111111111")
+        card_no_due_day.save()
         CreditCardBill.objects.create(
-            credit_card=card,
+            credit_card=card_no_due_day,
             year="2026",
             month="Apr",
             invoice_beginning_date=date.today() - timedelta(days=30),

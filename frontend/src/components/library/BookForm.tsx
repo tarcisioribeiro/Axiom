@@ -94,6 +94,7 @@ export function BookForm({
           media_type: book.media_type || '',
           rating: book.rating ?? null,
           read_status: book.read_status,
+          pause_reason: book.pause_reason || '',
           owner: book.owner,
         }
       : {
@@ -113,6 +114,7 @@ export function BookForm({
           media_type: '',
           rating: null,
           read_status: 'to_read',
+          pause_reason: '',
           owner: 0,
         },
   });
@@ -564,6 +566,23 @@ export function BookForm({
                   )}
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {watch('read_status') === 'paused' && (
+          <div className="col-span-2">
+            <Label htmlFor="pause_reason">Motivo da Pausa</Label>
+            <Textarea
+              id="pause_reason"
+              {...register('pause_reason')}
+              placeholder="Por que pausou a leitura? (opcional)"
+              rows={2}
+            />
+            {errors.pause_reason && (
+              <p className="mt-1 text-sm text-destructive">
+                {errors.pause_reason.message}
+              </p>
             )}
           </div>
         )}

@@ -65,6 +65,14 @@ READ_STATUS_CHOICES = (
     ("to_read", "Para ler"),
     ("reading", "Lendo"),
     ("read", "Lido"),
+    ("paused", "Pausado"),
+)
+
+TIME_OF_DAY_CHOICES = (
+    ("morning", "Manhã"),
+    ("afternoon", "Tarde"),
+    ("evening", "Noite"),
+    ("dawn", "Madrugada"),
 )
 
 GENRES = (
@@ -297,6 +305,11 @@ class Book(BaseModel):
         blank=True,
         verbose_name="Prioridade de Leitura",
     )
+    pause_reason = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Motivo da Pausa",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -399,6 +412,13 @@ class Reading(BaseModel):
         blank=True,
         verbose_name="Página Atual",
     )
+    time_of_day = models.CharField(
+        max_length=20,
+        choices=TIME_OF_DAY_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="Período do Dia",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -454,6 +474,12 @@ class ReadingGoal(BaseModel):
     """Meta anual de leitura."""
 
     year = models.PositiveIntegerField(verbose_name="Ano")
+    name = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name="Nome da Meta",
+    )
     books_goal = models.PositiveIntegerField(verbose_name="Meta de Livros", default=12)
     pages_goal = models.PositiveIntegerField(
         verbose_name="Meta de Páginas", default=0, blank=True
@@ -468,7 +494,6 @@ class ReadingGoal(BaseModel):
     class Meta:
         verbose_name = "Meta de Leitura"
         verbose_name_plural = "Metas de Leitura"
-        unique_together = [("year", "owner")]
         ordering = ["-year"]
 
     def __str__(self):

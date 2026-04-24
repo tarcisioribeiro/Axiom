@@ -13,7 +13,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BookOpen, GripVertical } from 'lucide-react';
+import { BookOpen, GripVertical, Clock } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -81,6 +81,14 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
         <Badge variant="outline" className="hidden text-xs sm:inline-flex">
           {book.genre_display}
         </Badge>
+        {book.estimated_days_to_finish != null && (
+          <Badge
+            variant="outline"
+            className="hidden items-center gap-1 text-xs lg:inline-flex"
+          >
+            <Clock className="h-3 w-3" />~{book.estimated_days_to_finish}d
+          </Badge>
+        )}
         <Badge variant={badge.variant} className="text-xs">
           {badge.label}
         </Badge>
