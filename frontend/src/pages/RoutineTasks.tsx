@@ -1,4 +1,14 @@
-import { Plus, CheckSquare, Edit, Trash2, BarChart2, Library } from 'lucide-react';
+import {
+  Plus,
+  CheckSquare,
+  Edit,
+  Trash2,
+  BarChart2,
+  Library,
+  Download,
+  FileText,
+  Sheet,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -19,8 +29,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { getIconByName } from '@/components/ui/icon-picker';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
 import { type routineTaskSchema } from '@/lib/validations';
 import { routineTasksService } from '@/services/routine-tasks-service';
@@ -44,6 +61,7 @@ export default function RoutineTasks() {
   const [highlightedIds, setHighlightedIds] = useState<Set<number>>(new Set());
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { isExporting, exportPDF, exportExcel } = useRoutineExport();
 
   useEffect(() => {
     void loadData();
@@ -138,6 +156,22 @@ export default function RoutineTasks() {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    try {
+      if (format === 'pdf') {
+        await exportPDF(tasks);
+      } else {
+        await exportExcel(tasks);
+      }
+    } catch {
+      toast({
+        title: t('pages.routineTasks.export.errorTitle'),
+        description: t('pages.routineTasks.export.errorDesc'),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -237,14 +271,15 @@ export default function RoutineTasks() {
       key: 'priority',
       label: t('pages.routineTasks.columns.priority'),
       render: (task) => {
-        const priorityColors: Record<string, string> = {
-          low: 'bg-muted text-muted-foreground',
-          medium: 'bg-info',
-          high: 'bg-warning',
-          critical: 'bg-destructive',
+        type PriorityVariant = 'secondary' | 'info' | 'warning' | 'destructive';
+        const priorityVariant: Record<string, PriorityVariant> = {
+          low: 'secondary',
+          medium: 'info',
+          high: 'warning',
+          critical: 'destructive',
         };
         return (
-          <Badge className={priorityColors[task.priority] ?? 'bg-muted'}>
+          <Badge variant={priorityVariant[task.priority] ?? 'secondary'}>
             {task.priority_display}
           </Badge>
         );
@@ -306,7 +341,31 @@ export default function RoutineTasks() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isExporting || tasks.length === 0}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting
+                  ? t('pages.routineTasks.export.exporting')
+                  : t('pages.routineTasks.export.btn')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => void handleExport('pdf')}>
+                <FileText className="mr-2 h-4 w-4" />
+                {t('pages.routineTasks.export.pdf')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void handleExport('excel')}>
+                <Sheet className="mr-2 h-4 w-4" />
+                {t('pages.routineTasks.export.excel')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             size="sm"

@@ -980,7 +980,7 @@ export interface Archive {
   file_name?: string;
   file_size?: number;
   notes?: string;
-  tags?: string;
+  tags?: string[];
   has_text: boolean;
   has_file: boolean;
   encrypted_file?: string | null;
@@ -1191,8 +1191,10 @@ export interface Book {
   rating: number | null;
   read_status: string;
   read_status_display: string;
+  pause_reason?: string | null;
   reading_priority: number | null;
   has_summary: boolean;
+  estimated_days_to_finish?: number | null;
   total_pages_read: number;
   reading_progress: number;
   general_avg_pages_per_day: number;
@@ -1222,6 +1224,7 @@ export interface BookFormData {
   media_type?: string;
   rating: number | null;
   read_status: string;
+  pause_reason?: string;
   owner: number;
 }
 
@@ -1259,6 +1262,8 @@ export interface Reading {
   pages_read: number;
   notes?: string;
   current_page?: number | null;
+  time_of_day?: string | null;
+  time_of_day_display?: string | null;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -1272,6 +1277,7 @@ export interface ReadingFormData {
   pages_read: number;
   notes?: string;
   current_page?: number | null;
+  time_of_day?: string | null;
   owner: number;
 }
 
@@ -1297,6 +1303,7 @@ export interface ReadingGoal {
   id: number;
   uuid: string;
   year: number;
+  name?: string | null;
   books_goal: number;
   pages_goal: number;
   books_read_this_year: number;
@@ -1312,6 +1319,7 @@ export interface ReadingGoal {
 
 export interface ReadingGoalFormData {
   year: number;
+  name?: string;
   books_goal: number;
   pages_goal: number;
   owner: number;
@@ -1433,6 +1441,7 @@ export const READ_STATUS = [
   { value: 'to_read', label: 'Para ler' },
   { value: 'reading', label: 'Lendo' },
   { value: 'read', label: 'Lido' },
+  { value: 'paused', label: 'Pausado' },
 ];
 
 // ============================================================================

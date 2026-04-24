@@ -286,6 +286,17 @@ class ApiClient {
           }
         }
 
+        // When responseType is 'blob', Axios stores error bodies as Blobs too.
+        // Parse them back to JSON so handleError can extract the error message.
+        if (error.response?.data instanceof Blob && error.response.data.size > 0) {
+          try {
+            const text = await error.response.data.text();
+            error.response.data = JSON.parse(text);
+          } catch {
+            // Leave as Blob if parsing fails — handleError will use fallback message
+          }
+        }
+
         return Promise.reject(this.handleError(error));
       }
     );

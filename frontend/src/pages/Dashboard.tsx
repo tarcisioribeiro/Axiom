@@ -619,7 +619,7 @@ export default function Dashboard() {
                     </h3>
                     {irReport.revenues.map((r) => (
                       <div key={r.category} className="flex justify-between text-sm">
-                        <span>{translate('expenseCategories', r.category)}</span>
+                        <span>{translate('revenueCategories', r.category)}</span>
                         <span>{formatCurrency(r.total)}</span>
                       </div>
                     ))}

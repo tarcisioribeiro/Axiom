@@ -123,7 +123,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           )}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold tabular-nums tracking-tight">
+          <div className="numeric text-2xl font-bold tracking-tight">
             {displayValue}
           </div>
           {trend && (
