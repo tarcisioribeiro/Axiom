@@ -660,6 +660,11 @@ export const bookSchema = z.object({
     .string()
     .min(1, requiredError('Status de leitura'))
     .max(50, maxError('Status de leitura', 50)),
+  pause_reason: z
+    .string()
+    .max(2000, maxError('Motivo da pausa', 2000))
+    .optional()
+    .or(z.literal('')),
   owner: z
     .number({ message: 'Proprietário inválido' })
     .int('Proprietário deve ser um número inteiro')
@@ -681,6 +686,13 @@ export const readingSchema = z.object({
     .int('Páginas deve ser um número inteiro')
     .positive(positiveError('Páginas lidas')),
   notes: z.string().max(2000, maxError('Anotações', 2000)).optional().or(z.literal('')),
+  current_page: z
+    .number({ message: numberError('Página atual') })
+    .int('Deve ser um número inteiro')
+    .min(1, 'Deve ser maior que zero')
+    .nullable()
+    .optional(),
+  time_of_day: z.string().nullable().optional(),
   owner: z
     .number({ message: 'Proprietário inválido' })
     .int('Proprietário deve ser um número inteiro')
@@ -887,6 +899,7 @@ export const readingGoalSchema = z.object({
     .int('Ano deve ser um número inteiro')
     .min(2000, 'Ano deve ser maior ou igual a 2000')
     .max(2100, 'Ano inválido'),
+  name: z.string().max(200, maxError('Nome', 200)).optional().or(z.literal('')),
   books_goal: z
     .number({ message: numberError('Meta de livros') })
     .int('Meta deve ser um número inteiro')

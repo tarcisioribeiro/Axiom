@@ -12,8 +12,8 @@ import type { ReactNode } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
+import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -96,6 +96,8 @@ export default function MemberFinancialReport() {
   const [isExporting, setIsExporting] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [appliedStart, setAppliedStart] = useState('');
+  const [appliedEnd, setAppliedEnd] = useState('');
   const [activeTab, setActiveTab] = useState<ActiveTab>('expenses');
 
   const memberId = Number(id);
@@ -105,8 +107,8 @@ export default function MemberFinancialReport() {
     try {
       setIsLoading(true);
       const data = await membersService.getFinancialReport(memberId, {
-        start_date: startDate || undefined,
-        end_date: endDate || undefined,
+        start_date: appliedStart || undefined,
+        end_date: appliedEnd || undefined,
       });
       setReport(data);
     } catch (error: unknown) {
@@ -118,7 +120,7 @@ export default function MemberFinancialReport() {
     } finally {
       setIsLoading(false);
     }
-  }, [memberId, startDate, endDate, toast, t]);
+  }, [memberId, appliedStart, appliedEnd, toast, t]);
 
   useEffect(() => {
     void loadReport();
@@ -216,14 +218,22 @@ export default function MemberFinancialReport() {
             className="w-44"
           />
         </div>
-        <Button onClick={() => void loadReport()} variant="outline">
+        <Button
+          onClick={() => {
+            setAppliedStart(startDate);
+            setAppliedEnd(endDate);
+          }}
+          variant="outline"
+        >
           Aplicar Filtro
         </Button>
-        {(startDate || endDate) && (
+        {(appliedStart || appliedEnd) && (
           <Button
             onClick={() => {
               setStartDate('');
               setEndDate('');
+              setAppliedStart('');
+              setAppliedEnd('');
             }}
             variant="ghost"
           >
@@ -288,22 +298,17 @@ export default function MemberFinancialReport() {
       {pieData.length > 0 && (
         <div className="mb-lg overflow-hidden rounded-lg border bg-card p-md">
           <h3 className="mb-md text-base font-semibold">Despesas por Categoria</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={110} dataKey="value">
-                {pieData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={chartColors[index % chartColors.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip
-                formatter={(value: number) => formatCurrency(value.toString())}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          <ChartContainer
+            chartId="member-expenses-by-category"
+            data={pieData}
+            dataKey="value"
+            nameKey="name"
+            formatter={(value) => formatCurrency(value.toString())}
+            colors={chartColors}
+            emptyMessage="Sem despesas por categoria"
+            lockChartType="pie"
+            height={300}
+          />
         </div>
       )}
 

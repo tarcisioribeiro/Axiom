@@ -774,21 +774,75 @@ class CashFlowForecastView(APIView):
         """
         Adiciona o saldo devedor das faturas de cartao de credito nao pagas
         ao dicionario de despesas, agrupado pela data de vencimento.
+
+        Para faturas com due_date explícito, usa a data real.
+        Para faturas sem due_date (abertas), estima a data a partir do
+        due_day configurado no cartão.
         """
-        bills = CreditCardBill.objects.filter(
+        _MONTH_MAP = {
+            "Jan": 1,
+            "Feb": 2,
+            "Mar": 3,
+            "Apr": 4,
+            "May": 5,
+            "Jun": 6,
+            "Jul": 7,
+            "Aug": 8,
+            "Sep": 9,
+            "Oct": 10,
+            "Nov": 11,
+            "Dec": 12,
+        }
+
+        # Faturas com due_date explícito dentro da janela
+        bills_with_date = CreditCardBill.objects.filter(
             credit_card__created_by=self._user,
             due_date__isnull=False,
             due_date__gte=today,
             due_date__lte=end_date,
         ).exclude(status="paid")
 
-        for bill in bills:
+        for bill in bills_with_date:
             remaining = (bill.total_amount or Decimal("0.00")) - (
                 bill.paid_amount or Decimal("0.00")
             )
             if remaining > Decimal("0.00"):
                 prev = expenses_by_date.get(bill.due_date, Decimal("0.00"))
                 expenses_by_date[bill.due_date] = prev + remaining
+
+        # Faturas sem due_date: estima vencimento pelo due_day do cartão
+        bills_no_date = (
+            CreditCardBill.objects.filter(
+                credit_card__created_by=self._user,
+                due_date__isnull=True,
+            )
+            .exclude(status="paid")
+            .select_related("credit_card")
+        )
+
+        for bill in bills_no_date:
+            cc = bill.credit_card
+            if not cc.due_day:
+                continue
+            month_num = _MONTH_MAP.get(bill.month, 0)
+            if not month_num:
+                continue
+            year_num = int(bill.year)
+            # Vencimento ocorre normalmente no mês seguinte ao fechamento
+            if month_num == 12:
+                due_month, due_year = 1, year_num + 1
+            else:
+                due_month, due_year = month_num + 1, year_num
+            max_day = calendar.monthrange(due_year, due_month)[1]
+            estimated_due = date(due_year, due_month, min(cc.due_day, max_day))
+            if not (today <= estimated_due <= end_date):
+                continue
+            remaining = (bill.total_amount or Decimal("0.00")) - (
+                bill.paid_amount or Decimal("0.00")
+            )
+            if remaining > Decimal("0.00"):
+                prev = expenses_by_date.get(estimated_due, Decimal("0.00"))
+                expenses_by_date[estimated_due] = prev + remaining
 
 
 class FinancialAlertsView(APIView):

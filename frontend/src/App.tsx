@@ -68,8 +68,28 @@ const Budgets = lazy(() => import('./pages/Budgets'));
 // Notification Preferences
 const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 
-// Bank Reconciliation Detail (navigated from Accounts page)
+// Bank Reconciliation
+const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
+
+// Credit Card Bills
+const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
+
+// Vault Simulator
+const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
+
+// Security extras
+const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
+const PasswordImport = lazy(() => import('./pages/PasswordImport'));
+const Permissions = lazy(() => import('./pages/Permissions'));
+
+// Library extras
+const Highlights = lazy(() => import('./pages/Highlights'));
+const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
+
+// Planning extras
+const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
+const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -182,7 +202,11 @@ function AnimatedRoutes() {
           />
           <Route
             path="/credit-card-bills"
-            element={<Navigate to="/credit-cards" replace />}
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <CreditCardBills />
+              </Suspense>
+            }
           />
           <Route
             path="/credit-card-expenses"
@@ -274,6 +298,22 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/security/activity-logs"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ActivityLogs />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/security/password-import"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <PasswordImport />
+              </Suspense>
+            }
+          />
           {/* Library Module routes */}
           <Route
             path="/library/dashboard"
@@ -304,6 +344,22 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <Publishers />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/highlights"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Highlights />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/library/reading-queue"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ReadingQueue />
               </Suspense>
             }
           />
@@ -344,6 +400,22 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
+          <Route
+            path="/planning/daily-checklist"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <DailyChecklist />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/planning/reflections"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <DailyReflections />
+              </Suspense>
+            }
+          />
 
           {/* Budgets Module routes */}
           <Route
@@ -355,10 +427,14 @@ function AnimatedRoutes() {
             }
           />
 
-          {/* Bank Reconciliation Detail (accessed from Accounts) */}
+          {/* Bank Reconciliation */}
           <Route
             path="/bank-reconciliation"
-            element={<Navigate to="/accounts" replace />}
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <BankReconciliation />
+              </Suspense>
+            }
           />
           <Route
             path="/bank-reconciliation/:importId"
@@ -386,9 +462,24 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-          <Route path="/vaults/simulator" element={<Navigate to="/vaults" replace />} />
+          <Route
+            path="/vaults/simulator"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <VaultSimulator />
+              </Suspense>
+            }
+          />
 
           {/* Settings */}
+          <Route
+            path="/settings/permissions"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <Permissions />
+              </Suspense>
+            }
+          />
           <Route
             path="/settings/notifications"
             element={

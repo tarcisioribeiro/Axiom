@@ -474,13 +474,24 @@
       "deleteTitle": "Confirmar exclusão",
       "deleteDesc": "Tem certeza que deseja excluir o empréstimo \"{{name}}\"?",
       "created": "Empréstimo criado",
+      "createdDesc": "O empréstimo foi criado com sucesso.",
       "updated": "Empréstimo atualizado",
+      "updatedDesc": "O empréstimo foi atualizado com sucesso.",
       "deleted": "Empréstimo excluído",
       "deletedDesc": "O empréstimo foi excluído com sucesso.",
       "emptySearch": "Nenhum empréstimo encontrado para a pesquisa atual.",
       "emptyState": "Nenhum empréstimo cadastrado. Clique em \"Novo Empréstimo\" para começar.",
       "searchPlaceholder": "Buscar empréstimos...",
       "noPrerequisitesMsg": "É necessário ter {{missing}} cadastrados antes de criar um empréstimo.",
+      "totalValue": "Valor Total:",
+      "paidValue": "Valor Pago:",
+      "remainingBalance": "Saldo:",
+      "beneficiary": "Beneficiado:",
+      "creditor": "Credor:",
+      "installmentsLabel": "Parcelas:",
+      "dueDate": "Vencimento:",
+      "payBtn": "Pagar",
+      "amortizationBtn": "Amortização",
       "installments": {
         "title": "Parcelas",
         "emptyState": "Nenhuma parcela gerada para este empréstimo.",
@@ -499,7 +510,8 @@
         "date": "Data",
         "notes": "Observações",
         "submit": "Registrar Pagamento",
-        "success": "Pagamento registrado com sucesso."
+        "success": "Pagamento registrado com sucesso.",
+        "successDesc": "O pagamento foi registrado e as parcelas foram atualizadas."
       },
       "amortization": {
         "title": "Tabela de Amortização",
@@ -511,7 +523,9 @@
         "payment": "Parcela",
         "principal": "Amortização",
         "interest": "Juros",
-        "balance": "Saldo"
+        "balance": "Saldo",
+        "loading": "Calculando...",
+        "noData": "Sem dados de amortização."
       }
     },
     "members": {
@@ -719,9 +733,17 @@
         "number": "Parcela",
         "dueDate": "Vencimento",
         "value": "Valor",
+        "status": "Status",
         "paid": "Paga",
         "pending": "Pendente"
       },
+      "totalValue": "Valor Total:",
+      "paidValue": "Valor Pago:",
+      "remainingBalance": "Saldo Restante:",
+      "registrationDate": "Data de Registro:",
+      "responsible": "Responsável:",
+      "payBtn": "Pagar",
+      "installmentsBtn": "Parcelas",
       "payment": {
         "title": "Registrar Pagamento",
         "value": "Valor",
@@ -729,7 +751,8 @@
         "date": "Data",
         "notes": "Observações",
         "submit": "Registrar",
-        "success": "Pagamento registrado com sucesso."
+        "success": "Pagamento registrado com sucesso.",
+        "successDesc": "O pagamento foi registrado e o saldo foi atualizado."
       }
     },
     "budgets": {
@@ -773,8 +796,13 @@
         "year": "Ano"
       },
       "trend": {
-        "title": "Tendência de Gastos"
+        "title": "Tendência de Gastos",
+        "noData": "Nenhum dado encontrado para esta categoria no período selecionado.",
+        "actualSpent": "Gasto real",
+        "limit": "Limite",
+        "monthsOption": "{{count}} meses"
       },
+      "badgeLabel": "Orçamento",
       "rollover": {
         "enabled": "Habilitar rolagem de saldo",
         "description": "O saldo não utilizado do mês anterior é adicionado ao limite do mês atual.",
@@ -872,8 +900,15 @@
       "deleted": "Cofre excluído",
       "deletedDesc": "O cofre foi excluído com sucesso.",
       "depositSuccess": "Depósito realizado",
+      "depositSuccessDesc": "{{amount}} depositado no cofre com sucesso.",
       "withdrawSuccess": "Saque realizado",
+      "withdrawSuccessDesc": "{{amount}} sacado do cofre com sucesso.",
       "yieldApplied": "Rendimento aplicado",
+      "yieldAppliedDesc": "{{amount}} de rendimento adicionado ao cofre.",
+      "invalidDepositDesc": "Informe um valor válido maior que zero para o depósito.",
+      "invalidWithdrawDesc": "Informe um valor válido maior que zero para o saque.",
+      "simulatorDesc": "Simule o crescimento deste cofre com diferentes parâmetros.",
+      "simulatorFinalBalance": "Saldo final após {{months}} meses",
       "noYield": "Sem rendimento",
       "noYieldDesc": "Não há rendimento pendente para aplicar.",
       "noAccountMsg": "É necessário ter pelo menos uma conta cadastrada antes de criar um cofre.",
@@ -1722,6 +1757,14 @@
         "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
         "alreadyImported": "Nada a importar",
         "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+      },
+      "export": {
+        "btn": "Exportar Rotina",
+        "pdf": "PDF",
+        "excel": "Excel (.xlsx)",
+        "exporting": "Gerando...",
+        "errorTitle": "Erro ao exportar",
+        "errorDesc": "Não foi possível gerar o arquivo. Tente novamente."
       }
     },
     "goals": {
@@ -1902,6 +1945,88 @@
       "timeLabel": "Horário: {{time}}",
       "listMode": "Modo lista",
       "kanbanMode": "Modo kanban"
+    },
+    "categorizationRules": {
+      "title": "Regras de Categorização",
+      "newBtn": "Nova Regra",
+      "editTitle": "Editar Regra",
+      "newTitle": "Nova Regra de Categorização",
+      "editDesc": "Atualize as informações da regra de categorização.",
+      "newDesc": "Crie uma regra para categorizar automaticamente suas despesas com base no estabelecimento.",
+      "deleteTitle": "Excluir regra",
+      "deleteDesc": "Tem certeza que deseja excluir esta regra de categorização?",
+      "created": "Regra criada",
+      "createdDesc": "Regra de categorização criada com sucesso.",
+      "updated": "Regra atualizada",
+      "updatedDesc": "Regra de categorização atualizada com sucesso.",
+      "deleted": "Regra excluída",
+      "deletedDesc": "A regra de categorização foi excluída.",
+      "applied": "Regras aplicadas",
+      "appliedDesc": "{{count}} despesa(s) categorizada(s) automaticamente.",
+      "applyBtn": "Aplicar Regras",
+      "applying": "Aplicando...",
+      "emptyTitle": "Nenhuma regra cadastrada",
+      "emptyMessage": "Crie regras para categorizar automaticamente suas despesas com base no estabelecimento.",
+      "saveError": "Erro ao salvar",
+      "deleteError": "Erro ao excluir",
+      "applyError": "Erro ao aplicar regras",
+      "columns": {
+        "merchantContains": "Estabelecimento contém",
+        "category": "Categoria",
+        "status": "Status",
+        "priority": "Prioridade",
+        "createdAt": "Criada em"
+      },
+      "form": {
+        "merchantContains": "Estabelecimento contém",
+        "merchantContainsPlaceholder": "Ex: McDonald, Uber, Netflix",
+        "merchantContainsHint": "Texto buscado no campo \"Estabelecimento\" da despesa (sem distinção de maiúsculas).",
+        "category": "Categoria",
+        "categoryPlaceholder": "Selecione uma categoria",
+        "priority": "Prioridade",
+        "priorityHint": "Menor valor = maior prioridade. Regras com valor menor são avaliadas primeiro.",
+        "isActive": "Regra ativa",
+        "statusActive": "Ativa",
+        "statusInactive": "Inativa"
+      }
+    },
+    "bankReconciliation": {
+      "title": "Conciliação Bancária",
+      "importBtn": "Importar Extrato",
+      "totalImports": "Total de Importações",
+      "lastImport": "Última Importação",
+      "emptyTitle": "Nenhum extrato importado",
+      "emptyMessage": "Clique em 'Importar Extrato' para começar.",
+      "columns": {
+        "file": "Arquivo",
+        "format": "Formato",
+        "status": "Status",
+        "entries": "Entradas",
+        "matched": "Conciliados",
+        "divergences": "Divergências",
+        "importedAt": "Importado em",
+        "actions": "Ações"
+      },
+      "statuses": {
+        "completed": "Concluído",
+        "processing": "Processando",
+        "failed": "Falhou"
+      },
+      "upload": {
+        "title": "Importar Extrato Bancário",
+        "desc": "Selecione o arquivo do extrato bancário e a conta correspondente.",
+        "fileLabel": "Arquivo (.ofx ou .csv)",
+        "accountLabel": "Conta",
+        "accountPlaceholder": "Selecione a conta",
+        "detectedFormat": "formato detectado",
+        "unknownFormat": "desconhecido",
+        "importBtn": "Importar",
+        "importing": "Importando...",
+        "success": "Extrato importado com sucesso!",
+        "fillRequired": "Preencha todos os campos.",
+        "invalidFormat": "Formato inválido. Use OFX ou CSV."
+      },
+      "viewBtn": "Ver"
     }
   }
 }
