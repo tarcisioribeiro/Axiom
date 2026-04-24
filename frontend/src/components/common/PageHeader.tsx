@@ -34,7 +34,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {icon}
           </div>
         )}
-        <h1 className="text-xl font-bold tracking-tight md:text-2xl">{title}</h1>
+        <h1 className="heading-1">{title}</h1>
       </div>
       {children}
       {!children && action && (

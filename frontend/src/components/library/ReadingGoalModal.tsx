@@ -59,11 +59,12 @@ export function ReadingGoalModal({
     defaultValues: goal
       ? {
           year: goal.year,
+          name: goal.name ?? '',
           books_goal: goal.books_goal,
           pages_goal: goal.pages_goal,
           owner: goal.owner,
         }
-      : { year: currentYear, books_goal: 12, pages_goal: 0, owner: 0 },
+      : { year: currentYear, name: '', books_goal: 12, pages_goal: 0, owner: 0 },
   });
 
   const [ltgDrafts, setLtgDrafts] = useState<LiteraryTypeGoalDraft[]>([]);
@@ -72,6 +73,7 @@ export function ReadingGoalModal({
     if (goal) {
       reset({
         year: goal.year,
+        name: goal.name ?? '',
         books_goal: goal.books_goal,
         pages_goal: goal.pages_goal,
         owner: goal.owner,
@@ -86,7 +88,7 @@ export function ReadingGoalModal({
         );
       });
     } else {
-      reset({ year: currentYear, books_goal: 12, pages_goal: 0, owner: 0 });
+      reset({ year: currentYear, name: '', books_goal: 12, pages_goal: 0, owner: 0 });
       startTransition(() => setLtgDrafts([]));
       const loadMember = async () => {
         try {
@@ -152,6 +154,21 @@ export function ReadingGoalModal({
             />
             {errors.year && (
               <p className="text-sm text-destructive">{errors.year.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome da Meta</Label>
+            <Input
+              id="name"
+              {...register('name')}
+              placeholder="Ex: Meta de Férias, Clássicos..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Opcional — útil quando há múltiplas metas no mesmo ano
+            </p>
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
             )}
           </div>
 

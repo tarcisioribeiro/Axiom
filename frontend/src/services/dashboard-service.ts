@@ -1,3 +1,4 @@
+import { API_CONFIG } from '@/config/api-config';
 import type {
   DashboardStats,
   AccountBalance,
@@ -21,6 +22,10 @@ export interface IRReport {
 interface CreditCardExpensesByCategoryParams {
   card?: number;
   bill?: number;
+}
+
+interface LGPDErrorResponse {
+  detail?: string;
 }
 
 class DashboardService {
@@ -68,8 +73,33 @@ class DashboardService {
     >);
   }
 
-  async requestLGPDExport(): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>('/api/v1/dashboard/lgpd-export/', null);
+  async requestLGPDExport(): Promise<void> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}/api/v1/dashboard/lgpd-export/`,
+      {
+        credentials: 'include',
+      }
+    );
+    if (!response.ok) {
+      let detail = `Erro ${response.status}`;
+      try {
+        const data = (await response.json()) as LGPDErrorResponse;
+        if (data.detail) detail = data.detail;
+      } catch {
+        /* ignore */
+      }
+      throw new Error(detail);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    a.href = url;
+    a.download = `mindledger_dados_${dateStr}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 }
 

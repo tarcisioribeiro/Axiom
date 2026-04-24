@@ -1757,6 +1757,14 @@
         "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
         "alreadyImported": "Nada a importar",
         "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+      },
+      "export": {
+        "btn": "Exportar Rotina",
+        "pdf": "PDF",
+        "excel": "Excel (.xlsx)",
+        "exporting": "Gerando...",
+        "errorTitle": "Erro ao exportar",
+        "errorDesc": "Não foi possível gerar o arquivo. Tente novamente."
       }
     },
     "goals": {

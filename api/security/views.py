@@ -400,7 +400,7 @@ class ArchiveListCreateView(VaultLockedMixin, BaseListCreateView):
     def get_queryset(self):
         # Usa defer() para excluir campo criptografado na listagem (performance)
         return (
-            Archive.objects.filter(owner__user=self.request.user)
+            Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
             .select_related("owner")
             .defer("_encrypted_text")
         )
@@ -452,9 +452,9 @@ class ArchiveDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        return Archive.objects.filter(owner__user=self.request.user).select_related(
-            "owner"
-        )
+        return Archive.objects.filter(
+            owner__user=self.request.user, is_deleted=False
+        ).select_related("owner")
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -517,7 +517,7 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        return Archive.objects.filter(owner__user=self.request.user)
+        return Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -578,15 +578,17 @@ class ArchiveDownloadView(APIView):
     def get(self, request, pk):
         """Download do arquivo criptografado."""
         try:
-            archive = Archive.objects.get(pk=pk, owner__user=request.user)
+            archive = Archive.objects.get(
+                pk=pk, owner__user=request.user, is_deleted=False
+            )
         except Archive.DoesNotExist:
             return Response(
-                {"error": "Arquivo não encontrado"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Arquivo não encontrado"}, status=status.HTTP_404_NOT_FOUND
             )
 
         if not archive.encrypted_file:
             return Response(
-                {"error": "Este arquivo não possui um arquivo anexado"},
+                {"detail": "Este arquivo não possui um arquivo anexado"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -610,7 +612,7 @@ class ArchiveDownloadView(APIView):
             file = archive.encrypted_file.open("rb")
         except Exception:
             return Response(
-                {"error": "Arquivo não encontrado no sistema de arquivos"},
+                {"detail": "Arquivo não encontrado no sistema de arquivos"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 

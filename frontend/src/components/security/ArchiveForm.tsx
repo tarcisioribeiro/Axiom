@@ -87,7 +87,7 @@ export function ArchiveForm({
           archive_type: archive.archive_type as ArchiveFormData['archive_type'],
           text_content: archive.text_content || '',
           notes: archive.notes || '',
-          tags: archive.tags || '',
+          tags: archive.tags?.join(', ') || '',
           owner: archive.owner,
         }
       : {
