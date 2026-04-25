@@ -79,10 +79,14 @@ export function KanbanCard({ card }: KanbanCardProps) {
                   )}
                 </span>
               </h4>
-              {card.scheduled_time && (
+              {(card.scheduled_time || card.closing_time) && (
                 <div className="mt-1 flex items-center gap-1 text-xs">
                   <Clock className="h-3 w-3" />
-                  <span>{card.scheduled_time}</span>
+                  <span>
+                    {card.scheduled_time}
+                    {card.scheduled_time && card.closing_time && ' — '}
+                    {card.closing_time}
+                  </span>
                 </div>
               )}
             </div>

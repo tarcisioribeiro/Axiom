@@ -69,7 +69,8 @@ export function RoutineTaskForm({
           target_quantity: task.target_quantity,
           unit: task.unit,
           owner: task.owner,
-          default_time: task.default_time || null,
+          default_time: task.default_time ? task.default_time.substring(0, 5) : null,
+          closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
           daily_occurrences: task.daily_occurrences || 1,
           interval_hours: task.interval_hours || null,
           scheduled_times: task.scheduled_times || null,
@@ -89,6 +90,7 @@ export function RoutineTaskForm({
           unit: 'vez',
           owner: 0,
           default_time: null,
+          closing_time: null,
           daily_occurrences: 1,
           interval_hours: null,
           scheduled_times: null,
@@ -97,6 +99,7 @@ export function RoutineTaskForm({
 
   const periodicity = watch('periodicity');
   const isActive = watch('is_active');
+  const dailyOccurrences = watch('daily_occurrences');
 
   // Sync form values when task prop changes (handles Dialog keeping form mounted)
   useEffect(() => {
@@ -115,7 +118,8 @@ export function RoutineTaskForm({
         target_quantity: task.target_quantity,
         unit: task.unit,
         owner: task.owner,
-        default_time: task.default_time || null,
+        default_time: task.default_time ? task.default_time.substring(0, 5) : null,
+        closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
         daily_occurrences: task.daily_occurrences || 1,
         interval_hours: task.interval_hours || null,
         scheduled_times: task.scheduled_times || null,
@@ -526,6 +530,26 @@ export function RoutineTaskForm({
               </p>
             )}
           </div>
+
+          {(dailyOccurrences ?? 1) === 1 && (
+            <div>
+              <Label htmlFor="closing_time">Horário de Encerramento</Label>
+              <Input
+                id="closing_time"
+                type="time"
+                value={watch('closing_time') || ''}
+                onChange={(e) => setValue('closing_time', e.target.value || null)}
+              />
+              <p className="mt-1 text-xs">
+                Horário de encerramento da tarefa (opcional)
+              </p>
+              {errors.closing_time && (
+                <p className="mt-1 text-sm text-destructive">
+                  {errors.closing_time.message}
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="scheduled_times">Horários Específicos</Label>

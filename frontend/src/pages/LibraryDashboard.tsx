@@ -34,6 +34,7 @@ import {
 } from 'recharts';
 
 import { ChartContainer } from '@/components/charts';
+import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -532,10 +533,13 @@ export default function LibraryDashboard() {
                               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
                               <YAxis hide domain={[0, 'auto']} />
                               <Tooltip
-                                formatter={(value) => [
-                                  `${String(value)}${unit ? ' ' + unit : ''}`,
-                                  label,
-                                ]}
+                                content={
+                                  <EnhancedTooltip
+                                    formatter={(value) =>
+                                      `${String(value)}${unit ? ' ' + unit : ''}`
+                                    }
+                                  />
+                                }
                               />
                               <Bar
                                 dataKey="value"

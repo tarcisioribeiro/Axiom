@@ -1534,6 +1534,7 @@ export interface RoutineTask {
   interval_start_date?: string | null;
   // Campos de agendamento de horário
   default_time?: string | null;
+  closing_time?: string | null;
   daily_occurrences: number;
   interval_hours?: number | null;
   scheduled_times?: string[] | null;
@@ -1567,6 +1568,7 @@ export interface RoutineTaskFormData {
   interval_start_date?: string | null;
   // Campos de agendamento de horário
   default_time?: string | null;
+  closing_time?: string | null;
   daily_occurrences?: number;
   interval_hours?: number | null;
   scheduled_times?: string[] | null;
@@ -1643,6 +1645,7 @@ export interface TaskCard {
   notes?: string;
   record_id?: number;
   scheduled_time?: string; // Horário programado (HH:MM)
+  closing_time?: string; // Horário de encerramento (HH:MM)
 }
 
 // Goal Types
@@ -1746,6 +1749,7 @@ export interface TaskInstance {
   started_at?: string | null;
   completed_at?: string | null;
   is_overdue: boolean;
+  closing_time?: string | null;
   owner: number;
   owner_name: string;
   created_at: string;

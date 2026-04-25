@@ -736,6 +736,11 @@ export const routineTaskSchema = z
       .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato invalido. Use HH:MM')
       .optional()
       .nullable(),
+    closing_time: z
+      .string()
+      .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato invalido. Use HH:MM')
+      .optional()
+      .nullable(),
     daily_occurrences: z
       .number()
       .min(1, 'Minimo 1 ocorrencia')
@@ -829,6 +834,19 @@ export const routineTaskSchema = z
     {
       message: 'Horario padrao e obrigatorio quando intervalo de horas esta definido',
       path: ['default_time'],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.closing_time && (data.daily_occurrences ?? 1) > 1) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        'Horario de encerramento so e permitido para tarefas com uma ocorrencia por dia',
+      path: ['closing_time'],
     }
   );
 
