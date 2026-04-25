@@ -159,7 +159,13 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                       <View style={s.timeRow}>
                         {entry.time ? (
                           <View style={s.timeBox}>
-                            <Text style={s.timeLabel}>{entry.time}</Text>
+                            <Text style={s.timeLabel}>
+                              {entry.time}
+                              {entry.task.daily_occurrences === 1 &&
+                              entry.task.closing_time
+                                ? ` — ${entry.task.closing_time.substring(0, 5)}`
+                                : ''}
+                            </Text>
                           </View>
                         ) : (
                           <Text style={s.timeNone}>Sem horario definido</Text>

@@ -183,26 +183,26 @@ export default function RoutineTasks() {
   };
 
   const getCompletionRateColor = (rate: number) => {
-    if (rate >= 80) return 'bg-success';
-    if (rate >= 50) return 'bg-warning';
-    return 'bg-destructive';
+    if (rate >= 80) return 'bg-success text-white dark:text-black border-transparent';
+    if (rate >= 50) return 'bg-warning text-white dark:text-black border-transparent';
+    return 'bg-destructive text-white dark:text-black border-transparent';
   };
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      health: 'bg-category-health',
-      intellect: 'bg-category-studies',
-      spiritual: 'bg-category-spiritual',
-      exercise: 'bg-category-exercise',
-      nutrition: 'bg-category-nutrition',
-      work: 'bg-category-work',
-      social: 'bg-category-leisure',
-      finance: 'bg-category-finance',
-      household: 'bg-category-nutrition',
-      personal_care: 'bg-category-health',
-      other: 'bg-muted',
+      health: 'bg-category-health text-white dark:text-black border-transparent',
+      intellect: 'bg-category-studies text-white dark:text-black border-transparent',
+      spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
+      exercise: 'bg-category-exercise text-white dark:text-black border-transparent',
+      nutrition: 'bg-category-nutrition text-white dark:text-black border-transparent',
+      work: 'bg-category-work text-white dark:text-black border-transparent',
+      social: 'bg-category-leisure text-white dark:text-black border-transparent',
+      finance: 'bg-category-finance text-white dark:text-black border-transparent',
+      household: 'bg-category-nutrition text-white dark:text-black border-transparent',
+      personal_care: 'bg-category-health text-white dark:text-black border-transparent',
+      other: 'bg-muted text-muted-foreground border-transparent',
     };
-    return colors[category] || 'bg-muted';
+    return colors[category] || 'bg-muted text-muted-foreground border-transparent';
   };
 
   // Define table columns
