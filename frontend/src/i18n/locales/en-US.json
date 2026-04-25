@@ -1766,6 +1766,7 @@
       "loadError": "Error loading tasks",
       "emptyState": "No tasks scheduled for today.",
       "timeLabel": "Time: {{time}}",
+      "closingTimeLabel": "until {{time}}",
       "listMode": "List mode",
       "kanbanMode": "Kanban mode"
     },
