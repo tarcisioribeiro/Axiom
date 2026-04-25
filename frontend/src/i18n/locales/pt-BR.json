@@ -1943,6 +1943,7 @@
       "loadError": "Erro ao carregar tarefas",
       "emptyState": "Nenhuma tarefa programada para hoje.",
       "timeLabel": "Horário: {{time}}",
+      "closingTimeLabel": "até {{time}}",
       "listMode": "Modo lista",
       "kanbanMode": "Modo kanban"
     },

@@ -54,6 +54,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "interval_days",
             "interval_start_date",
             "default_time",
+            "closing_time",
             "daily_occurrences",
             "interval_hours",
             "scheduled_times",
@@ -115,6 +116,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "interval_days",
             "interval_start_date",
             "default_time",
+            "closing_time",
             "daily_occurrences",
             "interval_hours",
             "scheduled_times",
@@ -253,11 +255,18 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
 
     priority_display = serializers.SerializerMethodField()
+    closing_time = serializers.SerializerMethodField()
 
     def get_priority_display(self, obj):
         from personal_planning.models import PRIORITY_CHOICES
 
         return dict(PRIORITY_CHOICES).get(obj.priority, obj.priority)
+
+    def get_closing_time(self, obj):
+        if obj.template and obj.template.daily_occurrences == 1:
+            ct = obj.template.closing_time
+            return str(ct) if ct else None
+        return None
 
     class Meta:
         model = TaskInstance
@@ -286,6 +295,7 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
             "started_at",
             "completed_at",
             "is_overdue",
+            "closing_time",
             "owner",
             "owner_name",
             "created_at",
