@@ -111,17 +111,30 @@ export async function exportScheduleToExcel(schedule: DaySchedule[]): Promise<vo
 
     ws.columns = [
       { width: 10 },
+      { width: 10 },
       { width: 28 },
       { width: 45 },
       { width: 12 },
       { width: 18 },
     ];
 
-    ws.addRow(['Horário', 'Nome da Tarefa', 'Descrição', 'Criticidade', 'Categoria']);
+    ws.addRow([
+      'Horário',
+      'Encerramento',
+      'Nome da Tarefa',
+      'Descrição',
+      'Criticidade',
+      'Categoria',
+    ]);
 
     for (const entry of day.entries) {
+      const closingTime =
+        entry.task.daily_occurrences === 1 && entry.task.closing_time
+          ? entry.task.closing_time.substring(0, 5)
+          : '';
       ws.addRow([
         entry.time ?? 'Sem horário definido',
+        closingTime,
         entry.task.name,
         entry.task.description ?? '',
         entry.task.priority_display,

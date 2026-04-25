@@ -209,6 +209,9 @@ export default function TodayTasks() {
       notes: instance.notes || undefined,
       record_id: instance.id,
       scheduled_time: instance.time_display || undefined,
+      closing_time: instance.closing_time
+        ? instance.closing_time.substring(0, 5)
+        : undefined,
     }));
 
   const cardsByStatus = useMemo(
@@ -269,13 +272,10 @@ export default function TodayTasks() {
     }
   };
 
-  const loadListData = async () => {
+  const loadListData = async (sync = false) => {
     try {
       setIsLoading(true);
-      const today = await appService
-        .getCurrentDate()
-        .catch(() => formatLocalDate(new Date()));
-      const response = await taskInstancesService.getForDate(today);
+      const response = await taskInstancesService.getForDate(selectedDate, sync);
       setTodayTasks(response.instances);
     } catch (error: unknown) {
       toast({
@@ -503,6 +503,28 @@ export default function TodayTasks() {
       {/* ─── LIST MODE ─── */}
       {viewMode === 'list' && (
         <>
+          <div className="flex items-end gap-2">
+            <div>
+              <Label htmlFor="list-date">{t('common.fields.date')}</Label>
+              <DatePicker
+                value={selectedDate ? parseLocalDate(selectedDate) : undefined}
+                onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
+                placeholder={t('pages.dailyChecklist.datePlaceholder')}
+                className="max-w-xs"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => void loadListData(true)}
+              disabled={isLoading}
+              title={t('pages.dailyChecklist.syncBtn')}
+              aria-label={t('pages.dailyChecklist.syncBtn')}
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+
           {todayTasks.length === 0 ? (
             <EmptyState
               icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
@@ -546,9 +568,20 @@ export default function TodayTasks() {
                         </h3>
                         <Badge variant={badge.variant}>{badge.label}</Badge>
                       </div>
-                      {task.time_display && (
+                      {(task.time_display || task.closing_time) && (
                         <p className="text-sm text-muted-foreground">
-                          {t('pages.todayTasks.timeLabel', { time: task.time_display })}
+                          {task.time_display &&
+                            t('pages.todayTasks.timeLabel', {
+                              time: task.time_display,
+                            })}
+                          {task.closing_time && (
+                            <span>
+                              {task.time_display ? ' — ' : ''}
+                              {t('pages.todayTasks.closingTimeLabel', {
+                                time: task.closing_time.substring(0, 5),
+                              })}
+                            </span>
+                          )}
                         </p>
                       )}
                       {task.notes && (

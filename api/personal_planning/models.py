@@ -180,6 +180,14 @@ class RoutineTask(BaseModel):
         verbose_name="Horário Padrão",
         help_text="Horário padrão para esta tarefa",
     )
+    closing_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário de Encerramento",
+        help_text=(
+            "Horário de encerramento (apenas para tarefas com uma ocorrência por dia)"
+        ),
+    )
     daily_occurrences = models.PositiveIntegerField(
         default=1,
         verbose_name="Ocorrências por Dia",
@@ -297,6 +305,16 @@ class RoutineTask(BaseModel):
                 )
 
         # Validação de campos de agendamento de horário
+        if self.closing_time and (self.daily_occurrences or 1) > 1:
+            raise ValidationError(
+                {
+                    "closing_time": (
+                        "Horário de encerramento só é permitido para tarefas"
+                        " com uma ocorrência por dia"
+                    )
+                }
+            )
+
         if self.interval_hours and not self.default_time:
             raise ValidationError(
                 {
