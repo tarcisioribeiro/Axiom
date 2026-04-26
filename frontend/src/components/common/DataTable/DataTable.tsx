@@ -29,6 +29,7 @@
  * ```
  */
 
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronLeft,
@@ -53,11 +54,14 @@ export interface Column<T> {
   className?: string;
 }
 
+export type DataTableDensity = 'comfortable' | 'compact';
+
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
   keyExtractor: (item: T) => string | number;
   isLoading?: boolean;
+  density?: DataTableDensity;
   emptyState?: {
     icon?: React.ReactNode;
     title?: string;
@@ -80,6 +84,8 @@ export interface DataTableProps<T> {
   };
   actions?: (item: T) => React.ReactNode;
   rowClassName?: (item: T) => string;
+  /** Row keys that are currently being deleted (fade + collapse animation) */
+  deletingKeys?: Set<string | number>;
 }
 
 export function DataTable<T>({
@@ -87,12 +93,15 @@ export function DataTable<T>({
   columns,
   keyExtractor,
   isLoading = false,
+  density = 'comfortable',
   emptyState,
   pagination,
   sorting,
   actions,
   rowClassName,
+  deletingKeys,
 }: DataTableProps<T>) {
+  const cellPad = density === 'compact' ? 'px-md py-sm' : 'px-lg py-md';
   const { t } = useTranslation();
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
@@ -166,16 +175,16 @@ export function DataTable<T>({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-md">
       {/* Mobile card list */}
       <div className="block overflow-hidden rounded-lg border bg-card md:hidden">
         <div className="divide-y">
           {data.map((item) => (
-            <div key={keyExtractor(item)} className="space-y-2 px-4 py-3">
+            <div key={keyExtractor(item)} className="space-y-sm px-md py-3">
               {columns.map((column) => (
                 <div
                   key={column.key}
-                  className="flex items-start justify-between gap-2"
+                  className="flex items-start justify-between gap-sm"
                 >
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {column.label}
@@ -185,7 +194,7 @@ export function DataTable<T>({
                   </span>
                 </div>
               ))}
-              {actions && <div className="flex justify-end pt-1">{actions(item)}</div>}
+              {actions && <div className="flex justify-end pt-xs">{actions(item)}</div>}
             </div>
           ))}
         </div>
@@ -204,7 +213,7 @@ export function DataTable<T>({
                     aria-sort={
                       column.sortable ? getAriaSortValue(column.key) : undefined
                     }
-                    className={`px-6 py-4 ${getAlignClass(column.align)} text-sm font-semibold ${
+                    className={`${cellPad} ${getAlignClass(column.align)} text-sm font-semibold ${
                       column.className || ''
                     }`}
                   >
@@ -225,7 +234,7 @@ export function DataTable<T>({
                 {actions && (
                   <th
                     scope="col"
-                    className="px-6 py-4 text-right text-sm font-semibold"
+                    className={`${cellPad} text-right text-sm font-semibold`}
                   >
                     {t('common.table.actions')}
                   </th>
@@ -233,29 +242,45 @@ export function DataTable<T>({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {data.map((item, index) => (
-                <tr
-                  key={keyExtractor(item)}
-                  ref={(el) => {
-                    rowRefs.current[index] = el;
-                  }}
-                  tabIndex={0}
-                  className={`transition-colors hover:bg-muted/30 focus:bg-muted/40 focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
-                  onKeyDown={(e) => handleRowKeyDown(e, index)}
-                >
-                  {columns.map((column) => (
-                    <td
-                      key={column.key}
-                      className={`px-6 py-4 ${getAlignClass(column.align)} ${
-                        column.className || ''
-                      }`}
+              <AnimatePresence initial={false}>
+                {data.map((item, index) => {
+                  const key = keyExtractor(item);
+                  const isDeleting = deletingKeys?.has(key);
+                  return (
+                    <motion.tr
+                      key={key}
+                      ref={(el) => {
+                        rowRefs.current[index] = el;
+                      }}
+                      tabIndex={0}
+                      className={`transition-colors hover:bg-muted/30 focus:bg-muted/40 focus:outline-none ${rowClassName ? rowClassName(item) : ''}`}
+                      onKeyDown={(e) => handleRowKeyDown(e, index)}
+                      animate={
+                        isDeleting
+                          ? { opacity: 0.4, scale: 0.99 }
+                          : { opacity: 1, scale: 1 }
+                      }
+                      exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                      transition={{ duration: 0.2 }}
+                      layout
                     >
-                      {renderColumnContent(item, column)}
-                    </td>
-                  ))}
-                  {actions && <td className="px-6 py-4 text-right">{actions(item)}</td>}
-                </tr>
-              ))}
+                      {columns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={`${cellPad} ${getAlignClass(column.align)} ${
+                            column.className || ''
+                          }`}
+                        >
+                          {renderColumnContent(item, column)}
+                        </td>
+                      ))}
+                      {actions && (
+                        <td className={`${cellPad} text-right`}>{actions(item)}</td>
+                      )}
+                    </motion.tr>
+                  );
+                })}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
@@ -278,7 +303,7 @@ export function DataTable<T>({
                   total: pagination.total,
                 })}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <Button
                   variant="outline"
                   size="sm"
