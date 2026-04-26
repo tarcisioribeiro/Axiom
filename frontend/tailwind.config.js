@@ -224,6 +224,13 @@ export default {
         lg: 'var(--spacing-lg)',
         xl: 'var(--spacing-xl)',
       },
+      zIndex: {
+        header: '30',
+        'sidebar-overlay': '40',
+        sidebar: '50',
+        modal: '60',
+        toast: '100',
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],

@@ -138,7 +138,10 @@
     "logout": "Logout",
     "toggleTheme": "Toggle theme",
     "language": "Language",
-    "openCommandPalette": "Open command palette (Ctrl+K)"
+    "openCommandPalette": "Open command palette (Ctrl+K)",
+    "search": "Search...",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
   },
   "breadcrumb": {
     "home": "Home",
@@ -339,6 +342,7 @@
       "updatedDesc": "The expense was updated successfully.",
       "deleted": "Expense deleted",
       "deletedDesc": "The expense was deleted successfully.",
+      "resource": "expense",
       "noAccountMsg": "You need at least one registered account before creating an expense.",
       "emptyState": "No expenses found.",
       "searchPlaceholder": "Search by description...",
