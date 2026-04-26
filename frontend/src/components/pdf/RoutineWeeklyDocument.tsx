@@ -1,6 +1,19 @@
-import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
+import {
+  Circle,
+  Document,
+  Font,
+  Page,
+  StyleSheet,
+  Svg,
+  Text,
+  View,
+} from '@react-pdf/renderer';
 
-import { PRIORITY_PDF_COLORS, type DaySchedule } from '@/lib/routine-export';
+import {
+  CATEGORY_COLORS,
+  PRIORITY_PDF_COLORS,
+  type DaySchedule,
+} from '@/lib/routine-export';
 
 // ── Design tokens (Alucard light theme) ──────────────────────────────────────
 const C = {
@@ -66,33 +79,16 @@ const s = StyleSheet.create({
     paddingTop: 3,
     paddingBottom: 3,
   },
-  timeRow: { flexDirection: 'row', marginBottom: 2 },
-  timeBox: {
-    backgroundColor: C.timeBg,
-    paddingTop: 1,
-    paddingBottom: 1,
-    paddingLeft: 5,
-    paddingRight: 5,
-    borderRadius: 3,
-  },
-  timeLabel: { fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: C.timeText },
-  timeNone: { fontSize: 7.5, color: C.muted, fontStyle: 'italic' },
-  taskName: {
+  fieldRow: { flexDirection: 'row', marginBottom: 2, alignItems: 'flex-start' },
+  labelText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.muted, width: 65 },
+  valueText: { fontSize: 8, color: C.foreground, flex: 1, lineHeight: 1.4 },
+  taskTitleValue: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
     color: C.foreground,
-    marginBottom: 2,
+    flex: 1,
   },
-  taskDesc: { fontSize: 8, color: C.muted, marginBottom: 2, lineHeight: 1.4 },
-  metaRow: { flexDirection: 'row' },
-  metaCategory: {
-    fontSize: 7.5,
-    fontFamily: 'Helvetica-Bold',
-    color: C.primary,
-    marginRight: 6,
-  },
-  metaDot: { fontSize: 7.5, color: C.muted, marginRight: 6 },
-  metaPriority: { fontSize: 7.5, fontFamily: 'Helvetica-Bold' },
+  categoryValue: { flexDirection: 'row', alignItems: 'center', flex: 1 },
 
   // ── Separator ─────────────────────────────────────────────────────────────
   divider: {
@@ -155,38 +151,68 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                 return (
                   <View key={`${entry.task.id}-${idx}`} wrap={false}>
                     <View style={s.taskRow}>
-                      {/* Time */}
-                      <View style={s.timeRow}>
+                      {/* Horário */}
+                      <View style={s.fieldRow}>
+                        <Text style={s.labelText}>Horário:</Text>
                         {entry.time ? (
-                          <View style={s.timeBox}>
-                            <Text style={s.timeLabel}>
-                              {entry.time}
-                              {entry.task.daily_occurrences === 1 &&
-                              entry.task.closing_time
-                                ? ` — ${entry.task.closing_time.substring(0, 5)}`
-                                : ''}
-                            </Text>
-                          </View>
+                          <Text style={s.valueText}>
+                            {entry.time}
+                            {entry.task.daily_occurrences === 1 &&
+                            entry.task.closing_time
+                              ? ` - ${entry.task.closing_time.substring(0, 5)}`
+                              : ''}
+                          </Text>
                         ) : (
-                          <Text style={s.timeNone}>Sem horario definido</Text>
+                          <Text
+                            style={[
+                              s.valueText,
+                              { color: C.muted, fontStyle: 'italic' },
+                            ]}
+                          >
+                            Sem horário definido
+                          </Text>
                         )}
                       </View>
 
-                      {/* Name */}
-                      <Text style={s.taskName}>{entry.task.name}</Text>
+                      {/* Tarefa */}
+                      <View style={s.fieldRow}>
+                        <Text style={s.labelText}>Tarefa:</Text>
+                        <Text style={s.taskTitleValue}>{entry.task.name}</Text>
+                      </View>
 
-                      {/* Description */}
+                      {/* Descrição */}
                       {entry.task.description ? (
-                        <Text style={s.taskDesc}>{entry.task.description}</Text>
+                        <View style={s.fieldRow}>
+                          <Text style={s.labelText}>Descrição:</Text>
+                          <Text style={s.valueText}>{entry.task.description}</Text>
+                        </View>
                       ) : null}
 
-                      {/* Category · Priority */}
-                      <View style={s.metaRow}>
-                        <Text style={s.metaCategory}>
-                          {entry.task.category_display}
-                        </Text>
-                        <Text style={s.metaDot}>·</Text>
-                        <Text style={[s.metaPriority, { color: priorityColor }]}>
+                      {/* Categoria */}
+                      <View style={s.fieldRow}>
+                        <Text style={s.labelText}>Categoria:</Text>
+                        <View style={s.categoryValue}>
+                          <Svg width={8} height={8} style={{ marginRight: 4 }}>
+                            <Circle
+                              cx="4"
+                              cy="4"
+                              r="4"
+                              fill={CATEGORY_COLORS[entry.task.category] ?? C.muted}
+                            />
+                          </Svg>
+                          <Text style={s.valueText}>{entry.task.category_display}</Text>
+                        </View>
+                      </View>
+
+                      {/* Prioridade */}
+                      <View style={s.fieldRow}>
+                        <Text style={s.labelText}>Prioridade:</Text>
+                        <Text
+                          style={[
+                            s.valueText,
+                            { color: priorityColor, fontFamily: 'Helvetica-Bold' },
+                          ]}
+                        >
                           {entry.task.priority_display}
                         </Text>
                       </View>

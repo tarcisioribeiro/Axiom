@@ -35,6 +35,20 @@ export const CATEGORY_EMOJIS: Record<string, string> = {
   other: '📌',
 };
 
+export const CATEGORY_COLORS: Record<string, string> = {
+  health: '#CB3A2A',
+  intellect: '#644AC9',
+  spiritual: '#8B6914',
+  exercise: '#1B6F2A',
+  nutrition: '#C47B0A',
+  work: '#036A96',
+  social: '#7B3FA0',
+  finance: '#1B4F72',
+  household: '#5D4037',
+  personal_care: '#AD1457',
+  other: '#455A64',
+};
+
 // Display order: Sunday first, then Monday–Saturday
 // Python/Django weekday(): 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
 const WEEK_ORDER = [
@@ -72,8 +86,16 @@ function getTimesForTask(task: RoutineTask): (string | null)[] {
   if (task.scheduled_times && task.scheduled_times.length > 0) {
     return task.scheduled_times;
   }
+  if (task.daily_occurrences > 1 && task.interval_hours && task.default_time) {
+    const [startH, startM] = task.default_time.substring(0, 5).split(':').map(Number);
+    return Array.from({ length: task.daily_occurrences }, (_, i) => {
+      const totalMin = startH * 60 + startM + i * task.interval_hours! * 60;
+      const hh = Math.floor(totalMin / 60) % 24;
+      const mm = totalMin % 60;
+      return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+    });
+  }
   if (task.default_time) {
-    // API returns "HH:MM:SS" — truncate to "HH:MM"
     return [task.default_time.substring(0, 5)];
   }
   return [null];
