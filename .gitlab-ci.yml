@@ -740,10 +740,10 @@ smoke:staging:
 
         while [ $attempt -lt $max_retries ]; do
           if [ -n "$auth_header" ]; then
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-              -H "$auth_header" "$url")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+              -H "$auth_header" "$url") || true
           else
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$url") || true
           fi
           if [ "$STATUS" = "$expected" ]; then
             echo "OK   $label → HTTP $STATUS"
@@ -762,8 +762,10 @@ smoke:staging:
       echo "=== Smoke tests: staging ==="
       # nginx-ingress tem sync period padrão de ~60s. O sleep abaixo garante que
       # o controller tenha tido tempo suficiente para recarregar a configuração
-      # após o rollout dos pods completar. Com 75s iniciais + 10 retries × 12s
-      # (120s) o timeout máximo é ~195s, cobrindo com folga um reload lento.
+      # após o rollout dos pods completar. Com 75s iniciais + 10 retries × (30s
+      # curl + 12s delay) o timeout máximo é ~495s, cobrindo com folga um reload
+      # lento. O || true nas chamadas curl evita que set -e aborte o script em
+      # caso de timeout (curl exit 28) antes do loop de retry ter chance de rodar.
       echo "Waiting 75s for nginx-ingress to reload configuration..."
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
@@ -1230,10 +1232,10 @@ smoke:production:
 
         while [ $attempt -lt $max_retries ]; do
           if [ -n "$auth_header" ]; then
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-              -H "$auth_header" "$url")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+              -H "$auth_header" "$url") || true
           else
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$url")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$url") || true
           fi
           if [ "$STATUS" = "$expected" ]; then
             echo "OK   $label → HTTP $STATUS"
@@ -1252,7 +1254,7 @@ smoke:production:
       echo "=== Smoke tests: production ==="
       # Em produção o deploy é blue-green: o ingress já existe, mas o
       # nginx-ingress pode levar até ~60s para sincronizar o novo upstream
-      # após o switch de slot. Mantemos o mesmo budget de espera que staging.
+      # após o switch de slot. Mesmo budget de espera que staging (ver acima).
       echo "Waiting 75s for nginx-ingress to reload configuration..."
       sleep 75
       check "/health/" "${SMOKE_URL}/health/"
