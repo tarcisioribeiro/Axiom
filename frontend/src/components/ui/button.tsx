@@ -41,20 +41,42 @@ export interface ButtonProps
   extends
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
+  /**
+   * When true, merges button styles onto the single child element instead of
+   * rendering a wrapping <button>. Useful for rendering a <Link> with button
+   * styles without nesting interactive elements.
+   *
+   * @example <Button asChild variant="outline"><Link to="/foo">Go</Link></Button>
+   */
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, disabled, asChild: _asChild, ...props }, ref) => {
+  (
+    { className, variant, size, disabled, asChild = false, children, ...props },
+    ref
+  ) => {
+    const classes = cn(buttonVariants({ variant, size, className }));
+
+    if (asChild && React.isValidElement(children)) {
+      const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
+      return React.cloneElement(child, {
+        ...props,
+        className: cn(classes, child.props.className),
+      } as React.HTMLAttributes<HTMLElement>);
+    }
+
     return (
       <motion.button
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={classes}
         ref={ref}
         disabled={disabled}
         whileTap={disabled ? undefined : { scale: 0.95 }}
         transition={{ duration: DURATION.fast }}
         {...(props as React.ComponentProps<typeof motion.button>)}
-      />
+      >
+        {children}
+      </motion.button>
     );
   }
 );

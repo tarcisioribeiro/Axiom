@@ -2,15 +2,9 @@ import * as React from 'react';
 
 import type { ToastActionElement, ToastProps } from '@/components/ui/toast';
 
-/** Numero maximo de toasts visiveis simultaneamente */
 const TOAST_LIMIT = 3;
-
-/** Tempo em ms para remover toast apos dismiss */
 const TOAST_REMOVE_DELAY = 5000;
 
-/**
- * Tipo de toast com propriedades adicionais.
- */
 type ToasterToast = ToastProps & {
   id: string;
   title?: React.ReactNode;
@@ -19,7 +13,6 @@ type ToasterToast = ToastProps & {
 };
 
 let count = 0;
-
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER;
   return count.toString();
@@ -33,22 +26,10 @@ type ActionType = {
 };
 
 type Action =
-  | {
-      type: ActionType['ADD_TOAST'];
-      toast: ToasterToast;
-    }
-  | {
-      type: ActionType['UPDATE_TOAST'];
-      toast: Partial<ToasterToast>;
-    }
-  | {
-      type: ActionType['DISMISS_TOAST'];
-      toastId?: ToasterToast['id'];
-    }
-  | {
-      type: ActionType['REMOVE_TOAST'];
-      toastId?: ToasterToast['id'];
-    };
+  | { type: ActionType['ADD_TOAST']; toast: ToasterToast }
+  | { type: ActionType['UPDATE_TOAST']; toast: Partial<ToasterToast> }
+  | { type: ActionType['DISMISS_TOAST']; toastId?: ToasterToast['id'] }
+  | { type: ActionType['REMOVE_TOAST']; toastId?: ToasterToast['id'] };
 
 interface State {
   toasts: ToasterToast[];
@@ -58,18 +39,11 @@ interface State {
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 const addToRemoveQueue = (toastId: string) => {
-  if (toastTimeouts.has(toastId)) {
-    return;
-  }
-
+  if (toastTimeouts.has(toastId)) return;
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId);
-    dispatch({
-      type: 'REMOVE_TOAST',
-      toastId: toastId,
-    });
+    dispatch({ type: 'REMOVE_TOAST', toastId });
   }, TOAST_REMOVE_DELAY);
-
   toastTimeouts.set(toastId, timeout);
 };
 
@@ -77,17 +51,10 @@ export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'ADD_TOAST': {
       if (state.toasts.length < TOAST_LIMIT) {
-        return {
-          ...state,
-          toasts: [action.toast, ...state.toasts],
-        };
+        return { ...state, toasts: [action.toast, ...state.toasts] };
       }
-      return {
-        ...state,
-        pending: [...state.pending, action.toast],
-      };
+      return { ...state, pending: [...state.pending, action.toast] };
     }
-
     case 'UPDATE_TOAST':
       return {
         ...state,
@@ -95,37 +62,23 @@ export const reducer = (state: State, action: Action): State => {
           t.id === action.toast.id ? { ...t, ...action.toast } : t
         ),
       };
-
     case 'DISMISS_TOAST': {
       const { toastId } = action;
-
       if (toastId) {
         addToRemoveQueue(toastId);
       } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id);
-        });
+        state.toasts.forEach((t) => addToRemoveQueue(t.id));
       }
-
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t
+          t.id === toastId || toastId === undefined ? { ...t, open: false } : t
         ),
       };
     }
     case 'REMOVE_TOAST': {
       if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-          pending: [],
-        };
+        return { ...state, toasts: [], pending: [] };
       }
       const filtered = state.toasts.filter((t) => t.id !== action.toastId);
       const availableSlots = TOAST_LIMIT - filtered.length;
@@ -141,53 +94,24 @@ export const reducer = (state: State, action: Action): State => {
 };
 
 const listeners: Array<(state: State) => void> = [];
-
 let memoryState: State = { toasts: [], pending: [] };
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action);
-  listeners.forEach((listener) => {
-    listener(memoryState);
-  });
+  listeners.forEach((listener) => listener(memoryState));
 }
 
 type Toast = Omit<ToasterToast, 'id'>;
+type ToastReturn = {
+  id: string;
+  dismiss: () => void;
+  update: (props: ToasterToast) => void;
+};
 
-/**
- * Exibe um toast de notificacao.
- *
- * Funcao imperativa que pode ser usada fora de componentes React.
- *
- * @param props - Propriedades do toast
- * @returns Objeto com id, dismiss e update para controlar o toast
- *
- * @example
- * ```ts
- * // Toast simples
- * toast({ title: 'Sucesso!', description: 'Operacao concluida.' });
- *
- * // Toast de erro
- * toast({
- *   title: 'Erro',
- *   description: 'Falha ao salvar dados.',
- *   variant: 'destructive'
- * });
- *
- * // Controlar toast programaticamente
- * const { dismiss, update } = toast({ title: 'Carregando...' });
- * // Depois...
- * update({ title: 'Concluido!' });
- * dismiss();
- * ```
- */
-function toast({ ...props }: Toast) {
+function _toast({ ...props }: Toast): ToastReturn {
   const id = genId();
-
-  const update = (props: ToasterToast) =>
-    dispatch({
-      type: 'UPDATE_TOAST',
-      toast: { ...props, id },
-    });
+  const update = (p: ToasterToast) =>
+    dispatch({ type: 'UPDATE_TOAST', toast: { ...p, id } });
   const dismiss = () => dispatch({ type: 'DISMISS_TOAST', toastId: id });
 
   dispatch({
@@ -202,43 +126,30 @@ function toast({ ...props }: Toast) {
     },
   });
 
-  return {
-    id: id,
-    dismiss,
-    update,
-  };
+  return { id, dismiss, update };
 }
 
-/**
- * Hook para gerenciar toasts de notificacao.
- *
- * Permite ate 3 toasts simultaneos (TOAST_LIMIT).
- * Toasts sao removidos automaticamente apos 5 segundos.
- *
- * @returns Objeto com toasts atuais, funcao toast e funcao dismiss
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const { toast, dismiss } = useToast();
- *
- *   const handleSave = async () => {
- *     try {
- *       await saveData();
- *       toast({ title: 'Salvo com sucesso!' });
- *     } catch (error) {
- *       toast({
- *         title: 'Erro ao salvar',
- *         description: getErrorMessage(error),
- *         variant: 'destructive'
- *       });
- *     }
- *   };
- *
- *   return <button onClick={handleSave}>Salvar</button>;
- * }
- * ```
- */
+type ShorthandOpts = Partial<Omit<Toast, 'variant'>>;
+
+type ToastFn = {
+  (props: Toast): ToastReturn;
+  success: (title: string, opts?: ShorthandOpts) => ToastReturn;
+  error: (title: string, opts?: ShorthandOpts) => ToastReturn;
+  info: (title: string, opts?: ShorthandOpts) => ToastReturn;
+  warning: (title: string, opts?: ShorthandOpts) => ToastReturn;
+};
+
+_toast.success = (title: string, opts?: ShorthandOpts) =>
+  _toast({ title, variant: 'success', ...opts });
+_toast.error = (title: string, opts?: ShorthandOpts) =>
+  _toast({ title, variant: 'destructive', ...opts });
+_toast.info = (title: string, opts?: ShorthandOpts) =>
+  _toast({ title, variant: 'info', ...opts });
+_toast.warning = (title: string, opts?: ShorthandOpts) =>
+  _toast({ title, variant: 'warning', ...opts });
+
+export const toast = _toast as ToastFn;
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -246,18 +157,15 @@ function useToast() {
     listeners.push(setState);
     return () => {
       const index = listeners.indexOf(setState);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
+      if (index > -1) listeners.splice(index, 1);
     };
-  }, [state]);
+  }, []); // stable subscription — no re-subscribe on state changes
 
   return {
     ...state,
     toast,
-    /** Dispensa um toast por ID, ou todos se ID nao for fornecido */
     dismiss: (toastId?: string) => dispatch({ type: 'DISMISS_TOAST', toastId }),
   };
 }
 
-export { useToast, toast };
+export { useToast };
