@@ -1,616 +1,514 @@
-import {
-  LayoutDashboard,
-  X,
-  Wallet,
-  Shield,
-  Library,
-  ChevronDown,
-  CreditCard,
-  ShoppingCart,
-  TrendingDown,
-  TrendingUp,
-  CalendarClock,
-  ArrowLeftRight,
-  HandCoins,
-  Archive,
-  Key,
-  BookOpen,
-  UserPen,
-  Building2,
-  Home,
-  Calendar,
-  Target,
-  CheckCircle2,
-  Users,
-  FolderOpen,
-  ClipboardList,
-  Vault,
-  PiggyBank,
-  Receipt,
-  Tag,
-  Bell,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, X, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 
-import { useSidebar } from '@/hooks/use-sidebar';
+import { Tooltip } from '@/components/ui/tooltip';
+import {
+  navItems,
+  navModules,
+  getAllModuleItems,
+  isPathActive,
+  type NavModule,
+  type NavSubItem,
+} from '@/config/nav-config';
+import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-interface NavSubItem {
-  titleKey: string;
-  href: string;
-  icon: React.ReactNode;
-  permission?: {
-    appName: string;
-    action: string;
-  };
+// ── Accordion state via reducer ───────────────────────────────────────────────
+
+interface AccordionState {
+  module: string | null;
+  subModule: string | null;
 }
 
-interface NavSubModule {
-  id: string;
-  titleKey: string;
-  icon: React.ReactNode;
-  items: NavSubItem[];
-}
+type AccordionAction =
+  | { type: 'TOGGLE_MODULE'; id: string }
+  | { type: 'TOGGLE_SUBMODULE'; id: string }
+  | { type: 'SET_FROM_ROUTE'; moduleId: string; subModuleId?: string }
+  | { type: 'EXPAND_MODULE'; id: string };
 
-interface NavModule {
-  id: string;
-  titleKey: string;
-  icon: React.ReactNode;
-  items?: NavSubItem[];
-  subModules?: NavSubModule[];
-  topItems?: NavSubItem[];
-}
-
-interface NavItem {
-  titleKey: string;
-  href: string;
-  icon: React.ReactNode;
-  permission?: {
-    appName: string;
-    action: string;
-  };
-}
-
-const navItems: NavItem[] = [
-  {
-    titleKey: 'nav.home',
-    href: '/',
-    icon: <Home className="h-5 w-5" />,
-  },
-  {
-    titleKey: 'nav.notificationPreferences',
-    href: '/settings/notifications',
-    icon: <Bell className="h-5 w-5" />,
-  },
-];
-
-const navModules: NavModule[] = [
-  {
-    id: 'planning',
-    titleKey: 'nav.modules.planning',
-    icon: <Calendar className="h-5 w-5" />,
-    items: [
-      {
-        titleKey: 'nav.dashboard',
-        href: '/planning/dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.todayTasks',
-        href: '/planning/today-tasks',
-        icon: <CheckCircle2 className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.routineTasks',
-        href: '/planning/routine-tasks',
-        icon: <Calendar className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.goals',
-        href: '/planning/goals',
-        icon: <Target className="h-4 w-4" />,
-      },
-    ],
-  },
-  {
-    id: 'finance',
-    titleKey: 'nav.modules.finance',
-    icon: <Wallet className="h-5 w-5" />,
-    topItems: [
-      {
-        titleKey: 'nav.dashboard',
-        href: '/dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-      },
-    ],
-    subModules: [
-      {
-        id: 'finance-registrations',
-        titleKey: 'nav.submodules.registrations',
-        icon: <FolderOpen className="h-4 w-4" />,
-        items: [
-          {
-            titleKey: 'nav.items.accounts',
-            href: '/accounts',
-            icon: <Wallet className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.creditCards',
-            href: '/credit-cards',
-            icon: <CreditCard className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.fixedExpenses',
-            href: '/fixed-expenses',
-            icon: <CalendarClock className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.categorizationRules',
-            href: '/categorization-rules',
-            icon: <Tag className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.budgets',
-            href: '/budgets',
-            icon: <PiggyBank className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.payables',
-            href: '/payables',
-            icon: <Receipt className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.financialGoals',
-            href: '/financial-goals',
-            icon: <Target className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.members',
-            href: '/members',
-            icon: <Users className="h-4 w-4" />,
-          },
-        ],
-      },
-      {
-        id: 'finance-records',
-        titleKey: 'nav.submodules.records',
-        icon: <ClipboardList className="h-4 w-4" />,
-        items: [
-          {
-            titleKey: 'nav.items.expenses',
-            href: '/expenses',
-            icon: <TrendingDown className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.revenues',
-            href: '/revenues',
-            icon: <TrendingUp className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.creditCardExpenses',
-            href: '/credit-card-expenses',
-            icon: <ShoppingCart className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.transfers',
-            href: '/transfers',
-            icon: <ArrowLeftRight className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.loans',
-            href: '/loans',
-            icon: <HandCoins className="h-4 w-4" />,
-          },
-          {
-            titleKey: 'nav.items.vaults',
-            href: '/vaults',
-            icon: <Vault className="h-4 w-4" />,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'security',
-    titleKey: 'nav.modules.security',
-    icon: <Shield className="h-5 w-5" />,
-    items: [
-      {
-        titleKey: 'nav.dashboard',
-        href: '/security/dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.passwords',
-        href: '/security/passwords',
-        icon: <Key className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.storedCards',
-        href: '/security/stored-cards',
-        icon: <CreditCard className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.storedAccounts',
-        href: '/security/stored-accounts',
-        icon: <Wallet className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.archives',
-        href: '/security/archives',
-        icon: <Archive className="h-4 w-4" />,
-      },
-    ],
-  },
-  {
-    id: 'library',
-    titleKey: 'nav.modules.library',
-    icon: <Library className="h-5 w-5" />,
-    items: [
-      {
-        titleKey: 'nav.dashboard',
-        href: '/library/dashboard',
-        icon: <LayoutDashboard className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.books',
-        href: '/library/books',
-        icon: <BookOpen className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.authors',
-        href: '/library/authors',
-        icon: <UserPen className="h-4 w-4" />,
-      },
-      {
-        titleKey: 'nav.items.publishers',
-        href: '/library/publishers',
-        icon: <Building2 className="h-4 w-4" />,
-      },
-    ],
-  },
-];
-
-// Helper function to get all items from a module (including subModules and topItems)
-const getAllModuleItems = (module: NavModule): NavSubItem[] => {
-  const items: NavSubItem[] = [];
-  if (module.items) items.push(...module.items);
-  if (module.topItems) items.push(...module.topItems);
-  if (module.subModules) {
-    module.subModules.forEach((sub) => items.push(...sub.items));
+function accordionReducer(
+  state: AccordionState,
+  action: AccordionAction
+): AccordionState {
+  switch (action.type) {
+    case 'TOGGLE_MODULE':
+      return { module: state.module === action.id ? null : action.id, subModule: null };
+    case 'TOGGLE_SUBMODULE':
+      return { ...state, subModule: state.subModule === action.id ? null : action.id };
+    case 'SET_FROM_ROUTE':
+      return {
+        module: action.moduleId,
+        subModule: action.subModuleId ?? state.subModule,
+      };
+    case 'EXPAND_MODULE':
+      return { ...state, module: action.id };
+    default:
+      return state;
   }
-  return items;
-};
+}
 
-const isPathActive = (href: string, pathname: string): boolean => {
-  if (href === '/') return pathname === '/';
-  return pathname === href || pathname.startsWith(href + '/');
-};
+// ── NavLink ───────────────────────────────────────────────────────────────────
+
+interface NavLinkProps {
+  item: NavSubItem;
+  isCollapsed: boolean;
+  indent?: 'sm' | 'md';
+  onClick?: () => void;
+}
+
+function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
+  const location = useLocation();
+  const { t } = useTranslation();
+  const active = isPathActive(item.href, location.pathname);
+  const Icon = item.icon;
+
+  const base = cn(
+    'relative flex items-center gap-3 rounded-lg transition-all duration-150',
+    active
+      ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
+      : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground',
+    isCollapsed
+      ? 'justify-center px-0 py-sm'
+      : indent === 'sm'
+        ? 'px-3 py-1.5'
+        : 'px-md py-sm',
+    isCollapsed ? 'w-10 h-10' : 'text-sm'
+  );
+
+  const link = (
+    <Link
+      to={item.href}
+      className={base}
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+    >
+      <Icon
+        className={cn('shrink-0', isCollapsed ? 'h-5 w-5' : 'h-4 w-4')}
+        aria-hidden="true"
+      />
+      <AnimatePresence>
+        {!isCollapsed && (
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
+            transition={{ duration: 0.15 }}
+            className="truncate"
+          >
+            {t(item.titleKey)}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
+  );
+
+  if (isCollapsed) {
+    return (
+      <Tooltip content={t(item.titleKey)} side="right">
+        {link}
+      </Tooltip>
+    );
+  }
+
+  return link;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 
 export const Sidebar = () => {
   const location = useLocation();
   const { hasPermission } = useAuthStore();
-  const { isOpen, close } = useSidebar();
+  const { isOpen, isCollapsed, close, toggleCollapsed } = useSidebar();
+  const isMobile = useIsMobile();
   const { icon } = useThemeAssets();
   const { t } = useTranslation();
-  // Accordion: apenas um módulo expandido por vez
-  const [expandedModule, setExpandedModule] = useState<string | null>(null);
-  // Accordion para submódulos: apenas um submódulo expandido por vez dentro de cada módulo
-  const [expandedSubModule, setExpandedSubModule] = useState<string | null>(null);
+  const navRef = useRef<HTMLElement>(null);
 
-  const filteredNavItems = navItems.filter((item) => {
-    if (!item.permission) return true;
-    return hasPermission(item.permission.appName, item.permission.action);
+  const [expanded, dispatch] = useReducer(accordionReducer, {
+    module: null,
+    subModule: null,
   });
 
-  // Toggle módulo com comportamento accordion (fecha os outros)
-  const toggleModule = (moduleId: string) => {
-    setExpandedModule((prev) => (prev === moduleId ? null : moduleId));
-    // Ao trocar de módulo, fecha o submódulo expandido
-    setExpandedSubModule(null);
-  };
+  const filteredNavItems = navItems.filter(
+    (item) =>
+      !item.permission || hasPermission(item.permission.appName, item.permission.action)
+  );
 
-  const isModuleExpanded = (moduleId: string) => {
-    return expandedModule === moduleId;
-  };
-
-  // Toggle submódulo com comportamento accordion (fecha os outros)
-  const toggleSubModule = (subModuleId: string) => {
-    setExpandedSubModule((prev) => (prev === subModuleId ? null : subModuleId));
-  };
-
-  const isSubModuleExpanded = (subModuleId: string) => {
-    return expandedSubModule === subModuleId;
-  };
-
-  // Auto-expand module and submodule if current route is within it
+  // Auto-expand the active module + submodule on route change
   useEffect(() => {
     navModules.forEach((module) => {
       const allItems = getAllModuleItems(module);
       const isActive = allItems.some((item) =>
         isPathActive(item.href, location.pathname)
       );
-      if (isActive) {
-        setExpandedModule(module.id);
-        // Verificar se está em um submódulo
-        if (module.subModules) {
-          module.subModules.forEach((sub) => {
-            const isSubActive = sub.items.some((item) =>
-              isPathActive(item.href, location.pathname)
-            );
-            if (isSubActive) {
-              setExpandedSubModule(sub.id);
-            }
-          });
-        }
+      if (!isActive) return;
+
+      let subModuleId: string | undefined;
+      if (module.subModules) {
+        module.subModules.forEach((sub) => {
+          const isSubActive = sub.items.some((item) =>
+            isPathActive(item.href, location.pathname)
+          );
+          if (isSubActive) subModuleId = sub.id;
+        });
       }
+      dispatch({ type: 'SET_FROM_ROUTE', moduleId: module.id, subModuleId });
     });
   }, [location.pathname]);
 
-  // Fechar sidebar ao mudar de rota em mobile
+  // Close mobile sidebar on route change
   useEffect(() => {
     close();
   }, [location.pathname, close]);
 
-  // Prevenir scroll do body quando sidebar mobile está aberta
+  // Prevent body scroll while mobile sidebar is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
 
+  // Focus first nav link when mobile sidebar opens
+  useEffect(() => {
+    if (isOpen && isMobile) {
+      const first = navRef.current?.querySelector<HTMLElement>('a, button');
+      first?.focus();
+    }
+  }, [isOpen, isMobile]);
+
+  // Keyboard: Ctrl/Cmd+B toggles collapsed on desktop
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        if (!isMobile) toggleCollapsed();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isMobile, toggleCollapsed]);
+
+  const handleModuleClick = (moduleId: string) => {
+    if (isCollapsed) {
+      // Expand sidebar first, then open the module
+      toggleCollapsed();
+      dispatch({ type: 'EXPAND_MODULE', id: moduleId });
+    } else {
+      dispatch({ type: 'TOGGLE_MODULE', id: moduleId });
+    }
+  };
+
+  const renderModule = (module: NavModule) => {
+    const isExpanded = expanded.module === module.id;
+    const allItems = getAllModuleItems(module);
+    const hasActiveItem = allItems.some((item) =>
+      isPathActive(item.href, location.pathname)
+    );
+    const Icon = module.icon;
+
+    return (
+      <div key={module.id} className="space-y-xs">
+        {/* Module header button */}
+        {isCollapsed ? (
+          <Tooltip content={t(module.titleKey)} side="right">
+            <button
+              onClick={() => handleModuleClick(module.id)}
+              aria-label={t(module.titleKey)}
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-150',
+                hasActiveItem
+                  ? 'font-medium text-primary'
+                  : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
+              )}
+            >
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+            </button>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() => handleModuleClick(module.id)}
+            aria-expanded={isExpanded}
+            aria-controls={`module-${module.id}`}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-lg px-md py-2.5 text-sm transition-all duration-200',
+              hasActiveItem
+                ? 'font-medium text-primary'
+                : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
+            )}
+          >
+            <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span className="flex-1 text-left">{t(module.titleKey)}</span>
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 shrink-0 transition-transform duration-200',
+                isExpanded ? 'rotate-0' : 'rotate-90'
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        )}
+
+        {/* Collapsible content (desktop expanded mode only) */}
+        {!isCollapsed && (
+          <div
+            id={`module-${module.id}`}
+            className={cn(
+              'grid transition-all duration-200 ease-in-out',
+              isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="ml-md space-y-xs py-1">
+                {module.topItems?.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    isCollapsed={false}
+                    indent="md"
+                  />
+                ))}
+
+                {module.subModules?.map((subModule) => {
+                  const isSubExpanded = expanded.subModule === subModule.id;
+                  const hasSubActiveItem = subModule.items.some((item) =>
+                    isPathActive(item.href, location.pathname)
+                  );
+                  const SubIcon = subModule.icon;
+
+                  return (
+                    <div key={subModule.id} className="space-y-xs">
+                      <button
+                        onClick={() =>
+                          dispatch({ type: 'TOGGLE_SUBMODULE', id: subModule.id })
+                        }
+                        aria-expanded={isSubExpanded}
+                        aria-controls={`submodule-${subModule.id}`}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-lg px-md py-sm text-sm transition-all duration-150',
+                          isSubExpanded
+                            ? 'bg-primary/10 font-medium text-primary'
+                            : hasSubActiveItem
+                              ? 'bg-accent/50 font-medium text-accent-foreground'
+                              : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
+                        )}
+                      >
+                        <SubIcon
+                          className={cn(
+                            'h-4 w-4 shrink-0 transition-colors duration-150',
+                            isSubExpanded ? 'text-primary' : ''
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="flex-1 text-left">
+                          {t(subModule.titleKey)}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            'h-3 w-3 shrink-0 transition-transform duration-200',
+                            isSubExpanded ? 'rotate-0' : 'rotate-90'
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+
+                      <div
+                        id={`submodule-${subModule.id}`}
+                        className={cn(
+                          'grid transition-all duration-200 ease-in-out',
+                          isSubExpanded
+                            ? 'grid-rows-[1fr] opacity-100'
+                            : 'grid-rows-[0fr] opacity-0'
+                        )}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="ml-md space-y-xs py-1">
+                            {subModule.items.map((item) => (
+                              <NavLink
+                                key={item.href}
+                                item={item}
+                                isCollapsed={false}
+                                indent="sm"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {module.items?.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    isCollapsed={false}
+                    indent="md"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── Desktop collapsed icon grid ─────────────────────────────────────────────
+  const collapsedNav = (
+    <div className="flex flex-col items-center gap-xs py-1">
+      {filteredNavItems.map((item) => (
+        <NavLink key={item.href} item={item} isCollapsed={true} />
+      ))}
+      <div className="my-xs w-8 border-t border-border/40" />
+      {navModules.map((module) => renderModule(module))}
+    </div>
+  );
+
+  // ── Sidebar content ──────────────────────────────────────────────────────────
+  const sidebarContent = (
+    <>
+      {/* Logo */}
+      <div
+        className={cn(
+          'mb-lg flex items-center',
+          isCollapsed && !isMobile ? 'justify-center' : 'justify-between'
+        )}
+      >
+        <Link
+          to="/"
+          className="flex items-center gap-2.5"
+          aria-label="MindLedger — página inicial"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/50">
+            <img
+              src={icon}
+              alt=""
+              className="h-9 w-9 object-contain"
+              aria-hidden="true"
+            />
+          </div>
+          <AnimatePresence>
+            {(!isCollapsed || isMobile) && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.15 }}
+                className="gradient-primary bg-clip-text text-lg font-bold tracking-tight text-transparent"
+              >
+                MindLedger
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </Link>
+
+        {/* Mobile close button */}
+        {isMobile && (
+          <button
+            onClick={close}
+            className="rounded-lg p-sm transition-colors hover:bg-accent"
+            aria-label={t('layout.closeMenu')}
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav
+        ref={navRef}
+        className="custom-scrollbar flex-1 overflow-y-auto"
+        aria-label={t('layout.mainMenu')}
+      >
+        {isCollapsed && !isMobile ? (
+          collapsedNav
+        ) : (
+          <div className="space-y-sm">
+            {filteredNavItems.map((item) => (
+              <NavLink key={item.href} item={item} isCollapsed={false} />
+            ))}
+
+            <div className="my-sm border-t border-border/40" />
+
+            {navModules.map((module) => renderModule(module))}
+          </div>
+        )}
+      </nav>
+
+      {/* Collapse toggle (desktop only) */}
+      {!isMobile && (
+        <div
+          className={cn(
+            'mt-md border-t border-border/40 pt-3',
+            isCollapsed ? 'flex justify-center' : ''
+          )}
+        >
+          <Tooltip
+            content={
+              isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+            }
+            side="right"
+          >
+            <button
+              onClick={toggleCollapsed}
+              aria-label={
+                isCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+              }
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              {isCollapsed ? (
+                <PanelLeft className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </Tooltip>
+          {!isCollapsed && (
+            <p className="mt-xs text-center text-xs text-muted-foreground/60">⌘B</p>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <>
-      {/* Overlay para mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={close}
-          aria-hidden="true"
-        />
-      )}
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-sidebar-overlay bg-black/50 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={close}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 md:sticky md:top-0',
-          'h-screen w-72 border-r border-border/50 bg-card p-4',
-          'flex flex-col',
-          'transform transition-transform duration-300 ease-in-out md:transform-none',
+          // positioning
+          'fixed inset-y-0 left-0 z-sidebar md:sticky md:top-0',
+          'flex h-screen flex-col border-r border-border/50 bg-card',
+          // desktop width transition
+          'transition-[width,padding] duration-300 ease-in-out',
+          isCollapsed && !isMobile ? 'w-[3.75rem] p-2' : 'w-72 p-4',
+          // mobile slide
+          'transform md:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border/50">
-                <img src={icon} alt="MindLedger" className="h-9 w-9 object-contain" />
-              </div>
-              <span className="bg-gradient-primary bg-clip-text text-lg font-bold tracking-tight text-transparent">
-                MindLedger
-              </span>
-            </Link>
-
-            {/* Botão fechar (apenas mobile) */}
-            <button
-              onClick={close}
-              className="rounded-lg p-2 transition-colors hover:bg-accent md:hidden"
-              aria-label={t('layout.closeMenu')}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        <nav
-          className="custom-scrollbar flex-1 space-y-2 overflow-y-auto"
-          aria-label={t('layout.mainMenu')}
-        >
-          {/* Items principais */}
-          {filteredNavItems.map((item) => {
-            const isActive = isPathActive(item.href, location.pathname);
-
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={cn(
-                  'relative flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-colors duration-150',
-                  isActive
-                    ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
-                    : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
-                )}
-              >
-                {item.icon}
-                <span>{t(item.titleKey)}</span>
-              </Link>
-            );
-          })}
-
-          {/* Divisória */}
-          <div className="my-2 border-t border-border/40" />
-
-          {/* Módulos com submenus */}
-          {navModules.map((module) => {
-            const isExpanded = isModuleExpanded(module.id);
-            const allItems = getAllModuleItems(module);
-            const hasActiveItem = allItems.some((item) =>
-              isPathActive(item.href, location.pathname)
-            );
-
-            return (
-              <div key={module.id} className="space-y-1">
-                {/* Cabeçalho do módulo */}
-                <button
-                  onClick={() => toggleModule(module.id)}
-                  aria-expanded={isExpanded}
-                  aria-controls={`module-${module.id}`}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200',
-                    hasActiveItem
-                      ? 'font-medium text-primary'
-                      : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
-                  )}
-                >
-                  {module.icon}
-                  <span className="flex-1 text-left">{t(module.titleKey)}</span>
-                  <ChevronDown
-                    className={cn(
-                      'h-4 w-4 transition-transform duration-200',
-                      isExpanded ? 'rotate-0' : '-rotate-90'
-                    )}
-                  />
-                </button>
-
-                {/* Conteúdo expandível com animação */}
-                <div
-                  id={`module-${module.id}`}
-                  className={cn(
-                    'grid transition-all duration-200 ease-in-out',
-                    isExpanded
-                      ? 'grid-rows-[1fr] opacity-100'
-                      : 'grid-rows-[0fr] opacity-0'
-                  )}
-                >
-                  <div className="overflow-hidden">
-                    <div className="ml-4 space-y-1 py-1">
-                      {/* Top Items (sem submódulo, ex: Dashboard) */}
-                      {module.topItems?.map((item) => {
-                        const isActive = isPathActive(item.href, location.pathname);
-                        return (
-                          <Link
-                            key={item.href}
-                            to={item.href}
-                            className={cn(
-                              'relative flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
-                              isActive
-                                ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
-                                : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
-                            )}
-                          >
-                            {item.icon}
-                            <span>{t(item.titleKey)}</span>
-                          </Link>
-                        );
-                      })}
-
-                      {/* Submódulos */}
-                      {module.subModules?.map((subModule) => {
-                        const isSubExpanded = isSubModuleExpanded(subModule.id);
-                        const hasSubActiveItem = subModule.items.some((item) =>
-                          isPathActive(item.href, location.pathname)
-                        );
-
-                        return (
-                          <div key={subModule.id} className="space-y-1">
-                            {/* Cabeçalho do submódulo */}
-                            <button
-                              onClick={() => toggleSubModule(subModule.id)}
-                              aria-expanded={isSubExpanded}
-                              aria-controls={`submodule-${subModule.id}`}
-                              className={cn(
-                                'flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
-                                isSubExpanded
-                                  ? 'bg-primary/10 font-medium text-primary'
-                                  : hasSubActiveItem
-                                    ? 'bg-accent/50 font-medium text-accent-foreground'
-                                    : 'sidebar-text hover:bg-accent hover:text-accent-foreground'
-                              )}
-                            >
-                              <span
-                                className={cn(
-                                  'transition-colors duration-150',
-                                  isSubExpanded ? 'text-primary' : ''
-                                )}
-                              >
-                                {subModule.icon}
-                              </span>
-                              <span className="flex-1 text-left">
-                                {t(subModule.titleKey)}
-                              </span>
-                              <ChevronDown
-                                className={cn(
-                                  'h-3 w-3 transition-transform duration-200',
-                                  isSubExpanded ? 'rotate-0' : '-rotate-90'
-                                )}
-                              />
-                            </button>
-
-                            {/* Itens do submódulo com animação */}
-                            <div
-                              id={`submodule-${subModule.id}`}
-                              className={cn(
-                                'grid transition-all duration-200 ease-in-out',
-                                isSubExpanded
-                                  ? 'grid-rows-[1fr] opacity-100'
-                                  : 'grid-rows-[0fr] opacity-0'
-                              )}
-                            >
-                              <div className="overflow-hidden">
-                                <div className="ml-4 space-y-1 py-1">
-                                  {subModule.items.map((item) => {
-                                    const isActive = isPathActive(
-                                      item.href,
-                                      location.pathname
-                                    );
-                                    return (
-                                      <Link
-                                        key={item.href}
-                                        to={item.href}
-                                        className={cn(
-                                          'relative flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-all duration-150',
-                                          isActive
-                                            ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
-                                            : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
-                                        )}
-                                      >
-                                        {item.icon}
-                                        <span>{t(item.titleKey)}</span>
-                                      </Link>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Items normais (módulos sem submódulos) */}
-                      {module.items?.map((item) => {
-                        const isActive = isPathActive(item.href, location.pathname);
-                        return (
-                          <Link
-                            key={item.href}
-                            to={item.href}
-                            className={cn(
-                              'relative flex items-center gap-3 rounded-lg px-4 py-2 text-sm transition-all duration-150',
-                              isActive
-                                ? 'bg-primary/10 font-medium text-primary before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-primary'
-                                : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
-                            )}
-                          >
-                            {item.icon}
-                            <span>{t(item.titleKey)}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </nav>
+        {sidebarContent}
       </aside>
     </>
   );

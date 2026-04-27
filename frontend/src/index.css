@@ -139,6 +139,13 @@
     --page-header-offset: 8rem;
     --page-header-with-filters-offset: 12rem;
     --page-full-offset: 4rem;
+
+    /* Z-index stacking order — single source of truth */
+    --z-header: 30;
+    --z-sidebar-overlay: 40;
+    --z-sidebar: 50;
+    --z-modal: 60;
+    --z-toast: 100;
   }
 
   /* Tema Escuro - Dracula Classic (Dracula Dark Theme Oficial) */

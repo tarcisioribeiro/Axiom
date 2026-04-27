@@ -1,16 +1,10 @@
-/**
- * StatCard Component
- *
- * Componente reutilizável para cards de estatísticas.
- * Usado principalmente no Dashboard para exibir métricas financeiras.
- */
-
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import React, { useMemo } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
+import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 
 interface StatCardProps {
@@ -20,27 +14,20 @@ interface StatCardProps {
   trend?: {
     value: number;
     isPositive: boolean;
+    /** Optional period label, e.g. "vs. mês anterior" */
+    period?: string;
   };
   variant?: 'default' | 'success' | 'warning' | 'danger';
 }
 
 const extractNumber = (val: string | number): number => {
   if (typeof val === 'number') return val;
-
-  const stringVal = String(val);
-
-  // For percentages, remove % and parse as decimal number
-  if (stringVal.includes('%')) {
-    const cleaned = stringVal.replace('%', '').trim();
-    return parseFloat(cleaned);
-  }
-
-  // For currency (R$ 1.234,56), convert pt-BR format to standard
-  // Remove currency symbol and convert pt-BR format (1.234,56) to standard (1234.56)
-  const cleaned = stringVal
-    .replace(/[^\d.,-]/g, '') // Remove non-numeric chars except . , -
-    .replace(/\./g, '') // Remove thousands separator (dot in pt-BR)
-    .replace(',', '.'); // Convert decimal separator (comma to dot)
+  const s = String(val);
+  if (s.includes('%')) return parseFloat(s.replace('%', '').trim());
+  const cleaned = s
+    .replace(/[^\d.,-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
   return parseFloat(cleaned);
 };
 
@@ -67,8 +54,6 @@ export const StatCard: React.FC<StatCardProps> = ({
     danger: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   };
 
-  // Parse numeric value for counter animation.
-  // Skip animation for ratio/fraction values (e.g., "8 / 18").
   const { isRatio, isPercentage, isCurrency, numericValue, isNumeric } = useMemo(() => {
     const ratio = typeof value === 'string' && value.includes('/');
     const percentage = typeof value === 'string' && value.includes('%');
@@ -83,7 +68,6 @@ export const StatCard: React.FC<StatCardProps> = ({
     };
   }, [value]);
 
-  // useCounter returns a float — callers format as needed.
   const animatedCount = useCounter(isNumeric ? numericValue : 0);
 
   const displayValue = isRatio
@@ -91,9 +75,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     : isPercentage
       ? `${animatedCount.toFixed(1)}%`
       : isCurrency
-        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-            animatedCount
-          )
+        ? formatCurrency(animatedCount)
         : isNumeric
           ? Math.round(animatedCount).toLocaleString('pt-BR')
           : value;
@@ -143,13 +125,14 @@ export const StatCard: React.FC<StatCardProps> = ({
                 )}
               </motion.div>
               <span
-                className={`text-xs font-medium ${
-                  trend.isPositive ? 'text-success' : 'text-destructive'
-                }`}
+                className={`text-xs font-medium ${trend.isPositive ? 'text-success' : 'text-destructive'}`}
               >
                 {trend.value > 0 ? '+' : ''}
                 {trend.value}%
               </span>
+              {trend.period && (
+                <span className="text-xs text-muted-foreground">{trend.period}</span>
+              )}
             </div>
           )}
         </CardContent>

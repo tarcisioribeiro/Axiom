@@ -1,11 +1,12 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useEffect, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { RouteProgressBar } from './components/common/RouteProgressBar';
 import { Layout } from './components/layout/Layout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
@@ -91,11 +92,20 @@ const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 
-// Loading component
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
     <Loader2 className="h-12 w-12 animate-spin text-primary" />
   </div>
+);
+
+/**
+ * Wraps every lazy-loaded page with its own ErrorBoundary + Suspense so a
+ * page-level crash doesn't unmount the sidebar/header.
+ */
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+  </ErrorBoundary>
 );
 
 function AnimatedRoutes() {
@@ -139,121 +149,121 @@ function AnimatedRoutes() {
           <Route
             path="/"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Home />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/dashboard"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Dashboard />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/accounts"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Accounts />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/expenses"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Expenses />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/fixed-expenses"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <FixedExpenses />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/categorization-rules"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <CategorizationRules />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/revenues"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Revenues />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/credit-cards"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <CreditCards />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/credit-card-bills"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <CreditCardBills />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/credit-card-expenses"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <CreditCardExpenses />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/transfers"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Transfers />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/loans"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Loans />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/payables"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Payables />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/members"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Members />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/members/:id/report"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <MemberFinancialReport />
-              </Suspense>
+              </PageWrapper>
             }
           />
 
@@ -261,131 +271,131 @@ function AnimatedRoutes() {
           <Route
             path="/security/dashboard"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <SecurityDashboard />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/passwords"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Passwords />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/stored-cards"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <StoredCards />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/stored-accounts"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <StoredAccounts />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/archives"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Archives />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/activity-logs"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <ActivityLogs />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/security/password-import"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <PasswordImport />
-              </Suspense>
+              </PageWrapper>
             }
           />
           {/* Library Module routes */}
           <Route
             path="/library/dashboard"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <LibraryDashboard />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/library/books"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Books />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/library/authors"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Authors />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/library/publishers"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Publishers />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/library/highlights"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Highlights />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/library/reading-queue"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <ReadingQueue />
-              </Suspense>
+              </PageWrapper>
             }
           />
           {/* Personal Planning Module routes */}
           <Route
             path="/planning/dashboard"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <PersonalPlanningDashboard />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/planning/routine-tasks"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <RoutineTasks />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/planning/goals"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Goals />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
@@ -395,25 +405,25 @@ function AnimatedRoutes() {
           <Route
             path="/planning/today-tasks"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <TodayTasks />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/planning/daily-checklist"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <DailyChecklist />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/planning/reflections"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <DailyReflections />
-              </Suspense>
+              </PageWrapper>
             }
           />
 
@@ -421,9 +431,9 @@ function AnimatedRoutes() {
           <Route
             path="/budgets"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Budgets />
-              </Suspense>
+              </PageWrapper>
             }
           />
 
@@ -431,17 +441,17 @@ function AnimatedRoutes() {
           <Route
             path="/bank-reconciliation"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <BankReconciliation />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/bank-reconciliation/:importId"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <BankReconciliationDetail />
-              </Suspense>
+              </PageWrapper>
             }
           />
 
@@ -449,25 +459,25 @@ function AnimatedRoutes() {
           <Route
             path="/vaults"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Vaults />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/financial-goals"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <FinancialGoals />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/vaults/simulator"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <VaultSimulator />
-              </Suspense>
+              </PageWrapper>
             }
           />
 
@@ -475,17 +485,17 @@ function AnimatedRoutes() {
           <Route
             path="/settings/permissions"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <Permissions />
-              </Suspense>
+              </PageWrapper>
             }
           />
           <Route
             path="/settings/notifications"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              <PageWrapper>
                 <NotificationPreferences />
-              </Suspense>
+              </PageWrapper>
             }
           />
         </Route>
@@ -496,9 +506,9 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <ErrorBoundary>
-                <Suspense fallback={<LoadingFallback />}>
+                <PageWrapper>
                   <BookReader />
-                </Suspense>
+                </PageWrapper>
               </ErrorBoundary>
             </ProtectedRoute>
           }
@@ -527,6 +537,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <RouteProgressBar />
         <AnimatedRoutes />
         <Toaster />
         <AlertDialogProvider />
