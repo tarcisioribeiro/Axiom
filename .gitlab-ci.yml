@@ -92,12 +92,24 @@ workflow:
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
 
+# ------------------------------------------------------------------------------
+# Shared rule: skip this job on main — develop already validated it.
+# Apply via `extends: [.base, .rules_skip_main]` on lint, typecheck, and test jobs.
+# ------------------------------------------------------------------------------
+.rules_skip_main:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - when: always
+
 # ==============================================================================
 # STAGE: lint
 # ==============================================================================
 
 lint:backend:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: lint
   script:
     - cd api
@@ -106,14 +118,18 @@ lint:backend:
     - flake8 .
 
 lint:frontend:
-  extends: .node_base
+  extends:
+    - .node_base
+    - .rules_skip_main
   stage: lint
   script:
     - npm run lint
     - npm run format:check
 
 lint:migrations:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: lint
   needs:
     - lint:backend
@@ -132,19 +148,25 @@ lint:migrations:
     - python manage.py makemigrations --check --dry-run
 
 lint:bandit:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: lint
   script:
     - bandit -r api/ -x api/tests,api/\*/migrations -ll
 
 lint:pip-audit:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: lint
   script:
     - pip-audit -r api/requirements.txt --desc
 
 lint:npm-audit:
-  extends: .node_base
+  extends:
+    - .node_base
+    - .rules_skip_main
   stage: lint
   script:
     - npm audit --audit-level=high
@@ -173,7 +195,7 @@ lint:secrets:
     - gitleaks detect --source . --redact
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != "main"
 
 lint:k8s:
   stage: lint
@@ -202,7 +224,9 @@ lint:k8s:
 # ==============================================================================
 
 typecheck:backend:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: typecheck
   needs:
     - lint:backend
@@ -215,7 +239,9 @@ typecheck:backend:
     - mypy .
 
 typecheck:frontend:
-  extends: .node_base
+  extends:
+    - .node_base
+    - .rules_skip_main
   stage: typecheck
   needs:
     - lint:frontend
@@ -227,7 +253,9 @@ typecheck:frontend:
 # ==============================================================================
 
 test:backend:
-  extends: .python_base
+  extends:
+    - .python_base
+    - .rules_skip_main
   stage: test
 
   needs:
@@ -278,7 +306,9 @@ test:backend:
         path: api/coverage.xml
 
 test:frontend:
-  extends: .node_base
+  extends:
+    - .node_base
+    - .rules_skip_main
   stage: test
   needs:
     - typecheck:frontend
@@ -293,7 +323,9 @@ test:frontend:
         path: frontend/coverage/cobertura-coverage.xml
 
 build:storybook:
-  extends: .node_base
+  extends:
+    - .node_base
+    - .rules_skip_main
   stage: test
   needs:
     - typecheck:frontend
@@ -341,6 +373,8 @@ build:storybook:
   extends: .docker_base
   stage: build
   interruptible: false
+  variables:
+    GIT_DEPTH: 2
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - apk add --no-cache curl
@@ -353,19 +387,29 @@ build:api:
   extends: .build_base
   needs:
     - job: test:backend
+      optional: true
     - job: test:frontend
+      optional: true
   script:
-    - docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
-    - docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - |
-      if [ -n "${CI_COMMIT_TAG:-}" ]; then
-        docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
-        docker push "$API_IMAGE:$CI_COMMIT_TAG"
-      fi
+    # On main: re-tag the image already built and pushed by the develop pipeline.
+    # HEAD^2 is the develop tip on a merge commit; fall back to HEAD^1 on fast-forward.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
+        DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
+          || git rev-parse HEAD^1 | cut -c1-8)
+        echo "main: re-tagging $API_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
+        docker pull "$API_IMAGE:$DEVELOP_SHA"
+        docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+        docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:main"
+        docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
         docker push "$API_IMAGE:main"
+      else
+        docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+        docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+        if [ -n "${CI_COMMIT_TAG:-}" ]; then
+          docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
+          docker push "$API_IMAGE:$CI_COMMIT_TAG"
+        fi
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────
@@ -422,19 +466,29 @@ build:frontend:
   extends: .build_base
   needs:
     - job: test:backend
+      optional: true
     - job: test:frontend
+      optional: true
   script:
-    - docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
-    - docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-    - |
-      if [ -n "${CI_COMMIT_TAG:-}" ]; then
-        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
-      fi
+    # On main: re-tag the image already built and pushed by the develop pipeline.
+    # HEAD^2 is the develop tip on a merge commit; fall back to HEAD^1 on fast-forward.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
+        DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
+          || git rev-parse HEAD^1 | cut -c1-8)
+        echo "main: re-tagging $FRONTEND_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
+        docker pull "$FRONTEND_IMAGE:$DEVELOP_SHA"
+        docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+        docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:main"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         docker push "$FRONTEND_IMAGE:main"
+      else
+        docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+        if [ -n "${CI_COMMIT_TAG:-}" ]; then
+          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+          docker push "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
+        fi
       fi
 
     # ── SBOM generation (syft) ────────────────────────────────────────────────
