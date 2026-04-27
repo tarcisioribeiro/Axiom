@@ -391,18 +391,27 @@ build:api:
     - job: test:frontend
       optional: true
   script:
-    # On main: re-tag the image already built and pushed by the develop pipeline.
-    # HEAD^2 is the develop tip on a merge commit; fall back to HEAD^1 on fast-forward.
+    # On main: try to re-tag the image already built by the develop pipeline.
+    # Falls back to a full build if the develop image is not in the registry
+    # (e.g. develop pipeline failed before build, or first-time setup).
+    # HEAD^2 is the develop tip on a merge commit; falls back to HEAD^1 on fast-forward.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
           || git rev-parse HEAD^1 | cut -c1-8)
-        echo "main: re-tagging $API_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
-        docker pull "$API_IMAGE:$DEVELOP_SHA"
-        docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
-        docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:main"
-        docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
-        docker push "$API_IMAGE:main"
+        if [ -n "$DEVELOP_SHA" ] && docker pull "$API_IMAGE:$DEVELOP_SHA" 2>/dev/null; then
+          echo "main: re-tagging $API_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
+          docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker tag "$API_IMAGE:$DEVELOP_SHA" "$API_IMAGE:main"
+          docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker push "$API_IMAGE:main"
+        else
+          echo "main: develop image ($API_IMAGE:$DEVELOP_SHA) not found — building from source"
+          docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+          docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
+          docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker push "$API_IMAGE:main"
+        fi
       else
         docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
@@ -470,18 +479,27 @@ build:frontend:
     - job: test:frontend
       optional: true
   script:
-    # On main: re-tag the image already built and pushed by the develop pipeline.
-    # HEAD^2 is the develop tip on a merge commit; fall back to HEAD^1 on fast-forward.
+    # On main: try to re-tag the image already built by the develop pipeline.
+    # Falls back to a full build if the develop image is not in the registry
+    # (e.g. develop pipeline failed before build, or first-time setup).
+    # HEAD^2 is the develop tip on a merge commit; falls back to HEAD^1 on fast-forward.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
         DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
           || git rev-parse HEAD^1 | cut -c1-8)
-        echo "main: re-tagging $FRONTEND_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
-        docker pull "$FRONTEND_IMAGE:$DEVELOP_SHA"
-        docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-        docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:main"
-        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-        docker push "$FRONTEND_IMAGE:main"
+        if [ -n "$DEVELOP_SHA" ] && docker pull "$FRONTEND_IMAGE:$DEVELOP_SHA" 2>/dev/null; then
+          echo "main: re-tagging $FRONTEND_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
+          docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:main"
+          docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker push "$FRONTEND_IMAGE:main"
+        else
+          echo "main: develop image ($FRONTEND_IMAGE:$DEVELOP_SHA) not found — building from source"
+          docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
+          docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+          docker push "$FRONTEND_IMAGE:main"
+        fi
       else
         docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
