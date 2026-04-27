@@ -7,7 +7,9 @@ import type { ExpensePrefillData } from '@/components/expenses/ExpenseForm';
 import { Badge } from '@/components/ui/badge';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useOptimisticDelete } from '@/hooks/use-optimistic-delete';
 import { useToast } from '@/hooks/use-toast';
+import { useUrlFilters } from '@/hooks/use-url-filters';
 import { formatCurrency, formatDateTime } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -50,6 +52,7 @@ export interface UseExpensesPageReturn {
   handleCreate: () => void;
   handleEdit: (expense: Expense) => void;
   handleDelete: (id: number) => Promise<void>;
+  deletingExpenseIds: Set<number | string>;
   handleSubmit: (data: ExpenseFormData) => void;
   handleExport: (params: {
     export_format: 'csv' | 'pdf';
@@ -73,17 +76,59 @@ export function useExpensesPage(): UseExpensesPageReturn {
   const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
   const prefillExpenseData = locationState?.prefillExpense;
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
+  const FILTER_DEFAULTS = useMemo(
+    () => ({
+      search: '',
+      category: 'all',
+      status: 'all',
+      startDate: '',
+      endDate: '',
+      accounts: '',
+    }),
+    []
+  );
+
+  const { filters, setFilter, resetFilters, hasActiveFilters } =
+    useUrlFilters(FILTER_DEFAULTS);
+
+  const searchTerm = filters.search;
+  const setSearchTerm = (v: string) => setFilter('search', v);
+  const categoryFilter = filters.category;
+  const setCategoryFilter = (v: string) => setFilter('category', v);
+  const statusFilter = filters.status;
+  const setStatusFilter = (v: string) => setFilter('status', v);
+
+  const startDate = useMemo(
+    () => (filters.startDate ? new Date(filters.startDate) : undefined),
+    [filters.startDate]
+  );
+  const setStartDate = (d: Date | undefined) =>
+    setFilter('startDate', d ? formatLocalDate(d) : '');
+
+  const endDate = useMemo(
+    () => (filters.endDate ? new Date(filters.endDate) : undefined),
+    [filters.endDate]
+  );
+  const setEndDate = (d: Date | undefined) =>
+    setFilter('endDate', d ? formatLocalDate(d) : '');
+
+  const selectedAccounts = useMemo(
+    () =>
+      filters.accounts ? filters.accounts.split(',').map(Number).filter(Boolean) : [],
+    [filters.accounts]
+  );
+  const toggleAccount = (id: number) => {
+    const next = selectedAccounts.includes(id)
+      ? selectedAccounts.filter((a) => a !== id)
+      : [...selectedAccounts, id];
+    setFilter('accounts', next.length ? next.join(',') : '');
+  };
+
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
     return () => clearTimeout(timer);
@@ -175,43 +220,24 @@ export function useExpensesPage(): UseExpensesPageReturn {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => expensesService.delete(id),
-    onSuccess: () => {
-      void invalidateExpenses();
-      toast({
-        title: t('pages.expenses.deleted'),
-        description: t('pages.expenses.deletedDesc'),
-      });
-    },
-    onError: (error: unknown) => {
-      toast({
-        title: t('common.messages.deleteError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    },
-  });
+  const { deletingIds: deletingExpenseIds, handleDelete: optimisticDelete } =
+    useOptimisticDelete<Expense>({
+      queryKey: ['expenses', params],
+      deleteFn: (id) => expensesService.delete(id as number),
+      getItemId: (e) => e.id,
+      resourceName: t('pages.expenses.resource'),
+      onSuccess: () => {
+        toast({
+          title: t('pages.expenses.deleted'),
+          description: t('pages.expenses.deletedDesc'),
+        });
+      },
+    });
 
   const isLoading = expensesLoading || accountsLoading;
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
-  const toggleAccount = (accountId: number) => {
-    setSelectedAccounts((prev) =>
-      prev.includes(accountId)
-        ? prev.filter((id) => id !== accountId)
-        : [...prev, accountId]
-    );
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCategoryFilter('all');
-    setStatusFilter('all');
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setSelectedAccounts([]);
-  };
+  const clearFilters = resetFilters;
 
   const handleCreate = () => {
     if (accounts.length === 0) {
@@ -240,7 +266,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
       variant: 'destructive',
     });
     if (!confirmed) return;
-    deleteMutation.mutate(id);
+    await optimisticDelete(id);
   };
 
   const handleSubmit = (data: ExpenseFormData) => {
@@ -289,14 +315,6 @@ export function useExpensesPage(): UseExpensesPageReturn {
     expenses.map((e) => ({ value: parseFloat(e.value) })),
     'value'
   );
-  const hasActiveFilters =
-    !!searchTerm ||
-    categoryFilter !== 'all' ||
-    statusFilter !== 'all' ||
-    !!startDate ||
-    !!endDate ||
-    selectedAccounts.length > 0;
-
   const columns: Column<Expense>[] = [
     {
       key: 'description',
@@ -392,6 +410,7 @@ export function useExpensesPage(): UseExpensesPageReturn {
     handleCreate,
     handleEdit,
     handleDelete,
+    deletingExpenseIds,
     handleSubmit,
     handleExport,
     totalExpenses,
