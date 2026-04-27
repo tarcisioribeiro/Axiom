@@ -35,6 +35,7 @@ vi.mock('framer-motion', async (importOriginal) => {
 
 vi.mock('@/lib/animations', () => ({
   cardVariants: {},
+  emptyStateVariants: {},
   useCounter: (end: number) => end,
 }));
 

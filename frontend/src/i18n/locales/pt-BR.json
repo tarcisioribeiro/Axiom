@@ -138,7 +138,10 @@
     "logout": "Sair",
     "toggleTheme": "Alternar tema",
     "language": "Idioma",
-    "openCommandPalette": "Abrir paleta de comandos (Ctrl+K)"
+    "openCommandPalette": "Abrir paleta de comandos (Ctrl+K)",
+    "search": "Buscar...",
+    "expandSidebar": "Expandir menu lateral",
+    "collapseSidebar": "Recolher menu lateral"
   },
   "breadcrumb": {
     "home": "Início",
@@ -378,6 +381,7 @@
       "updatedDesc": "A despesa foi atualizada com sucesso.",
       "deleted": "Despesa excluída",
       "deletedDesc": "A despesa foi excluída com sucesso.",
+      "resource": "despesa",
       "noAccountMsg": "É necessário ter pelo menos uma conta cadastrada antes de criar uma despesa.",
       "emptyState": "Nenhuma despesa encontrada.",
       "searchPlaceholder": "Buscar por descrição...",
