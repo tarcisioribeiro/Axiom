@@ -97,6 +97,8 @@ INSTALLED_APPS = [
     "budgets",
     # Bank Reconciliation Module
     "bank_reconciliation",
+    # Agents Module
+    "agents",
 ]
 
 MIDDLEWARE = [
@@ -455,3 +457,14 @@ SITE_URL = os.getenv("SITE_URL", "")
 # Use console backend in tests to avoid hitting a real SMTP server
 if _TESTING:
     EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# ============================================================================
+# LLM / Agents Configuration
+# ============================================================================
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
+OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+LLM_TIMEOUT_CHAT = int(os.getenv("LLM_TIMEOUT_CHAT", "120"))
+LLM_TIMEOUT_EMBED = int(os.getenv("LLM_TIMEOUT_EMBED", "30"))
+# ANTHROPIC_MODEL and ANTHROPIC_API_KEY must be set when LLM_PROVIDER=anthropic
