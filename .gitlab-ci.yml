@@ -373,8 +373,21 @@ build:storybook:
   extends: .docker_base
   stage: build
   interruptible: false
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
   variables:
     GIT_DEPTH: 2
+    # Override DNS for the DinD daemon itself (not just containers it runs).
+    # The --dns flag in services.command only affects child containers; the
+    # daemon uses the service container's /etc/resolv.conf, which defaults to
+    # the runner's DNS (1.1.1.1). Setting DOCKER_DAEMON_OPTS here causes
+    # dockerd-entrypoint.sh to start dockerd with these additional flags so
+    # the daemon itself also resolves external hostnames via Google DNS.
+    DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - apk add --no-cache curl

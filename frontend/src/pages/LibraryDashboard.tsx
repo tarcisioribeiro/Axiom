@@ -357,6 +357,26 @@ export default function LibraryDashboard() {
             <CardTitle className="text-sm font-medium">Sessões & Ritmo</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
+            {/* Streak em destaque */}
+            <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2 dark:bg-orange-950/20">
+              <div className="flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                  {t('pages.libraryDashboard.currentStreak')}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {stats?.reading_streak?.current_streak || 0}
+                </span>
+                <span className="ml-1 text-xs text-orange-500">
+                  {(stats?.reading_streak?.current_streak || 0) === 1 ? 'dia' : 'dias'}
+                </span>
+              </div>
+            </div>
+
+            <div className="border-t" />
+
             {(
               [
                 {
@@ -382,11 +402,6 @@ export default function LibraryDashboard() {
                   icon: <Zap className="h-4 w-4" />,
                   label: t('pages.libraryDashboard.longestSession'),
                   value: `${stats?.longest_session_pages || 0} págs`,
-                },
-                {
-                  icon: <Flame className="h-4 w-4" />,
-                  label: t('pages.libraryDashboard.currentStreak'),
-                  value: `${stats?.reading_streak?.current_streak || 0} dias`,
                 },
                 {
                   icon: <CalendarClock className="h-4 w-4" />,
@@ -872,6 +887,13 @@ export default function LibraryDashboard() {
                     0
                   );
                   const pct = total > 0 ? (item.session_count / total) * 100 : 0;
+                  const barColors: Record<string, string> = {
+                    morning: '#f59e0b',
+                    afternoon: '#f97316',
+                    evening: '#60a5fa',
+                    dawn: '#818cf8',
+                  };
+                  const barColor = barColors[item.time_of_day] ?? '#6b7280';
                   return (
                     <div key={item.time_of_day} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
@@ -887,8 +909,8 @@ export default function LibraryDashboard() {
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${pct}%` }}
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${pct}%`, backgroundColor: barColor }}
                         />
                       </div>
                     </div>

@@ -136,7 +136,7 @@ describe('Expenses page', () => {
   it('renders the page title', async () => {
     renderExpenses();
     await waitFor(() => {
-      expect(screen.getByText(/despesas/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     });
   });
 

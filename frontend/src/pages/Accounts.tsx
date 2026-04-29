@@ -7,8 +7,10 @@ import {
   ArrowLeftRight,
   FileUp,
   RefreshCw,
+  Banknote,
+  ShieldCheck,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +19,8 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
+import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,6 +71,7 @@ export default function Accounts() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | undefined>();
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Bank reconciliation state
   const [reconciliationAccount, setReconciliationAccount] = useState<
@@ -148,6 +153,26 @@ export default function Accounts() {
   });
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+
+  const filteredAccounts = useMemo(() => {
+    if (!searchTerm) return accounts;
+    const q = searchTerm.toLowerCase();
+    return accounts.filter(
+      (a) =>
+        a.account_name.toLowerCase().includes(q) ||
+        translate('institutions', a.institution).toLowerCase().includes(q) ||
+        (a.account_number_masked ?? '').toLowerCase().includes(q)
+    );
+  }, [accounts, searchTerm]);
+
+  const { totalBalance, totalAvailable } = useMemo(() => {
+    const balance = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
+    const available = accounts.reduce(
+      (s, a) => s + parseFloat(a.balance) + parseFloat(a.overdraft_limit ?? '0'),
+      0
+    );
+    return { totalBalance: balance, totalAvailable: available };
+  }, [accounts]);
 
   const handleCreate = () => {
     setSelectedAccount(undefined);
@@ -315,8 +340,35 @@ export default function Accounts() {
         }}
       />
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title={t('pages.accounts.stats.totalBalance')}
+          value={formatCurrency(totalBalance)}
+          icon={<Banknote />}
+          variant={totalBalance >= 0 ? 'success' : 'danger'}
+        />
+        <StatCard
+          title={t('pages.accounts.stats.availableBalance')}
+          value={formatCurrency(totalAvailable)}
+          icon={<ShieldCheck />}
+          variant={totalAvailable >= 0 ? 'default' : 'danger'}
+        />
+        <StatCard
+          title={t('pages.accounts.stats.count')}
+          value={accounts.length}
+          icon={<Wallet />}
+        />
+      </div>
+
+      <SearchInput
+        placeholder={t('pages.accounts.searchPlaceholder')}
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+        className="max-w-sm"
+      />
+
       <DataTable
-        data={accounts}
+        data={filteredAccounts}
         columns={columns}
         keyExtractor={(account) => account.id}
         isLoading={isLoading}
