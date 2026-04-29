@@ -54,6 +54,7 @@ known_first_party = [
     "payables",
     "vaults",
     "ai_assistant",
+    "agents",
     "bank_reconciliation",
 ]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
@@ -110,6 +111,8 @@ django_settings_module = "app.settings_mypy"
 module = [
     "django_filters.*",
     "corsheaders.*",
+    "anthropic",
+    "anthropic.*",
     "drf_spectacular.*",
     "pythonjsonlogger.*",
     "django_prometheus.*",
@@ -136,6 +139,8 @@ ignore_missing_imports = true
 module = [
     "ai_assistant",
     "ai_assistant.*",
+    "agents",
+    "agents.*",
     "budgets",
     "budgets.*",
     "credit_cards",

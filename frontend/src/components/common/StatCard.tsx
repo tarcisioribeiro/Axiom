@@ -90,7 +90,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <Card className={`transition-shadow ${variantClasses[variant]}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-          <CardTitle as="p" className="text-sm font-medium">
+          <CardTitle className="text-sm font-medium">
             {title}
           </CardTitle>
           {icon && (
