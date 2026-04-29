@@ -76,7 +76,11 @@
       "inactive": "Inactive",
       "paid": "Paid",
       "pending": "Pending",
-      "overdue": "Overdue"
+      "overdue": "Overdue",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
     }
   },
   "nav": {
@@ -318,6 +322,12 @@
       "deleted": "Account deleted",
       "deletedDesc": "The account was deleted successfully.",
       "emptyState": "No accounts registered. Click \"New Account\" to get started.",
+      "searchPlaceholder": "Search by name or institution...",
+      "stats": {
+        "totalBalance": "Consolidated Balance",
+        "availableBalance": "Total Available",
+        "count": "Active Accounts"
+      },
       "columns": {
         "name": "Account",
         "type": "Type",
@@ -365,7 +375,12 @@
         "date": "Date"
       },
       "exportTitle": "Export Expenses",
-      "exportDesc": "Select the period and format to export the filtered expenses."
+      "exportDesc": "Select the period and format to export the filtered expenses.",
+      "stats": {
+        "totalAmount": "Total Expenses",
+        "paid": "Paid",
+        "pending": "Pending"
+      }
     },
     "revenues": {
       "title": "Revenues",
@@ -402,7 +417,12 @@
         "date": "Date"
       },
       "exportTitle": "Export Revenues",
-      "exportDesc": "Select the period and format to export the filtered revenues."
+      "exportDesc": "Select the period and format to export the filtered revenues.",
+      "stats": {
+        "totalAmount": "Total Revenues",
+        "received": "Received",
+        "pending": "Pending"
+      }
     },
     "transfers": {
       "title": "Transfers",
@@ -421,11 +441,23 @@
       "deletedDesc": "The transfer was deleted successfully.",
       "noAccountMsg": "You need at least two registered accounts before creating a transfer.",
       "emptyState": "No transfers registered.",
+      "emptySearch": "No transfers found for the applied filters.",
+      "searchPlaceholder": "Search by description...",
+      "allStatus": "All Status",
+      "allAccounts": "All Accounts",
+      "dateFrom": "Start Date",
+      "dateTo": "End Date",
+      "stats": {
+        "totalAmount": "Total Volume",
+        "completed": "Completed",
+        "pending": "Pending"
+      },
       "columns": {
         "description": "Description",
         "amount": "Amount",
         "type": "Type",
         "route": "Origin → Destination",
+        "status": "Status",
         "date": "Date"
       }
     },
@@ -491,6 +523,12 @@
         "balance": "Balance",
         "loading": "Calculating...",
         "noData": "No amortization data available."
+      },
+      "stats": {
+        "total": "Total Loans",
+        "active": "Active",
+        "paid": "Paid Off",
+        "totalDebt": "Total Debt"
       }
     },
     "members": {
@@ -718,6 +756,12 @@
         "submit": "Register",
         "success": "Payment registered successfully.",
         "successDesc": "The payment was registered and the balance has been updated."
+      },
+      "stats": {
+        "total": "Total Payables",
+        "active": "Active",
+        "overdue": "Overdue",
+        "paid": "Paid Off"
       }
     },
     "budgets": {

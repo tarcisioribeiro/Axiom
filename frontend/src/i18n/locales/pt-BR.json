@@ -76,7 +76,11 @@
       "inactive": "Inativo",
       "paid": "Pago",
       "pending": "Pendente",
-      "overdue": "Vencido"
+      "overdue": "Vencido",
+      "processing": "Processando",
+      "completed": "Concluído",
+      "failed": "Falhou",
+      "cancelled": "Cancelado"
     }
   },
   "nav": {
@@ -357,6 +361,12 @@
       "deleted": "Conta excluída",
       "deletedDesc": "A conta foi excluída com sucesso.",
       "emptyState": "Nenhuma conta cadastrada. Clique em \"Nova Conta\" para começar.",
+      "searchPlaceholder": "Buscar por nome ou instituição...",
+      "stats": {
+        "totalBalance": "Saldo Consolidado",
+        "availableBalance": "Disponível Total",
+        "count": "Contas Ativas"
+      },
       "columns": {
         "name": "Conta",
         "type": "Tipo",
@@ -404,7 +414,12 @@
         "date": "Data"
       },
       "exportTitle": "Exportar Despesas",
-      "exportDesc": "Selecione o período e formato para exportar as despesas filtradas."
+      "exportDesc": "Selecione o período e formato para exportar as despesas filtradas.",
+      "stats": {
+        "totalAmount": "Total de Despesas",
+        "paid": "Pagas",
+        "pending": "Pendentes"
+      }
     },
     "revenues": {
       "title": "Receitas",
@@ -441,7 +456,12 @@
         "date": "Data"
       },
       "exportTitle": "Exportar Receitas",
-      "exportDesc": "Selecione o período e formato para exportar as receitas filtradas."
+      "exportDesc": "Selecione o período e formato para exportar as receitas filtradas.",
+      "stats": {
+        "totalAmount": "Total de Receitas",
+        "received": "Recebidas",
+        "pending": "Pendentes"
+      }
     },
     "transfers": {
       "title": "Transferências",
@@ -460,11 +480,23 @@
       "deletedDesc": "A transferência foi excluída com sucesso.",
       "noAccountMsg": "É necessário ter pelo menos duas contas cadastradas antes de criar uma transferência.",
       "emptyState": "Nenhuma transferência cadastrada.",
+      "emptySearch": "Nenhuma transferência encontrada para os filtros aplicados.",
+      "searchPlaceholder": "Buscar por descrição...",
+      "allStatus": "Todos Status",
+      "allAccounts": "Todas as Contas",
+      "dateFrom": "Data Inicial",
+      "dateTo": "Data Final",
+      "stats": {
+        "totalAmount": "Volume Total",
+        "completed": "Concluídas",
+        "pending": "Pendentes"
+      },
       "columns": {
         "description": "Descrição",
         "amount": "Valor",
         "type": "Tipo",
         "route": "Origem → Destino",
+        "status": "Status",
         "date": "Data"
       }
     },
@@ -530,6 +562,12 @@
         "balance": "Saldo",
         "loading": "Calculando...",
         "noData": "Sem dados de amortização."
+      },
+      "stats": {
+        "total": "Total de Empréstimos",
+        "active": "Ativos",
+        "paid": "Quitados",
+        "totalDebt": "Dívida Total"
       }
     },
     "members": {
@@ -757,6 +795,12 @@
         "submit": "Registrar",
         "success": "Pagamento registrado com sucesso.",
         "successDesc": "O pagamento foi registrado e o saldo foi atualizado."
+      },
+      "stats": {
+        "total": "Total a Pagar",
+        "active": "Ativos",
+        "overdue": "Vencidos",
+        "paid": "Quitados"
       }
     },
     "budgets": {

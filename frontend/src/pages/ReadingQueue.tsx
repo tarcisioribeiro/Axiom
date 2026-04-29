@@ -36,6 +36,8 @@ function getPriorityBadge(rank: number): {
   return { label: 'Baixa', variant: 'secondary' };
 }
 
+const RANK_COLORS = ['bg-amber-500', 'bg-zinc-400', 'bg-orange-600'];
+
 interface SortableBookItemProps {
   book: Book;
   rank: number;
@@ -48,10 +50,11 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
   };
 
   const badge = getPriorityBadge(rank);
+  const rankColorClass = rank <= 3 ? RANK_COLORS[rank - 1] : 'bg-muted-foreground/40';
 
   return (
     <div
@@ -59,19 +62,40 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
       style={style}
       className="flex items-center gap-md rounded-lg border bg-card p-md shadow-sm"
     >
+      {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        className="cursor-grab touch-none opacity-40 transition-opacity hover:opacity-100 active:cursor-grabbing"
         aria-label="Arrastar para reordenar"
       >
-        <GripVertical className="h-5 w-5" />
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
       </button>
 
-      <span className="w-6 text-center text-sm font-semibold text-muted-foreground">
+      {/* Circular rank badge */}
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${rankColorClass}`}
+      >
         {rank}
       </span>
 
+      {/* Book cover thumbnail */}
+      <div className="h-12 w-8 shrink-0 overflow-hidden rounded shadow-sm">
+        {book.cover ? (
+          <img
+            src={book.cover}
+            alt=""
+            aria-hidden="true"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted">
+            <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+
+      {/* Title + author */}
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{book.title}</p>
         <p className="truncate text-sm text-muted-foreground">
@@ -79,6 +103,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
         </p>
       </div>
 
+      {/* Badges */}
       <div className="flex shrink-0 items-center gap-sm">
         <Badge variant="outline" className="hidden text-xs sm:inline-flex">
           {book.genre_display}

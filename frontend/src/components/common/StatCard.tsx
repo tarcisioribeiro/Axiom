@@ -90,7 +90,9 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <Card className={`transition-shadow ${variantClasses[variant]}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <CardTitle as="p" className="text-sm font-medium">
+            {title}
+          </CardTitle>
           {icon && (
             <motion.div
               whileHover={{ scale: 1.05, rotate: 4 }}
