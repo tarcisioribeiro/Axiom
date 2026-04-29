@@ -66,7 +66,10 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "source_id",
-                    models.UUIDField(verbose_name="ID da Fonte"),
+                    models.UUIDField(
+                        help_text="UUID do objeto de origem (livro, leitura, etc.)",
+                        verbose_name="ID da Fonte",
+                    ),
                 ),
                 (
                     "source_title",
@@ -81,8 +84,8 @@ class Migration(migrations.Migration):
                     models.TextField(
                         blank=True,
                         default="[]",
+                        help_text="Lista de floats serializada como JSON. Usada com pgvector em prod.",
                         verbose_name="Embedding (JSON)",
-                        help_text="Lista de floats serializada como JSON.",
                     ),
                 ),
                 (
@@ -91,7 +94,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="embeddingdocument_created",
+                        related_name="%(class)s_created",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Criado por",
                     ),
@@ -102,7 +105,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="embeddingdocument_deleted",
+                        related_name="%(class)s_deleted",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Excluído por",
                     ),
@@ -113,7 +116,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="embeddingdocument_updated",
+                        related_name="%(class)s_updated",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Atualizado por",
                     ),
@@ -202,7 +205,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="agentconversation_created",
+                        related_name="%(class)s_created",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Criado por",
                     ),
@@ -213,7 +216,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="agentconversation_deleted",
+                        related_name="%(class)s_deleted",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Excluído por",
                     ),
@@ -224,7 +227,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="agentconversation_updated",
+                        related_name="%(class)s_updated",
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Atualizado por",
                     ),
@@ -249,28 +252,28 @@ class Migration(migrations.Migration):
             model_name="embeddingdocument",
             index=models.Index(
                 fields=["user", "source_type"],
-                name="agents_embe_user_id_source_idx",
+                name="agents_embe_user_id_ebd899_idx",
             ),
         ),
         migrations.AddIndex(
             model_name="embeddingdocument",
             index=models.Index(
                 fields=["source_id"],
-                name="agents_embe_source_id_idx",
+                name="agents_embe_source__2df8a4_idx",
             ),
         ),
         migrations.AddIndex(
             model_name="agentconversation",
             index=models.Index(
                 fields=["user", "session_id"],
-                name="agents_conv_user_session_idx",
+                name="agents_agen_user_id_8b8795_idx",
             ),
         ),
         migrations.AddIndex(
             model_name="agentconversation",
             index=models.Index(
                 fields=["user", "-created_at"],
-                name="agents_conv_user_created_idx",
+                name="agents_agen_user_id_b4d360_idx",
             ),
         ),
     ]
