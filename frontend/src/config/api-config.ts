@@ -185,6 +185,21 @@ export const API_CONFIG = {
 
     // Health
     HEALTH: '/api/v1/health/',
+
+    // Agents
+    AGENTS_ASK: '/api/v1/agents/ask/',
+    AGENTS_HISTORY: '/api/v1/agents/history/',
+    AGENTS_SESSIONS: '/api/v1/agents/sessions/',
+    AGENTS_STATUS: '/api/v1/agents/status/',
+
+    // Admin Panel
+    ADMIN_CONFIG: '/api/v1/admin/config/',
+    ADMIN_CONFIG_DETAIL: (key: string) => `/api/v1/admin/config/${key}/`,
+    ADMIN_HEALTH: '/api/v1/admin/health/',
+    ADMIN_INTEGRATIONS: '/api/v1/admin/integrations/',
+    ADMIN_LOGS: '/api/v1/admin/logs/',
+    ADMIN_EMAIL_TEST: '/api/v1/admin/email/test/',
+    ADMIN_AGENTS_STATUS: '/api/v1/admin/agents/status/',
   },
 };
 

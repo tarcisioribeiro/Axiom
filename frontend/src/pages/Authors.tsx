@@ -7,6 +7,8 @@ import {
   UserPen,
   Calendar,
   UserCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +19,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { AuthorForm } from '@/components/library/AuthorForm';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -37,6 +40,124 @@ import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
 import type { Author, AuthorFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+function AuthorCard({
+  author,
+  onEdit,
+  onDelete,
+}: {
+  author: Author;
+  onEdit: (a: Author) => void;
+  onDelete: (id: number) => void;
+}) {
+  const [bioExpanded, setBioExpanded] = useState(false);
+  const { t } = useTranslation();
+  const hasBioOverflow = author.biography && author.biography.length > 120;
+
+  return (
+    <Card className="flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            {author.photo ? (
+              <img
+                src={author.photo}
+                alt={author.name}
+                className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border"
+              />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted ring-2 ring-border">
+                <UserCircle className="h-9 w-9 text-muted-foreground" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <CardTitle className="text-base leading-tight">{author.name}</CardTitle>
+              <CardDescription className="mt-0.5">
+                {author.nationality_display}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex shrink-0 gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onEdit(author)}
+              aria-label={t('common.actions.edit')}
+            >
+              <Edit className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => onDelete(author.id)}
+              aria-label={t('common.actions.delete')}
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex flex-1 flex-col gap-3">
+        {(author.birth_year || author.death_year) && (
+          <div className="flex items-center gap-2">
+            <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <Badge variant="outline" className="text-xs font-normal">
+              {author.birth_year && (
+                <>
+                  {author.birth_year} {author.birth_era_display || ''}
+                </>
+              )}
+              {author.birth_year && author.death_year && (
+                <span className="mx-1 text-muted-foreground">·</span>
+              )}
+              {author.death_year && (
+                <>
+                  {author.death_year} {author.death_era_display || ''}
+                </>
+              )}
+            </Badge>
+          </div>
+        )}
+
+        {author.biography && (
+          <div>
+            <p
+              className={`text-sm leading-relaxed text-muted-foreground ${!bioExpanded ? 'line-clamp-3' : ''}`}
+            >
+              {author.biography}
+            </p>
+            {hasBioOverflow && (
+              <button
+                className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                onClick={() => setBioExpanded((v) => !v)}
+              >
+                {bioExpanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" /> Ver menos
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" /> Ver mais
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center justify-between pt-2">
+          <Badge variant="secondary" className="flex items-center gap-1.5 text-xs">
+            <BookOpen className="h-3 w-3" />
+            {author.books_count} {author.books_count === 1 ? 'livro' : 'livros'}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Authors() {
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -183,78 +304,12 @@ export default function Authors() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredAuthors.map((author) => (
-            <Card key={author.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    {author.photo ? (
-                      <img
-                        src={author.photo}
-                        alt={author.name}
-                        className="h-12 w-12 shrink-0 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted">
-                        <UserCircle className="h-7 w-7 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <CardTitle className="text-lg">{author.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {author.nationality_display}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(author)}
-                      aria-label={t('common.actions.edit')}
-                    >
-                      <Edit className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(author.id)}
-                      aria-label={t('common.actions.delete')}
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {(author.birth_year || author.death_year) && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>
-                      {author.birth_year && (
-                        <>
-                          {author.birth_year} {author.birth_era_display || ''}
-                        </>
-                      )}
-                      {author.death_year && (
-                        <>
-                          {' - '}
-                          {author.death_year} {author.death_era_display || ''}
-                        </>
-                      )}
-                    </span>
-                  </div>
-                )}
-                {author.biography && (
-                  <p className="line-clamp-3 text-sm">{author.biography}</p>
-                )}
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="text-sm">
-                    {author.books_count} {author.books_count === 1 ? 'livro' : 'livros'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+            <AuthorCard
+              key={author.id}
+              author={author}
+              onEdit={handleEdit}
+              onDelete={(id) => void handleDelete(id)}
+            />
           ))}
         </div>
       )}

@@ -103,7 +103,10 @@ class AuthService {
    *
    * @returns Promise com lista de permissoes do usuario
    */
-  async getUserPermissions(): Promise<Permission[]> {
+  async getUserPermissions(): Promise<{
+    permissions: Permission[];
+    is_superuser: boolean;
+  }> {
     const response = await apiClient.get<{
       username: string;
       permissions: string[];
@@ -111,15 +114,19 @@ class AuthService {
       is_superuser: boolean;
     }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
 
+    if (response.is_superuser) {
+      return { permissions: [], is_superuser: true };
+    }
+
     if (!Array.isArray(response.permissions)) {
       logger.error(
         'Invalid permissions format received from API:',
         response.permissions
       );
-      return [];
+      return { permissions: [], is_superuser: false };
     }
 
-    return response.permissions.map((perm: string) => {
+    const permissions = response.permissions.map((perm: string) => {
       const [app_label, codename] = perm.split('.');
       return {
         app_label,
@@ -127,6 +134,8 @@ class AuthService {
         name: perm,
       };
     });
+
+    return { permissions, is_superuser: false };
   }
 
   /**

@@ -75,6 +75,14 @@ Guias para desenvolvedores.
 - **[Troubleshooting](development/troubleshooting.md)** - Solução de problemas comuns
 - **[Funcionalidades Pendentes](development/pending_features.md)** - O que está parcialmente implementado e como completar (email, reset de senha, 2FA, export ZIP, etc.)
 
+### [9. Painel de Administração](admin-panel/README.md)
+Configuração do sistema via painel admin (sem editar `.env` nem reconstruir containers).
+
+- **[Visão Geral](admin-panel/README.md)** - Acesso, endpoints da API e como as configurações são carregadas
+- **[Configuração de Email](admin-panel/email_configuration.md)** - SMTP, provedores (Gmail, Outlook, SES, SendGrid) e teste de envio
+- **[Configuração LLM / Ollama](admin-panel/llm_ollama_configuration.md)** - Ollama local, Anthropic Claude, modelos e monitoramento de agentes
+- **[Referência de Variáveis](admin-panel/environment_variables.md)** - Tabela completa de todas as chaves, valores padrão, segredos e efeitos
+
 ## 🚀 Início Rápido
 
 ### Para Novos Usuários

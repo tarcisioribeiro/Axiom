@@ -25,6 +25,10 @@ export default defineConfig({
         'src/components/ui/**',
         // Pages without unit tests are covered by E2E; only Expenses/Accounts/Dashboard have unit tests
         'src/pages/!(Expenses|Accounts|Dashboard).tsx',
+        // Admin pages — no unit tests yet; covered by E2E/integration tests
+        'src/pages/admin/**',
+        // Admin route guard — covered by E2E
+        'src/components/common/AdminRoute.tsx',
         // Service files are thin API-call wrappers — covered by integration tests
         'src/services/**',
         // Feature-specific components depend on API data; tested via integration/E2E

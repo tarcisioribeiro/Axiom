@@ -291,16 +291,19 @@ class AuthenticationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_user_permissions(self):
-        """Testa endpoint de permissões do usuário"""
-        # Autenticar usuário
-        refresh = RefreshToken.for_user(self.user)
-        access_token = str(refresh.access_token)
-        self.client.credentials(  # type: ignore
-            HTTP_AUTHORIZATION=f"Bearer {access_token}"
+        """Testa endpoint de permissões do usuário (não-superusuário)"""
+        # Endpoint bloqueia superusuários — usar usuário regular
+        regular_user = User.objects.create_user(
+            username="permstest",
+            email="permstest@test.com",
+            password="testpass123",
         )
+        client = APIClient()
+        refresh = RefreshToken.for_user(regular_user)
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
 
         url = reverse("user-permissions")
-        response = self.client.get(url)
+        response = client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("username", response.data)  # type: ignore
