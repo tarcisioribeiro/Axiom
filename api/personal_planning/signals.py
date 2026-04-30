@@ -2,6 +2,7 @@
 Signals para atualizacao automatica de progresso de objetivos e notificações.
 """
 
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -60,3 +61,49 @@ def _notify_goal_completed(goal):
         )
     except Exception:
         pass
+
+
+@receiver(post_save, sender="personal_planning.RoutineTask")
+def embed_routine_task(sender, instance, **kwargs):
+    from agents.services.embedding_service import generate_embedding_for_instance
+
+    source_title = instance.name
+
+    def _embed():
+        generate_embedding_for_instance(
+            instance,
+            domain="planning",
+            source_type="routine",
+            content_fn=lambda i: (
+                f"Rotina '{i.name}': {i.description or ''}, frequência {i.periodicity}"
+            ),
+            source_title=source_title,
+        )
+
+    transaction.on_commit(_embed)
+
+
+@receiver(post_save, sender="personal_planning.Goal")
+def embed_goal(sender, instance, **kwargs):
+    from agents.services.embedding_service import generate_embedding_for_instance
+
+    source_title = instance.title
+
+    def _embed():
+        deadline = (
+            instance.deadline.strftime("%d/%m/%Y") if instance.deadline else "sem prazo"
+        )
+        target = instance.target_value or 1
+        progress = int(instance.current_value / target * 100)
+        generate_embedding_for_instance(
+            instance,
+            domain="planning",
+            source_type="goal",
+            content_fn=lambda i: (
+                f"Meta '{i.title}': {i.description or ''},"
+                f" progresso {progress}%, prazo {deadline}"
+            ),
+            source_title=source_title,
+        )
+
+    transaction.on_commit(_embed)

@@ -5,3 +5,6 @@ class BudgetsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "budgets"
     verbose_name = "Orçamentos"
+
+    def ready(self):
+        import budgets.signals  # noqa: F401
