@@ -6,7 +6,10 @@ import {
   Edit,
   Filter,
   Highlighter,
+  Lightbulb,
   Plus,
+  Quote,
+  StickyNote,
   Trash2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -50,12 +53,38 @@ import { membersService } from '@/services/members-service';
 import type { Book, BookHighlight, BookHighlightFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const COLOR_CLASSES: Record<string, string> = {
-  yellow: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20',
-  green: 'border-green-400 bg-green-50 dark:bg-green-950/20',
-  blue: 'border-blue-400 bg-blue-50 dark:bg-blue-950/20',
-  pink: 'border-pink-400 bg-pink-50 dark:bg-pink-950/20',
-  orange: 'border-orange-400 bg-orange-50 dark:bg-orange-950/20',
+const COLOR_CLASSES: Record<string, { card: string; bar: string; bg: string }> = {
+  yellow: {
+    card: 'border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20',
+    bar: 'bg-yellow-400',
+    bg: '#facc15',
+  },
+  green: {
+    card: 'border-green-400 bg-green-50 dark:bg-green-950/20',
+    bar: 'bg-green-400',
+    bg: '#4ade80',
+  },
+  blue: {
+    card: 'border-blue-400 bg-blue-50 dark:bg-blue-950/20',
+    bar: 'bg-blue-400',
+    bg: '#60a5fa',
+  },
+  pink: {
+    card: 'border-pink-400 bg-pink-50 dark:bg-pink-950/20',
+    bar: 'bg-pink-400',
+    bg: '#f472b6',
+  },
+  orange: {
+    card: 'border-orange-400 bg-orange-50 dark:bg-orange-950/20',
+    bar: 'bg-orange-400',
+    bg: '#fb923c',
+  },
+};
+
+const TYPE_ICON: Record<string, React.ReactNode> = {
+  quote: <Quote className="h-3.5 w-3.5" />,
+  note: <StickyNote className="h-3.5 w-3.5" />,
+  idea: <Lightbulb className="h-3.5 w-3.5" />,
 };
 
 const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
@@ -64,36 +93,54 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   idea: 'outline',
 };
 
+const COLOR_OPTIONS = [
+  { value: 'yellow', label: 'Amarelo', bg: '#facc15' },
+  { value: 'green', label: 'Verde', bg: '#4ade80' },
+  { value: 'blue', label: 'Azul', bg: '#60a5fa' },
+  { value: 'pink', label: 'Rosa', bg: '#f472b6' },
+  { value: 'orange', label: 'Laranja', bg: '#fb923c' },
+];
+
 function HighlightCard({
   highlight,
+  bookCover,
   onEdit,
   onDelete,
 }: {
   highlight: BookHighlight;
+  bookCover?: string | null;
   onEdit: (h: BookHighlight) => void;
   onDelete: (id: number) => void;
 }) {
-  const colorClass = COLOR_CLASSES[highlight.color] ?? COLOR_CLASSES.yellow;
+  const colorDef = COLOR_CLASSES[highlight.color] ?? COLOR_CLASSES.yellow;
+  const isQuote = highlight.highlight_type === 'quote';
 
   return (
-    <div className={`rounded-lg border-l-4 p-4 ${colorClass}`}>
-      <div className="mb-2 flex items-start justify-between gap-2">
+    <div className={`rounded-lg border-l-4 p-4 ${colorDef.card}`}>
+      {/* Header row */}
+      <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={TYPE_VARIANT[highlight.highlight_type] ?? 'default'}>
+          {/* Type badge with icon */}
+          <Badge
+            variant={TYPE_VARIANT[highlight.highlight_type] ?? 'default'}
+            className="flex items-center gap-1"
+          >
+            {TYPE_ICON[highlight.highlight_type]}
             {highlight.highlight_type_display}
           </Badge>
+
           {highlight.page_number && (
-            <span className="text-xs text-muted-foreground">
+            <span className="rounded bg-background/60 px-1.5 py-0.5 text-xs text-muted-foreground">
               p. {highlight.page_number}
             </span>
           )}
           {highlight.chapter && (
-            <span className="text-xs text-muted-foreground">{highlight.chapter}</span>
+            <span className="rounded bg-background/60 px-1.5 py-0.5 text-xs text-muted-foreground">
+              {highlight.chapter}
+            </span>
           )}
-          <span className="text-xs font-medium text-muted-foreground">
-            {highlight.book_title}
-          </span>
         </div>
+
         <div className="flex shrink-0 gap-1">
           <Button
             variant="ghost"
@@ -113,7 +160,43 @@ function HighlightCard({
           </Button>
         </div>
       </div>
-      <p className="text-sm leading-relaxed">{highlight.text}</p>
+
+      {/* Text — special typography for quotes */}
+      {isQuote ? (
+        <blockquote className="relative pl-4">
+          <span
+            className="absolute left-0 top-0 select-none font-serif text-3xl leading-none text-muted-foreground/40"
+            aria-hidden="true"
+          >
+            &ldquo;
+          </span>
+          <p className="text-sm italic leading-relaxed">{highlight.text}</p>
+        </blockquote>
+      ) : (
+        <p className="text-sm leading-relaxed">{highlight.text}</p>
+      )}
+
+      {/* Footer: book info + optional cover */}
+      <div className="mt-3 flex items-center gap-2 border-t border-black/5 pt-2 dark:border-white/5">
+        {bookCover ? (
+          <img
+            src={bookCover}
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-6 flex-shrink-0 rounded object-cover shadow-sm"
+          />
+        ) : (
+          <div
+            className="flex h-8 w-6 flex-shrink-0 items-center justify-center rounded"
+            style={{ background: colorDef.bg + '33' }}
+          >
+            <BookMarked className="h-3.5 w-3.5 text-muted-foreground" />
+          </div>
+        )}
+        <span className="text-xs font-medium text-muted-foreground">
+          {highlight.book_title}
+        </span>
+      </div>
     </div>
   );
 }
@@ -201,9 +284,21 @@ function HighlightForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="quote">Citação</SelectItem>
-              <SelectItem value="note">Nota</SelectItem>
-              <SelectItem value="idea">Ideia</SelectItem>
+              <SelectItem value="quote">
+                <div className="flex items-center gap-2">
+                  <Quote className="h-3.5 w-3.5" /> Citação
+                </div>
+              </SelectItem>
+              <SelectItem value="note">
+                <div className="flex items-center gap-2">
+                  <StickyNote className="h-3.5 w-3.5" /> Nota
+                </div>
+              </SelectItem>
+              <SelectItem value="idea">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-3.5 w-3.5" /> Ideia
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -214,11 +309,17 @@ function HighlightForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yellow">Amarelo</SelectItem>
-              <SelectItem value="green">Verde</SelectItem>
-              <SelectItem value="blue">Azul</SelectItem>
-              <SelectItem value="pink">Rosa</SelectItem>
-              <SelectItem value="orange">Laranja</SelectItem>
+              {COLOR_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-3 w-3 rounded-full border border-black/10"
+                      style={{ backgroundColor: opt.bg }}
+                    />
+                    {opt.label}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -304,6 +405,10 @@ export default function Highlights() {
       setIsLoading(false);
     }
   };
+
+  const bookCoverMap = new Map<number, string | null>(
+    books.map((b) => [b.id, b.cover ?? null])
+  );
 
   const handleCreate = () => {
     setEditingHighlight(undefined);
@@ -429,6 +534,8 @@ export default function Highlights() {
           className="max-w-sm"
         />
         <Filter className="h-4 w-4 text-muted-foreground" />
+
+        {/* Type filter */}
         <Select
           value={filterType || 'all'}
           onValueChange={(v) => {
@@ -436,16 +543,30 @@ export default function Highlights() {
             setCurrentPage(1);
           }}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-36">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os tipos</SelectItem>
-            <SelectItem value="quote">Citação</SelectItem>
-            <SelectItem value="note">Nota</SelectItem>
-            <SelectItem value="idea">Ideia</SelectItem>
+            <SelectItem value="quote">
+              <div className="flex items-center gap-2">
+                <Quote className="h-3.5 w-3.5" /> Citação
+              </div>
+            </SelectItem>
+            <SelectItem value="note">
+              <div className="flex items-center gap-2">
+                <StickyNote className="h-3.5 w-3.5" /> Nota
+              </div>
+            </SelectItem>
+            <SelectItem value="idea">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-3.5 w-3.5" /> Ideia
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Color filter with swatches */}
         <Select
           value={filterColor || 'all'}
           onValueChange={(v) => {
@@ -453,18 +574,25 @@ export default function Highlights() {
             setCurrentPage(1);
           }}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger className="w-36">
             <SelectValue placeholder="Cor" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as cores</SelectItem>
-            <SelectItem value="yellow">Amarelo</SelectItem>
-            <SelectItem value="green">Verde</SelectItem>
-            <SelectItem value="blue">Azul</SelectItem>
-            <SelectItem value="pink">Rosa</SelectItem>
-            <SelectItem value="orange">Laranja</SelectItem>
+            {COLOR_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full border border-black/10"
+                    style={{ backgroundColor: opt.bg }}
+                  />
+                  {opt.label}
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+
         {highlights.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -499,11 +627,12 @@ export default function Highlights() {
         />
       ) : (
         <>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {pagedHighlights.map((h) => (
               <HighlightCard
                 key={h.id}
                 highlight={h}
+                bookCover={bookCoverMap.get(h.book)}
                 onEdit={handleEdit}
                 onDelete={(id) => void handleDelete(id)}
               />

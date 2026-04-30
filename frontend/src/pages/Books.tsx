@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -67,6 +69,34 @@ import { getErrorMessage } from '@/utils/error-utils';
 const PAGE_SIZE = 20;
 
 type DetailTab = 'info' | 'highlights' | 'readings' | 'summaries';
+type ViewMode = 'table' | 'grid';
+
+const GENRE_COLORS: Record<string, string> = {
+  Fiction: 'from-violet-500 to-purple-600',
+  NonFiction: 'from-blue-500 to-cyan-600',
+  Fantasy: 'from-emerald-500 to-teal-600',
+  SciFi: 'from-sky-500 to-indigo-600',
+  Mystery: 'from-slate-500 to-gray-600',
+  Thriller: 'from-red-500 to-rose-600',
+  Romance: 'from-pink-500 to-fuchsia-600',
+  Horror: 'from-gray-700 to-zinc-800',
+  Historical: 'from-amber-500 to-orange-600',
+  Biography: 'from-yellow-500 to-amber-600',
+  SelfHelp: 'from-lime-500 to-green-600',
+  Science: 'from-cyan-500 to-blue-600',
+  Philosophy: 'from-indigo-500 to-violet-600',
+  Psychology: 'from-teal-500 to-cyan-600',
+  Economics: 'from-orange-500 to-amber-600',
+  Politics: 'from-blue-600 to-indigo-700',
+  Art: 'from-fuchsia-500 to-pink-600',
+  Poetry: 'from-rose-400 to-pink-500',
+  Comics: 'from-yellow-400 to-orange-500',
+  Other: 'from-stone-400 to-slate-500',
+};
+
+function genreGradient(genre: string): string {
+  return GENRE_COLORS[genre] ?? 'from-stone-400 to-slate-500';
+}
 
 const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
   switch (status) {
@@ -95,9 +125,160 @@ function StarRow({ rating }: { rating: number | null }) {
       {[1, 2, 3, 4, 5].map((s) => (
         <Star
           key={s}
-          className={`h-3 w-3 ${s <= rating ? 'fill-star text-star' : 'fill-muted text-muted'}`}
+          className={`h-3.5 w-3.5 ${s <= rating ? 'fill-star text-star' : 'fill-muted text-muted'}`}
         />
       ))}
+    </div>
+  );
+}
+
+function BookCoverPlaceholder({ title, genre }: { title: string; genre: string }) {
+  const initial = title.charAt(0).toUpperCase();
+  const gradient = genreGradient(genre);
+  return (
+    <div
+      className={`flex h-full w-full items-center justify-center rounded-md bg-gradient-to-br ${gradient}`}
+    >
+      <span className="select-none text-4xl font-bold text-white/90">{initial}</span>
+    </div>
+  );
+}
+
+function BookGridCard({
+  book,
+  onOpen,
+  onEdit,
+  onDelete,
+  onOpenDetail,
+}: {
+  book: Book;
+  onOpen: (b: Book, tab: DetailTab) => void;
+  onEdit: (b: Book) => void;
+  onDelete: (id: number) => void;
+  onOpenDetail: (b: Book) => void;
+}) {
+  const pb = priorityBadge(book.reading_priority);
+  const { t } = useTranslation();
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md"
+      onClick={() => onOpenDetail(book)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onOpenDetail(book);
+      }}
+    >
+      {/* Cover */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-muted">
+        {book.cover ? (
+          <img
+            src={book.cover}
+            alt={`Capa de ${book.title}`}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <BookCoverPlaceholder title={book.title} genre={book.genre} />
+        )}
+        <div className="absolute right-2 top-2">
+          <Badge variant={statusVariant(book.read_status)} className="text-xs shadow">
+            {book.read_status_display}
+          </Badge>
+        </div>
+        {pb && (
+          <div className="absolute left-2 top-2">
+            <Badge variant={pb.variant} className="text-xs shadow">
+              {pb.label}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-1 flex-col gap-1 p-3">
+        <p className="line-clamp-2 text-sm font-semibold leading-tight">{book.title}</p>
+        <p className="line-clamp-1 text-xs text-muted-foreground">
+          {book.authors_names.join(', ')}
+        </p>
+        <Badge variant="secondary" className="mt-1 w-fit text-xs">
+          {book.genre_display}
+        </Badge>
+
+        {book.reading_progress > 0 && (
+          <div className="mt-auto flex items-center gap-2 pt-2">
+            <Progress value={book.reading_progress} className="h-1.5 flex-1" />
+            <span className="text-xs text-muted-foreground">
+              {book.reading_progress}%
+            </span>
+          </div>
+        )}
+
+        {book.rating && (
+          <div className="mt-1">
+            <StarRow rating={book.rating} />
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div
+        role="presentation"
+        className="flex items-center justify-end gap-1 border-t px-2 py-1"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Mais opções">
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {book.media_type === 'Dig' && book.book_file && (
+              <DropdownMenuItem
+                onClick={() => window.open(`/library/reader/${book.id}`, '_blank')}
+              >
+                <BookText className="mr-2 h-4 w-4" />
+                Abrir Leitor
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => onOpen(book, 'readings')}>
+              <BookMarked className="mr-2 h-4 w-4" />
+              {t('pages.readings.title')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpen(book, 'summaries')}
+              disabled={book.read_status !== 'read'}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              {t('pages.summaries.title')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onOpen(book, 'highlights')}>
+              <Highlighter className="mr-2 h-4 w-4" />
+              Destaques
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => onEdit(book)}
+          title={t('common.actions.edit')}
+        >
+          <Edit className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          onClick={() => void onDelete(book.id)}
+          title={t('common.actions.delete')}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -111,6 +292,7 @@ export default function Books() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterGenre, setFilterGenre] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   // Form dialog (create / edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -371,6 +553,30 @@ export default function Books() {
             ))}
           </SelectContent>
         </Select>
+
+        {/* View mode toggle */}
+        <div className="ml-auto flex items-center rounded-md border">
+          <Button
+            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+            size="icon"
+            className="h-8 w-8 rounded-r-none border-r"
+            onClick={() => setViewMode('table')}
+            title="Visualização em lista"
+            aria-label="Visualização em lista"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+            size="icon"
+            className="h-8 w-8 rounded-l-none"
+            onClick={() => setViewMode('grid')}
+            title="Visualização em grade"
+            aria-label="Visualização em grade"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {filteredBooks.length === 0 ? (
@@ -380,12 +586,25 @@ export default function Books() {
             searchTerm ? t('pages.books.emptySearch') : t('pages.books.emptyState')
           }
         />
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {pagedBooks.map((book) => (
+            <BookGridCard
+              key={book.id}
+              book={book}
+              onOpen={openDetail}
+              onEdit={handleEdit}
+              onDelete={(id) => void handleDelete(id)}
+              onOpenDetail={(b) => openDetail(b, 'info')}
+            />
+          ))}
+        </div>
       ) : (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-50">{t('pages.books.colCover')}</TableHead>
+                <TableHead className="w-14">{t('pages.books.colCover')}</TableHead>
                 <TableHead>{t('pages.books.colTitle')}</TableHead>
                 <TableHead className="hidden md:table-cell">
                   {t('pages.books.colAuthors')}
@@ -418,19 +637,19 @@ export default function Books() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => openDetail(book, 'info')}
                   >
-                    {/* Cover */}
+                    {/* Cover — compact in table view */}
                     <TableCell className="py-2">
-                      {book.cover ? (
-                        <img
-                          src={book.cover}
-                          alt={`Capa de ${book.title}`}
-                          className="w-50 h-64 rounded-md object-cover shadow-md"
-                        />
-                      ) : (
-                        <div className="w-50 flex h-64 items-center justify-center rounded-md border bg-muted shadow-sm">
-                          <BookOpen className="h-10 w-10 text-muted-foreground" />
-                        </div>
-                      )}
+                      <div className="h-20 w-14 overflow-hidden rounded-md shadow-sm">
+                        {book.cover ? (
+                          <img
+                            src={book.cover}
+                            alt={`Capa de ${book.title}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <BookCoverPlaceholder title={book.title} genre={book.genre} />
+                        )}
+                      </div>
                     </TableCell>
 
                     {/* Title + priority */}
@@ -486,7 +705,7 @@ export default function Books() {
                         <div className="flex items-center gap-2">
                           <Progress
                             value={book.reading_progress}
-                            className="h-1.5 w-20"
+                            className="h-2 w-28"
                           />
                           <span className="text-xs text-muted-foreground">
                             {book.reading_progress}%
