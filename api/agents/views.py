@@ -43,6 +43,7 @@ class AgentAskView(APIView):
         data = serializer.validated_data
         session_id = data["session_id"]
         query = data["query"]
+        query_id = uuid.uuid4()
 
         history = ConversationMemory.get(user.pk, session_id)
 
@@ -74,6 +75,7 @@ class AgentAskView(APIView):
                     session_id=session_id,
                     role="user",
                     content=query,
+                    query_id=query_id,
                     created_by=user,
                     updated_by=user,
                 ),
@@ -83,6 +85,7 @@ class AgentAskView(APIView):
                     role="agent",
                     content=agent_response.content,
                     agent_name=agent_response.agent_name,
+                    query_id=query_id,
                     created_by=user,
                     updated_by=user,
                 ),
@@ -95,6 +98,7 @@ class AgentAskView(APIView):
                 "agent": agent_response.agent_name,
                 "sources": agent_response.sources,
                 "session_id": session_id,
+                "query_id": str(query_id),
             }
         )
 
@@ -257,6 +261,7 @@ class AgentStreamView(APIView):
                             session_id=session_id,
                             role="user",
                             content=query,
+                            query_id=query_id,
                             created_by=user,
                             updated_by=user,
                         ),
@@ -266,6 +271,7 @@ class AgentStreamView(APIView):
                             role="agent",
                             content=full_content,
                             agent_name=agent.name,
+                            query_id=query_id,
                             created_by=user,
                             updated_by=user,
                         ),
