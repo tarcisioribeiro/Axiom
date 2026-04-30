@@ -33,6 +33,8 @@ _TRIGGER_WORDS = [
 class LibraryAgent(BaseAgent):
     name = "library"
     description = "Respostas sobre livros lidos, resumos e insights via RAG"
+    ollama_model = "llama3.1:8b"
+    anthropic_model = "claude-sonnet-4-6"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
