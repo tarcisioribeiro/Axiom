@@ -1,10 +1,20 @@
-import { Plus, Pencil, Trash2, TrendingUp, Download } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  Download,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { RevenuesFilters } from '@/components/revenues/RevenuesFilters';
@@ -17,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
+import { formatCurrency } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -58,6 +69,17 @@ export default function Revenues() {
     prefillRevenueData,
   } = useRevenuesPage();
 
+  const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
+    const received = revenues.filter((r) => r.received);
+    const pending = revenues.filter((r) => !r.received);
+    return {
+      receivedCount: received.length,
+      receivedAmount: received.reduce((s, r) => s + parseFloat(r.value), 0),
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((s, r) => s + parseFloat(r.value), 0),
+    };
+  }, [revenues]);
+
   return (
     <PageContainer>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
@@ -76,6 +98,45 @@ export default function Revenues() {
           </Button>
         </div>
       </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title={t('pages.revenues.stats.totalAmount')}
+          value={formatCurrency(totalRevenues)}
+          icon={<TrendingUp />}
+          variant="success"
+        />
+        <StatCard
+          title={t('pages.revenues.stats.received')}
+          value={receivedCount}
+          icon={<CheckCircle2 />}
+          variant="success"
+          trend={
+            revenues.length > 0
+              ? {
+                  value: Math.round((receivedCount / revenues.length) * 100),
+                  isPositive: true,
+                  period: formatCurrency(receivedAmount),
+                }
+              : undefined
+          }
+        />
+        <StatCard
+          title={t('pages.revenues.stats.pending')}
+          value={pendingCount}
+          icon={<Clock />}
+          variant="warning"
+          trend={
+            revenues.length > 0
+              ? {
+                  value: Math.round((pendingCount / revenues.length) * 100),
+                  isPositive: false,
+                  period: formatCurrency(pendingAmount),
+                }
+              : undefined
+          }
+        />
+      </div>
 
       <RevenuesFilters
         accounts={accounts}

@@ -28,6 +28,7 @@ import {
   Receipt,
   Tag,
   Bell,
+  BotMessageSquare,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -62,6 +63,7 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { titleKey: 'nav.home', href: '/', icon: Home },
+  { titleKey: 'nav.agents', href: '/agents', icon: BotMessageSquare },
   {
     titleKey: 'nav.notificationPreferences',
     href: '/settings/notifications',

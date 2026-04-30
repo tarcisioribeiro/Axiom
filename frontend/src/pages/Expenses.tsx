@@ -1,10 +1,20 @@
-import { Plus, Pencil, Trash2, TrendingDown, Download } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingDown,
+  Download,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ExpensesFilters } from '@/components/expenses/ExpensesFilters';
 import { ReceiptButton } from '@/components/receipts';
@@ -17,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
+import { formatCurrency } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -59,6 +70,17 @@ export default function Expenses() {
     prefillExpenseData,
   } = useExpensesPage();
 
+  const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
+    const paid = expenses.filter((e) => e.payed);
+    const pending = expenses.filter((e) => !e.payed);
+    return {
+      paidCount: paid.length,
+      paidAmount: paid.reduce((s, e) => s + parseFloat(e.value), 0),
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((s, e) => s + parseFloat(e.value), 0),
+    };
+  }, [expenses]);
+
   return (
     <PageContainer>
       <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
@@ -77,6 +99,45 @@ export default function Expenses() {
           </Button>
         </div>
       </PageHeader>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title={t('pages.expenses.stats.totalAmount')}
+          value={formatCurrency(totalExpenses)}
+          icon={<TrendingDown />}
+          variant="danger"
+        />
+        <StatCard
+          title={t('pages.expenses.stats.paid')}
+          value={paidCount}
+          icon={<CheckCircle2 />}
+          variant="success"
+          trend={
+            expenses.length > 0
+              ? {
+                  value: Math.round((paidCount / expenses.length) * 100),
+                  isPositive: true,
+                  period: formatCurrency(paidAmount),
+                }
+              : undefined
+          }
+        />
+        <StatCard
+          title={t('pages.expenses.stats.pending')}
+          value={pendingCount}
+          icon={<Clock />}
+          variant="warning"
+          trend={
+            expenses.length > 0
+              ? {
+                  value: Math.round((pendingCount / expenses.length) * 100),
+                  isPositive: false,
+                  period: formatCurrency(pendingAmount),
+                }
+              : undefined
+          }
+        />
+      </div>
 
       <ExpensesFilters
         accounts={accounts}
