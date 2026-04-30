@@ -25,7 +25,7 @@ def _build_registry() -> list[BaseAgent]:
 
 class AgentRouter:
     @staticmethod
-    def route(ctx: AgentContext) -> AgentResponse:
+    def select(ctx: AgentContext) -> BaseAgent:
         registry = _build_registry()
         scores = [(agent, agent.can_handle(ctx.query)) for agent in registry]
         best_agent, best_score = max(scores, key=lambda x: x[1])
@@ -41,4 +41,8 @@ class AgentRouter:
             best_score,
             ctx.query[:80],
         )
-        return best_agent.run(ctx)
+        return best_agent
+
+    @staticmethod
+    def route(ctx: AgentContext) -> AgentResponse:
+        return AgentRouter.select(ctx).run(ctx)

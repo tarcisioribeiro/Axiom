@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -59,3 +60,16 @@ class BaseAgent(ABC):
             agent_name=self.name,
             sources=data.get("sources", []),
         )
+
+    def stream(self, ctx: AgentContext) -> Generator[str, None, None]:
+        from agents.core.llm_client import LLMClient
+
+        data = self.build_context(ctx)
+        prompt = self.build_prompt(ctx, data)
+        self._stream_sources: list[str] = data.get("sources", [])
+        system = data.get("system_prompt", "")
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        yield from LLMClient.stream_chat(messages, model=self.get_model())
