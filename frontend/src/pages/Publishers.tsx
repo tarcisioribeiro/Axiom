@@ -8,6 +8,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PublisherForm } from '@/components/library/PublisherForm';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,6 +29,33 @@ import { useToast } from '@/hooks/use-toast';
 import { publishersService } from '@/services/publishers-service';
 import type { Publisher, PublisherFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+function PublisherInitials({ name }: { name: string }) {
+  const words = name.trim().split(/\s+/);
+  const initials =
+    words.length >= 2
+      ? (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
+      : name.slice(0, 2).toUpperCase();
+
+  const colors = [
+    'from-blue-500 to-indigo-600',
+    'from-emerald-500 to-teal-600',
+    'from-violet-500 to-purple-600',
+    'from-orange-500 to-amber-600',
+    'from-rose-500 to-pink-600',
+    'from-cyan-500 to-sky-600',
+  ];
+  const colorIndex =
+    name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
+
+  return (
+    <div
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${colors[colorIndex]}`}
+    >
+      <span className="select-none text-sm font-bold text-white">{initials}</span>
+    </div>
+  );
+}
 
 export default function Publishers() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
@@ -169,67 +197,79 @@ export default function Publishers() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPublishers.map((publisher) => (
-            <Card key={publisher.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{publisher.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {publisher.country_display}
-                    </CardDescription>
+            <Card key={publisher.id} className="flex flex-col">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <PublisherInitials name={publisher.name} />
+                    <div className="min-w-0">
+                      <CardTitle className="text-base leading-tight">
+                        {publisher.name}
+                      </CardTitle>
+                      <CardDescription className="mt-0.5">
+                        {publisher.country_display}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8"
                       onClick={() => handleEdit(publisher)}
                       aria-label={t('common.actions.edit')}
                       title={t('common.actions.edit')}
                     >
-                      <Edit className="h-4 w-4" aria-hidden="true" />
+                      <Edit className="h-3.5 w-3.5" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(publisher.id)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => void handleDelete(publisher.id)}
                       aria-label={t('common.actions.delete')}
                       title={t('common.actions.delete')}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+
+              <CardContent className="flex flex-1 flex-col gap-3">
                 {publisher.founded_year && (
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <Badge variant="outline" className="text-xs font-normal">
                       {t('pages.publishers.foundedYear', {
                         year: publisher.founded_year,
                       })}
-                    </span>
+                    </Badge>
                   </div>
                 )}
                 {publisher.website && (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
+                    <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <a
                       href={publisher.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="truncate text-sm text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {publisher.website.replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="text-sm">
+                <div className="mt-auto pt-2">
+                  <Badge
+                    variant="secondary"
+                    className="flex w-fit items-center gap-1.5 text-xs"
+                  >
+                    <BookOpen className="h-3 w-3" />
                     {publisher.books_count}{' '}
                     {publisher.books_count === 1 ? 'livro' : 'livros'}
-                  </span>
+                  </Badge>
                 </div>
               </CardContent>
             </Card>

@@ -163,10 +163,10 @@ def get_current_user(request: Request) -> Response:
 def get_user_permissions(request: Request) -> Response:
     user = request.user
 
-    # Bloqueia superusuários de usar a interface Streamlit
+    # Superusuários devem usar o Django Admin — bloqueados neste endpoint
     if user.is_superuser:
         return Response(
-            {"error": "Administradores não podem acessar esta interface"},
+            {"detail": "Superusuários não têm acesso a este endpoint."},
             status=status.HTTP_403_FORBIDDEN,
         )
 

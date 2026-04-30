@@ -13,7 +13,8 @@ interface AuthState {
   permissions: Permission[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  isInitializing: boolean; // Novo: indica se está carregando dados iniciais
+  isInitializing: boolean;
+  isAdmin: boolean;
   error: string | null;
 
   // Actions
@@ -30,7 +31,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   permissions: [],
   isAuthenticated: false,
   isLoading: false,
-  isInitializing: true, // Começa como true
+  isInitializing: true,
+  isAdmin: false,
   error: null,
 
   login: async (credentials: LoginCredentials) => {
@@ -44,7 +46,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Podemos fazer chamadas imediatamente
 
       // Get user permissions and data
-      const permissionsResponse = await authService.getUserPermissions();
+      const { permissions: permissionsResponse, is_superuser } =
+        await authService.getUserPermissions();
+
+      // Superusuário → acesso exclusivo ao painel admin
+      if (is_superuser) {
+        const adminUser: User = {
+          id: 0,
+          username: credentials.username,
+          email: '',
+          first_name: 'Admin',
+          last_name: '',
+          groups: [],
+          is_superuser: true,
+        };
+        authService.saveUserData(adminUser);
+        authService.savePermissions([]);
+        set({
+          user: adminUser,
+          permissions: [],
+          isAuthenticated: true,
+          isAdmin: true,
+          isLoading: false,
+        });
+        return;
+      }
+
       authService.savePermissions(permissionsResponse);
 
       // Construct user object with data from permissions endpoint
@@ -54,14 +81,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: '',
         first_name: '',
         last_name: '',
-        groups: ['Membros'], // Default group for all non-superuser users
+        groups: ['Membros'],
       };
 
       // Fetch member data to get full name
       try {
         const memberData = await membersService.getCurrentUserMember();
         if (memberData?.name) {
-          // Parse the member name into first_name and last_name
           const nameParts = memberData.name.trim().split(' ');
           user = {
             ...user,
@@ -71,7 +97,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       } catch (memberError) {
         logger.log('[AuthStore] Could not fetch member data:', memberError);
-        // Continue with empty first_name/last_name
       }
 
       authService.saveUserData(user);
@@ -80,18 +105,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user,
         permissions: permissionsResponse,
         isAuthenticated: true,
+        isAdmin: false,
         isLoading: false,
       });
     } catch (error: unknown) {
       const err = error as Error;
-      let errorMessage = err.message || 'Login failed';
-
-      // Handle specific error cases
-      if (err.name === 'PermissionError') {
-        errorMessage =
-          'Superusuários não podem acessar o frontend. Por favor, faça login com um usuário regular.';
-      }
-
+      const errorMessage =
+        err.name === 'PermissionError'
+          ? 'Superusuários não podem acessar este painel. Use o Django Admin.'
+          : err.message || 'Login failed';
       set({
         error: errorMessage,
         isLoading: false,
@@ -106,6 +128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: null,
       permissions: [],
       isAuthenticated: false,
+      isAdmin: false,
       error: null,
     });
   },
@@ -163,10 +186,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             }
           }
 
+          const isAdminUser = isAuthenticated ? user?.is_superuser === true : false;
           set({
             user: isAuthenticated ? user : null,
             permissions: isAuthenticated ? permissions : [],
             isAuthenticated,
+            isAdmin: isAdminUser,
             isInitializing: false,
           });
         } catch {

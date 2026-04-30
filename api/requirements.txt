@@ -38,3 +38,7 @@ reportlab==4.4.10
 # AI Assistant - NLP and text processing
 rapidfuzz==3.14.3
 dateparser==1.3.0
+
+# Agents / LLM integration
+# anthropic: SDK para Claude API (opcional — usado quando LLM_PROVIDER=anthropic)
+anthropic==0.52.0

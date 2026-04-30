@@ -4,9 +4,11 @@ import { Loader2 } from 'lucide-react';
 import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
+import { AdminRoute } from './components/common/AdminRoute';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { RouteProgressBar } from './components/common/RouteProgressBar';
+import { AdminLayout } from './components/layout/AdminLayout';
 import { Layout } from './components/layout/Layout';
 import { AlertDialogProvider } from './components/providers/AlertDialogProvider';
 import { Toaster } from './components/ui/toaster';
@@ -92,6 +94,15 @@ const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 
+// Agents
+const Agents = lazy(() => import('./pages/Agents'));
+
+// Admin Panel
+const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
+const AdminConfig = lazy(() => import('./pages/admin/AdminConfig'));
+const AdminIntegrations = lazy(() => import('./pages/admin/AdminIntegrations'));
+const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+
 const LoadingFallback = () => (
   <div className="flex h-screen items-center justify-center">
     <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -110,16 +121,23 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
 
 function AnimatedRoutes() {
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isAdmin } = useAuthStore();
+
+  const loginRedirect = isAuthenticated ? (
+    isAdmin ? (
+      <Navigate to="/admin" replace />
+    ) : (
+      <Navigate to="/" replace />
+    )
+  ) : (
+    <Login />
+  );
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public routes */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
-        />
+        <Route path="/login" element={loginRedirect} />
         <Route
           path="/register"
           element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
@@ -481,6 +499,16 @@ function AnimatedRoutes() {
             }
           />
 
+          {/* Agents */}
+          <Route
+            path="/agents"
+            element={
+              <PageWrapper>
+                <Agents />
+              </PageWrapper>
+            }
+          />
+
           {/* Settings */}
           <Route
             path="/settings/permissions"
@@ -513,6 +541,48 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Admin Panel routes — exclusivo para superusuários */}
+        <Route
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route
+            path="/admin"
+            element={
+              <PageWrapper>
+                <AdminOverview />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/admin/config"
+            element={
+              <PageWrapper>
+                <AdminConfig />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/admin/integrations"
+            element={
+              <PageWrapper>
+                <AdminIntegrations />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/admin/logs"
+            element={
+              <PageWrapper>
+                <AdminLogs />
+              </PageWrapper>
+            }
+          />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

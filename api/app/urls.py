@@ -54,6 +54,10 @@ urlpatterns = [
     path("api/v1/", include("budgets.urls")),
     # Bank Reconciliation Module
     path("api/v1/", include("bank_reconciliation.urls")),
+    # Agents Module
+    path("api/v1/agents/", include("agents.urls")),
+    # Admin Panel Module
+    path("api/v1/admin/", include("admin_panel.urls")),
 ]
 
 if settings.DEBUG:
