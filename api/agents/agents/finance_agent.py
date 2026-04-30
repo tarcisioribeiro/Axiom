@@ -36,6 +36,8 @@ _TRIGGER_WORDS = [
 class FinanceAgent(BaseAgent):
     name = "finance"
     description = "Análise de despesas, receitas e padrões de consumo"
+    ollama_model = "qwen2.5:7b"
+    anthropic_model = "claude-haiku-4-5-20251001"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
