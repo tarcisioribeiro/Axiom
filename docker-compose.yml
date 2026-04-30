@@ -276,8 +276,12 @@ services:
       - network
 
   # Ollama — LLM local para o módulo de Agentes
-  # Para iniciar os modelos após subir: docker compose exec ollama ollama pull mistral:7b-instruct
-  # e: docker compose exec ollama ollama pull nomic-embed-text
+  # Para iniciar os modelos após subir:
+  #   docker compose exec ollama ollama pull mistral:7b-instruct
+  #   docker compose exec ollama ollama pull nomic-embed-text
+  #   docker compose exec ollama ollama pull qwen2.5:7b
+  #   docker compose exec ollama ollama pull qwen2.5:14b
+  #   docker compose exec ollama ollama pull llama3.1:8b
   ollama:
     image: ollama/ollama:0.22.0
     container_name: mindledger-ollama
@@ -297,10 +301,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8g
+          memory: 16g
           cpus: "4.0"
         reservations:
-          memory: 2g
+          memory: 4g
           cpus: "1.0"
     logging:
       driver: "json-file"

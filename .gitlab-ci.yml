@@ -262,7 +262,7 @@ test:backend:
     - typecheck:backend
 
   services:
-    - name: postgres:16-alpine
+    - name: pgvector/pgvector:pg16
       alias: postgres
 
   variables:
@@ -1071,7 +1071,7 @@ test:backup-restore:
     - job: deploy:staging
     - job: backup:staging
   services:
-    - name: postgres:16-alpine
+    - name: pgvector/pgvector:pg16
       alias: postgres
   variables:
     POSTGRES_DB: postgres
