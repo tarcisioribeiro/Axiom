@@ -366,7 +366,10 @@ describe('useAuthStore', () => {
         message: 'Login successful',
         user: { username: 'testuser' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue(mockPermissions);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: mockPermissions,
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockResolvedValue({
         id: 1,
         uuid: 'abc',
@@ -400,7 +403,10 @@ describe('useAuthStore', () => {
         message: 'OK',
         user: { username: 'user' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue([]);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: [],
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockResolvedValue({
         id: 1,
         uuid: 'abc',
@@ -472,7 +478,10 @@ describe('useAuthStore', () => {
         message: 'OK',
         user: { username: 'user' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue([]);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: [],
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockRejectedValue(
         new Error('Not found')
       );

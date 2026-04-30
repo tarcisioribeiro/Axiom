@@ -41,7 +41,7 @@ def get_top_merchants(
 ) -> list[dict[str, Any]]:
     from expenses.models import Expense
 
-    return list(
+    qs: Any = (
         Expense.objects.filter(
             created_by=user,
             date__range=(start, end),
@@ -53,6 +53,7 @@ def get_top_merchants(
         .annotate(total=Sum("value"), count=Count("id"))
         .order_by("-total")[:limit]
     )
+    return list(qs)
 
 
 def get_monthly_trend(user: User, months: int = 3) -> list[dict[str, Any]]:

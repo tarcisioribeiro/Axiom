@@ -279,7 +279,7 @@ services:
   # Para iniciar os modelos após subir: docker compose exec ollama ollama pull mistral:7b-instruct
   # e: docker compose exec ollama ollama pull nomic-embed-text
   ollama:
-    image: ollama/ollama:0.7.4
+    image: ollama/ollama:0.22.0
     container_name: mindledger-ollama
     ports:
       - "${OLLAMA_PORT:-39107}:11434"

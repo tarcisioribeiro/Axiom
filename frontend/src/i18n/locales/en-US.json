@@ -132,7 +132,8 @@
       "routineTasks": "Routine Tasks",
       "goals": "Goals",
       "bankReconciliation": "Bank Reconciliation"
-    }
+    },
+    "agents": "AI Agents"
   },
   "layout": {
     "skipToContent": "Skip to main content",
@@ -1899,6 +1900,29 @@
         "invalidFormat": "Invalid format. Use OFX or CSV."
       },
       "viewBtn": "View"
+    },
+    "agents": {
+      "title": "AI Agents",
+      "subtitle": "Chat with MindLedger intelligent agents",
+      "newSession": "New session",
+      "clearHistory": "Clear history",
+      "clearConfirm": "Delete all messages in this session?",
+      "inputPlaceholder": "Ask about your finances, planning, or reading...",
+      "send": "Send",
+      "thinking": "Thinking...",
+      "noMessages": "No messages yet. Start by asking a question!",
+      "session": "Session",
+      "provider": "Provider",
+      "unavailable": "LLM unavailable. Check settings in the admin panel.",
+      "sources": "Sources",
+      "agentNames": {
+        "finance_agent": "Finance",
+        "budget_agent": "Budgets",
+        "forecast_agent": "Forecast",
+        "planning_agent": "Planning",
+        "library_agent": "Library",
+        "insight_agent": "Insights"
+      }
     }
   }
 }

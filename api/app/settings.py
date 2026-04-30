@@ -99,6 +99,8 @@ INSTALLED_APPS = [
     "bank_reconciliation",
     # Agents Module
     "agents",
+    # Admin Panel Module
+    "admin_panel",
 ]
 
 MIDDLEWARE = [
