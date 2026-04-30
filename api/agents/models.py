@@ -146,6 +146,12 @@ class AgentConversation(BaseModel):
         verbose_name="ID da Sessão",
         db_index=True,
     )
+    query_id = models.UUIDField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="ID da Consulta",
+    )
     role = models.CharField(
         max_length=10,
         choices=ROLE_CHOICES,

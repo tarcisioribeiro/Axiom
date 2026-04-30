@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
@@ -239,3 +240,128 @@ class TestAgentStreamView(APITestCase):
             gen.close()  # simulate disconnect — must not raise
         except Exception as exc:
             self.fail(f"Unexpected exception on generator close: {exc}")
+
+
+class TestAgentAskViewQueryId(APITestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="ask_qid_user",
+            email="ask_qid@test.com",
+            password="testpass123",
+            is_superuser=True,
+        )
+        self.client = APIClient()
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+
+    @patch("agents.views.AgentRouter.route")
+    @patch("agents.views.ConversationMemory")
+    def test_ask_response_contains_query_id(
+        self, mock_memory: MagicMock, mock_route: MagicMock
+    ) -> None:
+        from agents.core.base_agent import AgentResponse
+
+        mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
+        mock_memory.get.return_value = []
+
+        response = self.client.post(
+            "/api/v1/agents/ask/",
+            {"query": "test question", "session_id": "qid-session"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("query_id", response.data)
+        # Must be a valid UUID string
+        parsed = uuid.UUID(response.data["query_id"])
+        self.assertIsInstance(parsed, uuid.UUID)
+
+    @patch("agents.views.AgentRouter.route")
+    @patch("agents.views.ConversationMemory")
+    def test_ask_saves_query_id_to_conversation(
+        self, mock_memory: MagicMock, mock_route: MagicMock
+    ) -> None:
+        from agents.core.base_agent import AgentResponse
+        from agents.models import AgentConversation
+
+        mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
+        mock_memory.get.return_value = []
+
+        response = self.client.post(
+            "/api/v1/agents/ask/",
+            {"query": "save test", "session_id": "qid-save-session"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        returned_qid = uuid.UUID(response.data["query_id"])
+        records = AgentConversation.objects.filter(
+            user=self.user, query_id=returned_qid
+        )
+        self.assertEqual(records.count(), 2)
+        roles = set(records.values_list("role", flat=True))
+        self.assertEqual(roles, {"user", "agent"})
+
+
+class TestAgentRouterSemantic(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="router_sem_user",
+            email="router_sem@test.com",
+            password="testpass123",
+        )
+
+    @patch("agents.core.router.semantic_domain_scores")
+    @patch("agents.core.router.LLMClient")
+    def test_semantic_bonus_selects_library_agent(
+        self, mock_llm: MagicMock, mock_scores: MagicMock
+    ) -> None:
+        from agents.core.base_agent import AgentContext
+        from agents.core.router import AgentRouter
+
+        mock_llm.embed.return_value = [0.1] * 4
+        mock_scores.return_value = {
+            "finance": 0.1,
+            "budget": 0.1,
+            "planning": 0.1,
+            "library": 0.95,
+            "general": 0.1,
+        }
+
+        ctx = AgentContext(user_id=self.user.pk, query="livro resumo leitura")
+        agent = AgentRouter.select(ctx)
+
+        self.assertEqual(agent.name, "library")
+        mock_scores.assert_called_once_with([0.1] * 4, self.user.pk)
+
+    @patch("agents.core.router.LLMClient")
+    def test_routing_uses_keywords_when_embed_fails(self, mock_llm: MagicMock) -> None:
+        from agents.core.base_agent import AgentContext
+        from agents.core.router import AgentRouter
+
+        mock_llm.embed.return_value = []  # failed embed
+
+        ctx = AgentContext(
+            user_id=self.user.pk, query="despesas gastos financeiro conta"
+        )
+        agent = AgentRouter.select(ctx)
+
+        # Must not raise and must return a valid agent
+        self.assertIsNotNone(agent)
+        self.assertIsNotNone(agent.name)
+
+    @patch("agents.core.router.semantic_domain_scores")
+    @patch("agents.core.router.LLMClient")
+    def test_routing_continues_when_semantic_scoring_raises(
+        self, mock_llm: MagicMock, mock_scores: MagicMock
+    ) -> None:
+        from agents.core.base_agent import AgentContext
+        from agents.core.router import AgentRouter
+
+        mock_llm.embed.return_value = [0.1] * 4
+        mock_scores.side_effect = RuntimeError("DB unavailable")
+
+        ctx = AgentContext(user_id=self.user.pk, query="qualquer pergunta")
+        # Must not raise even when semantic_domain_scores blows up
+        agent = AgentRouter.select(ctx)
+        self.assertIsNotNone(agent)
