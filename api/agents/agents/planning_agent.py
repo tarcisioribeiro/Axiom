@@ -35,6 +35,8 @@ _TRIGGER_WORDS = [
 class PlanningAgent(BaseAgent):
     name = "planning"
     description = "Análise de rotinas, hábitos e progresso de metas"
+    ollama_model = "llama3.1:8b"
+    anthropic_model = "claude-haiku-4-5-20251001"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()

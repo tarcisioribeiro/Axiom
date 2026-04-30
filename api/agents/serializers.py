@@ -45,3 +45,7 @@ class AgentStatusSerializer(serializers.Serializer):
     available = serializers.BooleanField()
     provider = serializers.CharField()
     models = serializers.ListField(child=serializers.CharField())
+    agents = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField()),
+        default=list,
+    )

@@ -30,6 +30,8 @@ _TRIGGER_WORDS = [
 class ForecastAgent(BaseAgent):
     name = "forecast"
     description = "Previsão de saldo e fluxo de caixa futuro"
+    ollama_model = "qwen2.5:14b"
+    anthropic_model = "claude-sonnet-4-6"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()

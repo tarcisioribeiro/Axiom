@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
@@ -21,6 +22,14 @@ class AgentResponse:
 class BaseAgent(ABC):
     name: str
     description: str
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
+    anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+
+    def get_model(self) -> str:
+        """Retorna o modelo adequado para o provider configurado."""
+        if os.getenv("LLM_PROVIDER", "ollama") == "anthropic":
+            return self.anthropic_model
+        return self.ollama_model
 
     @abstractmethod
     def can_handle(self, query: str) -> float:
@@ -39,7 +48,12 @@ class BaseAgent(ABC):
 
         data = self.build_context(ctx)
         prompt = self.build_prompt(ctx, data)
-        raw = LLMClient.complete(prompt, system=data.get("system_prompt", ""))
+        system = data.get("system_prompt", "")
+        messages: list[dict[str, str]] = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        raw = LLMClient.chat(messages, model=self.get_model())
         return AgentResponse(
             content=raw,
             agent_name=self.name,

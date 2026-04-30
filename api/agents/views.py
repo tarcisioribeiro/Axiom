@@ -148,14 +148,42 @@ class AgentStatusView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request: Request) -> Response:
+        from agents.agents.budget_agent import BudgetAgent
+        from agents.agents.finance_agent import FinanceAgent
+        from agents.agents.forecast_agent import ForecastAgent
+        from agents.agents.insight_agent import InsightAgent
+        from agents.agents.library_agent import LibraryAgent
+        from agents.agents.planning_agent import PlanningAgent
         from agents.core.llm_client import LLMClient
 
         provider = os.getenv("LLM_PROVIDER", "ollama")
         available = LLMClient.is_available()
         models = LLMClient.list_models() if provider == "ollama" else []
 
+        agent_instances: list = [
+            FinanceAgent(),
+            BudgetAgent(),
+            ForecastAgent(),
+            PlanningAgent(),
+            LibraryAgent(),
+            InsightAgent(),
+        ]
+        agents_info = [
+            {
+                "name": a.name,
+                "description": a.description,
+                "model": a.get_model(),
+            }
+            for a in agent_instances
+        ]
+
         serializer = AgentStatusSerializer(
-            {"available": available, "provider": provider, "models": models}
+            {
+                "available": available,
+                "provider": provider,
+                "models": models,
+                "agents": agents_info,
+            }
         )
         return Response(serializer.data)
 
