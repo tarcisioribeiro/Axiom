@@ -59,9 +59,9 @@ def get_top_missed_routines(user: User, days: int = 7) -> list[dict[str, Any]]:
 
     return [
         {
-            "name": m["template__name"],
-            "category": m["template__category"],
-            "missed": m["miss_count"],
+            "name": m["template__name"],  # type: ignore[index]
+            "category": m["template__category"],  # type: ignore[index]
+            "missed": m["miss_count"],  # type: ignore[index]
         }
         for m in missed
     ]

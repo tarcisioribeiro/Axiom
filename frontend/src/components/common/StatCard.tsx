@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import React, { useMemo } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
@@ -90,9 +90,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <Card className={`transition-shadow ${variantClasses[variant]}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-          <CardTitle className="text-sm font-medium">
-            {title}
-          </CardTitle>
+          <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
             <motion.div
               whileHover={{ scale: 1.05, rotate: 4 }}

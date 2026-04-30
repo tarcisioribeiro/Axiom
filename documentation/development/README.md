@@ -56,7 +56,17 @@ Configuração de DNS dinâmico e TLS:
 - Ingress nginx: roteamento por path
 - Verificação de certificados e renovação
 
-### 8. [Solução de Problemas](./troubleshooting.md)
+### 8. [Referência kubectl](./kubectl_reference.md)
+Referência completa de comandos kubectl para operar o cluster k3s:
+- Comandos por componente: PostgreSQL, Redis, API, Frontend, MinIO
+- Port-forwarding para acesso local a cada serviço
+- Como extrair senhas e secrets do cluster
+- Backup: disparar manualmente, acompanhar logs, restaurar
+- Blue-green: identificar slot ativo, fazer switch manual
+- Rollback de staging e produção
+- Troubleshooting e diagnóstico
+
+### 9. [Solução de Problemas](./troubleshooting.md)
 Diagnóstico e resolução de problemas comuns:
 - Problemas com Docker
 - Erros de banco de dados
@@ -65,7 +75,7 @@ Diagnóstico e resolução de problemas comuns:
 - Erros de criptografia
 - Problemas de CORS
 
-### 9. [Funcionalidades Pendentes](./pending_features.md)
+### 10. [Funcionalidades Pendentes](./pending_features.md)
 Funcionalidades com infraestrutura parcial que precisam de implementação ou configuração:
 - Notificações por email (configuração SMTP)
 - Reset de senha

@@ -132,7 +132,8 @@
       "routineTasks": "Tarefas Rotineiras",
       "goals": "Objetivos",
       "bankReconciliation": "Conciliação Bancária"
-    }
+    },
+    "agents": "Agentes IA"
   },
   "layout": {
     "skipToContent": "Pular para o conteúdo principal",
@@ -2076,6 +2077,29 @@
         "invalidFormat": "Formato inválido. Use OFX ou CSV."
       },
       "viewBtn": "Ver"
+    },
+    "agents": {
+      "title": "Agentes IA",
+      "subtitle": "Converse com os agentes inteligentes do MindLedger",
+      "newSession": "Nova sessão",
+      "clearHistory": "Limpar histórico",
+      "clearConfirm": "Deseja apagar todas as mensagens desta sessão?",
+      "inputPlaceholder": "Faça uma pergunta sobre suas finanças, planejamento ou leituras...",
+      "send": "Enviar",
+      "thinking": "Pensando...",
+      "noMessages": "Nenhuma mensagem ainda. Comece fazendo uma pergunta!",
+      "session": "Sessão",
+      "provider": "Provedor",
+      "unavailable": "LLM indisponível. Verifique as configurações no painel admin.",
+      "sources": "Fontes",
+      "agentNames": {
+        "finance_agent": "Finanças",
+        "budget_agent": "Orçamentos",
+        "forecast_agent": "Projeção",
+        "planning_agent": "Planejamento",
+        "library_agent": "Biblioteca",
+        "insight_agent": "Insights"
+      }
     }
   }
 }
