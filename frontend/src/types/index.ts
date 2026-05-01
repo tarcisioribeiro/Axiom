@@ -150,6 +150,143 @@ export interface AgentStatus {
   models: string[];
 }
 
+// Admin Panel Types
+export type ConfigCategory =
+  | 'llm'
+  | 'email'
+  | 'backup'
+  | 'app'
+  | 'security'
+  | 'storage';
+
+export interface SystemConfig {
+  key: string;
+  label: string;
+  description: string;
+  category: ConfigCategory;
+  is_secret: boolean;
+  is_editable: boolean;
+  requires_restart: boolean;
+  masked_value: string | null;
+  is_configured: boolean;
+  updated_at: string;
+  updated_by_username: string | null;
+}
+
+export type ServiceStatus =
+  | 'healthy'
+  | 'unhealthy'
+  | 'warning'
+  | 'not_configured'
+  | 'unknown'
+  | 'not_active';
+
+export interface ServiceCheck {
+  status: ServiceStatus;
+  message?: string;
+  models?: string[];
+  free_percent?: number;
+}
+
+export interface HealthResponse {
+  status: ServiceStatus;
+  timestamp: string;
+  checks: {
+    database: ServiceCheck;
+    cache: ServiceCheck;
+    storage: ServiceCheck;
+    ollama: ServiceCheck;
+    email: ServiceCheck;
+    disk: ServiceCheck;
+  };
+}
+
+export interface IntegrationsResponse {
+  database: ServiceCheck;
+  cache: ServiceCheck;
+  storage: ServiceCheck;
+  ollama: ServiceCheck;
+  anthropic: ServiceCheck;
+  email: ServiceCheck;
+  llm_provider: string;
+  ollama_model: string;
+  anthropic_model: string;
+}
+
+export interface AdminLog {
+  id: number;
+  action: string;
+  action_display: string;
+  model_name: string | null;
+  object_id: number | null;
+  object_uuid: string | null;
+  description: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  user: number | null;
+  username: string | null;
+  created_at: string;
+}
+
+export interface AdminLogsResponse {
+  count: number;
+  page: number;
+  page_size: number;
+  results: AdminLog[];
+}
+
+// Agents
+export type AgentRole = 'user' | 'agent';
+
+export interface AgentMessage {
+  id: number;
+  session_id: string;
+  role: AgentRole;
+  content: string;
+  agent_name: string | null;
+  created_at: string;
+}
+
+export interface AgentHistoryResponse {
+  results: AgentMessage[];
+  session_id: string;
+}
+
+export interface AgentAskRequest {
+  query: string;
+  session_id: string;
+  date_from?: string;
+  date_to?: string;
+  forecast_days?: number;
+}
+
+export interface AgentAskResponse {
+  answer: string;
+  agent: string;
+  sources: string[];
+  session_id: string;
+}
+
+export interface AgentStatus {
+  available: boolean;
+  provider: string;
+  models: string[];
+}
+
+export interface AgentStreamToken {
+  token: string;
+  done?: false;
+}
+
+export interface AgentStreamDone {
+  done: true;
+  agent: string;
+  sources: string[];
+  query_id: string;
+}
+
+export type AgentStreamEvent = AgentStreamToken | AgentStreamDone;
+
 export interface Permission {
   app_label: string;
   codename: string;

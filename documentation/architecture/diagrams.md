@@ -14,6 +14,9 @@ Diagramas em [Mermaid](https://mermaid.js.org/) do MindLedger. Renderizados auto
 8. [Diagrama de Classes — Camada de Views Backend](#8-diagrama-de-classes--camada-de-views-backend)
 9. [Diagrama de Estado — Autenticação](#9-diagrama-de-estado--autenticação)
 10. [Diagrama de Estado — Cofre (Vault)](#10-diagrama-de-estado--cofre-vault)
+11. [Pipeline de Agentes de IA — Componentes](#11-pipeline-de-agentes-de-ia--componentes)
+12. [Pipeline de Agentes de IA — Sequência de Streaming](#12-pipeline-de-agentes-de-ia--sequência-de-streaming)
+13. [ERD — Módulo Agentes](#13-erd--módulo-agentes)
 
 ---
 
@@ -653,6 +656,196 @@ stateDiagram-v2
 
     [*] --> NotCreated : no vault
     NotCreated --> Locked : create vault + set master password
+```
+
+---
+
+---
+
+## 11. Pipeline de Agentes de IA — Componentes
+
+Visão dos componentes do módulo `api/agents/` e suas dependências.
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend (React)"]
+        PAGE["Agents.tsx"]
+        HOOK["useAgentStream"]
+        SVC["AgentService\n(fetch SSE)"]
+        PAGE --> HOOK --> SVC
+    end
+
+    subgraph API["Backend (Django)"]
+        subgraph Views["Views"]
+            ASKV["AgentAskView\nPOST /ask/"]
+            STMV["AgentStreamView\nPOST /stream/"]
+            HISTV["AgentConversationHistoryView\nGET|DELETE /history/"]
+            SESSV["AgentNewSessionView\nPOST /sessions/"]
+            STATV["AgentStatusView\nGET /status/"]
+        end
+
+        subgraph Core["Core"]
+            ROUTER["AgentRouter\n(keyword + semantic)"]
+            BASE["BaseAgent\n(can_handle / build_context / build_prompt)"]
+            LLMC["LLMClient\n(Ollama | Groq | Anthropic)"]
+            MEM["ConversationMemory\n(Redis)"]
+            TEMP["parse_temporal_intent\n(datas relativas)"]
+        end
+
+        subgraph Agents["Agentes"]
+            FA["FinanceAgent"]
+            BA["BudgetAgent"]
+            FCA["ForecastAgent"]
+            PA["PlanningAgent"]
+            LA["LibraryAgent"]
+            IA["InsightAgent"]
+        end
+
+        subgraph Tools["Tools"]
+            FT["financial_tools"]
+            BT["budget_tools"]
+            FCT["forecast_tools"]
+            PT["planning_tools"]
+            RT["rag_tools"]
+        end
+    end
+
+    subgraph Storage["Storage"]
+        PG[("PostgreSQL\nAgentConversation\nAgentEmbedding")]
+        REDIS[("Redis\nConversationMemory")]
+        OLLAMA["Ollama\n(LLM local)"]
+        GROQ["Groq API\n(cloud)"]
+        ANT["Anthropic API\n(cloud)"]
+    end
+
+    SVC -->|"POST /stream/ SSE"| STMV
+    SVC -->|"POST /ask/"| ASKV
+
+    STMV --> ROUTER
+    ASKV --> ROUTER
+    ROUTER --> BASE
+    BASE --> FA & BA & FCA & PA & LA & IA
+    FA --> FT
+    BA --> BT
+    FCA --> FCT
+    PA --> PT
+    LA --> RT
+
+    ROUTER --> LLMC
+    FA & BA & FCA & PA & LA & IA --> LLMC
+
+    STMV & ASKV --> MEM
+    FA & BA --> TEMP
+    FT & BT & FCT & PT & RT --> PG
+    RT --> PG
+
+    MEM --> REDIS
+    STMV --> PG
+    ASKV --> PG
+
+    LLMC -->|ollama| OLLAMA
+    LLMC -->|groq| GROQ
+    LLMC -->|anthropic| ANT
+    LLMC -->|embeddings| OLLAMA
+```
+
+---
+
+## 12. Pipeline de Agentes de IA — Sequência de Streaming
+
+Fluxo detalhado do modo streaming (SSE) desde a digitação do usuário até a resposta completa no frontend.
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant FE as Agents.tsx
+    participant HS as useAgentStream
+    participant AS as AgentService
+    participant DJ as AgentStreamView
+    participant RT as AgentRouter
+    participant AG as Agente
+    participant LLM as LLM Provider
+    participant MEM as Redis
+    participant DB as PostgreSQL
+
+    U->>FE: envia pergunta
+    FE->>HS: send(query, sessionId)
+    HS->>AS: stream(payload, AbortController.signal)
+    AS->>DJ: POST /api/v1/agents/stream/\nfetch com ReadableStream
+
+    DJ->>MEM: get(user_id, session_id)
+    MEM-->>DJ: histórico (últimos 10 turnos)
+
+    DJ->>RT: AgentRouter.select(ctx)
+    RT->>RT: score por palavras-chave
+    RT->>LLM: embed(query) → 768 floats
+    RT->>DB: pgvector: TOP-3 por domínio
+    RT->>RT: score final → agente selecionado
+
+    DJ->>AG: agent.stream(ctx)
+    AG->>DB: build_context() — dados do usuário
+    AG->>AG: build_prompt()
+
+    AG->>LLM: stream_chat(messages, model)
+
+    loop tokens em tempo real
+        LLM-->>AG: token
+        AG-->>DJ: yield token
+        DJ-->>AS: data: {"token":"..."}\n\n
+        AS-->>HS: yield {token}
+        HS->>FE: setState (re-render)
+        FE->>U: texto cresce
+    end
+
+    LLM-->>AG: FIM
+    DJ-->>AS: data: {"done":true,"agent":"...","sources":[...]}\n\n
+    AS-->>HS: yield {done:true}
+    HS->>FE: setState isStreaming=false
+
+    DJ->>MEM: append(query, full_content)
+    DJ->>DB: bulk_create [user_turn, agent_turn]
+```
+
+---
+
+## 13. ERD — Módulo Agentes
+
+Modelos de dados do módulo de agentes de IA.
+
+```mermaid
+erDiagram
+    User {
+        int id PK
+        string username
+    }
+
+    AgentConversation {
+        uuid id PK
+        string session_id
+        uuid query_id
+        string role
+        text content
+        string agent_name
+        bool is_deleted
+        datetime created_at
+        int user FK
+    }
+
+    AgentEmbedding {
+        uuid id PK
+        string domain
+        string source_type
+        uuid source_id
+        string source_title
+        text content
+        vector embedding
+        bool is_deleted
+        datetime created_at
+        int user FK
+    }
+
+    User ||--o{ AgentConversation : "user"
+    User ||--o{ AgentEmbedding : "user"
 ```
 
 ---

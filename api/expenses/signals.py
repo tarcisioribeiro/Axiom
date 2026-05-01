@@ -12,7 +12,8 @@ Em atualizações:
   auto_categorized é limpo para refletir a escolha manual do usuário.
 """
 
-from django.db.models.signals import pre_save
+from django.db import transaction
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from rapidfuzz import fuzz
@@ -85,3 +86,24 @@ def auto_categorize_expense(sender, instance, **kwargs):
     # Category is 'others': re-apply rules only if it changed to 'others'
     if old_category != "others":
         _apply_categorization_rules(user, instance)
+
+
+@receiver(post_save, sender="expenses.Expense")
+def embed_expense(sender, instance, **kwargs):
+    from agents.services.embedding_service import generate_embedding_for_instance
+
+    source_title = f"{instance.category} — {instance.date}"
+
+    def _embed():
+        generate_embedding_for_instance(
+            instance,
+            domain="finance",
+            source_type="expense",
+            content_fn=lambda i: (
+                f"Despesa de R$ {i.value} em {i.category}"
+                f" — {i.merchant or i.description} em {i.date}"
+            ),
+            source_title=source_title,
+        )
+
+    transaction.on_commit(_embed)

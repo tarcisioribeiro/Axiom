@@ -1,5 +1,9 @@
+import uuid
+
 from django.contrib.auth.models import User
 from django.db import models
+
+from pgvector.django import VectorField  # type: ignore[import-untyped]
 
 from app.models import BaseModel
 
@@ -14,13 +18,79 @@ ROLE_CHOICES = (
     ("agent", "Agente"),
 )
 
+DOMAIN_CHOICES = (
+    ("finance", "Finanças"),
+    ("budget", "Orçamento"),
+    ("planning", "Planejamento"),
+    ("library", "Biblioteca"),
+    ("general", "Geral"),
+)
+
+AGENT_SOURCE_TYPE_CHOICES = (
+    ("expense", "Despesa"),
+    ("revenue", "Receita"),
+    ("budget", "Orçamento"),
+    ("task", "Tarefa"),
+    ("goal", "Meta"),
+    ("routine", "Rotina"),
+    ("book_summary", "Resumo de Livro"),
+    ("reading_note", "Nota de Leitura"),
+    ("highlight", "Destaque"),
+    ("credit_card_bill", "Fatura de Cartão"),
+)
+
+
+class AgentEmbedding(models.Model):
+    """
+    Embedding vetorial real (pgvector) por domínio e fonte.
+    Substitui EmbeddingDocument para buscas semânticas em prod.
+    Armazenado em vectors.agent_embeddings (schema dedicado no PostgreSQL).
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        verbose_name="ID",
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="agent_embeddings",
+        verbose_name="Usuário",
+    )
+    domain = models.CharField(
+        max_length=20,
+        choices=DOMAIN_CHOICES,
+        verbose_name="Domínio",
+    )
+    source_type = models.CharField(
+        max_length=50,
+        choices=AGENT_SOURCE_TYPE_CHOICES,
+        verbose_name="Tipo de Fonte",
+    )
+    source_id = models.UUIDField(verbose_name="ID da Fonte")
+    source_title = models.CharField(max_length=255, verbose_name="Título da Fonte")
+    content = models.TextField(verbose_name="Conteúdo")
+    embedding = VectorField(dimensions=768, verbose_name="Embedding")
+    is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+
+    class Meta:
+        verbose_name = "Embedding de Agente"
+        verbose_name_plural = "Embeddings de Agentes"
+        db_table = '"vectors"."agent_embeddings"'
+
+    def __str__(self) -> str:
+        return f"{self.source_title} ({self.domain}/{self.source_type})"
+
 
 class EmbeddingDocument(BaseModel):
     """
-    Chunk de texto indexado com embedding para busca semântica (RAG).
-    O embedding é armazenado como JSON serializado para compatibilidade
-    com SQLite nos testes. Em produção, o campo é usado com pgvector
-    via cast dinâmico no raw SQL (embedding_json::vector).
+    DEPRECATED: Substituído por AgentEmbedding (VectorField real, schema vectors).
+    Mantido com managed=True para não quebrar o migration history.
+    Não deve ser usado em novos fluxos — use AgentEmbedding.
     """
 
     user = models.ForeignKey(
@@ -75,6 +145,12 @@ class AgentConversation(BaseModel):
         max_length=64,
         verbose_name="ID da Sessão",
         db_index=True,
+    )
+    query_id = models.UUIDField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name="ID da Consulta",
     )
     role = models.CharField(
         max_length=10,
