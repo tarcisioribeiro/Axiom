@@ -15,3 +15,4 @@ class RevenuesConfig(AppConfig):
         de saldo das contas sejam registrados corretamente.
         """
         import accounts.signals  # noqa: F401
+        import revenues.signals  # noqa: F401

@@ -42,3 +42,5 @@ dateparser==1.3.0
 # Agents / LLM integration
 # anthropic: SDK para Claude API (opcional — usado quando LLM_PROVIDER=anthropic)
 anthropic==0.52.0
+# pgvector: VectorField nativo para Django + pgvector extension no PostgreSQL
+pgvector==0.3.3

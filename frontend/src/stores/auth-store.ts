@@ -110,12 +110,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error: unknown) {
       const err = error as Error;
-      const errorMessage =
+      const message =
         err.name === 'PermissionError'
-          ? 'Superusuários não podem acessar este painel. Use o Django Admin.'
+          ? 'Superusuários não têm acesso ao sistema. Use o painel admin.'
           : err.message || 'Login failed';
       set({
-        error: errorMessage,
+        error: message,
         isLoading: false,
       });
       throw error;

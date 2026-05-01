@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
 from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
     "gastei",
@@ -30,12 +31,17 @@ _TRIGGER_WORDS = [
     "gastando",
     "valor",
     "gastar",
+    "mês passado",
+    "semana passada",
 ]
 
 
 class FinanceAgent(BaseAgent):
     name = "finance"
     description = "Análise de despesas, receitas e padrões de consumo"
+    ollama_model = "qwen2.5:7b"
+    anthropic_model = "claude-haiku-4-5-20251001"
+    groq_model = "llama-3.1-8b-instant"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
@@ -54,7 +60,7 @@ class FinanceAgent(BaseAgent):
         now = timezone.now().date()
         month_start = now.replace(day=1)
 
-        # Suporte a período customizado via metadata
+        # Explicit date range from the request takes precedence.
         if ctx.metadata.get("date_from"):
             try:
                 start = date.fromisoformat(ctx.metadata["date_from"])
@@ -62,7 +68,9 @@ class FinanceAgent(BaseAgent):
             except ValueError:
                 start, end = month_start, now
         else:
-            start, end = month_start, now
+            # Fall back to temporal intent parsed from the query itself.
+            temporal = parse_temporal_intent(ctx.query, now)
+            start, end = temporal if temporal else (month_start, now)
 
         expenses = get_expense_summary(user, start, end)
         revenues = get_revenue_summary(user, start, end)
