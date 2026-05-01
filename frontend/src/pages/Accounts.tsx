@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Banknote,
   ShieldCheck,
+  Building2,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -20,9 +21,9 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
-import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -165,6 +166,27 @@ export default function Accounts() {
     );
   }, [accounts, searchTerm]);
 
+  const ACCOUNT_TYPE_COLORS: Record<
+    string,
+    { border: string; icon: string; bg: string }
+  > = {
+    CC: { border: 'border-l-info', icon: 'text-info', bg: 'bg-info/5' },
+    CS: { border: 'border-l-success', icon: 'text-success', bg: 'bg-success/5' },
+    FG: { border: 'border-l-warning', icon: 'text-warning', bg: 'bg-warning/5' },
+    VA: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
+    VR: { border: 'border-l-accent', icon: 'text-accent', bg: 'bg-accent/5' },
+    CP: { border: 'border-l-primary', icon: 'text-primary', bg: 'bg-primary/5' },
+  };
+
+  const BALANCE_DIST_COLORS = [
+    'bg-info',
+    'bg-success',
+    'bg-primary',
+    'bg-warning',
+    'bg-accent',
+    'bg-destructive',
+  ] as const;
+
   const { totalBalance, totalAvailable } = useMemo(() => {
     const balance = accounts.reduce((s, a) => s + parseFloat(a.balance), 0);
     const available = accounts.reduce(
@@ -172,6 +194,15 @@ export default function Accounts() {
       0
     );
     return { totalBalance: balance, totalAvailable: available };
+  }, [accounts]);
+
+  const balanceDistribution = useMemo(() => {
+    const positiveAccounts = accounts.filter((a) => parseFloat(a.balance) > 0);
+    const totalPositive = positiveAccounts.reduce(
+      (s, a) => s + parseFloat(a.balance),
+      0
+    );
+    return { positiveAccounts, totalPositive };
   }, [accounts]);
 
   const handleCreate = () => {
@@ -340,25 +371,106 @@ export default function Accounts() {
         }}
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          title={t('pages.accounts.stats.totalBalance')}
-          value={formatCurrency(totalBalance)}
-          icon={<Banknote />}
-          variant={totalBalance >= 0 ? 'success' : 'danger'}
-        />
-        <StatCard
-          title={t('pages.accounts.stats.availableBalance')}
-          value={formatCurrency(totalAvailable)}
-          icon={<ShieldCheck />}
-          variant={totalAvailable >= 0 ? 'default' : 'danger'}
-        />
-        <StatCard
-          title={t('pages.accounts.stats.count')}
-          value={accounts.length}
-          icon={<Wallet />}
-        />
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card
+          className={`overflow-hidden border-t-2 ${totalBalance >= 0 ? 'border-t-success/60' : 'border-t-destructive/60'}`}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.accounts.stats.totalBalance')}
+            </p>
+            <div
+              className={`rounded-lg p-sm ring-1 ${totalBalance >= 0 ? 'bg-success/10 ring-success/20' : 'bg-destructive/10 ring-destructive/20'}`}
+            >
+              <Banknote
+                className={`h-4 w-4 ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}
+            >
+              {formatCurrency(totalBalance)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {accounts.length} contas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={`overflow-hidden border-t-2 ${totalAvailable >= 0 ? 'border-t-info/60' : 'border-t-destructive/60'}`}
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.accounts.stats.availableBalance')}
+            </p>
+            <div
+              className={`rounded-lg p-sm ring-1 ${totalAvailable >= 0 ? 'bg-info/10 ring-info/20' : 'bg-destructive/10 ring-destructive/20'}`}
+            >
+              <ShieldCheck
+                className={`h-4 w-4 ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={`text-2xl font-bold ${totalAvailable >= 0 ? 'text-info' : 'text-destructive'}`}
+            >
+              {formatCurrency(totalAvailable)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              incluindo cheque especial
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-primary/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.accounts.stats.count')}</p>
+            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
+              <Building2 className="h-4 w-4 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{accounts.length}</div>
+            <p className="mt-xs text-xs text-muted-foreground">instituições</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {balanceDistribution.positiveAccounts.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Distribuição de saldo
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {balanceDistribution.positiveAccounts.map((acc, i) => (
+              <div
+                key={acc.id}
+                className={`h-full transition-all ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
+                style={{
+                  width: `${(parseFloat(acc.balance) / balanceDistribution.totalPositive) * 100}%`,
+                }}
+                title={`${acc.account_name}: ${formatCurrency(acc.balance)}`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {balanceDistribution.positiveAccounts.map((acc, i) => (
+              <div key={acc.id} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${BALANCE_DIST_COLORS[i % BALANCE_DIST_COLORS.length]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {acc.account_name} · {formatCurrency(acc.balance)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <SearchInput
         placeholder={t('pages.accounts.searchPlaceholder')}
@@ -372,6 +484,10 @@ export default function Accounts() {
         columns={columns}
         keyExtractor={(account) => account.id}
         isLoading={isLoading}
+        rowClassName={(account) => {
+          const colors = ACCOUNT_TYPE_COLORS[account.account_type];
+          return colors ? `border-l-4 ${colors.border} ${colors.bg}` : '';
+        }}
         emptyState={{
           icon: <Wallet className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.accounts.emptyState'),
