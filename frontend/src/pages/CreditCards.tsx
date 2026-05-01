@@ -8,6 +8,7 @@ import {
   Receipt,
   Filter,
   RotateCcw,
+  TrendingDown,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +24,7 @@ import { CreditCardForm } from '@/components/credit-cards/CreditCardForm';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { sumByProperty } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
@@ -459,14 +461,58 @@ export default function CreditCards() {
         }}
       />
 
-      <div className="flex items-center justify-between rounded-lg border bg-card p-4">
-        <span className="text-sm">
-          {t('pages.creditCards.cardCount', { count: creditCards.length })}
-        </span>
-        <span className="text-lg font-bold">
-          {t('pages.creditCards.totalLimit')} {formatCurrency(totalAvailable)} /{' '}
-          {formatCurrency(totalLimit)}
-        </span>
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-primary/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.creditCards.cardCount', { count: creditCards.length })}
+            </p>
+            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
+              <CreditCardIcon className="h-4 w-4 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{creditCards.length}</div>
+            <p className="mt-xs text-xs text-muted-foreground">cartões cadastrados</p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">Crédito disponível</p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <Wallet className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">
+              {formatCurrency(totalAvailable)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              de {formatCurrency(totalLimit)} no total
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">Crédito utilizado</p>
+            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {formatCurrency(totalLimit - totalAvailable)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {totalLimit > 0
+                ? Math.round(((totalLimit - totalAvailable) / totalLimit) * 100)
+                : 0}
+              % do limite
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {creditCards.length === 0 ? (
@@ -479,21 +525,23 @@ export default function CreditCards() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {creditCards.map((card) => {
             const cardNumber = getCardNumber(card);
+            const limit = parseFloat(card.credit_limit);
+            const available = card.available_credit ?? 0;
+            const used = Math.max(0, limit - available);
+            const usagePct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
             return (
-              <Card key={card.id}>
-                <CardHeader className="pb-2">
+              <Card key={card.id} className="overflow-hidden">
+                {/* Card hero — gradient background simulating a bank card */}
+                <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-md pb-lg pt-md">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <CardTitle className="text-lg">{card.name}</CardTitle>
-                        <Badge variant="secondary">
-                          {translate('cardBrands', card.flag)}
-                        </Badge>
-                      </div>
-                      {cardNumber && <p className="font-mono text-sm">{cardNumber}</p>}
-                      {card.on_card_name && (
-                        <p className="text-sm">{card.on_card_name}</p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {t('pages.creditCards.limit')}
+                      </p>
+                      <p className="text-xl font-bold">{formatCurrency(available)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        de {formatCurrency(limit)} disponível
+                      </p>
                     </div>
                     <div className="flex gap-1">
                       <Button
@@ -531,34 +579,63 @@ export default function CreditCards() {
                       </Button>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
+                  {/* Card chip */}
+                  <div className="absolute bottom-3 left-md h-5 w-7 rounded bg-warning/40 ring-1 ring-warning/30" />
+                  {/* Bottom accent strip */}
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                </div>
+
+                <CardContent className="space-y-sm pt-md">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Wallet className="h-4 w-4" />
-                      <span>{t('pages.creditCards.limit')}</span>
+                    <div>
+                      <p className="font-semibold">{card.name}</p>
+                      {cardNumber && (
+                        <p className="font-mono text-xs text-muted-foreground">
+                          {cardNumber}
+                        </p>
+                      )}
                     </div>
-                    <span className="font-semibold">
-                      {formatCurrency(card.available_credit || 0)} /{' '}
-                      {formatCurrency(card.credit_limit)}
-                    </span>
+                    <Badge variant="secondary">
+                      {translate('cardBrands', card.flag)}
+                    </Badge>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4" />
+
+                  {/* Usage bar */}
+                  <div className="space-y-xs">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Utilizado</span>
+                      <span>{Math.round(usagePct)}%</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          'h-full rounded-full transition-all',
+                          usagePct >= 90
+                            ? 'bg-destructive'
+                            : usagePct >= 70
+                              ? 'bg-warning'
+                              : 'bg-success'
+                        )}
+                        style={{ width: `${usagePct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t pt-sm text-sm">
+                    <div className="flex items-center gap-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
                       <span>{t('pages.creditCards.dueDay')}</span>
                     </div>
-                    <span className="text-sm">
+                    <span className="font-medium">
                       {t('pages.creditCards.dueDayValue', { day: card.due_day })}
                     </span>
                   </div>
+
                   {card.associated_account_name && (
-                    <div className="border-t pt-2">
-                      <p className="text-xs">
-                        {t('pages.creditCards.associatedAccount')}{' '}
-                        {card.associated_account_name}
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.creditCards.associatedAccount')}{' '}
+                      {card.associated_account_name}
+                    </p>
                   )}
                 </CardContent>
               </Card>
