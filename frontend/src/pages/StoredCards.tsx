@@ -11,7 +11,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StoredCardForm } from '@/components/security/StoredCardForm';
@@ -26,10 +26,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { copyToClipboard } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { membersService } from '@/services/members-service';
 import { storedCardsService } from '@/services/stored-cards-service';
@@ -40,6 +39,41 @@ import type {
   Member,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+type FlagConfig = { bg: string; badge: string };
+
+const FLAG_CONFIG: Record<string, FlagConfig> = {
+  VSA: {
+    bg: 'border-2 border-info/30 bg-gradient-to-br from-info/20 to-info/5',
+    badge: 'border-info/30 bg-info/10 text-info',
+  },
+  MSC: {
+    bg: 'border-2 border-destructive/30 bg-gradient-to-br from-destructive/20 to-destructive/5',
+    badge: 'border-destructive/30 bg-destructive/10 text-destructive',
+  },
+  ELO: {
+    bg: 'border-2 border-warning/30 bg-gradient-to-br from-warning/20 to-warning/5',
+    badge: 'border-warning/30 bg-warning/10 text-warning',
+  },
+  EXP: {
+    bg: 'border-2 border-success/30 bg-gradient-to-br from-success/20 to-success/5',
+    badge: 'border-success/30 bg-success/10 text-success',
+  },
+  HCD: {
+    bg: 'border-2 border-destructive/30 bg-gradient-to-br from-destructive/20 to-destructive/5',
+    badge: 'border-destructive/30 bg-destructive/10 text-destructive',
+  },
+  DIN: {
+    bg: 'border-2 border-accent/30 bg-gradient-to-br from-accent/20 to-accent/5',
+    badge: 'border-accent/30 bg-accent/10 text-accent',
+  },
+  OTHER: {
+    bg: 'border-2 border-primary/30 bg-gradient-to-br from-primary/20 to-primary/5',
+    badge: 'border-primary/30 bg-primary/10 text-primary',
+  },
+};
+
+const DEFAULT_FLAG: FlagConfig = FLAG_CONFIG.OTHER;
 
 export default function StoredCards() {
   const [cards, setCards] = useState<StoredCreditCard[]>([]);
@@ -123,7 +157,6 @@ export default function StoredCards() {
 
   const handleReveal = async (id: number) => {
     if (revealedData.has(id)) {
-      // Ocultar dados
       const newMap = new Map(revealedData);
       newMap.delete(id);
       setRevealedData(newMap);
@@ -163,11 +196,9 @@ export default function StoredCards() {
     try {
       setIsSubmitting(true);
       if (selectedCard) {
-        // Remove campos vazios (não atualizar dados sensíveis vazios)
         const updateData: Partial<StoredCreditCardFormData> = { ...data };
         if (!updateData.card_number) delete updateData.card_number;
         if (!updateData.security_code) delete updateData.security_code;
-
         await storedCardsService.update(selectedCard.id, updateData);
         toast({
           title: t('pages.storedCards.updated'),
@@ -200,105 +231,6 @@ export default function StoredCards() {
       card.last_four_digits?.includes(searchTerm)
   );
 
-  const getFinanceCardName = (id?: number) => {
-    if (!id) return t('pages.storedCards.noFinanceCard');
-    const card = creditCards.find((c) => c.id === id);
-    return card ? card.name : 'N/A';
-  };
-
-  const columns: Column<StoredCreditCard>[] = [
-    {
-      key: 'name',
-      label: t('pages.storedCards.columns.name'),
-      render: (card) => (
-        <div className="flex items-center gap-2">
-          <CreditCardIcon className="h-4 w-4" />
-          <span className="font-medium">{card.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'cardholder',
-      label: t('pages.storedCards.columns.holder'),
-      render: (card) => <span className="text-sm">{card.cardholder_name}</span>,
-    },
-    {
-      key: 'number',
-      label: t('pages.storedCards.columns.number'),
-      render: (card) => {
-        const revealed = revealedData.get(card.id);
-        if (revealed) {
-          return (
-            <div className="flex items-center gap-2 font-mono text-sm">
-              <span>{revealed.number}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() =>
-                  handleCopy(revealed.number, t('pages.storedCards.cardNumberLabel'))
-                }
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <span className="font-mono text-sm">
-            **** **** **** {card.last_four_digits || '****'}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'cvv',
-      label: t('pages.storedCards.columns.cvv'),
-      align: 'center',
-      render: (card) => {
-        const revealed = revealedData.get(card.id);
-        if (revealed) {
-          return (
-            <div className="flex items-center justify-center gap-2 font-mono text-sm">
-              <span>{revealed.cvv}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleCopy(revealed.cvv, 'CVV')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        }
-        return <span>***</span>;
-      },
-    },
-    {
-      key: 'flag',
-      label: t('pages.storedCards.columns.brand'),
-      render: (card) => <Badge>{translate('cardBrands', card.flag)}</Badge>,
-    },
-    {
-      key: 'expiration',
-      label: t('pages.storedCards.columns.expiry'),
-      align: 'center',
-      render: (card) => (
-        <span className="text-sm">
-          {String(card.expiration_month).padStart(2, '0')}/{card.expiration_year}
-        </span>
-      ),
-    },
-    {
-      key: 'finance_card',
-      label: t('pages.storedCards.columns.isFinancial'),
-      render: (card) => (
-        <Badge variant="outline" className="text-xs">
-          {getFinanceCardName(card.finance_card ?? undefined)}
-        </Badge>
-      ),
-    },
-  ];
-
   return (
     <VaultGuard>
       <PageContainer>
@@ -321,58 +253,171 @@ export default function StoredCards() {
           />
         </div>
 
-        <DataTable
-          data={filteredCards}
-          columns={columns}
-          keyExtractor={(card) => card.id}
-          isLoading={isLoading}
-          emptyState={{
-            icon: <CreditCardIcon className="h-12 w-12 text-muted-foreground" />,
-            message: t('pages.storedCards.emptySearch'),
-          }}
-          actions={(card) => (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleReveal(card.id)}
-                disabled={revealingId === card.id}
-              >
-                {revealingId === card.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : revealedData.has(card.id) ? (
-                  <>
-                    <EyeOff className="mr-1 h-3 w-3" />
-                    {t('common.actions.hide')}
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-1 h-3 w-3" />
-                    {t('common.actions.reveal')}
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(card)}
-                aria-label={t('common.actions.edit')}
-                title={t('common.actions.edit')}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(card.id)}
-                aria-label={t('common.actions.delete')}
-                title={t('common.actions.delete')}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-              </Button>
-            </div>
-          )}
-        />
+        {!isLoading && filteredCards.length === 0 ? (
+          <EmptyState
+            icon={<CreditCardIcon className="h-12 w-12 text-muted-foreground" />}
+            message={
+              searchTerm
+                ? t('pages.storedCards.emptySearch')
+                : t('pages.storedCards.emptySearch')
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredCards.map((card) => {
+              const flagCfg = FLAG_CONFIG[card.flag] ?? DEFAULT_FLAG;
+              const revealed = revealedData.get(card.id);
+
+              return (
+                <div key={card.id} className="flex flex-col gap-2">
+                  {/* Card face */}
+                  <div
+                    className={cn(
+                      'relative overflow-hidden rounded-2xl p-5',
+                      flagCfg.bg
+                    )}
+                  >
+                    {/* Decorative background circles */}
+                    <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-foreground/[0.04]" />
+                    <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-foreground/[0.03]" />
+
+                    {/* Top row: chip + brand */}
+                    <div className="relative flex items-start justify-between">
+                      <div className="h-8 w-10 rounded-md border border-warning/60 bg-gradient-to-br from-warning/40 to-warning/20" />
+                      <Badge variant="outline" className={flagCfg.badge}>
+                        {card.flag_display}
+                      </Badge>
+                    </div>
+
+                    {/* Card number */}
+                    <div className="relative mt-6 flex items-center gap-2">
+                      <span className="font-mono text-base tracking-widest">
+                        {revealed
+                          ? revealed.number
+                          : `**** **** **** ${card.last_four_digits || '****'}`}
+                      </span>
+                      {revealed && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                          onClick={() =>
+                            handleCopy(
+                              revealed.number,
+                              t('pages.storedCards.cardNumberLabel')
+                            )
+                          }
+                          aria-label={t('common.actions.copy')}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Bottom row: holder + expiry/cvv */}
+                    <div className="relative mt-4 flex items-end justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                          {t('pages.storedCards.columns.holder')}
+                        </p>
+                        <p className="truncate text-sm font-semibold uppercase tracking-wide">
+                          {card.cardholder_name}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                          {t('pages.storedCards.columns.expiry')}
+                        </p>
+                        <p className="font-mono text-sm font-semibold">
+                          {String(card.expiration_month).padStart(2, '0')}/
+                          {card.expiration_year}
+                        </p>
+                        {revealed && (
+                          <div className="mt-0.5 flex items-center justify-end gap-1">
+                            <span className="font-mono text-xs opacity-70">
+                              CVV: {revealed.cvv}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                              onClick={() => handleCopy(revealed.cvv, 'CVV')}
+                              aria-label={t('common.actions.copy')}
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action bar */}
+                  <div className="flex items-center justify-between gap-2 px-1">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{card.name}</p>
+                      {card.finance_card_name && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {card.finance_card_name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleReveal(card.id)}
+                        disabled={revealingId === card.id}
+                        title={
+                          revealed
+                            ? t('common.actions.hide')
+                            : t('common.actions.reveal')
+                        }
+                        aria-label={
+                          revealed
+                            ? t('common.actions.hide')
+                            : t('common.actions.reveal')
+                        }
+                      >
+                        {revealingId === card.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : revealed ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEdit(card)}
+                        title={t('common.actions.edit')}
+                        aria-label={t('common.actions.edit')}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleDelete(card.id)}
+                        title={t('common.actions.delete')}
+                        aria-label={t('common.actions.delete')}
+                      >
+                        <Trash2
+                          className="h-3.5 w-3.5 text-destructive"
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">

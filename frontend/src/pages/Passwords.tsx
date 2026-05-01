@@ -56,13 +56,64 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
-import { copyToClipboard } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const CATEGORY_CONFIG: Record<
+  string,
+  { badge: string; border: string; avatar: string }
+> = {
+  social: {
+    badge: 'bg-info/10 text-info border-info/25',
+    border: 'border-l-info/60',
+    avatar: 'bg-info/10 text-info ring-1 ring-info/25',
+  },
+  email: {
+    badge: 'bg-primary/10 text-primary border-primary/25',
+    border: 'border-l-primary/60',
+    avatar: 'bg-primary/10 text-primary ring-1 ring-primary/25',
+  },
+  banking: {
+    badge: 'bg-warning/10 text-warning border-warning/25',
+    border: 'border-l-warning/60',
+    avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
+  },
+  work: {
+    badge: 'bg-success/10 text-success border-success/25',
+    border: 'border-l-success/60',
+    avatar: 'bg-success/10 text-success ring-1 ring-success/25',
+  },
+  entertainment: {
+    badge: 'bg-accent/10 text-accent border-accent/25',
+    border: 'border-l-accent/60',
+    avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
+  },
+  shopping: {
+    badge: 'bg-warning/10 text-warning border-warning/25',
+    border: 'border-l-warning/60',
+    avatar: 'bg-warning/10 text-warning ring-1 ring-warning/25',
+  },
+  streaming: {
+    badge: 'bg-accent/10 text-accent border-accent/25',
+    border: 'border-l-accent/60',
+    avatar: 'bg-accent/10 text-accent ring-1 ring-accent/25',
+  },
+  gaming: {
+    badge: 'bg-info/10 text-info border-info/25',
+    border: 'border-l-info/60',
+    avatar: 'bg-info/10 text-info ring-1 ring-info/25',
+  },
+  other: {
+    badge: '',
+    border: 'border-l-border',
+    avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
+  },
+};
 
 export default function Passwords() {
   const [passwords, setPasswords] = useState<Password[]>([]);
@@ -286,23 +337,23 @@ export default function Passwords() {
     <VaultGuard>
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
-          <div className="flex gap-2">
+          <div className="flex gap-sm">
             <Button
               variant="outline"
               onClick={() => setIsImportOpen(true)}
-              className="gap-2"
+              className="gap-sm"
             >
               <Upload className="h-4 w-4" />
               {t('pages.passwordImport.title')}
             </Button>
-            <Button onClick={handleCreate} className="gap-2">
+            <Button onClick={handleCreate} className="gap-sm">
               <Plus className="h-4 w-4" />
               {t('pages.passwords.newBtn')}
             </Button>
           </div>
         </PageHeader>
 
-        <div className="flex gap-4">
+        <div className="flex gap-md">
           <SearchInput
             placeholder={t('pages.passwords.searchPlaceholder')}
             value={searchTerm}
@@ -311,108 +362,138 @@ export default function Passwords() {
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredPasswords.map((password) => (
-            <Card key={password.id} className="transition-shadow hover:shadow-lg">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{password.title}</CardTitle>
-                    <CardDescription>{password.username}</CardDescription>
-                  </div>
-                  <Badge variant="secondary">{password.category_display}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {password.site && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <ExternalLink className="h-3 w-3" />
-                      <a
-                        href={password.site}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate hover:underline"
-                      >
-                        {password.site}
-                      </a>
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+          {filteredPasswords.map((password) => {
+            const catConfig =
+              CATEGORY_CONFIG[password.category] ?? CATEGORY_CONFIG.other;
+            return (
+              <Card
+                key={password.id}
+                className={cn(
+                  'overflow-hidden border-l-2 transition-shadow hover:shadow-lg',
+                  catConfig.border
+                )}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
+                        catConfig.avatar
+                      )}
+                    >
+                      {password.title.charAt(0).toUpperCase()}
                     </div>
-                  )}
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="truncate text-base">
+                        {password.title}
+                      </CardTitle>
+                      <CardDescription className="truncate text-xs">
+                        {password.username}
+                      </CardDescription>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={cn('shrink-0 text-xs', catConfig.badge)}
+                    >
+                      {password.category_display}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {password.site && (
+                      <div className="flex items-center gap-sm text-sm">
+                        <ExternalLink className="h-3 w-3" />
+                        <a
+                          href={password.site}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate hover:underline"
+                        >
+                          {password.site}
+                        </a>
+                      </div>
+                    )}
 
-                  {revealedPasswords.has(password.id) && (
-                    <div className="flex items-center gap-2 rounded bg-muted p-2">
-                      <code className="flex-1 text-sm">
-                        {revealedPasswords.get(password.id)}
-                      </code>
+                    {revealedPasswords.has(password.id) && (
+                      <div className="flex items-center gap-sm rounded bg-muted p-sm">
+                        <code className="flex-1 text-sm">
+                          {revealedPasswords.get(password.id)}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleCopyPassword(password.id)}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="flex gap-sm pt-sm">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleReveal(password.id)}
+                        disabled={revealingId === password.id}
+                        className="flex-1"
+                      >
+                        {revealingId === password.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : revealedPasswords.has(password.id) ? (
+                          <>
+                            <EyeOff className="mr-xs h-3 w-3" />
+                            {t('common.actions.hide')}
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="mr-xs h-3 w-3" />
+                            {t('common.actions.reveal')}
+                          </>
+                        )}
+                      </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleCopyPassword(password.id)}
+                        onClick={() => setSharingPassword(password)}
+                        title={t('pages.sharePassword.title')}
+                        aria-label={t('pages.sharePassword.title')}
                       >
-                        <Copy className="h-3 w-3" />
+                        <Share2 className="h-3 w-3" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(password)}
+                        title={t('common.actions.edit')}
+                        aria-label={t('common.actions.edit')}
+                      >
+                        <Pencil className="h-3 w-3" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(password.id)}
+                        title={t('common.actions.delete')}
+                        aria-label={t('common.actions.delete')}
+                      >
+                        <Trash2
+                          className="h-3 w-3 text-destructive"
+                          aria-hidden="true"
+                        />
                       </Button>
                     </div>
-                  )}
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleReveal(password.id)}
-                      disabled={revealingId === password.id}
-                      className="flex-1"
-                    >
-                      {revealingId === password.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : revealedPasswords.has(password.id) ? (
-                        <>
-                          <EyeOff className="mr-1 h-3 w-3" />
-                          {t('common.actions.hide')}
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="mr-1 h-3 w-3" />
-                          {t('common.actions.reveal')}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setSharingPassword(password)}
-                      title={t('pages.sharePassword.title')}
-                      aria-label={t('pages.sharePassword.title')}
-                    >
-                      <Share2 className="h-3 w-3" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(password)}
-                      title={t('common.actions.edit')}
-                      aria-label={t('common.actions.edit')}
-                    >
-                      <Pencil className="h-3 w-3" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(password.id)}
-                      title={t('common.actions.delete')}
-                      aria-label={t('common.actions.delete')}
-                    >
-                      <Trash2 className="h-3 w-3 text-destructive" aria-hidden="true" />
-                    </Button>
+                    <div className="text-xs">
+                      {t('common.fields.updatedAt')}{' '}
+                      {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
+                    </div>
                   </div>
-
-                  <div className="text-xs">
-                    {t('common.fields.updatedAt')}{' '}
-                    {formatDate(password.updated_at, 'dd/MM/yyyy HH:mm')}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredPasswords.length === 0 && (
@@ -467,8 +548,8 @@ export default function Passwords() {
                   : t('pages.passwords.newDesc')}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={rhfHandleSubmit(onFormSubmit)} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={rhfHandleSubmit(onFormSubmit)} className="space-y-md">
+              <div className="space-y-sm">
                 <Label htmlFor="title">{t('common.fields.title')} *</Label>
                 <Input
                   id="title"
@@ -480,7 +561,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="site">{t('common.fields.site')}</Label>
                 <Input
                   id="site"
@@ -493,7 +574,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="username">{t('common.fields.username')} *</Label>
                 <Input
                   id="username"
@@ -505,7 +586,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">
                     {t('auth.login.password')} {selectedPassword ? '' : '*'}
@@ -515,9 +596,9 @@ export default function Passwords() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowGenerator(!showGenerator)}
-                    className="h-auto px-2 py-1 text-xs"
+                    className="h-auto px-sm py-xs text-xs"
                   >
-                    <Wand2 className="mr-1 h-3 w-3" />
+                    <Wand2 className="mr-xs h-3 w-3" />
                     {showGenerator
                       ? t('pages.passwords.hideGenerator')
                       : t('pages.passwords.generatePassword')}
@@ -544,7 +625,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="category">{t('common.fields.category')} *</Label>
                 <Select
                   value={watch('category')}
@@ -566,7 +647,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="notes">{t('common.fields.notes')}</Label>
                 <Textarea
                   id="notes"
@@ -579,7 +660,7 @@ export default function Passwords() {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-sm">
                 <Button
                   type="button"
                   variant="outline"
@@ -590,7 +671,7 @@ export default function Passwords() {
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                       {t('common.actions.saving')}
                     </>
                   ) : (
