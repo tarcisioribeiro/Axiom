@@ -107,12 +107,28 @@ class AuthService {
     permissions: Permission[];
     is_superuser: boolean;
   }> {
-    const response = await apiClient.get<{
+    let response: {
       username: string;
       permissions: string[];
       is_staff: boolean;
       is_superuser: boolean;
-    }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
+    };
+
+    try {
+      response = await apiClient.get<{
+        username: string;
+        permissions: string[];
+        is_staff: boolean;
+        is_superuser: boolean;
+      }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
+    } catch (error) {
+      // Backend retorna 403 para superusuários neste endpoint.
+      // Tratamos isso como sinal de que o usuário é superusuário.
+      if ((error as Error).name === 'PermissionError') {
+        return { permissions: [], is_superuser: true };
+      }
+      throw error;
+    }
 
     if (response.is_superuser) {
       return { permissions: [], is_superuser: true };

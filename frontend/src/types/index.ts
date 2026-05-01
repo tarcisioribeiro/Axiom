@@ -150,6 +150,20 @@ export interface AgentStatus {
   models: string[];
 }
 
+export interface AgentStreamToken {
+  token: string;
+  done?: false;
+}
+
+export interface AgentStreamDone {
+  done: true;
+  agent: string;
+  sources: string[];
+  query_id: string;
+}
+
+export type AgentStreamEvent = AgentStreamToken | AgentStreamDone;
+
 export interface Permission {
   app_label: string;
   codename: string;
