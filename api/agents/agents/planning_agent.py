@@ -1,9 +1,11 @@
 from typing import Any
 
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
 from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
     "rotina",
@@ -53,10 +55,31 @@ class PlanningAgent(BaseAgent):
         )
 
         user = User.objects.get(pk=ctx.user_id)
-        summary = get_routine_summary(user, days=7)
-        missed = get_top_missed_routines(user, days=7)
+        now = timezone.now().date()
+
+        # Detect temporal intent; explicit metadata date_from takes precedence.
+        temporal = (
+            parse_temporal_intent(ctx.query, now)
+            if not ctx.metadata.get("date_from")
+            else None
+        )
+
+        if temporal:
+            t_start, t_end = temporal
+            summary = get_routine_summary(user, start=t_start, end=t_end)
+            missed = get_top_missed_routines(user, start=t_start, end=t_end)
+            # Pending tasks are always "today" — not meaningful for past periods.
+            pending_today: list[dict[str, Any]] = []
+            sources_label = (
+                f"Rotinas {t_start.strftime('%d/%m')}–{t_end.strftime('%d/%m/%Y')}"
+            )
+        else:
+            summary = get_routine_summary(user, days=7)
+            missed = get_top_missed_routines(user, days=7)
+            pending_today = get_today_pending_tasks(user)
+            sources_label = "Tarefas e rotinas — últimos 7 dias"
+
         goals = get_active_goals(user)
-        pending_today = get_today_pending_tasks(user)
 
         return {
             "system_prompt": BASE_SYSTEM_PROMPT,
@@ -64,7 +87,8 @@ class PlanningAgent(BaseAgent):
             "missed_routines": missed,
             "goals": goals,
             "pending_today": pending_today,
-            "sources": ["Tarefas e rotinas — últimos 7 dias"],
+            "is_historical": temporal is not None,
+            "sources": [sources_label],
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
@@ -93,12 +117,15 @@ class PlanningAgent(BaseAgent):
             or "  Nenhuma meta ativa."
         )
 
-        pending_block = (
-            "\n".join(
-                f"  - {t['name']} ({t['category']})" for t in data["pending_today"]
+        pending_section = ""
+        if not data["is_historical"]:
+            pending_block = (
+                "\n".join(
+                    f"  - {t['name']} ({t['category']})" for t in data["pending_today"]
+                )
+                or "  Todas as tarefas de hoje já foram tratadas."
             )
-            or "  Todas as tarefas de hoje já foram tratadas."
-        )
+            pending_section = f"\nPendente hoje:\n{pending_block}\n"
 
         history_block = ""
         if ctx.history:
@@ -109,14 +136,13 @@ class PlanningAgent(BaseAgent):
             )
 
         return (
-            f"Resumo de rotinas — últimos 7 dias:\n"
+            f"Resumo de rotinas — {s['start']} a {s['end']}:\n"
             f"{summary_block}\n\n"
             f"Rotinas com mais falhas:\n"
             f"{missed_block}\n\n"
             f"Metas ativas:\n"
-            f"{goals_block}\n\n"
-            f"Pendente hoje:\n"
-            f"{pending_block}\n"
+            f"{goals_block}\n"
+            f"{pending_section}"
             f"{history_block}\n"
             f"Pergunta: {ctx.query}\n\n"
             "Seja encorajador mas realista. "

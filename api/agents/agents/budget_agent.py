@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
 from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
     "orçamento",
@@ -46,27 +47,63 @@ class BudgetAgent(BaseAgent):
         )
 
         user = User.objects.get(pk=ctx.user_id)
-        budgets = get_budget_status(user)
-        days_remaining = get_days_remaining_in_month()
-
         now = timezone.now().date()
+
+        # Detect temporal intent; explicit metadata date_from takes precedence.
+        temporal = (
+            parse_temporal_intent(ctx.query, now)
+            if not ctx.metadata.get("date_from")
+            else None
+        )
+
+        if temporal:
+            exp_start, exp_end = temporal
+            target_year = exp_start.year
+            target_month = exp_start.month
+            is_historical = exp_end < now
+            budgets = get_budget_status(
+                user,
+                year=target_year,
+                month=target_month,
+                expense_start=exp_start,
+                expense_end=exp_end,
+            )
+            period_label = (
+                f"{exp_start.strftime('%d/%m')}–{exp_end.strftime('%d/%m/%Y')}"
+            )
+            month_label = calendar.month_abbr[target_month] + "/" + str(target_year)
+        else:
+            target_year = now.year
+            target_month = now.month
+            is_historical = False
+            budgets = get_budget_status(user)
+            month_label = now.strftime("%B/%Y")
+            period_label = month_label
+
         total_days = calendar.monthrange(now.year, now.month)[1]
         days_elapsed = now.day
 
         critical = [b for b in budgets if b["percentage"] >= 80]
         overbudget = [b for b in budgets if b["overbudget"]]
 
-        projections = []
-        for b in budgets[:5]:
-            projected = get_projected_end_of_month(b["spent"], days_elapsed, total_days)
-            projections.append(
-                {
-                    "category": b["category"],
-                    "projected": projected,
-                    "limit": b["limit"],
-                    "will_exceed": projected > b["limit"],
-                }
-            )
+        # Projections are only meaningful for the current (ongoing) month.
+        projections: list[dict[str, Any]] = []
+        if not is_historical:
+            days_remaining = get_days_remaining_in_month()
+            for b in budgets[:5]:
+                projected = get_projected_end_of_month(
+                    b["spent"], days_elapsed, total_days
+                )
+                projections.append(
+                    {
+                        "category": b["category"],
+                        "projected": projected,
+                        "limit": b["limit"],
+                        "will_exceed": projected > b["limit"],
+                    }
+                )
+        else:
+            days_remaining = 0
 
         return {
             "system_prompt": BASE_SYSTEM_PROMPT,
@@ -77,13 +114,15 @@ class BudgetAgent(BaseAgent):
             "days_remaining": days_remaining,
             "days_elapsed": days_elapsed,
             "total_days": total_days,
-            "month": now.strftime("%B/%Y"),
-            "sources": [f"Orçamentos {now.strftime('%B/%Y')}"],
+            "month": month_label,
+            "period_label": period_label,
+            "is_historical": is_historical,
+            "sources": [f"Orçamentos {month_label} — despesas {period_label}"],
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
         if not data["budgets"]:
-            budget_block = "  Nenhum orçamento configurado para este mês."
+            budget_block = "  Nenhum orçamento configurado para este período."
         else:
             lines = []
             for b in data["budgets"]:
@@ -99,14 +138,19 @@ class BudgetAgent(BaseAgent):
                 )
             budget_block = "\n".join(lines)
 
-        projection_block = ""
-        for p in data["projections"]:
-            if p["will_exceed"]:
-                excesso = p["projected"] - p["limit"]
-                projection_block += (
-                    f"\n  ⚠️ {p['category']}: projeção R$ {p['projected']:.2f} "
-                    f"(excede em R$ {excesso:.2f})"
-                )
+        # Projections block (only for current month)
+        if data["projections"]:
+            proj_lines = []
+            for p in data["projections"]:
+                if p["will_exceed"]:
+                    excesso = p["projected"] - p["limit"]
+                    proj_lines.append(
+                        f"  ⚠️ {p['category']}: projeção R$ {p['projected']:.2f}"
+                        f" (excede em R$ {excesso:.2f})"
+                    )
+            projection_block = "\n".join(proj_lines) if proj_lines else ""
+        else:
+            projection_block = ""
 
         history_block = ""
         if ctx.history:
@@ -116,14 +160,30 @@ class BudgetAgent(BaseAgent):
                 f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
             )
 
-        no_breach = "  Nenhuma categoria vai estourar no ritmo atual."
+        header = (
+            f"Mês: {data['month']}\n" f"Período das despesas: {data['period_label']}\n"
+            if data["is_historical"]
+            else (
+                f"Mês: {data['month']}\n"
+                f"Dia: {data['days_elapsed']} de {data['total_days']}"
+                f" ({data['days_remaining']} dias restantes)\n"
+            )
+        )
+
+        _no_breach = "  Nenhuma categoria vai estourar no ritmo atual."
+        proj_section = (
+            ""
+            if data["is_historical"]
+            else (
+                f"\nProjeções de estouro (ritmo atual):\n"
+                f"{projection_block or _no_breach}\n"
+            )
+        )
+
         return (
-            f"Mês: {data['month']}\n"
-            f"Dia: {data['days_elapsed']} de {data['total_days']}"
-            f" ({data['days_remaining']} dias restantes)\n\n"
-            f"Orçamentos:\n{budget_block}\n\n"
-            f"Projeções de estouro (ritmo atual):\n"
-            f"{projection_block or no_breach}\n"
+            f"{header}\n"
+            f"Orçamentos:\n{budget_block}\n"
+            f"{proj_section}"
             f"{history_block}\n"
             f"Pergunta: {ctx.query}\n\n"
             "Seja direto sobre desvios. "

@@ -188,6 +188,7 @@ export const API_CONFIG = {
 
     // Agents
     AGENTS_ASK: '/api/v1/agents/ask/',
+    AGENTS_STREAM: '/api/v1/agents/stream/',
     AGENTS_HISTORY: '/api/v1/agents/history/',
     AGENTS_SESSIONS: '/api/v1/agents/sessions/',
     AGENTS_STATUS: '/api/v1/agents/status/',

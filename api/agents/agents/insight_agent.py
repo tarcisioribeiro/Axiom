@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
 from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
     "resumo",
@@ -23,7 +24,7 @@ _TRIGGER_WORDS = [
 
 
 class InsightAgent(BaseAgent):
-    """Orquestrador — sintetiza dados de todos os domínios."""
+    """Orchestrator — synthesises data from all domains."""
 
     name = "insight"
     description = "Briefing geral: síntese financeira, orçamentos e rotinas"
@@ -50,23 +51,47 @@ class InsightAgent(BaseAgent):
 
         user = User.objects.get(pk=ctx.user_id)
         now = timezone.now()
+        today = now.date()
 
-        # Financeiro
-        month_totals = get_current_month_totals(user)
+        # Detect temporal intent; explicit metadata date_from takes precedence.
+        temporal = (
+            parse_temporal_intent(ctx.query, today)
+            if not ctx.metadata.get("date_from")
+            else None
+        )
+
+        # Always show current account balances (point-in-time, not date-filtered).
         balances = get_total_balances(user)
         total_balance = sum(float(b["current_balance"]) for b in balances)
 
-        # Orçamento
-        budgets = get_budget_status(user)
+        if temporal:
+            fin_start, fin_end = temporal
+            month_totals = get_current_month_totals(user, start=fin_start, end=fin_end)
+            # Use the month of the temporal start for budget definitions.
+            budgets = get_budget_status(
+                user,
+                year=fin_start.year,
+                month=fin_start.month,
+                expense_start=fin_start,
+                expense_end=fin_end,
+            )
+            planning = get_routine_summary(user, start=fin_start, end=fin_end)
+            # Upcoming bills are future-facing — skip for past periods.
+            upcoming_bills: list[dict[str, Any]] = []
+            days_remaining = 0
+            period_label = (
+                f"{fin_start.strftime('%d/%m')}–{fin_end.strftime('%d/%m/%Y')}"
+            )
+        else:
+            month_totals = get_current_month_totals(user)
+            budgets = get_budget_status(user)
+            planning = get_routine_summary(user, days=7)
+            upcoming_bills = get_fixed_expenses_upcoming(user, days=15)
+            days_remaining = get_days_remaining_in_month()
+            period_label = now.strftime("%B/%Y")
+
         overbudget = [b for b in budgets if b["overbudget"]]
         critical = [b for b in budgets if b["percentage"] >= 80 and not b["overbudget"]]
-        days_remaining = get_days_remaining_in_month()
-
-        # Previsão próximos 15 dias
-        upcoming_bills = get_fixed_expenses_upcoming(user, days=15)
-
-        # Planejamento
-        planning = get_routine_summary(user, days=7)
 
         return {
             "system_prompt": BASE_SYSTEM_PROMPT,
@@ -78,14 +103,15 @@ class InsightAgent(BaseAgent):
             "upcoming_bills": upcoming_bills,
             "planning": planning,
             "days_remaining": days_remaining,
-            "month": now.strftime("%B/%Y"),
+            "period_label": period_label,
+            "is_historical": temporal is not None,
             "sources": ["Dashboard financeiro", "Orçamentos", "Rotinas"],
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
         mt = data["month_totals"]
         fin_block = (
-            f"**Financeiro ({data['month']}):**\n"
+            f"**Financeiro ({data['period_label']}):**\n"
             f"  - Receitas: R$ {mt['revenues']:.2f}\n"
             f"  - Despesas: R$ {mt['expenses']:.2f}\n"
             f"  - Resultado: R$ {mt['balance']:.2f} "
@@ -119,9 +145,15 @@ class InsightAgent(BaseAgent):
 
         p = data["planning"]
         planning_block = (
-            f"\n\n**Rotinas (últimos 7 dias):** "
+            f"\n\n**Rotinas ({p['start']}–{p['end']}):** "
             f"{p['completion_rate']}% de cumprimento "
             f"({p['completed']}/{p['total']} tarefas)"
+        )
+
+        days_block = (
+            f"\n\nDias restantes no mês: {data['days_remaining']}"
+            if not data["is_historical"]
+            else ""
         )
 
         history_block = ""
@@ -132,12 +164,10 @@ class InsightAgent(BaseAgent):
                 f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
             )
 
-        return f"""Dados do usuário — {data['month']}:
+        return f"""Dados do usuário — {data['period_label']}:
 
 {fin_block}
-{budget_block}{bills_block}{planning_block}
-
-Dias restantes no mês: {data['days_remaining']}
+{budget_block}{bills_block}{planning_block}{days_block}
 {history_block}
 Pergunta: {ctx.query}
 

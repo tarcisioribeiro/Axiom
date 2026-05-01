@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any
 
 from django.contrib.auth.models import User
@@ -6,16 +6,27 @@ from django.db.models import Count
 from django.utils import timezone
 
 
-def get_routine_summary(user: User, days: int = 7) -> dict[str, Any]:
-    """Resumo de cumprimento de rotinas nos últimos N dias."""
+def get_routine_summary(
+    user: User,
+    days: int = 7,
+    start: date | None = None,
+    end: date | None = None,
+) -> dict[str, Any]:
+    """Summary of routine completion for a period.
+
+    If start/end are provided they take precedence over days.
+    """
     from personal_planning.models import TaskInstance
 
-    end = timezone.now().date()
-    start = end - timedelta(days=days - 1)
+    if start is not None and end is not None:
+        period_start, period_end = start, end
+    else:
+        period_end = timezone.now().date()
+        period_start = period_end - timedelta(days=days - 1)
 
     instances = TaskInstance.objects.filter(
         owner__user=user,
-        scheduled_date__range=(start, end),
+        scheduled_date__range=(period_start, period_end),
         is_deleted=False,
     ).values("status")
 
@@ -27,28 +38,36 @@ def get_routine_summary(user: User, days: int = 7) -> dict[str, Any]:
     completion_rate = (completed / total * 100) if total > 0 else 0
 
     return {
-        "period_days": days,
+        "period_days": (period_end - period_start).days + 1,
         "total": total,
         "completed": completed,
         "skipped": skipped,
         "pending": pending,
         "completion_rate": round(completion_rate, 1),
-        "start": start.strftime("%d/%m"),
-        "end": end.strftime("%d/%m/%Y"),
+        "start": period_start.strftime("%d/%m"),
+        "end": period_end.strftime("%d/%m/%Y"),
     }
 
 
-def get_top_missed_routines(user: User, days: int = 7) -> list[dict[str, Any]]:
-    """Rotinas com maior taxa de falha."""
+def get_top_missed_routines(
+    user: User,
+    days: int = 7,
+    start: date | None = None,
+    end: date | None = None,
+) -> list[dict[str, Any]]:
+    """Routines with the highest failure count in the period."""
     from personal_planning.models import TaskInstance
 
-    end = timezone.now().date()
-    start = end - timedelta(days=days - 1)
+    if start is not None and end is not None:
+        period_start, period_end = start, end
+    else:
+        period_end = timezone.now().date()
+        period_start = period_end - timedelta(days=days - 1)
 
     missed = (
         TaskInstance.objects.filter(
             owner__user=user,
-            scheduled_date__range=(start, end),
+            scheduled_date__range=(period_start, period_end),
             is_deleted=False,
         )
         .exclude(status="completed")
@@ -68,7 +87,7 @@ def get_top_missed_routines(user: User, days: int = 7) -> list[dict[str, Any]]:
 
 
 def get_active_goals(user: User) -> list[dict[str, Any]]:
-    """Metas ativas com progresso."""
+    """Active goals with progress."""
     from personal_planning.models import Goal
 
     goals = Goal.objects.filter(
