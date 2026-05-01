@@ -23,13 +23,20 @@ class AgentResponse:
 class BaseAgent(ABC):
     name: str
     description: str
+    # Modelos por provider — subclasses podem sobrescrever individualmente.
+    # Ollama: usa o env var OLLAMA_MODEL como fallback automático se o modelo não
+    # estiver instalado (tratado em LLMClient._ollama_chat/_ollama_stream).
     ollama_model: str = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
     anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+    groq_model: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     def get_model(self) -> str:
         """Retorna o modelo adequado para o provider configurado."""
-        if os.getenv("LLM_PROVIDER", "ollama") == "anthropic":
+        provider = os.getenv("LLM_PROVIDER", "ollama")
+        if provider == "anthropic":
             return self.anthropic_model
+        if provider == "groq":
+            return self.groq_model
         return self.ollama_model
 
     @abstractmethod
