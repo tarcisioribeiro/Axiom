@@ -6,7 +6,10 @@ DEFAULT_CONFIGS: list[dict] = [
         "key": "LLM_PROVIDER",
         "category": "llm",
         "label": "Provedor LLM",
-        "description": "Provedor de linguagem: 'ollama' (local) ou 'anthropic' (nuvem).",  # noqa: E501
+        "description": (
+            "Provedor de linguagem: 'ollama' (local), "
+            "'groq' (nuvem, rápido e gratuito) ou 'anthropic' (nuvem, Claude)."
+        ),
         "is_secret": False,
         "requires_restart": True,
         "is_editable": True,
@@ -52,6 +55,30 @@ DEFAULT_CONFIGS: list[dict] = [
         "category": "llm",
         "label": "Timeout Embedding (segundos)",
         "description": "Tempo máximo de espera por embedding.",
+        "is_secret": False,
+        "requires_restart": False,
+        "is_editable": True,
+    },
+    {
+        "key": "GROQ_API_KEY",
+        "category": "llm",
+        "label": "Chave API Groq",
+        "description": (
+            "Chave de API para uso com Groq "
+            "(obrigatório se LLM_PROVIDER=groq). Obtenha em console.groq.com."
+        ),
+        "is_secret": True,
+        "requires_restart": False,
+        "is_editable": True,
+    },
+    {
+        "key": "GROQ_MODEL",
+        "category": "llm",
+        "label": "Modelo Groq",
+        "description": (
+            "Modelo Groq a utilizar. Opções: llama-3.1-8b-instant (rápido), "
+            "llama-3.3-70b-versatile (melhor qualidade), gemma2-9b-it."
+        ),
         "is_secret": False,
         "requires_restart": False,
         "is_editable": True,

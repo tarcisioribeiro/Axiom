@@ -85,6 +85,7 @@ def get_expected_revenues(user: User, days: int = 30) -> list[dict[str, Any]]:
             date__gte=cutoff,
             is_deleted=False,
             recurring=True,
+            related_transfer__isnull=True,
         )
         .values("description", "category", "source")
         .annotate(avg_value=Avg("value"))

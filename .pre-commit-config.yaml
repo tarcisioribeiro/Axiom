@@ -63,6 +63,8 @@ repos:
           - cryptography==46.0.5
           - python-dotenv==1.1.1
           - rapidfuzz==3.14.3
+          - pgvector==0.3.3
+          - psycopg2-binary==2.9.10
 
   # Commit message linting
   - repo: local
