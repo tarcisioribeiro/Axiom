@@ -566,7 +566,13 @@ class LiteraryTypeGoal(BaseModel):
     class Meta:
         verbose_name = "Meta por Tipo Literário"
         verbose_name_plural = "Metas por Tipo Literário"
-        unique_together = [("reading_goal", "literary_type")]
+        constraints = [
+            models.UniqueConstraint(
+                condition=models.Q(deleted_at__isnull=True),
+                fields=("reading_goal", "literary_type"),
+                name="unique_literary_type_goal_active",
+            )
+        ]
         ordering = ["literary_type"]
 
     def __str__(self):
