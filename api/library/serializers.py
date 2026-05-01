@@ -558,6 +558,7 @@ class LiteraryTypeGoalCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LiteraryTypeGoal
         fields = ["id", "reading_goal", "literary_type", "goal_count"]
+        validators: list = []
 
     def validate(self, data):
         reading_goal = data.get("reading_goal")
@@ -591,7 +592,11 @@ class ReadingGoalSerializer(serializers.ModelSerializer):
     pages_read_this_year = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
     pages_progress_percentage = serializers.SerializerMethodField()
-    literary_type_goals = LiteraryTypeGoalSerializer(many=True, read_only=True)
+    literary_type_goals = serializers.SerializerMethodField()
+
+    def get_literary_type_goals(self, obj):
+        qs = obj.literary_type_goals.filter(deleted_at__isnull=True)
+        return LiteraryTypeGoalSerializer(qs, many=True).data
 
     class Meta:
         model = ReadingGoal

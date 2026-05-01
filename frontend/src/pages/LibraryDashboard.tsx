@@ -558,6 +558,7 @@ export default function LibraryDashboard() {
                               />
                               <Bar
                                 dataKey="value"
+                                name={label}
                                 radius={[4, 4, 0, 0]}
                                 maxBarSize={40}
                               >
