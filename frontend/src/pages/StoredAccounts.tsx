@@ -6,19 +6,20 @@ import {
   EyeOff,
   Loader2,
   Copy,
-  Building2,
   Wallet,
+  Building2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StoredAccountForm } from '@/components/security/StoredAccountForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ import { Input } from '@/components/ui/input';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { copyToClipboard } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { membersService } from '@/services/members-service';
 import { storedAccountsService } from '@/services/stored-accounts-service';
@@ -41,6 +42,46 @@ import type {
   Member,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+type AccountTypeConfig = { badge: string; avatar: string; border: string };
+
+const ACCOUNT_TYPE_CONFIG: Record<string, AccountTypeConfig> = {
+  CC: {
+    badge: 'bg-primary/10 text-primary border-primary/25',
+    avatar: 'bg-primary/15 text-primary ring-1 ring-primary/25',
+    border: 'border-l-primary/60',
+  },
+  CS: {
+    badge: 'bg-success/10 text-success border-success/25',
+    avatar: 'bg-success/15 text-success ring-1 ring-success/25',
+    border: 'border-l-success/60',
+  },
+  CP: {
+    badge: 'bg-info/10 text-info border-info/25',
+    avatar: 'bg-info/15 text-info ring-1 ring-info/25',
+    border: 'border-l-info/60',
+  },
+  CI: {
+    badge: 'bg-warning/10 text-warning border-warning/25',
+    avatar: 'bg-warning/15 text-warning ring-1 ring-warning/25',
+    border: 'border-l-warning/60',
+  },
+  OTHER: {
+    badge: '',
+    avatar: 'bg-muted text-muted-foreground ring-1 ring-border',
+    border: 'border-l-border',
+  },
+};
+
+const DEFAULT_ACCOUNT_TYPE: AccountTypeConfig = ACCOUNT_TYPE_CONFIG.OTHER;
+
+function getInstitutionInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
 export default function StoredAccounts() {
   const [accounts, setAccounts] = useState<StoredBankAccount[]>([]);
@@ -126,14 +167,12 @@ export default function StoredAccounts() {
 
   const handleReveal = async (id: number) => {
     if (revealedData.has(id)) {
-      // Ocultar senhas
       const newMap = new Map(revealedData);
       newMap.delete(id);
       setRevealedData(newMap);
       return;
     }
 
-    // Confirmação extra para revelar senhas
     const confirmed = await showConfirm({
       title: t('pages.storedAccounts.revealTitle'),
       description: t('pages.storedAccounts.revealDesc'),
@@ -176,11 +215,9 @@ export default function StoredAccounts() {
     try {
       setIsSubmitting(true);
       if (selectedAccount) {
-        // Remove campos vazios (não atualizar dados sensíveis vazios)
         const updateData = { ...data };
         if (!updateData.password) delete updateData.password;
         if (!updateData.digital_password) delete updateData.digital_password;
-
         await storedAccountsService.update(selectedAccount.id, updateData);
         toast({
           title: t('pages.storedAccounts.updated'),
@@ -213,117 +250,6 @@ export default function StoredAccounts() {
       acc.account_number_masked?.includes(searchTerm)
   );
 
-  const getFinanceAccountName = (id?: number) => {
-    if (!id) return t('pages.storedAccounts.noFinanceAccount');
-    const account = financeAccounts.find((a) => a.id === id);
-    return account ? account.account_name : 'N/A';
-  };
-
-  const columns: Column<StoredBankAccount>[] = [
-    {
-      key: 'name',
-      label: t('pages.storedAccounts.columns.name'),
-      render: (acc) => (
-        <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4" />
-          <span className="font-medium">{acc.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'institution',
-      label: t('pages.storedAccounts.columns.institution'),
-      render: (acc) => (
-        <span className="text-sm">
-          {translate('institutions', acc.institution_name)}
-        </span>
-      ),
-    },
-    {
-      key: 'type',
-      label: t('pages.storedAccounts.columns.type'),
-      render: (acc) => (
-        <Badge variant="outline">
-          {t(`pages.storedAccounts.accountTypes.${acc.account_type}`, {
-            defaultValue: acc.account_type,
-          })}
-        </Badge>
-      ),
-    },
-    {
-      key: 'account_number',
-      label: t('pages.storedAccounts.columns.number'),
-      render: (acc) => (
-        <span className="font-mono text-sm">{acc.account_number_masked}</span>
-      ),
-    },
-    {
-      key: 'agency',
-      label: t('pages.storedAccounts.columns.agency'),
-      align: 'center',
-      render: (acc) => <span className="font-mono text-sm">{acc.agency || '-'}</span>,
-    },
-    {
-      key: 'passwords',
-      label: t('pages.storedAccounts.columns.passwords'),
-      render: (acc) => {
-        const revealed = revealedData.get(acc.id);
-        if (revealed) {
-          return (
-            <div className="space-y-1 text-xs">
-              {revealed.password && (
-                <div className="flex items-center gap-2 font-mono">
-                  <span>{t('pages.storedAccounts.password1')}:</span>
-                  <span>{revealed.password}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      handleCopy(
-                        revealed.password!,
-                        t('pages.storedAccounts.password1')
-                      )
-                    }
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-              {revealed.password2 && (
-                <div className="flex items-center gap-2 font-mono">
-                  <span>{t('pages.storedAccounts.password2')}:</span>
-                  <span>{revealed.password2}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      handleCopy(
-                        revealed.password2!,
-                        t('pages.storedAccounts.password2')
-                      )
-                    }
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          );
-        }
-        return <span className="text-sm">***</span>;
-      },
-    },
-    {
-      key: 'finance_account',
-      label: t('pages.storedAccounts.columns.isFinancial'),
-      render: (acc) => (
-        <Badge variant="outline" className="text-xs">
-          {getFinanceAccountName(acc.finance_account ?? undefined)}
-        </Badge>
-      ),
-    },
-  ];
-
   return (
     <VaultGuard>
       <PageContainer>
@@ -346,58 +272,204 @@ export default function StoredAccounts() {
           />
         </div>
 
-        <DataTable
-          data={filteredAccounts}
-          columns={columns}
-          keyExtractor={(acc) => acc.id}
-          isLoading={isLoading}
-          emptyState={{
-            icon: <Building2 className="h-12 w-12 text-muted-foreground" />,
-            message: t('pages.storedAccounts.emptySearch'),
-          }}
-          actions={(acc) => (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleReveal(acc.id)}
-                disabled={revealingId === acc.id}
-              >
-                {revealingId === acc.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : revealedData.has(acc.id) ? (
-                  <>
-                    <EyeOff className="mr-1 h-3 w-3" />
-                    {t('common.actions.hide')}
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-1 h-3 w-3" />
-                    {t('common.actions.reveal')}
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(acc)}
-                aria-label={t('common.actions.edit')}
-                title={t('common.actions.edit')}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(acc.id)}
-                aria-label={t('common.actions.delete')}
-                title={t('common.actions.delete')}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-              </Button>
-            </div>
-          )}
-        />
+        {!isLoading && filteredAccounts.length === 0 ? (
+          <EmptyState
+            icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
+            message={
+              searchTerm
+                ? t('pages.storedAccounts.emptySearch')
+                : t('pages.storedAccounts.emptySearch')
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {filteredAccounts.map((acc) => {
+              const typeCfg =
+                ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
+              const revealed = revealedData.get(acc.id);
+              const initials = getInstitutionInitials(acc.institution_name);
+
+              return (
+                <Card
+                  key={acc.id}
+                  className={cn('overflow-hidden border-l-2', typeCfg.border)}
+                >
+                  <CardHeader className="pb-3">
+                    {/* Institution row */}
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold',
+                          typeCfg.avatar
+                        )}
+                      >
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold leading-tight">
+                          {acc.name}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {translate('institutions', acc.institution_name)}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className={cn('shrink-0 text-xs', typeCfg.badge)}
+                      >
+                        {acc.account_type_display}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-3 pt-0">
+                    {/* Account details */}
+                    <div className="space-y-1.5 rounded-lg bg-muted/40 px-3 py-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {t('pages.storedAccounts.columns.number')}
+                        </span>
+                        <span className="font-mono">{acc.account_number_masked}</span>
+                      </div>
+                      {acc.agency && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {t('pages.storedAccounts.columns.agency')}
+                          </span>
+                          <span className="font-mono">{acc.agency}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Passwords section */}
+                    {revealed ? (
+                      <div className="space-y-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                        {revealed.password && (
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                              {t('pages.storedAccounts.password1')}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono">{revealed.password}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                onClick={() =>
+                                  handleCopy(
+                                    revealed.password!,
+                                    t('pages.storedAccounts.password1')
+                                  )
+                                }
+                                aria-label={t('common.actions.copy')}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        {revealed.password2 && (
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                              {t('pages.storedAccounts.password2')}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono">{revealed.password2}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                                onClick={() =>
+                                  handleCopy(
+                                    revealed.password2!,
+                                    t('pages.storedAccounts.password2')
+                                  )
+                                }
+                                aria-label={t('common.actions.copy')}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-muted/40 px-3 py-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          {t('pages.storedAccounts.columns.passwords')}
+                        </p>
+                        <p className="mt-0.5 font-mono text-sm text-muted-foreground">
+                          ••••••••
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Footer: finance link + actions */}
+                    <div className="flex items-center justify-between gap-2 pt-1">
+                      <div className="min-w-0">
+                        {acc.finance_account_name && (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {acc.finance_account_name}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-0.5">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleReveal(acc.id)}
+                          disabled={revealingId === acc.id}
+                          title={
+                            revealed
+                              ? t('common.actions.hide')
+                              : t('common.actions.reveal')
+                          }
+                          aria-label={
+                            revealed
+                              ? t('common.actions.hide')
+                              : t('common.actions.reveal')
+                          }
+                        >
+                          {revealingId === acc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : revealed ? (
+                            <EyeOff className="h-3.5 w-3.5" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEdit(acc)}
+                          title={t('common.actions.edit')}
+                          aria-label={t('common.actions.edit')}
+                        >
+                          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleDelete(acc.id)}
+                          title={t('common.actions.delete')}
+                          aria-label={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="h-3.5 w-3.5 text-destructive"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
