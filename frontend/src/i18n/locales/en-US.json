@@ -1922,6 +1922,12 @@
         "planning_agent": "Planning",
         "library_agent": "Library",
         "insight_agent": "Insights"
+      },
+      "streaming": {
+        "processing": "Agent is processing...",
+        "typing": "typing",
+        "sources": "Sources",
+        "error": "Error receiving agent response"
       }
     }
   }

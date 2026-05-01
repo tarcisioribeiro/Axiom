@@ -13,6 +13,7 @@ Documentação técnica do backend Django REST Framework do MindLedger.
 - **[Middleware e Signals](middleware_signals.md)** — Pipeline de requisições e automação por eventos
 - **[Criptografia](criptography.md)** — FieldEncryption (Fernet), campos sensíveis e rotação de chaves
 - **[Comandos de Management](management_commands.md)** — Comandos customizados Django
+- **[Sistema de Agentes de IA](agents.md)** — Pipeline completo dos agentes LLM, roteador, memória, RAG e streaming
 
 ## Padrões essenciais
 

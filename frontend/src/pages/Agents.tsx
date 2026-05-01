@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAgentStream } from '@/hooks/use-agent-stream';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -85,7 +86,6 @@ function MessageBubble({
       transition={{ duration: 0.18 }}
       className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}
     >
-      {/* Avatar */}
       <div
         className={cn(
           'mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
@@ -101,7 +101,6 @@ function MessageBubble({
         )}
       </div>
 
-      {/* Content */}
       <div className={cn('flex max-w-[75%] flex-col gap-1', isUser && 'items-end')}>
         {!isUser && message.agent_name && (
           <span
@@ -142,6 +141,89 @@ function MessageBubble({
   );
 }
 
+function StreamingBubble({
+  text,
+  isStreaming,
+  agentName,
+  sources,
+  getAgentLabel,
+}: {
+  text: string;
+  isStreaming: boolean;
+  agentName: string | null;
+  sources: string[];
+  getAgentLabel: (name: string | null) => string;
+}) {
+  const { t } = useTranslation();
+  const agentColorClass = agentName
+    ? (AGENT_COLORS[agentName] ?? 'bg-secondary text-secondary-foreground')
+    : 'bg-secondary text-secondary-foreground';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18 }}
+      className="flex gap-3"
+    >
+      <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        {isStreaming && !text ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <BotMessageSquare className="h-4 w-4" />
+        )}
+      </div>
+
+      <div className="flex max-w-[75%] flex-col gap-1">
+        {agentName && (
+          <span
+            className={cn(
+              'rounded-full px-2 py-0.5 text-xs font-medium',
+              agentColorClass
+            )}
+          >
+            {getAgentLabel(agentName)}
+          </span>
+        )}
+
+        <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-sm leading-relaxed text-foreground">
+          {!text && isStreaming ? (
+            <span className="text-muted-foreground">
+              {t('agents.streaming.processing')}
+            </span>
+          ) : (
+            <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 prose-code:rounded prose-code:bg-black/10 prose-code:px-1 prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+              {isStreaming && (
+                <span
+                  aria-hidden="true"
+                  className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[1px] animate-pulse bg-current align-middle"
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {!isStreaming && sources.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            <span className="text-[11px] text-muted-foreground/70">
+              {t('agents.streaming.sources')}:
+            </span>
+            {sources.map((src) => (
+              <span
+                key={src}
+                className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+              >
+                {src}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 function ThinkingBubble() {
   const { t } = useTranslation();
   return (
@@ -172,7 +254,16 @@ export default function Agents() {
   const [sessionId, setSessionId] = useState('default');
   const [sessions, setSessions] = useState<string[]>(['default']);
   const [query, setQuery] = useState('');
-  const [isPending, setIsPending] = useState(false);
+
+  const {
+    isStreaming,
+    accumulatedText,
+    currentAgent,
+    sources,
+    error,
+    send: sendStream,
+    reset: resetStream,
+  } = useAgentStream();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -181,7 +272,6 @@ export default function Agents() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Status query
   const { data: status } = useQuery({
     queryKey: ['agents', 'status'],
     queryFn: () => agentService.getStatus(),
@@ -189,7 +279,6 @@ export default function Agents() {
     refetchInterval: 60_000,
   });
 
-  // History query
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['agents', 'history', sessionId],
     queryFn: () => agentService.getHistory(sessionId),
@@ -198,11 +287,46 @@ export default function Agents() {
 
   const messages = historyData?.results ?? [];
 
+  // Scroll on new messages, streaming tokens, or while pending
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isPending, scrollToBottom]);
+  }, [messages, isStreaming, accumulatedText, scrollToBottom]);
 
-  // Auto-resize textarea
+  // Show error toast when streaming fails
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: t('agents.streaming.error'),
+        variant: 'destructive',
+      });
+    }
+  }, [error, toast, t]);
+
+  // After streaming ends, trigger history refetch then clear streaming state.
+  // awaitingHistoryRefresh gates the reset so it only fires once per response.
+  const prevIsStreaming = useRef(false);
+  const awaitingHistoryRefresh = useRef(false);
+  const prevMessageCount = useRef(0);
+
+  useEffect(() => {
+    if (prevIsStreaming.current && !isStreaming && !error) {
+      awaitingHistoryRefresh.current = true;
+      void queryClient.invalidateQueries({
+        queryKey: ['agents', 'history', sessionId],
+      });
+    }
+    prevIsStreaming.current = isStreaming;
+  }, [isStreaming, error, queryClient, sessionId]);
+
+  // Clear the streaming bubble once new history messages have loaded.
+  useEffect(() => {
+    if (awaitingHistoryRefresh.current && messages.length > prevMessageCount.current) {
+      awaitingHistoryRefresh.current = false;
+      resetStream();
+    }
+    prevMessageCount.current = messages.length;
+  }, [messages, resetStream]);
+
   const handleQueryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setQuery(e.target.value);
     const el = e.target;
@@ -212,28 +336,15 @@ export default function Agents() {
 
   const handleSend = async () => {
     const trimmed = query.trim();
-    if (!trimmed || isPending) return;
+    if (!trimmed || isStreaming) return;
 
     setQuery('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    setIsPending(true);
 
-    try {
-      await agentService.ask({ query: trimmed, session_id: sessionId });
-      await queryClient.invalidateQueries({
-        queryKey: ['agents', 'history', sessionId],
-      });
-    } catch {
-      toast({
-        title: 'Erro ao enviar mensagem',
-        description: 'Verifique se o LLM está disponível no painel admin.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsPending(false);
-    }
+    // Optimistically add the user message to history by invalidating after send
+    await sendStream(trimmed, sessionId);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -279,6 +390,12 @@ export default function Agents() {
 
   const sessionLabel = (id: string) => (id === 'default' ? 'Padrão' : id.toUpperCase());
 
+  const isLlmUnavailable = status !== undefined && !status.available;
+  const inputDisabled = isStreaming || isLlmUnavailable;
+
+  // Determine whether to show the streaming bubble (active stream OR just finished)
+  const showStreamingBubble = isStreaming || (accumulatedText.length > 0 && !error);
+
   return (
     <PageContainer>
       <div className="flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-xl border border-border bg-card">
@@ -304,7 +421,6 @@ export default function Agents() {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-2">
-            {/* Session selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground hover:bg-accent">
@@ -330,7 +446,6 @@ export default function Agents() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* New session */}
             <button
               onClick={() => newSessionMutation.mutate()}
               disabled={newSessionMutation.isPending}
@@ -345,7 +460,6 @@ export default function Agents() {
               {t('pages.agents.newSession')}
             </button>
 
-            {/* Clear history */}
             {messages.length > 0 && (
               <button
                 onClick={() => void handleClearHistory()}
@@ -372,7 +486,7 @@ export default function Agents() {
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : messages.length === 0 && !isPending ? (
+          ) : messages.length === 0 && !showStreamingBubble ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                 <BotMessageSquare className="h-7 w-7 text-muted-foreground" />
@@ -391,7 +505,17 @@ export default function Agents() {
                     agentLabel={getAgentLabel(msg.agent_name)}
                   />
                 ))}
-                {isPending && <ThinkingBubble key="thinking" />}
+                {showStreamingBubble && (
+                  <StreamingBubble
+                    key="streaming"
+                    text={accumulatedText}
+                    isStreaming={isStreaming}
+                    agentName={currentAgent}
+                    sources={sources}
+                    getAgentLabel={getAgentLabel}
+                  />
+                )}
+                {isStreaming && !accumulatedText && <ThinkingBubble key="thinking" />}
               </AnimatePresence>
             </div>
           )}
@@ -408,20 +532,17 @@ export default function Agents() {
               onChange={handleQueryChange}
               onKeyDown={handleKeyDown}
               placeholder={t('pages.agents.inputPlaceholder')}
-              disabled={isPending || (status !== undefined && !status.available)}
+              disabled={inputDisabled}
+              aria-label={t('pages.agents.inputPlaceholder')}
               className="max-h-40 flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
             />
             <button
               onClick={() => void handleSend()}
-              disabled={
-                !query.trim() ||
-                isPending ||
-                (status !== undefined && !status.available)
-              }
+              disabled={!query.trim() || inputDisabled}
               className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:bg-primary/90 disabled:opacity-40"
               aria-label={t('pages.agents.send')}
             >
-              {isPending ? (
+              {isStreaming ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />

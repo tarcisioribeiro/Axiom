@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -46,3 +47,24 @@ def ensure_bill_defaults(sender, instance, created, **kwargs):
             CreditCardBill.objects.filter(pk=instance.pk).update(
                 status="open", closed=False
             )
+
+
+@receiver(post_save, sender="credit_cards.CreditCardPurchase")
+def embed_credit_card_purchase(sender, instance, **kwargs):
+    from agents.services.embedding_service import generate_embedding_for_instance
+
+    source_title = f"{instance.category} — {instance.purchase_date}"
+
+    def _embed():
+        generate_embedding_for_instance(
+            instance,
+            domain="finance",
+            source_type="credit_card_bill",
+            content_fn=lambda i: (
+                f"Compra no cartão de R$ {i.total_value} em {i.category}"
+                f" — {i.merchant or i.description} em {i.purchase_date}"
+            ),
+            source_title=source_title,
+        )
+
+    transaction.on_commit(_embed)
