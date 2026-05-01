@@ -767,9 +767,13 @@ class ReadingGoalListCreateView(BaseListCreateView):
     queryset = ReadingGoal.objects.all()
 
     def get_queryset(self):
-        return ReadingGoal.objects.filter(
-            owner__user=self.request.user, deleted_at__isnull=True
-        ).select_related("owner")
+        return (
+            ReadingGoal.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
+            .select_related("owner")
+            .prefetch_related("literary_type_goals")
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -823,7 +827,7 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(
@@ -899,7 +903,7 @@ class LiteraryTypeGoalDetailView(BaseRetrieveUpdateDestroyView):
         )
 
     def perform_destroy(self, instance):
-        instance.deleted_at = instance.updated_at
+        instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user
         instance.save()
         log_activity(

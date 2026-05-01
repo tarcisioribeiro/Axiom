@@ -34,11 +34,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
-import { copyToClipboard } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { archivesService } from '@/services/archives-service';
 import { membersService } from '@/services/members-service';
 import type { Archive, ArchiveFormData, Member } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const TYPE_CONFIG: Record<string, { icon: string; border: string }> = {
+  text: { icon: 'bg-info/10 text-info', border: 'border-l-info/60' },
+  file: { icon: 'bg-warning/10 text-warning', border: 'border-l-warning/60' },
+};
 
 export default function Archives() {
   const { t } = useTranslation();
@@ -287,7 +292,7 @@ export default function Archives() {
           }}
         />
 
-        <div className="flex gap-4">
+        <div className="flex gap-md">
           <Input
             placeholder={t('pages.archives.searchPlaceholder')}
             value={searchTerm}
@@ -306,111 +311,129 @@ export default function Archives() {
             }
           />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredArchives.map((arc) => (
-              <Card key={arc.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        {arc.archive_type === 'text' ? (
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                        ) : (
-                          <File className="h-4 w-4 flex-shrink-0" />
-                        )}
-                        <CardTitle className="truncate text-base">
-                          {arc.title}
-                        </CardTitle>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge>{t(`pages.archives.categories.${arc.category}`)}</Badge>
-                        <Badge variant="outline">
-                          {t(`pages.archives.types.${arc.archive_type}`)}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="flex flex-shrink-0 gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() =>
-                          arc.archive_type === 'text'
-                            ? handleRevealContent(arc)
-                            : handleDownload(arc)
-                        }
-                        disabled={isRevealing}
-                        aria-label={
-                          arc.archive_type === 'text'
-                            ? t('pages.archives.viewContent')
-                            : t('pages.archives.downloadFile')
-                        }
-                        title={
-                          arc.archive_type === 'text'
-                            ? t('pages.archives.viewContent')
-                            : t('pages.archives.downloadFile')
-                        }
-                      >
-                        {arc.archive_type === 'text' ? (
-                          <Eye className="h-4 w-4" aria-hidden="true" />
-                        ) : (
-                          <Download className="h-4 w-4" aria-hidden="true" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleEdit(arc)}
-                        aria-label={t('common.actions.edit')}
-                        title={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleDelete(arc.id)}
-                        aria-label={t('common.actions.delete')}
-                        title={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="h-4 w-4 text-destructive"
-                          aria-hidden="true"
-                        />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
-                    </div>
-                    <span>{formatFileSize(arc.file_size)}</span>
-                  </div>
-                  {arc.tags && arc.tags.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 flex-shrink-0" />
-                      <div className="flex flex-wrap gap-1">
-                        {arc.tags.slice(0, 3).map((tag, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
-                            {tag}
+          <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+            {filteredArchives.map((arc) => {
+              const typeConfig = TYPE_CONFIG[arc.archive_type] ?? {
+                icon: 'bg-muted text-muted-foreground',
+                border: 'border-l-border',
+              };
+              return (
+                <Card
+                  key={arc.id}
+                  className={cn('overflow-hidden border-l-2', typeConfig.border)}
+                >
+                  <CardHeader className="pb-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-xs flex items-center gap-sm">
+                          <div
+                            className={cn(
+                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
+                              typeConfig.icon
+                            )}
+                          >
+                            {arc.archive_type === 'text' ? (
+                              <FileText className="h-4 w-4" />
+                            ) : (
+                              <File className="h-4 w-4" />
+                            )}
+                          </div>
+                          <CardTitle className="truncate text-base">
+                            {arc.title}
+                          </CardTitle>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-sm">
+                          <Badge>
+                            {t(`pages.archives.categories.${arc.category}`)}
                           </Badge>
-                        ))}
-                        {arc.tags.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{arc.tags.length - 3}
+                          <Badge variant="outline">
+                            {t(`pages.archives.types.${arc.archive_type}`)}
                           </Badge>
-                        )}
+                        </div>
+                      </div>
+                      <div className="flex flex-shrink-0 gap-xs">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            arc.archive_type === 'text'
+                              ? handleRevealContent(arc)
+                              : handleDownload(arc)
+                          }
+                          disabled={isRevealing}
+                          aria-label={
+                            arc.archive_type === 'text'
+                              ? t('pages.archives.viewContent')
+                              : t('pages.archives.downloadFile')
+                          }
+                          title={
+                            arc.archive_type === 'text'
+                              ? t('pages.archives.viewContent')
+                              : t('pages.archives.downloadFile')
+                          }
+                        >
+                          {arc.archive_type === 'text' ? (
+                            <Eye className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Download className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(arc)}
+                          aria-label={t('common.actions.edit')}
+                          title={t('common.actions.edit')}
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleDelete(arc.id)}
+                          aria-label={t('common.actions.delete')}
+                          title={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="h-4 w-4 text-destructive"
+                            aria-hidden="true"
+                          />
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardHeader>
+                  <CardContent className="space-y-sm">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-sm">
+                        <Calendar className="h-4 w-4" />
+                        <span>{formatDate(arc.created_at, 'dd/MM/yyyy')}</span>
+                      </div>
+                      <span>{formatFileSize(arc.file_size)}</span>
+                    </div>
+                    {arc.tags && arc.tags.length > 0 && (
+                      <div className="flex items-center gap-sm">
+                        <Tag className="h-4 w-4 flex-shrink-0" />
+                        <div className="flex flex-wrap gap-xs">
+                          {arc.tags.slice(0, 3).map((tag, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {arc.tags.length > 3 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{arc.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
@@ -451,14 +474,14 @@ export default function Archives() {
                   : ''}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-md">
               <Textarea
                 value={revealedContent}
                 readOnly
                 rows={20}
                 className="font-mono text-sm"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-sm">
                 <Button
                   variant="outline"
                   onClick={() => {
