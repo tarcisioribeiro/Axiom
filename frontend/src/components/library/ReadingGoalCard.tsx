@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { Target, Pencil, Plus, Trophy, BookOpen } from 'lucide-react';
+import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import type { ReadingGoalFormData } from '@/lib/validations';
 import { literaryTypeGoalsService } from '@/services/literary-type-goals-service';
@@ -98,10 +99,11 @@ function CelebrationBurst() {
 interface GoalPanelProps {
   goal: ReadingGoal;
   onEdit: () => void;
+  onDelete: () => void;
   showCelebration: boolean;
 }
 
-function GoalPanel({ goal, onEdit, showCelebration }: GoalPanelProps) {
+function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) {
   const isCompleted = goal.progress_percentage >= 100;
   const ltgs = goal.literary_type_goals ?? [];
 
@@ -113,15 +115,26 @@ function GoalPanel({ goal, onEdit, showCelebration }: GoalPanelProps) {
         <span className="text-xs font-medium text-muted-foreground">
           {goal.name ? goal.name : `Meta ${goal.year}`}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={onEdit}
-          title="Editar meta"
-        >
-          <Pencil className="h-3 w-3" />
-        </Button>
+        <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={onEdit}
+            title="Editar meta"
+          >
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-destructive hover:text-destructive"
+            onClick={onDelete}
+            title="Excluir meta"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -232,6 +245,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   const [editingGoal, setEditingGoal] = useState<ReadingGoal | undefined>();
   const [celebrationId, setCelebrationId] = useState<number | null>(null);
   const { toast } = useToast();
+  const { showDelete } = useAlertDialog();
 
   const currentYear = new Date().getFullYear();
 
@@ -266,6 +280,23 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   const openEditGoal = (goal: ReadingGoal) => {
     setEditingGoal(goal);
     setIsModalOpen(true);
+  };
+
+  const handleDeleteGoal = async (goal: ReadingGoal) => {
+    const confirmed = await showDelete(`a meta "${goal.name ?? `Meta ${goal.year}`}"`);
+    if (!confirmed) return;
+    try {
+      await readingGoalsService.delete(goal.id);
+      toast({ title: 'Meta excluída com sucesso!' });
+      await loadGoals();
+      onGoalChange?.();
+    } catch (error) {
+      toast({
+        title: 'Erro ao excluir meta',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleSubmit = async (
@@ -357,6 +388,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
                   <GoalPanel
                     goal={goal}
                     onEdit={() => openEditGoal(goal)}
+                    onDelete={() => void handleDeleteGoal(goal)}
                     showCelebration={celebrationId === goal.id}
                   />
                 </div>
