@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Clock,
   X,
+  ArrowRight,
+  Banknote,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,11 +17,11 @@ import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
-import { StatCard } from '@/components/common/StatCard';
 import { ReceiptButton } from '@/components/receipts';
 import { TransferForm } from '@/components/transfers/TransferForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -279,9 +281,15 @@ export default function Transfers() {
       key: 'accounts',
       label: t('pages.transfers.columns.route'),
       render: (transfer) => (
-        <span className="text-sm">
-          {transfer.origin_account_name} → {transfer.destiny_account_name}
-        </span>
+        <div className="flex items-center gap-xs text-sm">
+          <span className="rounded bg-muted px-xs py-0.5 text-xs font-medium text-muted-foreground">
+            {transfer.origin_account_name ?? '—'}
+          </span>
+          <ArrowRight className="h-3 w-3 shrink-0 text-info" />
+          <span className="rounded bg-info/10 px-xs py-0.5 text-xs font-medium text-info">
+            {transfer.destiny_account_name ?? '—'}
+          </span>
+        </div>
       ),
     },
     {
@@ -323,24 +331,53 @@ export default function Transfers() {
         }}
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          title={t('pages.transfers.stats.totalAmount')}
-          value={formatCurrency(totalVolume)}
-          icon={<ArrowLeftRight />}
-        />
-        <StatCard
-          title={t('pages.transfers.stats.completed')}
-          value={completedCount}
-          icon={<CheckCircle2 />}
-          variant="success"
-        />
-        <StatCard
-          title={t('pages.transfers.stats.pending')}
-          value={pendingCount}
-          icon={<Clock />}
-          variant="warning"
-        />
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-info/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.transfers.stats.totalAmount')}
+            </p>
+            <div className="rounded-lg bg-info/10 p-sm ring-1 ring-info/20">
+              <Banknote className="h-4 w-4 text-info" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-info">
+              {formatCurrency(totalVolume)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {transfers.length} transferências
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.transfers.stats.completed')}
+            </p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">{completedCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">concluídas</p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.transfers.stats.pending')}</p>
+            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">pendentes</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
