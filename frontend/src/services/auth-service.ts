@@ -134,6 +134,10 @@ class AuthService {
       return { permissions: [], is_superuser: true };
     }
 
+    if (response.is_superuser) {
+      return { permissions: [], is_superuser: true };
+    }
+
     if (!Array.isArray(response.permissions)) {
       logger.error(
         'Invalid permissions format received from API:',
