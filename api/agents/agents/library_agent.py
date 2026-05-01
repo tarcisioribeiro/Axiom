@@ -35,6 +35,7 @@ class LibraryAgent(BaseAgent):
     description = "Respostas sobre livros lidos, resumos e insights via RAG"
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-sonnet-4-6"
+    groq_model = "llama-3.3-70b-versatile"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()

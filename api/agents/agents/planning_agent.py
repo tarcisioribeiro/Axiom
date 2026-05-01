@@ -37,6 +37,7 @@ class PlanningAgent(BaseAgent):
     description = "Análise de rotinas, hábitos e progresso de metas"
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-haiku-4-5-20251001"
+    groq_model = "llama-3.1-8b-instant"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
