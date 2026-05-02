@@ -656,7 +656,9 @@ export default function CreditCardExpenses() {
             <p className="text-xs text-muted-foreground">
               {t('pages.creditCardExpenses.totalPaid')}
             </p>
-            <p className="text-xl font-bold text-success">{formatCurrency(totalPaid)}</p>
+            <p className="text-xl font-bold text-success">
+              {formatCurrency(totalPaid)}
+            </p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-t-2 border-t-warning/60">
@@ -664,7 +666,9 @@ export default function CreditCardExpenses() {
             <p className="text-xs text-muted-foreground">
               {t('pages.creditCardExpenses.totalPending')}
             </p>
-            <p className="text-xl font-bold text-warning">{formatCurrency(totalPending)}</p>
+            <p className="text-xl font-bold text-warning">
+              {formatCurrency(totalPending)}
+            </p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-t-2 border-t-destructive/60">

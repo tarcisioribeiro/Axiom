@@ -474,80 +474,82 @@ export default function CreditCardBills() {
       </div>
 
       {/* Summary cards */}
-      {filteredBills.length > 0 && (() => {
-        const openBills = filteredBills.filter(
-          (b) => b.status === 'open' || b.status === 'overdue'
-        );
-        const totalOpen = openBills.reduce(
-          (sum, b) => sum + parseFloat(b.total_amount),
-          0
-        );
-        const totalPaid = filteredBills
-          .filter((b) => b.status === 'paid')
-          .reduce((sum, b) => sum + parseFloat(b.paid_amount), 0);
-        const totalMinimum = openBills.reduce(
-          (sum, b) => sum + parseFloat(b.minimum_payment),
-          0
-        );
-        return (
-          <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
-            <Card className="overflow-hidden border-t-2 border-t-destructive/60">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                <p className="text-sm font-medium">Em Aberto</p>
-                <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-destructive">
-                  {formatCurrency(totalOpen)}
-                </div>
-                <p className="mt-xs text-xs text-muted-foreground">
-                  {openBills.length} fatura{openBills.length !== 1 ? 's' : ''} em aberto
-                </p>
-              </CardContent>
-            </Card>
+      {filteredBills.length > 0 &&
+        (() => {
+          const openBills = filteredBills.filter(
+            (b) => b.status === 'open' || b.status === 'overdue'
+          );
+          const totalOpen = openBills.reduce(
+            (sum, b) => sum + parseFloat(b.total_amount),
+            0
+          );
+          const totalPaid = filteredBills
+            .filter((b) => b.status === 'paid')
+            .reduce((sum, b) => sum + parseFloat(b.paid_amount), 0);
+          const totalMinimum = openBills.reduce(
+            (sum, b) => sum + parseFloat(b.minimum_payment),
+            0
+          );
+          return (
+            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+              <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+                  <p className="text-sm font-medium">Em Aberto</p>
+                  <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-destructive">
+                    {formatCurrency(totalOpen)}
+                  </div>
+                  <p className="mt-xs text-xs text-muted-foreground">
+                    {openBills.length} fatura{openBills.length !== 1 ? 's' : ''} em
+                    aberto
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card className="overflow-hidden border-t-2 border-t-success/60">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                <p className="text-sm font-medium">Pagas</p>
-                <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success">
-                  {formatCurrency(totalPaid)}
-                </div>
-                <p className="mt-xs text-xs text-muted-foreground">
-                  {filteredBills.filter((b) => b.status === 'paid').length} fatura
-                  {filteredBills.filter((b) => b.status === 'paid').length !== 1
-                    ? 's'
-                    : ''}{' '}
-                  pagas
-                </p>
-              </CardContent>
-            </Card>
+              <Card className="overflow-hidden border-t-2 border-t-success/60">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+                  <p className="text-sm font-medium">Pagas</p>
+                  <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">
+                    {formatCurrency(totalPaid)}
+                  </div>
+                  <p className="mt-xs text-xs text-muted-foreground">
+                    {filteredBills.filter((b) => b.status === 'paid').length} fatura
+                    {filteredBills.filter((b) => b.status === 'paid').length !== 1
+                      ? 's'
+                      : ''}{' '}
+                    pagas
+                  </p>
+                </CardContent>
+              </Card>
 
-            <Card className="overflow-hidden border-t-2 border-t-warning/60">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                <p className="text-sm font-medium">Mínimo Pendente</p>
-                <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
-                  <Wallet className="h-4 w-4 text-warning" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-warning">
-                  {formatCurrency(totalMinimum)}
-                </div>
-                <p className="mt-xs text-xs text-muted-foreground">
-                  pagamento mínimo das abertas
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })()}
+              <Card className="overflow-hidden border-t-2 border-t-warning/60">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+                  <p className="text-sm font-medium">Mínimo Pendente</p>
+                  <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+                    <Wallet className="h-4 w-4 text-warning" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-warning">
+                    {formatCurrency(totalMinimum)}
+                  </div>
+                  <p className="mt-xs text-xs text-muted-foreground">
+                    pagamento mínimo das abertas
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })()}
 
       <DataTable
         data={filteredBills}

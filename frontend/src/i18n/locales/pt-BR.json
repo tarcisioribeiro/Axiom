@@ -101,7 +101,8 @@
       "accounts": "Contas",
       "creditCards": "Cartões de Crédito",
       "bills": "Faturas",
-      "fixedExpenses": "Gastos Fixos",
+      "fixedExpenses": "Despesas Fixas",
+      "fixedRevenues": "Receitas Fixas",
       "categorizationRules": "Regras de Categorização",
       "budgets": "Orçamentos",
       "payables": "Valores a Pagar",
@@ -160,7 +161,8 @@
     "accounts": "Contas",
     "creditCards": "Cartões de Crédito",
     "creditCardBills": "Faturas",
-    "fixedExpenses": "Gastos Fixos",
+    "fixedExpenses": "Despesas Fixas",
+    "fixedRevenues": "Receitas Fixas",
     "categorizationRules": "Regras de Categorização",
     "payables": "Valores a Pagar",
     "financialGoals": "Metas Financeiras",
@@ -1088,11 +1090,16 @@
       "yields": "rendimentos",
       "columns": {
         "description": "Descrição",
+        "current": "Atual",
+        "target": "Meta",
         "progress": "Progresso",
         "vaults": "Cofres",
         "targetDate": "Data Alvo",
         "status": "Status"
-      }
+      },
+      "daysLeft": "{{count}} dia(s) restante(s)",
+      "deadlinePassed": "Prazo encerrado",
+      "goalCompletedLabel": "Meta Concluída!"
     },
     "dashboard": {
       "title": "Dashboard de Controle Financeiro",

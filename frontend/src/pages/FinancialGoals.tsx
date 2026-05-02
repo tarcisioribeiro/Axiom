@@ -101,13 +101,24 @@ interface GoalCardProps {
   onCheckCompletion: (g: FinancialGoalListItem) => void;
 }
 
-function GoalCard({ goal, todayTimestamp, t, onEdit, onDelete, onManageVaults, onCheckCompletion }: GoalCardProps) {
+function GoalCard({
+  goal,
+  todayTimestamp,
+  t,
+  onEdit,
+  onDelete,
+  onManageVaults,
+  onCheckCompletion,
+}: GoalCardProps) {
   const cp = goal.computed_progress;
   const currentVal = parseFloat(cp.current_value);
   const targetVal = parseFloat(cp.target_value);
   const pct = parseFloat(cp.percentage);
 
-  const categoryConfig: Record<string, { icon: React.ReactNode; color: string; ringColor: string }> = {
+  const categoryConfig: Record<
+    string,
+    { icon: React.ReactNode; color: string; ringColor: string }
+  > = {
     reduce_expenses: {
       icon: <TrendingDown className="h-5 w-5 text-orange-500" />,
       color: 'text-orange-500',
@@ -201,16 +212,24 @@ function GoalCard({ goal, todayTimestamp, t, onEdit, onDelete, onManageVaults, o
         {/* Valores */}
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('pages.financialGoals.columns.current')}</span>
-            <span className={`font-semibold ${config.color}`}>{formatCurrency(currentVal)}</span>
+            <span className="text-muted-foreground">
+              {t('pages.financialGoals.columns.current')}
+            </span>
+            <span className={`font-semibold ${config.color}`}>
+              {formatCurrency(currentVal)}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('pages.financialGoals.columns.target')}</span>
+            <span className="text-muted-foreground">
+              {t('pages.financialGoals.columns.target')}
+            </span>
             <span className="font-semibold">{formatCurrency(targetVal)}</span>
           </div>
           {goal.vaults_count > 0 && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{t('pages.financialGoals.columns.vaults')}</span>
+              <span className="text-muted-foreground">
+                {t('pages.financialGoals.columns.vaults')}
+              </span>
               <Badge variant="outline" className="text-xs">
                 {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
               </Badge>
@@ -239,7 +258,9 @@ function GoalCard({ goal, todayTimestamp, t, onEdit, onDelete, onManageVaults, o
         {goal.is_completed && (
           <div className="mt-2 flex items-center justify-center gap-1 text-success">
             <CheckCircle2 className="h-4 w-4" />
-            <span className="text-xs font-semibold">{t('pages.financialGoals.goalCompletedLabel')}</span>
+            <span className="text-xs font-semibold">
+              {t('pages.financialGoals.goalCompletedLabel')}
+            </span>
           </div>
         )}
       </CardContent>
@@ -248,7 +269,6 @@ function GoalCard({ goal, todayTimestamp, t, onEdit, onDelete, onManageVaults, o
 }
 
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
-
 
 export default function FinancialGoals() {
   const { t } = useTranslation();
@@ -508,7 +528,6 @@ export default function FinancialGoals() {
     (sum, g) => sum + parseFloat(g.current_value),
     0
   );
-
 
   return (
     <PageContainer>

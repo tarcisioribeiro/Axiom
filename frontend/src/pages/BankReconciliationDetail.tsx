@@ -46,7 +46,13 @@ function ConfidenceBadge({
   if (!confidence) return <span className="text-muted-foreground">—</span>;
 
   const bars =
-    confidence === 'high' ? 4 : confidence === 'medium' ? 2 : confidence === 'low' ? 1 : 3;
+    confidence === 'high'
+      ? 4
+      : confidence === 'medium'
+        ? 2
+        : confidence === 'low'
+          ? 1
+          : 3;
   const color =
     confidence === 'high'
       ? 'bg-success'
@@ -61,7 +67,10 @@ function ConfidenceBadge({
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className={cn('w-1.5 rounded-sm transition-all', i <= bars ? color : 'bg-muted')}
+          className={cn(
+            'w-1.5 rounded-sm transition-all',
+            i <= bars ? color : 'bg-muted'
+          )}
           style={{ height: `${i * 4 + 4}px` }}
         />
       ))}
@@ -272,11 +281,16 @@ export default function BankReconciliationDetail() {
         const isDebit = entry.transaction_type === 'debit';
         return (
           <div className="flex items-center gap-1">
-            <span className={cn('text-xs', isDebit ? 'text-destructive' : 'text-success')}>
+            <span
+              className={cn('text-xs', isDebit ? 'text-destructive' : 'text-success')}
+            >
               {isDebit ? '↓' : '↑'}
             </span>
             <span
-              className={cn('font-semibold', isDebit ? 'text-destructive' : 'text-success')}
+              className={cn(
+                'font-semibold',
+                isDebit ? 'text-destructive' : 'text-success'
+              )}
             >
               {formatCurrency(Math.abs(Number(entry.amount)))}
             </span>
@@ -450,7 +464,7 @@ export default function BankReconciliationDetail() {
 
       {/* Progress bar */}
       <div className="mb-4 rounded-lg border bg-card p-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium">Progresso da conciliação</span>
           <span className="text-sm font-semibold">
             {importData.matched_count} de {importData.total_entries} transações
@@ -505,7 +519,8 @@ export default function BankReconciliationDetail() {
           message: 'Este extrato não possui transações.',
         }}
         rowClassName={(entry) => {
-          if (entry.status === 'matched') return 'bg-success/[0.03] border-l-4 border-l-success';
+          if (entry.status === 'matched')
+            return 'bg-success/[0.03] border-l-4 border-l-success';
           if (entry.status === 'unmatched')
             return 'bg-destructive/[0.03] border-l-4 border-l-destructive';
           if (entry.status === 'ignored') return 'opacity-50 border-l-4 border-l-muted';
