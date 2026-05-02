@@ -521,7 +521,10 @@ export default function Accounts() {
                         title={t('common.actions.delete')}
                         aria-label={t('common.actions.delete')}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
+                        <Trash2
+                          className="h-3.5 w-3.5 text-destructive"
+                          aria-hidden="true"
+                        />
                       </Button>
                     </div>
                   </div>

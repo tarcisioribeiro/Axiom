@@ -172,6 +172,7 @@ export const expenseSchema = z.object({
     .int('Conta deve ser um número inteiro')
     .positive('Selecione uma conta'),
   member: z.number().int().positive().optional().nullable(),
+  merchant: z.string().optional(),
   related_loan: z.number().int().positive().optional().nullable(),
   related_payable: z.number().int().positive().optional().nullable(),
 });

@@ -274,20 +274,38 @@ export default function Payables() {
                   </Badge>
                 </div>
 
+                {(() => {
+                  const total = parseFloat(payable.value);
+                  const paid = parseFloat(payable.paid_value);
+                  const pct = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
+                  const barColor =
+                    pct >= 100
+                      ? 'bg-success'
+                      : pct >= 50
+                        ? 'bg-warning'
+                        : 'bg-destructive';
+                  return (
+                    <div className="space-y-1">
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn('h-full rounded-full transition-all', barColor)}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{formatCurrency(paid)} pago</span>
+                        <span>{pct.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       {t('pages.payables.totalValue')}
                     </span>
                     <span className="font-medium">{formatCurrency(payable.value)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      {t('pages.payables.paidValue')}
-                    </span>
-                    <span className="font-medium text-success">
-                      {formatCurrency(payable.paid_value)}
-                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">

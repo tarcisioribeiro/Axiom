@@ -151,11 +151,11 @@ function UploadDialog({
             >
               {file ? (
                 <>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 mb-3">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
                     <FileUp className="h-6 w-6 text-success" />
                   </div>
                   <p className="font-medium">{file.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
                     <strong>
                       {detectFormat(file.name).toUpperCase() ||
@@ -165,7 +165,7 @@ function UploadDialog({
                 </>
               ) : (
                 <>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                     <FileUp className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="font-medium">
@@ -173,7 +173,7 @@ function UploadDialog({
                       defaultValue: 'Arraste ou clique para selecionar',
                     })}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {t('pages.bankReconciliation.upload.supportedFormats', {
                       defaultValue: 'Suporte: OFX, CSV',
                     })}
@@ -300,14 +300,18 @@ export default function BankReconciliation() {
       {/* Stat summary below cards */}
       {imports.length > 0 && (
         <div className="mb-lg flex gap-md text-sm text-muted-foreground">
-          <span className="text-success font-medium">
+          <span className="font-medium text-success">
             {completedCount}{' '}
-            {t('pages.bankReconciliation.completedLabel', { defaultValue: 'concluídos' })}
+            {t('pages.bankReconciliation.completedLabel', {
+              defaultValue: 'concluídos',
+            })}
           </span>
           {pendingCount > 0 && (
-            <span className="text-warning font-medium">
+            <span className="font-medium text-warning">
               {pendingCount}{' '}
-              {t('pages.bankReconciliation.pendingLabel', { defaultValue: 'pendentes' })}
+              {t('pages.bankReconciliation.pendingLabel', {
+                defaultValue: 'pendentes',
+              })}
             </span>
           )}
         </div>
@@ -334,17 +338,20 @@ export default function BankReconciliation() {
               <div key={imp.id} className="rounded-lg border bg-card p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1 flex items-center gap-2">
                       <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
                       <ImportStatusBadge status={imp.status} />
                     </div>
-                    <p className="font-medium truncate">{imp.original_filename}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="truncate font-medium">{imp.original_filename}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {imp.total_entries}{' '}
                       {t('pages.bankReconciliation.transactionsLabel', {
                         defaultValue: 'transações',
                       })}{' '}
-                      · {t('pages.bankReconciliation.importedAtLabel', { defaultValue: 'importado em' })}{' '}
+                      ·{' '}
+                      {t('pages.bankReconciliation.importedAtLabel', {
+                        defaultValue: 'importado em',
+                      })}{' '}
                       {formatDate(imp.created_at)}
                     </p>
 

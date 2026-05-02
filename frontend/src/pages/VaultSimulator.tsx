@@ -303,7 +303,8 @@ export default function VaultSimulator() {
           {(() => {
             const bestScenarioName = results.reduce(
               (best, s) =>
-                s.final_balance > (results.find((r) => r.name === best)?.final_balance ?? 0)
+                s.final_balance >
+                (results.find((r) => r.name === best)?.final_balance ?? 0)
                   ? s.name
                   : best,
               results[0]?.name ?? ''
@@ -343,7 +344,9 @@ export default function VaultSimulator() {
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
                           <p className="text-muted-foreground">Total investido</p>
-                          <p className="font-semibold">{formatCurrency(scenario.total_invested)}</p>
+                          <p className="font-semibold">
+                            {formatCurrency(scenario.total_invested)}
+                          </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Rendimento</p>

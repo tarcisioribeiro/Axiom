@@ -142,7 +142,8 @@ function VaultCard({
   const color = VAULT_COLORS[index % VAULT_COLORS.length];
   const balance = parseFloat(vault.current_balance);
   const accYield = parseFloat(vault.accumulated_yield);
-  const proportion = totalBalance > 0 ? Math.min(100, (balance / totalBalance) * 100) : 0;
+  const proportion =
+    totalBalance > 0 ? Math.min(100, (balance / totalBalance) * 100) : 0;
 
   return (
     <Card className={`overflow-hidden border ${color.border}`}>
@@ -161,7 +162,9 @@ function VaultCard({
           </Badge>
         </div>
         <div className="mt-3">
-          <p className="text-xs text-muted-foreground">{t('pages.vaults.columns.currentBalance')}</p>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.vaults.columns.currentBalance')}
+          </p>
           <p className={`text-2xl font-bold ${color.accent}`}>
             {formatCurrency(balance)}
           </p>
@@ -192,7 +195,9 @@ function VaultCard({
 
         {/* Taxa anual */}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('pages.vaults.columns.rate')}</span>
+          <span className="text-muted-foreground">
+            {t('pages.vaults.columns.rate')}
+          </span>
           <Badge variant="outline">
             {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
           </Badge>
@@ -896,7 +901,6 @@ export default function Vaults() {
       value: dp.balance,
     }));
   }, [simResults]);
-
 
   return (
     <PageContainer>

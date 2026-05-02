@@ -1,0 +1,735 @@
+import { Plus, Pencil, Trash2, Calendar, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { DataTable, type Column } from '@/components/common/DataTable';
+import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { TRANSLATIONS } from '@/config/constants';
+import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
+import { fixedRevenuesService } from '@/services/fixed-revenues-service';
+import type { FixedRevenue, FixedRevenueFormData, Account } from '@/types';
+import { getErrorMessage } from '@/utils/error-utils';
+
+const REVENUE_CATEGORIES = Object.entries(TRANSLATIONS.revenueCategories).map(
+  ([key, label]) => ({ key, label })
+);
+
+const MONTHS = [
+  { value: '01', label: 'Janeiro' },
+  { value: '02', label: 'Fevereiro' },
+  { value: '03', label: 'Março' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Maio' },
+  { value: '06', label: 'Junho' },
+  { value: '07', label: 'Julho' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Setembro' },
+  { value: '10', label: 'Outubro' },
+  { value: '11', label: 'Novembro' },
+  { value: '12', label: 'Dezembro' },
+];
+
+function getDefaultMonth(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
+}
+
+export default function FixedRevenues() {
+  const { t } = useTranslation();
+  const [fixedRevenues, setFixedRevenues] = useState<FixedRevenue[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
+  const [selectedRevenue, setSelectedRevenue] = useState<FixedRevenue | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const { showConfirm } = useAlertDialog();
+
+  const [formData, setFormData] = useState<FixedRevenueFormData>({
+    description: '',
+    default_value: 0,
+    category: 'salary',
+    account: 0,
+    due_day: 1,
+    is_active: true,
+    allow_value_edit: true,
+    member: null,
+    notes: '',
+  });
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const [revenuesData, accountsData] = await Promise.all([
+        fixedRevenuesService.getAll(),
+        accountsService.getAll(),
+      ]);
+      const revenues = Array.isArray(revenuesData)
+        ? revenuesData
+        : ((revenuesData as { results: FixedRevenue[] }).results ?? []);
+      setFixedRevenues(revenues);
+      setAccounts(accountsData);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.loadError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openCreate = () => {
+    setSelectedRevenue(undefined);
+    setFormData({
+      description: '',
+      default_value: 0,
+      category: 'salary',
+      account: accounts[0]?.id ?? 0,
+      due_day: 1,
+      is_active: true,
+      allow_value_edit: true,
+      member: null,
+      notes: '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const openEdit = (item: FixedRevenue) => {
+    setSelectedRevenue(item);
+    setFormData({
+      description: item.description,
+      default_value: parseFloat(item.default_value),
+      category: item.category,
+      account: item.account,
+      due_day: item.due_day,
+      is_active: item.is_active,
+      allow_value_edit: item.allow_value_edit,
+      member: item.member ?? null,
+      notes: item.notes ?? '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      if (selectedRevenue) {
+        await fixedRevenuesService.update(selectedRevenue.id, formData);
+        toast({
+          title: t('pages.fixedRevenues.updated'),
+          description: t('pages.fixedRevenues.updatedDesc'),
+        });
+      } else {
+        await fixedRevenuesService.create(formData);
+        toast({
+          title: t('pages.fixedRevenues.created'),
+          description: t('pages.fixedRevenues.createdDesc'),
+        });
+      }
+      setIsDialogOpen(false);
+      void loadData();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    const confirmed = await showConfirm({
+      title: t('pages.fixedRevenues.deleteTitle'),
+      description: t('pages.fixedRevenues.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      await fixedRevenuesService.delete(id);
+      toast({
+        title: t('pages.fixedRevenues.deleted'),
+        description: t('pages.fixedRevenues.deletedDesc'),
+      });
+      void loadData();
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const columns: Column<FixedRevenue>[] = [
+    {
+      key: 'description',
+      label: t('pages.fixedRevenues.columns.description'),
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-success/10 text-sm font-bold text-success">
+            {item.due_day}
+          </div>
+          <div>
+            <div className="font-medium">{item.description}</div>
+            <div className="text-xs text-muted-foreground">
+              Dia {item.due_day} de cada mês
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'default_value',
+      label: t('pages.fixedRevenues.columns.defaultAmount'),
+      align: 'right',
+      render: (item) => (
+        <span className="font-semibold text-success">
+          {formatCurrency(item.default_value)}
+        </span>
+      ),
+    },
+    {
+      key: 'due_day',
+      label: t('pages.fixedRevenues.columns.dueDay'),
+      align: 'center',
+      render: (item) => <Badge variant="outline">Dia {item.due_day}</Badge>,
+    },
+    {
+      key: 'account_name',
+      label: t('pages.fixedRevenues.columns.account'),
+      render: (item) => <Badge variant="outline">{item.account_name || 'N/A'}</Badge>,
+    },
+    {
+      key: 'category',
+      label: t('pages.fixedRevenues.columns.category'),
+      render: (item) => (
+        <Badge variant="secondary">
+          {TRANSLATIONS.revenueCategories[
+            item.category as keyof typeof TRANSLATIONS.revenueCategories
+          ] || item.category}
+        </Badge>
+      ),
+    },
+    {
+      key: 'is_active',
+      label: t('pages.fixedRevenues.columns.status'),
+      render: (item) => (
+        <Badge variant={item.is_active ? 'default' : 'secondary'}>
+          {item.is_active ? 'Ativa' : 'Inativa'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'total_generated',
+      label: t('pages.fixedRevenues.columns.generated'),
+      align: 'center',
+      render: (item) => <span className="text-sm">{item.total_generated ?? 0}x</span>,
+    },
+  ];
+
+  const activeRevenues = fixedRevenues.filter((r) => r.is_active);
+  const totalMonthlyFixed = activeRevenues.reduce(
+    (sum, r) => sum + parseFloat(r.default_value || '0'),
+    0
+  );
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title={t('pages.fixedRevenues.title')}
+        icon={<Calendar className="h-6 w-6" />}
+        action={{
+          label: t('pages.fixedRevenues.newBtn'),
+          icon: <Plus className="h-4 w-4" />,
+          onClick: openCreate,
+        }}
+      />
+
+      {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
+      <div
+        className={cn(
+          'grid gap-4',
+          activeRevenues.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
+        )}
+      >
+        {/* Card 1: Lançamento */}
+        <div className="flex flex-col justify-between rounded-lg border bg-card p-4">
+          <div>
+            <h3 className="text-base font-semibold">
+              {t('pages.fixedRevenues.launchSection')}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('pages.fixedRevenues.launchDesc')}
+            </p>
+          </div>
+          <Button
+            onClick={() => setIsLaunchDialogOpen(true)}
+            className="mt-4 w-full bg-success hover:bg-success/90"
+          >
+            <TrendingUp className="mr-2 h-4 w-4" />
+            {t('pages.fixedRevenues.launchBtn')}
+          </Button>
+        </div>
+
+        {activeRevenues.length > 0 && (
+          <>
+            {/* Card 2: Comprometimento */}
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-sm font-medium">Receita mensal fixa prevista</p>
+              <p className="mt-1 text-2xl font-bold text-success">
+                {formatCurrency(totalMonthlyFixed)}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {activeRevenues.length} receitas ativas recorrentes todo mês
+              </p>
+            </div>
+
+            {/* Card 3: Calendário */}
+            <div className="rounded-lg border bg-card p-4">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Calendário de recebimentos
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                  const revsOnDay = activeRevenues.filter((r) => r.due_day === day);
+                  const hasRevenue = revsOnDay.length > 0;
+                  return (
+                    <div
+                      key={day}
+                      title={
+                        hasRevenue
+                          ? revsOnDay.map((r) => r.description).join(', ')
+                          : undefined
+                      }
+                      className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
+                        hasRevenue
+                          ? 'bg-success/15 text-success ring-1 ring-success/30'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Table */}
+      <DataTable
+        data={fixedRevenues}
+        columns={columns}
+        keyExtractor={(item) => item.id}
+        isLoading={isLoading}
+        emptyState={{
+          icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.fixedRevenues.emptyState'),
+        }}
+        rowClassName={(item) =>
+          item.is_active
+            ? 'border-l-4 border-l-success/50'
+            : 'border-l-4 border-l-muted opacity-60'
+        }
+        actions={(item) => (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openEdit(item)}
+              aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => void handleDelete(item.id)}
+              aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+            </Button>
+          </div>
+        )}
+      />
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedRevenue
+                ? t('pages.fixedRevenues.editTitle')
+                : t('pages.fixedRevenues.newTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedRevenue
+                ? t('pages.fixedRevenues.editDesc')
+                : t('pages.fixedRevenues.newDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição *</Label>
+              <Input
+                id="description"
+                required
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, description: e.target.value }))
+                }
+                placeholder="Ex: Salário"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="default_value">Valor Padrão *</Label>
+                <Input
+                  id="default_value"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  required
+                  value={formData.default_value || ''}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      default_value: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="due_day">Dia de Recebimento *</Label>
+                <Input
+                  id="due_day"
+                  type="number"
+                  min={1}
+                  max={31}
+                  required
+                  value={formData.due_day}
+                  onChange={(e) =>
+                    setFormData((p) => ({
+                      ...p,
+                      due_day: parseInt(e.target.value) || 1,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Categoria *</Label>
+              <Select
+                value={formData.category}
+                onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REVENUE_CATEGORIES.map(({ key, label }) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Conta *</Label>
+              <Select
+                value={formData.account ? String(formData.account) : ''}
+                onValueChange={(v) =>
+                  setFormData((p) => ({ ...p, account: parseInt(v) }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma conta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={String(a.id)}>
+                      {a.account_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes ?? ''}
+                onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
+                placeholder="Observações opcionais..."
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) =>
+                  setFormData((p) => ({ ...p, is_active: !!checked }))
+                }
+              />
+              <Label htmlFor="is_active" className="cursor-pointer">
+                Receita ativa
+              </Label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox
+                id="allow_value_edit"
+                checked={formData.allow_value_edit}
+                onCheckedChange={(checked) =>
+                  setFormData((p) => ({ ...p, allow_value_edit: !!checked }))
+                }
+              />
+              <Label htmlFor="allow_value_edit" className="cursor-pointer">
+                Permitir editar valor ao lançar
+              </Label>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                {t('common.actions.cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? t('common.actions.saving')
+                  : selectedRevenue
+                    ? t('common.actions.save')
+                    : t('common.actions.create')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Launch Dialog */}
+      <LaunchRevenuesDialog
+        isOpen={isLaunchDialogOpen}
+        onClose={() => setIsLaunchDialogOpen(false)}
+        fixedRevenues={activeRevenues}
+        onSuccess={loadData}
+      />
+    </PageContainer>
+  );
+}
+
+interface LaunchDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  fixedRevenues: FixedRevenue[];
+  onSuccess: () => void;
+}
+
+function LaunchRevenuesDialog({
+  isOpen,
+  onClose,
+  fixedRevenues,
+  onSuccess,
+}: LaunchDialogProps) {
+  const { toast } = useToast();
+  const [selectedMonth, setSelectedMonth] = useState(getDefaultMonth);
+  const [revenueValues, setRevenueValues] = useState<Record<number, number>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 3 }, (_, i) => currentYear + i);
+  const [monthPart, yearPart] = selectedMonth.split('-');
+
+  useEffect(() => {
+    if (isOpen) {
+      const defaults: Record<number, number> = {};
+      const ids = new Set<number>();
+      fixedRevenues.forEach((r) => {
+        defaults[r.id] = parseFloat(r.default_value);
+        ids.add(r.id);
+      });
+      setRevenueValues(defaults);
+      setSelectedIds(ids);
+    }
+  }, [isOpen, fixedRevenues]);
+
+  const handleSubmit = async () => {
+    if (!selectedMonth || selectedIds.size === 0) return;
+    setIsSubmitting(true);
+    try {
+      await fixedRevenuesService.bulkGenerate({
+        month: selectedMonth,
+        revenue_values: Array.from(selectedIds).map((id) => ({
+          fixed_revenue_id: id,
+          value: revenueValues[id] ?? 0,
+        })),
+      });
+      toast({ title: 'Receitas lançadas com sucesso!' });
+      onSuccess();
+      onClose();
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao lançar receitas',
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Lançar Receitas do Mês</DialogTitle>
+          <DialogDescription>
+            Selecione o mês e confirme os valores para gerar as receitas.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex gap-3">
+          <div className="flex-1 space-y-1">
+            <Label>Mês</Label>
+            <Select
+              value={monthPart}
+              onValueChange={(m) => setSelectedMonth(`${yearPart}-${m}`)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="w-28 space-y-1">
+            <Label>Ano</Label>
+            <Select
+              value={yearPart}
+              onValueChange={(y) => setSelectedMonth(`${y}-${monthPart}`)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="max-h-64 space-y-3 overflow-y-auto">
+          {fixedRevenues.map((r) => (
+            <div key={r.id} className="flex items-center gap-3">
+              <Checkbox
+                id={`rev-${r.id}`}
+                checked={selectedIds.has(r.id)}
+                onCheckedChange={(checked) => {
+                  setSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    if (checked) next.add(r.id);
+                    else next.delete(r.id);
+                    return next;
+                  });
+                }}
+              />
+              <Label htmlFor={`rev-${r.id}`} className="flex-1 cursor-pointer text-sm">
+                {r.description}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  (Dia {r.due_day})
+                </span>
+              </Label>
+              {r.allow_value_edit ? (
+                <Input
+                  type="number"
+                  step="0.01"
+                  className="w-28"
+                  value={revenueValues[r.id] ?? ''}
+                  onChange={(e) =>
+                    setRevenueValues((p) => ({
+                      ...p,
+                      [r.id]: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  disabled={!selectedIds.has(r.id)}
+                />
+              ) : (
+                <span className="w-28 text-right text-sm font-medium text-success">
+                  {formatCurrency(parseFloat(r.default_value))}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => void handleSubmit()}
+            disabled={isSubmitting || selectedIds.size === 0}
+          >
+            {isSubmitting ? 'Lançando...' : 'Lançar Receitas'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

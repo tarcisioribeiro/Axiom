@@ -39,7 +39,6 @@ import {
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-
 import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -597,7 +596,15 @@ export default function Dashboard() {
                         </p>
                         <div className="flex items-center gap-1.5">
                           <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">
-                            +{anomaly.average > 0 ? ((anomaly.current_amount - anomaly.average) / anomaly.average * 100).toFixed(0) : '0'}%
+                            +
+                            {anomaly.average > 0
+                              ? (
+                                  ((anomaly.current_amount - anomaly.average) /
+                                    anomaly.average) *
+                                  100
+                                ).toFixed(0)
+                              : '0'}
+                            %
                           </span>
                           <Badge variant="outline" className="text-xs">
                             z={anomaly.z_score.toFixed(1)}
@@ -695,7 +702,7 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <div
                                 className={cn(
-                                  'h-2 w-2 rounded-full shrink-0',
+                                  'h-2 w-2 shrink-0 rounded-full',
                                   account.current_balance >= 0
                                     ? 'bg-success'
                                     : 'bg-destructive'
@@ -925,7 +932,9 @@ export default function Dashboard() {
         {/* Separador: Projeção futura */}
         <div className="flex items-center gap-3 py-2">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Projeção futura</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Projeção futura
+          </span>
           <div className="h-px flex-1 bg-border" />
         </div>
 
@@ -1121,7 +1130,9 @@ export default function Dashboard() {
         {/* Separador: Composição do mês */}
         <div className="flex items-center gap-3 py-2">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Composição do mês</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Composição do mês
+          </span>
           <div className="h-px flex-1 bg-border" />
         </div>
 

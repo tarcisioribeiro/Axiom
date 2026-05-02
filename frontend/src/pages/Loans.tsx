@@ -234,7 +234,7 @@ export default function Loans() {
                 type="button"
                 onClick={() => setRoleFilter(key)}
                 className={cn(
-                  'flex items-center gap-1.5 border-r px-3 py-1.5 text-sm last:border-r-0 transition-colors',
+                  'flex items-center gap-1.5 border-r px-3 py-1.5 text-sm transition-colors last:border-r-0',
                   roleFilter === key
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background text-muted-foreground hover:bg-muted'

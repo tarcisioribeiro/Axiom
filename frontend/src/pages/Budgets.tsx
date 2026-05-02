@@ -1,30 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  PiggyBank,
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ComposedChart,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 
-import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -54,10 +31,7 @@ import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useSemanticColors } from '@/lib/chart-colors';
-import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
-import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
@@ -127,12 +101,6 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
-  const [showTrend, setShowTrend] = useState(true);
-  const [trendCategory, setTrendCategory] = useState<string>(
-    EXPENSE_CATEGORIES_CANONICAL[0]?.key ?? 'others'
-  );
-  const [trendMonths, setTrendMonths] = useState(6);
-
   useEffect(() => {
     void loadData();
   }, []);
@@ -391,68 +359,6 @@ export default function Budgets() {
         </>
       )}
 
-      {/* Visão geral comparativa — todos os orçamentos do mês */}
-      {budgetStatuses.length > 0 && (
-        <BudgetOverviewChart statuses={budgetStatuses} />
-      )}
-
-      <div className="rounded-lg border bg-card">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between p-4 text-left"
-          onClick={() => setShowTrend((v) => !v)}
-        >
-          <div className="flex items-center gap-2 font-semibold">
-            <TrendingUp className="h-4 w-4" />
-            {t('pages.budgets.trend.title')}
-          </div>
-          {showTrend ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-
-        {showTrend && (
-          <div className="border-t p-4">
-            <div className="mb-4 flex flex-wrap gap-4">
-              <Select value={trendCategory} onValueChange={setTrendCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder={t('common.fields.category')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                    <SelectItem key={cat.key} value={cat.key}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={String(trendMonths)}
-                onValueChange={(v) => setTrendMonths(parseInt(v))}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6">
-                    {t('pages.budgets.trend.monthsOption', { count: 6 })}
-                  </SelectItem>
-                  <SelectItem value="12">
-                    {t('pages.budgets.trend.monthsOption', { count: 12 })}
-                  </SelectItem>
-                  <SelectItem value="24">
-                    {t('pages.budgets.trend.monthsOption', { count: 24 })}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <BudgetTrendChart category={trendCategory} months={trendMonths} />
-          </div>
-        )}
-      </div>
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -615,194 +521,6 @@ export default function Budgets() {
   );
 }
 
-const MONTH_SHORT = [
-  'Jan',
-  'Fev',
-  'Mar',
-  'Abr',
-  'Mai',
-  'Jun',
-  'Jul',
-  'Ago',
-  'Set',
-  'Out',
-  'Nov',
-  'Dez',
-];
-
-function BudgetOverviewChart({ statuses }: { statuses: BudgetStatus[] }) {
-  const colors = useSemanticColors();
-
-  const chartData = statuses
-    .filter((s) => s.limit_amount !== null)
-    .map((s) => {
-      const spent = parseFloat(s.actual_spent);
-      const limit = parseFloat(s.limit_amount);
-      const remaining = Math.max(0, limit - spent);
-      const icon = CATEGORY_ICONS[s.category] ?? '📦';
-      const label = translate('expenseCategories', s.category);
-      return {
-        name: `${icon} ${label}`,
-        spent,
-        remaining,
-        limit,
-        pct: s.percentage,
-      };
-    })
-    .sort((a, b) => b.pct - a.pct);
-
-  if (chartData.length === 0) return null;
-
-  const barHeight = 40;
-  const chartHeight = Math.max(200, chartData.length * barHeight + 40);
-
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <p className="mb-3 text-sm font-semibold">Visão geral dos orçamentos</p>
-      <ResponsiveContainer width="100%" height={chartHeight}>
-        <BarChart
-          data={chartData}
-          layout="vertical"
-          margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
-          barCategoryGap="30%"
-        >
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
-          <XAxis
-            type="number"
-            tickFormatter={(v: number) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)}`}
-            tick={{ fontSize: 11 }}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fontSize: 11 }}
-            width={120}
-          />
-          <Tooltip
-            content={(props) => {
-              const { active, payload, label } = props;
-              if (!active || !payload?.length) return null;
-              const d = chartData.find((c) => c.name === label);
-              return (
-                <EnhancedTooltip
-                  active={active}
-                  payload={[
-                    { name: 'Gasto', value: d?.spent ?? 0, color: colors.info, dataKey: 'spent', payload: d ?? {} },
-                    { name: 'Restante', value: d?.remaining ?? 0, color: 'hsl(var(--muted-foreground) / 0.4)', dataKey: 'remaining', payload: d ?? {} },
-                  ]}
-                  label={label as string}
-                  formatter={(v) => formatCurrencyBR(v as number)}
-                  labelFormatter={(l) => `${l} — ${d?.pct.toFixed(0)}% do limite`}
-                />
-              );
-            }}
-          />
-          <Bar dataKey="spent" stackId="a" radius={[0, 0, 0, 0]}>
-            {chartData.map((entry) => (
-              <Cell
-                key={entry.name}
-                fill={
-                  entry.pct > 100
-                    ? colors.danger
-                    : entry.pct >= 70
-                      ? colors.warning
-                      : colors.info
-                }
-              />
-            ))}
-          </Bar>
-          <Bar dataKey="remaining" stackId="a" fill="hsl(var(--muted))" radius={[0, 3, 3, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function BudgetTrendChart({ category, months }: { category: string; months: number }) {
-  const { t } = useTranslation();
-  const colors = useSemanticColors();
-  const { data: history = [], isLoading } = useQuery({
-    queryKey: ['budgets', 'history', category, months],
-    queryFn: () => budgetsService.getHistory({ category, months }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: !!category,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        {t('common.actions.loading')}
-      </div>
-    );
-  }
-
-  const chartData = history.map((h) => ({
-    label: `${MONTH_SHORT[h.month - 1]}/${String(h.year).slice(2)}`,
-    actual_spent: parseFloat(h.actual_spent),
-    limit_amount: h.limit_amount !== null ? parseFloat(h.limit_amount) : null,
-  }));
-
-  const hasAnyData = chartData.some(
-    (d) => d.actual_spent > 0 || d.limit_amount !== null
-  );
-
-  if (!hasAnyData) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        {t('pages.budgets.trend.noData')}
-      </div>
-    );
-  }
-
-  const labelActualSpent = t('pages.budgets.trend.actualSpent');
-  const labelLimit = t('pages.budgets.trend.limit');
-
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart
-        data={chartData}
-        margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis tickFormatter={axisFormatCurrency} tick={{ fontSize: 12 }} width={64} />
-        <Tooltip
-          content={(props) => {
-            if (!props.active || !props.label) return null;
-            const d = chartData.find((item) => item.label === props.label);
-            if (!d) return null;
-            return (
-              <EnhancedTooltip
-                active
-                payload={[
-                  { name: labelActualSpent, value: d.actual_spent, color: colors.info, dataKey: 'actual_spent', payload: { ...d, limit_amount: d.limit_amount ?? undefined } },
-                  ...(d.limit_amount !== null
-                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger, dataKey: 'limit_amount', payload: { ...d, limit_amount: d.limit_amount ?? undefined } }]
-                    : []),
-                ]}
-                label={props.label as string}
-                formatter={(v) => formatCurrencyBR(v as number)}
-              />
-            );
-          }}
-        />
-        <Legend />
-        <Bar dataKey="actual_spent" name={labelActualSpent} fill={colors.info} radius={[3, 3, 0, 0]} />
-        <Line
-          type="monotone"
-          dataKey="limit_amount"
-          name={labelLimit}
-          stroke={colors.danger}
-          strokeDasharray="5 5"
-          strokeWidth={2}
-          dot={false}
-          connectNulls={false}
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
-  );
-}
-
 function BudgetCard({
   budget,
   status,
@@ -824,11 +542,7 @@ function BudgetCard({
   const limitAmount = parseFloat(budget.limit_amount);
 
   const barColor =
-    pct > 100
-      ? 'bg-destructive'
-      : pct >= 70
-        ? 'bg-warning'
-        : 'bg-success';
+    pct > 100 ? 'bg-destructive' : pct >= 70 ? 'bg-warning' : 'bg-success';
 
   const categoryIcon = CATEGORY_ICONS[budget.category] ?? '📦';
 
@@ -901,15 +615,12 @@ function BudgetCard({
           </div>
         )}
 
-        {budget.rollover_enabled &&
-          parseFloat(budget.rollover_amount) > 0 && (
-            <div className="mt-2 flex items-center gap-1 text-xs text-info">
-              <span>↩</span>
-              <span>
-                Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}
-              </span>
-            </div>
-          )}
+        {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-info">
+            <span>↩</span>
+            <span>Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}</span>
+          </div>
+        )}
 
         {budget.member_name && (
           <p className="mt-1 text-xs text-muted-foreground">

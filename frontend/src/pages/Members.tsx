@@ -284,9 +284,14 @@ export default function Members() {
                   <MemberInitials name={member.name} sex={member.sex} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <p className="truncate font-semibold leading-tight">{member.name}</p>
+                      <p className="truncate font-semibold leading-tight">
+                        {member.name}
+                      </p>
                       {isCurrentUser && (
-                        <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0">
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 px-1.5 py-0 text-[10px]"
+                        >
                           Você
                         </Badge>
                       )}
@@ -309,7 +314,9 @@ export default function Members() {
                         </span>
                       )}
                       {!member.is_creditor && !member.is_benefited && (
-                        <span className="text-[10px] text-muted-foreground">Sem papel definido</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          Sem papel definido
+                        </span>
                       )}
                     </div>
                   </div>
@@ -330,7 +337,9 @@ export default function Members() {
                     </div>
                   )}
                   {member.document && (
-                    <p className="font-mono text-xs text-muted-foreground">{member.document}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {member.document}
+                    </p>
                   )}
                   {member.monthly_income && (
                     <div className="rounded bg-muted/50 px-2 py-1 text-xs">
@@ -346,7 +355,10 @@ export default function Members() {
 
                   {/* Actions */}
                   <div className="flex items-center justify-between border-t pt-2">
-                    <Badge variant={member.active ? 'success' : 'outline'} className="text-xs">
+                    <Badge
+                      variant={member.active ? 'success' : 'outline'}
+                      className="text-xs"
+                    >
                       {member.active ? 'Ativo' : 'Inativo'}
                     </Badge>
                     <div className="flex gap-1">
@@ -383,7 +395,10 @@ export default function Members() {
                         aria-label={t('common.actions.delete')}
                         title={t('common.actions.delete')}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
+                        <Trash2
+                          className="h-3.5 w-3.5 text-destructive"
+                          aria-hidden="true"
+                        />
                       </Button>
                     </div>
                   </div>
