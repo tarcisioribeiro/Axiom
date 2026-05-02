@@ -55,9 +55,26 @@ import { useSemanticColors } from '@/lib/chart-colors';
 import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
-import type { Budget, BudgetFormData } from '@/types';
+import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const CATEGORY_ICONS: Record<string, string> = {
+  'food and drink': '🍽️',
+  supermarket: '🛒',
+  transport: '🚗',
+  'bills and services': '⚡',
+  entertainment: '🎬',
+  education: '📚',
+  health: '❤️',
+  'health and care': '❤️',
+  house: '🏠',
+  vestuary: '👔',
+  travels: '✈️',
+  investments: '📈',
+  others: '📦',
+};
 
 const MONTHS = [
   { value: 1, label: 'Janeiro' },
@@ -93,6 +110,7 @@ function getDefaultFormData(): BudgetFormData {
 export default function Budgets() {
   const { t } = useTranslation();
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | undefined>();
@@ -119,8 +137,12 @@ export default function Budgets() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await budgetsService.getAll();
+      const [data, statuses] = await Promise.all([
+        budgetsService.getAll(),
+        budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
+      ]);
       setBudgets(Array.isArray(data) ? data : []);
+      setBudgetStatuses(Array.isArray(statuses) ? statuses : []);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -128,6 +150,7 @@ export default function Budgets() {
         variant: 'destructive',
       });
       setBudgets([]);
+      setBudgetStatuses([]);
     } finally {
       setIsLoading(false);
     }
@@ -280,16 +303,89 @@ export default function Budgets() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBudgets.map((budget) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
+        <>
+          {(() => {
+            const statusMap = new Map(
+              budgetStatuses.map((s) => [`${s.month}-${s.year}-${s.category}`, s])
+            );
+            const enriched = filteredBudgets.map((b) => ({
+              budget: b,
+              status: statusMap.get(`${b.month}-${b.year}-${b.category}`),
+            }));
+            const exceededCount = enriched.filter(({ status }) => {
+              const pct = status ? status.percentage : 0;
+              return pct > 100;
+            }).length;
+            const warningCount = enriched.filter(({ status }) => {
+              const pct = status ? status.percentage : 0;
+              return pct >= 70 && pct <= 100;
+            }).length;
+            const okCount = filteredBudgets.length - exceededCount - warningCount;
+            return (
+              <>
+                <div className="rounded-lg border bg-card p-4">
+                  <p className="mb-2 text-sm font-medium">
+                    Saúde dos orçamentos este mês
+                  </p>
+                  <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                    {exceededCount > 0 && (
+                      <div
+                        className="bg-destructive"
+                        style={{
+                          width: `${(exceededCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {warningCount > 0 && (
+                      <div
+                        className="bg-warning"
+                        style={{
+                          width: `${(warningCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {okCount > 0 && (
+                      <div
+                        className="bg-success"
+                        style={{
+                          width: `${(okCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                    <span>
+                      <span className="font-semibold text-success">{okCount}</span>{' '}
+                      dentro do limite
+                    </span>
+                    <span>
+                      <span className="font-semibold text-warning">{warningCount}</span>{' '}
+                      em alerta
+                    </span>
+                    <span>
+                      <span className="font-semibold text-destructive">
+                        {exceededCount}
+                      </span>{' '}
+                      excedidos
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {enriched.map(({ budget, status }) => (
+                    <BudgetCard
+                      key={budget.id}
+                      budget={budget}
+                      status={status}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </>
       )}
 
       <div className="rounded-lg border bg-card">
@@ -602,10 +698,12 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
 
 function BudgetCard({
   budget,
+  status,
   onEdit,
   onDelete,
 }: {
   budget: Budget;
+  status?: BudgetStatus;
   onEdit: (b: Budget) => void;
   onDelete: (b: Budget) => Promise<void>;
 }) {
@@ -614,60 +712,124 @@ function BudgetCard({
     MONTHS.find((m) => m.value === budget.month)?.label ?? String(budget.month);
   const categoryLabel = translate('expenseCategories', budget.category);
 
+  const pct = status ? status.percentage : 0;
+  const actualSpent = status ? parseFloat(status.actual_spent) : null;
+  const limitAmount = parseFloat(budget.limit_amount);
+
+  const barColor =
+    pct > 100
+      ? 'bg-destructive'
+      : pct >= 70
+        ? 'bg-warning'
+        : 'bg-success';
+
+  const categoryIcon = CATEGORY_ICONS[budget.category] ?? '📦';
+
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="font-semibold">{categoryLabel}</h3>
-          <p className="text-sm text-muted-foreground">
-            {monthLabel}/{budget.year}
-          </p>
+    <div
+      className={cn(
+        'overflow-hidden rounded-lg border-l-4 bg-card transition-shadow hover:shadow-md',
+        pct > 100
+          ? 'border-l-destructive shadow-sm shadow-destructive/20'
+          : pct >= 70
+            ? 'border-l-warning'
+            : 'border-l-success'
+      )}
+    >
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl" role="img" aria-hidden="true">
+              {categoryIcon}
+            </span>
+            <div>
+              <p className="font-semibold leading-tight">{categoryLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                {monthLabel}/{budget.year}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {status && (
+              <span
+                className={cn(
+                  'rounded px-2 py-0.5 text-xs font-bold',
+                  pct > 100
+                    ? 'bg-destructive/10 text-destructive'
+                    : pct >= 70
+                      ? 'bg-warning/10 text-warning'
+                      : 'bg-success/10 text-success'
+                )}
+              >
+                {pct.toFixed(0)}%
+              </span>
+            )}
+            {!status && (
+              <Badge variant="outline">{t('pages.budgets.badgeLabel')}</Badge>
+            )}
+          </div>
         </div>
-        <Badge variant="outline">{t('pages.budgets.badgeLabel')}</Badge>
-      </div>
 
-      <div className="space-y-1 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
-          <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
-        </div>
-        {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t('pages.budgets.rollover.amount')}
-            </span>
-            <span className="font-medium text-green-600 dark:text-green-400">
-              +{formatCurrency(budget.rollover_amount)}
-            </span>
+        {status && (
+          <div className="mt-3 space-y-1">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn('h-full rounded-full transition-all', barColor)}
+                style={{ width: `${Math.min(pct, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{formatCurrency(actualSpent ?? 0)}</span>
+              <span>de {formatCurrency(limitAmount)}</span>
+            </div>
           </div>
         )}
+
+        {!status && (
+          <div className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
+              <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
+            </div>
+          </div>
+        )}
+
+        {budget.rollover_enabled &&
+          parseFloat(budget.rollover_amount) > 0 && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-info">
+              <span>↩</span>
+              <span>
+                Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}
+              </span>
+            </div>
+          )}
+
         {budget.member_name && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('pages.budgets.member')}</span>
-            <span className="font-medium">{budget.member_name}</span>
-          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('pages.budgets.member')}: {budget.member_name}
+          </p>
         )}
-      </div>
 
-      <div className="flex gap-2 border-t pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => onEdit(budget)}
-        >
-          <Pencil className="mr-1 h-3 w-3" />
-          {t('common.actions.edit')}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          onClick={() => void onDelete(budget)}
-        >
-          <Trash2 className="mr-1 h-3 w-3" />
-          {t('common.actions.delete')}
-        </Button>
+        <div className="mt-3 flex gap-2 border-t pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onEdit(budget)}
+          >
+            <Pencil className="mr-1 h-3 w-3" />
+            {t('common.actions.edit')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => void onDelete(budget)}
+          >
+            <Trash2 className="mr-1 h-3 w-3" />
+            {t('common.actions.delete')}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,18 @@
-import { Plus, Pencil, Trash2, Target, CheckCircle2, Link } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Target,
+  CheckCircle2,
+  Link,
+  PiggyBank,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +29,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -31,7 +40,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 import { accountsService } from '@/services/accounts-service';
 import { vaultsService, financialGoalsService } from '@/services/vaults-service';
 import type {
@@ -44,16 +53,206 @@ import type {
 import { FINANCIAL_GOAL_CATEGORIES as CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+function ProgressRing({
+  pct,
+  size = 80,
+  color = '#22c55e',
+}: {
+  pct: number;
+  size?: number;
+  color?: string;
+}) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = Math.min(pct / 100, 1) * circ;
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={6}
+        className="text-muted/30"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={6}
+        strokeDasharray={`${filled} ${circ - filled}`}
+        strokeLinecap="round"
+        style={{ transition: 'stroke-dasharray 0.5s ease' }}
+      />
+    </svg>
+  );
+}
+
+interface GoalCardProps {
+  goal: FinancialGoalListItem;
+  todayTimestamp: number;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  onEdit: (g: FinancialGoalListItem) => void;
+  onDelete: (id: number) => void;
+  onManageVaults: (g: FinancialGoalListItem) => void;
+  onCheckCompletion: (g: FinancialGoalListItem) => void;
+}
+
+function GoalCard({ goal, todayTimestamp, t, onEdit, onDelete, onManageVaults, onCheckCompletion }: GoalCardProps) {
+  const cp = goal.computed_progress;
+  const currentVal = parseFloat(cp.current_value);
+  const targetVal = parseFloat(cp.target_value);
+  const pct = parseFloat(cp.percentage);
+
+  const categoryConfig: Record<string, { icon: React.ReactNode; color: string; ringColor: string }> = {
+    reduce_expenses: {
+      icon: <TrendingDown className="h-5 w-5 text-orange-500" />,
+      color: 'text-orange-500',
+      ringColor: '#f97316',
+    },
+    increase_revenue: {
+      icon: <TrendingUp className="h-5 w-5 text-blue-500" />,
+      color: 'text-blue-500',
+      ringColor: '#3b82f6',
+    },
+  };
+
+  const config = categoryConfig[goal.category] ?? {
+    icon: <PiggyBank className="h-5 w-5 text-success" />,
+    color: 'text-success',
+    ringColor: '#22c55e',
+  };
+
+  const daysLeft = goal.target_date
+    ? Math.ceil(
+        (new Date(goal.target_date).getTime() - todayTimestamp) / (1000 * 60 * 60 * 24)
+      )
+    : null;
+
+  return (
+    <Card
+      className={`overflow-hidden transition-shadow hover:shadow-md ${
+        goal.is_completed ? 'border-success/50 bg-success/[0.03]' : ''
+      }`}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            {config.icon}
+            <div>
+              <p className="font-semibold leading-tight">{goal.description}</p>
+              <p className="text-xs text-muted-foreground">{goal.category_display}</p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onManageVaults(goal)}
+              aria-label={t('pages.financialGoals.manageVaults')}
+              title={t('pages.financialGoals.manageVaults')}
+            >
+              <Link className="h-4 w-4 text-info" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onCheckCompletion(goal)}
+              aria-label={t('pages.financialGoals.checkCompletion')}
+              title={t('pages.financialGoals.checkCompletion')}
+              disabled={goal.is_completed}
+            >
+              <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(goal)}
+              aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(goal.id)}
+              aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Anel de progresso centralizado */}
+        <div className="relative my-4 flex justify-center">
+          <ProgressRing pct={pct} size={80} color={config.ringColor} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`text-sm font-bold ${config.color}`}>
+              {pct.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Valores */}
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">{t('pages.financialGoals.columns.current')}</span>
+            <span className={`font-semibold ${config.color}`}>{formatCurrency(currentVal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">{t('pages.financialGoals.columns.target')}</span>
+            <span className="font-semibold">{formatCurrency(targetVal)}</span>
+          </div>
+          {goal.vaults_count > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t('pages.financialGoals.columns.vaults')}</span>
+              <Badge variant="outline" className="text-xs">
+                {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Prazo */}
+        {daysLeft !== null && (
+          <div
+            className={`mt-2 text-center text-xs font-medium ${
+              daysLeft <= 0
+                ? 'text-destructive'
+                : daysLeft <= 30
+                  ? 'text-warning'
+                  : 'text-muted-foreground'
+            }`}
+          >
+            {daysLeft > 0
+              ? t('pages.financialGoals.daysLeft', { count: daysLeft })
+              : t('pages.financialGoals.deadlinePassed')}
+          </div>
+        )}
+
+        {/* Conquista */}
+        {goal.is_completed && (
+          <div className="mt-2 flex items-center justify-center gap-1 text-success">
+            <CheckCircle2 className="h-4 w-4" />
+            <span className="text-xs font-semibold">{t('pages.financialGoals.goalCompletedLabel')}</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
 
-const DATA_SOURCE_LABELS: Record<string, string> = {
-  vaults: 'Baseado em cofres',
-  expenses: 'Baseado em despesas',
-  revenues: 'Baseado em receitas',
-};
 
 export default function FinancialGoals() {
   const { t } = useTranslation();
+  const todayTimestamp = useMemo(() => Date.now(), []);
   const [goals, setGoals] = useState<FinancialGoalListItem[]>([]);
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -310,117 +509,6 @@ export default function FinancialGoals() {
     0
   );
 
-  const columns: Column<FinancialGoalListItem>[] = [
-    {
-      key: 'description',
-      label: t('pages.financialGoals.columns.description'),
-      render: (goal) => (
-        <div>
-          <div className="font-medium">{goal.description}</div>
-          <div className="text-xs text-muted-foreground">{goal.category_display}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'progress',
-      label: t('pages.financialGoals.columns.progress'),
-      render: (goal) => {
-        const cp = goal.computed_progress;
-        const currentVal = parseFloat(cp.current_value);
-        const targetVal = parseFloat(cp.target_value);
-        const pct = parseFloat(cp.percentage);
-        return (
-          <div className="min-w-[200px]">
-            <div className="mb-1 flex justify-between text-sm">
-              <span>{formatCurrency(currentVal)}</span>
-              <span className="text-muted-foreground">{formatCurrency(targetVal)}</span>
-            </div>
-            <Progress value={pct} className="h-2" />
-            <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-              <span>{pct.toFixed(1)}%</span>
-              <span className="italic">{DATA_SOURCE_LABELS[cp.data_source]}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'vaults_count',
-      label: t('pages.financialGoals.columns.vaults'),
-      render: (goal) => (
-        <Badge variant="outline">
-          {t('pages.financialGoals.vaultsCount', { count: goal.vaults_count })}
-        </Badge>
-      ),
-    },
-    {
-      key: 'target_date',
-      label: t('pages.financialGoals.columns.targetDate'),
-      render: (goal) => (goal.target_date ? formatDate(goal.target_date) : '-'),
-    },
-    {
-      key: 'status',
-      label: t('pages.financialGoals.columns.status'),
-      render: (goal) => (
-        <Badge
-          variant={
-            goal.is_completed ? 'default' : goal.is_active ? 'secondary' : 'outline'
-          }
-        >
-          {goal.is_completed
-            ? t('common.status.paid')
-            : goal.is_active
-              ? t('common.status.active')
-              : t('common.status.inactive')}
-        </Badge>
-      ),
-    },
-    {
-      key: 'actions',
-      label: t('common.table.actions'),
-      render: (goal) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleManageVaults(goal)}
-            aria-label={t('pages.financialGoals.manageVaults')}
-            title={t('pages.financialGoals.manageVaults')}
-          >
-            <Link className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleCheckCompletion(goal)}
-            aria-label={t('pages.financialGoals.checkCompletion')}
-            title={t('pages.financialGoals.checkCompletion')}
-            disabled={goal.is_completed}
-          >
-            <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(goal)}
-            aria-label={t('common.actions.edit')}
-            title={t('common.actions.edit')}
-          >
-            <Pencil className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDelete(goal.id)}
-            aria-label={t('common.actions.delete')}
-            title={t('common.actions.delete')}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   return (
     <PageContainer>
@@ -436,9 +524,10 @@ export default function FinancialGoals() {
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="border-t-2 border-t-primary">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Target className="h-4 w-4 text-primary" />
               {t('pages.financialGoals.activeGoals')}
             </CardTitle>
           </CardHeader>
@@ -446,9 +535,10 @@ export default function FinancialGoals() {
             <div className="text-2xl font-bold">{activeGoals.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-2 border-t-success">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <CheckCircle2 className="h-4 w-4 text-success" />
               {t('pages.financialGoals.completedGoals')}
             </CardTitle>
           </CardHeader>
@@ -458,9 +548,10 @@ export default function FinancialGoals() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-2 border-t-success">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <PiggyBank className="h-4 w-4 text-success" />
               {t('pages.financialGoals.accumulatedAmount')}
             </CardTitle>
           </CardHeader>
@@ -470,9 +561,10 @@ export default function FinancialGoals() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-2 border-t-muted-foreground">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
               {t('pages.financialGoals.totalAmount')}
             </CardTitle>
           </CardHeader>
@@ -482,16 +574,30 @@ export default function FinancialGoals() {
         </Card>
       </div>
 
-      <DataTable
-        data={goals}
-        columns={columns}
-        keyExtractor={(goal) => goal.id}
-        isLoading={isLoading}
-        emptyState={{
-          icon: <Target className="h-12 w-12 text-muted-foreground" />,
-          message: t('pages.financialGoals.emptyState'),
-        }}
-      />
+      {/* Goal Cards Grid */}
+      {isLoading ? (
+        <LoadingState />
+      ) : goals.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <Target className="mb-4 h-12 w-12" />
+          <p>{t('pages.financialGoals.emptyState')}</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {goals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              todayTimestamp={todayTimestamp}
+              t={t}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onManageVaults={handleManageVaults}
+              onCheckCompletion={handleCheckCompletion}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
