@@ -11,11 +11,13 @@ import {
   Zap,
   TrendingUp,
   Calculator,
+  PiggyBank,
+  Sparkles,
 } from 'lucide-react';
 import { useState, useEffect, useMemo, useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ReceiptButton } from '@/components/receipts';
@@ -68,6 +70,235 @@ import type {
   VaultRecurringContributionFormData,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const VAULT_COLORS = [
+  {
+    bg: 'from-emerald-500/20 to-teal-500/10',
+    accent: 'text-emerald-600 dark:text-emerald-400',
+    border: 'border-emerald-500/30',
+    barColor: '#10b981',
+  },
+  {
+    bg: 'from-blue-500/20 to-indigo-500/10',
+    accent: 'text-blue-600 dark:text-blue-400',
+    border: 'border-blue-500/30',
+    barColor: '#3b82f6',
+  },
+  {
+    bg: 'from-violet-500/20 to-purple-500/10',
+    accent: 'text-violet-600 dark:text-violet-400',
+    border: 'border-violet-500/30',
+    barColor: '#8b5cf6',
+  },
+  {
+    bg: 'from-amber-500/20 to-orange-500/10',
+    accent: 'text-amber-600 dark:text-amber-400',
+    border: 'border-amber-500/30',
+    barColor: '#f59e0b',
+  },
+  {
+    bg: 'from-rose-500/20 to-pink-500/10',
+    accent: 'text-rose-600 dark:text-rose-400',
+    border: 'border-rose-500/30',
+    barColor: '#f43f5e',
+  },
+  {
+    bg: 'from-cyan-500/20 to-sky-500/10',
+    accent: 'text-cyan-600 dark:text-cyan-400',
+    border: 'border-cyan-500/30',
+    barColor: '#06b6d4',
+  },
+];
+
+interface VaultCardProps {
+  vault: VaultType;
+  index: number;
+  totalBalance: number;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+  onDeposit: (v: VaultType) => void;
+  onWithdraw: (v: VaultType) => void;
+  onApplyYield: (v: VaultType) => void;
+  onTransactions: (v: VaultType) => void;
+  onContributions: (v: VaultType) => void;
+  onSimulator: (v: VaultType) => void;
+  onEdit: (v: VaultType) => void;
+  onDelete: (id: number) => void;
+}
+
+function VaultCard({
+  vault,
+  index,
+  totalBalance,
+  t,
+  onDeposit,
+  onWithdraw,
+  onApplyYield,
+  onTransactions,
+  onContributions,
+  onSimulator,
+  onEdit,
+  onDelete,
+}: VaultCardProps) {
+  const color = VAULT_COLORS[index % VAULT_COLORS.length];
+  const balance = parseFloat(vault.current_balance);
+  const accYield = parseFloat(vault.accumulated_yield);
+  const proportion = totalBalance > 0 ? Math.min(100, (balance / totalBalance) * 100) : 0;
+
+  return (
+    <Card className={`overflow-hidden border ${color.border}`}>
+      {/* Hero com gradiente */}
+      <div className={`bg-gradient-to-br ${color.bg} px-4 pb-4 pt-4`}>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <Vault className={`h-8 w-8 ${color.accent}`} />
+            <div>
+              <p className="font-semibold leading-tight">{vault.description}</p>
+              <p className="text-xs text-muted-foreground">{vault.account_name}</p>
+            </div>
+          </div>
+          <Badge variant={vault.is_active ? 'default' : 'secondary'}>
+            {vault.is_active ? t('common.status.active') : t('common.status.inactive')}
+          </Badge>
+        </div>
+        <div className="mt-3">
+          <p className="text-xs text-muted-foreground">{t('pages.vaults.columns.currentBalance')}</p>
+          <p className={`text-2xl font-bold ${color.accent}`}>
+            {formatCurrency(balance)}
+          </p>
+        </div>
+      </div>
+
+      <CardContent className="space-y-3 pt-3">
+        {/* Rendimento acumulado */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-1 text-amber-500">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{t('pages.vaults.columns.yields')}</span>
+          </div>
+          <span className="font-semibold text-amber-600 dark:text-amber-400">
+            {formatCurrency(accYield)}
+          </span>
+        </div>
+
+        {/* Rendimento pendente */}
+        {vault.pending_yield > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('pages.vaults.pending')}</span>
+            <span className="font-medium text-info">
+              +{formatCurrency(vault.pending_yield)}
+            </span>
+          </div>
+        )}
+
+        {/* Taxa anual */}
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('pages.vaults.columns.rate')}</span>
+          <Badge variant="outline">
+            {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
+          </Badge>
+        </div>
+
+        {/* Barra de proporção no total */}
+        {totalBalance > 0 && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{t('pages.vaults.proportionLabel')}</span>
+              <span>{proportion.toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${proportion}%`,
+                  backgroundColor: color.barColor,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Botões de ação */}
+        <div className="flex flex-wrap items-center gap-1 border-t pt-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDeposit(vault)}
+            aria-label={t('pages.vaults.depositBtn')}
+            title={t('pages.vaults.depositBtn')}
+            disabled={!vault.is_active}
+          >
+            <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onWithdraw(vault)}
+            aria-label={t('pages.vaults.withdrawBtn')}
+            title={t('pages.vaults.withdrawBtn')}
+            disabled={!vault.is_active || balance <= 0}
+          >
+            <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onApplyYield(vault)}
+            aria-label={t('pages.vaults.applyYieldBtn')}
+            title={t('pages.vaults.applyYieldBtn')}
+            disabled={!vault.is_active || vault.pending_yield <= 0}
+          >
+            <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onTransactions(vault)}
+            aria-label={t('pages.vaults.transactionsBtn')}
+            title={t('pages.vaults.transactionsBtn')}
+          >
+            <History className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onContributions(vault)}
+            aria-label={t('pages.vaults.recurringContributions.btn')}
+            title={t('pages.vaults.recurringContributions.btn')}
+          >
+            <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onSimulator(vault)}
+            title={t('pages.vaultSimulator.title')}
+            aria-label={t('pages.vaultSimulator.title')}
+          >
+            <TrendingUp className="h-4 w-4 text-info" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(vault)}
+            title={t('common.actions.edit')}
+            aria-label={t('common.actions.edit')}
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(vault.id)}
+            title={t('common.actions.delete')}
+            aria-label={t('common.actions.delete')}
+          >
+            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Vaults() {
   const { t, i18n } = useTranslation();
@@ -666,154 +897,6 @@ export default function Vaults() {
     }));
   }, [simResults]);
 
-  const columns: Column<VaultType>[] = [
-    {
-      key: 'description',
-      label: t('pages.vaults.columns.description'),
-      render: (vault) => (
-        <div>
-          <div className="font-medium">{vault.description}</div>
-          <div className="text-xs text-muted-foreground">{vault.account_name}</div>
-        </div>
-      ),
-    },
-    {
-      key: 'current_balance',
-      label: t('pages.vaults.columns.currentBalance'),
-      render: (vault) => (
-        <span
-          className={cn(
-            'font-semibold',
-            parseFloat(vault.current_balance) > 0 ? 'text-success' : ''
-          )}
-        >
-          {formatCurrency(parseFloat(vault.current_balance))}
-        </span>
-      ),
-    },
-    {
-      key: 'accumulated_yield',
-      label: t('pages.vaults.columns.yields'),
-      render: (vault) => (
-        <div>
-          <div className="text-success">
-            {formatCurrency(parseFloat(vault.accumulated_yield))}
-          </div>
-          {vault.pending_yield > 0 && (
-            <div className="text-xs text-muted-foreground">
-              +{formatCurrency(vault.pending_yield)} {t('pages.vaults.pending')}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'yield_rate',
-      label: t('pages.vaults.columns.rate'),
-      render: (vault) => (
-        <div>
-          <div className="font-medium">
-            {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {vault.daily_yield_rate_percentage.toFixed(4)}% {t('pages.vaults.perDay')}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'is_active',
-      label: t('pages.vaults.columns.status'),
-      render: (vault) => (
-        <Badge variant={vault.is_active ? 'default' : 'secondary'}>
-          {vault.is_active ? t('common.status.active') : t('common.status.inactive')}
-        </Badge>
-      ),
-    },
-    {
-      key: 'actions',
-      label: t('common.table.actions'),
-      render: (vault) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openDepositDialog(vault)}
-            aria-label={t('pages.vaults.depositBtn')}
-            title={t('pages.vaults.depositBtn')}
-            disabled={!vault.is_active}
-          >
-            <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openWithdrawDialog(vault)}
-            aria-label={t('pages.vaults.withdrawBtn')}
-            title={t('pages.vaults.withdrawBtn')}
-            disabled={!vault.is_active || parseFloat(vault.current_balance) <= 0}
-          >
-            <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleApplyYield(vault)}
-            aria-label={t('pages.vaults.applyYieldBtn')}
-            title={t('pages.vaults.applyYieldBtn')}
-            disabled={!vault.is_active || vault.pending_yield <= 0}
-          >
-            <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openTransactionsDialog(vault)}
-            aria-label={t('pages.vaults.transactionsBtn')}
-            title={t('pages.vaults.transactionsBtn')}
-          >
-            <History className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openContributionsDialog(vault)}
-            aria-label={t('pages.vaults.recurringContributions.btn')}
-            title={t('pages.vaults.recurringContributions.btn')}
-          >
-            <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => openSimulator(vault)}
-            title={t('pages.vaultSimulator.title')}
-            aria-label={t('pages.vaultSimulator.title')}
-          >
-            <TrendingUp className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(vault)}
-            title={t('common.actions.edit')}
-            aria-label={t('common.actions.edit')}
-          >
-            <Pencil className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDelete(vault.id)}
-            title={t('common.actions.delete')}
-            aria-label={t('common.actions.delete')}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   return (
     <PageContainer>
@@ -836,9 +919,10 @@ export default function Vaults() {
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="border-t-2 border-t-success">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <PiggyBank className="h-4 w-4 text-success" />
               {t('pages.vaults.totalBalance')}
             </CardTitle>
           </CardHeader>
@@ -848,21 +932,23 @@ export default function Vaults() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-2 border-t-amber-500">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Sparkles className="h-4 w-4 text-amber-500" />
               {t('pages.vaults.totalYield')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">
+            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
               {formatCurrency(totalYield)}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-t-2 border-t-info">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <TrendingUp className="h-4 w-4 text-info" />
               {t('pages.vaults.pendingYield')}
             </CardTitle>
           </CardHeader>
@@ -874,16 +960,35 @@ export default function Vaults() {
         </Card>
       </div>
 
-      <DataTable
-        data={vaults}
-        columns={columns}
-        keyExtractor={(vault) => vault.id}
-        isLoading={isLoading}
-        emptyState={{
-          icon: <Vault className="h-12 w-12 text-muted-foreground" />,
-          message: t('pages.vaults.emptyState'),
-        }}
-      />
+      {/* Vault Cards Grid */}
+      {isLoading ? (
+        <LoadingState />
+      ) : vaults.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+          <Vault className="mb-4 h-12 w-12" />
+          <p>{t('pages.vaults.emptyState')}</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {vaults.map((vault, index) => (
+            <VaultCard
+              key={vault.id}
+              vault={vault}
+              index={index}
+              totalBalance={totalBalance}
+              t={t}
+              onDeposit={openDepositDialog}
+              onWithdraw={openWithdrawDialog}
+              onApplyYield={handleApplyYield}
+              onTransactions={openTransactionsDialog}
+              onContributions={openContributionsDialog}
+              onSimulator={openSimulator}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

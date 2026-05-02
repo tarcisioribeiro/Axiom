@@ -39,6 +39,7 @@ import {
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+
 import { ChartContainer } from '@/components/charts';
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -77,12 +78,24 @@ import { creditCardsService } from '@/services/credit-cards-service';
 import { dashboardService, type IRReport } from '@/services/dashboard-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
+import { useAuthStore } from '@/stores/auth-store';
 
 type CategoryStat = { category: string; name: string; value: number };
+
+function getGreeting(): { emoji: string; text: string } {
+  const hour = new Date().getHours();
+  if (hour < 12) return { emoji: '☀️', text: 'Bom dia' };
+  if (hour < 18) return { emoji: '🌤️', text: 'Boa tarde' };
+  return { emoji: '🌙', text: 'Boa noite' };
+}
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
+  const user = useAuthStore((s) => s.user);
+
+  const greeting = getGreeting();
+  const displayName = user?.first_name || user?.username || '';
 
   // Filter state
   const [selectedCard, setSelectedCard] = useState<string>('all');
@@ -482,7 +495,8 @@ export default function Dashboard() {
     <AnimatedPage>
       <div className="space-y-6 px-sm py-md md:px-4 md:py-8">
         <PageHeader
-          title={t('pages.dashboard.title')}
+          title={`${greeting.emoji} ${greeting.text}${displayName ? `, ${displayName}` : ''}`}
+          subtitle="Aqui está seu resumo financeiro de hoje."
           icon={<LayoutDashboard />}
           action={{
             label: 'Exportar Extrato',
@@ -566,21 +580,29 @@ export default function Dashboard() {
                       key={anomaly.category}
                       className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/5 p-3"
                     >
-                      <div>
-                        <p className="font-medium">
-                          {translate('expenseCategories', anomaly.category)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {anomaly.message}
-                        </p>
+                      <div className="flex items-start gap-3">
+                        <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                        <div>
+                          <p className="font-medium">
+                            {translate('expenseCategories', anomaly.category)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {anomaly.message}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
+                      <div className="ml-4 flex flex-col items-end gap-1">
                         <p className="font-semibold">
                           {formatCurrency(anomaly.current_amount)}
                         </p>
-                        <Badge variant="outline" className="text-xs">
-                          z={anomaly.z_score.toFixed(1)}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">
+                            +{anomaly.average > 0 ? ((anomaly.current_amount - anomaly.average) / anomaly.average * 100).toFixed(0) : '0'}%
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            z={anomaly.z_score.toFixed(1)}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -670,10 +692,20 @@ export default function Dashboard() {
                       {accountBalances.map((account) => (
                         <TableRow key={account.id}>
                           <TableCell className="font-medium">
-                            <div>
-                              <div>{account.account_name}</div>
-                              <div className="text-xs">
-                                {translate('institutions', account.institution_name)}
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={cn(
+                                  'h-2 w-2 rounded-full shrink-0',
+                                  account.current_balance >= 0
+                                    ? 'bg-success'
+                                    : 'bg-destructive'
+                                )}
+                              />
+                              <div>
+                                <div>{account.account_name}</div>
+                                <div className="text-xs">
+                                  {translate('institutions', account.institution_name)}
+                                </div>
                               </div>
                             </div>
                           </TableCell>
@@ -890,6 +922,13 @@ export default function Dashboard() {
           </motion.div>
         )}
 
+        {/* Separador: Projeção futura */}
+        <div className="flex items-center gap-3 py-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Projeção futura</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
         {/* Projeção de Fluxo de Caixa */}
         <motion.div variants={itemVariants} initial="hidden" animate="visible">
           <Card>
@@ -1015,6 +1054,29 @@ export default function Dashboard() {
           </Card>
         </motion.div>
 
+        {/* Faixa de Superávit / Déficit */}
+        {stats && (
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium',
+              stats.total_revenues > stats.total_expenses
+                ? 'bg-success/10 text-success'
+                : 'bg-destructive/10 text-destructive'
+            )}
+          >
+            {stats.total_revenues > stats.total_expenses ? (
+              <TrendingUp className="h-4 w-4 shrink-0" />
+            ) : (
+              <TrendingDown className="h-4 w-4 shrink-0" />
+            )}
+            <span>
+              {stats.total_revenues > stats.total_expenses
+                ? `Superávit de ${formatCurrency(stats.total_revenues - stats.total_expenses)} este mês`
+                : `Déficit de ${formatCurrency(stats.total_expenses - stats.total_revenues)} este mês`}
+            </span>
+          </div>
+        )}
+
         <motion.div
           className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
@@ -1055,6 +1117,13 @@ export default function Dashboard() {
             />
           </motion.div>
         </motion.div>
+
+        {/* Separador: Composição do mês */}
+        <div className="flex items-center gap-3 py-2">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Composição do mês</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>

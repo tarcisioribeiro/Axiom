@@ -60,6 +60,44 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+const CARD_BRAND_GRADIENTS: Record<string, string> = {
+  visa: 'from-blue-600/30 via-blue-500/15 to-indigo-500/10',
+  mastercard: 'from-red-600/30 via-orange-500/15 to-yellow-500/10',
+  elo: 'from-yellow-500/30 via-blue-500/15 to-blue-700/10',
+  amex: 'from-green-600/30 via-teal-500/15 to-emerald-500/10',
+  hipercard: 'from-red-700/30 via-red-500/15 to-pink-500/10',
+};
+
+function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
+  const r = (size - 6) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = (pct / 100) * circ;
+  const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#22c55e';
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={4}
+        className="text-muted/30"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={4}
+        strokeDasharray={`${filled} ${circ - filled}`}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 // Mapeamento de abreviações de mês para número
 const MONTH_TO_NUMBER: Record<string, number> = {
   Jan: 1,
@@ -116,6 +154,8 @@ export default function CreditCards() {
   const { showConfirm } = useAlertDialog();
   const { user } = useAuthStore();
 
+  const [allBills, setAllBills] = useState<CreditCardBill[]>([]);
+
   // Bills dialog state
   const [billsCard, setBillsCard] = useState<CreditCard | undefined>();
   const [isBillsOpen, setIsBillsOpen] = useState(false);
@@ -136,12 +176,14 @@ export default function CreditCards() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [cardsData, accountsData] = await Promise.all([
+      const [cardsData, accountsData, billsData] = await Promise.all([
         creditCardsService.getAll(),
         accountsService.getAll(),
+        creditCardBillsService.getAll(),
       ]);
       setCreditCards(cardsData);
       setAccounts(accountsData);
+      setAllBills(billsData);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -529,10 +571,41 @@ export default function CreditCards() {
             const available = card.available_credit ?? 0;
             const used = Math.max(0, limit - available);
             const usagePct = limit > 0 ? Math.min(100, (used / limit) * 100) : 0;
+            const brandGradient =
+              CARD_BRAND_GRADIENTS[card.flag.toLowerCase()] ??
+              'from-primary/20 via-primary/10 to-transparent';
+
+            const openBill = allBills.find(
+              (b) =>
+                b.credit_card === card.id &&
+                (b.status === 'open' || b.status === 'overdue')
+            );
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const daysUntilDue = openBill?.due_date
+              ? Math.ceil(
+                  (new Date(openBill.due_date).getTime() - today.getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              : null;
+            const urgencyBorder =
+              openBill && daysUntilDue !== null
+                ? daysUntilDue < 0
+                  ? 'border-t-4 border-t-destructive'
+                  : daysUntilDue <= 5
+                    ? 'border-t-4 border-t-warning'
+                    : ''
+                : '';
+
             return (
-              <Card key={card.id} className="overflow-hidden">
+              <Card key={card.id} className={cn('overflow-hidden', urgencyBorder)}>
                 {/* Card hero — gradient background simulating a bank card */}
-                <div className="relative bg-gradient-to-br from-primary/20 via-primary/10 to-transparent px-md pb-lg pt-md">
+                <div
+                  className={cn(
+                    'relative bg-gradient-to-br px-md pb-lg pt-md',
+                    brandGradient
+                  )}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground">
@@ -543,40 +616,43 @@ export default function CreditCards() {
                         de {formatCurrency(limit)} disponível
                       </p>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => void openBillsDialog(card)}
-                        title={t('pages.creditCards.viewBills')}
-                        aria-label={t('pages.creditCards.viewBills')}
-                      >
-                        <Receipt className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleEdit(card)}
-                        title={t('common.actions.edit')}
-                        aria-label={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleDelete(card.id)}
-                        title={t('common.actions.delete')}
-                        aria-label={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="h-4 w-4 text-destructive"
-                          aria-hidden="true"
-                        />
-                      </Button>
+                    <div className="flex items-center gap-1">
+                      <UsageArc pct={usagePct} size={48} />
+                      <div className="flex flex-col">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => void openBillsDialog(card)}
+                          title={t('pages.creditCards.viewBills')}
+                          aria-label={t('pages.creditCards.viewBills')}
+                        >
+                          <Receipt className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleEdit(card)}
+                          title={t('common.actions.edit')}
+                          aria-label={t('common.actions.edit')}
+                        >
+                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleDelete(card.id)}
+                          title={t('common.actions.delete')}
+                          aria-label={t('common.actions.delete')}
+                        >
+                          <Trash2
+                            className="h-4 w-4 text-destructive"
+                            aria-hidden="true"
+                          />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   {/* Card chip */}
@@ -594,31 +670,24 @@ export default function CreditCards() {
                           {cardNumber}
                         </p>
                       )}
+                      {openBill && (
+                        <p
+                          className={cn(
+                            'mt-0.5 text-xs font-medium',
+                            daysUntilDue !== null && daysUntilDue <= 5
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          Fatura: {formatCurrency(openBill.total_amount)}
+                          {openBill.due_date &&
+                            ` • vence dia ${new Date(openBill.due_date).getUTCDate()}`}
+                        </p>
+                      )}
                     </div>
                     <Badge variant="secondary">
                       {translate('cardBrands', card.flag)}
                     </Badge>
-                  </div>
-
-                  {/* Usage bar */}
-                  <div className="space-y-xs">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Utilizado</span>
-                      <span>{Math.round(usagePct)}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition-all',
-                          usagePct >= 90
-                            ? 'bg-destructive'
-                            : usagePct >= 70
-                              ? 'bg-warning'
-                              : 'bg-success'
-                        )}
-                        style={{ width: `${usagePct}%` }}
-                      />
-                    </div>
                   </div>
 
                   <div className="flex items-center justify-between border-t pt-sm text-sm">

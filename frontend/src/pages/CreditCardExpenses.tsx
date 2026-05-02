@@ -43,6 +43,7 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
@@ -555,21 +556,58 @@ export default function CreditCardExpenses() {
     {
       key: 'category',
       label: t('pages.creditCardExpenses.columns.category'),
-      render: (installment) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', installment.category || '')}
-        </Badge>
-      ),
+      render: (installment) => {
+        const categoryEmoji: Record<string, string> = {
+          'food and drink': '🍽️',
+          supermarket: '🛒',
+          transport: '🚗',
+          entertainment: '🎬',
+          education: '📚',
+          'health and care': '❤️',
+          house: '🏠',
+          electronics: '💻',
+          travels: '✈️',
+          vestuary: '👔',
+          others: '📦',
+        };
+        const emoji = categoryEmoji[installment.category ?? ''] ?? '📦';
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <span>{emoji}</span>
+            {translate('expenseCategories', installment.category ?? '')}
+          </Badge>
+        );
+      },
     },
     {
       key: 'installment',
       label: t('pages.creditCardExpenses.columns.installment'),
       align: 'center',
-      render: (installment) => (
-        <span className="text-sm">
-          {installment.installment_number}/{installment.total_installments}
-        </span>
-      ),
+      render: (installment) => {
+        const current = installment.installment_number;
+        const total = installment.total_installments ?? 1;
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-0.5">
+              {Array.from({ length: Math.min(total, 8) }, (_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    i < current ? 'bg-success' : 'bg-muted'
+                  )}
+                />
+              ))}
+              {total > 8 && (
+                <span className="text-xs text-muted-foreground">+{total - 8}</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {current}/{total}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: 'payed',
@@ -611,6 +649,35 @@ export default function CreditCardExpenses() {
           onClick: handleCreate,
         }}
       />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPaid')}
+            </p>
+            <p className="text-xl font-bold text-success">{formatCurrency(totalPaid)}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPending')}
+            </p>
+            <p className="text-xl font-bold text-warning">{formatCurrency(totalPending)}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalAmount')}
+            </p>
+            <p className="text-xl font-bold text-destructive">
+              {formatCurrency(totalInstallments)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -751,6 +818,7 @@ export default function CreditCardExpenses() {
             installmentsByBill.map(
               ({
                 key,
+                bill,
                 label,
                 period,
                 cardName,
@@ -762,12 +830,34 @@ export default function CreditCardExpenses() {
                 <Card key={key}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Calendar className="h-5 w-5 text-primary" />
                           {key === 'sem-fatura'
                             ? label
                             : t('pages.creditCardExpenses.billLabel', { label })}
+                          {bill && (
+                            <Badge
+                              variant={
+                                bill.status === 'paid'
+                                  ? 'success'
+                                  : bill.status === 'overdue'
+                                    ? 'destructive'
+                                    : bill.status === 'closed'
+                                      ? 'secondary'
+                                      : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {bill.status === 'paid'
+                                ? 'Paga'
+                                : bill.status === 'overdue'
+                                  ? 'Vencida'
+                                  : bill.status === 'closed'
+                                    ? 'Fechada'
+                                    : 'Aberta'}
+                            </Badge>
+                          )}
                         </CardTitle>
                         {period && (
                           <p className="mt-1 text-sm">
@@ -777,6 +867,24 @@ export default function CreditCardExpenses() {
                             {cardName && period && ' • '}
                             {period}
                           </p>
+                        )}
+                        {bill && (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Pago</span>
+                              <span>
+                                {total > 0 ? Math.round((paid / total) * 100) : 0}%
+                              </span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-success"
+                                style={{
+                                  width: `${total > 0 ? (paid / total) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-4">

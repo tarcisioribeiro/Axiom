@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
+  subtitle?: string;
   icon?: React.ReactNode;
   action?: {
     label: string;
@@ -22,6 +23,7 @@ interface PageHeaderProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
+  subtitle,
   icon,
   action,
   children,
@@ -34,7 +36,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {icon}
           </div>
         )}
-        <h1 className="heading-1">{title}</h1>
+        <div>
+          <h1 className="heading-1">{title}</h1>
+          {subtitle && (
+            <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+          )}
+        </div>
       </div>
       {children}
       {!children && action && (
