@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -29,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import type { Account, BankStatementImport } from '@/types';
@@ -130,25 +130,64 @@ function UploadDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-md">
           <div className="space-y-sm">
-            <Label htmlFor="upload-file">
+            <Label htmlFor="upload-file-input">
               {t('pages.bankReconciliation.upload.fileLabel')}
             </Label>
-            <input
-              id="upload-file"
-              type="file"
-              accept=".ofx,.csv"
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-            {file && (
-              <p className="text-xs text-muted-foreground">
-                {file.name} — {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
-                <strong>
-                  {detectFormat(file.name).toUpperCase() ||
-                    t('pages.bankReconciliation.upload.unknownFormat')}
-                </strong>
-              </p>
-            )}
+            <div
+              role="button"
+              tabIndex={0}
+              className={cn(
+                'flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors',
+                file
+                  ? 'border-success/50 bg-success/5'
+                  : 'border-muted-foreground/30 bg-muted/30 hover:border-primary/50 hover:bg-muted/50'
+              )}
+              onClick={() => document.getElementById('upload-file-input')?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ')
+                  document.getElementById('upload-file-input')?.click();
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {file ? (
+                <>
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
+                    <FileUp className="h-6 w-6 text-success" />
+                  </div>
+                  <p className="font-medium">{file.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
+                    <strong>
+                      {detectFormat(file.name).toUpperCase() ||
+                        t('pages.bankReconciliation.upload.unknownFormat')}
+                    </strong>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <FileUp className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="font-medium">
+                    {t('pages.bankReconciliation.upload.dropzone', {
+                      defaultValue: 'Arraste ou clique para selecionar',
+                    })}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t('pages.bankReconciliation.upload.supportedFormats', {
+                      defaultValue: 'Suporte: OFX, CSV',
+                    })}
+                  </p>
+                </>
+              )}
+              <input
+                id="upload-file-input"
+                type="file"
+                accept=".ofx,.csv"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
           </div>
           <div className="space-y-sm">
             <Label htmlFor="upload-account">
@@ -228,60 +267,8 @@ export default function BankReconciliation() {
 
   const lastImportDate = imports.length > 0 ? formatDate(imports[0].created_at) : '—';
 
-  const columns: Column<BankStatementImport>[] = [
-    {
-      key: 'original_filename',
-      label: t('pages.bankReconciliation.columns.file'),
-      render: (imp) => <span className="font-medium">{imp.original_filename}</span>,
-    },
-    {
-      key: 'file_format',
-      label: t('pages.bankReconciliation.columns.format'),
-      render: (imp) => <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>,
-    },
-    {
-      key: 'status',
-      label: t('pages.bankReconciliation.columns.status'),
-      render: (imp) => <ImportStatusBadge status={imp.status} />,
-    },
-    {
-      key: 'total_entries',
-      label: t('pages.bankReconciliation.columns.entries'),
-      render: (imp) => imp.total_entries,
-    },
-    {
-      key: 'matched_count',
-      label: t('pages.bankReconciliation.columns.matched'),
-      render: (imp) => (
-        <span className="font-medium text-success">{imp.matched_count}</span>
-      ),
-    },
-    {
-      key: 'unmatched_count',
-      label: t('pages.bankReconciliation.columns.divergences'),
-      render: (imp) => (
-        <span className="font-medium text-destructive">{imp.unmatched_count}</span>
-      ),
-    },
-    {
-      key: 'created_at',
-      label: t('pages.bankReconciliation.columns.importedAt'),
-      render: (imp) => formatDate(imp.created_at),
-    },
-    {
-      key: 'actions',
-      label: t('pages.bankReconciliation.columns.actions'),
-      render: (imp) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(`/bank-reconciliation/${imp.id}`)}
-        >
-          {t('pages.bankReconciliation.viewBtn')}
-        </Button>
-      ),
-    },
-  ];
+  const completedCount = imports.filter((imp) => imp.status === 'completed').length;
+  const pendingCount = imports.filter((imp) => imp.status !== 'completed').length;
 
   if (loading) return <LoadingState />;
 
@@ -310,6 +297,26 @@ export default function BankReconciliation() {
         />
       </div>
 
+      {/* Stat summary below cards */}
+      {imports.length > 0 && (
+        <div className="mb-lg flex gap-md text-sm text-muted-foreground">
+          <span className="font-medium text-success">
+            {completedCount}{' '}
+            {t('pages.bankReconciliation.completedLabel', {
+              defaultValue: 'concluídos',
+            })}
+          </span>
+          {pendingCount > 0 && (
+            <span className="font-medium text-warning">
+              {pendingCount}{' '}
+              {t('pages.bankReconciliation.pendingLabel', {
+                defaultValue: 'pendentes',
+              })}
+            </span>
+          )}
+        </div>
+      )}
+
       {imports.length === 0 ? (
         <EmptyState
           title={t('pages.bankReconciliation.emptyTitle')}
@@ -321,16 +328,95 @@ export default function BankReconciliation() {
           }}
         />
       ) : (
-        <DataTable
-          data={imports}
-          columns={columns}
-          keyExtractor={(imp) => imp.id}
-          emptyState={{
-            icon: <ArrowLeftRight className="h-12 w-12" />,
-            title: t('pages.bankReconciliation.emptyTitle'),
-            message: t('pages.bankReconciliation.emptyMessage'),
-          }}
-        />
+        <div className="space-y-3">
+          {imports.map((imp) => {
+            const matchPct =
+              imp.total_entries > 0
+                ? Math.round((imp.matched_count / imp.total_entries) * 100)
+                : 0;
+            return (
+              <div key={imp.id} className="rounded-lg border bg-card p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
+                      <ImportStatusBadge status={imp.status} />
+                    </div>
+                    <p className="truncate font-medium">{imp.original_filename}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {imp.total_entries}{' '}
+                      {t('pages.bankReconciliation.transactionsLabel', {
+                        defaultValue: 'transações',
+                      })}{' '}
+                      ·{' '}
+                      {t('pages.bankReconciliation.importedAtLabel', {
+                        defaultValue: 'importado em',
+                      })}{' '}
+                      {formatDate(imp.created_at)}
+                    </p>
+
+                    {/* Barra de progresso de conciliação */}
+                    <div className="mt-3 space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {t('pages.bankReconciliation.reconciliationLabel', {
+                            defaultValue: 'Conciliação',
+                          })}
+                        </span>
+                        <span
+                          className={
+                            matchPct === 100
+                              ? 'font-semibold text-success'
+                              : 'text-muted-foreground'
+                          }
+                        >
+                          {matchPct}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all',
+                            matchPct === 100
+                              ? 'bg-success'
+                              : matchPct >= 70
+                                ? 'bg-info'
+                                : 'bg-warning'
+                          )}
+                          style={{ width: `${matchPct}%` }}
+                        />
+                      </div>
+                      <div className="flex gap-3 text-xs text-muted-foreground">
+                        <span className="text-success">
+                          {imp.matched_count}{' '}
+                          {t('pages.bankReconciliation.matchedLabel', {
+                            defaultValue: 'conciliados',
+                          })}
+                        </span>
+                        {imp.unmatched_count > 0 && (
+                          <span className="text-destructive">
+                            {imp.unmatched_count}{' '}
+                            {t('pages.bankReconciliation.divergencesLabel', {
+                              defaultValue: 'divergências',
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void navigate(`/bank-reconciliation/${imp.id}`)}
+                  >
+                    {t('pages.bankReconciliation.viewBtn')}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <UploadDialog

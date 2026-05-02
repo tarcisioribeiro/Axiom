@@ -116,6 +116,11 @@ export const navModules: NavModule[] = [
             icon: CalendarClock,
           },
           {
+            titleKey: 'nav.items.fixedRevenues',
+            href: '/fixed-revenues',
+            icon: TrendingUp,
+          },
+          {
             titleKey: 'nav.items.categorizationRules',
             href: '/categorization-rules',
             icon: Tag,
