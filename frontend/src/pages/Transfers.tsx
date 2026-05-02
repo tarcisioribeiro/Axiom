@@ -61,7 +61,8 @@ const STATUS_VARIANTS: Record<
 };
 
 function getTransferStatus(transfer: Transfer): string {
-  return transfer.status ?? (transfer.transfered ? 'completed' : 'pending');
+  if (transfer.transfered) return 'completed';
+  return transfer.status ?? 'pending';
 }
 
 export default function Transfers() {
@@ -413,16 +414,20 @@ export default function Transfers() {
             ))}
           </SelectContent>
         </Select>
-        <DatePicker
-          value={startDate}
-          onChange={setStartDate}
-          placeholder={t('pages.transfers.dateFrom')}
-        />
-        <DatePicker
-          value={endDate}
-          onChange={setEndDate}
-          placeholder={t('pages.transfers.dateTo')}
-        />
+        <div className="flex items-center gap-1">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">De</span>
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder={t('pages.transfers.dateFrom')}
+          />
+          <span className="whitespace-nowrap text-xs text-muted-foreground">até</span>
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder={t('pages.transfers.dateTo')}
+          />
+        </div>
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
             <X className="h-4 w-4" />

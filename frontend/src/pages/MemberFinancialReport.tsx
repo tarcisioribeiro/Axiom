@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
   MemberFinancialReport,
@@ -84,7 +85,7 @@ type ActiveTab =
   | 'payables'
   | 'transfers';
 
-export default function MemberFinancialReport() {
+export default function MemberFinancialReportPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -153,6 +154,10 @@ export default function MemberFinancialReport() {
   const netBalanceValue = parseFloat(summary.net_balance);
   const isNetPositive = netBalanceValue >= 0;
 
+  const totalRevenues = parseFloat(summary.total_revenues);
+  const totalExpenses = parseFloat(summary.total_expenses);
+  const revenuesPlusExpenses = totalRevenues + totalExpenses;
+
   const pieData = expenses_by_category
     .filter((item) => parseFloat(item.total) > 0)
     .map((item) => ({
@@ -160,21 +165,43 @@ export default function MemberFinancialReport() {
       value: parseFloat(item.total),
     }));
 
-  const tabs: { key: ActiveTab; label: string; count: number }[] = [
-    { key: 'expenses', label: 'Despesas', count: report.expenses.length },
-    { key: 'revenues', label: 'Receitas', count: report.revenues.length },
+  const tabs: { key: ActiveTab; label: string; count: number; icon: ReactNode }[] = [
+    {
+      key: 'expenses',
+      label: 'Despesas',
+      count: report.expenses.length,
+      icon: <TrendingDown className="h-4 w-4" />,
+    },
+    {
+      key: 'revenues',
+      label: 'Receitas',
+      count: report.revenues.length,
+      icon: <TrendingUp className="h-4 w-4" />,
+    },
     {
       key: 'loans_benefited',
       label: 'Emp. Recebidos',
       count: report.loans_as_benefited.length,
+      icon: <HandCoins className="h-4 w-4" />,
     },
     {
       key: 'loans_creditor',
       label: 'Emp. Concedidos',
       count: report.loans_as_creditor.length,
+      icon: <HandCoins className="h-4 w-4" />,
     },
-    { key: 'payables', label: 'A Pagar', count: report.payables.length },
-    { key: 'transfers', label: 'Transferências', count: report.transfers.length },
+    {
+      key: 'payables',
+      label: 'A Pagar',
+      count: report.payables.length,
+      icon: <Receipt className="h-4 w-4" />,
+    },
+    {
+      key: 'transfers',
+      label: 'Transferências',
+      count: report.transfers.length,
+      icon: <ArrowLeftRight className="h-4 w-4" />,
+    },
   ];
 
   return (
@@ -194,6 +221,24 @@ export default function MemberFinancialReport() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar para Membros
         </Button>
+      </div>
+
+      {/* Member identity header */}
+      <div className="mb-6 overflow-hidden rounded-xl border bg-gradient-to-r from-primary/10 via-transparent to-transparent p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
+            {report.member.name?.charAt(0).toUpperCase() ?? '?'}
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">{report.member.name}</h2>
+            <p className="text-sm text-muted-foreground">Relatório financeiro</p>
+            {appliedStart && appliedEnd && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatDate(appliedStart)} a {formatDate(appliedEnd)}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Date Filters */}
@@ -242,38 +287,91 @@ export default function MemberFinancialReport() {
         )}
       </div>
 
+      {/* Net balance hero */}
+      <div className="mb-4 rounded-lg border bg-card p-4">
+        <p className="text-sm text-muted-foreground">Saldo líquido do período</p>
+        <p
+          className={cn(
+            'text-3xl font-bold',
+            isNetPositive ? 'text-success' : 'text-destructive'
+          )}
+        >
+          {isNetPositive ? '+' : ''}
+          {formatCurrency(summary.net_balance)}
+        </p>
+        {revenuesPlusExpenses > 0 && (
+          <div className="mt-3 space-y-1">
+            <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+              <div
+                className="bg-success"
+                style={{
+                  width: `${(totalRevenues / revenuesPlusExpenses) * 100}%`,
+                }}
+              />
+              <div
+                className="bg-destructive"
+                style={{
+                  width: `${(totalExpenses / revenuesPlusExpenses) * 100}%`,
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span className="text-success">
+                Receitas: {formatCurrency(summary.total_revenues)}
+              </span>
+              <span className="text-destructive">
+                Despesas: {formatCurrency(summary.total_expenses)}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Summary Cards */}
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Receitas"
-          value={formatCurrency(summary.total_revenues)}
-          icon={<TrendingUp className="h-5 w-5 text-success" />}
-          variant="success"
-        />
-        <StatCard
-          title="Despesas"
-          value={formatCurrency(summary.total_expenses)}
-          icon={<TrendingDown className="h-5 w-5 text-destructive" />}
-          variant="danger"
-        />
-        <StatCard
-          title="Valores a Pagar"
-          value={formatCurrency(summary.total_payables)}
-          icon={<Receipt className="h-5 w-5 text-warning" />}
-          variant="warning"
-        />
-        <StatCard
-          title="Saldo Líquido"
-          value={formatCurrency(summary.net_balance)}
-          icon={
-            isNetPositive ? (
-              <TrendingUp className="h-5 w-5 text-success" />
-            ) : (
-              <TrendingDown className="h-5 w-5 text-destructive" />
-            )
-          }
-          variant={isNetPositive ? 'success' : 'danger'}
-        />
+        <div className="overflow-hidden rounded-lg border-t-2 border-t-success">
+          <StatCard
+            title="Receitas"
+            value={formatCurrency(summary.total_revenues)}
+            icon={<TrendingUp className="h-5 w-5 text-success" />}
+            variant="success"
+          />
+        </div>
+        <div className="overflow-hidden rounded-lg border-t-2 border-t-destructive">
+          <StatCard
+            title="Despesas"
+            value={formatCurrency(summary.total_expenses)}
+            icon={<TrendingDown className="h-5 w-5 text-destructive" />}
+            variant="danger"
+          />
+        </div>
+        <div className="overflow-hidden rounded-lg border-t-2 border-t-warning">
+          <StatCard
+            title="Valores a Pagar"
+            value={formatCurrency(summary.total_payables)}
+            icon={<Receipt className="h-5 w-5 text-warning" />}
+            variant="warning"
+          />
+        </div>
+        <div
+          className={cn(
+            'overflow-hidden rounded-lg border-t-2',
+            isNetPositive ? 'border-t-success' : 'border-t-destructive'
+          )}
+        >
+          <StatCard
+            title="Saldo Líquido"
+            value={formatCurrency(summary.net_balance)}
+            icon={
+              isNetPositive ? (
+                <TrendingUp className="h-5 w-5 text-success" />
+              ) : (
+                <TrendingDown className="h-5 w-5 text-destructive" />
+              )
+            }
+            variant={isNetPositive ? 'success' : 'danger'}
+          />
+        </div>
       </div>
 
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
@@ -325,6 +423,7 @@ export default function MemberFinancialReport() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
+              {tab.icon}
               {tab.label}
               <Badge variant="secondary" className="text-xs">
                 {tab.count}

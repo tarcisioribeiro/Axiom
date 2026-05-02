@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import { bankReconciliationService } from '@/services/bank-reconciliation-service';
 import { expensesService } from '@/services/expenses-service';
 import { revenuesService } from '@/services/revenues-service';
@@ -43,24 +44,37 @@ function ConfidenceBadge({
   confidence: BankStatementEntry['match_confidence'];
 }) {
   if (!confidence) return <span className="text-muted-foreground">—</span>;
-  const variants: Record<string, string> = {
-    high: 'bg-success/10 text-success border-success/30',
-    medium: 'bg-warning/10 text-warning border-warning/30',
-    low: 'bg-destructive/10 text-destructive border-destructive/30',
-    manual: 'bg-primary/10 text-primary border-primary/30',
-  };
-  const labels: Record<string, string> = {
-    high: 'Alta',
-    medium: 'Média',
-    low: 'Baixa',
-    manual: 'Manual',
-  };
+
+  const bars =
+    confidence === 'high'
+      ? 4
+      : confidence === 'medium'
+        ? 2
+        : confidence === 'low'
+          ? 1
+          : 3;
+  const color =
+    confidence === 'high'
+      ? 'bg-success'
+      : confidence === 'medium'
+        ? 'bg-warning'
+        : confidence === 'low'
+          ? 'bg-destructive'
+          : 'bg-primary';
+
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[confidence] ?? ''}`}
-    >
-      {labels[confidence] ?? confidence}
-    </span>
+    <div className="flex items-end gap-0.5" title={`Confiança: ${confidence}`}>
+      {[1, 2, 3, 4].map((i) => (
+        <div
+          key={i}
+          className={cn(
+            'w-1.5 rounded-sm transition-all',
+            i <= bars ? color : 'bg-muted'
+          )}
+          style={{ height: `${i * 4 + 4}px` }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -266,10 +280,21 @@ export default function BankReconciliationDetail() {
       render: (entry) => {
         const isDebit = entry.transaction_type === 'debit';
         return (
-          <span className={isDebit ? 'text-destructive' : 'text-success'}>
-            {isDebit ? '-' : '+'}
-            {formatCurrency(Math.abs(Number(entry.amount)))}
-          </span>
+          <div className="flex items-center gap-1">
+            <span
+              className={cn('text-xs', isDebit ? 'text-destructive' : 'text-success')}
+            >
+              {isDebit ? '↓' : '↑'}
+            </span>
+            <span
+              className={cn(
+                'font-semibold',
+                isDebit ? 'text-destructive' : 'text-success'
+              )}
+            >
+              {formatCurrency(Math.abs(Number(entry.amount)))}
+            </span>
+          </div>
         );
       },
     },
@@ -402,6 +427,11 @@ export default function BankReconciliationDetail() {
     importData.unmatched_count -
     importData.ignored_count;
 
+  const reconciliationPct =
+    importData.total_entries > 0
+      ? (importData.matched_count / importData.total_entries) * 100
+      : 0;
+
   const candidateLabel =
     matchingEntry?.transaction_type === 'debit' ? 'despesas' : 'receitas';
 
@@ -431,6 +461,30 @@ export default function BankReconciliationDetail() {
           },
         }}
       />
+
+      {/* Progress bar */}
+      <div className="mb-4 rounded-lg border bg-card p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-sm font-medium">Progresso da conciliação</span>
+          <span className="text-sm font-semibold">
+            {importData.matched_count} de {importData.total_entries} transações
+          </span>
+        </div>
+        <div className="h-3 overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-success transition-all"
+            style={{ width: `${reconciliationPct}%` }}
+          />
+        </div>
+        <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+          <span className="text-success">{importData.matched_count} conciliados</span>
+          <span className="text-destructive">
+            {importData.unmatched_count} divergências
+          </span>
+          <span>{importData.ignored_count} ignorados</span>
+          <span>{pendingCount} pendentes</span>
+        </div>
+      </div>
 
       <div className="mb-lg mt-lg grid grid-cols-2 gap-md sm:grid-cols-4">
         <StatCard
@@ -463,6 +517,14 @@ export default function BankReconciliationDetail() {
           icon: <ArrowLeftRight className="h-12 w-12" />,
           title: 'Nenhuma entrada',
           message: 'Este extrato não possui transações.',
+        }}
+        rowClassName={(entry) => {
+          if (entry.status === 'matched')
+            return 'bg-success/[0.03] border-l-4 border-l-success';
+          if (entry.status === 'unmatched')
+            return 'bg-destructive/[0.03] border-l-4 border-l-destructive';
+          if (entry.status === 'ignored') return 'opacity-50 border-l-4 border-l-muted';
+          return 'border-l-4 border-l-warning';
         }}
       />
 
