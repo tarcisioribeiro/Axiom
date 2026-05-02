@@ -4,6 +4,8 @@ import {
   Receipt,
   HandCoins,
   CreditCard,
+  PiggyBank,
+  Target,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -18,6 +20,10 @@ const iconMap: Record<string, React.ElementType> = {
   loan_overdue: HandCoins,
   bill_due_soon: CreditCard,
   bill_overdue: CreditCard,
+  budget_warning: PiggyBank,
+  budget_exceeded: PiggyBank,
+  financial_goal_reached: Target,
+  financial_goal_approaching: Target,
 };
 
 const colorMap: Record<string, string> = {
@@ -29,6 +35,10 @@ const colorMap: Record<string, string> = {
   loan_overdue: 'text-destructive',
   bill_due_soon: 'text-warning',
   bill_overdue: 'text-destructive',
+  budget_warning: 'text-warning',
+  budget_exceeded: 'text-destructive',
+  financial_goal_reached: 'text-primary',
+  financial_goal_approaching: 'text-warning',
 };
 
 interface NotificationItemProps {

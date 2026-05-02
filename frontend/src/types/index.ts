@@ -2369,7 +2369,11 @@ export type NotificationType =
   | 'loan_due_soon'
   | 'loan_overdue'
   | 'bill_due_soon'
-  | 'bill_overdue';
+  | 'bill_overdue'
+  | 'budget_warning'
+  | 'budget_exceeded'
+  | 'financial_goal_reached'
+  | 'financial_goal_approaching';
 
 export interface Notification {
   id: number;

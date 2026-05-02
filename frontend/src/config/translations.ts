@@ -424,6 +424,10 @@ export const TRANSLATIONS = {
     loan_overdue: 'Empréstimo Atrasado',
     bill_due_soon: 'Fatura Vencendo',
     bill_overdue: 'Fatura Atrasada',
+    budget_warning: 'Alerta de Orçamento',
+    budget_exceeded: 'Orçamento Estourado',
+    financial_goal_reached: 'Meta Financeira Atingida',
+    financial_goal_approaching: 'Meta Financeira Próxima do Prazo',
   },
 
   // Common Terms
