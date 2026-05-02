@@ -10,8 +10,9 @@ Schedule via cron (example — daily at 08:00 BRT):
     0 8 * * * docker compose exec api python manage.py send_due_notifications
 """
 
+import calendar
 import logging
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q
@@ -221,6 +222,137 @@ class Command(BaseCommand):
             for obj in queryset:
                 dispatched += self._maybe_dispatch(
                     member, ntype, "bill", obj.id, make_defaults(obj), dry_run
+                )
+
+        # --- Budget ---
+        dispatched += self._process_member_budgets(member, today, dry_run)
+
+        # --- FinancialGoal ---
+        dispatched += self._process_member_financial_goals(member, today, dry_run)
+
+        return dispatched
+
+    def _process_member_budgets(self, member, today, dry_run: bool) -> int:
+        from django.db.models import Sum
+
+        from budgets.models import Budget
+        from expenses.models import Expense
+
+        dispatched = 0
+        year, month = today.year, today.month
+        _, last_day = calendar.monthrange(year, month)
+        period_start = date(year, month, 1)
+        month_end = date(year, month, last_day)
+
+        budgets = Budget.objects.filter(
+            created_by=member.user,
+            month=month,
+            year=year,
+            is_deleted=False,
+        )
+
+        for budget in budgets:
+            effective_limit = float(budget.limit_amount) + float(
+                budget.rollover_amount or 0
+            )
+            if effective_limit <= 0:
+                continue
+
+            spent = (
+                Expense.objects.filter(
+                    created_by=member.user,
+                    category=budget.category,
+                    date__range=(period_start, today),
+                    is_deleted=False,
+                    related_transfer__isnull=True,
+                ).aggregate(total=Sum("value"))["total"]
+                or 0
+            )
+            pct = float(spent) / effective_limit * 100
+
+            if float(spent) > effective_limit:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "budget_exceeded",
+                    "budget",
+                    budget.id,
+                    {
+                        "title": f"Orçamento estourado: {budget.category}",
+                        "message": (
+                            f"{pct:.0f}% do limite utilizado"
+                            f" (R$ {float(spent):.2f} / R$ {effective_limit:.2f})"
+                        ),
+                        "due_date": month_end,
+                    },
+                    dry_run,
+                )
+            elif pct >= 80:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "budget_warning",
+                    "budget",
+                    budget.id,
+                    {
+                        "title": f"Alerta de orçamento: {budget.category}",
+                        "message": (
+                            f"{pct:.0f}% do limite utilizado"
+                            f" (R$ {float(spent):.2f} / R$ {effective_limit:.2f})"
+                        ),
+                        "due_date": month_end,
+                    },
+                    dry_run,
+                )
+
+        return dispatched
+
+    def _process_member_financial_goals(self, member, today, dry_run: bool) -> int:
+        from vaults.models import FinancialGoal
+
+        dispatched = 0
+        approaching_threshold = today + timedelta(days=30)
+
+        goals = FinancialGoal.objects.filter(
+            created_by=member.user,
+            is_active=True,
+            is_completed=False,
+            is_deleted=False,
+        )
+
+        for goal in goals:
+            if goal.current_value >= goal.target_value:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "financial_goal_reached",
+                    "financial_goal",
+                    goal.id,
+                    {
+                        "title": f"Meta financeira atingida: {goal.description}",
+                        "message": (
+                            f"Parabéns! Você atingiu sua meta de"
+                            f" R$ {float(goal.target_value):.2f}."
+                        ),
+                        "due_date": goal.target_date,
+                    },
+                    dry_run,
+                )
+            elif goal.target_date and goal.target_date <= approaching_threshold:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "financial_goal_approaching",
+                    "financial_goal",
+                    goal.id,
+                    {
+                        "title": (
+                            f"Meta financeira próxima do prazo: {goal.description}"
+                        ),
+                        "message": (
+                            f'Prazo em {goal.target_date.strftime("%d/%m/%Y")}.'
+                            f" Progresso: R$ {float(goal.current_value):.2f}"
+                            f" / R$ {float(goal.target_value):.2f}."
+                        ),
+                        "due_date": goal.target_date,
+                    },
+                    dry_run,
                 )
 
         return dispatched
