@@ -983,6 +983,7 @@
       "pending": "pendente",
       "perYear": "ao ano",
       "perDay": "ao dia",
+      "proportionLabel": "Proporção do total",
       "yieldRateLabel": "Taxa de Rendimento (% ao ano)",
       "yieldRateHint": "Deixe 0 para cofres sem rendimento. Ex: 12 = 12% ao ano",
       "activeVault": "Cofre ativo",

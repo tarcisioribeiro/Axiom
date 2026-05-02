@@ -53,6 +53,8 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
+type LoanRole = 'all' | 'benefited' | 'creditor';
+
 export default function Loans() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -74,6 +76,7 @@ export default function Loans() {
     handleSubmit,
   } = useLoansPage();
 
+  const [roleFilter, setRoleFilter] = useState<LoanRole>('all');
   const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
 
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
@@ -116,6 +119,19 @@ export default function Loans() {
       setIsLoadingAmortization(false);
     }
   };
+
+  const currentMemberId = useMemo(
+    () => members.find((m) => m.user === user?.id)?.id ?? null,
+    [members, user?.id]
+  );
+
+  const roleFilteredLoans = useMemo(() => {
+    if (roleFilter === 'benefited' && currentMemberId !== null)
+      return filteredLoans.filter((l) => l.benefited === currentMemberId);
+    if (roleFilter === 'creditor' && currentMemberId !== null)
+      return filteredLoans.filter((l) => l.creditor === currentMemberId);
+    return filteredLoans;
+  }, [filteredLoans, roleFilter, currentMemberId]);
 
   const { activeCount, paidCount, totalDebt } = useMemo(() => {
     const active = loans.filter((l) => l.status === 'active');
@@ -197,16 +213,42 @@ export default function Loans() {
         </Card>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <SearchInput
           placeholder={t('pages.loans.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="max-w-sm"
         />
+        {currentMemberId !== null && (
+          <div className="flex overflow-hidden rounded-lg border">
+            {(
+              [
+                { key: 'all', label: 'Todos', icon: '📋' },
+                { key: 'benefited', label: 'Beneficiário', icon: '🤲' },
+                { key: 'creditor', label: 'Credor', icon: '🏦' },
+              ] as { key: LoanRole; label: string; icon: string }[]
+            ).map(({ key, label, icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setRoleFilter(key)}
+                className={cn(
+                  'flex items-center gap-1.5 border-r px-3 py-1.5 text-sm last:border-r-0 transition-colors',
+                  roleFilter === key
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                )}
+              >
+                <span>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {filteredLoans.length === 0 ? (
+      {roleFilteredLoans.length === 0 ? (
         <EmptyState
           icon={<HandCoins className="h-12 w-12 text-muted-foreground" />}
           message={
@@ -215,7 +257,7 @@ export default function Loans() {
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredLoans.map((loan) => {
+          {roleFilteredLoans.map((loan) => {
             const total = parseFloat(loan.value);
             const paid = parseFloat(loan.payed_value);
             const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
