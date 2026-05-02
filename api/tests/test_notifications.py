@@ -530,3 +530,143 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
                 content_type="financial_goal",
             ).exists()
         )
+
+
+class AgentInsightNotificationCommandTest(BaseNotificationTestCase):
+    """Tests for agent_insight notifications in send_due_notifications."""
+
+    def setUp(self):
+        super().setUp()
+        from accounts.models import Account
+        from budgets.models import Budget
+        from expenses.models import Expense
+
+        self.today = date.today()
+        self.account = Account.objects.create(
+            account_name="Agent Insight Account",
+            institution_name="Bank",
+            account_type="CS",
+            is_active=True,
+            current_balance=Decimal("50000.00"),
+        )
+        self.budget = Budget.objects.create(
+            category="food and drink",
+            limit_amount=Decimal("200.00"),
+            month=self.today.month,
+            year=self.today.year,
+            created_by=self.user,
+        )
+        # Spend 85% of limit to trigger critical insight
+        Expense.objects.create(
+            description="Food expense",
+            value=Decimal("170.00"),
+            date=self.today,
+            horary="08:00:00",
+            category="food and drink",
+            account=self.account,
+            payed=True,
+            created_by=self.user,
+        )
+
+    def _run_command(self, dry_run=False):
+        from django.core.management import call_command
+
+        out = StringIO()
+        args = ["send_due_notifications", f"--member-id={self.member.pk}"]
+        if dry_run:
+            args.append("--dry-run")
+        call_command(*args, stdout=out)
+        return out.getvalue()
+
+    def test_agent_insight_created_for_critical_budget(self):
+        """Creates agent_insight when spending is >= 80% of budget limit."""
+        self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="agent_insight",
+                content_type="budget",
+                object_id=self.budget.id,
+            ).exists()
+        )
+
+    def test_agent_insight_created_for_overbudget(self):
+        """Creates agent_insight when spending exceeds the budget limit."""
+        from expenses.models import Expense
+
+        Expense.objects.create(
+            description="Over limit",
+            value=Decimal("50.00"),
+            date=self.today,
+            horary="09:00:00",
+            category="food and drink",
+            account=self.account,
+            payed=True,
+            created_by=self.user,
+        )
+        self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="agent_insight",
+                content_type="budget",
+                object_id=self.budget.id,
+            ).exists()
+        )
+
+    def test_no_agent_insight_below_80_percent(self):
+        """No agent_insight created when spending is below 80% of budget limit."""
+        from budgets.models import Budget
+        from expenses.models import Expense
+
+        low_budget = Budget.objects.create(
+            category="health",
+            limit_amount=Decimal("500.00"),
+            month=self.today.month,
+            year=self.today.year,
+            created_by=self.user,
+        )
+        Expense.objects.create(
+            description="Small health expense",
+            value=Decimal("50.00"),
+            date=self.today,
+            horary="10:00:00",
+            category="health",
+            account=self.account,
+            payed=True,
+            created_by=self.user,
+        )
+        self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="agent_insight",
+                content_type="budget",
+                object_id=low_budget.id,
+            ).exists()
+        )
+
+    def test_idempotent_does_not_duplicate(self):
+        """Running the command twice does not create duplicate agent_insight entries."""
+        self._run_command()
+        self._run_command()
+        self.assertEqual(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="agent_insight",
+                content_type="budget",
+                object_id=self.budget.id,
+            ).count(),
+            1,
+        )
+
+    def test_dry_run_does_not_persist(self):
+        """--dry-run prints what would be dispatched without saving."""
+        output = self._run_command(dry_run=True)
+        self.assertIn("dry-run", output)
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="agent_insight",
+            ).exists()
+        )

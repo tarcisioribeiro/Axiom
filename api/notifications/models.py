@@ -15,6 +15,7 @@ NOTIFICATION_TYPE_CHOICES = (
     ("budget_exceeded", "Orçamento Estourado"),
     ("financial_goal_reached", "Meta Financeira Atingida"),
     ("financial_goal_approaching", "Meta Financeira Próxima do Prazo"),
+    ("agent_insight", "Insight do Agente"),
 )
 
 NOTIFICATION_CHANNEL_CHOICES = (

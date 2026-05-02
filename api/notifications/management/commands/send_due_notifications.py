@@ -6,8 +6,16 @@ Iterates over all active members, generates their pending notifications
 configured channel (in_app / email / both) based on the member's
 NotificationPreference settings.
 
-Schedule via cron (example — daily at 08:00 BRT):
+Also generates proactive agent_insight notifications by running the
+InsightAgent's budget-detection logic for each member without requiring
+user interaction. One insight is created per budget per month; the
+unique_together constraint prevents duplicates across runs.
+
+Recommended cron schedules (BRT):
+    # Standard due/overdue alerts — daily at 08:00
     0 8 * * * docker compose exec api python manage.py send_due_notifications
+    # Agent insights — daily at 07:00 (before the main run)
+    0 7 * * * docker compose exec api python manage.py send_due_notifications
 """
 
 import calendar
@@ -230,6 +238,9 @@ class Command(BaseCommand):
         # --- FinancialGoal ---
         dispatched += self._process_member_financial_goals(member, today, dry_run)
 
+        # --- Agent Insights ---
+        dispatched += self._process_member_agent_insights(member, today, dry_run)
+
         return dispatched
 
     def _process_member_budgets(self, member, today, dry_run: bool) -> int:
@@ -351,6 +362,81 @@ class Command(BaseCommand):
                             f" / R$ {float(goal.target_value):.2f}."
                         ),
                         "due_date": goal.target_date,
+                    },
+                    dry_run,
+                )
+
+        return dispatched
+
+    def _process_member_agent_insights(self, member, today, dry_run: bool) -> int:
+        """Generate agent_insight notifications from budget detection logic.
+
+        Uses get_budget_status() from the InsightAgent's tool layer to detect
+        overbudget and critical (>=80%) budgets, then creates one agent_insight
+        notification per budget per month. The unique_together constraint on
+        (owner, notification_type, content_type, object_id) ensures idempotency
+        across repeated runs within the same month.
+        """
+        from agents.tools.budget_tools import (
+            get_budget_status,
+            get_days_remaining_in_month,
+        )
+        from budgets.models import Budget
+
+        user = member.user
+        year, month = today.year, today.month
+        _, last_day = calendar.monthrange(year, month)
+        month_end = date(year, month, last_day)
+        days_remaining = get_days_remaining_in_month()
+
+        budget_statuses = get_budget_status(user, year=year, month=month)
+        budget_id_by_category = {
+            b.category: b.id
+            for b in Budget.objects.filter(
+                created_by=user, month=month, year=year, is_deleted=False
+            )
+        }
+
+        dispatched = 0
+        for b in budget_statuses:
+            budget_id = budget_id_by_category.get(b["category"])
+            if not budget_id:
+                continue
+
+            if b["overbudget"]:
+                over_by = b["spent"] - b["limit"]
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "agent_insight",
+                    "budget",
+                    budget_id,
+                    {
+                        "title": f"Insight: orçamento estourado em {b['category']}",
+                        "message": (
+                            f"{b['percentage']:.0f}% do limite utilizado"
+                            f" (R$ {b['spent']:.2f} / R$ {b['limit']:.2f},"
+                            f" R$ {over_by:.2f} acima do limite)."
+                            f" Restam {days_remaining} dias no mês."
+                        ),
+                        "due_date": month_end,
+                    },
+                    dry_run,
+                )
+            elif b["percentage"] >= 80:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "agent_insight",
+                    "budget",
+                    budget_id,
+                    {
+                        "title": f"Insight: orçamento crítico em {b['category']}",
+                        "message": (
+                            f"{b['percentage']:.0f}% do limite utilizado"
+                            f" (R$ {b['spent']:.2f} / R$ {b['limit']:.2f})."
+                            f" Saldo disponível: R$ {b['remaining']:.2f}"
+                            f" para {days_remaining} dias."
+                        ),
+                        "due_date": month_end,
                     },
                     dry_run,
                 )
