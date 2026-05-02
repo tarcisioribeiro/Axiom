@@ -12,7 +12,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   ComposedChart,
   Legend,
   Line,
@@ -22,6 +24,7 @@ import {
   YAxis,
 } from 'recharts';
 
+import { EnhancedTooltip } from '@/components/charts/EnhancedTooltip';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -124,7 +127,7 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
-  const [showTrend, setShowTrend] = useState(false);
+  const [showTrend, setShowTrend] = useState(true);
   const [trendCategory, setTrendCategory] = useState<string>(
     EXPENSE_CATEGORIES_CANONICAL[0]?.key ?? 'others'
   );
@@ -388,6 +391,11 @@ export default function Budgets() {
         </>
       )}
 
+      {/* Visão geral comparativa — todos os orçamentos do mês */}
+      {budgetStatuses.length > 0 && (
+        <BudgetOverviewChart statuses={budgetStatuses} />
+      )}
+
       <div className="rounded-lg border bg-card">
         <button
           type="button"
@@ -622,6 +630,94 @@ const MONTH_SHORT = [
   'Dez',
 ];
 
+function BudgetOverviewChart({ statuses }: { statuses: BudgetStatus[] }) {
+  const colors = useSemanticColors();
+
+  const chartData = statuses
+    .filter((s) => s.limit_amount !== null)
+    .map((s) => {
+      const spent = parseFloat(s.actual_spent);
+      const limit = parseFloat(s.limit_amount);
+      const remaining = Math.max(0, limit - spent);
+      const icon = CATEGORY_ICONS[s.category] ?? '📦';
+      const label = translate('expenseCategories', s.category);
+      return {
+        name: `${icon} ${label}`,
+        spent,
+        remaining,
+        limit,
+        pct: s.percentage,
+      };
+    })
+    .sort((a, b) => b.pct - a.pct);
+
+  if (chartData.length === 0) return null;
+
+  const barHeight = 40;
+  const chartHeight = Math.max(200, chartData.length * barHeight + 40);
+
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <p className="mb-3 text-sm font-semibold">Visão geral dos orçamentos</p>
+      <ResponsiveContainer width="100%" height={chartHeight}>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+          barCategoryGap="30%"
+        >
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} className="stroke-border" />
+          <XAxis
+            type="number"
+            tickFormatter={(v: number) => `R$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)}`}
+            tick={{ fontSize: 11 }}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            tick={{ fontSize: 11 }}
+            width={120}
+          />
+          <Tooltip
+            content={(props) => {
+              const { active, payload, label } = props;
+              if (!active || !payload?.length) return null;
+              const d = chartData.find((c) => c.name === label);
+              return (
+                <EnhancedTooltip
+                  active={active}
+                  payload={[
+                    { name: 'Gasto', value: d?.spent ?? 0, color: colors.info },
+                    { name: 'Restante', value: d?.remaining ?? 0, color: 'hsl(var(--muted-foreground) / 0.4)' },
+                  ]}
+                  label={label as string}
+                  formatter={(v) => formatCurrencyBR(v as number)}
+                  labelFormatter={(l) => `${l} — ${d?.pct.toFixed(0)}% do limite`}
+                />
+              );
+            }}
+          />
+          <Bar dataKey="spent" stackId="a" radius={[0, 0, 0, 0]}>
+            {chartData.map((entry) => (
+              <Cell
+                key={entry.name}
+                fill={
+                  entry.pct > 100
+                    ? colors.danger
+                    : entry.pct >= 70
+                      ? colors.warning
+                      : colors.info
+                }
+              />
+            ))}
+          </Bar>
+          <Bar dataKey="remaining" stackId="a" fill="hsl(var(--muted))" radius={[0, 3, 3, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function BudgetTrendChart({ category, months }: { category: string; months: number }) {
   const { t } = useTranslation();
   const colors = useSemanticColors();
@@ -671,20 +767,31 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
         <XAxis dataKey="label" tick={{ fontSize: 12 }} />
         <YAxis tickFormatter={axisFormatCurrency} tick={{ fontSize: 12 }} width={64} />
         <Tooltip
-          formatter={(value: number, name: string) => [
-            formatCurrencyBR(value),
-            name === 'actual_spent' ? labelActualSpent : labelLimit,
-          ]}
+          content={(props) => {
+            if (!props.active || !props.label) return null;
+            const d = chartData.find((item) => item.label === props.label);
+            if (!d) return null;
+            return (
+              <EnhancedTooltip
+                active
+                payload={[
+                  { name: labelActualSpent, value: d.actual_spent, color: colors.info },
+                  ...(d.limit_amount !== null
+                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger }]
+                    : []),
+                ]}
+                label={props.label as string}
+                formatter={(v) => formatCurrencyBR(v as number)}
+              />
+            );
+          }}
         />
-        <Legend
-          formatter={(value) =>
-            value === 'actual_spent' ? labelActualSpent : labelLimit
-          }
-        />
-        <Bar dataKey="actual_spent" fill={colors.info} radius={[3, 3, 0, 0]} />
+        <Legend />
+        <Bar dataKey="actual_spent" name={labelActualSpent} fill={colors.info} radius={[3, 3, 0, 0]} />
         <Line
           type="monotone"
           dataKey="limit_amount"
+          name={labelLimit}
           stroke={colors.danger}
           strokeDasharray="5 5"
           strokeWidth={2}

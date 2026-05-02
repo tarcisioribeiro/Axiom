@@ -865,6 +865,7 @@
       "pending": "pending",
       "perYear": "per year",
       "perDay": "per day",
+      "proportionLabel": "Proportion of total",
       "yieldRateLabel": "Yield Rate (% per year)",
       "yieldRateHint": "Leave 0 for vaults without yield. Ex: 12 = 12% per year",
       "activeVault": "Active vault",
