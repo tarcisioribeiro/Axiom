@@ -3,7 +3,6 @@ import { Pencil, Plus, Tag, Trash2, Wand2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -31,11 +30,50 @@ import {
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatDateTime } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
 import type { CategorizationRule, CategorizationRuleFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+function getCategoryIcon(category: string): string {
+  const icons: Record<string, string> = {
+    'food and drink': '🍽️',
+    supermarket: '🛒',
+    transport: '🚗',
+    'bills and services': '⚡',
+    entertainment: '🎬',
+    education: '📚',
+    'health and care': '❤️',
+    house: '🏠',
+    vestuary: '👔',
+    travels: '✈️',
+    investments: '📈',
+    electronics: '💻',
+    'digital signs': '📱',
+    others: '📦',
+  };
+  return icons[category] ?? '📦';
+}
+
+function getCategoryBg(category: string): string {
+  const bgs: Record<string, string> = {
+    'food and drink': 'bg-orange-500/10',
+    supermarket: 'bg-green-500/10',
+    transport: 'bg-blue-500/10',
+    'bills and services': 'bg-yellow-500/10',
+    entertainment: 'bg-purple-500/10',
+    education: 'bg-cyan-500/10',
+    'health and care': 'bg-red-500/10',
+    house: 'bg-teal-500/10',
+    vestuary: 'bg-pink-500/10',
+    travels: 'bg-indigo-500/10',
+    investments: 'bg-emerald-500/10',
+    electronics: 'bg-sky-500/10',
+    'digital signs': 'bg-violet-500/10',
+  };
+  return bgs[category] ?? 'bg-muted';
+}
 
 function RuleForm({
   rule,
@@ -275,54 +313,6 @@ export default function CategorizationRules() {
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
-  const columns: Column<CategorizationRule>[] = [
-    {
-      key: 'merchant_contains',
-      label: t('pages.categorizationRules.columns.merchantContains'),
-      render: (rule) => (
-        <span className="font-mono text-sm">{rule.merchant_contains}</span>
-      ),
-    },
-    {
-      key: 'category',
-      label: t('pages.categorizationRules.columns.category'),
-      render: (rule) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', rule.category)}
-        </Badge>
-      ),
-    },
-    {
-      key: 'is_active',
-      label: t('pages.categorizationRules.columns.status'),
-      render: (rule) =>
-        rule.is_active ? (
-          <Badge variant="success">
-            {t('pages.categorizationRules.form.statusActive')}
-          </Badge>
-        ) : (
-          <Badge variant="outline">
-            {t('pages.categorizationRules.form.statusInactive')}
-          </Badge>
-        ),
-    },
-    {
-      key: 'priority',
-      label: t('pages.categorizationRules.columns.priority'),
-      sortable: true,
-      render: (rule) => <span className="text-sm tabular-nums">{rule.priority}</span>,
-    },
-    {
-      key: 'created_at',
-      label: t('pages.categorizationRules.columns.createdAt'),
-      render: (rule) => (
-        <span className="text-sm text-muted-foreground">
-          {formatDateTime(rule.created_at)}
-        </span>
-      ),
-    },
-  ];
-
   if (isLoading) return <LoadingState />;
 
   return (
@@ -344,6 +334,23 @@ export default function CategorizationRules() {
         </Button>
       </PageHeader>
 
+      {/* Informational banner */}
+      <div className="mb-md rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
+        <div className="flex items-start gap-3">
+          <Wand2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
+          <div>
+            <p className="text-sm font-medium text-blue-500">
+              Categorização automática
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Quando uma despesa é criada com descrição contendo o padrão da regra, ela
+              é automaticamente categorizada. Regras com menor número de prioridade são
+              aplicadas primeiro.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {rules.length === 0 ? (
         <EmptyState
           icon={<Tag className="h-12 w-12" />}
@@ -351,35 +358,100 @@ export default function CategorizationRules() {
           message={t('pages.categorizationRules.emptyMessage')}
         />
       ) : (
-        <DataTable
-          data={rules}
-          columns={columns}
-          keyExtractor={(rule) => rule.id}
-          actions={(rule) => (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(rule)}
-                title={t('common.actions.edit')}
-                aria-label={t('common.actions.edit')}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void handleDelete(rule.id)}
-                title={t('common.actions.delete')}
-                aria-label={t('common.actions.delete')}
-                className="text-destructive hover:text-destructive"
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </Button>
+        <div className="space-y-3">
+          {rules.map((rule) => (
+            <div
+              key={rule.id}
+              className={cn(
+                'flex items-center gap-3 rounded-lg border bg-card p-4',
+                !rule.is_active && 'opacity-50'
+              )}
+            >
+              {/* Left: merchant pattern → category flow */}
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+                {/* Merchant pattern chip */}
+                <div className="flex flex-shrink-0 items-center gap-2 rounded-md bg-muted px-3 py-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">contém</p>
+                    <p className="font-mono text-sm font-semibold">
+                      &ldquo;{rule.merchant_contains}&rdquo;
+                    </p>
+                  </div>
+                </div>
+
+                {/* Arrow */}
+                <div className="flex flex-shrink-0 items-center gap-1 text-muted-foreground">
+                  <div className="h-px w-6 bg-border" />
+                  <svg
+                    width="8"
+                    height="12"
+                    viewBox="0 0 8 12"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M1 1l6 5-6 5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+
+                {/* Target category chip */}
+                <div
+                  className={cn(
+                    'flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2',
+                    getCategoryBg(rule.category)
+                  )}
+                >
+                  <span className="text-lg" aria-hidden="true">
+                    {getCategoryIcon(rule.category)}
+                  </span>
+                  <div>
+                    <p className="text-xs text-muted-foreground">categorizar como</p>
+                    <p className="text-sm font-semibold">
+                      {translate('expenseCategories', rule.category)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: priority + status badges + actions */}
+              <div className="flex flex-shrink-0 items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  #{rule.priority}
+                </Badge>
+                {!rule.is_active && (
+                  <Badge variant="secondary">
+                    {t('pages.categorizationRules.form.statusInactive')}
+                  </Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(rule)}
+                  title={t('common.actions.edit')}
+                  aria-label={t('common.actions.edit')}
+                >
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void handleDelete(rule.id)}
+                  title={t('common.actions.delete')}
+                  aria-label={t('common.actions.delete')}
+                  className="text-destructive hover:text-destructive"
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </div>
             </div>
-          )}
-        />
+          ))}
+        </div>
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

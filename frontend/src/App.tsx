@@ -29,6 +29,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
+const FixedRevenues = lazy(() => import('./pages/FixedRevenues'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
 const Revenues = lazy(() => import('./pages/Revenues'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
@@ -201,6 +202,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <FixedExpenses />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/fixed-revenues"
+            element={
+              <PageWrapper>
+                <FixedRevenues />
               </PageWrapper>
             }
           />

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 
@@ -18,8 +18,17 @@ import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
+import { categorizationRulesService } from '@/services/categorization-rules-service';
 import { membersService } from '@/services/members-service';
-import type { Expense, ExpenseFormData, Account, Member, Loan, Payable } from '@/types';
+import type {
+  Expense,
+  ExpenseFormData,
+  Account,
+  Member,
+  Loan,
+  Payable,
+  CategorizationRule,
+} from '@/types';
 export interface ExpensePrefillData {
   description?: string;
   value?: number;
@@ -50,6 +59,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
   const [eligiblePayables, setEligiblePayables] = useState<Payable[]>([]);
+  const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
+    []
+  );
+  const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const {
     register,
     handleSubmit,
@@ -67,6 +80,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       category: '',
       account: 0,
       member: null,
+      merchant: '',
       related_loan: null,
       related_payable: null,
     },
@@ -77,7 +91,6 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       try {
         const member = await membersService.getCurrentUserMember();
         setCurrentUserMember(member);
-        // Se não estamos editando, define o membro automaticamente
         if (!expense) {
           setValue('member', member.id);
         }
@@ -86,7 +99,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       }
     };
 
+    const loadRules = async () => {
+      try {
+        const data = await categorizationRulesService.getAll();
+        const rules = Array.isArray(data)
+          ? data
+          : ((data as { results: CategorizationRule[] }).results ?? []);
+        setCategorizationRules(rules.filter((r) => r.is_active));
+      } catch {
+        // rules are optional — fail silently
+      }
+    };
+
     void loadCurrentUserMember();
+    void loadRules();
   }, [expense, setValue]);
 
   useEffect(() => {
@@ -122,12 +148,37 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       setValue('payed', expense.payed);
       setValue('account', expense.account);
       setValue('member', expense.member);
+      setValue('merchant', expense.merchant ?? '');
       setValue('related_loan', expense.related_loan || null);
       setValue('related_payable', expense.related_payable || null);
     } else if (accounts.length > 0) {
       setValue('account', accounts[0].id, { shouldDirty: true });
     }
   }, [expense, accounts, setValue]);
+
+  const handleMerchantChange = (value: string) => {
+    setValue('merchant', value);
+    if (merchantDebounceRef.current) clearTimeout(merchantDebounceRef.current);
+    if (!value.trim() || categorizationRules.length === 0) return;
+    merchantDebounceRef.current = setTimeout(() => {
+      const lower = value.toLowerCase();
+      const matched = categorizationRules.find(
+        (rule) =>
+          lower.includes(rule.merchant_contains.toLowerCase()) ||
+          rule.merchant_contains.toLowerCase().includes(lower)
+      );
+      if (matched) {
+        const currentCategory = watch('category');
+        if (
+          !currentCategory ||
+          currentCategory === 'others' ||
+          currentCategory === ''
+        ) {
+          setValue('category', matched.category);
+        }
+      }
+    }, 400);
+  };
 
   useEffect(() => {
     if (!expense && prefillData) {
@@ -189,6 +240,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           {errors.horary && (
             <p className="text-sm text-destructive">{errors.horary.message}</p>
           )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="merchant">Estabelecimento</Label>
+          <Input
+            id="merchant"
+            value={watch('merchant') ?? ''}
+            onChange={(e) => handleMerchantChange(e.target.value)}
+            placeholder="Ex: Supermercado Extra"
+            disabled={isLoading}
+          />
+          <p className="text-xs text-muted-foreground">
+            Preencha para categorização automática
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Categoria *</Label>

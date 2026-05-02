@@ -21,6 +21,7 @@ import { TRANSLATIONS } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
@@ -125,7 +126,19 @@ export default function FixedExpenses() {
     {
       key: 'description',
       label: t('pages.fixedExpenses.columns.description'),
-      render: (item) => <div className="font-medium">{item.description}</div>,
+      render: (item) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            {item.due_day}
+          </div>
+          <div>
+            <div className="font-medium">{item.description}</div>
+            <div className="text-xs text-muted-foreground">
+              Dia {item.due_day} de cada mês
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
       key: 'default_value',
@@ -194,21 +207,89 @@ export default function FixedExpenses() {
       {/* Stats Dashboard */}
       <FixedExpenseStats />
 
-      {/* Launch Button */}
-      <div className="rounded-lg border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">
-              {t('pages.fixedExpenses.launchSection')}
-            </h3>
-            <p className="text-sm">{t('pages.fixedExpenses.launchDesc')}</p>
+      {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
+      {(() => {
+        const activeExpenses = fixedExpenses.filter((e) => e.is_active);
+        const totalMonthlyFixed = activeExpenses.reduce(
+          (sum, e) => sum + parseFloat(e.default_value || '0'),
+          0
+        );
+        return (
+          <div
+            className={cn(
+              'grid gap-4',
+              activeExpenses.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
+            )}
+          >
+            {/* Card 1: Lançamento */}
+            <div className="flex flex-col justify-between rounded-lg border bg-card p-4">
+              <div>
+                <h3 className="text-base font-semibold">
+                  {t('pages.fixedExpenses.launchSection')}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t('pages.fixedExpenses.launchDesc')}
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsLaunchDialogOpen(true)}
+                className="mt-4 w-full"
+              >
+                <TrendingDown className="mr-2 h-4 w-4" />
+                {t('pages.fixedExpenses.launchBtn')}
+              </Button>
+            </div>
+
+            {activeExpenses.length > 0 && (
+              <>
+                {/* Card 2: Comprometimento */}
+                <div className="rounded-lg border bg-card p-4">
+                  <p className="text-sm font-medium">Comprometimento mensal fixo</p>
+                  <p className="mt-1 text-2xl font-bold text-destructive">
+                    {formatCurrency(totalMonthlyFixed)}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {activeExpenses.length} despesas ativas recorrentes todo mês
+                  </p>
+                </div>
+
+                {/* Card 3: Calendário */}
+                <div className="rounded-lg border bg-card p-4">
+                  <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Calendário de vencimentos
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                      const expensesOnDay = activeExpenses.filter(
+                        (e) => e.due_day === day
+                      );
+                      const hasExpense = expensesOnDay.length > 0;
+                      return (
+                        <div
+                          key={day}
+                          title={
+                            hasExpense
+                              ? expensesOnDay.map((e) => e.description).join(', ')
+                              : undefined
+                          }
+                          className={cn(
+                            'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
+                            hasExpense
+                              ? 'bg-destructive/15 text-destructive ring-1 ring-destructive/30'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          {day}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <Button onClick={() => setIsLaunchDialogOpen(true)} size="lg">
-            <TrendingDown className="mr-2 h-4 w-4" />
-            {t('pages.fixedExpenses.launchBtn')}
-          </Button>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Table */}
       <DataTable
@@ -220,6 +301,11 @@ export default function FixedExpenses() {
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.fixedExpenses.emptyState'),
         }}
+        rowClassName={(item) =>
+          item.is_active
+            ? 'border-l-4 border-l-destructive/50'
+            : 'border-l-4 border-l-muted opacity-60'
+        }
         actions={(item) => (
           <div className="flex items-center justify-end gap-2">
             <Button

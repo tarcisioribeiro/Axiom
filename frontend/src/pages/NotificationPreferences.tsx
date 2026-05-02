@@ -75,6 +75,26 @@ const NOTIFICATION_TYPES: {
     label: 'Fatura Atrasada',
     description: 'Faturas de cartão com vencimento já passado.',
   },
+  {
+    key: 'budget_warning',
+    label: 'Alerta de Orçamento',
+    description: 'Orçamento mensal atingiu 80% ou mais do limite definido.',
+  },
+  {
+    key: 'budget_exceeded',
+    label: 'Orçamento Estourado',
+    description: 'Gastos ultrapassaram o limite do orçamento mensal.',
+  },
+  {
+    key: 'financial_goal_reached',
+    label: 'Meta Financeira Atingida',
+    description: 'Meta financeira concluída: valor atual atingiu o valor alvo.',
+  },
+  {
+    key: 'financial_goal_approaching',
+    label: 'Meta Financeira Próxima do Prazo',
+    description: 'Meta financeira com prazo vencendo nos próximos 30 dias.',
+  },
 ];
 
 const CHANNEL_OPTIONS: {
