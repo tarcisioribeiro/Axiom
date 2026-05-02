@@ -20,6 +20,9 @@ import {
   List,
   LayoutGrid,
   Circle,
+  Sun,
+  Sunset,
+  Moon,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -32,6 +35,7 @@ import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -110,22 +114,22 @@ const getStatusBadge = (status: string) => {
 
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
-    health: 'bg-category-health text-white dark:text-black border-transparent',
-    intellect: 'bg-category-studies text-white dark:text-black border-transparent',
-    studies: 'bg-category-studies text-white dark:text-black border-transparent',
-    spiritual: 'bg-category-spiritual text-white dark:text-black border-transparent',
-    exercise: 'bg-category-exercise text-white dark:text-black border-transparent',
-    nutrition: 'bg-category-nutrition text-white dark:text-black border-transparent',
-    meditation: 'bg-category-spiritual text-white dark:text-black border-transparent',
-    reading: 'bg-category-studies text-white dark:text-black border-transparent',
-    writing: 'bg-category-work text-white dark:text-black border-transparent',
-    work: 'bg-category-work text-white dark:text-black border-transparent',
-    leisure: 'bg-category-leisure text-white dark:text-black border-transparent',
+    health: 'bg-category-health text-white border-transparent',
+    intellect: 'bg-category-studies text-white border-transparent',
+    studies: 'bg-category-studies text-white border-transparent',
+    spiritual: 'bg-category-spiritual text-white border-transparent',
+    exercise: 'bg-category-exercise text-white border-transparent',
+    nutrition: 'bg-category-nutrition text-white border-transparent',
+    meditation: 'bg-category-spiritual text-white border-transparent',
+    reading: 'bg-category-studies text-white border-transparent',
+    writing: 'bg-category-work text-white border-transparent',
+    work: 'bg-category-work text-white border-transparent',
+    leisure: 'bg-category-leisure text-white border-transparent',
     family: 'bg-accent text-accent-foreground border-transparent',
-    social: 'bg-category-leisure text-white dark:text-black border-transparent',
-    finance: 'bg-category-finance text-white dark:text-black border-transparent',
-    household: 'bg-category-nutrition text-white dark:text-black border-transparent',
-    personal_care: 'bg-category-health text-white dark:text-black border-transparent',
+    social: 'bg-category-leisure text-white border-transparent',
+    finance: 'bg-category-finance text-white border-transparent',
+    household: 'bg-category-nutrition text-white border-transparent',
+    personal_care: 'bg-category-health text-white border-transparent',
   };
   return colors[category] ?? 'bg-muted text-muted-foreground border-transparent';
 };
@@ -494,11 +498,73 @@ export default function TodayTasks() {
     </div>
   );
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { label: t('pages.todayTasks.greetingMorning'), Icon: Sun };
+    if (hour < 18)
+      return { label: t('pages.todayTasks.greetingAfternoon'), Icon: Sunset };
+    return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
+  };
+
+  const greeting = getGreeting();
+  const GreetIcon = greeting.Icon;
+
+  const todayTasksCount = viewMode === 'kanban' ? cards.length : todayTasks.length;
+  const doneCount =
+    viewMode === 'kanban'
+      ? cardsByStatus.done.length
+      : todayTasks.filter((t) => t.status === 'completed').length;
+  const dayRate = todayTasksCount > 0 ? (doneCount / todayTasksCount) * 100 : 0;
+  const dayRingColor =
+    dayRate >= 80
+      ? 'hsl(var(--chart-2))'
+      : dayRate >= 40
+        ? 'hsl(var(--warning))'
+        : 'hsl(var(--primary))';
+
+  const dateLabel = selectedDate
+    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    : '';
+
   return (
     <PageContainer>
       <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />}>
         {viewToggle}
       </PageHeader>
+
+      {/* ─── BANNER DO DIA ─── */}
+      <div className="flex items-center gap-6 rounded-xl border bg-card px-6 py-4">
+        <CircularProgress
+          value={dayRate}
+          size={72}
+          strokeWidth={6}
+          color={dayRingColor}
+        >
+          <span className="text-sm font-bold">{doneCount}</span>
+        </CircularProgress>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <GreetIcon className="h-5 w-5 text-muted-foreground" />
+            <span className="text-lg font-semibold">{greeting.label}</span>
+          </div>
+          <p className="mt-0.5 capitalize text-muted-foreground">{dateLabel}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold">
+            {doneCount}
+            <span className="text-base font-normal text-muted-foreground">
+              /{todayTasksCount}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.todayTasks.tasksLabel')}
+          </p>
+        </div>
+      </div>
 
       {/* ─── LIST MODE ─── */}
       {viewMode === 'list' && (

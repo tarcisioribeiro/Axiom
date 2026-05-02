@@ -80,8 +80,11 @@ export default function Revenues() {
   ] as const;
 
   const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const received = revenues.filter((r) => r.received);
-    const pending = revenues.filter((r) => !r.received);
+    const filtered = revenues.filter(
+      (r) => !r.related_transfer && !r.is_transfer_generated
+    );
+    const received = filtered.filter((r) => r.received);
+    const pending = filtered.filter((r) => !r.received);
     return {
       receivedCount: received.length,
       receivedAmount: received.reduce((s, r) => s + parseFloat(r.value), 0),
@@ -92,7 +95,9 @@ export default function Revenues() {
 
   const categoryBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
-    for (const r of revenues) {
+    for (const r of revenues.filter(
+      (r) => !r.related_transfer && !r.is_transfer_generated
+    )) {
       groups[r.category] = (groups[r.category] ?? 0) + parseFloat(r.value);
     }
     const total = Object.values(groups).reduce((s, v) => s + v, 0);

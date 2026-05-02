@@ -81,8 +81,11 @@ export default function Expenses() {
   ] as const;
 
   const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const paid = expenses.filter((e) => e.payed);
-    const pending = expenses.filter((e) => !e.payed);
+    const filtered = expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated
+    );
+    const paid = filtered.filter((e) => e.payed);
+    const pending = filtered.filter((e) => !e.payed);
     return {
       paidCount: paid.length,
       paidAmount: paid.reduce((s, e) => s + parseFloat(e.value), 0),
@@ -93,7 +96,9 @@ export default function Expenses() {
 
   const categoryBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
-    for (const e of expenses) {
+    for (const e of expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated
+    )) {
       groups[e.category] = (groups[e.category] ?? 0) + parseFloat(e.value);
     }
     const total = Object.values(groups).reduce((s, v) => s + v, 0);
