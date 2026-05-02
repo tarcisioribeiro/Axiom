@@ -23,7 +23,9 @@
       "filter": "Filters",
       "clearFilters": "Clear Filters",
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "seeMore": "See more",
+      "seeLess": "See less"
     },
     "messages": {
       "loadError": "Error loading data",
@@ -1091,6 +1093,7 @@
     },
     "securityDashboard": {
       "title": "Security Dashboard",
+      "vaultItems": "Vault Items",
       "passwords": "Passwords",
       "storedCards": "Stored Cards",
       "storedAccounts": "Bank Accounts",
@@ -1690,7 +1693,10 @@
       "recalculatedDesc": "Progress updated to {{days}} days.",
       "loadError": "Error loading data",
       "saveError": "Error saving",
-      "deleteError": "Error deleting goal"
+      "deleteError": "Error deleting goal",
+      "sectionActive": "Active",
+      "sectionCompleted": "Completed",
+      "sectionOther": "Closed"
     },
     "dailyChecklist": {
       "title": "Daily Checklist",
@@ -1796,6 +1802,8 @@
       "deleteError": "Error deleting reflection",
       "deleteTitle": "Delete Reflection",
       "deleteDesc": "Are you sure you want to delete this reflection? This action cannot be undone.",
+      "moodTimeline": "Last 21 days",
+      "noMood": "No record",
       "filters": {
         "mood": "Mood",
         "allMoods": "All moods",
@@ -1825,7 +1833,11 @@
       "timeLabel": "Time: {{time}}",
       "closingTimeLabel": "until {{time}}",
       "listMode": "List mode",
-      "kanbanMode": "Kanban mode"
+      "kanbanMode": "Kanban mode",
+      "greetingMorning": "Good morning!",
+      "greetingAfternoon": "Good afternoon!",
+      "greetingEvening": "Good evening!",
+      "tasksLabel": "tasks completed"
     },
     "categorizationRules": {
       "title": "Categorization Rules",

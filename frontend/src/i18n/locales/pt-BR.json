@@ -23,7 +23,9 @@
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
       "yes": "Sim",
-      "no": "Não"
+      "no": "Não",
+      "seeMore": "Ver mais",
+      "seeLess": "Ver menos"
     },
     "messages": {
       "loadError": "Erro ao carregar dados",
@@ -1244,6 +1246,7 @@
     },
     "securityDashboard": {
       "title": "Dashboard de Segurança",
+      "vaultItems": "Itens do Cofre",
       "passwords": "Senhas",
       "storedCards": "Cartões Armazenados",
       "storedAccounts": "Contas Bancárias",
@@ -1867,7 +1870,10 @@
       "recalculatedDesc": "Progresso atualizado para {{days}} dias.",
       "loadError": "Erro ao carregar dados",
       "saveError": "Erro ao salvar",
-      "deleteError": "Erro ao excluir objetivo"
+      "deleteError": "Erro ao excluir objetivo",
+      "sectionActive": "Ativos",
+      "sectionCompleted": "Concluídos",
+      "sectionOther": "Encerrados"
     },
     "dailyChecklist": {
       "title": "Checklist Diário",
@@ -1973,6 +1979,8 @@
       "deleteError": "Erro ao excluir reflexão",
       "deleteTitle": "Excluir Reflexão",
       "deleteDesc": "Tem certeza que deseja excluir esta reflexão? Esta ação não pode ser desfeita.",
+      "moodTimeline": "Últimos 21 dias",
+      "noMood": "Sem registro",
       "filters": {
         "mood": "Humor",
         "allMoods": "Todos os humores",
@@ -2002,7 +2010,11 @@
       "timeLabel": "Horário: {{time}}",
       "closingTimeLabel": "até {{time}}",
       "listMode": "Modo lista",
-      "kanbanMode": "Modo kanban"
+      "kanbanMode": "Modo kanban",
+      "greetingMorning": "Bom dia!",
+      "greetingAfternoon": "Boa tarde!",
+      "greetingEvening": "Boa noite!",
+      "tasksLabel": "tarefas concluídas"
     },
     "categorizationRules": {
       "title": "Regras de Categorização",

@@ -42,6 +42,7 @@ import {
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
@@ -521,6 +522,21 @@ export default function CreditCardExpenses() {
     .filter((i) => !i.payed)
     .reduce((sum, i) => sum + i.value, 0);
 
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const i of filteredInstallments) {
+      const cat = i.category ?? 'others';
+      groups[cat] = (groups[cat] ?? 0) + i.value;
+    }
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: totalInstallments > 0 ? (amount / totalInstallments) * 100 : 0,
+      }));
+  }, [filteredInstallments, totalInstallments]);
+
   const columns: Column<CreditCardInstallment>[] = [
     {
       key: 'description',
@@ -682,6 +698,36 @@ export default function CreditCardExpenses() {
           </CardContent>
         </Card>
       </div>
+
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Por categoria
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">

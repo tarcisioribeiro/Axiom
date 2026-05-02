@@ -7,14 +7,10 @@ import {
   Award,
   ListTodo,
   Flag,
-  Smile,
-  Frown,
-  Meh,
-  SmilePlus,
-  Angry,
   Activity,
   Lightbulb,
   BarChart3,
+  Flame,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -25,11 +21,10 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
-import type { DailyReflection } from '@/types';
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
@@ -48,16 +43,13 @@ export default function PersonalPlanningDashboard() {
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
-  // Processar dados para gráficos
   const weeklyProgressData = stats?.weekly_progress
     ? stats.weekly_progress.map((item) => {
-        // Parse da data sem problemas de timezone - a data vem como "YYYY-MM-DD"
         const parts = item.date.split('-');
         const day = parts[2];
         const month = parts[1];
-        const dateStr = `${day}/${month}`;
         return {
-          date: dateStr,
+          date: `${day}/${month}`,
           total: item.total,
           completadas: item.completed,
           taxa: parseFloat(item.rate.toFixed(1)),
@@ -73,30 +65,20 @@ export default function PersonalPlanningDashboard() {
       }))
     : [];
 
-  // Função para obter cor por categoria (usa cores do tema)
-  const getCategoryColor = (category: string) => {
-    return (
-      categoryColors[category as keyof typeof categoryColors] || categoryColors.other
-    );
-  };
+  const getCategoryColor = (category: string) =>
+    categoryColors[category as keyof typeof categoryColors] || categoryColors.other;
 
-  // Ícone de mood - usando cores Dracula
-  const getMoodIcon = (mood?: string) => {
-    switch (mood) {
-      case 'excellent':
-        return <SmilePlus className="h-4 w-4 text-success" />;
-      case 'good':
-        return <Smile className="h-4 w-4 text-info" />;
-      case 'neutral':
-        return <Meh className="h-4 w-4" />;
-      case 'bad':
-        return <Frown className="h-4 w-4 text-warning" />;
-      case 'terrible':
-        return <Angry className="h-4 w-4 text-destructive" />;
-      default:
-        return null;
-    }
-  };
+  const todayRate =
+    stats && stats.total_tasks_today > 0
+      ? (stats.completed_tasks_today / stats.total_tasks_today) * 100
+      : 0;
+
+  const todayRingColor =
+    todayRate >= 80
+      ? 'hsl(var(--chart-2))'
+      : todayRate >= 40
+        ? 'hsl(var(--warning))'
+        : 'hsl(var(--primary))';
 
   if (isLoading) {
     return <LoadingState />;
@@ -115,13 +97,26 @@ export default function PersonalPlanningDashboard() {
     <PageContainer>
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
-      {/* Grid 1: 8 Cards de Métricas Principais */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title={t('pages.planningDashboard.todayTasks')}
-          value={`${stats.completed_tasks_today} / ${stats.total_tasks_today}`}
-          icon={<Calendar className="h-4 w-4" />}
-        />
+      {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card className="flex flex-col items-center justify-center p-5">
+          <CircularProgress
+            value={todayRate}
+            size={80}
+            strokeWidth={7}
+            color={todayRingColor}
+          >
+            <div className="flex flex-col items-center leading-none">
+              <span className="text-lg font-bold">{stats.completed_tasks_today}</span>
+              <span className="text-xs text-muted-foreground">
+                /{stats.total_tasks_today}
+              </span>
+            </div>
+          </CircularProgress>
+          <p className="mt-2 text-center text-sm font-medium text-muted-foreground">
+            {t('pages.planningDashboard.todayTasks')}
+          </p>
+        </Card>
 
         <StatCard
           title={t('pages.planningDashboard.completionRate7d')}
@@ -140,24 +135,49 @@ export default function PersonalPlanningDashboard() {
           value={`${stats.completion_rate_30d.toFixed(1)}%`}
           icon={<Calendar className="h-4 w-4" />}
         />
+      </div>
 
+      {/* Linha 2: Objetivos ativos | Melhor Sequência | Sequência atual | Objetivos Completados */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           title={t('pages.planningDashboard.activeGoals')}
           value={stats.active_goals}
           icon={<Target className="h-4 w-4" />}
         />
 
-        <StatCard
-          title={t('pages.planningDashboard.bestStreak')}
-          value={`${stats.best_streak} ${t('pages.planningDashboard.days')}`}
-          icon={<Award className="h-4 w-4" />}
-        />
+        <Card className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/15">
+            <Flame className="h-5 w-5 text-orange-500" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">
+              {stats.best_streak}
+              <span className="ml-1 text-sm font-normal text-muted-foreground">
+                {t('pages.planningDashboard.days')}
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('pages.planningDashboard.bestStreak')}
+            </p>
+          </div>
+        </Card>
 
-        <StatCard
-          title={t('pages.planningDashboard.currentStreak')}
-          value={`${stats.current_streak} ${t('pages.planningDashboard.days')}`}
-          icon={<TrendingUp className="h-4 w-4" />}
-        />
+        <Card className="flex items-center gap-4 p-5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+            <Award className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">
+              {stats.current_streak}
+              <span className="ml-1 text-sm font-normal text-muted-foreground">
+                {t('pages.planningDashboard.days')}
+              </span>
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('pages.planningDashboard.currentStreak')}
+            </p>
+          </div>
+        </Card>
 
         <StatCard
           title={t('pages.planningDashboard.completedGoals')}
@@ -166,14 +186,13 @@ export default function PersonalPlanningDashboard() {
         />
       </div>
 
-      {/* Grid 2: Gráficos de Visualização */}
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-        {/* Gráfico 1: Progresso Semanal */}
+      {/* Linha 3: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {weeklyProgressData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <TrendingUp className="h-4 w-4" />
                 {t('pages.planningDashboard.weeklyProgress')}
               </CardTitle>
             </CardHeader>
@@ -219,18 +238,17 @@ export default function PersonalPlanningDashboard() {
                     name: t('pages.planningDashboard.rate'),
                   },
                 ]}
-                height={350}
+                height={280}
               />
             </CardContent>
           </Card>
         )}
 
-        {/* Gráfico 2: Tarefas por Categoria */}
         {tasksByCategoryData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ListTodo className="h-5 w-5" />
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <ListTodo className="h-4 w-4" />
                 {t('pages.planningDashboard.tasksByCategory')}
               </CardTitle>
             </CardHeader>
@@ -248,99 +266,70 @@ export default function PersonalPlanningDashboard() {
                 emptyMessage={t('pages.planningDashboard.noTasks')}
                 lockChartType="pie"
                 layout="horizontal"
-                height={350}
+                height={280}
               />
             </CardContent>
           </Card>
         )}
+
+        {stats.active_goals_progress && stats.active_goals_progress.length > 0 && (
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <Flag className="h-4 w-4" />
+                {t('pages.planningDashboard.activeGoalsProgress')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {stats.active_goals_progress.slice(0, 4).map((goal, index) => {
+                  const pct = goal.progress_percentage;
+                  const ringColor =
+                    pct >= 80
+                      ? 'hsl(var(--chart-2))'
+                      : pct >= 40
+                        ? 'hsl(var(--warning))'
+                        : 'hsl(var(--primary))';
+                  return (
+                    <div key={index} className="flex items-center gap-3">
+                      <CircularProgress
+                        value={pct}
+                        size={48}
+                        strokeWidth={5}
+                        color={ringColor}
+                      >
+                        <span className="text-xs font-bold">{pct.toFixed(0)}%</span>
+                      </CircularProgress>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{goal.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {goal.current_value} / {goal.target_value}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Activity className="h-4 w-4" />
+              {t('pages.planningDashboard.habitConsistency')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HabitHeatmap />
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Grid 3: Progresso de Objetivos Ativos */}
-      {stats.active_goals_progress && stats.active_goals_progress.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flag className="h-5 w-5" />
-              {t('pages.planningDashboard.activeGoalsProgress')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {stats.active_goals_progress.map((goal, index) => (
-                <div key={index}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="font-medium">{goal.title}</span>
-                    <span className="text-sm">{goal.progress_percentage}%</span>
-                  </div>
-                  <Progress value={goal.progress_percentage} className="h-3" />
-                  <div className="mt-1 flex items-center justify-between text-xs">
-                    <span>
-                      {goal.current_value}/{goal.target_value}
-                    </span>
-                    <span>
-                      {goal.days_active} {t('pages.planningDashboard.activeDays')}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Grid 4: Heatmap de Consistência */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            {t('pages.planningDashboard.habitConsistency')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <HabitHeatmap />
-        </CardContent>
-      </Card>
-
-      {/* Grid 5: Reflexões Recentes com Ícones de Mood */}
-      {stats.recent_reflections && stats.recent_reflections.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Smile className="h-5 w-5" />
-              {t('pages.planningDashboard.recentReflections')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats.recent_reflections.map((reflection: DailyReflection) => (
-                <div
-                  key={reflection.id}
-                  className="border-b pb-4 last:border-b-0 last:pb-0"
-                >
-                  <div className="mb-2 flex items-start justify-between">
-                    <span className="text-sm font-medium">
-                      {new Date(reflection.date).toLocaleDateString('pt-BR')}
-                    </span>
-                    {reflection.mood && (
-                      <div className="flex items-center gap-2">
-                        {getMoodIcon(reflection.mood)}
-                        <span className="text-sm capitalize">
-                          {reflection.mood_display}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm leading-relaxed">{reflection.reflection}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Grid 6: Analytics — Desempenho por Dia da Semana */}
+      {/* Linha 4: Desempenho Dia Por Semana | Insight de Hábitos */}
       {analytics && (
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
