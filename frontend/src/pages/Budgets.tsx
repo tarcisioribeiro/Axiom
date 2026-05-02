@@ -687,8 +687,8 @@ function BudgetOverviewChart({ statuses }: { statuses: BudgetStatus[] }) {
                 <EnhancedTooltip
                   active={active}
                   payload={[
-                    { name: 'Gasto', value: d?.spent ?? 0, color: colors.info },
-                    { name: 'Restante', value: d?.remaining ?? 0, color: 'hsl(var(--muted-foreground) / 0.4)' },
+                    { name: 'Gasto', value: d?.spent ?? 0, color: colors.info, dataKey: 'spent', payload: d ?? {} },
+                    { name: 'Restante', value: d?.remaining ?? 0, color: 'hsl(var(--muted-foreground) / 0.4)', dataKey: 'remaining', payload: d ?? {} },
                   ]}
                   label={label as string}
                   formatter={(v) => formatCurrencyBR(v as number)}
@@ -775,9 +775,9 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
               <EnhancedTooltip
                 active
                 payload={[
-                  { name: labelActualSpent, value: d.actual_spent, color: colors.info },
+                  { name: labelActualSpent, value: d.actual_spent, color: colors.info, dataKey: 'actual_spent', payload: d },
                   ...(d.limit_amount !== null
-                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger }]
+                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger, dataKey: 'limit_amount', payload: d }]
                     : []),
                 ]}
                 label={props.label as string}

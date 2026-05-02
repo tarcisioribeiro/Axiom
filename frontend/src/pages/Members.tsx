@@ -1,6 +1,17 @@
 import { format } from 'date-fns';
-import { Plus, Pencil, Trash2, Users, BarChart3 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  BarChart3,
+  Pencil,
+  Plus,
+  Trash2,
+  Users,
+  Banknote,
+  HandCoins,
+  UserCheck,
+  Phone,
+  Mail,
+} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,9 +19,11 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { MemberForm } from '@/components/members/MemberForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -20,9 +33,37 @@ import {
 } from '@/components/ui/dialog';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type { Member, MemberFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const SEX_COLORS: Record<string, { bg: string; text: string }> = {
+  M: { bg: 'bg-blue-500/15', text: 'text-blue-600 dark:text-blue-400' },
+  F: { bg: 'bg-pink-500/15', text: 'text-pink-600 dark:text-pink-400' },
+  O: { bg: 'bg-violet-500/15', text: 'text-violet-600 dark:text-violet-400' },
+};
+
+function MemberInitials({ name, sex }: { name: string; sex: string }) {
+  const initials = name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+  const colors = SEX_COLORS[sex] ?? { bg: 'bg-muted', text: 'text-muted-foreground' };
+  return (
+    <div
+      className={cn(
+        'flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold',
+        colors.bg,
+        colors.text
+      )}
+    >
+      {initials}
+    </div>
+  );
+}
 
 export default function Members() {
   const { t } = useTranslation();
@@ -33,6 +74,7 @@ export default function Members() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -116,9 +158,23 @@ export default function Members() {
     }
   };
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  const filteredMembers = useMemo(() => {
+    if (!searchTerm) return members;
+    const q = searchTerm.toLowerCase();
+    return members.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.document.toLowerCase().includes(q) ||
+        m.phone.toLowerCase().includes(q) ||
+        (m.email ?? '').toLowerCase().includes(q)
+    );
+  }, [members, searchTerm]);
+
+  const creditorCount = members.filter((m) => m.is_creditor).length;
+  const beneficiaryCount = members.filter((m) => m.is_benefited).length;
+  const activeCount = members.filter((m) => m.active).length;
+
+  if (isLoading) return <LoadingState />;
 
   return (
     <PageContainer>
@@ -135,106 +191,206 @@ export default function Members() {
         }}
       />
 
-      {members.length === 0 ? (
+      {/* Stat cards */}
+      {members.length > 0 && (
+        <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
+          <Card className="overflow-hidden border-t-2 border-t-primary/60">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <p className="text-sm font-medium">{t('pages.members.title')}</p>
+              <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">{members.length}</div>
+              <p className="mt-xs text-xs text-muted-foreground">cadastrados</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden border-t-2 border-t-success/60">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <p className="text-sm font-medium">Ativos</p>
+              <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+                <UserCheck className="h-4 w-4 text-success" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-success">{activeCount}</div>
+              <p className="mt-xs text-xs text-muted-foreground">membros ativos</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden border-t-2 border-t-blue-500/60">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <p className="text-sm font-medium">Credores</p>
+              <div className="rounded-lg bg-blue-500/10 p-sm ring-1 ring-blue-500/20">
+                <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {creditorCount}
+              </div>
+              <p className="mt-xs text-xs text-muted-foreground">podem emprestar</p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden border-t-2 border-t-emerald-500/60">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+              <p className="text-sm font-medium">Beneficiários</p>
+              <div className="rounded-lg bg-emerald-500/10 p-sm ring-1 ring-emerald-500/20">
+                <HandCoins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {beneficiaryCount}
+              </div>
+              <p className="mt-xs text-xs text-muted-foreground">podem receber</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <SearchInput
+        placeholder="Buscar por nome, CPF ou telefone…"
+        value={searchTerm}
+        onValueChange={setSearchTerm}
+        className="max-w-sm"
+      />
+
+      {filteredMembers.length === 0 ? (
         <EmptyState
           icon={<Users className="h-12 w-12 text-muted-foreground" />}
-          message={t('pages.members.emptyState')}
+          message={
+            searchTerm ? 'Nenhum membro encontrado.' : t('pages.members.emptyState')
+          }
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-card">
-          <div className="custom-scrollbar overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b bg-muted/50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    {t('pages.members.columns.name')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    {t('pages.members.columns.document')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    {t('pages.members.columns.phone')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    {t('pages.members.columns.role')}
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold">
-                    {t('pages.members.columns.createdAt')}
-                  </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold">
-                    {t('common.table.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {members.map((member) => (
-                  <tr key={member.id} className="transition-colors hover:bg-muted/30">
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{member.name}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">{member.document}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">{member.phone}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-1">
-                        {member.is_creditor && (
-                          <Badge variant="secondary">Credor</Badge>
-                        )}
-                        {member.is_benefited && (
-                          <Badge variant="outline">Beneficiário</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm">
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredMembers.map((member) => {
+            const isCurrentUser = currentUserMemberId === member.id;
+            return (
+              <Card
+                key={member.id}
+                className={cn(
+                  'overflow-hidden transition-shadow hover:shadow-md',
+                  isCurrentUser && 'ring-2 ring-primary/40',
+                  !member.active && 'opacity-60'
+                )}
+              >
+                {/* Header com avatar e nome */}
+                <div className="flex items-start gap-3 bg-gradient-to-r from-muted/50 to-transparent p-4">
+                  <MemberInitials name={member.name} sex={member.sex} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate font-semibold leading-tight">{member.name}</p>
+                      {isCurrentUser && (
+                        <Badge variant="secondary" className="shrink-0 text-[10px] px-1.5 py-0">
+                          Você
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
                       {format(new Date(member.created_at), 'dd/MM/yyyy')}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {currentUserMemberId === member.id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/members/${member.id}/report`)}
-                            aria-label={t('pages.members.viewReport')}
-                            title={t('pages.members.viewReport')}
-                          >
-                            <BarChart3 className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        )}
+                    </p>
+                    {/* Papéis */}
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {member.is_creditor && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                          <Banknote className="h-2.5 w-2.5" />
+                          Credor
+                        </span>
+                      )}
+                      {member.is_benefited && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                          <HandCoins className="h-2.5 w-2.5" />
+                          Beneficiário
+                        </span>
+                      )}
+                      {!member.is_creditor && !member.is_benefited && (
+                        <span className="text-[10px] text-muted-foreground">Sem papel definido</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dados de contato */}
+                <CardContent className="space-y-2 py-3">
+                  {member.phone && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      <span>{member.phone}</span>
+                    </div>
+                  )}
+                  {member.email && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{member.email}</span>
+                    </div>
+                  )}
+                  {member.document && (
+                    <p className="font-mono text-xs text-muted-foreground">{member.document}</p>
+                  )}
+                  {member.monthly_income && (
+                    <div className="rounded bg-muted/50 px-2 py-1 text-xs">
+                      <span className="text-muted-foreground">Renda: </span>
+                      <span className="font-medium">
+                        {parseFloat(member.monthly_income).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between border-t pt-2">
+                    <Badge variant={member.active ? 'success' : 'outline'} className="text-xs">
+                      {member.active ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                    <div className="flex gap-1">
+                      {isCurrentUser && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            setSelectedMember(member);
-                            setIsDialogOpen(true);
-                          }}
-                          aria-label={t('common.actions.edit')}
-                          title={t('common.actions.edit')}
+                          className="h-7 w-7"
+                          onClick={() => navigate(`/members/${member.id}/report`)}
+                          aria-label={t('pages.members.viewReport')}
+                          title={t('pages.members.viewReport')}
                         >
-                          <Pencil className="h-4 w-4" aria-hidden="true" />
+                          <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(member.id)}
-                          aria-label={t('common.actions.delete')}
-                          title={t('common.actions.delete')}
-                        >
-                          <Trash2
-                            className="h-4 w-4 text-destructive"
-                            aria-hidden="true"
-                          />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => {
+                          setSelectedMember(member);
+                          setIsDialogOpen(true);
+                        }}
+                        aria-label={t('common.actions.edit')}
+                        title={t('common.actions.edit')}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleDelete(member.id)}
+                        aria-label={t('common.actions.delete')}
+                        title={t('common.actions.delete')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
