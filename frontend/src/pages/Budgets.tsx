@@ -1,26 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import {
-  PiggyBank,
-  Plus,
-  Pencil,
-  Trash2,
-  TrendingUp,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Bar,
-  CartesianGrid,
-  ComposedChart,
-  Legend,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -51,13 +31,27 @@ import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useSemanticColors } from '@/lib/chart-colors';
-import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
-import { STALE_TIMES } from '@/lib/query-client';
+import { cn } from '@/lib/utils';
 import { budgetsService } from '@/services/budgets-service';
-import type { Budget, BudgetFormData } from '@/types';
+import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+const CATEGORY_ICONS: Record<string, string> = {
+  'food and drink': '🍽️',
+  supermarket: '🛒',
+  transport: '🚗',
+  'bills and services': '⚡',
+  entertainment: '🎬',
+  education: '📚',
+  health: '❤️',
+  'health and care': '❤️',
+  house: '🏠',
+  vestuary: '👔',
+  travels: '✈️',
+  investments: '📈',
+  others: '📦',
+};
 
 const MONTHS = [
   { value: 1, label: 'Janeiro' },
@@ -93,6 +87,7 @@ function getDefaultFormData(): BudgetFormData {
 export default function Budgets() {
   const { t } = useTranslation();
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | undefined>();
@@ -106,12 +101,6 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
-  const [showTrend, setShowTrend] = useState(false);
-  const [trendCategory, setTrendCategory] = useState<string>(
-    EXPENSE_CATEGORIES_CANONICAL[0]?.key ?? 'others'
-  );
-  const [trendMonths, setTrendMonths] = useState(6);
-
   useEffect(() => {
     void loadData();
   }, []);
@@ -119,8 +108,12 @@ export default function Budgets() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const data = await budgetsService.getAll();
+      const [data, statuses] = await Promise.all([
+        budgetsService.getAll(),
+        budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
+      ]);
       setBudgets(Array.isArray(data) ? data : []);
+      setBudgetStatuses(Array.isArray(statuses) ? statuses : []);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -128,6 +121,7 @@ export default function Budgets() {
         variant: 'destructive',
       });
       setBudgets([]);
+      setBudgetStatuses([]);
     } finally {
       setIsLoading(false);
     }
@@ -280,74 +274,90 @@ export default function Budgets() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredBudgets.map((budget) => (
-            <BudgetCard
-              key={budget.id}
-              budget={budget}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+        <>
+          {(() => {
+            const statusMap = new Map(
+              budgetStatuses.map((s) => [`${s.month}-${s.year}-${s.category}`, s])
+            );
+            const enriched = filteredBudgets.map((b) => ({
+              budget: b,
+              status: statusMap.get(`${b.month}-${b.year}-${b.category}`),
+            }));
+            const exceededCount = enriched.filter(({ status }) => {
+              const pct = status ? status.percentage : 0;
+              return pct > 100;
+            }).length;
+            const warningCount = enriched.filter(({ status }) => {
+              const pct = status ? status.percentage : 0;
+              return pct >= 70 && pct <= 100;
+            }).length;
+            const okCount = filteredBudgets.length - exceededCount - warningCount;
+            return (
+              <>
+                <div className="rounded-lg border bg-card p-4">
+                  <p className="mb-2 text-sm font-medium">
+                    Saúde dos orçamentos este mês
+                  </p>
+                  <div className="flex h-3 overflow-hidden rounded-full bg-muted">
+                    {exceededCount > 0 && (
+                      <div
+                        className="bg-destructive"
+                        style={{
+                          width: `${(exceededCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {warningCount > 0 && (
+                      <div
+                        className="bg-warning"
+                        style={{
+                          width: `${(warningCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {okCount > 0 && (
+                      <div
+                        className="bg-success"
+                        style={{
+                          width: `${(okCount / filteredBudgets.length) * 100}%`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                    <span>
+                      <span className="font-semibold text-success">{okCount}</span>{' '}
+                      dentro do limite
+                    </span>
+                    <span>
+                      <span className="font-semibold text-warning">{warningCount}</span>{' '}
+                      em alerta
+                    </span>
+                    <span>
+                      <span className="font-semibold text-destructive">
+                        {exceededCount}
+                      </span>{' '}
+                      excedidos
+                    </span>
+                  </div>
+                </div>
 
-      <div className="rounded-lg border bg-card">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between p-4 text-left"
-          onClick={() => setShowTrend((v) => !v)}
-        >
-          <div className="flex items-center gap-2 font-semibold">
-            <TrendingUp className="h-4 w-4" />
-            {t('pages.budgets.trend.title')}
-          </div>
-          {showTrend ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-
-        {showTrend && (
-          <div className="border-t p-4">
-            <div className="mb-4 flex flex-wrap gap-4">
-              <Select value={trendCategory} onValueChange={setTrendCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder={t('common.fields.category')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                    <SelectItem key={cat.key} value={cat.key}>
-                      {cat.label}
-                    </SelectItem>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {enriched.map(({ budget, status }) => (
+                    <BudgetCard
+                      key={budget.id}
+                      budget={budget}
+                      status={status}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
                   ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={String(trendMonths)}
-                onValueChange={(v) => setTrendMonths(parseInt(v))}
-              >
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6">
-                    {t('pages.budgets.trend.monthsOption', { count: 6 })}
-                  </SelectItem>
-                  <SelectItem value="12">
-                    {t('pages.budgets.trend.monthsOption', { count: 12 })}
-                  </SelectItem>
-                  <SelectItem value="24">
-                    {t('pages.budgets.trend.monthsOption', { count: 24 })}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <BudgetTrendChart category={trendCategory} months={trendMonths} />
-          </div>
-        )}
-      </div>
+                </div>
+              </>
+            );
+          })()}
+        </>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -511,101 +521,14 @@ export default function Budgets() {
   );
 }
 
-const MONTH_SHORT = [
-  'Jan',
-  'Fev',
-  'Mar',
-  'Abr',
-  'Mai',
-  'Jun',
-  'Jul',
-  'Ago',
-  'Set',
-  'Out',
-  'Nov',
-  'Dez',
-];
-
-function BudgetTrendChart({ category, months }: { category: string; months: number }) {
-  const { t } = useTranslation();
-  const colors = useSemanticColors();
-  const { data: history = [], isLoading } = useQuery({
-    queryKey: ['budgets', 'history', category, months],
-    queryFn: () => budgetsService.getHistory({ category, months }),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
-    enabled: !!category,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        {t('common.actions.loading')}
-      </div>
-    );
-  }
-
-  const chartData = history.map((h) => ({
-    label: `${MONTH_SHORT[h.month - 1]}/${String(h.year).slice(2)}`,
-    actual_spent: parseFloat(h.actual_spent),
-    limit_amount: h.limit_amount !== null ? parseFloat(h.limit_amount) : null,
-  }));
-
-  const hasAnyData = chartData.some(
-    (d) => d.actual_spent > 0 || d.limit_amount !== null
-  );
-
-  if (!hasAnyData) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-        {t('pages.budgets.trend.noData')}
-      </div>
-    );
-  }
-
-  const labelActualSpent = t('pages.budgets.trend.actualSpent');
-  const labelLimit = t('pages.budgets.trend.limit');
-
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <ComposedChart
-        data={chartData}
-        margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-        <YAxis tickFormatter={axisFormatCurrency} tick={{ fontSize: 12 }} width={64} />
-        <Tooltip
-          formatter={(value: number, name: string) => [
-            formatCurrencyBR(value),
-            name === 'actual_spent' ? labelActualSpent : labelLimit,
-          ]}
-        />
-        <Legend
-          formatter={(value) =>
-            value === 'actual_spent' ? labelActualSpent : labelLimit
-          }
-        />
-        <Bar dataKey="actual_spent" fill={colors.info} radius={[3, 3, 0, 0]} />
-        <Line
-          type="monotone"
-          dataKey="limit_amount"
-          stroke={colors.danger}
-          strokeDasharray="5 5"
-          strokeWidth={2}
-          dot={false}
-          connectNulls={false}
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
-  );
-}
-
 function BudgetCard({
   budget,
+  status,
   onEdit,
   onDelete,
 }: {
   budget: Budget;
+  status?: BudgetStatus;
   onEdit: (b: Budget) => void;
   onDelete: (b: Budget) => Promise<void>;
 }) {
@@ -614,60 +537,117 @@ function BudgetCard({
     MONTHS.find((m) => m.value === budget.month)?.label ?? String(budget.month);
   const categoryLabel = translate('expenseCategories', budget.category);
 
+  const pct = status ? status.percentage : 0;
+  const actualSpent = status ? parseFloat(status.actual_spent) : null;
+  const limitAmount = parseFloat(budget.limit_amount);
+
+  const barColor =
+    pct > 100 ? 'bg-destructive' : pct >= 70 ? 'bg-warning' : 'bg-success';
+
+  const categoryIcon = CATEGORY_ICONS[budget.category] ?? '📦';
+
   return (
-    <div className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <h3 className="font-semibold">{categoryLabel}</h3>
-          <p className="text-sm text-muted-foreground">
-            {monthLabel}/{budget.year}
-          </p>
+    <div
+      className={cn(
+        'overflow-hidden rounded-lg border-l-4 bg-card transition-shadow hover:shadow-md',
+        pct > 100
+          ? 'border-l-destructive shadow-sm shadow-destructive/20'
+          : pct >= 70
+            ? 'border-l-warning'
+            : 'border-l-success'
+      )}
+    >
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl" role="img" aria-hidden="true">
+              {categoryIcon}
+            </span>
+            <div>
+              <p className="font-semibold leading-tight">{categoryLabel}</p>
+              <p className="text-xs text-muted-foreground">
+                {monthLabel}/{budget.year}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {status && (
+              <span
+                className={cn(
+                  'rounded px-2 py-0.5 text-xs font-bold',
+                  pct > 100
+                    ? 'bg-destructive/10 text-destructive'
+                    : pct >= 70
+                      ? 'bg-warning/10 text-warning'
+                      : 'bg-success/10 text-success'
+                )}
+              >
+                {pct.toFixed(0)}%
+              </span>
+            )}
+            {!status && (
+              <Badge variant="outline">{t('pages.budgets.badgeLabel')}</Badge>
+            )}
+          </div>
         </div>
-        <Badge variant="outline">{t('pages.budgets.badgeLabel')}</Badge>
-      </div>
 
-      <div className="space-y-1 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
-          <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
-        </div>
+        {status && (
+          <div className="mt-3 space-y-1">
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn('h-full rounded-full transition-all', barColor)}
+                style={{ width: `${Math.min(pct, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{formatCurrency(actualSpent ?? 0)}</span>
+              <span>de {formatCurrency(limitAmount)}</span>
+            </div>
+          </div>
+        )}
+
+        {!status && (
+          <div className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
+              <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
+            </div>
+          </div>
+        )}
+
         {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t('pages.budgets.rollover.amount')}
-            </span>
-            <span className="font-medium text-green-600 dark:text-green-400">
-              +{formatCurrency(budget.rollover_amount)}
-            </span>
+          <div className="mt-2 flex items-center gap-1 text-xs text-info">
+            <span>↩</span>
+            <span>Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}</span>
           </div>
         )}
-        {budget.member_name && (
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">{t('pages.budgets.member')}</span>
-            <span className="font-medium">{budget.member_name}</span>
-          </div>
-        )}
-      </div>
 
-      <div className="flex gap-2 border-t pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => onEdit(budget)}
-        >
-          <Pencil className="mr-1 h-3 w-3" />
-          {t('common.actions.edit')}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-          onClick={() => void onDelete(budget)}
-        >
-          <Trash2 className="mr-1 h-3 w-3" />
-          {t('common.actions.delete')}
-        </Button>
+        {budget.member_name && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('pages.budgets.member')}: {budget.member_name}
+          </p>
+        )}
+
+        <div className="mt-3 flex gap-2 border-t pt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => onEdit(budget)}
+          >
+            <Pencil className="mr-1 h-3 w-3" />
+            {t('common.actions.edit')}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => void onDelete(budget)}
+          >
+            <Trash2 className="mr-1 h-3 w-3" />
+            {t('common.actions.delete')}
+          </Button>
+        </div>
       </div>
     </div>
   );

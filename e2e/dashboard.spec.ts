@@ -26,7 +26,7 @@ test.describe('Dashboard', () => {
 
   test('dashboard page heading is visible', async ({ page }) => {
     await expect(
-      page.getByRole('heading', { name: /dashboard|painel|visão geral/i }).first()
+      page.getByRole('heading', { name: /bom dia|boa tarde|boa noite/i }).first()
     ).toBeVisible({ timeout: 10_000 });
   });
 
@@ -73,10 +73,12 @@ test.describe('Dashboard', () => {
       await registrosBtn.click();
     }
 
-    // Wait for the "Despesas" link to be fully visible and interactive
-    const expensesLink = page.getByRole('link', { name: 'Despesas' }).first();
+    // Wait for the "Despesas" link to be fully visible and interactive.
+    // exact: true avoids matching "Despesas Fixas" (which also contains "Despesas").
+    const expensesLink = page.getByRole('link', { name: 'Despesas', exact: true }).first();
     await expect(expensesLink).toBeVisible({ timeout: 5_000 });
-    await expensesLink.click();
+    // Use force:true because sidebar collapse animations can briefly intercept pointer events.
+    await expensesLink.click({ force: true });
     await expect(page).toHaveURL(/\/expenses/, { timeout: 10_000 });
 
     await expect(
