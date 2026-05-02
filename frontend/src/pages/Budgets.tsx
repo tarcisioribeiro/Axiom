@@ -775,9 +775,9 @@ function BudgetTrendChart({ category, months }: { category: string; months: numb
               <EnhancedTooltip
                 active
                 payload={[
-                  { name: labelActualSpent, value: d.actual_spent, color: colors.info, dataKey: 'actual_spent', payload: d },
+                  { name: labelActualSpent, value: d.actual_spent, color: colors.info, dataKey: 'actual_spent', payload: { ...d, limit_amount: d.limit_amount ?? undefined } },
                   ...(d.limit_amount !== null
-                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger, dataKey: 'limit_amount', payload: d }]
+                    ? [{ name: labelLimit, value: d.limit_amount, color: colors.danger, dataKey: 'limit_amount', payload: { ...d, limit_amount: d.limit_amount ?? undefined } }]
                     : []),
                 ]}
                 label={props.label as string}
