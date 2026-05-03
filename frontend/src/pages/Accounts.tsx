@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -297,19 +298,20 @@ export default function Accounts() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.accounts.title')} icon={<Wallet />}>
-        <div className="flex items-center gap-2">
-          <SearchInput
-            placeholder={t('pages.accounts.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.accounts.newBtn')}
-          </Button>
-        </div>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.accounts.newBtn')}
+        </Button>
       </PageHeader>
+
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <SearchInput
+          placeholder={t('pages.accounts.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+      </FilterBar>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
         <Card

@@ -6,13 +6,13 @@ import {
   Download,
   CheckCircle2,
   Clock,
-  X,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -20,6 +20,7 @@ import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -61,7 +62,9 @@ export default function Expenses() {
     statusFilter,
     setStatusFilter,
     startDate,
+    setStartDate,
     endDate,
+    setEndDate,
     isExportModalOpen,
     setIsExportModalOpen,
     clearFilters,
@@ -119,45 +122,7 @@ export default function Expenses() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
-        <div className="flex flex-wrap items-center gap-2">
-          <SearchInput
-            placeholder={t('pages.expenses.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-48 flex-none"
-          />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger
-              className="w-40"
-              aria-label={t('pages.expenses.allCategories')}
-            >
-              <SelectValue placeholder={t('pages.expenses.allCategories')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
-                <SelectItem key={key} value={key}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
-              <SelectValue placeholder={t('pages.expenses.allStatus')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
-              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
-              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-            </SelectContent>
-          </Select>
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-              <X className="h-4 w-4" />
-              {t('common.actions.clearFilters')}
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
@@ -172,6 +137,61 @@ export default function Expenses() {
           </Button>
         </div>
       </PageHeader>
+
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <SearchInput
+          placeholder={t('pages.expenses.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44 flex-none"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.expenses.allCategories')}
+          >
+            <SelectValue placeholder={t('pages.expenses.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
+            <SelectValue placeholder={t('pages.expenses.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+            <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-1">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.expenses.dateFrom')}
+          </span>
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder={t('pages.expenses.dateFrom')}
+            clearable
+          />
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.expenses.dateTo')}
+          </span>
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder={t('pages.expenses.dateTo')}
+            clearable
+          />
+        </div>
+      </FilterBar>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
         <Card className="overflow-hidden border-t-2 border-t-destructive/60">
