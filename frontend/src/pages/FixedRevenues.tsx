@@ -1,10 +1,19 @@
-import { Plus, Pencil, Trash2, Calendar, TrendingUp } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,7 +42,12 @@ import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { fixedRevenuesService } from '@/services/fixed-revenues-service';
-import type { FixedRevenue, FixedRevenueFormData, Account } from '@/types';
+import type {
+  FixedRevenue,
+  FixedRevenueFormData,
+  Account,
+  FixedRevenueStats,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 const REVENUE_CATEGORIES = Object.entries(TRANSLATIONS.revenueCategories).map(
@@ -66,6 +80,7 @@ export default function FixedRevenues() {
   const { t } = useTranslation();
   const [fixedRevenues, setFixedRevenues] = useState<FixedRevenue[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [stats, setStats] = useState<FixedRevenueStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
@@ -93,15 +108,17 @@ export default function FixedRevenues() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [revenuesData, accountsData] = await Promise.all([
+      const [revenuesData, accountsData, statsData] = await Promise.all([
         fixedRevenuesService.getAll(),
         accountsService.getAll(),
+        fixedRevenuesService.getStats(),
       ]);
       const revenues = Array.isArray(revenuesData)
         ? revenuesData
         : ((revenuesData as { results: FixedRevenue[] }).results ?? []);
       setFixedRevenues(revenues);
       setAccounts(accountsData);
+      setStats(statsData as FixedRevenueStats);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -284,6 +301,50 @@ export default function FixedRevenues() {
           onClick: openCreate,
         }}
       />
+
+      {/* 4 stat cards: modelos ativos | total mês | recebidas/pendentes | vs mês anterior */}
+      {stats && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Modelos Ativos"
+            value={stats.active_templates}
+            icon={<Calendar className="h-5 w-5" />}
+            variant="default"
+          />
+          <StatCard
+            title="Total do Mês"
+            value={formatCurrency(stats.current_month.total_amount)}
+            icon={<DollarSign className="h-5 w-5" />}
+            variant="success"
+          />
+          <StatCard
+            title="Recebidas / Pendentes"
+            value={`${stats.current_month.received_count} / ${stats.current_month.pending_count}`}
+            icon={<TrendingUp className="h-5 w-5" />}
+            variant={stats.current_month.pending_count > 0 ? 'warning' : 'success'}
+          />
+          <StatCard
+            title="Vs. Mês Anterior"
+            value={formatCurrency(
+              Math.abs(
+                stats.current_month.total_amount - stats.previous_month.total_amount
+              )
+            )}
+            icon={
+              stats.current_month.total_amount >= stats.previous_month.total_amount ? (
+                <TrendingUp className="h-5 w-5" />
+              ) : (
+                <TrendingDown className="h-5 w-5" />
+              )
+            }
+            variant={
+              stats.current_month.total_amount >= stats.previous_month.total_amount
+                ? 'success'
+                : 'warning'
+            }
+          />
+        </div>
+      )}
 
       {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
       <div

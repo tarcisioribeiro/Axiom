@@ -154,7 +154,7 @@ export function GoalForm({
           <Select
             value={watch('related_task')?.toString()}
             onValueChange={(value) =>
-              setValue('related_task', value ? parseInt(value) : undefined)
+              setValue('related_task', value === 'none' ? undefined : parseInt(value))
             }
           >
             <SelectTrigger>
