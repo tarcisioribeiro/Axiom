@@ -108,6 +108,11 @@ class Revenue(BaseModel):
         verbose_name="Moeda",
         help_text="Código ISO 4217 da moeda (ex: BRL, USD, EUR)",
     )
+    is_initial_balance = models.BooleanField(
+        default=False,
+        verbose_name="Saldo Inicial",
+        help_text="Receita gerada automaticamente a partir do saldo inicial da conta",
+    )
     tags = models.ManyToManyField(
         "expenses.Tag",
         blank=True,

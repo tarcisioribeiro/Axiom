@@ -150,6 +150,30 @@ spec:
         - protocol: TCP
           port: 9001
 ---
+# Allow the API to reach Ollama for LLM inference and embedding.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-ollama
+  namespace: mindledger
+  labels:
+    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: ollama
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: api
+      ports:
+        - protocol: TCP
+          port: 11434
+---
 # Allow Prometheus (in namespace monitoring) to scrape the API metrics endpoint.
 # NetworkPolicies apply at the pod level, so use the container port (39100).
 apiVersion: networking.k8s.io/v1

@@ -501,11 +501,12 @@ class ReadingGoal(BaseModel):
 
     @property
     def books_read_this_year(self):
-        """Livros com read_status='read' com pelo menos uma sessão de leitura no ano."""
+        """Livros com read_status='read' e pelo menos uma sessão de leitura no ano."""
         return (
             Book.objects.filter(
                 owner=self.owner,
                 read_status="read",
+                literarytype="book",
                 deleted_at__isnull=True,
                 readings__deleted_at__isnull=True,
                 readings__reading_date__year=self.year,
