@@ -1350,6 +1350,7 @@
     },
     "libraryDashboard": {
       "title": "Reading Dashboard",
+      "overview": "Overview",
       "books": "Books",
       "authors": "Authors",
       "publishers": "Publishers",

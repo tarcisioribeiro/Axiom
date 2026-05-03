@@ -185,6 +185,14 @@ class Expense(BaseModel):
         verbose_name="Categorizado Automaticamente",
         help_text="Categoria preenchida automaticamente por uma regra de categorização",
     )
+    is_initial_balance = models.BooleanField(
+        default=False,
+        verbose_name="Saldo Inicial",
+        help_text=(
+            "Despesa gerada automaticamente a partir do saldo inicial"
+            " negativo de conta (cheque especial)"
+        ),
+    )
     tags: models.ManyToManyField = models.ManyToManyField(
         "Tag",
         blank=True,

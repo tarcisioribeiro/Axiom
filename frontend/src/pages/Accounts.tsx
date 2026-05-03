@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { AccountForm } from '@/components/accounts/AccountForm';
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
@@ -296,15 +297,21 @@ export default function Accounts() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.accounts.title')}
-        icon={<Wallet />}
-        action={{
-          label: t('pages.accounts.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.accounts.title')} icon={<Wallet />}>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.accounts.newBtn')}
+        </Button>
+      </PageHeader>
+
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <SearchInput
+          placeholder={t('pages.accounts.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+      </FilterBar>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
         <Card
@@ -406,13 +413,6 @@ export default function Accounts() {
           </div>
         </div>
       )}
-
-      <SearchInput
-        placeholder={t('pages.accounts.searchPlaceholder')}
-        value={searchTerm}
-        onValueChange={setSearchTerm}
-        className="max-w-sm"
-      />
 
       {isLoading ? (
         <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

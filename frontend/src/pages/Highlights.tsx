@@ -4,7 +4,6 @@ import {
   ChevronRight,
   Download,
   Edit,
-  Filter,
   Highlighter,
   Lightbulb,
   Plus,
@@ -16,6 +15,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -523,7 +523,15 @@ export default function Highlights() {
         }}
       />
 
-      <div className="flex flex-wrap items-center gap-2">
+      <FilterBar
+        hasActiveFilters={!!(searchTerm || filterType || filterColor)}
+        onClear={() => {
+          setSearchTerm('');
+          setFilterType('');
+          setFilterColor('');
+          setCurrentPage(1);
+        }}
+      >
         <SearchInput
           placeholder="Buscar destaques..."
           value={searchTerm}
@@ -531,9 +539,8 @@ export default function Highlights() {
             setSearchTerm(v);
             setCurrentPage(1);
           }}
-          className="max-w-sm"
+          className="w-44 flex-none"
         />
-        <Filter className="h-4 w-4 text-muted-foreground" />
 
         {/* Type filter */}
         <Select
@@ -614,7 +621,7 @@ export default function Highlights() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
+      </FilterBar>
 
       {filtered.length === 0 ? (
         <EmptyState

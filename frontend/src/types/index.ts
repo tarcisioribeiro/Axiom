@@ -224,6 +224,7 @@ export interface Expense {
   related_payable?: number | null;
   payable_description?: string;
   auto_categorized: boolean;
+  is_initial_balance?: boolean;
   currency_code?: string;
   tags?: Tag[];
   tag_ids?: number[];
@@ -274,6 +275,7 @@ export interface Revenue {
   related_transfer?: number | null;
   related_transfer_id?: number | null;
   is_transfer_generated?: boolean;
+  is_initial_balance?: boolean;
   related_loan?: number | null;
   loan_description?: string;
   currency_code?: string;

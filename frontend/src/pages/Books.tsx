@@ -12,7 +12,6 @@ import {
   BookText,
   ChevronLeft,
   ChevronRight,
-  Filter,
   LayoutGrid,
   List,
 } from 'lucide-react';
@@ -20,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -494,17 +494,46 @@ export default function Books() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.books.title')}
-        icon={<BookOpen />}
-        action={{
-          label: t('pages.books.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.books.title')} icon={<BookOpen />}>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center rounded-md border">
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-r-none border-r"
+              onClick={() => setViewMode('table')}
+              title="Visualização em lista"
+              aria-label="Visualização em lista"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8 rounded-l-none"
+              onClick={() => setViewMode('grid')}
+              title="Visualização em grade"
+              aria-label="Visualização em grade"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('pages.books.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <FilterBar
+        hasActiveFilters={!!(searchTerm || filterStatus || filterGenre)}
+        onClear={() => {
+          setSearchTerm('');
+          setFilterStatus('');
+          setFilterGenre('');
+          handleFilterChange();
+        }}
+      >
         <SearchInput
           placeholder={t('pages.books.searchPlaceholder')}
           value={searchTerm}
@@ -512,9 +541,8 @@ export default function Books() {
             setSearchTerm(v);
             handleFilterChange();
           }}
-          className="max-w-sm"
+          className="w-44 flex-none"
         />
-        <Filter className="h-4 w-4 text-muted-foreground" />
         <Select
           value={filterStatus || 'all'}
           onValueChange={(v) => {
@@ -553,31 +581,7 @@ export default function Books() {
             ))}
           </SelectContent>
         </Select>
-
-        {/* View mode toggle */}
-        <div className="ml-auto flex items-center rounded-md border">
-          <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-            size="icon"
-            className="h-8 w-8 rounded-r-none border-r"
-            onClick={() => setViewMode('table')}
-            title="Visualização em lista"
-            aria-label="Visualização em lista"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-            size="icon"
-            className="h-8 w-8 rounded-l-none"
-            onClick={() => setViewMode('grid')}
-            title="Visualização em grade"
-            aria-label="Visualização em grade"
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      </FilterBar>
 
       {filteredBooks.length === 0 ? (
         <EmptyState

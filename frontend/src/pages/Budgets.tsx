@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -223,22 +224,19 @@ export default function Budgets() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.budgets.title')}
-        icon={<PiggyBank />}
-        action={{
-          label: t('pages.budgets.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.budgets.newBtn')}
+        </Button>
+      </PageHeader>
 
-      <div className="flex flex-wrap gap-4">
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput
           placeholder={t('pages.budgets.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
-          className="max-w-xs"
+          className="w-44 flex-none"
         />
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-40">
@@ -264,7 +262,7 @@ export default function Budgets() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </FilterBar>
 
       {filteredBudgets.length === 0 ? (
         <EmptyState

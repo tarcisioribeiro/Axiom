@@ -82,6 +82,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
             "related_payable",
             "payable_description",
             "auto_categorized",
+            "is_initial_balance",
             "currency_code",
             "tags",
             "tag_ids",
