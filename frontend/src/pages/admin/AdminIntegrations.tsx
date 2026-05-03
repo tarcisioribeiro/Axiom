@@ -7,16 +7,19 @@ import {
   HardDrive,
   Mail,
   RefreshCw,
+  RotateCcw,
   Send,
   Server,
   XCircle,
   Zap,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { ServiceCheck, ServiceStatus } from '@/types';
 
 const statusConfig: Record<
@@ -121,6 +124,53 @@ function IntegrationCard({
         </div>
       )}
       {details}
+    </div>
+  );
+}
+
+function OllamaRestartPanel() {
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+  const { toast } = useToast();
+  const [redirecting, setRedirecting] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: () => adminService.restartAll(),
+    onSuccess: () => {
+      setRedirecting(true);
+      toast({
+        title: 'Reiniciando todos os pods',
+        description:
+          'Você será desconectado. Aguarde os serviços subirem e faça login novamente.',
+      });
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2500);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: 'Falha ao reiniciar',
+        description: err.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  return (
+    <div className="mt-3 border-t border-border pt-3">
+      <button
+        onClick={() => mutation.mutate()}
+        disabled={mutation.isPending || redirecting}
+        className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+      >
+        {mutation.isPending || redirecting ? (
+          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <RotateCcw className="h-3.5 w-3.5" />
+        )}
+        {redirecting ? 'Desconectando...' : 'Reiniciar todos os pods'}
+      </button>
     </div>
   );
 }
@@ -255,6 +305,7 @@ export default function AdminIntegrations() {
           icon={Server}
           check={data?.ollama}
           loading={isLoading}
+          details={<OllamaRestartPanel />}
         />
         <IntegrationCard
           name="LLM Nuvem (Anthropic)"

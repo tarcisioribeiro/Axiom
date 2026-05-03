@@ -28,10 +28,11 @@ data:
   # Used by Django's S3 storage backend to verify the self-signed MinIO TLS certificate.
   MINIO_CA_BUNDLE: "/etc/ssl/minio/ca.crt"
 
-  # Ollama — local LLM. Set to empty string to disable AI features.
-  # Ollama is NOT deployed in k8s by default (too heavy for a single VPS node).
-  # If running Ollama externally, set this to its URL; otherwise leave as empty.
-  OLLAMA_HOST: ""
+  # Ollama — LLM local implantado no mesmo namespace (deployment: ollama).
+  OLLAMA_BASE_URL: "http://ollama-service:11434"
+  OLLAMA_MODEL: "mistral:7b-instruct"
+  OLLAMA_EMBED_MODEL: "nomic-embed-text"
+  LLM_PROVIDER: "ollama"
 
   # Sentry environment tag
   SENTRY_ENVIRONMENT: "production"
