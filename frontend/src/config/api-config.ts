@@ -201,6 +201,7 @@ export const API_CONFIG = {
     ADMIN_LOGS: '/api/v1/admin/logs/',
     ADMIN_EMAIL_TEST: '/api/v1/admin/email/test/',
     ADMIN_AGENTS_STATUS: '/api/v1/admin/agents/status/',
+    ADMIN_RESTART_ALL: '/api/v1/admin/restart/',
   },
 };
 

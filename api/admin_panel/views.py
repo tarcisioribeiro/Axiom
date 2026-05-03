@@ -1,4 +1,6 @@
+import json
 import os
+import ssl
 import urllib.error
 import urllib.request
 from typing import Any
@@ -372,6 +374,115 @@ class AdminEmailTestView(AdminBaseView):
                 {"error": f"Falha ao enviar email: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+# ─── Restart All Deployments ───────────────────────────────────────────────────
+
+# Deployments de aplicação reiniciados pelo painel. 404s são ignorados
+# automaticamente, então a mesma lista funciona em produção (api-blue/green)
+# e em staging (api).
+_APP_DEPLOYMENTS = ["api", "api-blue", "api-green", "frontend", "ollama"]
+
+
+def _restart_deployments() -> dict[str, Any]:
+    sa_dir = "/var/run/secrets/kubernetes.io/serviceaccount"
+    token_path = f"{sa_dir}/token"
+    ca_path = f"{sa_dir}/ca.crt"
+    ns_path = f"{sa_dir}/namespace"
+
+    if not os.path.exists(token_path):
+        return {
+            "success": False,
+            "message": "Fora do ambiente Kubernetes — reinício não disponível.",
+            "results": {},
+        }
+
+    try:
+        with open(token_path) as f:
+            token = f.read().strip()
+        with open(ns_path) as f:
+            namespace = f.read().strip()
+
+        kube_host = os.environ.get("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc")
+        kube_port = os.environ.get("KUBERNETES_SERVICE_PORT", "443")
+        base_url = (
+            f"https://{kube_host}:{kube_port}"
+            f"/apis/apps/v1/namespaces/{namespace}/deployments"
+        )
+
+        patch = json.dumps(
+            {
+                "spec": {
+                    "template": {
+                        "metadata": {
+                            "annotations": {
+                                "kubectl.kubernetes.io/restartedAt": now().isoformat()
+                            }
+                        }
+                    }
+                }
+            }
+        ).encode()
+
+        ctx = ssl.create_default_context(cafile=ca_path)
+        results: dict[str, str] = {}
+        errors: list[str] = []
+
+        for name in _APP_DEPLOYMENTS:
+            req = urllib.request.Request(
+                f"{base_url}/{name}",
+                data=patch,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/strategic-merge-patch+json",
+                },
+                method="PATCH",
+            )
+            try:
+                with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:  # nosec B310
+                    results[name] = "reiniciado" if resp.status in (200, 201) else f"HTTP {resp.status}"
+                    if resp.status not in (200, 201):
+                        errors.append(name)
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    results[name] = "ignorado (não existe neste ambiente)"
+                elif e.code == 403:
+                    results[name] = "sem permissão (403)"
+                    errors.append(name)
+                else:
+                    results[name] = f"erro HTTP {e.code}"
+                    errors.append(name)
+            except Exception as e:
+                results[name] = str(e)
+                errors.append(name)
+
+        restarted = [k for k, v in results.items() if v == "reiniciado"]
+        if errors:
+            return {
+                "success": False,
+                "message": f"Erros ao reiniciar: {', '.join(errors)}",
+                "results": results,
+            }
+        return {
+            "success": True,
+            "message": f"{len(restarted)} deployment(s) reiniciado(s): {', '.join(restarted)}.",
+            "results": results,
+        }
+    except Exception as e:
+        return {"success": False, "message": str(e), "results": {}}
+
+
+class AdminRestartAllView(AdminBaseView):
+    """POST /api/v1/admin/restart/ — reinicia todos os deployments da aplicação."""
+
+    def post(self, request: Request) -> Response:
+        result = _restart_deployments()
+        if result["success"]:
+            return Response({"message": result["message"], "results": result["results"]})
+        return Response(
+            {"error": result["message"], "results": result.get("results", {})},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 # ─── Agents Status ─────────────────────────────────────────────────────────────

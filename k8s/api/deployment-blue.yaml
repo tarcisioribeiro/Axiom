@@ -54,7 +54,9 @@ spec:
           hostnames:
             - "registry.tjtux.duckdns.org"
       serviceAccountName: sa-api
-      automountServiceAccountToken: false
+      # true necessário para montar o token e permitir restart do Ollama via admin panel.
+      # RBAC restringe o acesso a patch no deployment "ollama" apenas.
+      automountServiceAccountToken: true
       imagePullSecrets:
         - name: gitlab-registry-secret
       containers:
