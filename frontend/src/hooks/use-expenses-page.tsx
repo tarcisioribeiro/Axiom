@@ -312,7 +312,9 @@ export function useExpensesPage(): UseExpensesPageReturn {
   };
 
   const totalExpenses = sumByProperty(
-    expenses.map((e) => ({ value: parseFloat(e.value) })),
+    expenses
+      .filter((e) => !e.related_transfer && !e.is_transfer_generated)
+      .map((e) => ({ value: parseFloat(e.value) })),
     'value'
   );
   const columns: Column<Expense>[] = [
