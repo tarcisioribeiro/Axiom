@@ -76,7 +76,7 @@ workflow:
     paths:
       - .npm/
   before_script:
-    - cd frontend && npm ci --prefer-offline
+    - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
 .docker_base:
   image: docker:26
@@ -420,13 +420,13 @@ build:api:
           docker push "$API_IMAGE:main"
         else
           echo "main: develop image ($API_IMAGE:$DEVELOP_SHA) not found — building from source"
-          docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+          docker build --network=host -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:main"
           docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
           docker push "$API_IMAGE:main"
         fi
       else
-        docker build -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
+        docker build --network=host -t "$API_IMAGE:$CI_COMMIT_SHORT_SHA" ./api
         docker push "$API_IMAGE:$CI_COMMIT_SHORT_SHA"
         if [ -n "${CI_COMMIT_TAG:-}" ]; then
           docker tag "$API_IMAGE:$CI_COMMIT_SHORT_SHA" "$API_IMAGE:$CI_COMMIT_TAG"
@@ -508,13 +508,13 @@ build:frontend:
           docker push "$FRONTEND_IMAGE:main"
         else
           echo "main: develop image ($FRONTEND_IMAGE:$DEVELOP_SHA) not found — building from source"
-          docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+          docker build --network=host -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
           docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
           docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
           docker push "$FRONTEND_IMAGE:main"
         fi
       else
-        docker build -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+        docker build --network=host -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         if [ -n "${CI_COMMIT_TAG:-}" ]; then
           docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"
@@ -663,6 +663,14 @@ deploy:staging:
     - kubectl apply -f k8s/staging/api/service.yaml
     - kubectl apply -f k8s/staging/configmap.yaml
     - kubectl apply -f k8s/staging/minio/service.yaml
+    # ── Ollama: RBAC, network policy e deployment ────────────────────────────
+    - kubectl apply -f k8s/staging/serviceaccounts.yaml
+    - kubectl apply -f k8s/staging/network-policy.yaml
+    - kubectl apply -f k8s/staging/ollama/pvc.yaml
+    - kubectl apply -f k8s/staging/ollama/service.yaml
+    - kubectl apply -f k8s/staging/ollama/deployment.yaml
+    # Aguarda o servidor Ollama subir (modelos são puxados em background).
+    - kubectl -n mindledger-staging rollout status deployment/ollama --timeout=120s
     # Apply deployment specs with the real image tag substituted in-place so
     # kubectl apply creates exactly one rollout revision per deploy cycle.
     # Using sed to replace the placeholder 0.0.0 tag avoids a spurious revision
@@ -1037,7 +1045,7 @@ test:e2e:
         exit 1
       fi
     - cd frontend
-    - npm ci --prefer-offline
+    - npm ci --prefer-offline --legacy-peer-deps
     - export NODE_PATH="$(pwd)/node_modules"
   script:
     - npm run test:e2e
@@ -1225,7 +1233,13 @@ deploy:production:
     - kubectl apply -f k8s/base/namespace.yaml
     - kubectl apply -f k8s/base/configmap.yaml
     - kubectl apply -f k8s/serviceaccounts.yaml
+    - kubectl apply -f k8s/network-policy.yaml
     - kubectl apply -f k8s/api/pvc.yaml
+    # ── 2b. Ollama: PVC, Service, Deployment ─────────────────────────────────────
+    - kubectl apply -f k8s/ollama/pvc.yaml
+    - kubectl apply -f k8s/ollama/service.yaml
+    - kubectl apply -f k8s/ollama/deployment.yaml
+    - kubectl -n mindledger rollout status deployment/ollama --timeout=120s
     # ── 3. Sync blue-green Deployment specs + Service ────────────────────────────
     # Always apply the manifest so spec changes (volumes, probes, env) propagate.
     # The image tag is preserved from whatever is currently running so we don't

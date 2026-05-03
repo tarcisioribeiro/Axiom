@@ -1527,6 +1527,7 @@
     },
     "libraryDashboard": {
       "title": "Dashboard de Leitura",
+      "overview": "Visão Geral",
       "books": "Livros",
       "authors": "Autores",
       "publishers": "Editoras",

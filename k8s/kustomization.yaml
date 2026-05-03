@@ -47,6 +47,9 @@ resources:
   - frontend/configmap-nginx.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
+  - ollama/pvc.yaml
+  - ollama/deployment.yaml
+  - ollama/service.yaml
   - hpa.yaml
   - pdb.yaml
   - backup-cronjob.yaml

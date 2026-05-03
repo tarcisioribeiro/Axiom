@@ -711,7 +711,7 @@ class LiteraryTypeGoalTest(APITestCase):
             url,
             {
                 "reading_goal": self.reading_goal.pk,
-                "literary_type": "book",
+                "literary_type": "essay",
                 "goal_count": 10,
             },
             format="json",

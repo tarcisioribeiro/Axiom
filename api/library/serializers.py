@@ -564,6 +564,17 @@ class LiteraryTypeGoalCreateUpdateSerializer(serializers.ModelSerializer):
         reading_goal = data.get("reading_goal")
         literary_type = data.get("literary_type")
         instance = self.instance
+
+        if literary_type == "book":
+            raise serializers.ValidationError(
+                {
+                    "literary_type": (
+                        "Livros são contabilizados pela meta principal."
+                        " Selecione outro tipo literário."
+                    )
+                }
+            )
+
         if reading_goal and literary_type:
             qs = LiteraryTypeGoal.objects.filter(
                 reading_goal=reading_goal,

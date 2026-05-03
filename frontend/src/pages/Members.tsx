@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -178,18 +179,27 @@ export default function Members() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.members.title')}
-        icon={<Users />}
-        action={{
-          label: t('pages.members.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
+      <PageHeader title={t('pages.members.title')} icon={<Users />}>
+        <Button
+          onClick={() => {
             setSelectedMember(undefined);
             setIsDialogOpen(true);
-          },
-        }}
-      />
+          }}
+          className="gap-sm"
+        >
+          <Plus className="h-4 w-4" />
+          {t('pages.members.newBtn')}
+        </Button>
+      </PageHeader>
+
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <SearchInput
+          placeholder="Buscar por nome, CPF ou telefone…"
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+      </FilterBar>
 
       {/* Stat cards */}
       {members.length > 0 && (
@@ -251,13 +261,6 @@ export default function Members() {
           </Card>
         </div>
       )}
-
-      <SearchInput
-        placeholder="Buscar por nome, CPF ou telefone…"
-        value={searchTerm}
-        onValueChange={setSearchTerm}
-        className="max-w-sm"
-      />
 
       {filteredMembers.length === 0 ? (
         <EmptyState

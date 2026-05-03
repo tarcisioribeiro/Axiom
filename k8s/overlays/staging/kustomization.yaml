@@ -39,6 +39,9 @@ resources:
   - ../../staging/frontend/configmap-nginx.yaml
   - ../../staging/frontend/deployment.yaml
   - ../../staging/frontend/service.yaml
+  - ../../staging/ollama/pvc.yaml
+  - ../../staging/ollama/deployment.yaml
+  - ../../staging/ollama/service.yaml
   - ../../staging/serviceaccounts.yaml
   - ../../staging/network-policy.yaml
   - ../../staging/resource-quota.yaml

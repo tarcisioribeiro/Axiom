@@ -17,8 +17,7 @@ import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { LiteraryTypeGoal, ReadingGoal } from '@/types';
 
-const LITERARY_TYPES = [
-  { value: 'book', label: 'Livro' },
+const LITERARY_TYPE_GOAL_OPTIONS = [
   { value: 'collection', label: 'Coletânea' },
   { value: 'magazine', label: 'Revista' },
   { value: 'article', label: 'Artigo' },
@@ -103,7 +102,9 @@ export function ReadingGoalModal({
   }, [goal, reset, setValue, currentYear]);
 
   const usedTypes = new Set(ltgDrafts.map((d) => d.literary_type));
-  const availableTypes = LITERARY_TYPES.filter((t) => !usedTypes.has(t.value));
+  const availableTypes = LITERARY_TYPE_GOAL_OPTIONS.filter(
+    (t) => !usedTypes.has(t.value)
+  );
 
   const addLtg = () => {
     if (availableTypes.length === 0) return;
@@ -229,7 +230,8 @@ export function ReadingGoalModal({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Defina metas individuais para artigos, revistas, ensaios, etc. (opcional)
+              Defina metas para outros tipos (revistas, artigos, ensaios…). Livros são
+              contados pela meta principal. As páginas de todas as obras somam ao total.
             </p>
 
             {ltgDrafts.length > 0 && (
@@ -244,7 +246,7 @@ export function ReadingGoalModal({
                       }
                     >
                       {/* Show current value + available options */}
-                      {LITERARY_TYPES.filter(
+                      {LITERARY_TYPE_GOAL_OPTIONS.filter(
                         (t) =>
                           t.value === draft.literary_type ||
                           !usedTypes.has(t.value) ||

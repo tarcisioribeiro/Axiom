@@ -25,7 +25,8 @@ spec:
         environment: staging
     spec:
       serviceAccountName: sa-api
-      automountServiceAccountToken: false
+      # true necessário para montar o token e permitir restart do Ollama via admin panel.
+      automountServiceAccountToken: true
       imagePullSecrets:
         - name: gitlab-registry-secret
       initContainers:
