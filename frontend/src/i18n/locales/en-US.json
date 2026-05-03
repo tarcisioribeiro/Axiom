@@ -23,7 +23,9 @@
       "filter": "Filters",
       "clearFilters": "Clear Filters",
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "seeMore": "See more",
+      "seeLess": "See less"
     },
     "messages": {
       "loadError": "Error loading data",
@@ -102,6 +104,7 @@
       "creditCards": "Credit Cards",
       "bills": "Bills",
       "fixedExpenses": "Fixed Expenses",
+      "fixedRevenues": "Fixed Revenues",
       "categorizationRules": "Categorization Rules",
       "budgets": "Budgets",
       "payables": "Payables",
@@ -161,6 +164,7 @@
     "creditCards": "Credit Cards",
     "creditCardBills": "Bills",
     "fixedExpenses": "Fixed Expenses",
+    "fixedRevenues": "Fixed Revenues",
     "categorizationRules": "Categorization Rules",
     "payables": "Payables",
     "financialGoals": "Financial Goals",
@@ -865,6 +869,7 @@
       "pending": "pending",
       "perYear": "per year",
       "perDay": "per day",
+      "proportionLabel": "Proportion of total",
       "yieldRateLabel": "Yield Rate (% per year)",
       "yieldRateHint": "Leave 0 for vaults without yield. Ex: 12 = 12% per year",
       "activeVault": "Active vault",
@@ -961,11 +966,16 @@
       "totalAmount": "Total Goals Amount",
       "columns": {
         "description": "Description",
+        "current": "Current",
+        "target": "Target",
         "progress": "Progress",
         "vaults": "Vaults",
         "targetDate": "Target Date",
         "status": "Status"
       },
+      "daysLeft": "{{count}} day(s) left",
+      "deadlinePassed": "Deadline passed",
+      "goalCompletedLabel": "Goal Achieved!",
       "manageVaultsDesc": "Select the vaults that contribute to the goal \"{{name}}\".",
       "vaultsCount": "{{count}} vault(s)",
       "targetValueLabel": "Target Value *",
@@ -1083,6 +1093,7 @@
     },
     "securityDashboard": {
       "title": "Security Dashboard",
+      "vaultItems": "Vault Items",
       "passwords": "Passwords",
       "storedCards": "Stored Cards",
       "storedAccounts": "Bank Accounts",
@@ -1682,7 +1693,10 @@
       "recalculatedDesc": "Progress updated to {{days}} days.",
       "loadError": "Error loading data",
       "saveError": "Error saving",
-      "deleteError": "Error deleting goal"
+      "deleteError": "Error deleting goal",
+      "sectionActive": "Active",
+      "sectionCompleted": "Completed",
+      "sectionOther": "Closed"
     },
     "dailyChecklist": {
       "title": "Daily Checklist",
@@ -1788,6 +1802,8 @@
       "deleteError": "Error deleting reflection",
       "deleteTitle": "Delete Reflection",
       "deleteDesc": "Are you sure you want to delete this reflection? This action cannot be undone.",
+      "moodTimeline": "Last 21 days",
+      "noMood": "No record",
       "filters": {
         "mood": "Mood",
         "allMoods": "All moods",
@@ -1817,7 +1833,11 @@
       "timeLabel": "Time: {{time}}",
       "closingTimeLabel": "until {{time}}",
       "listMode": "List mode",
-      "kanbanMode": "Kanban mode"
+      "kanbanMode": "Kanban mode",
+      "greetingMorning": "Good morning!",
+      "greetingAfternoon": "Good afternoon!",
+      "greetingEvening": "Good evening!",
+      "tasksLabel": "tasks completed"
     },
     "categorizationRules": {
       "title": "Categorization Rules",

@@ -42,7 +42,9 @@ import {
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
@@ -520,6 +522,21 @@ export default function CreditCardExpenses() {
     .filter((i) => !i.payed)
     .reduce((sum, i) => sum + i.value, 0);
 
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const i of filteredInstallments) {
+      const cat = i.category ?? 'others';
+      groups[cat] = (groups[cat] ?? 0) + i.value;
+    }
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: totalInstallments > 0 ? (amount / totalInstallments) * 100 : 0,
+      }));
+  }, [filteredInstallments, totalInstallments]);
+
   const columns: Column<CreditCardInstallment>[] = [
     {
       key: 'description',
@@ -555,21 +572,58 @@ export default function CreditCardExpenses() {
     {
       key: 'category',
       label: t('pages.creditCardExpenses.columns.category'),
-      render: (installment) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', installment.category || '')}
-        </Badge>
-      ),
+      render: (installment) => {
+        const categoryEmoji: Record<string, string> = {
+          'food and drink': '🍽️',
+          supermarket: '🛒',
+          transport: '🚗',
+          entertainment: '🎬',
+          education: '📚',
+          'health and care': '❤️',
+          house: '🏠',
+          electronics: '💻',
+          travels: '✈️',
+          vestuary: '👔',
+          others: '📦',
+        };
+        const emoji = categoryEmoji[installment.category ?? ''] ?? '📦';
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <span>{emoji}</span>
+            {translate('expenseCategories', installment.category ?? '')}
+          </Badge>
+        );
+      },
     },
     {
       key: 'installment',
       label: t('pages.creditCardExpenses.columns.installment'),
       align: 'center',
-      render: (installment) => (
-        <span className="text-sm">
-          {installment.installment_number}/{installment.total_installments}
-        </span>
-      ),
+      render: (installment) => {
+        const current = installment.installment_number;
+        const total = installment.total_installments ?? 1;
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-0.5">
+              {Array.from({ length: Math.min(total, 8) }, (_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    i < current ? 'bg-success' : 'bg-muted'
+                  )}
+                />
+              ))}
+              {total > 8 && (
+                <span className="text-xs text-muted-foreground">+{total - 8}</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {current}/{total}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: 'payed',
@@ -611,6 +665,69 @@ export default function CreditCardExpenses() {
           onClick: handleCreate,
         }}
       />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPaid')}
+            </p>
+            <p className="text-xl font-bold text-success">
+              {formatCurrency(totalPaid)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPending')}
+            </p>
+            <p className="text-xl font-bold text-warning">
+              {formatCurrency(totalPending)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalAmount')}
+            </p>
+            <p className="text-xl font-bold text-destructive">
+              {formatCurrency(totalInstallments)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Por categoria
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 rounded-lg border bg-card p-4">
         <div className="flex items-center justify-between">
@@ -751,6 +868,7 @@ export default function CreditCardExpenses() {
             installmentsByBill.map(
               ({
                 key,
+                bill,
                 label,
                 period,
                 cardName,
@@ -762,12 +880,34 @@ export default function CreditCardExpenses() {
                 <Card key={key}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <CardTitle className="flex items-center gap-2 text-lg">
                           <Calendar className="h-5 w-5 text-primary" />
                           {key === 'sem-fatura'
                             ? label
                             : t('pages.creditCardExpenses.billLabel', { label })}
+                          {bill && (
+                            <Badge
+                              variant={
+                                bill.status === 'paid'
+                                  ? 'success'
+                                  : bill.status === 'overdue'
+                                    ? 'destructive'
+                                    : bill.status === 'closed'
+                                      ? 'secondary'
+                                      : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {bill.status === 'paid'
+                                ? 'Paga'
+                                : bill.status === 'overdue'
+                                  ? 'Vencida'
+                                  : bill.status === 'closed'
+                                    ? 'Fechada'
+                                    : 'Aberta'}
+                            </Badge>
+                          )}
                         </CardTitle>
                         {period && (
                           <p className="mt-1 text-sm">
@@ -777,6 +917,24 @@ export default function CreditCardExpenses() {
                             {cardName && period && ' • '}
                             {period}
                           </p>
+                        )}
+                        {bill && (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>Pago</span>
+                              <span>
+                                {total > 0 ? Math.round((paid / total) * 100) : 0}%
+                              </span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-success"
+                                style={{
+                                  width: `${total > 0 ? (paid / total) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-4">

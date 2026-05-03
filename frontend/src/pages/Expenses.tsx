@@ -14,11 +14,11 @@ import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { StatCard } from '@/components/common/StatCard';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ExpensesFilters } from '@/components/expenses/ExpensesFilters';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
 import { formatCurrency } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -70,15 +71,44 @@ export default function Expenses() {
     prefillExpenseData,
   } = useExpensesPage();
 
+  const BREAKDOWN_COLORS = [
+    'bg-primary',
+    'bg-success',
+    'bg-warning',
+    'bg-info',
+    'bg-accent',
+    'bg-destructive',
+  ] as const;
+
   const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
-    const paid = expenses.filter((e) => e.payed);
-    const pending = expenses.filter((e) => !e.payed);
+    const filtered = expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated
+    );
+    const paid = filtered.filter((e) => e.payed);
+    const pending = filtered.filter((e) => !e.payed);
     return {
       paidCount: paid.length,
       paidAmount: paid.reduce((s, e) => s + parseFloat(e.value), 0),
       pendingCount: pending.length,
       pendingAmount: pending.reduce((s, e) => s + parseFloat(e.value), 0),
     };
+  }, [expenses]);
+
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const e of expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated
+    )) {
+      groups[e.category] = (groups[e.category] ?? 0) + parseFloat(e.value);
+    }
+    const total = Object.values(groups).reduce((s, v) => s + v, 0);
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: total > 0 ? (amount / total) * 100 : 0,
+      }));
   }, [expenses]);
 
   return (
@@ -100,44 +130,86 @@ export default function Expenses() {
         </div>
       </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          title={t('pages.expenses.stats.totalAmount')}
-          value={formatCurrency(totalExpenses)}
-          icon={<TrendingDown />}
-          variant="danger"
-        />
-        <StatCard
-          title={t('pages.expenses.stats.paid')}
-          value={paidCount}
-          icon={<CheckCircle2 />}
-          variant="success"
-          trend={
-            expenses.length > 0
-              ? {
-                  value: Math.round((paidCount / expenses.length) * 100),
-                  isPositive: true,
-                  period: formatCurrency(paidAmount),
-                }
-              : undefined
-          }
-        />
-        <StatCard
-          title={t('pages.expenses.stats.pending')}
-          value={pendingCount}
-          icon={<Clock />}
-          variant="warning"
-          trend={
-            expenses.length > 0
-              ? {
-                  value: Math.round((pendingCount / expenses.length) * 100),
-                  isPositive: false,
-                  period: formatCurrency(pendingAmount),
-                }
-              : undefined
-          }
-        />
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.expenses.stats.totalAmount')}
+            </p>
+            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {formatCurrency(totalExpenses)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {expenses.length} lançamentos
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.expenses.stats.paid')}</p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">{paidCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(paidAmount)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.expenses.stats.pending')}</p>
+            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(pendingAmount)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Por categoria
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ExpensesFilters
         accounts={accounts}
