@@ -12,7 +12,6 @@ import {
   BookText,
   ChevronLeft,
   ChevronRight,
-  Filter,
   LayoutGrid,
   List,
 } from 'lucide-react';
@@ -20,6 +19,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -495,57 +495,7 @@ export default function Books() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.books.title')} icon={<BookOpen />}>
-        <div className="flex flex-wrap items-center gap-2">
-          <SearchInput
-            placeholder={t('pages.books.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={(v) => {
-              setSearchTerm(v);
-              handleFilterChange();
-            }}
-            className="max-w-sm"
-          />
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select
-            value={filterStatus || 'all'}
-            onValueChange={(v) => {
-              setFilterStatus(v === 'all' ? '' : v);
-              handleFilterChange();
-            }}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              {READ_STATUS.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filterGenre || 'all'}
-            onValueChange={(v) => {
-              setFilterGenre(v === 'all' ? '' : v);
-              handleFilterChange();
-            }}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Gênero" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os gêneros</SelectItem>
-              {BOOK_GENRES.map((g) => (
-                <SelectItem key={g.value} value={g.value}>
-                  {g.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* View mode toggle */}
+        <div className="flex items-center gap-2">
           <div className="flex items-center rounded-md border">
             <Button
               variant={viewMode === 'table' ? 'secondary' : 'ghost'}
@@ -568,13 +518,70 @@ export default function Books() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
             {t('pages.books.newBtn')}
           </Button>
         </div>
       </PageHeader>
+
+      <FilterBar
+        hasActiveFilters={!!(searchTerm || filterStatus || filterGenre)}
+        onClear={() => {
+          setSearchTerm('');
+          setFilterStatus('');
+          setFilterGenre('');
+          handleFilterChange();
+        }}
+      >
+        <SearchInput
+          placeholder={t('pages.books.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={(v) => {
+            setSearchTerm(v);
+            handleFilterChange();
+          }}
+          className="w-44 flex-none"
+        />
+        <Select
+          value={filterStatus || 'all'}
+          onValueChange={(v) => {
+            setFilterStatus(v === 'all' ? '' : v);
+            handleFilterChange();
+          }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {READ_STATUS.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filterGenre || 'all'}
+          onValueChange={(v) => {
+            setFilterGenre(v === 'all' ? '' : v);
+            handleFilterChange();
+          }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Gênero" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os gêneros</SelectItem>
+            {BOOK_GENRES.map((g) => (
+              <SelectItem key={g.value} value={g.value}>
+                {g.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FilterBar>
 
       {filteredBooks.length === 0 ? (
         <EmptyState

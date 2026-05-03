@@ -15,6 +15,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -119,19 +120,20 @@ export default function Payables() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
-        <div className="flex items-center gap-2">
-          <SearchInput
-            placeholder={t('pages.payables.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.payables.newBtn')}
-          </Button>
-        </div>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.payables.newBtn')}
+        </Button>
       </PageHeader>
+
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <SearchInput
+          placeholder={t('pages.payables.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+      </FilterBar>
 
       <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
         <Card className="overflow-hidden border-t-2 border-t-destructive/60">

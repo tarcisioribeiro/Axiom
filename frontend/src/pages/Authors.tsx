@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -276,19 +277,20 @@ export default function Authors() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.authors.title')} icon={<UserPen />}>
-        <div className="flex items-center gap-2">
-          <SearchInput
-            placeholder={t('pages.authors.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="w-52 sm:w-64"
-          />
-          <Button onClick={handleCreate} className="gap-sm">
-            <Plus className="h-4 w-4" />
-            {t('pages.authors.newBtn')}
-          </Button>
-        </div>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.authors.newBtn')}
+        </Button>
       </PageHeader>
+
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <SearchInput
+          placeholder={t('pages.authors.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-52 sm:w-64"
+        />
+      </FilterBar>
 
       {filteredAuthors.length === 0 ? (
         <EmptyState
