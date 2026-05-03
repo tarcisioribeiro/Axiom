@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { StoredCardForm } from '@/components/security/StoredCardForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cn, copyToClipboard } from '@/lib/utils';
@@ -234,24 +234,20 @@ export default function StoredCards() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader
-          title={t('pages.storedCards.title')}
-          icon={<CreditCardIcon />}
-          action={{
-            label: t('pages.storedCards.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
-        />
-
-        <div className="flex gap-4">
-          <Input
-            placeholder={t('pages.storedCards.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+        <PageHeader title={t('pages.storedCards.title')} icon={<CreditCardIcon />}>
+          <div className="flex items-center gap-2">
+            <SearchInput
+              placeholder={t('pages.storedCards.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.storedCards.newBtn')}
+            </Button>
+          </div>
+        </PageHeader>
 
         {!isLoading && filteredCards.length === 0 ? (
           <EmptyState

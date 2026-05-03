@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Tag, Trash2, Wand2 } from 'lucide-react';
+import { Pencil, Plus, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -263,25 +263,6 @@ export default function CategorizationRules() {
     },
   });
 
-  const applyMutation = useMutation({
-    mutationFn: () => categorizationRulesService.applyRules(),
-    onSuccess: (result) => {
-      toast({
-        title: t('pages.categorizationRules.applied'),
-        description: t('pages.categorizationRules.appliedDesc', {
-          count: result.updated,
-        }),
-      });
-    },
-    onError: (error: unknown) => {
-      toast({
-        title: t('pages.categorizationRules.applyError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    },
-  });
-
   function handleCreate() {
     setSelectedItem(undefined);
     setIsDialogOpen(true);
@@ -318,38 +299,11 @@ export default function CategorizationRules() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.categorizationRules.title')} icon={<Tag />}>
-        <Button
-          variant="outline"
-          onClick={() => applyMutation.mutate()}
-          disabled={applyMutation.isPending || rules.length === 0}
-        >
-          <Wand2 className="mr-2 h-4 w-4" />
-          {applyMutation.isPending
-            ? t('pages.categorizationRules.applying')
-            : t('pages.categorizationRules.applyBtn')}
-        </Button>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
           {t('pages.categorizationRules.newBtn')}
         </Button>
       </PageHeader>
-
-      {/* Informational banner */}
-      <div className="mb-md rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
-        <div className="flex items-start gap-3">
-          <Wand2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-500" />
-          <div>
-            <p className="text-sm font-medium text-blue-500">
-              Categorização automática
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Quando uma despesa é criada com descrição contendo o padrão da regra, ela
-              é automaticamente categorizada. Regras com menor número de prioridade são
-              aplicadas primeiro.
-            </p>
-          </div>
-        </div>
-      </div>
 
       {rules.length === 0 ? (
         <EmptyState

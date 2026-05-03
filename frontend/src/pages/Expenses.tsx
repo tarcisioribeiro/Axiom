@@ -6,6 +6,7 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  X,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,8 +15,8 @@ import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
-import { ExpensesFilters } from '@/components/expenses/ExpensesFilters';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -26,6 +27,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
 import { formatCurrency } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -52,13 +61,9 @@ export default function Expenses() {
     statusFilter,
     setStatusFilter,
     startDate,
-    setStartDate,
     endDate,
-    setEndDate,
-    selectedAccounts,
     isExportModalOpen,
     setIsExportModalOpen,
-    toggleAccount,
     clearFilters,
     handleCreate,
     handleEdit,
@@ -82,7 +87,7 @@ export default function Expenses() {
 
   const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
     const filtered = expenses.filter(
-      (e) => !e.related_transfer && !e.is_transfer_generated
+      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
     );
     const paid = filtered.filter((e) => e.payed);
     const pending = filtered.filter((e) => !e.payed);
@@ -97,7 +102,7 @@ export default function Expenses() {
   const categoryBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
     for (const e of expenses.filter(
-      (e) => !e.related_transfer && !e.is_transfer_generated
+      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
     )) {
       groups[e.category] = (groups[e.category] ?? 0) + parseFloat(e.value);
     }
@@ -114,7 +119,45 @@ export default function Expenses() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.expenses.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-48 flex-none"
+          />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger
+              className="w-40"
+              aria-label={t('pages.expenses.allCategories')}
+            >
+              <SelectValue placeholder={t('pages.expenses.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
+              <SelectValue placeholder={t('pages.expenses.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+              <X className="h-4 w-4" />
+              {t('common.actions.clearFilters')}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
@@ -210,26 +253,6 @@ export default function Expenses() {
           </div>
         </div>
       )}
-
-      <ExpensesFilters
-        accounts={accounts}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        selectedAccounts={selectedAccounts}
-        toggleAccount={toggleAccount}
-        hasActiveFilters={hasActiveFilters}
-        clearFilters={clearFilters}
-        totalExpenses={totalExpenses}
-        count={expenses.length}
-      />
 
       <DataTable
         data={expenses}

@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { StoredAccountForm } from '@/components/security/StoredAccountForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -253,24 +253,20 @@ export default function StoredAccounts() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader
-          title={t('pages.storedAccounts.title')}
-          icon={<Wallet />}
-          action={{
-            label: t('pages.storedAccounts.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
-        />
-
-        <div className="flex gap-4">
-          <Input
-            placeholder={t('pages.storedAccounts.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+        <PageHeader title={t('pages.storedAccounts.title')} icon={<Wallet />}>
+          <div className="flex items-center gap-2">
+            <SearchInput
+              placeholder={t('pages.storedAccounts.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.storedAccounts.newBtn')}
+            </Button>
+          </div>
+        </PageHeader>
 
         {!isLoading && filteredAccounts.length === 0 ? (
           <EmptyState

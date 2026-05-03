@@ -6,6 +6,7 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  X,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,9 +15,9 @@ import { DataTable } from '@/components/common/DataTable';
 import { ExportModal } from '@/components/common/ExportModal';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
-import { RevenuesFilters } from '@/components/revenues/RevenuesFilters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
@@ -26,6 +27,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { TRANSLATIONS } from '@/config/constants';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -51,13 +60,9 @@ export default function Revenues() {
     statusFilter,
     setStatusFilter,
     startDate,
-    setStartDate,
     endDate,
-    setEndDate,
-    selectedAccounts,
     isExportModalOpen,
     setIsExportModalOpen,
-    toggleAccount,
     clearFilters,
     handleCreate,
     handleEdit,
@@ -81,7 +86,7 @@ export default function Revenues() {
 
   const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
     const filtered = revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated
+      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
     );
     const received = filtered.filter((r) => r.received);
     const pending = filtered.filter((r) => !r.received);
@@ -96,7 +101,7 @@ export default function Revenues() {
   const categoryBreakdown = useMemo(() => {
     const groups: Record<string, number> = {};
     for (const r of revenues.filter(
-      (r) => !r.related_transfer && !r.is_transfer_generated
+      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
     )) {
       groups[r.category] = (groups[r.category] ?? 0) + parseFloat(r.value);
     }
@@ -113,7 +118,42 @@ export default function Revenues() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.revenues.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-48 flex-none"
+          />
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder={t('pages.revenues.allCategories')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
+              {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
+                <SelectItem key={k} value={k}>
+                  {v}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder={t('pages.revenues.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
+              <SelectItem value="received">Recebido</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+              <X className="h-4 w-4" />
+              {t('common.actions.clearFilters')}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
@@ -209,26 +249,6 @@ export default function Revenues() {
           </div>
         </div>
       )}
-
-      <RevenuesFilters
-        accounts={accounts}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        selectedAccounts={selectedAccounts}
-        toggleAccount={toggleAccount}
-        hasActiveFilters={hasActiveFilters}
-        clearFilters={clearFilters}
-        totalRevenues={totalRevenues}
-        count={revenues.length}
-      />
 
       <DataTable
         data={revenues}

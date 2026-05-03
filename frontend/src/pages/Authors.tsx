@@ -275,24 +275,20 @@ export default function Authors() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.authors.title')}
-        icon={<UserPen />}
-        action={{
-          label: t('pages.authors.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="flex items-center gap-4">
-        <SearchInput
-          placeholder={t('pages.authors.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="flex-1"
-        />
-      </div>
+      <PageHeader title={t('pages.authors.title')} icon={<UserPen />}>
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.authors.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.authors.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       {filteredAuthors.length === 0 ? (
         <EmptyState
