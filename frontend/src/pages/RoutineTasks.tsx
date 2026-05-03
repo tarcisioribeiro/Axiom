@@ -9,6 +9,7 @@ import {
   FileText,
   Sheet,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -39,6 +40,7 @@ import { getIconByName } from '@/components/ui/icon-picker';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import { type routineTaskSchema } from '@/lib/validations';
 import { routineTasksService } from '@/services/routine-tasks-service';
 import type {
@@ -182,11 +184,57 @@ export default function RoutineTasks() {
     setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
 
-  const getCompletionRateColor = (rate: number) => {
-    if (rate >= 80) return 'bg-success text-white dark:text-black border-transparent';
-    if (rate >= 50) return 'bg-warning text-white dark:text-black border-transparent';
-    return 'bg-destructive text-white dark:text-black border-transparent';
+  // Retorna os índices dos dias ativos para a tarefa (0=Dom, 1=Seg, ... 6=Sáb)
+  const getActiveWeekdays = (task: RoutineTask): number[] => {
+    if (task.periodicity === 'daily') return [0, 1, 2, 3, 4, 5, 6];
+    if (task.periodicity === 'weekdays') return [1, 2, 3, 4, 5];
+    if (task.periodicity === 'weekly' && task.weekday !== undefined)
+      return [task.weekday];
+    if (task.custom_weekdays && task.custom_weekdays.length > 0)
+      return task.custom_weekdays;
+    return [];
   };
+
+  function WeekdayDots({ task }: { task: RoutineTask }): ReactNode {
+    const activeDays = getActiveWeekdays(task);
+    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+    return (
+      <div className="flex gap-0.5">
+        {labels.map((label, idx) => (
+          <div
+            key={idx}
+            title={label}
+            className={cn(
+              'flex h-5 w-5 items-center justify-center rounded text-[10px] font-semibold',
+              activeDays.includes(idx)
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {label}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function CompletionBar({ rate }: { rate: number }): ReactNode {
+    const barColor =
+      rate >= 80 ? 'bg-success' : rate >= 50 ? 'bg-warning' : 'bg-destructive';
+    return (
+      <div className="flex w-28 items-center gap-2">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn('h-full rounded-full transition-all', barColor)}
+            style={{ width: `${Math.min(rate, 100)}%` }}
+          />
+        </div>
+        <span className="w-8 text-right text-xs font-semibold tabular-nums">
+          {rate.toFixed(0)}%
+        </span>
+      </div>
+    );
+  }
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -235,16 +283,9 @@ export default function RoutineTasks() {
       key: 'periodicity',
       label: t('pages.routineTasks.columns.frequency'),
       render: (task) => (
-        <div className="text-sm">
-          <div>{task.periodicity_display}</div>
-          {task.weekday_display && (
-            <div className="text-xs">{task.weekday_display}</div>
-          )}
-          {task.day_of_month && (
-            <div className="text-xs">
-              {t('pages.routineTasks.dayLabel', { day: task.day_of_month })}
-            </div>
-          )}
+        <div className="space-y-1.5">
+          <div className="text-sm">{task.periodicity_display}</div>
+          <WeekdayDots task={task} />
         </div>
       ),
     },
@@ -260,12 +301,7 @@ export default function RoutineTasks() {
     {
       key: 'completion_rate',
       label: t('pages.routineTasks.columns.completionRate'),
-      align: 'center',
-      render: (task) => (
-        <Badge className={getCompletionRateColor(task.completion_rate)}>
-          {task.completion_rate.toFixed(0)}%
-        </Badge>
-      ),
+      render: (task) => <CompletionBar rate={task.completion_rate} />,
     },
     {
       key: 'priority',

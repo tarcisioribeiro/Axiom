@@ -1,15 +1,29 @@
-import { Plus, Trophy, Edit, Trash2, RefreshCw, RotateCcw, Clock } from 'lucide-react';
+import {
+  Plus,
+  Trophy,
+  Edit,
+  Trash2,
+  RefreshCw,
+  RotateCcw,
+  Clock,
+  Flame,
+  Calendar,
+  Ban,
+  Star,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { GoalForm } from '@/components/personal-planning/GoalForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { CircularProgress } from '@/components/ui/circular-progress';
 import {
   Dialog,
   DialogContent,
@@ -17,9 +31,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
@@ -27,6 +41,200 @@ import type { Goal, RoutineTask, GoalFormData as GoalApiFormData } from '@/types
 import { getErrorMessage } from '@/utils/error-utils';
 
 type GoalFormData = z.infer<typeof goalSchema>;
+
+const GOAL_TYPE_META: Record<
+  string,
+  { icon: React.ElementType; label: string; color: string }
+> = {
+  consecutive_days: {
+    icon: Flame,
+    label: 'Dias Consecutivos',
+    color: 'text-orange-500 bg-orange-500/15',
+  },
+  total_days: {
+    icon: Calendar,
+    label: 'Total de Dias',
+    color: 'text-info bg-info/15',
+  },
+  avoid_habit: {
+    icon: Ban,
+    label: 'Evitar Hábito',
+    color: 'text-destructive bg-destructive/15',
+  },
+  custom: {
+    icon: Star,
+    label: 'Personalizado',
+    color: 'text-primary bg-primary/15',
+  },
+};
+
+function GoalCard({
+  goal,
+  onEdit,
+  onDelete,
+  onRecalculate,
+  onReset,
+}: {
+  goal: Goal;
+  onEdit: (g: Goal) => void;
+  onDelete: (id: number) => void;
+  onRecalculate: (g: Goal) => void;
+  onReset: (g: Goal) => void;
+}) {
+  const { t } = useTranslation();
+  const pct = goal.progress_percentage;
+  const typeMeta = GOAL_TYPE_META[goal.goal_type] ?? GOAL_TYPE_META.custom;
+  const TypeIcon = typeMeta.icon;
+
+  const days = goal.days_until_deadline;
+  const isUrgent = days !== null && days !== undefined && days <= 7 && days >= 0;
+  const isOverdue = days !== null && days !== undefined && days < 0;
+
+  const ringColor =
+    goal.status === 'completed'
+      ? 'hsl(var(--chart-2))'
+      : isOverdue
+        ? 'hsl(var(--destructive))'
+        : isUrgent
+          ? 'hsl(var(--warning))'
+          : pct >= 80
+            ? 'hsl(var(--chart-2))'
+            : 'hsl(var(--primary))';
+
+  const displayValue =
+    goal.calculated_current_value !== undefined
+      ? goal.calculated_current_value
+      : goal.current_value;
+
+  return (
+    <Card
+      className={cn(
+        'relative overflow-hidden transition-shadow hover:shadow-md',
+        isUrgent && goal.status === 'active' && 'ring-1 ring-warning/50',
+        isOverdue && goal.status === 'active' && 'ring-1 ring-destructive/50'
+      )}
+    >
+      {isUrgent && goal.status === 'active' && (
+        <div className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full bg-warning" />
+      )}
+      {isOverdue && goal.status === 'active' && (
+        <div className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full bg-destructive" />
+      )}
+
+      <CardContent className="p-5">
+        {/* Header: ícone do tipo + título */}
+        <div className="mb-4 flex items-start gap-3">
+          <div
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
+              typeMeta.color
+            )}
+          >
+            <TypeIcon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate font-semibold leading-tight">{goal.title}</h3>
+            <p className="text-xs text-muted-foreground">{goal.goal_type_display}</p>
+          </div>
+        </div>
+
+        {/* Progresso circular + stats */}
+        <div className="mb-4 flex items-center gap-4">
+          <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
+            <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
+          </CircularProgress>
+          <div className="flex-1 space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Progresso</span>
+              <span className="font-medium">
+                {displayValue} / {goal.target_value}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Dias ativos</span>
+              <span className="font-medium">{goal.days_active}</span>
+            </div>
+            {goal.deadline && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Prazo</span>
+                <span
+                  className={cn(
+                    'flex items-center gap-1 font-medium',
+                    isOverdue && 'text-destructive',
+                    isUrgent && !isOverdue && 'text-warning'
+                  )}
+                >
+                  <Clock className="h-3 w-3" />
+                  {isOverdue
+                    ? t('pages.goals.deadlineOverdue', { days: Math.abs(days ?? 0) })
+                    : days === 0
+                      ? t('pages.goals.deadlineToday')
+                      : t('pages.goals.deadlineDays', { days })}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Status + ações */}
+        <div className="flex items-center justify-between border-t pt-3">
+          <Badge
+            className={cn(
+              goal.status === 'active' && 'bg-info',
+              goal.status === 'completed' && 'bg-success',
+              goal.status === 'failed' && 'bg-destructive',
+              goal.status === 'cancelled' && 'bg-muted'
+            )}
+          >
+            {goal.status_display}
+          </Badge>
+          <div className="flex gap-1">
+            {goal.goal_type === 'consecutive_days' && goal.status === 'active' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onRecalculate(goal)}
+                title={t('pages.goals.recalculateBtn')}
+                aria-label={t('pages.goals.recalculateBtn')}
+              >
+                <RefreshCw className="h-4 w-4 text-primary" />
+              </Button>
+            )}
+            {goal.status === 'active' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onReset(goal)}
+                title={t('pages.goals.resetBtn2')}
+                aria-label={t('pages.goals.resetBtn2')}
+              >
+                <RotateCcw className="h-4 w-4 text-warning" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(goal)}
+              title={t('common.actions.edit')}
+              aria-label={t('common.actions.edit')}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(goal.id)}
+              title={t('common.actions.delete')}
+              aria-label={t('common.actions.delete')}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Goals() {
   const { t } = useTranslation();
@@ -81,9 +289,7 @@ export default function Goals() {
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
-
     if (!confirmed) return;
-
     try {
       await goalsService.delete(id);
       toast({
@@ -109,7 +315,6 @@ export default function Goals() {
       });
       return;
     }
-
     try {
       await goalsService.recalculate(goal.id);
       toast({
@@ -134,9 +339,7 @@ export default function Goals() {
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
-
     if (!confirmed) return;
-
     try {
       await goalsService.reset(goal.id);
       toast({
@@ -156,12 +359,10 @@ export default function Goals() {
   const handleSubmit = async (data: GoalFormData) => {
     try {
       setIsSubmitting(true);
-      // Convert null to undefined for API compatibility
       const apiData = {
         ...data,
         related_task: data.related_task === null ? undefined : data.related_task,
       };
-
       if (selectedGoal) {
         await goalsService.update(selectedGoal.id, apiData as GoalApiFormData);
         toast({
@@ -188,157 +389,20 @@ export default function Goals() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-info';
-      case 'completed':
-        return 'bg-success';
-      case 'failed':
-        return 'bg-destructive';
-      case 'cancelled':
-        return 'bg-muted';
-      default:
-        return 'bg-muted';
-    }
+  if (isLoading) return <LoadingState />;
+
+  const activeGoals = goals.filter((g) => g.status === 'active');
+  const completedGoals = goals.filter((g) => g.status === 'completed');
+  const otherGoals = goals.filter(
+    (g) => g.status !== 'active' && g.status !== 'completed'
+  );
+
+  const cardProps = {
+    onEdit: handleEdit,
+    onDelete: (id: number) => void handleDelete(id),
+    onRecalculate: (g: Goal) => void handleRecalculate(g),
+    onReset: (g: Goal) => void handleReset(g),
   };
-
-  // Define table columns
-  const columns: Column<Goal>[] = [
-    {
-      key: 'title',
-      label: t('pages.goals.columns.title'),
-      render: (goal) => <div className="font-medium">{goal.title}</div>,
-    },
-    {
-      key: 'goal_type',
-      label: t('pages.goals.columns.type'),
-      render: (goal) => <Badge variant="secondary">{goal.goal_type_display}</Badge>,
-    },
-    {
-      key: 'related_task',
-      label: t('pages.goals.columns.relatedTask'),
-      render: (goal) => (
-        <span className="text-sm">{goal.related_task_name || '-'}</span>
-      ),
-    },
-    {
-      key: 'progress',
-      label: t('pages.goals.columns.progress'),
-      render: (goal) => {
-        // Usar calculated_current_value quando disponível (para objetivos com tarefa relacionada)
-        const displayValue =
-          goal.calculated_current_value !== undefined
-            ? goal.calculated_current_value
-            : goal.current_value;
-        return (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-sm">
-              <span>
-                {displayValue} / {goal.target_value}
-              </span>
-              <span className="font-medium">
-                {goal.progress_percentage.toFixed(0)}%
-              </span>
-            </div>
-            <Progress value={goal.progress_percentage} className="h-2" />
-          </div>
-        );
-      },
-    },
-    {
-      key: 'status',
-      label: t('pages.goals.columns.status'),
-      render: (goal) => (
-        <Badge className={getStatusColor(goal.status)}>{goal.status_display}</Badge>
-      ),
-    },
-    {
-      key: 'deadline',
-      label: t('pages.goals.columns.deadline'),
-      render: (goal) => {
-        if (!goal.deadline) return <span className="text-muted-foreground">-</span>;
-        const days = goal.days_until_deadline;
-        const urgent = days !== null && days !== undefined && days <= 7 && days >= 0;
-        const overdue = days !== null && days !== undefined && days < 0;
-        return (
-          <div className="flex items-center gap-1">
-            <Clock
-              className={`h-3 w-3 ${overdue ? 'text-destructive' : urgent ? 'text-warning' : 'text-muted-foreground'}`}
-            />
-            <span
-              className={`text-sm ${overdue ? 'font-medium text-destructive' : urgent ? 'font-medium text-warning' : ''}`}
-            >
-              {overdue
-                ? t('pages.goals.deadlineOverdue', { days: Math.abs(days ?? 0) })
-                : days === 0
-                  ? t('pages.goals.deadlineToday')
-                  : t('pages.goals.deadlineDays', { days })}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: 'days_active',
-      label: t('pages.goals.columns.activeDays'),
-      align: 'center',
-      render: (goal) => <span className="text-sm font-medium">{goal.days_active}</span>,
-    },
-    {
-      key: 'actions',
-      label: t('common.table.actions'),
-      align: 'center',
-      render: (goal) => (
-        <div className="flex justify-center gap-1">
-          {goal.goal_type === 'consecutive_days' && goal.status === 'active' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleRecalculate(goal)}
-              aria-label={t('pages.goals.recalculateBtn')}
-              title={t('pages.goals.recalculateBtn')}
-            >
-              <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
-            </Button>
-          )}
-          {goal.status === 'active' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleReset(goal)}
-              aria-label={t('pages.goals.resetBtn2')}
-              title={t('pages.goals.resetBtn2')}
-            >
-              <RotateCcw className="h-4 w-4 text-warning" aria-hidden="true" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(goal)}
-            aria-label={t('common.actions.edit')}
-            title={t('common.actions.edit')}
-          >
-            <Edit className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleDelete(goal.id)}
-            aria-label={t('common.actions.delete')}
-            title={t('common.actions.delete')}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  if (isLoading) {
-    return <LoadingState />;
-  }
 
   return (
     <PageContainer>
@@ -352,17 +416,57 @@ export default function Goals() {
         }}
       />
 
-      <DataTable
-        data={goals}
-        columns={columns}
-        keyExtractor={(goal) => goal.id}
-        isLoading={isLoading}
-        emptyState={{
-          icon: <Trophy className="h-12 w-12" />,
-          title: t('pages.goals.emptyState'),
-          message: t('pages.goals.emptyStateDesc'),
-        }}
-      />
+      {goals.length === 0 ? (
+        <EmptyState
+          icon={<Trophy className="h-12 w-12" />}
+          title={t('pages.goals.emptyState')}
+          message={t('pages.goals.emptyStateDesc')}
+        />
+      ) : (
+        <div className="space-y-8">
+          {activeGoals.length > 0 && (
+            <section>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-info" />
+                {t('pages.goals.sectionActive')} ({activeGoals.length})
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {activeGoals.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {completedGoals.length > 0 && (
+            <section>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-success" />
+                {t('pages.goals.sectionCompleted')} ({completedGoals.length})
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {completedGoals.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {otherGoals.length > 0 && (
+            <section>
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+                {t('pages.goals.sectionOther')} ({otherGoals.length})
+              </h2>
+              <div className="grid gap-4 opacity-70 sm:grid-cols-2 lg:grid-cols-3">
+                {otherGoals.map((goal) => (
+                  <GoalCard key={goal.id} goal={goal} {...cardProps} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">

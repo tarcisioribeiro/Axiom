@@ -2066,6 +2066,21 @@ export interface FixedExpenseStats {
   }>;
 }
 
+export interface FixedRevenueStats {
+  active_templates: number;
+  current_month: {
+    month: string;
+    total_amount: number;
+    received_count: number;
+    generated_count: number;
+    pending_count: number;
+  };
+  previous_month: {
+    month: string;
+    total_amount: number;
+  };
+}
+
 // ============================================================================
 // VAULTS MODULE TYPES (Cofres)
 // ============================================================================
