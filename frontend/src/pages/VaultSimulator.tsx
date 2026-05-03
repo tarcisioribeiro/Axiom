@@ -31,9 +31,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useChartColors, useChartGradientId } from '@/lib/chart-colors';
 import { axisFormatCurrency, formatCurrencyBR } from '@/lib/chart-formatters';
 import { formatCurrency } from '@/lib/formatters';
+import { cn } from '@/lib/utils';
 import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
 import { vaultSimulatorService } from '@/services/vault-simulator-service';
 import { getErrorMessage } from '@/utils/error-utils';
+
+function getProjectedDate(months: number): string {
+  const date = new Date();
+  date.setMonth(date.getMonth() + months);
+  return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
 
 interface ScenarioForm {
   id: string;
@@ -72,6 +79,9 @@ function ScenarioCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            {index + 1}
+          </div>
           <Badge variant="secondary">
             {t('pages.vaultSimulator.scenarioLabel', { index: index + 1 })}
           </Badge>
@@ -280,6 +290,78 @@ export default function VaultSimulator() {
       {/* Results */}
       {results && results.length > 0 && (
         <div className="mt-6 space-y-6">
+          {/* Separador temático */}
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Projeção calculada
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          {/* Cards de resultado por cenário */}
+          {(() => {
+            const bestScenarioName = results.reduce(
+              (best, s) =>
+                s.final_balance >
+                (results.find((r) => r.name === best)?.final_balance ?? 0)
+                  ? s.name
+                  : best,
+              results[0]?.name ?? ''
+            );
+            return (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {results.map((scenario) => (
+                  <Card
+                    key={scenario.name}
+                    className={cn(
+                      'overflow-hidden',
+                      scenario.name === bestScenarioName && 'border-amber-500/40'
+                    )}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">
+                          {scenario.name}
+                        </CardTitle>
+                        {scenario.name === bestScenarioName && (
+                          <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-600">
+                            🏆 Melhor retorno
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="rounded-lg bg-primary/5 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Você acumulará</p>
+                        <p className="text-xl font-bold text-primary">
+                          {formatCurrency(scenario.final_balance)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          em {getProjectedDate(scenario.months)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-muted-foreground">Total investido</p>
+                          <p className="font-semibold">
+                            {formatCurrency(scenario.total_invested)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Rendimento</p>
+                          <p className="font-semibold text-green-600 dark:text-green-400">
+                            {formatCurrency(scenario.total_yield)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            );
+          })()}
+
           {/* Area Chart */}
           <Card>
             <CardHeader>

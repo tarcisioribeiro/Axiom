@@ -1,15 +1,30 @@
-import { format } from 'date-fns';
-import { Plus, StickyNote, Edit, Trash2 } from 'lucide-react';
+import { format, parseISO, subDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import {
+  Plus,
+  BookOpen,
+  Edit,
+  Trash2,
+  SmilePlus,
+  Smile,
+  Meh,
+  Frown,
+  Angry,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { z } from 'zod';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
+import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DailyReflectionForm } from '@/components/personal-planning/DailyReflectionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -27,7 +42,7 @@ import {
 } from '@/components/ui/select';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import type { dailyReflectionSchema } from '@/lib/validations';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
@@ -42,6 +57,162 @@ const MOOD_COLOR: Record<string, string> = {
   bad: 'bg-warning',
   terrible: 'bg-destructive',
 };
+
+const MOOD_DOT: Record<string, string> = {
+  excellent: 'bg-success',
+  good: 'bg-info',
+  neutral: 'bg-secondary',
+  bad: 'bg-warning',
+  terrible: 'bg-destructive',
+};
+
+function getMoodIcon(mood: string) {
+  const cls = 'h-4 w-4';
+  switch (mood) {
+    case 'excellent':
+      return <SmilePlus className={cn(cls, 'text-success')} />;
+    case 'good':
+      return <Smile className={cn(cls, 'text-info')} />;
+    case 'neutral':
+      return <Meh className={cls} />;
+    case 'bad':
+      return <Frown className={cn(cls, 'text-warning')} />;
+    case 'terrible':
+      return <Angry className={cn(cls, 'text-destructive')} />;
+    default:
+      return null;
+  }
+}
+
+function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
+  const today = new Date();
+  const days = Array.from({ length: 21 }, (_, i) => {
+    const d = subDays(today, 20 - i);
+    const key = formatLocalDate(d);
+    const ref = reflections.find((r) => r.date === key);
+    return { date: d, key, mood: ref?.mood };
+  });
+
+  return (
+    <div className="mb-6 flex items-end gap-1.5">
+      {days.map(({ date, key, mood }) => (
+        <div key={key} className="flex flex-col items-center gap-1">
+          <div
+            title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
+            className={cn(
+              'h-3 w-3 rounded-full transition-all',
+              mood ? MOOD_DOT[mood] : 'bg-muted'
+            )}
+          />
+          {date.getDay() === 0 && (
+            <span className="text-[9px] text-muted-foreground">
+              {format(date, 'dd/MM')}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReflectionCard({
+  reflection,
+  onEdit,
+  onDelete,
+}: {
+  reflection: DailyReflection;
+  onEdit: (r: DailyReflection) => void;
+  onDelete: (id: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const isLong = reflection.reflection.length > 240;
+  const text =
+    isLong && !expanded
+      ? reflection.reflection.slice(0, 240) + '…'
+      : reflection.reflection;
+
+  const date = parseISO(reflection.date + 'T00:00:00');
+
+  return (
+    <Card className="group">
+      <CardContent className="p-5">
+        <div className="flex items-start gap-4">
+          {/* Data estilo calendário */}
+          <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border bg-muted/40 py-1.5 text-center">
+            <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+              {format(date, 'MMM', { locale: ptBR })}
+            </span>
+            <span className="text-2xl font-bold leading-tight">
+              {format(date, 'dd')}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {format(date, 'yyyy')}
+            </span>
+          </div>
+
+          {/* Conteúdo */}
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              {reflection.mood && (
+                <Badge
+                  className={cn(
+                    'gap-1.5',
+                    MOOD_COLOR[reflection.mood] ?? 'bg-secondary'
+                  )}
+                >
+                  {getMoodIcon(reflection.mood)}
+                  {reflection.mood_display ?? reflection.mood}
+                </Badge>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {format(date, 'EEEE', { locale: ptBR })}
+              </span>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed">{text}</p>
+            {isLong && (
+              <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                {expanded ? (
+                  <>
+                    <ChevronUp className="h-3 w-3" /> {t('common.actions.seeLess')}
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Ações */}
+          <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit(reflection)}
+              aria-label={t('common.actions.edit')}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(reflection.id)}
+              aria-label={t('common.actions.delete')}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function DailyReflections() {
   const { t } = useTranslation();
@@ -83,15 +254,9 @@ export default function DailyReflections() {
 
   const applyFilters = () => {
     let result = [...reflections];
-    if (moodFilter !== 'all') {
-      result = result.filter((r) => r.mood === moodFilter);
-    }
-    if (startDate) {
-      result = result.filter((r) => new Date(r.date) >= startDate);
-    }
-    if (endDate) {
-      result = result.filter((r) => new Date(r.date) <= endDate);
-    }
+    if (moodFilter !== 'all') result = result.filter((r) => r.mood === moodFilter);
+    if (startDate) result = result.filter((r) => new Date(r.date) >= startDate);
+    if (endDate) result = result.filter((r) => new Date(r.date) <= endDate);
     setFiltered(result);
   };
 
@@ -114,7 +279,6 @@ export default function DailyReflections() {
       variant: 'destructive',
     });
     if (!confirmed) return;
-
     try {
       await dailyReflectionsService.delete(id);
       toast({
@@ -160,67 +324,13 @@ export default function DailyReflections() {
     }
   };
 
-  const columns: Column<DailyReflection>[] = [
-    {
-      key: 'date',
-      label: t('pages.dailyReflections.columns.date'),
-      render: (r) => (
-        <span className="font-medium">
-          {format(new Date(r.date + 'T00:00:00'), 'dd/MM/yyyy')}
-        </span>
-      ),
-    },
-    {
-      key: 'mood',
-      label: t('pages.dailyReflections.columns.mood'),
-      render: (r) =>
-        r.mood ? (
-          <Badge className={MOOD_COLOR[r.mood] ?? 'bg-secondary'}>
-            {r.mood_display ?? r.mood}
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        ),
-    },
-    {
-      key: 'reflection',
-      label: t('pages.dailyReflections.columns.reflection'),
-      render: (r) => <p className="max-w-md truncate text-sm">{r.reflection}</p>,
-    },
-    {
-      key: 'actions',
-      label: t('pages.dailyReflections.columns.actions'),
-      align: 'center',
-      render: (r) => (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleEdit(r)}
-            aria-label={t('common.actions.edit')}
-            title={t('common.actions.edit')}
-          >
-            <Edit className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => void handleDelete(r.id)}
-            aria-label={t('common.actions.delete')}
-            title={t('common.actions.delete')}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  if (isLoading) return <LoadingState />;
 
   return (
     <PageContainer>
       <PageHeader
         title={t('pages.dailyReflections.title')}
-        icon={<StickyNote />}
+        icon={<BookOpen />}
         action={{
           label: t('pages.dailyReflections.newBtn'),
           icon: <Plus className="h-4 w-4" />,
@@ -228,8 +338,30 @@ export default function DailyReflections() {
         }}
       />
 
-      {/* Filters */}
-      <div className="mb-4 flex flex-wrap items-end gap-4">
+      {/* Timeline de humores dos últimos 21 dias */}
+      {reflections.length > 0 && (
+        <div className="rounded-xl border bg-card px-5 py-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {t('pages.dailyReflections.moodTimeline')}
+          </p>
+          <MoodTimeline reflections={reflections} />
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            {MOOD_CHOICES.map((c) => (
+              <span key={c.value} className="flex items-center gap-1">
+                <span className={cn('h-2.5 w-2.5 rounded-full', MOOD_DOT[c.value])} />
+                {c.label}
+              </span>
+            ))}
+            <span className="flex items-center gap-1">
+              <span className="h-2.5 w-2.5 rounded-full bg-muted" />
+              {t('pages.dailyReflections.noMood')}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Filtros */}
+      <div className="flex flex-wrap items-end gap-4">
         <div className="w-48">
           <Select value={moodFilter} onValueChange={setMoodFilter}>
             <SelectTrigger>
@@ -247,7 +379,6 @@ export default function DailyReflections() {
             </SelectContent>
           </Select>
         </div>
-
         <div>
           <label className="mb-1 block text-sm text-muted-foreground">
             {t('pages.dailyReflections.filters.startDate')}
@@ -258,7 +389,6 @@ export default function DailyReflections() {
             placeholder={t('pages.dailyReflections.filters.startDate')}
           />
         </div>
-
         <div>
           <label className="mb-1 block text-sm text-muted-foreground">
             {t('pages.dailyReflections.filters.endDate')}
@@ -271,16 +401,24 @@ export default function DailyReflections() {
         </div>
       </div>
 
-      <DataTable
-        data={filtered}
-        columns={columns}
-        keyExtractor={(r) => r.id}
-        isLoading={isLoading}
-        emptyState={{
-          icon: <StickyNote className="h-12 w-12" />,
-          message: t('pages.dailyReflections.emptyState'),
-        }}
-      />
+      {/* Entradas no estilo diário */}
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={<BookOpen className="h-12 w-12" />}
+          message={t('pages.dailyReflections.emptyState')}
+        />
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((r) => (
+            <ReflectionCard
+              key={r.id}
+              reflection={r}
+              onEdit={handleEdit}
+              onDelete={(id) => void handleDelete(id)}
+            />
+          ))}
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">

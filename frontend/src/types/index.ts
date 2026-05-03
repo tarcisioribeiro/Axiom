@@ -2066,6 +2066,21 @@ export interface FixedExpenseStats {
   }>;
 }
 
+export interface FixedRevenueStats {
+  active_templates: number;
+  current_month: {
+    month: string;
+    total_amount: number;
+    received_count: number;
+    generated_count: number;
+    pending_count: number;
+  };
+  previous_month: {
+    month: string;
+    total_amount: number;
+  };
+}
+
 // ============================================================================
 // VAULTS MODULE TYPES (Cofres)
 // ============================================================================
@@ -2369,7 +2384,11 @@ export type NotificationType =
   | 'loan_due_soon'
   | 'loan_overdue'
   | 'bill_due_soon'
-  | 'bill_overdue';
+  | 'bill_overdue'
+  | 'budget_warning'
+  | 'budget_exceeded'
+  | 'financial_goal_reached'
+  | 'financial_goal_approaching';
 
 export interface Notification {
   id: number;
