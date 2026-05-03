@@ -904,22 +904,18 @@ export default function Vaults() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.vaults.title')}
-        icon={<Vault />}
-        action={{
-          label: t('pages.vaults.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="mb-4 flex justify-end">
-        <Button variant="outline" onClick={() => setIsGenerateDialogOpen(true)}>
-          <Zap className="mr-2 h-4 w-4" />
-          {t('pages.vaults.recurringContributions.generateBtn')}
-        </Button>
-      </div>
+      <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsGenerateDialogOpen(true)}>
+            <Zap className="mr-2 h-4 w-4" />
+            {t('pages.vaults.recurringContributions.generateBtn')}
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('pages.vaults.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">

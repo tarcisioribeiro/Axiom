@@ -145,7 +145,7 @@ function OllamaRestartPanel() {
       });
       setTimeout(() => {
         logout();
-        navigate('/login');
+        void navigate('/login');
       }, 2500);
     },
     onError: (err: Error) => {

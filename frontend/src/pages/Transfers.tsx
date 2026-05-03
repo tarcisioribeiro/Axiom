@@ -322,15 +322,68 @@ export default function Transfers() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.transfers.title')}
-        icon={<ArrowLeftRight />}
-        action={{
-          label: t('pages.transfers.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.transfers.title')} icon={<ArrowLeftRight />}>
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.transfers.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-48 flex-none"
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder={t('pages.transfers.allStatus')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.transfers.allStatus')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+              <SelectItem value="processing">
+                {t('common.status.processing')}
+              </SelectItem>
+              <SelectItem value="completed">{t('common.status.completed')}</SelectItem>
+              <SelectItem value="failed">{t('common.status.failed')}</SelectItem>
+              <SelectItem value="cancelled">{t('common.status.cancelled')}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={accountFilter} onValueChange={setAccountFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder={t('pages.transfers.allAccounts')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('pages.transfers.allAccounts')}</SelectItem>
+              {accounts.map((acc) => (
+                <SelectItem key={acc.id} value={String(acc.id)}>
+                  {acc.account_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-1">
+            <span className="whitespace-nowrap text-xs text-muted-foreground">De</span>
+            <DatePicker
+              value={startDate}
+              onChange={setStartDate}
+              placeholder={t('pages.transfers.dateFrom')}
+            />
+            <span className="whitespace-nowrap text-xs text-muted-foreground">até</span>
+            <DatePicker
+              value={endDate}
+              onChange={setEndDate}
+              placeholder={t('pages.transfers.dateTo')}
+            />
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+              <X className="h-4 w-4" />
+              {t('common.actions.clearFilters', { defaultValue: 'Limpar' })}
+            </Button>
+          )}
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {t('pages.transfers.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
         <Card className="overflow-hidden border-t-2 border-t-info/60">
@@ -379,61 +432,6 @@ export default function Transfers() {
             <p className="mt-xs text-xs text-muted-foreground">pendentes</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <SearchInput
-          placeholder={t('pages.transfers.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="max-w-xs"
-        />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder={t('pages.transfers.allStatus')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.transfers.allStatus')}</SelectItem>
-            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
-            <SelectItem value="processing">{t('common.status.processing')}</SelectItem>
-            <SelectItem value="completed">{t('common.status.completed')}</SelectItem>
-            <SelectItem value="failed">{t('common.status.failed')}</SelectItem>
-            <SelectItem value="cancelled">{t('common.status.cancelled')}</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={accountFilter} onValueChange={setAccountFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder={t('pages.transfers.allAccounts')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('pages.transfers.allAccounts')}</SelectItem>
-            {accounts.map((acc) => (
-              <SelectItem key={acc.id} value={String(acc.id)}>
-                {acc.account_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-1">
-          <span className="whitespace-nowrap text-xs text-muted-foreground">De</span>
-          <DatePicker
-            value={startDate}
-            onChange={setStartDate}
-            placeholder={t('pages.transfers.dateFrom')}
-          />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">até</span>
-          <DatePicker
-            value={endDate}
-            onChange={setEndDate}
-            placeholder={t('pages.transfers.dateTo')}
-          />
-        </div>
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-            <X className="h-4 w-4" />
-            {t('common.actions.clearFilters', { defaultValue: 'Limpar' })}
-          </Button>
-        )}
       </div>
 
       <DataTable

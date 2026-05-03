@@ -166,24 +166,20 @@ export default function Publishers() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.publishers.title')}
-        icon={<Building2 />}
-        action={{
-          label: t('pages.publishers.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="flex items-center gap-4">
-        <SearchInput
-          placeholder={t('pages.publishers.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="flex-1"
-        />
-      </div>
+      <PageHeader title={t('pages.publishers.title')} icon={<Building2 />}>
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.publishers.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.publishers.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       {filteredPublishers.length === 0 ? (
         <EmptyState

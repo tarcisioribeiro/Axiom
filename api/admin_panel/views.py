@@ -439,8 +439,14 @@ def _restart_deployments() -> dict[str, Any]:
                 method="PATCH",
             )
             try:
-                with urllib.request.urlopen(req, context=ctx, timeout=10) as resp:  # nosec B310
-                    results[name] = "reiniciado" if resp.status in (200, 201) else f"HTTP {resp.status}"
+                with urllib.request.urlopen(
+                    req, context=ctx, timeout=10
+                ) as resp:  # nosec B310
+                    results[name] = (
+                        "reiniciado"
+                        if resp.status in (200, 201)
+                        else f"HTTP {resp.status}"
+                    )
                     if resp.status not in (200, 201):
                         errors.append(name)
             except urllib.error.HTTPError as e:
@@ -465,7 +471,9 @@ def _restart_deployments() -> dict[str, Any]:
             }
         return {
             "success": True,
-            "message": f"{len(restarted)} deployment(s) reiniciado(s): {', '.join(restarted)}.",
+            "message": (
+                f"{len(restarted)} deployment(s) reiniciado(s): {', '.join(restarted)}."
+            ),
             "results": results,
         }
     except Exception as e:
@@ -478,7 +486,9 @@ class AdminRestartAllView(AdminBaseView):
     def post(self, request: Request) -> Response:
         result = _restart_deployments()
         if result["success"]:
-            return Response({"message": result["message"], "results": result["results"]})
+            return Response(
+                {"message": result["message"], "results": result["results"]}
+            )
         return Response(
             {"error": result["message"], "results": result.get("results", {})},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

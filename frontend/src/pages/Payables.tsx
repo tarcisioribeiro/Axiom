@@ -118,15 +118,20 @@ export default function Payables() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.payables.title')}
-        icon={<Receipt />}
-        action={{
-          label: t('pages.payables.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.payables.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.payables.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
         <Card className="overflow-hidden border-t-2 border-t-destructive/60">
@@ -182,15 +187,6 @@ export default function Payables() {
             <p className="mt-xs text-xs text-muted-foreground">quitados</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex gap-4">
-        <SearchInput
-          placeholder={t('pages.payables.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="max-w-sm"
-        />
       </div>
 
       {filteredPayables.length === 0 ? (

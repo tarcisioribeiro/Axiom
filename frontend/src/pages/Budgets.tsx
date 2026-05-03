@@ -223,23 +223,22 @@ export default function Budgets() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.budgets.title')}
-        icon={<PiggyBank />}
-        action={{
-          label: t('pages.budgets.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder={t('pages.budgets.searchPlaceholder')}
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.budgets.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       <div className="flex flex-wrap gap-4">
-        <SearchInput
-          placeholder={t('pages.budgets.searchPlaceholder')}
-          value={searchTerm}
-          onValueChange={setSearchTerm}
-          className="max-w-xs"
-        />
         <Select value={filterMonth} onValueChange={setFilterMonth}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder={t('pages.budgets.month')} />

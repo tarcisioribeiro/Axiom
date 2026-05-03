@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { ArchiveForm } from '@/components/security/ArchiveForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -282,24 +282,20 @@ export default function Archives() {
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader
-          title={t('pages.archives.title')}
-          icon={<ArchiveIcon />}
-          action={{
-            label: t('pages.archives.newBtn'),
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
-        />
-
-        <div className="flex gap-md">
-          <Input
-            placeholder={t('pages.archives.searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-          />
-        </div>
+        <PageHeader title={t('pages.archives.title')} icon={<ArchiveIcon />}>
+          <div className="flex items-center gap-2">
+            <SearchInput
+              placeholder={t('pages.archives.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
+            <Button onClick={handleCreate} className="gap-sm">
+              <Plus className="h-4 w-4" />
+              {t('pages.archives.newBtn')}
+            </Button>
+          </div>
+        </PageHeader>
 
         {filteredArchives.length === 0 ? (
           <EmptyState

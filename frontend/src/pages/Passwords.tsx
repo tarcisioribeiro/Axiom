@@ -337,7 +337,13 @@ export default function Passwords() {
     <VaultGuard>
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
-          <div className="flex gap-sm">
+          <div className="flex items-center gap-2">
+            <SearchInput
+              placeholder={t('pages.passwords.searchPlaceholder')}
+              value={searchTerm}
+              onValueChange={setSearchTerm}
+              className="w-52 sm:w-64"
+            />
             <Button
               variant="outline"
               onClick={() => setIsImportOpen(true)}
@@ -352,15 +358,6 @@ export default function Passwords() {
             </Button>
           </div>
         </PageHeader>
-
-        <div className="flex gap-md">
-          <SearchInput
-            placeholder={t('pages.passwords.searchPlaceholder')}
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            className="max-w-sm"
-          />
-        </div>
 
         <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {filteredPasswords.map((password) => {

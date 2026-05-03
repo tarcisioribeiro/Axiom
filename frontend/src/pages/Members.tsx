@@ -178,18 +178,26 @@ export default function Members() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.members.title')}
-        icon={<Users />}
-        action={{
-          label: t('pages.members.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            setSelectedMember(undefined);
-            setIsDialogOpen(true);
-          },
-        }}
-      />
+      <PageHeader title={t('pages.members.title')} icon={<Users />}>
+        <div className="flex items-center gap-2">
+          <SearchInput
+            placeholder="Buscar por nome, CPF ou telefone…"
+            value={searchTerm}
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
+          />
+          <Button
+            onClick={() => {
+              setSelectedMember(undefined);
+              setIsDialogOpen(true);
+            }}
+            className="gap-sm"
+          >
+            <Plus className="h-4 w-4" />
+            {t('pages.members.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
       {/* Stat cards */}
       {members.length > 0 && (
@@ -251,13 +259,6 @@ export default function Members() {
           </Card>
         </div>
       )}
-
-      <SearchInput
-        placeholder="Buscar por nome, CPF ou telefone…"
-        value={searchTerm}
-        onValueChange={setSearchTerm}
-        className="max-w-sm"
-      />
 
       {filteredMembers.length === 0 ? (
         <EmptyState
