@@ -6,6 +6,7 @@ from admin_panel.views import (
     AdminHealthView,
     AdminIntegrationsView,
     AdminLogsView,
+    AdminRestartAllView,
     SystemConfigDetailView,
     SystemConfigListView,
 )
@@ -22,4 +23,5 @@ urlpatterns = [
     path("logs/", AdminLogsView.as_view(), name="admin-logs"),
     path("email/test/", AdminEmailTestView.as_view(), name="admin-email-test"),
     path("agents/status/", AdminAgentsStatusView.as_view(), name="admin-agents-status"),
+    path("restart/", AdminRestartAllView.as_view(), name="admin-restart-all"),
 ]

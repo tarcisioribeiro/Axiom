@@ -278,7 +278,9 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
 
   const totalRevenues = sumByProperty(
     revenues
-      .filter((r) => !r.related_transfer && !r.is_transfer_generated)
+      .filter(
+        (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
+      )
       .map((r) => ({ value: parseFloat(r.value) })),
     'value'
   );

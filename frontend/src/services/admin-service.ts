@@ -52,6 +52,13 @@ class AdminService {
       API_CONFIG.ENDPOINTS.ADMIN_AGENTS_STATUS
     );
   }
+
+  async restartAll(): Promise<{ message: string; results: Record<string, string> }> {
+    return apiClient.post<{ message: string; results: Record<string, string> }>(
+      API_CONFIG.ENDPOINTS.ADMIN_RESTART_ALL,
+      {}
+    );
+  }
 }
 
 export const adminService = new AdminService();

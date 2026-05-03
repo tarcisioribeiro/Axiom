@@ -44,6 +44,7 @@ class RevenueSerializer(serializers.ModelSerializer):
             "frequency",
             "notes",
             "currency_code",
+            "is_initial_balance",
             "tags",
             "tag_ids",
             "related_transfer",

@@ -2,7 +2,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Filter,
   CreditCard as CreditCardIcon,
   Receipt,
   Wallet,
@@ -400,24 +399,10 @@ export default function CreditCardBills() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={t('pages.creditCardBills.title')}
-        icon={<Receipt />}
-        action={{
-          label: t('pages.creditCardBills.newBtn'),
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
-
-      <div className="space-y-4 rounded-lg border bg-card p-4">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          <span className="font-semibold">{t('common.actions.filter')}</span>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={cardFilter} onValueChange={setCardFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-52">
               <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
             </SelectTrigger>
             <SelectContent>
@@ -438,7 +423,7 @@ export default function CreditCardBills() {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-36">
               <SelectValue placeholder={t('pages.creditCardBills.allStatus')} />
             </SelectTrigger>
             <SelectContent>
@@ -453,7 +438,7 @@ export default function CreditCardBills() {
             </SelectContent>
           </Select>
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="w-28">
               <SelectValue placeholder={t('pages.creditCardBills.allYears')} />
             </SelectTrigger>
             <SelectContent>
@@ -465,13 +450,12 @@ export default function CreditCardBills() {
               ))}
             </SelectContent>
           </Select>
+          <Button onClick={handleCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {t('pages.creditCardBills.newBtn')}
+          </Button>
         </div>
-        <div className="flex items-center justify-between border-t pt-2">
-          <span className="text-sm">
-            {t('pages.creditCardBills.foundBills', { count: filteredBills.length })}
-          </span>
-        </div>
-      </div>
+      </PageHeader>
 
       {/* Summary cards */}
       {filteredBills.length > 0 &&
