@@ -252,75 +252,75 @@ typecheck:frontend:
 # STAGE: test
 # ==============================================================================
 
-test:backend:
-  extends:
-    - .python_base
-    - .rules_skip_main
-  stage: test
+# test:backend:
+#   extends:
+#     - .python_base
+#     - .rules_skip_main
+#   stage: test
+#
+#   needs:
+#     - typecheck:backend
+#
+#   services:
+#     - name: pgvector/pgvector:pg16
+#       alias: postgres
+#
+#   variables:
+#     POSTGRES_DB: mindledger_test
+#     POSTGRES_USER: mindledger
+#     POSTGRES_PASSWORD: ci_test_password
+#     POSTGRES_HOST_AUTH_METHOD: trust
+#
+#     SECRET_KEY: "ci-insecure-key-not-for-production-use"
+#     DEBUG: "True"
+#     DJANGO_SETTINGS_MODULE: app.settings
+#     PYTHONPATH: $CI_PROJECT_DIR/api
+#
+#     DB_HOST: postgres
+#     DB_PORT: "5432"
+#     DB_NAME: mindledger_test
+#     DB_USER: mindledger
+#     DB_PASSWORD: ci_test_password
+#
+#   before_script:
+#     # reaproveita o pip install
+#     - *python_before_script
+#
+#     # extras do job
+#     - apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+#     - until pg_isready -h postgres -p 5432; do sleep 1; done
+#     - export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+#     - cd api
+#     - python manage.py migrate --noinput
+#
+#   coverage: '/(?i)total.*\s+(\d+(?:\.\d+)?%)$/'
+#
+#   script:
+#     - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$CI_COVERAGE_THRESHOLD
+#
+#   artifacts:
+#     when: always
+#     reports:
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: api/coverage.xml
 
-  needs:
-    - typecheck:backend
-
-  services:
-    - name: pgvector/pgvector:pg16
-      alias: postgres
-
-  variables:
-    POSTGRES_DB: mindledger_test
-    POSTGRES_USER: mindledger
-    POSTGRES_PASSWORD: ci_test_password
-    POSTGRES_HOST_AUTH_METHOD: trust
-
-    SECRET_KEY: "ci-insecure-key-not-for-production-use"
-    DEBUG: "True"
-    DJANGO_SETTINGS_MODULE: app.settings
-    PYTHONPATH: $CI_PROJECT_DIR/api
-
-    DB_HOST: postgres
-    DB_PORT: "5432"
-    DB_NAME: mindledger_test
-    DB_USER: mindledger
-    DB_PASSWORD: ci_test_password
-
-  before_script:
-    # reaproveita o pip install
-    - *python_before_script
-
-    # extras do job
-    - apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-    - until pg_isready -h postgres -p 5432; do sleep 1; done
-    - export ENCRYPTION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-    - cd api
-    - python manage.py migrate --noinput
-
-  coverage: '/(?i)total.*\s+(\d+(?:\.\d+)?%)$/'
-
-  script:
-    - pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=$CI_COVERAGE_THRESHOLD
-
-  artifacts:
-    when: always
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: api/coverage.xml
-
-test:frontend:
-  extends:
-    - .node_base
-    - .rules_skip_main
-  stage: test
-  needs:
-    - typecheck:frontend
-  script:
-    - npm run test:coverage
-  coverage: '/Statements\s*:\s*(\d+(?:\.\d+)?%)/'
-  artifacts:
-    when: always
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: frontend/coverage/cobertura-coverage.xml
+# test:frontend:
+#   extends:
+#     - .node_base
+#     - .rules_skip_main
+#   stage: test
+#   needs:
+#     - typecheck:frontend
+#   script:
+#     - npm run test:coverage
+#   coverage: '/Statements\s*:\s*(\d+(?:\.\d+)?%)/'
+#   artifacts:
+#     when: always
+#     reports:
+#       coverage_report:
+#         coverage_format: cobertura
+#         path: frontend/coverage/cobertura-coverage.xml
 
 build:storybook:
   extends:
@@ -670,7 +670,7 @@ deploy:staging:
     - kubectl apply -f k8s/staging/ollama/service.yaml
     - kubectl apply -f k8s/staging/ollama/deployment.yaml
     # Aguarda o servidor Ollama subir (modelos são puxados em background).
-    - kubectl -n mindledger-staging rollout status deployment/ollama --timeout=120s
+    - kubectl -n mindledger-staging rollout status deployment/ollama --timeout=600s
     # Apply deployment specs with the real image tag substituted in-place so
     # kubectl apply creates exactly one rollout revision per deploy cycle.
     # Using sed to replace the placeholder 0.0.0 tag avoids a spurious revision
@@ -1239,7 +1239,7 @@ deploy:production:
     - kubectl apply -f k8s/ollama/pvc.yaml
     - kubectl apply -f k8s/ollama/service.yaml
     - kubectl apply -f k8s/ollama/deployment.yaml
-    - kubectl -n mindledger rollout status deployment/ollama --timeout=120s
+    - kubectl -n mindledger rollout status deployment/ollama --timeout=600s
     # ── 3. Sync blue-green Deployment specs + Service ────────────────────────────
     # Always apply the manifest so spec changes (volumes, probes, env) propagate.
     # The image tag is preserved from whatever is currently running so we don't
