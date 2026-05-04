@@ -11,6 +11,7 @@ spec:
   replicas: 1
   progressDeadlineSeconds: 900
   revisionHistoryLimit: 3
+  minReadySeconds: 30
   strategy:
     type: Recreate
   selector:
