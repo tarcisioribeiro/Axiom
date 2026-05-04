@@ -46,3 +46,5 @@ data:
   DJANGO_SETTINGS_MODULE: "app.settings"
   LOG_FORMAT: "json"
   TZ: "America/Sao_Paulo"
+  # Staging: 2 workers to stay within the 512Mi memory limit.
+  GUNICORN_WORKERS: "2"
