@@ -776,6 +776,8 @@ backup:staging:
     - kubectl apply -f k8s/staging/backup-cronjob.yaml
     # Trigger a one-off backup Job and wait for it to complete (timeout 10 min)
     - JOB_NAME="db-backup-ci-${CI_PIPELINE_ID}"
+    # Delete stale job from a previous attempt of this pipeline (retry-safe).
+    - kubectl -n mindledger-staging delete job "$JOB_NAME" --ignore-not-found=true 2>/dev/null || true
     - |
       kubectl -n mindledger-staging create job "$JOB_NAME" \
         --from=cronjob/mindledger-db-backup-staging
@@ -900,7 +902,14 @@ deploy:rollback:staging:
     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
-    - echo "Smoke tests failed — rolling back staging deployment..."
+    - echo "Smoke tests failed — collecting diagnostics before rollback..."
+    - echo "=== Pod status ==="
+    - kubectl -n mindledger-staging get pods -o wide
+    - echo "=== API pod logs (last 80 lines) ==="
+    - kubectl -n mindledger-staging logs deployment/api --tail=80 2>/dev/null || kubectl -n mindledger-staging logs -l app=api --tail=80 --previous 2>/dev/null || echo "(no logs available)"
+    - echo "=== Recent events ==="
+    - kubectl -n mindledger-staging get events --sort-by=.metadata.creationTimestamp | tail -30
+    - echo "Rolling back staging deployment..."
     - kubectl -n mindledger-staging rollout undo deployment/api
     - kubectl -n mindledger-staging rollout undo deployment/frontend
     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
