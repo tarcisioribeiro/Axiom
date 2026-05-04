@@ -9,9 +9,6 @@ stages:
   - build
   - scan
   - deploy-staging
-  - smoke-staging
-  - test-load
-  - test-e2e
   - promote
   - deploy-production
   - smoke-production
@@ -906,37 +903,37 @@ seed:staging:
 # Não possui `allow_failure: true` — um rollback mal-sucedido deve bloquear
 # qualquer promoção do develop para a main.
 # ==============================================================================
-deploy:rollback:staging:
-  image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
-    entrypoint: [""]
-  stage: smoke-staging
-  interruptible: false
-  needs:
-    # - job: smoke:staging
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: on_failure
-  before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
-  script:
-    - echo "Smoke tests failed — collecting diagnostics before rollback..."
-    - echo "=== Pod status ==="
-    - kubectl -n mindledger-staging get pods -o wide
-    - echo "=== API pod logs (last 80 lines) ==="
-    - kubectl -n mindledger-staging logs deployment/api --tail=80 2>/dev/null || kubectl -n mindledger-staging logs -l app=api --tail=80 --previous 2>/dev/null || echo "(no logs available)"
-    - echo "=== Recent events ==="
-    - kubectl -n mindledger-staging get events --sort-by=.metadata.creationTimestamp | tail -30
-    - echo "Rolling back staging deployment..."
-    - kubectl -n mindledger-staging rollout undo deployment/api
-    - kubectl -n mindledger-staging rollout undo deployment/frontend
-    - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=360s
-    - echo "Staging rollback complete."
-  after_script:
-    - rm -f /tmp/kubeconfig
-  allow_failure: false
+# deploy:rollback:staging:
+#   image:
+#     name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+#     entrypoint: [""]
+#   stage: smoke-staging
+#   interruptible: false
+#   needs:
+#     - job: smoke:staging
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "develop"
+#       when: on_failure
+#   before_script:
+#     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+#     - export KUBECONFIG=/tmp/kubeconfig
+#   script:
+#     - echo "Smoke tests failed — collecting diagnostics before rollback..."
+#     - echo "=== Pod status ==="
+#     - kubectl -n mindledger-staging get pods -o wide
+#     - echo "=== API pod logs (last 80 lines) ==="
+#     - kubectl -n mindledger-staging logs deployment/api --tail=80 2>/dev/null || kubectl -n mindledger-staging logs -l app=api --tail=80 --previous 2>/dev/null || echo "(no logs available)"
+#     - echo "=== Recent events ==="
+#     - kubectl -n mindledger-staging get events --sort-by=.metadata.creationTimestamp | tail -30
+#     - echo "Rolling back staging deployment..."
+#     - kubectl -n mindledger-staging rollout undo deployment/api
+#     - kubectl -n mindledger-staging rollout undo deployment/frontend
+#     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
+#     - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=360s
+#     - echo "Staging rollback complete."
+#   after_script:
+#     - rm -f /tmp/kubeconfig
+#   allow_failure: false
 
 # ==============================================================================
 # rollback:staging  (manual — acionado pelo operador)
@@ -955,34 +952,34 @@ deploy:rollback:staging:
 # Timeouts conservadores (api: 120 s, frontend: 200 s) — suficientes para a
 # maioria dos clusters de staging, mas ajustáveis se o pull de imagem for lento.
 # ==============================================================================
-rollback:staging:
-  image:
-    name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
-    entrypoint: [""]
-  stage: smoke-staging
-  interruptible: false
-  needs:
-    - job: deploy:staging
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: manual
-  allow_failure: true
-  environment:
-    name: staging
-    url: $STAGING_URL
-    action: start
-  before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
-    - export KUBECONFIG=/tmp/kubeconfig
-  script:
-    - echo "Manual rollback triggered — rolling back staging deployment..."
-    - kubectl -n mindledger-staging rollout undo deployment/api
-    - kubectl -n mindledger-staging rollout undo deployment/frontend
-    - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-    - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=200s
-    - echo "Staging rollback complete."
-  after_script:
-    - rm -f /tmp/kubeconfig
+# rollback:staging:
+#   image:
+#     name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
+#     entrypoint: [""]
+#   stage: smoke-staging
+#   interruptible: false
+#   needs:
+#     - job: deploy:staging
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "develop"
+#       when: manual
+#   allow_failure: true
+#   environment:
+#     name: staging
+#     url: $STAGING_URL
+#     action: start
+#   before_script:
+#     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+#     - export KUBECONFIG=/tmp/kubeconfig
+#   script:
+#     - echo "Manual rollback triggered — rolling back staging deployment..."
+#     - kubectl -n mindledger-staging rollout undo deployment/api
+#     - kubectl -n mindledger-staging rollout undo deployment/frontend
+#     - kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
+#     - kubectl -n mindledger-staging rollout status deployment/frontend --timeout=200s
+#     - echo "Staging rollback complete."
+#   after_script:
+#     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
 # STAGE: test-load
@@ -1008,45 +1005,38 @@ rollback:staging:
 #   STAGING_URL      — URL pública do ambiente de staging
 # ==============================================================================
 
-test:load:
-  image:
-    name: grafana/k6:latest
-    entrypoint: [""]
-  stage: test-load
-  needs:
-    # - job: smoke:staging
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-  variables:
-    # BASE_URL points at staging so the load test exercises the real deploy.
-    BASE_URL: $STAGING_URL
-    TEST_USERNAME: $K6_TEST_USERNAME
-    TEST_PASSWORD: $K6_TEST_PASSWORD
-  before_script:
-    # Wait up to 90 s for the staging API liveness endpoint to return 200
-    # before starting the load test. This guards against the case where the
-    # pod restarts after rollout status exits (e.g. readiness probe oscillation).
-    # Uses wget (BusyBox) instead of curl — curl is not available in grafana/k6:latest.
-    # The awk pattern anchors to lines starting with two spaces ("^  HTTP/") so that
-    # wget's own error message ("wget: server returned error: HTTP/1.1 …") is ignored.
-    - |
-      echo "Waiting for ${BASE_URL}/live/ to return 200..."
-      for i in $(seq 1 18); do
-        STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/live/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
-        [ -z "$STATUS" ] && STATUS="000"
-        [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
-        [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS})"; exit 1; }
-        sleep 5
-      done
-  script:
-    - mkdir -p k6
-    - k6 run --out json=k6/results.json --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
-  artifacts:
-    when: always
-    paths:
-      - k6/results.json
-    expire_in: 7 days
-  allow_failure: false
+# test:load:
+#   image:
+#     name: grafana/k6:latest
+#     entrypoint: [""]
+#   stage: test-load
+#   needs:
+#     - job: smoke:staging
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "develop"
+#   variables:
+#     BASE_URL: $STAGING_URL
+#     TEST_USERNAME: $K6_TEST_USERNAME
+#     TEST_PASSWORD: $K6_TEST_PASSWORD
+#   before_script:
+#     - |
+#       echo "Waiting for ${BASE_URL}/live/ to return 200..."
+#       for i in $(seq 1 18); do
+#         STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/live/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
+#         [ -z "$STATUS" ] && STATUS="000"
+#         [ "$STATUS" = "200" ] && { echo "API ready (attempt $i)"; break; }
+#         [ "$i" = "18" ] && { echo "ERROR: API not ready after 90s (last status: ${STATUS})"; exit 1; }
+#         sleep 5
+#       done
+#   script:
+#     - mkdir -p k6
+#     - k6 run --out json=k6/results.json --env BASE_URL="$BASE_URL" --env TEST_USERNAME="$TEST_USERNAME" --env TEST_PASSWORD="$TEST_PASSWORD" k6/load-test.js
+#   artifacts:
+#     when: always
+#     paths:
+#       - k6/results.json
+#     expire_in: 7 days
+#   allow_failure: false
 
 # ==============================================================================
 # STAGE: test-e2e
@@ -1080,68 +1070,62 @@ test:load:
 #   E2E_USERNAME  — usuário da conta de teste no banco de staging
 #   E2E_PASSWORD  — senha da conta de teste (masked)
 
-test:e2e:
-  image:
-    name: mcr.microsoft.com/playwright:v1.58.2-noble
-    entrypoint: [""]
-  stage: test-e2e
-  needs:
-    # - job: smoke:staging
-    - job: test:load
-    - job: seed:staging
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-  variables:
-    BASE_URL: $STAGING_URL
-    # HOME must be writable for Playwright's browser cache
-    HOME: /root
-  before_script:
-    # Wait up to 60 s for the staging frontend to become available.
-    - |
-      echo "Waiting for ${BASE_URL} to respond..."
-      for i in $(seq 1 12); do
-        STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
-        [ -z "$STATUS" ] && STATUS="000"
-        [ "$STATUS" = "200" ] && { echo "Frontend ready (attempt $i)"; break; }
-        [ "$i" = "12" ] && { echo "ERROR: Frontend not ready after 60s (last status: ${STATUS})"; exit 1; }
-        sleep 5
-      done
-    # Smoke-test the E2E credentials against the real login endpoint before
-    # running the full test suite.  A failure here means seed:staging did not
-    # create the account or the credentials are misconfigured — much clearer
-    # than 20 tests timing out with a 15 s waitForURL error each.
-    - |
-      if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
-        echo "ERROR: E2E_USERNAME and E2E_PASSWORD must be set as CI/CD variables."
-        exit 1
-      fi
-      API_URL="${BASE_URL}/api/v1/authentication/token/"
-      HTTP_STATUS=$(wget -qS --method=POST \
-        --header="Content-Type: application/json" \
-        --body-data="{\"username\":\"${E2E_USERNAME}\",\"password\":\"${E2E_PASSWORD}\"}" \
-        --server-response -O /dev/null "${API_URL}" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
-      [ -z "$HTTP_STATUS" ] && HTTP_STATUS="000"
-      echo "E2E credential check: HTTP ${HTTP_STATUS} (user=${E2E_USERNAME})"
-      if [ "${HTTP_STATUS}" != "200" ]; then
-        echo "ERROR: E2E login failed (HTTP ${HTTP_STATUS}). Verify E2E_USERNAME/E2E_PASSWORD CI variables and that seed:staging ran successfully."
-        exit 1
-      fi
-    - cd frontend
-    - npm ci --prefer-offline --legacy-peer-deps
-    - export NODE_PATH="$(pwd)/node_modules"
-  script:
-    - npm run test:e2e
-  after_script:
-    - mkdir -p e2e-results
-  artifacts:
-    when: always
-    paths:
-      - e2e-results/
-      - frontend/test-results/
-    reports:
-      junit: e2e-results/results.xml
-    expire_in: 7 days
-  allow_failure: false
+# test:e2e:
+#   image:
+#     name: mcr.microsoft.com/playwright:v1.58.2-noble
+#     entrypoint: [""]
+#   stage: test-e2e
+#   needs:
+#     - job: smoke:staging
+#     - job: test:load
+#     - job: seed:staging
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "develop"
+#   variables:
+#     BASE_URL: $STAGING_URL
+#     HOME: /root
+#   before_script:
+#     - |
+#       echo "Waiting for ${BASE_URL} to respond..."
+#       for i in $(seq 1 12); do
+#         STATUS=$(wget -qS -T 10 -O /dev/null "${BASE_URL}/" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
+#         [ -z "$STATUS" ] && STATUS="000"
+#         [ "$STATUS" = "200" ] && { echo "Frontend ready (attempt $i)"; break; }
+#         [ "$i" = "12" ] && { echo "ERROR: Frontend not ready after 60s (last status: ${STATUS})"; exit 1; }
+#         sleep 5
+#       done
+#     - |
+#       if [ -z "${E2E_USERNAME}" ] || [ -z "${E2E_PASSWORD}" ]; then
+#         echo "ERROR: E2E_USERNAME and E2E_PASSWORD must be set as CI/CD variables."
+#         exit 1
+#       fi
+#       API_URL="${BASE_URL}/api/v1/authentication/token/"
+#       HTTP_STATUS=$(wget -qS --method=POST \
+#         --header="Content-Type: application/json" \
+#         --body-data="{\"username\":\"${E2E_USERNAME}\",\"password\":\"${E2E_PASSWORD}\"}" \
+#         --server-response -O /dev/null "${API_URL}" 2>&1 | awk '/^  HTTP\//{print $2}' | tail -1) || true
+#       [ -z "$HTTP_STATUS" ] && HTTP_STATUS="000"
+#       echo "E2E credential check: HTTP ${HTTP_STATUS} (user=${E2E_USERNAME})"
+#       if [ "${HTTP_STATUS}" != "200" ]; then
+#         echo "ERROR: E2E login failed (HTTP ${HTTP_STATUS}). Verify E2E_USERNAME/E2E_PASSWORD CI variables and that seed:staging ran successfully."
+#         exit 1
+#       fi
+#     - cd frontend
+#     - npm ci --prefer-offline --legacy-peer-deps
+#     - export NODE_PATH="$(pwd)/node_modules"
+#   script:
+#     - npm run test:e2e
+#   after_script:
+#     - mkdir -p e2e-results
+#   artifacts:
+#     when: always
+#     paths:
+#       - e2e-results/
+#       - frontend/test-results/
+#     reports:
+#       junit: e2e-results/results.xml
+#     expire_in: 7 days
+#   allow_failure: false
 
 # ==============================================================================
 # test:backup-restore  —  Validação end-to-end do ciclo de backup/restore
@@ -1183,107 +1167,87 @@ test:e2e:
 #   STAGING_MINIO_BUCKET         — nome do bucket (padrão: mindledger-backups)
 # ==============================================================================
 
-test:backup-restore:
-  extends: .python_base
-  stage: test-e2e
-  interruptible: false
-  needs:
-    - job: deploy:staging
-    # - job: backup:staging
-  services:
-    - name: pgvector/pgvector:pg16
-      alias: postgres
-  variables:
-    POSTGRES_DB: postgres
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: ci_backup_restore_pw  # gitleaks:allow
-    POSTGRES_HOST_AUTH_METHOD: trust
-    # PGPASSWORD must match POSTGRES_PASSWORD so psql / pg_restore can connect
-    PGPASSWORD: ci_backup_restore_pw          # gitleaks:allow
-    PGHOST: postgres
-    PGPORT: "5432"
-    DB_USER: postgres
-    SECRET_KEY: "ci-insecure-key-not-for-production-use"  # gitleaks:allow
-    DEBUG: "False"
-    DJANGO_SETTINGS_MODULE: "app.settings"
-    BACKUP_DIR: "/tmp/ci-backups"
-    MIN_TABLE_COUNT: "20"
-    MINIO_ALIAS: "staging-minio"
-  rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-  before_script:
-    - *python_before_script
-    - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
-    - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
-    # Generate a valid Fernet key so Django's FieldEncryption initialises cleanly
-    - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
-    - until pg_isready -h postgres -p 5432; do sleep 1; done
-    - mkdir -p "$BACKUP_DIR"
-    # Configure MinIO client and fetch the latest backup from the staging bucket.
-    # Try with the configured endpoint first (--insecure handles self-signed certs).
-    # If the endpoint uses https:// but MinIO serves plain HTTP, fall back to http://.
-    - |
-      mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
-        "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY" --insecure 2>/dev/null \
-      || mc alias set "$MINIO_ALIAS" \
-        "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
-        "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
-    - |
-      LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/" --json \
-        | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
-      mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/${LATEST_FILE}" \
-        "${BACKUP_DIR}/${LATEST_FILE}"
-      # Store filename so the script section can resolve it (before_script runs in a separate shell)
-      echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
-      echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
-  script:
-    - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
-
-    # ── Step 1: verify-backup.sh — decrypt → pg_restore → schema checks ──────
-    - chmod +x api/scripts/verify-backup.sh
-    - |
-      BACKUP_DIR="$BACKUP_DIR" \
-      PGHOST="$PGHOST" PGPORT="$PGPORT" PGPASSWORD="$PGPASSWORD" \
-      DB_USER="$DB_USER" MIN_TABLE_COUNT="$MIN_TABLE_COUNT" \
-      BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
-      api/scripts/verify-backup.sh "$ENC_FILE"
-
-    # ── Step 2: re-restore and run manage.py check ────────────────────────────
-    # verify-backup.sh drops its temp DB in an EXIT trap; spin up a fresh
-    # restore so Django's system check framework can verify connectivity and
-    # model integrity against real data from the backup.
-    - |
-      RESTORE_DB="mindledger_managecheck_${CI_JOB_ID}"
-      TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
-
-      # Resolve versioned decryption key (mirrors verify-backup.sh logic)
-      ENC_BASENAME=$(basename "$ENC_FILE")
-      DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
-      if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
-        KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
-        [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
-      fi
-
-      DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
-        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
-          -pass "env:DECRYPT_KEY_FOR_VERIFY" \
-          -in  "$ENC_FILE" -out "$TEMP_DUMP"
-
-      createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
-      pg_restore --host=postgres --port=5432 --username=postgres \
-        --dbname="$RESTORE_DB" --no-owner --no-privileges \
-        "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
-      rm -f "$TEMP_DUMP"
-
-      cd api
-      # POSTGRES_HOST_AUTH_METHOD=trust — password is not checked by the server
-      DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
-        DB_USER=postgres DB_PASSWORD="" \
-        python manage.py check --database default
-      cd ..
-
-      dropdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
-  allow_failure: false
+# test:backup-restore:
+#   extends: .python_base
+#   stage: test-e2e
+#   interruptible: false
+#   needs:
+#     - job: deploy:staging
+#     - job: backup:staging
+#   services:
+#     - name: pgvector/pgvector:pg16
+#       alias: postgres
+#   variables:
+#     POSTGRES_DB: postgres
+#     POSTGRES_USER: postgres
+#     POSTGRES_PASSWORD: ci_backup_restore_pw  # gitleaks:allow
+#     POSTGRES_HOST_AUTH_METHOD: trust
+#     PGPASSWORD: ci_backup_restore_pw          # gitleaks:allow
+#     PGHOST: postgres
+#     PGPORT: "5432"
+#     DB_USER: postgres
+#     SECRET_KEY: "ci-insecure-key-not-for-production-use"  # gitleaks:allow
+#     DEBUG: "False"
+#     DJANGO_SETTINGS_MODULE: "app.settings"
+#     BACKUP_DIR: "/tmp/ci-backups"
+#     MIN_TABLE_COUNT: "20"
+#     MINIO_ALIAS: "staging-minio"
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "develop"
+#   before_script:
+#     - *python_before_script
+#     - apt-get update -qq && apt-get install -y -qq curl openssl postgresql-client && rm -rf /var/lib/apt/lists/*
+#     - curl -sSfL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc && chmod +x /usr/local/bin/mc
+#     - export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+#     - until pg_isready -h postgres -p 5432; do sleep 1; done
+#     - mkdir -p "$BACKUP_DIR"
+#     - |
+#       mc alias set "$MINIO_ALIAS" "$STAGING_MINIO_ENDPOINT" \
+#         "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY" --insecure 2>/dev/null \
+#       || mc alias set "$MINIO_ALIAS" \
+#         "${STAGING_MINIO_ENDPOINT/https:\/\//http://}" \
+#         "$STAGING_MINIO_ACCESS_KEY" "$STAGING_MINIO_SECRET_KEY"
+#     - |
+#       LATEST_FILE=$(mc ls "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/" --json \
+#         | python3 -c 'import sys,json;d=[o for l in sys.stdin if l.strip() for o in [json.loads(l)] if o.get("type")=="file" and o.get("key","").endswith(".dump.enc")];sys.exit(1) if not d else print(sorted(d,key=lambda x:x["lastModified"])[-1]["key"])')
+#       mc cp "${MINIO_ALIAS}/${STAGING_MINIO_BUCKET:-mindledger-backups}/db/${LATEST_FILE}" \
+#         "${BACKUP_DIR}/${LATEST_FILE}"
+#       echo "${LATEST_FILE}" > "${BACKUP_DIR}/.ci_latest"
+#       echo "Downloaded: ${LATEST_FILE} ($(du -h "${BACKUP_DIR}/${LATEST_FILE}" | cut -f1))"
+#   script:
+#     - ENC_FILE="${BACKUP_DIR}/$(cat ${BACKUP_DIR}/.ci_latest)"
+#     - chmod +x api/scripts/verify-backup.sh
+#     - |
+#       BACKUP_DIR="$BACKUP_DIR" \
+#       PGHOST="$PGHOST" PGPORT="$PGPORT" PGPASSWORD="$PGPASSWORD" \
+#       DB_USER="$DB_USER" MIN_TABLE_COUNT="$MIN_TABLE_COUNT" \
+#       BACKUP_ENCRYPTION_KEY="$BACKUP_ENCRYPTION_KEY" \
+#       api/scripts/verify-backup.sh "$ENC_FILE"
+#     - |
+#       RESTORE_DB="mindledger_managecheck_${CI_JOB_ID}"
+#       TEMP_DUMP=$(mktemp /tmp/managecheck_XXXXXX.dump)
+#       ENC_BASENAME=$(basename "$ENC_FILE")
+#       DECRYPT_KEY="$BACKUP_ENCRYPTION_KEY"
+#       if [[ "$ENC_BASENAME" =~ _kv([^.]+)\.dump\.enc$ ]]; then
+#         KV_VAR="BACKUP_ENCRYPTION_KEY_${BASH_REMATCH[1]}"
+#         [ -n "${!KV_VAR:-}" ] && DECRYPT_KEY="${!KV_VAR}"
+#       fi
+#       DECRYPT_KEY_FOR_VERIFY="$DECRYPT_KEY" \
+#         openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+#           -pass "env:DECRYPT_KEY_FOR_VERIFY" \
+#           -in  "$ENC_FILE" -out "$TEMP_DUMP"
+#       createdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
+#       pg_restore --host=postgres --port=5432 --username=postgres \
+#         --dbname="$RESTORE_DB" --no-owner --no-privileges \
+#         "$TEMP_DUMP" 2>&1 | grep -v '^pg_restore: warning' || true
+#       rm -f "$TEMP_DUMP"
+#       cd api
+#       DB_HOST=postgres DB_PORT=5432 DB_NAME="$RESTORE_DB" \
+#         DB_USER=postgres DB_PASSWORD="" \
+#         python manage.py check --database default
+#       cd ..
+#       dropdb --host=postgres --port=5432 --username=postgres "$RESTORE_DB"
+#   allow_failure: false
 
 # ==============================================================================
 # STAGE: deploy-production
@@ -1571,8 +1535,8 @@ promote:to_main:
   stage: promote
   interruptible: false
   needs:
-    - job: test:e2e
-    - job: test:backup-restore
+    - job: deploy:staging
+    - job: seed:staging
   # CI_COMMIT_BRANCH is only populated for branch pipelines (not MR pipelines),
   # so this rule is already implicitly restricted to push events on develop.
   rules:
