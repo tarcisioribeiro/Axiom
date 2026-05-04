@@ -887,6 +887,25 @@ seed:staging:
 #       echo "=== All staging smoke tests passed ==="
 #   allow_failure: false
 
+# ==============================================================================
+# deploy:rollback:staging  (automático — disparado em caso de falha)
+#
+# Revertido automaticamente quando smoke:staging falha (when: on_failure).
+# O job coleta diagnósticos antes de agir para facilitar post-mortem:
+#   1. Lista todos os pods do namespace com -o wide
+#   2. Extrai as últimas 80 linhas de log do pod api (ou do pod anterior se já
+#      tiver crashado)
+#   3. Lista os eventos recentes ordenados por criationTimestamp
+#
+# Após os diagnósticos executa `rollout undo` em api e frontend, revertendo
+# ambos para a revisão anterior registrada no histórico do Deployment.
+# O job encerra com falha se o rollback não estabilizar dentro do timeout
+# (api: 120 s, frontend: 360 s), o que manterá o pipeline como FAILED e
+# alertará a equipe de que o cluster está em estado inconsistente.
+#
+# Não possui `allow_failure: true` — um rollback mal-sucedido deve bloquear
+# qualquer promoção do develop para a main.
+# ==============================================================================
 deploy:rollback:staging:
   image:
     name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
@@ -919,8 +938,23 @@ deploy:rollback:staging:
     - rm -f /tmp/kubeconfig
   allow_failure: false
 
-# Manual rollback job for staging — operators can trigger this at any point
-# after deploy:staging, regardless of smoke test outcome.
+# ==============================================================================
+# rollback:staging  (manual — acionado pelo operador)
+#
+# Complementa deploy:rollback:staging para os casos em que os smoke tests
+# passaram mas o ambiente apresenta problemas funcionais descobertos depois
+# (ex.: regressão percebida por QA, anomalia em logs de aplicação, alerta do
+# Prometheus disparando minutos após o deploy).
+#
+# Diferenças em relação ao rollback automático:
+#   - when: manual → não é acionado pelo pipeline, só por um operador na UI
+#   - allow_failure: true → não bloqueia o pipeline se cancelado ou ignorado
+#   - Não coleta diagnósticos (assume que o operador já os tem)
+#   - Usa os mesmos comandos `rollout undo` que o rollback automático
+#
+# Timeouts conservadores (api: 120 s, frontend: 200 s) — suficientes para a
+# maioria dos clusters de staging, mas ajustáveis se o pull de imagem for lento.
+# ==============================================================================
 rollback:staging:
   image:
     name: bitnami/kubectl:latest@sha256:d80c09afa570a14cf6d32ca09ca610b5701eb0a08c655b5bb820194b218078eb
@@ -952,6 +986,26 @@ rollback:staging:
 
 # ==============================================================================
 # STAGE: test-load
+# ==============================================================================
+#
+# Executa o script k6/load-test.js contra o ambiente de staging usando a
+# imagem oficial grafana/k6.  O teste valida:
+#   - Latência e throughput sob carga realista (VUs e rampa definidos no script)
+#   - Que a API não retorna 5xx durante a carga (thresholds definidos no script)
+#
+# before_script: aguarda até 90 s pelo endpoint /live/ retornar HTTP 200 antes
+# de iniciar o teste — evita falhas espúrias causadas por oscilação de readiness
+# probe logo após o rollout (wget é usado porque curl não está disponível na
+# imagem grafana/k6).
+#
+# Artefatos: k6/results.json (JSON Lines) retido por 7 dias.  O arquivo pode
+# ser importado no Grafana Cloud k6 ou processado com `jq` para análise de
+# tendência entre pipelines.
+#
+# Variáveis necessárias:
+#   K6_TEST_USERNAME — usuário pré-criado no banco de staging para autenticação
+#   K6_TEST_PASSWORD — senha do usuário de teste (masked)
+#   STAGING_URL      — URL pública do ambiente de staging
 # ==============================================================================
 
 test:load:
@@ -998,14 +1052,33 @@ test:load:
 # STAGE: test-e2e
 # ==============================================================================
 #
-# Runs Playwright E2E tests against the staging environment after it is
-# deployed.  Tests use a pre-seeded test account (same vars as load tests).
-# The mcr.microsoft.com/playwright image bundles all required browser binaries.
+# Executa os testes Playwright (npm run test:e2e) contra o ambiente de staging
+# após os testes de carga (test:load) e a criação da conta de teste
+# (seed:staging) serem concluídos.
 #
-# Required CI/CD variables (set in GitLab → Settings → CI/CD → Variables):
-#   STAGING_URL     — public URL of the staging environment
-#   E2E_USERNAME    — username of a test account seeded in the staging database
-#   E2E_PASSWORD    — password for the E2E test account (masked variable)
+# A imagem mcr.microsoft.com/playwright já inclui todos os binários de
+# navegador necessários (Chromium, Firefox, WebKit), eliminando o passo de
+# `npx playwright install` em cada pipeline.
+#
+# before_script realiza duas verificações antes de rodar a suíte completa:
+#   1. Aguarda até 60 s pelo frontend retornar HTTP 200 em /.
+#      Evita que todos os testes falhem com "waitForURL timeout" simplesmente
+#      porque o ingress ainda não sincronizou após o rollout.
+#   2. Valida as credenciais E2E contra o endpoint de autenticação real.
+#      Uma falha aqui indica problema no seed:staging (conta não criada ou
+#      variáveis incorretas), gerando uma mensagem de erro clara em vez de
+#      20+ testes falhando com erro de login.
+#
+# Artefatos retidos por 7 dias:
+#   - e2e-results/          — relatório HTML e screenshots/vídeos dos testes
+#   - frontend/test-results/ — saída bruta do Playwright
+#   - e2e-results/results.xml (JUnit) — integrado ao GitLab para exibição
+#     inline na UI de MR/pipeline
+#
+# Variáveis necessárias (GitLab → Settings → CI/CD → Variables):
+#   STAGING_URL   — URL pública do ambiente de staging
+#   E2E_USERNAME  — usuário da conta de teste no banco de staging
+#   E2E_PASSWORD  — senha da conta de teste (masked)
 
 test:e2e:
   image:
@@ -1071,13 +1144,43 @@ test:e2e:
   allow_failure: false
 
 # ==============================================================================
-# Backup-restore validation
+# test:backup-restore  —  Validação end-to-end do ciclo de backup/restore
 #
-# Downloads the latest encrypted backup from the staging MinIO bucket, runs
-# verify-backup.sh (decrypt → pg_restore → schema checks), then performs a
-# second restore to exercise Django's system check framework against real data.
-# Job fails the pipeline if any step — download, decryption, restore, schema
-# validation, or manage.py check — returns a non-zero exit code.
+# Objetivo: garantir que o backup de staging pode ser decriptado e restaurado
+# com sucesso, e que o schema do banco restaurado é compatível com o código
+# Django atual.  Falha aqui significa que um eventual restore de emergência em
+# produção também falharia.
+#
+# Fluxo em dois passos:
+#
+#   Passo 1 — verify-backup.sh
+#     • Configura o cliente mc (MinIO) e baixa o artefato .dump.enc mais recente
+#       do bucket de staging (mindledger-backups/db/).
+#     • Decripta com OpenSSL AES-256-CBC + PBKDF2 (600 000 iterações) usando
+#       BACKUP_ENCRYPTION_KEY (ou a chave versionada _kv<N> quando presente no
+#       nome do arquivo — suporte a rotação de chave).
+#     • Restaura em um banco temporário via pg_restore e executa verificações de
+#       schema (contagem mínima de tabelas definida em MIN_TABLE_COUNT).
+#     • Um trap EXIT garante que o banco temporário é sempre descartado, mesmo
+#       em caso de falha.
+#
+#   Passo 2 — manage.py check
+#     • Repete a decriptação e restaura o dump em um segundo banco
+#       (mindledger_managecheck_<CI_JOB_ID>).
+#     • Roda `python manage.py check --database default` apontado para esse
+#       banco — valida que o ORM do Django não detecta inconsistências de
+#       modelo contra dados reais.
+#     • Descarta o banco ao final.
+#
+# Serviço PostgreSQL: pgvector/pgvector:pg16 em container auxiliar (alias
+# "postgres").  Todos os comandos psql/pg_restore usam PGPASSWORD=trust.
+#
+# Variáveis necessárias:
+#   BACKUP_ENCRYPTION_KEY        — passphrase AES-256-CBC (masked)
+#   STAGING_MINIO_ENDPOINT       — endpoint MinIO acessível pelo runner
+#   STAGING_MINIO_ACCESS_KEY     — access key MinIO de staging
+#   STAGING_MINIO_SECRET_KEY     — secret key MinIO de staging (masked)
+#   STAGING_MINIO_BUCKET         — nome do bucket (padrão: mindledger-backups)
 # ==============================================================================
 
 test:backup-restore:
@@ -1199,7 +1302,7 @@ deploy:production:
     - job: scan:frontend
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+      when: on_success
   allow_failure: false
   environment:
     name: production
