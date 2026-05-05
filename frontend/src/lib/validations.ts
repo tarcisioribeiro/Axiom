@@ -749,7 +749,7 @@ export const routineTaskSchema = z
     interval_hours: z
       .number()
       .min(1, 'Intervalo minimo de 1 hora')
-      .max(12, 'Intervalo maximo de 12 horas')
+      .max(23, 'Intervalo maximo de 23 horas')
       .optional()
       .nullable(),
     scheduled_times: z
@@ -766,7 +766,27 @@ export const routineTaskSchema = z
       .number()
       .min(1, positiveError('Quantidade alvo'))
       .positive(positiveError('Quantidade alvo')),
-    unit: z.string().min(1, requiredError('Unidade')).max(50, maxError('Unidade', 50)),
+    unit: z.enum(
+      [
+        'vez',
+        'minuto',
+        'hora',
+        'ml',
+        'copo',
+        'litro',
+        'página',
+        'km',
+        'metro',
+        'passo',
+        'repetição',
+        'série',
+        'capítulo',
+        'exercício',
+        'dose',
+        'comprimido',
+      ],
+      { errorMap: () => ({ message: 'Selecione uma unidade válida' }) }
+    ),
     owner: z.number().positive(requiredError('Proprietario')),
   })
   .refine(

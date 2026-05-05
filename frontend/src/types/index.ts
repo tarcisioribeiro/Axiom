@@ -1653,6 +1653,25 @@ export const PRIORITY_CHOICES = [
   { value: 'critical', label: 'Crítica' },
 ] as const;
 
+export const UNIT_CHOICES = [
+  { value: 'vez', label: 'vez' },
+  { value: 'minuto', label: 'minuto' },
+  { value: 'hora', label: 'hora' },
+  { value: 'ml', label: 'ml' },
+  { value: 'copo', label: 'copo' },
+  { value: 'litro', label: 'litro' },
+  { value: 'página', label: 'página' },
+  { value: 'km', label: 'km' },
+  { value: 'metro', label: 'metro' },
+  { value: 'passo', label: 'passo' },
+  { value: 'repetição', label: 'repetição' },
+  { value: 'série', label: 'série' },
+  { value: 'capítulo', label: 'capítulo' },
+  { value: 'exercício', label: 'exercício' },
+  { value: 'dose', label: 'dose' },
+  { value: 'comprimido', label: 'comprimido' },
+] as const;
+
 export interface RoutineTask {
   id: number;
   uuid: string;
@@ -1684,6 +1703,7 @@ export interface RoutineTask {
   allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
+  unit_display?: string;
   completion_rate: number;
   total_completions: number;
   owner: number;
