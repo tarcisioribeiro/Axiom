@@ -47,6 +47,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     books_count = serializers.SerializerMethodField()
     birth_display = serializers.SerializerMethodField()
     death_display = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = Author
@@ -73,6 +74,11 @@ class AuthorSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_photo(self, obj):
+        if not obj.photo:
+            return None
+        return f"/api/v1/library/authors/{obj.pk}/photo/"
 
     def get_books_count(self, obj):
         return obj.books.filter(deleted_at__isnull=True).count()
@@ -199,6 +205,7 @@ class BookSerializer(serializers.ModelSerializer):
     book_avg_pages_per_day = serializers.SerializerMethodField()
     estimated_completion_general = serializers.SerializerMethodField()
     estimated_completion_book = serializers.SerializerMethodField()
+    cover = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
@@ -245,6 +252,11 @@ class BookSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_cover(self, obj):
+        if not obj.cover:
+            return None
+        return f"/api/v1/library/books/{obj.pk}/cover/"
 
     def get_authors_names(self, obj):
         return [author.name for author in obj.authors.all()]

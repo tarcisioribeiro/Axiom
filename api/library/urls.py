@@ -3,6 +3,8 @@ from django.urls import path
 from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Highlight/Dashboard views
     AuthorDetailView,
     AuthorListCreateView,
+    AuthorPhotoStreamView,
+    BookCoverStreamView,
     BookDetailView,
     BookFileStreamView,
     BookFileView,
@@ -36,6 +38,11 @@ urlpatterns = [
     # Authors
     path("authors/", AuthorListCreateView.as_view(), name="author-list-create"),
     path("authors/<int:pk>/", AuthorDetailView.as_view(), name="author-detail"),
+    path(
+        "authors/<int:pk>/photo/",
+        AuthorPhotoStreamView.as_view(),
+        name="author-photo-stream",
+    ),
     # Publishers
     path(
         "publishers/", PublisherListCreateView.as_view(), name="publisher-list-create"
@@ -46,6 +53,11 @@ urlpatterns = [
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
     path("books/<int:pk>/", BookDetailView.as_view(), name="book-detail"),
+    path(
+        "books/<int:pk>/cover/",
+        BookCoverStreamView.as_view(),
+        name="book-cover-stream",
+    ),
     path("books/<int:pk>/file/", BookFileView.as_view(), name="book-file"),
     path(
         "books/<int:pk>/file/stream/",

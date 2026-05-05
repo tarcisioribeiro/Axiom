@@ -86,13 +86,13 @@ export default function SecurityDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-                <div className="flex flex-col gap-xs">
+              <div className="flex flex-col gap-sm">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-xs">
                     <div className="rounded-lg bg-info/10 p-sm ring-1 ring-info/20">
                       <Key className="h-4 w-4 text-info" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {t('pages.securityDashboard.passwords')}
                     </span>
                   </div>
@@ -101,12 +101,12 @@ export default function SecurityDashboard() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-xs">
                     <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
                       <CreditCard className="h-4 w-4 text-warning" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {t('pages.securityDashboard.storedCards')}
                     </span>
                   </div>
@@ -115,12 +115,12 @@ export default function SecurityDashboard() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-xs">
                     <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
                       <Wallet className="h-4 w-4 text-success" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {t('pages.securityDashboard.storedAccounts')}
                     </span>
                   </div>
@@ -129,12 +129,12 @@ export default function SecurityDashboard() {
                   </span>
                 </div>
 
-                <div className="flex flex-col gap-xs">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-xs">
                     <div className="rounded-lg bg-accent/10 p-sm ring-1 ring-accent/20">
                       <Archive className="h-4 w-4 text-accent" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       {t('pages.securityDashboard.archives')}
                     </span>
                   </div>
