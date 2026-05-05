@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -25,7 +26,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
   MemberFinancialReport,
@@ -151,13 +151,6 @@ export default function MemberFinancialReportPage() {
 
   const { summary, expenses_by_category } = report;
 
-  const netBalanceValue = parseFloat(summary.net_balance);
-  const isNetPositive = netBalanceValue >= 0;
-
-  const totalRevenues = parseFloat(summary.total_revenues);
-  const totalExpenses = parseFloat(summary.total_expenses);
-  const revenuesPlusExpenses = totalRevenues + totalExpenses;
-
   const pieData = expenses_by_category
     .filter((item) => parseFloat(item.total) > 0)
     .map((item) => ({
@@ -242,93 +235,56 @@ export default function MemberFinancialReportPage() {
       </div>
 
       {/* Date Filters */}
-      <div className="mb-lg flex flex-wrap items-end gap-md rounded-lg border bg-card p-md">
-        <div className="flex flex-col gap-xs">
-          <Label htmlFor="start-date">Data Inicial</Label>
-          <Input
-            id="start-date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-44"
-          />
-        </div>
-        <div className="flex flex-col gap-xs">
-          <Label htmlFor="end-date">Data Final</Label>
-          <Input
-            id="end-date"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-44"
-          />
-        </div>
-        <Button
-          onClick={() => {
-            setAppliedStart(startDate);
-            setAppliedEnd(endDate);
-          }}
-          variant="outline"
-        >
-          Aplicar Filtro
-        </Button>
-        {(appliedStart || appliedEnd) && (
-          <Button
-            onClick={() => {
-              setStartDate('');
-              setEndDate('');
-              setAppliedStart('');
-              setAppliedEnd('');
-            }}
-            variant="ghost"
-          >
-            Limpar
-          </Button>
-        )}
-      </div>
-
-      {/* Net balance hero */}
-      <div className="mb-4 rounded-lg border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Saldo líquido do período</p>
-        <p
-          className={cn(
-            'text-3xl font-bold',
-            isNetPositive ? 'text-success' : 'text-destructive'
-          )}
-        >
-          {isNetPositive ? '+' : ''}
-          {formatCurrency(summary.net_balance)}
-        </p>
-        {revenuesPlusExpenses > 0 && (
-          <div className="mt-3 space-y-1">
-            <div className="flex h-3 overflow-hidden rounded-full bg-muted">
-              <div
-                className="bg-success"
-                style={{
-                  width: `${(totalRevenues / revenuesPlusExpenses) * 100}%`,
-                }}
-              />
-              <div
-                className="bg-destructive"
-                style={{
-                  width: `${(totalExpenses / revenuesPlusExpenses) * 100}%`,
-                }}
-              />
-            </div>
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span className="text-success">
-                Receitas: {formatCurrency(summary.total_revenues)}
-              </span>
-              <span className="text-destructive">
-                Despesas: {formatCurrency(summary.total_expenses)}
-              </span>
-            </div>
+      <FilterBar
+        hasActiveFilters={!!(appliedStart || appliedEnd)}
+        onClear={() => {
+          setStartDate('');
+          setEndDate('');
+          setAppliedStart('');
+          setAppliedEnd('');
+        }}
+        className="mb-lg"
+      >
+        <div className="flex flex-wrap items-end gap-sm">
+          <div className="flex flex-col gap-xs">
+            <Label htmlFor="start-date" className="text-xs">
+              Data Inicial
+            </Label>
+            <Input
+              id="start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="h-8 w-40 text-sm"
+            />
           </div>
-        )}
-      </div>
+          <div className="flex flex-col gap-xs">
+            <Label htmlFor="end-date" className="text-xs">
+              Data Final
+            </Label>
+            <Input
+              id="end-date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="h-8 w-40 text-sm"
+            />
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setAppliedStart(startDate);
+              setAppliedEnd(endDate);
+            }}
+          >
+            Aplicar
+          </Button>
+        </div>
+      </FilterBar>
 
       {/* Summary Cards */}
-      <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
         <div className="overflow-hidden rounded-lg border-t-2 border-t-success">
           <StatCard
             title="Receitas"
@@ -351,25 +307,6 @@ export default function MemberFinancialReportPage() {
             value={formatCurrency(summary.total_payables)}
             icon={<Receipt className="h-5 w-5 text-warning" />}
             variant="warning"
-          />
-        </div>
-        <div
-          className={cn(
-            'overflow-hidden rounded-lg border-t-2',
-            isNetPositive ? 'border-t-success' : 'border-t-destructive'
-          )}
-        >
-          <StatCard
-            title="Saldo Líquido"
-            value={formatCurrency(summary.net_balance)}
-            icon={
-              isNetPositive ? (
-                <TrendingUp className="h-5 w-5 text-success" />
-              ) : (
-                <TrendingDown className="h-5 w-5 text-destructive" />
-              )
-            }
-            variant={isNetPositive ? 'success' : 'danger'}
           />
         </div>
       </div>

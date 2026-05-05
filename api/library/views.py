@@ -486,6 +486,90 @@ class BookFileStreamView(APIView):
 
 
 # ============================================================================
+# BOOK COVER STREAM VIEW
+# ============================================================================
+
+
+class BookCoverStreamView(APIView):
+    """Proxy da capa do livro via Django, contornando acesso direto ao MinIO."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Book.objects.all()
+
+    def get(self, request, pk):
+        try:
+            book = Book.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Book.DoesNotExist:
+            return Response(
+                {"detail": "Livro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not book.cover:
+            return Response(
+                {"detail": "Este livro não possui capa."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        filename = book.cover.name.split("/")[-1]
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+        mime_map = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "webp": "image/webp",
+            "gif": "image/gif",
+        }
+        content_type = mime_map.get(ext, "image/jpeg")
+        file_obj = book.cover.open("rb")
+        response = FileResponse(file_obj, content_type=content_type)
+        response["Cache-Control"] = "public, max-age=86400"
+        return response
+
+
+# ============================================================================
+# AUTHOR PHOTO STREAM VIEW
+# ============================================================================
+
+
+class AuthorPhotoStreamView(APIView):
+    """Proxy da foto do autor via Django, contornando acesso direto ao MinIO."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Author.objects.all()
+
+    def get(self, request, pk):
+        try:
+            author = Author.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Author.DoesNotExist:
+            return Response(
+                {"detail": "Autor não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not author.photo:
+            return Response(
+                {"detail": "Este autor não possui foto."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        filename = author.photo.name.split("/")[-1]
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+        mime_map = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "webp": "image/webp",
+            "gif": "image/gif",
+        }
+        content_type = mime_map.get(ext, "image/jpeg")
+        file_obj = author.photo.open("rb")
+        response = FileResponse(file_obj, content_type=content_type)
+        response["Cache-Control"] = "public, max-age=86400"
+        return response
+
+
+# ============================================================================
 # BOOK MARK AS READ VIEW
 # ============================================================================
 

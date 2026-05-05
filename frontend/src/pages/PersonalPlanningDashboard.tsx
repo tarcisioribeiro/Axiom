@@ -99,7 +99,7 @@ export default function PersonalPlanningDashboard() {
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card className="flex flex-col items-center justify-center p-5">
+        <Card className="flex items-center gap-4 p-5">
           <CircularProgress
             value={todayRate}
             size={80}
@@ -113,7 +113,7 @@ export default function PersonalPlanningDashboard() {
               </span>
             </div>
           </CircularProgress>
-          <p className="mt-2 text-center text-sm font-medium text-muted-foreground">
+          <p className="text-sm font-medium text-muted-foreground">
             {t('pages.planningDashboard.todayTasks')}
           </p>
         </Card>

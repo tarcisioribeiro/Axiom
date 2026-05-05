@@ -184,10 +184,10 @@ export default function RoutineTasks() {
     setTimeout(() => setHighlightedIds(new Set()), 5000);
   };
 
-  // Retorna os índices dos dias ativos para a tarefa (0=Dom, 1=Seg, ... 6=Sáb)
+  // Retorna os índices dos dias ativos para a tarefa (0=Seg, 1=Ter, ... 6=Dom)
   const getActiveWeekdays = (task: RoutineTask): number[] => {
     if (task.periodicity === 'daily') return [0, 1, 2, 3, 4, 5, 6];
-    if (task.periodicity === 'weekdays') return [1, 2, 3, 4, 5];
+    if (task.periodicity === 'weekdays') return [0, 1, 2, 3, 4];
     if (task.periodicity === 'weekly' && task.weekday !== undefined)
       return [task.weekday];
     if (task.custom_weekdays && task.custom_weekdays.length > 0)
@@ -197,7 +197,7 @@ export default function RoutineTasks() {
 
   function WeekdayDots({ task }: { task: RoutineTask }): ReactNode {
     const activeDays = getActiveWeekdays(task);
-    const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+    const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
     return (
       <div className="flex gap-0.5">
         {labels.map((label, idx) => (
