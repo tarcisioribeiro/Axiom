@@ -282,9 +282,12 @@ class MemberFinancialReportView(APIView):
                 "payed": e.payed,
                 "merchant": e.merchant or "",
             }
-            for e in Expense.objects.filter(member=member, **date_filter).order_by(
-                "-date"
-            )
+            for e in Expense.objects.filter(
+                member=member,
+                related_transfer__isnull=True,
+                is_initial_balance=False,
+                **date_filter,
+            ).order_by("-date")
         ]
 
         revenues = [
@@ -297,9 +300,12 @@ class MemberFinancialReportView(APIView):
                 "received": r.received,
                 "source": r.source or "",
             }
-            for r in Revenue.objects.filter(member=member, **date_filter).order_by(
-                "-date"
-            )
+            for r in Revenue.objects.filter(
+                member=member,
+                related_transfer__isnull=True,
+                is_initial_balance=False,
+                **date_filter,
+            ).order_by("-date")
         ]
 
         loans_as_benefited = [
