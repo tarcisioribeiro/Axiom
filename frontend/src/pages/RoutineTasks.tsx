@@ -73,7 +73,13 @@ export default function RoutineTasks() {
     try {
       setIsLoading(true);
       const tasksData = await routineTasksService.getAll();
-      setTasks(tasksData);
+      const sorted = [...tasksData].sort((a, b) => {
+        if (!a.default_time && !b.default_time) return 0;
+        if (!a.default_time) return 1;
+        if (!b.default_time) return -1;
+        return a.default_time.localeCompare(b.default_time);
+      });
+      setTasks(sorted);
     } catch (error: unknown) {
       toast({
         title: t('pages.routineTasks.loadError'),
