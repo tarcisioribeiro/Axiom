@@ -401,3 +401,4 @@ Frontend: ESLint flat config (`eslint.config.js`), Prettier (`.prettierrc` with 
 After any change:
 1. Run `source .venv/bin/activate && ./ci-check.sh` (see [CI/CD Validation](#cicd-validation-run-before-every-push))
 2. Verify the Docker build still passes: `docker compose up --build -d`
+3. Tell the changes to user in brazilian portuguese
