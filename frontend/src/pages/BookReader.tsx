@@ -453,9 +453,9 @@ interface PdfReaderProps {
   url: string;
   theme: ReaderTheme;
   width: number;
-  initialPage: number;
+  pageNumber: number;
   isDark: boolean;
-  onPageChange: (page: number) => void;
+  onNumPagesChange: (n: number) => void;
 }
 
 // Maps each reader theme to a CSS filter applied directly to the PDF canvas so
@@ -473,15 +473,12 @@ function PdfReader({
   url,
   theme,
   width,
-  initialPage,
+  pageNumber,
   isDark,
-  onPageChange,
+  onNumPagesChange,
 }: PdfReaderProps) {
   const themes = buildThemes(isDark);
   const cfg = themes[theme];
-  const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState(initialPage || 1);
-  const [pageInput, setPageInput] = useState(String(initialPage || 1));
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 
   // Fetch PDF as ArrayBuffer with JWT cookies so that:
@@ -497,77 +494,24 @@ function PdfReader({
       .then((buf) => {
         if (!cancelled) setPdfData(buf);
       })
-      .catch(() => {
-        // Document's error prop handles the display; just don't set data.
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
       setPdfData(null);
     };
   }, [url]);
 
-  const onDocumentLoadSuccess = ({ numPages: n }: { numPages: number }) => {
-    setNumPages(n);
-  };
-
-  const goTo = (page: number) => {
-    const p = Math.max(1, Math.min(page, numPages || 1));
-    setPageNumber(p);
-    setPageInput(String(p));
-    onPageChange(p);
-  };
-
-  const handlePageInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') goTo(parseInt(pageInput) || 1);
-  };
-
   const pageFilter = PDF_THEME_FILTER[theme];
 
   return (
     <div className="flex h-full flex-col" style={themeStyle(cfg)}>
-      {/* Page navigation bar */}
-      <div
-        className="flex items-center justify-center gap-3 border-t px-4 py-2"
-        style={{ ...themeStyle(cfg), borderColor: cfg.borderColor }}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => goTo(pageNumber - 1)}
-          disabled={pageNumber <= 1}
-          style={{ color: cfg.color }}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex items-center gap-2 text-sm">
-          <Input
-            className="h-7 w-16 text-center text-sm"
-            value={pageInput}
-            onChange={(e) => setPageInput(e.target.value)}
-            onKeyDown={handlePageInput}
-            onBlur={() => goTo(parseInt(pageInput) || 1)}
-          />
-          <span style={{ color: cfg.color }}>/ {numPages}</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => goTo(pageNumber + 1)}
-          disabled={pageNumber >= numPages}
-          style={{ color: cfg.color }}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* PDF content */}
       <div
         className="flex flex-1 items-start justify-center overflow-auto py-6"
         style={themeStyle(cfg)}
       >
         <Document
           file={pdfData ?? undefined}
-          onLoadSuccess={onDocumentLoadSuccess}
+          onLoadSuccess={({ numPages: n }) => onNumPagesChange(n)}
           loading={
             <div className="flex h-64 items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin opacity-60" />
@@ -627,6 +571,10 @@ export default function BookReader() {
   const [annotations, setAnnotations] = useState<BookHighlight[]>([]);
   const [ownerId, setOwnerId] = useState<number>(0);
 
+  // PDF pagination (lifted from PdfReader so the toolbar can own the nav)
+  const [numPages, setNumPages] = useState(0);
+  const [pageInput, setPageInput] = useState('1');
+
   // Progress tracking
   const [currentPage, setCurrentPage] = useState<number | null>(null);
   const [currentCfi, setCurrentCfi] = useState<string | null>(null);
@@ -664,7 +612,10 @@ export default function BookReader() {
           (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
         )[0];
         setLatestReadingId(latest.id);
-        if (latest.current_page) setCurrentPage(latest.current_page);
+        if (latest.current_page) {
+          setCurrentPage(latest.current_page);
+          setPageInput(String(latest.current_page));
+        }
       }
     } catch (err) {
       toast({
@@ -706,13 +657,18 @@ export default function BookReader() {
     [bookId, ownerId, latestReadingId]
   );
 
+  const goToPdfPage = useCallback(
+    (page: number) => {
+      const p = Math.max(1, Math.min(page, numPages || 1));
+      setCurrentPage(p);
+      setPageInput(String(p));
+      saveProgress(p);
+    },
+    [numPages, saveProgress]
+  );
+
   const handleEpubLocationChange = (cfi: string, page: number) => {
     setCurrentCfi(cfi);
-    setCurrentPage(page);
-    saveProgress(page);
-  };
-
-  const handlePdfPageChange = (page: number) => {
     setCurrentPage(page);
     saveProgress(page);
   };
@@ -782,23 +738,69 @@ export default function BookReader() {
       style={{ backgroundColor: cfg.backgroundColor, color: cfg.color }}
     >
       {/* ── Toolbar ── */}
-      <header
-        className="flex shrink-0 items-center justify-between px-4 py-2"
-        style={tbStyle}
-      >
-        {/* Left: book title + page */}
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="flex shrink-0 items-center px-4 py-2" style={tbStyle}>
+        {/* Left: book title (+ page badge for EPUB) */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <BookOpen className="h-5 w-5 shrink-0 opacity-60" />
           <span className="truncate text-sm font-semibold">{book.title}</span>
-          {currentPage !== null && (
-            <Badge variant="secondary" className="shrink-0 text-xs">
+          {fileType === 'epub' && currentPage !== null && (
+            <Badge
+              variant="secondary"
+              className="shrink-0 text-xs"
+              style={{ backgroundColor: `${cfg.color}18`, color: cfg.color }}
+            >
               p. {currentPage}
             </Badge>
           )}
         </div>
 
+        {/* Center: PDF page navigation */}
+        {fileType === 'pdf' && (
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => goToPdfPage((currentPage ?? 1) - 1)}
+              disabled={(currentPage ?? 1) <= 1}
+              style={{ color: cfg.color }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-1.5 text-sm">
+              <Input
+                className="h-7 w-14 text-center text-sm"
+                value={pageInput}
+                onChange={(e) => setPageInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') goToPdfPage(parseInt(pageInput) || 1);
+                }}
+                onBlur={() => goToPdfPage(parseInt(pageInput) || 1)}
+                style={{
+                  color: cfg.color,
+                  backgroundColor: `${cfg.backgroundColor}`,
+                  borderColor: cfg.borderColor,
+                }}
+              />
+              <span className="opacity-70" style={{ color: cfg.color }}>
+                / {numPages}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => goToPdfPage((currentPage ?? 1) + 1)}
+              disabled={(currentPage ?? 1) >= numPages}
+              style={{ color: cfg.color }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Right: controls */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex flex-1 shrink-0 items-center justify-end gap-1">
           {/* Width controls */}
           <Button
             variant="ghost"
@@ -904,9 +906,9 @@ export default function BookReader() {
               url={fileUrl}
               theme={theme}
               width={contentWidth}
-              initialPage={currentPage ?? 1}
+              pageNumber={currentPage ?? 1}
               isDark={isDark}
-              onPageChange={handlePdfPageChange}
+              onNumPagesChange={setNumPages}
             />
           )}
         </main>
