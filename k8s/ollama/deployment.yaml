@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/component: ollama
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   # Recreate evita dois pods tentando escrever no PVC ao mesmo tempo.
   strategy:
     type: Recreate
