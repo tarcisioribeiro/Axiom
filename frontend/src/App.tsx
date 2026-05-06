@@ -46,6 +46,8 @@ const Passwords = lazy(() => import('./pages/Passwords'));
 const StoredCards = lazy(() => import('./pages/StoredCards'));
 const StoredAccounts = lazy(() => import('./pages/StoredAccounts'));
 const Archives = lazy(() => import('./pages/Archives'));
+const VaultHealthReport = lazy(() => import('./pages/VaultHealthReport'));
+const TwoFactorSetup = lazy(() => import('./pages/TwoFactorSetup'));
 
 // Library Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
@@ -75,6 +77,7 @@ const NotificationPreferences = lazy(() => import('./pages/NotificationPreferenc
 // Bank Reconciliation
 const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
+const BankStatementImport = lazy(() => import('./pages/BankStatementImport'));
 
 // Credit Card Bills
 const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
@@ -351,6 +354,22 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
+          <Route
+            path="/security/health"
+            element={
+              <PageWrapper>
+                <VaultHealthReport />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/settings/two-factor"
+            element={
+              <PageWrapper>
+                <TwoFactorSetup />
+              </PageWrapper>
+            }
+          />
           {/* Library Module routes */}
           <Route
             path="/library/dashboard"
@@ -478,6 +497,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <BankReconciliationDetail />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/bank-reconciliation/import"
+            element={
+              <PageWrapper>
+                <BankStatementImport />
               </PageWrapper>
             }
           />

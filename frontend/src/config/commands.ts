@@ -3,6 +3,7 @@ import {
   Home,
   Wallet,
   Shield,
+  ShieldCheck,
   Library,
   Calendar,
   LayoutDashboard,
@@ -30,6 +31,7 @@ import {
   Plus,
   ShoppingCart,
   ListOrdered,
+  FileUp,
 } from 'lucide-react';
 
 export type CommandSection = 'navigation' | 'actions' | 'settings';
@@ -270,6 +272,40 @@ export const navigationCommands: Command[] = [
     href: '/security/archives',
     keywords: ['arquivos', 'documentos', 'criptografados'],
     section: 'navigation',
+  },
+  {
+    id: 'vault-health',
+    title: 'Saúde do Cofre',
+    description: 'Análise de segurança das senhas',
+    icon: ShieldCheck,
+    href: '/security/health',
+    keywords: ['saude', 'cofre', 'seguranca', 'senhas', 'analise', 'health'],
+    section: 'navigation',
+  },
+  {
+    id: 'bank-statement-import',
+    title: 'Importar Extrato Bancário',
+    description: 'Importar transações de arquivo OFX ou CSV',
+    icon: FileUp,
+    href: '/bank-reconciliation/import',
+    keywords: ['importar', 'extrato', 'bancario', 'ofx', 'csv', 'transacoes'],
+    section: 'navigation',
+  },
+  {
+    id: '2fa-setup',
+    title: 'Autenticação de Dois Fatores',
+    description: 'Configurar ou desativar 2FA/TOTP',
+    icon: ShieldCheck,
+    href: '/settings/two-factor',
+    keywords: [
+      '2fa',
+      'totp',
+      'autenticacao',
+      'dois fatores',
+      'seguranca',
+      'configuracoes',
+    ],
+    section: 'settings',
   },
 
   // Library Module

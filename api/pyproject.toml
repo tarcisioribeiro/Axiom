@@ -135,6 +135,8 @@ module = [
     "mysql.*",
     "bank_reconciliation",
     "bank_reconciliation.*",
+    "qrcode",
+    "qrcode.*",
 ]
 ignore_missing_imports = true
 
