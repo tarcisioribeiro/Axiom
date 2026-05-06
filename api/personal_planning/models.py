@@ -55,6 +55,25 @@ PRIORITY_CHOICES = (
     ("critical", "Crítica"),
 )
 
+UNIT_CHOICES = (
+    ("vez", "vez"),
+    ("minuto", "minuto"),
+    ("hora", "hora"),
+    ("ml", "ml"),
+    ("copo", "copo"),
+    ("litro", "litro"),
+    ("página", "página"),
+    ("km", "km"),
+    ("metro", "metro"),
+    ("passo", "passo"),
+    ("repetição", "repetição"),
+    ("série", "série"),
+    ("capítulo", "capítulo"),
+    ("exercício", "exercício"),
+    ("dose", "dose"),
+    ("comprimido", "comprimido"),
+)
+
 GOAL_STATUS_CHOICES = (
     ("active", "Ativo"),
     ("completed", "Concluído"),
@@ -169,9 +188,9 @@ class RoutineTask(BaseModel):
     )
     unit = models.CharField(
         max_length=50,
+        choices=UNIT_CHOICES,
         default="vez",
         verbose_name="Unidade",
-        help_text="Ex: copos, minutos, paginas, vezes",
     )
     # Campos de agendamento de horário
     default_time = models.TimeField(
@@ -227,7 +246,7 @@ class RoutineTask(BaseModel):
     class Meta:
         verbose_name = "Tarefa Rotineira"
         verbose_name_plural = "Tarefas Rotineiras"
-        ordering = ["category", "name"]
+        ordering = ["default_time", "category", "name"]
         indexes = [
             models.Index(fields=["owner", "is_active"]),
             models.Index(fields=["periodicity", "is_active"]),
