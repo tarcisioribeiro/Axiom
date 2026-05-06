@@ -27,6 +27,7 @@ import {
   PERIODICITY_CHOICES,
   WEEKDAY_CHOICES,
   PRIORITY_CHOICES,
+  UNIT_CHOICES,
   type RoutineTask,
 } from '@/types';
 
@@ -67,7 +68,7 @@ export function RoutineTaskForm({
           priority: task.priority ?? 'medium',
           allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
           target_quantity: task.target_quantity,
-          unit: task.unit,
+          unit: task.unit as RoutineTaskFormData['unit'],
           owner: task.owner,
           default_time: task.default_time ? task.default_time.substring(0, 5) : null,
           closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
@@ -116,7 +117,7 @@ export function RoutineTaskForm({
         priority: task.priority ?? 'medium',
         allowed_skips_per_month: task.allowed_skips_per_month ?? 0,
         target_quantity: task.target_quantity,
-        unit: task.unit,
+        unit: task.unit as RoutineTaskFormData['unit'],
         owner: task.owner,
         default_time: task.default_time ? task.default_time.substring(0, 5) : null,
         closing_time: task.closing_time ? task.closing_time.substring(0, 5) : null,
@@ -455,11 +456,23 @@ export function RoutineTaskForm({
 
         <div>
           <Label htmlFor="unit">Unidade *</Label>
-          <Input
-            id="unit"
-            {...register('unit')}
-            placeholder="Ex: vez, minutos, páginas..."
-          />
+          <Select
+            value={watch('unit') ?? 'vez'}
+            onValueChange={(value) =>
+              setValue('unit', value as (typeof UNIT_CHOICES)[number]['value'])
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {UNIT_CHOICES.map((u) => (
+                <SelectItem key={u.value} value={u.value}>
+                  {u.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.unit && (
             <p className="mt-1 text-sm text-destructive">{errors.unit.message}</p>
           )}
@@ -510,7 +523,7 @@ export function RoutineTaskForm({
               id="interval_hours"
               type="number"
               min="1"
-              max="12"
+              max="23"
               value={watch('interval_hours') || ''}
               onChange={(e) =>
                 setValue(
