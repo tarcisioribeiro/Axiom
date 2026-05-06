@@ -16,9 +16,12 @@ interface AuthState {
   isInitializing: boolean;
   isAdmin: boolean;
   error: string | null;
+  requires2FA: boolean;
+  tempToken: string | null;
 
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
+  verify2FA: (code: string) => Promise<void>;
   logout: () => void;
   loadUserData: () => Promise<void>;
   setError: (error: string | null) => void;
@@ -34,13 +37,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitializing: true,
   isAdmin: false,
   error: null,
+  requires2FA: false,
+  tempToken: null,
 
   login: async (credentials: LoginCredentials) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, requires2FA: false, tempToken: null });
 
     try {
       const loginResponse = await authService.login(credentials);
-      logger.log('[AuthStore] Login successful:', loginResponse.message);
+      logger.log('[AuthStore] Login response:', loginResponse.message);
+
+      // Se 2FA requerido, pausar fluxo e aguardar código
+      if (loginResponse.requires_2fa) {
+        set({
+          isLoading: false,
+          requires2FA: true,
+          tempToken: loginResponse.temp_token,
+        });
+        return;
+      }
 
       // Os tokens agora são httpOnly cookies definidos pelo backend
       // Podemos fazer chamadas imediatamente
@@ -122,6 +137,84 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  verify2FA: async (code: string) => {
+    const { tempToken } = get();
+    if (!tempToken) {
+      set({ error: 'Sessão 2FA expirada. Faça login novamente.' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      await authService.verifyTwoFactor(tempToken, code);
+
+      // Cookies JWT agora setados pelo backend — carregar dados do usuário
+      const { permissions: permissionsResponse, is_superuser } =
+        await authService.getUserPermissions();
+
+      if (is_superuser) {
+        const adminUser: User = {
+          id: 0,
+          username: '',
+          email: '',
+          first_name: 'Admin',
+          last_name: '',
+          groups: [],
+          is_superuser: true,
+        };
+        authService.saveUserData(adminUser);
+        authService.savePermissions([]);
+        set({
+          user: adminUser,
+          permissions: [],
+          isAuthenticated: true,
+          isAdmin: true,
+          isLoading: false,
+          requires2FA: false,
+          tempToken: null,
+        });
+        return;
+      }
+
+      authService.savePermissions(permissionsResponse);
+      let user: User = {
+        id: 1,
+        username: '',
+        email: '',
+        first_name: '',
+        last_name: '',
+        groups: ['Membros'],
+      };
+      try {
+        const memberData = await membersService.getCurrentUserMember();
+        if (memberData?.name) {
+          const nameParts = memberData.name.trim().split(' ');
+          user = {
+            ...user,
+            first_name: nameParts[0] || '',
+            last_name: nameParts.slice(1).join(' ') || '',
+          };
+        }
+      } catch {
+        // não bloquear
+      }
+      authService.saveUserData(user);
+      set({
+        user,
+        permissions: permissionsResponse,
+        isAuthenticated: true,
+        isAdmin: false,
+        isLoading: false,
+        requires2FA: false,
+        tempToken: null,
+      });
+    } catch (error: unknown) {
+      const err = error as Error;
+      set({ error: err.message || 'Código inválido.', isLoading: false });
+      throw error;
+    }
+  },
+
   logout: () => {
     authService.logout();
     set({
@@ -130,6 +223,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: false,
       isAdmin: false,
       error: null,
+      requires2FA: false,
+      tempToken: null,
     });
   },
 
