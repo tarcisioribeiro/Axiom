@@ -11,6 +11,7 @@ spec:
   # Green starts at 0 replicas; the blue-green-switch.sh script scales it up
   # to match the active slot's replica count before switching traffic.
   replicas: 0
+  revisionHistoryLimit: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
