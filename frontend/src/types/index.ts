@@ -734,6 +734,7 @@ export interface Member {
   is_creditor: boolean;
   is_benefited: boolean;
   active: boolean;
+  email_verified?: boolean;
   birth_date?: string | null;
   address?: string | null;
   profile_photo?: string | null;
