@@ -65,6 +65,8 @@ repos:
           - rapidfuzz==3.14.3
           - pgvector==0.3.3
           - psycopg2-binary==2.9.10
+          - pyotp==2.9.0
+          - qrcode==8.0
 
   # Commit message linting
   - repo: local

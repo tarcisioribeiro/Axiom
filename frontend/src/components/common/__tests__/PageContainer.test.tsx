@@ -19,6 +19,10 @@ vi.mock('framer-motion', async (importOriginal) => {
   };
 });
 
+vi.mock('@/components/common/EmailVerificationBanner', () => ({
+  EmailVerificationBanner: () => null,
+}));
+
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
