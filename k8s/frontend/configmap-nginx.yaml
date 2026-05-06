@@ -22,11 +22,6 @@ data:
         gzip_min_length 1024;
         gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
 
-        # ES module files (.mjs) must be served as JavaScript or browsers refuse to load them as workers
-        types {
-            application/javascript mjs;
-        }
-
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-XSS-Protection "1; mode=block" always;
