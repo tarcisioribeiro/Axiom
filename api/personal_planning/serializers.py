@@ -23,6 +23,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     priority_display = serializers.CharField(
         source="get_priority_display", read_only=True
     )
+    unit_display = serializers.CharField(source="get_unit_display", read_only=True)
     completion_rate = serializers.SerializerMethodField()
     total_completions = serializers.SerializerMethodField()
 
@@ -47,6 +48,7 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "allowed_skips_per_month",
             "target_quantity",
             "unit",
+            "unit_display",
             "custom_weekdays",
             "custom_month_days",
             "times_per_week",
