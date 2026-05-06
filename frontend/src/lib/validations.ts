@@ -785,7 +785,7 @@ export const routineTaskSchema = z
         'dose',
         'comprimido',
       ],
-      { errorMap: () => ({ message: 'Selecione uma unidade válida' }) }
+      { message: 'Selecione uma unidade válida' }
     ),
     owner: z.number().positive(requiredError('Proprietario')),
   })
