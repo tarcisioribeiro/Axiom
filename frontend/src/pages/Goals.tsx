@@ -145,18 +145,24 @@ function GoalCard({
           </CircularProgress>
           <div className="flex-1 space-y-1">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progresso</span>
+              <span className="text-muted-foreground">
+                {t('pages.goals.columns.progress')}
+              </span>
               <span className="font-medium">
                 {displayValue} / {goal.target_value}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Dias ativos</span>
+              <span className="text-muted-foreground">
+                {t('pages.goals.columns.activeDays')}
+              </span>
               <span className="font-medium">{goal.days_active}</span>
             </div>
             {goal.deadline && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Prazo</span>
+                <span className="text-muted-foreground">
+                  {t('pages.goals.columns.deadline')}
+                </span>
                 <span
                   className={cn(
                     'flex items-center gap-1 font-medium',

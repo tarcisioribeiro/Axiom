@@ -4,29 +4,35 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Container,
   Eye,
   EyeOff,
   HelpCircle,
   Lock,
   Pencil,
   RefreshCw,
+  RotateCcw,
+  Server,
   X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { adminService } from '@/services/admin-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { ConfigCategory, SystemConfig } from '@/types';
-
-const CATEGORY_LABELS: Record<ConfigCategory, string> = {
-  llm: 'LLM / Agentes',
-  email: 'Email',
-  backup: 'Backup',
-  app: 'Aplicação',
-  security: 'Segurança',
-  storage: 'Armazenamento (MinIO)',
-};
 
 const CATEGORY_ORDER: ConfigCategory[] = [
   'llm',
@@ -221,6 +227,7 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
 };
 
 function VariableHelperPopover({ configKey }: { configKey: string }) {
+  const { t } = useTranslation();
   const helper = VARIABLE_HELPERS[configKey];
   if (!helper) return null;
 
@@ -230,7 +237,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
         <button
           type="button"
           className="flex-shrink-0 rounded p-0.5 text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-          aria-label="Ver ajuda"
+          aria-label={t('pages.adminConfig.helpAriaLabel')}
         >
           <HelpCircle className="h-3.5 w-3.5" />
         </button>
@@ -241,7 +248,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
         {helper.accepted_values && (
           <div>
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Valores aceitos
+              {t('pages.adminConfig.popover.acceptedValues')}
             </span>
             <p className="mt-0.5 font-mono text-xs text-foreground/80">
               {helper.accepted_values}
@@ -252,7 +259,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
         {helper.default_value && (
           <div>
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Padrão
+              {t('pages.adminConfig.popover.default')}
             </span>
             <p className="mt-0.5 font-mono text-xs text-foreground/80">
               {helper.default_value}
@@ -263,7 +270,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
         {helper.example && (
           <div>
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Exemplo
+              {t('pages.adminConfig.popover.example')}
             </span>
             <p className="mt-0.5 font-mono text-xs text-foreground/80">
               {helper.example}
@@ -285,6 +292,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
 }
 
 function ConfigRow({ config }: { config: SystemConfig }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const [showValue, setShowValue] = useState(false);
@@ -300,8 +308,8 @@ function ConfigRow({ config }: { config: SystemConfig }) {
     mutationFn: (val: string) => adminService.updateConfig(config.key, val),
     onSuccess: () => {
       toast({
-        title: 'Configuração salva',
-        description: `${config.label} atualizado com sucesso.`,
+        title: t('pages.adminConfig.configSaved'),
+        description: t('pages.adminConfig.configSavedDesc', { label: config.label }),
       });
       setEditing(false);
       setValue('');
@@ -309,7 +317,7 @@ function ConfigRow({ config }: { config: SystemConfig }) {
     },
     onError: (err: Error) => {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.adminConfig.configError'),
         description: err.message,
         variant: 'destructive',
       });
@@ -324,8 +332,8 @@ function ConfigRow({ config }: { config: SystemConfig }) {
   const handleSave = () => {
     if (value === '') {
       toast({
-        title: 'Valor vazio',
-        description: 'Informe um valor para salvar.',
+        title: t('pages.adminConfig.emptyValue'),
+        description: t('pages.adminConfig.emptyValueDesc'),
         variant: 'destructive',
       });
       return;
@@ -335,7 +343,11 @@ function ConfigRow({ config }: { config: SystemConfig }) {
 
   const displayValue = () => {
     if (!config.is_configured)
-      return <span className="italic text-muted-foreground">Não configurado</span>;
+      return (
+        <span className="italic text-muted-foreground">
+          {t('pages.adminConfig.notConfigured')}
+        </span>
+      );
     if (config.is_secret)
       return <span className="text-muted-foreground">••••••••</span>;
     return <span className="font-mono text-sm">{config.masked_value}</span>;
@@ -350,12 +362,13 @@ function ConfigRow({ config }: { config: SystemConfig }) {
             <VariableHelperPopover configKey={config.key} />
             {config.is_secret && (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                <Lock className="h-3 w-3" /> Secreto
+                <Lock className="h-3 w-3" /> {t('pages.adminConfig.secretBadge')}
               </span>
             )}
             {config.requires_restart && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
-                <AlertTriangle className="h-3 w-3" /> Requer reinicialização
+                <AlertTriangle className="h-3 w-3" />{' '}
+                {t('pages.adminConfig.requiresRestartBadge')}
               </span>
             )}
           </div>
@@ -375,8 +388,8 @@ function ConfigRow({ config }: { config: SystemConfig }) {
                   onChange={(e) => setValue(e.target.value)}
                   placeholder={
                     config.is_secret
-                      ? 'Digite o novo valor (não será exibido)'
-                      : 'Novo valor'
+                      ? t('pages.adminConfig.newSecretPlaceholder')
+                      : t('pages.adminConfig.newValuePlaceholder')
                   }
                   className="w-full rounded-lg border border-border bg-background px-3 py-1.5 pr-10 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   onKeyDown={(e) => {
@@ -408,7 +421,7 @@ function ConfigRow({ config }: { config: SystemConfig }) {
                 ) : (
                   <Check className="h-3.5 w-3.5" />
                 )}
-                Salvar
+                {t('pages.adminConfig.save')}
               </button>
               <button
                 onClick={() => setEditing(false)}
@@ -422,7 +435,9 @@ function ConfigRow({ config }: { config: SystemConfig }) {
               {displayValue()}
               {config.updated_by_username && (
                 <span className="text-xs text-muted-foreground">
-                  · atualizado por {config.updated_by_username}
+                  {t('pages.adminConfig.updatedBy', {
+                    username: config.updated_by_username,
+                  })}
                 </span>
               )}
             </div>
@@ -434,7 +449,7 @@ function ConfigRow({ config }: { config: SystemConfig }) {
           <button
             onClick={handleEdit}
             className="mt-0.5 flex-shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            title="Editar"
+            title={t('pages.adminConfig.editTitle')}
           >
             <Pencil className="h-4 w-4" />
           </button>
@@ -446,7 +461,7 @@ function ConfigRow({ config }: { config: SystemConfig }) {
         <div className="mt-2 flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2">
           <AlertTriangle className="h-4 w-4 flex-shrink-0 text-blue-500" />
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            Esta configuração requer reinicialização do container para ter efeito.
+            {t('pages.adminConfig.restartRequired')}
           </p>
         </div>
       )}
@@ -461,6 +476,7 @@ function CategorySection({
   category: ConfigCategory;
   configs: SystemConfig[];
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
 
   return (
@@ -471,7 +487,7 @@ function CategorySection({
       >
         <div className="flex items-center gap-3">
           <span className="font-semibold text-foreground">
-            {CATEGORY_LABELS[category]}
+            {t(`pages.adminConfig.categories.${category}`)}
           </span>
           <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
             {configs.length}
@@ -494,7 +510,135 @@ function CategorySection({
   );
 }
 
+type RestartMode = 'docker' | 'kubernetes';
+
+function RestartModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [mode, setMode] = useState<RestartMode>('docker');
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const logout = useAuthStore((s) => s.logout);
+
+  const mutation = useMutation({
+    mutationFn: () => adminService.restartAll(mode),
+    onSuccess: () => {
+      let seconds = 5;
+      setCountdown(seconds);
+      const interval = setInterval(() => {
+        seconds -= 1;
+        setCountdown(seconds);
+        if (seconds <= 0) {
+          clearInterval(interval);
+          logout();
+          void navigate('/login');
+        }
+      }, 1000);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: t('pages.adminConfig.restartError'),
+        description: err.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const handleClose = () => {
+    if (mutation.isPending || countdown !== null) return;
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <RotateCcw className="h-5 w-5 text-primary" />
+            {t('pages.adminConfig.restartModal.title')}
+          </DialogTitle>
+          <DialogDescription>
+            {t('pages.adminConfig.restartModal.desc')}
+          </DialogDescription>
+        </DialogHeader>
+
+        {countdown !== null ? (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <RefreshCw className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
+              {t('pages.adminConfig.restartModal.countdown', { seconds: countdown })}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <button
+              type="button"
+              onClick={() => setMode('docker')}
+              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-colors ${
+                mode === 'docker'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+              }`}
+            >
+              <Container className="h-6 w-6" />
+              {t('pages.adminConfig.restartModal.docker')}
+              <span className="text-xs font-normal opacity-70">
+                {t('pages.adminConfig.restartModal.dockerDesc')}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('kubernetes')}
+              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-colors ${
+                mode === 'kubernetes'
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+              }`}
+            >
+              <Server className="h-6 w-6" />
+              {t('pages.adminConfig.restartModal.kubernetes')}
+              <span className="text-xs font-normal opacity-70">
+                {t('pages.adminConfig.restartModal.kubernetesDesc')}
+              </span>
+            </button>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={mutation.isPending || countdown !== null}
+          >
+            {t('pages.adminConfig.restartModal.cancel')}
+          </Button>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending || countdown !== null}
+            variant="destructive"
+          >
+            {mutation.isPending ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                {t('pages.adminConfig.restartModal.sending')}
+              </>
+            ) : (
+              <>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                {t('pages.adminConfig.restartModal.confirm')}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminConfig() {
+  const { t } = useTranslation();
+  const [restartOpen, setRestartOpen] = useState(false);
+
   const { data: configs, isLoading } = useQuery({
     queryKey: ['admin', 'config'],
     queryFn: () => adminService.getConfigs(),
@@ -521,19 +665,29 @@ export default function AdminConfig() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Configurações do Sistema</h1>
-        <p className="text-sm text-muted-foreground">
-          Valores armazenados no banco de dados. Secrets nunca são exibidos.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t('pages.adminConfig.title')}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t('pages.adminConfig.subtitle')}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setRestartOpen(true)}
+          className="flex-shrink-0 gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          {t('pages.adminConfig.restartBtn')}
+        </Button>
       </div>
 
       <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
         <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500" />
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          Configurações marcadas com{' '}
-          <span className="font-semibold">"Requer reinicialização"</span> só terão
-          efeito após reiniciar o container da API.
+          {t('pages.adminConfig.restartWarning')}
         </p>
       </div>
 
@@ -542,6 +696,8 @@ export default function AdminConfig() {
           <CategorySection key={cat} category={cat} configs={grouped[cat]} />
         ) : null
       )}
+
+      <RestartModal open={restartOpen} onClose={() => setRestartOpen(false)} />
     </div>
   );
 }

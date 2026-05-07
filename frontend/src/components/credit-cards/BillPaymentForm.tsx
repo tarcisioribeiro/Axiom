@@ -1,6 +1,7 @@
 import { CreditCard, Calendar, Wallet, Building2, AlertCircle } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -25,6 +26,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const remaining = parseFloat(bill.total_amount) - parseFloat(bill.paid_amount);
 
   const {
@@ -76,14 +78,16 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {/* Bill Summary */}
       <div className="space-y-3 rounded-lg bg-muted/50 p-4">
         <h4 className="text-sm font-semibold text-muted-foreground">
-          Resumo da Fatura
+          {t('pages.creditCardBills.payForm.billSummary')}
         </h4>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Cartão</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.cardLabel')}
+              </p>
               <p className="text-sm font-medium">
                 {cardholderName} {cardNumber}
               </p>
@@ -94,7 +98,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Conta de Débito</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.debitAccountLabel')}
+              </p>
               <p className="text-sm font-medium">{accountName}</p>
             </div>
           </div>
@@ -102,7 +108,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Período</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.periodLabel')}
+              </p>
               <p className="text-sm font-medium">
                 {translate('months', bill.month)}/{bill.year}
               </p>
@@ -112,7 +120,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">Vencimento</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.dueDateLabel')}
+              </p>
               <p className="text-sm font-medium">
                 {bill.due_date ? formatDate(bill.due_date) : 'N/A'}
               </p>
@@ -123,17 +133,23 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         <div className="mt-3 border-t pt-3">
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-xs text-muted-foreground">Valor Total</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.totalAmountLabel')}
+              </p>
               <p className="text-lg font-bold">{formatCurrency(bill.total_amount)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Já Pago</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.alreadyPaidLabel')}
+              </p>
               <p className="text-lg font-bold text-success">
                 {formatCurrency(bill.paid_amount)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Saldo Restante</p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.creditCardBills.payForm.remainingLabel')}
+              </p>
               <p className="text-lg font-bold text-primary">
                 {formatCurrency(remaining.toString())}
               </p>
@@ -146,7 +162,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {remaining <= 0 && (
         <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4">
           <AlertCircle className="h-5 w-5 text-warning" />
-          <p className="text-sm text-warning">Esta fatura já foi totalmente paga.</p>
+          <p className="text-sm text-warning">
+            {t('pages.creditCardBills.payForm.alreadyPaidWarning')}
+          </p>
         </div>
       )}
 
@@ -154,7 +172,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
       {remaining > 0 && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Valor do Pagamento *</Label>
+            <Label htmlFor="amount">
+              {t('pages.creditCardBills.payForm.paymentAmountLabel')}
+            </Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 R$
@@ -168,11 +188,13 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
                 className="pl-10"
                 {...register('amount', {
                   valueAsNumber: true,
-                  required: 'Valor é obrigatório',
-                  min: { value: 0.01, message: 'Valor deve ser maior que zero' },
+                  required: true,
+                  min: { value: 0.01, message: '' },
                   max: {
                     value: remaining,
-                    message: `Valor não pode exceder ${formatCurrency(remaining.toString())}`,
+                    message: t('pages.creditCardBills.payForm.maxHint', {
+                      value: formatCurrency(remaining.toString()),
+                    }),
                   },
                 })}
                 disabled={isLoading}
@@ -182,27 +204,33 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               <p className="text-xs text-destructive">{errors.amount.message}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              Máximo: {formatCurrency(remaining.toString())}
+              {t('pages.creditCardBills.payForm.maxHint', {
+                value: formatCurrency(remaining.toString()),
+              })}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="payment_date">Data do Pagamento *</Label>
+            <Label htmlFor="payment_date">
+              {t('pages.creditCardBills.payForm.paymentDateLabel')}
+            </Label>
             <DatePicker
               value={watch('payment_date')}
               onChange={(date) =>
                 setValue('payment_date', date ? formatLocalDate(date) : '')
               }
-              placeholder="Selecione a data do pagamento"
+              placeholder={t('pages.creditCardBills.payForm.paymentDatePlaceholder')}
               disabled={isLoading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Observações</Label>
+            <Label htmlFor="notes">
+              {t('pages.creditCardBills.payForm.notesLabel')}
+            </Label>
             <Textarea
               id="notes"
-              placeholder="Observações opcionais sobre o pagamento..."
+              placeholder={t('pages.creditCardBills.payForm.notesPlaceholder')}
               {...register('notes')}
               disabled={isLoading}
               rows={3}
@@ -213,7 +241,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         {remaining > 0 && (
           <Button
@@ -222,7 +250,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             className="gap-2"
           >
             <Wallet className="h-4 w-4" />
-            {isLoading ? 'Processando...' : 'Pagar Fatura'}
+            {isLoading
+              ? t('pages.creditCardBills.payForm.processing')
+              : t('pages.creditCardBills.payForm.payBtn')}
           </Button>
         )}
       </div>

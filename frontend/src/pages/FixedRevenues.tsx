@@ -55,18 +55,18 @@ const REVENUE_CATEGORIES = Object.entries(TRANSLATIONS.revenueCategories).map(
 );
 
 const MONTHS = [
-  { value: '01', label: 'Janeiro' },
-  { value: '02', label: 'Fevereiro' },
-  { value: '03', label: 'Março' },
-  { value: '04', label: 'Abril' },
-  { value: '05', label: 'Maio' },
-  { value: '06', label: 'Junho' },
-  { value: '07', label: 'Julho' },
-  { value: '08', label: 'Agosto' },
-  { value: '09', label: 'Setembro' },
-  { value: '10', label: 'Outubro' },
-  { value: '11', label: 'Novembro' },
-  { value: '12', label: 'Dezembro' },
+  { value: '01' },
+  { value: '02' },
+  { value: '03' },
+  { value: '04' },
+  { value: '05' },
+  { value: '06' },
+  { value: '07' },
+  { value: '08' },
+  { value: '09' },
+  { value: '10' },
+  { value: '11' },
+  { value: '12' },
 ];
 
 function getDefaultMonth(): string {
@@ -272,7 +272,9 @@ export default function FixedRevenues() {
       label: t('pages.fixedRevenues.columns.status'),
       render: (item) => (
         <Badge variant={item.is_active ? 'default' : 'secondary'}>
-          {item.is_active ? 'Ativa' : 'Inativa'}
+          {item.is_active
+            ? t('pages.fixedRevenues.form.isActiveLabel')
+            : t('pages.fixedRevenues.form.isInactiveLabel')}
         </Badge>
       ),
     },
@@ -306,25 +308,25 @@ export default function FixedRevenues() {
       {stats && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Modelos Ativos"
+            title={t('pages.fixedRevenues.stats.activeModels')}
             value={stats.active_templates}
             icon={<Calendar className="h-5 w-5" />}
             variant="default"
           />
           <StatCard
-            title="Total do Mês"
+            title={t('pages.fixedRevenues.stats.monthTotal')}
             value={formatCurrency(stats.current_month.total_amount)}
             icon={<DollarSign className="h-5 w-5" />}
             variant="success"
           />
           <StatCard
-            title="Recebidas / Pendentes"
+            title={t('pages.fixedRevenues.stats.receivedPending')}
             value={`${stats.current_month.received_count} / ${stats.current_month.pending_count}`}
             icon={<TrendingUp className="h-5 w-5" />}
             variant={stats.current_month.pending_count > 0 ? 'warning' : 'success'}
           />
           <StatCard
-            title="Vs. Mês Anterior"
+            title={t('pages.fixedRevenues.stats.vsPreviousMonth')}
             value={formatCurrency(
               Math.abs(
                 stats.current_month.total_amount - stats.previous_month.total_amount
@@ -376,19 +378,21 @@ export default function FixedRevenues() {
           <>
             {/* Card 2: Comprometimento */}
             <div className="rounded-lg border bg-card p-4">
-              <p className="text-sm font-medium">Receita mensal fixa prevista</p>
+              <p className="text-sm font-medium">
+                {t('pages.fixedRevenues.stats.monthlyDesc')}
+              </p>
               <p className="mt-1 text-2xl font-bold text-success">
                 {formatCurrency(totalMonthlyFixed)}
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                {activeRevenues.length} receitas ativas recorrentes todo mês
+                {activeRevenues.length} {t('pages.fixedRevenues.stats.activeCount')}
               </p>
             </div>
 
             {/* Card 3: Calendário */}
             <div className="rounded-lg border bg-card p-4">
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Calendário de recebimentos
+                {t('pages.fixedRevenues.stats.scheduleTitle')}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
@@ -475,7 +479,9 @@ export default function FixedRevenues() {
           </DialogHeader>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Descrição *</Label>
+              <Label htmlFor="description">
+                {t('pages.fixedRevenues.form.descriptionLabel')}
+              </Label>
               <Input
                 id="description"
                 required
@@ -483,12 +489,14 @@ export default function FixedRevenues() {
                 onChange={(e) =>
                   setFormData((p) => ({ ...p, description: e.target.value }))
                 }
-                placeholder="Ex: Salário"
+                placeholder={t('pages.fixedRevenues.form.descriptionPlaceholder')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="default_value">Valor Padrão *</Label>
+                <Label htmlFor="default_value">
+                  {t('pages.fixedRevenues.form.defaultAmountLabel')}
+                </Label>
                 <Input
                   id="default_value"
                   type="number"
@@ -506,7 +514,9 @@ export default function FixedRevenues() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="due_day">Dia de Recebimento *</Label>
+                <Label htmlFor="due_day">
+                  {t('pages.fixedRevenues.form.dueDayLabel')}
+                </Label>
                 <Input
                   id="due_day"
                   type="number"
@@ -524,13 +534,13 @@ export default function FixedRevenues() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Categoria *</Label>
+              <Label>{t('pages.fixedRevenues.form.categoryLabel')}</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={t('common.actions.select')} />
                 </SelectTrigger>
                 <SelectContent>
                   {REVENUE_CATEGORIES.map(({ key, label }) => (
@@ -542,7 +552,7 @@ export default function FixedRevenues() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Conta *</Label>
+              <Label>{t('pages.fixedRevenues.form.accountLabel')}</Label>
               <Select
                 value={formData.account ? String(formData.account) : ''}
                 onValueChange={(v) =>
@@ -550,7 +560,9 @@ export default function FixedRevenues() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma conta" />
+                  <SelectValue
+                    placeholder={t('pages.fixedRevenues.form.accountPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((a) => (
@@ -562,12 +574,12 @@ export default function FixedRevenues() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">{t('pages.fixedRevenues.form.notesLabel')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes ?? ''}
                 onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
-                placeholder="Observações opcionais..."
+                placeholder={t('pages.fixedRevenues.form.notesPlaceholder')}
               />
             </div>
             <div className="flex items-center gap-3">
@@ -579,7 +591,7 @@ export default function FixedRevenues() {
                 }
               />
               <Label htmlFor="is_active" className="cursor-pointer">
-                Receita ativa
+                {t('pages.fixedRevenues.form.isActiveLabel')}
               </Label>
             </div>
             <div className="flex items-center gap-3">
@@ -591,7 +603,7 @@ export default function FixedRevenues() {
                 }
               />
               <Label htmlFor="allow_value_edit" className="cursor-pointer">
-                Permitir editar valor ao lançar
+                {t('pages.fixedRevenues.form.allowValueEditLabel')}
               </Label>
             </div>
             <DialogFooter>
@@ -639,6 +651,7 @@ function LaunchRevenuesDialog({
   onSuccess,
 }: LaunchDialogProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState(getDefaultMonth);
   const [revenueValues, setRevenueValues] = useState<Record<number, number>>({});
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -672,12 +685,12 @@ function LaunchRevenuesDialog({
           value: revenueValues[id] ?? 0,
         })),
       });
-      toast({ title: 'Receitas lançadas com sucesso!' });
+      toast({ title: t('pages.fixedRevenues.created') });
       onSuccess();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao lançar receitas',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -690,15 +703,13 @@ function LaunchRevenuesDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Lançar Receitas do Mês</DialogTitle>
-          <DialogDescription>
-            Selecione o mês e confirme os valores para gerar as receitas.
-          </DialogDescription>
+          <DialogTitle>{t('pages.fixedRevenues.launchBtn')}</DialogTitle>
+          <DialogDescription>{t('pages.fixedRevenues.launchDesc')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-3">
           <div className="flex-1 space-y-1">
-            <Label>Mês</Label>
+            <Label>{t('pages.fixedRevenues.form.monthLabel')}</Label>
             <Select
               value={monthPart}
               onValueChange={(m) => setSelectedMonth(`${yearPart}-${m}`)}
@@ -707,16 +718,16 @@ function LaunchRevenuesDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {MONTHS.map((m) => (
+                {MONTHS.map((m, i) => (
                   <SelectItem key={m.value} value={m.value}>
-                    {m.label}
+                    {t(`pages.budgets.months.${i}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="w-28 space-y-1">
-            <Label>Ano</Label>
+            <Label>{t('pages.fixedRevenues.form.yearLabel')}</Label>
             <Select
               value={yearPart}
               onValueChange={(y) => setSelectedMonth(`${y}-${monthPart}`)}
@@ -781,13 +792,15 @@ function LaunchRevenuesDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            {t('common.actions.cancel')}
           </Button>
           <Button
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || selectedIds.size === 0}
           >
-            {isSubmitting ? 'Lançando...' : 'Lançar Receitas'}
+            {isSubmitting
+              ? t('common.actions.saving')
+              : t('pages.fixedRevenues.launchBtn')}
           </Button>
         </DialogFooter>
       </DialogContent>

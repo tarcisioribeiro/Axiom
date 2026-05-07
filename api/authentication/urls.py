@@ -7,10 +7,16 @@ from .cookie_auth import (
     logout_view,
 )
 from .views import (
+    ChangePasswordView,
     EmailVerificationConfirmView,
     EmailVerificationSendView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    TwoFactorActivateView,
+    TwoFactorDisableView,
+    TwoFactorSetupView,
+    TwoFactorStatusView,
+    TwoFactorVerifyView,
     create_user_with_member,
     get_available_users,
     get_current_user,
@@ -59,4 +65,15 @@ urlpatterns = [
         EmailVerificationConfirmView.as_view(),
         name="email-verification-confirm",
     ),
+    path(
+        "users/change-password/",
+        ChangePasswordView.as_view(),
+        name="change-password",
+    ),
+    # 2FA / TOTP
+    path("users/2fa/setup/", TwoFactorSetupView.as_view(), name="2fa-setup"),
+    path("users/2fa/activate/", TwoFactorActivateView.as_view(), name="2fa-activate"),
+    path("users/2fa/verify/", TwoFactorVerifyView.as_view(), name="2fa-verify"),
+    path("users/2fa/disable/", TwoFactorDisableView.as_view(), name="2fa-disable"),
+    path("users/2fa/status/", TwoFactorStatusView.as_view(), name="2fa-status"),
 ]

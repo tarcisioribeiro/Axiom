@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +52,7 @@ export function StoredAccountForm({
   onCancel,
   isLoading = false,
 }: StoredAccountFormProps) {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showSecondPassword, setShowSecondPassword] = useState(false);
 
@@ -94,21 +96,29 @@ export function StoredAccountForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="name">Nome *</Label>
-          <Input id="name" {...register('name')} placeholder="Ex: Conta Banco X" />
+          <Label htmlFor="name">{t('pages.storedAccounts.form.nameLabel')}</Label>
+          <Input
+            id="name"
+            {...register('name')}
+            placeholder={t('pages.storedAccounts.form.namePlaceholder')}
+          />
           {errors.name && (
             <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="institution_name">Instituição *</Label>
+          <Label htmlFor="institution_name">
+            {t('pages.storedAccounts.form.institutionLabel')}
+          </Label>
           <Select
             value={watch('institution_name') || ''}
             onValueChange={(value) => setValue('institution_name', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione uma instituição" />
+              <SelectValue
+                placeholder={t('pages.storedAccounts.form.institutionPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {INSTITUTIONS.map((inst) => (
@@ -126,7 +136,9 @@ export function StoredAccountForm({
         </div>
 
         <div>
-          <Label htmlFor="account_type">Tipo de Conta *</Label>
+          <Label htmlFor="account_type">
+            {t('pages.storedAccounts.form.typeLabel')}
+          </Label>
           <Select
             value={watch('account_type')}
             onValueChange={(value) =>
@@ -155,11 +167,13 @@ export function StoredAccountForm({
         </div>
 
         <div>
-          <Label htmlFor="account_number">Número da Conta *</Label>
+          <Label htmlFor="account_number">
+            {t('pages.storedAccounts.form.numberLabel')}
+          </Label>
           <Input
             id="account_number"
             {...register('account_number')}
-            placeholder="Ex: 12345-6"
+            placeholder={t('pages.storedAccounts.form.numberPlaceholder')}
           />
           {errors.account_number && (
             <p className="mt-1 text-sm text-destructive">
@@ -169,15 +183,21 @@ export function StoredAccountForm({
         </div>
 
         <div>
-          <Label htmlFor="agency">Agência</Label>
-          <Input id="agency" {...register('agency')} placeholder="Ex: 1234" />
+          <Label htmlFor="agency">{t('pages.storedAccounts.form.agencyLabel')}</Label>
+          <Input
+            id="agency"
+            {...register('agency')}
+            placeholder={t('pages.storedAccounts.form.agencyPlaceholder')}
+          />
           {errors.agency && (
             <p className="mt-1 text-sm text-destructive">{errors.agency.message}</p>
           )}
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="password">Senha de Acesso</Label>
+          <Label htmlFor="password">
+            {t('pages.storedAccounts.form.password1Label')}
+          </Label>
           <div className="relative">
             <Input
               id="password"
@@ -212,7 +232,9 @@ export function StoredAccountForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="digital_password">Senha Digital (Cartão/Token)</Label>
+          <Label htmlFor="digital_password">
+            {t('pages.storedAccounts.form.password2Label')}
+          </Label>
           <div className="relative">
             <Input
               id="digital_password"
@@ -246,7 +268,7 @@ export function StoredAccountForm({
         {financeAccounts.length > 0 && (
           <div className="col-span-2">
             <Label htmlFor="finance_account">
-              Conta Financeira Vinculada (Opcional)
+              {t('pages.storedAccounts.form.financeAccountLabel')}
             </Label>
             <Select
               value={watch('finance_account')?.toString() || 'none'}
@@ -258,10 +280,10 @@ export function StoredAccountForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Nenhuma" />
+                <SelectValue placeholder={t('common.actions.none')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhuma</SelectItem>
+                <SelectItem value="none">{t('common.actions.none')}</SelectItem>
                 {financeAccounts.map((acc) => (
                   <SelectItem key={acc.id} value={acc.id.toString()}>
                     {acc.account_name}
@@ -270,17 +292,17 @@ export function StoredAccountForm({
               </SelectContent>
             </Select>
             <p className="mt-1 text-xs">
-              Vincule esta conta armazenada a uma conta do módulo financeiro
+              {t('pages.storedAccounts.form.financeAccountHint')}
             </p>
           </div>
         )}
 
         <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.storedAccounts.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Notas adicionais sobre a conta..."
+            placeholder={t('pages.storedAccounts.form.notesPlaceholder')}
             rows={3}
           />
           {errors.notes && (
@@ -291,16 +313,16 @@ export function StoredAccountForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

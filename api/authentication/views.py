@@ -134,6 +134,7 @@ def get_current_user(request: Request) -> Response:
             "is_creditor": member.is_creditor,
             "is_benefited": member.is_benefited,
             "active": member.active,
+            "email_verified": member.email_verified,
         }
     except Member.DoesNotExist:
         member_data = None
@@ -314,9 +315,8 @@ def create_user_with_member(request: Request) -> Response:
                     ]
                 )
                 try:
-                    _verification_url = (
-                        f"{getattr(settings, 'SITE_URL', '')}/verify-email/{_token}/"
-                    )
+                    _site_url = getattr(settings, "SITE_URL", "")
+                    _verification_url = f"{_site_url}/verify-email?token={_token}"
                     _html_message = render_to_string(
                         "email/email_verification.html",
                         {
@@ -565,14 +565,13 @@ class EmailVerificationSendView(APIView):
             return Response({"message": "E-mail já verificado."})
 
         token = uuid.uuid4()
-        member.email_verification_token = token
-        member.email_verification_sent_at = timezone.now()
-        member.save(
-            update_fields=["email_verification_token", "email_verification_sent_at"]
+        Member.objects.filter(pk=member.pk).update(
+            email_verification_token=token,
+            email_verification_sent_at=timezone.now(),
         )
 
         site_url = getattr(settings, "SITE_URL", "")
-        verification_url = f"{site_url}/verify-email/{token}/"
+        verification_url = f"{site_url}/verify-email?token={token}"
 
         try:
             html_message = render_to_string(
@@ -599,11 +598,7 @@ class EmailVerificationSendView(APIView):
             )
 
         return Response(
-            {
-                "message": (
-                    "E-mail de verificação enviado. " "Verifique sua caixa de entrada."
-                )
-            }
+            {"message": "E-mail de verificação enviado. Verifique sua caixa."}
         )
 
 
@@ -675,3 +670,311 @@ class EmailVerificationConfirmView(APIView):
         )
 
         return Response({"message": "E-mail verificado com sucesso!"})
+
+
+# ============================================================================
+# CHANGE PASSWORD VIEW
+# ============================================================================
+
+
+class ChangePasswordView(APIView):
+    """
+    POST /api/v1/users/change-password/
+
+    Altera a senha do usuário autenticado.
+    Body: { "current_password": "...", "new_password": "...",
+    "confirm_password": "..." }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        user = cast(User, request.user)
+        current_password = request.data.get("current_password", "")
+        new_password = request.data.get("new_password", "")
+        confirm_password = request.data.get("confirm_password", "")
+
+        if not all([current_password, new_password, confirm_password]):
+            return Response(
+                {"error": "Todos os campos são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Senha atual incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"error": "As senhas não coincidem."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as e:
+            return Response(
+                {"error": "Senha inválida.", "details": list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"message": "Senha alterada com sucesso."})
+
+
+# ============================================================================
+# 2FA / TOTP VIEWS
+# ============================================================================
+
+
+class TwoFactorSetupView(APIView):
+    """
+    GET /api/v1/users/2fa/setup/
+
+    Gera (ou retorna existente pendente) um secret TOTP e retorna QR code em base64.
+    Só funciona se 2FA ainda não estiver ativo para o usuário.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        import base64
+        import io
+
+        import pyotp
+        import qrcode
+
+        from .models import TOTPDevice
+
+        user = cast(User, request.user)
+
+        # Se já existe device ativo, rejeitar
+        try:
+            device = user.totp_device  # type: ignore[attr-defined]
+            if device.is_active:
+                return Response(
+                    {"error": "2FA já está ativado para esta conta."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except TOTPDevice.DoesNotExist:
+            device = TOTPDevice.objects.create(
+                user=user,
+                secret=pyotp.random_base32(),
+            )
+
+        uri = device.generate_provisioning_uri()
+
+        qr = qrcode.make(uri)
+        img_buffer = io.BytesIO()
+        qr.save(img_buffer, format="PNG")
+        qr_base64 = base64.b64encode(img_buffer.getvalue()).decode()
+
+        return Response(
+            {
+                "secret": device.secret,
+                "qr_code": f"data:image/png;base64,{qr_base64}",
+                "manual_entry_key": device.secret,
+            }
+        )
+
+
+class TwoFactorActivateView(APIView):
+    """
+    POST /api/v1/users/2fa/activate/
+    Body: { "code": "123456" }
+
+    Ativa 2FA após o usuário confirmar o primeiro código TOTP válido.
+    Retorna backup codes (exibição única — não armazenados em plaintext).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        from django.utils import timezone
+
+        from .models import TOTPDevice
+
+        user = cast(User, request.user)
+        code = (request.data.get("code") or "").strip()
+
+        if not code:
+            return Response(
+                {"error": "Código é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            device = user.totp_device  # type: ignore[attr-defined]
+        except TOTPDevice.DoesNotExist:
+            return Response(
+                {"error": "Nenhum setup de 2FA pendente. Acesse /2fa/setup/ primeiro."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if device.is_active:
+            return Response(
+                {"error": "2FA já está ativado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not device.verify_token(code):
+            return Response(
+                {"error": "Código inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        plaintext_codes, hashed_codes = TOTPDevice.generate_backup_codes()
+        device.is_active = True
+        device.backup_codes = hashed_codes
+        device.activated_at = timezone.now()
+        device.save(update_fields=["is_active", "backup_codes", "activated_at"])
+
+        return Response(
+            {
+                "message": "2FA ativado com sucesso.",
+                "backup_codes": plaintext_codes,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class TwoFactorVerifyView(APIView):
+    """
+    POST /api/v1/users/2fa/verify/
+    Body: { "temp_token": "...", "code": "123456" }
+
+    Valida o código TOTP (ou backup code) durante o login de dois fatores.
+    Se válido, emite os cookies JWT e conclui o login.
+    Chamado pelo frontend após receber requires_2fa=true do endpoint de login.
+    """
+
+    permission_classes = []
+    authentication_classes = []
+
+    def post(self, request: Request) -> Response:
+        from django.conf import settings
+        from django.core.cache import cache
+
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        from .models import TOTPDevice
+
+        temp_token = (request.data.get("temp_token") or "").strip()
+        code = (request.data.get("code") or "").strip()
+
+        if not temp_token or not code:
+            return Response(
+                {"error": "temp_token e code são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        cache_key = f"2fa_temp:{temp_token}"
+        user_id = cache.get(cache_key)
+        if not user_id:
+            return Response(
+                {"error": "Token expirado. Faça login novamente."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = User.objects.get(pk=user_id)
+            device = user.totp_device  # type: ignore[attr-defined]
+        except (User.DoesNotExist, TOTPDevice.DoesNotExist):
+            cache.delete(cache_key)
+            return Response(
+                {"error": "Usuário ou device não encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validar código TOTP ou backup code
+        valid = device.verify_token(code) or device.verify_backup_code(code)
+        if not valid:
+            return Response(
+                {"error": "Código inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Consumir temp token
+        cache.delete(cache_key)
+
+        # Emitir cookies JWT
+        refresh = RefreshToken.for_user(user)
+        response = Response(
+            {"message": "Login realizado com sucesso"},
+            status=status.HTTP_200_OK,
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=str(refresh.access_token),
+            max_age=60 * 15,
+            httponly=True,
+            secure=settings.DEBUG is False,
+            samesite="Strict",
+            path="/",
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=str(refresh),
+            max_age=60 * 60,
+            httponly=True,
+            secure=settings.DEBUG is False,
+            samesite="Strict",
+            path="/api/v1/authentication/",
+        )
+
+        return response
+
+
+class TwoFactorDisableView(APIView):
+    """
+    POST /api/v1/users/2fa/disable/
+    Body: { "password": "senha_atual" }
+
+    Desativa 2FA após confirmação de senha.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        from .models import TOTPDevice
+
+        user = cast(User, request.user)
+        password = request.data.get("password", "")
+
+        if not user.check_password(password):
+            return Response(
+                {"error": "Senha incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        TOTPDevice.objects.filter(user=user).delete()
+        return Response(
+            {"message": "2FA desativado com sucesso."}, status=status.HTTP_200_OK
+        )
+
+
+class TwoFactorStatusView(APIView):
+    """
+    GET /api/v1/users/2fa/status/
+
+    Retorna se 2FA está ativo para o usuário autenticado.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: Request) -> Response:
+        from .models import TOTPDevice
+
+        user = cast(User, request.user)
+        try:
+            device = user.totp_device  # type: ignore[attr-defined]
+            is_active = device.is_active
+        except TOTPDevice.DoesNotExist:
+            is_active = False
+
+        return Response({"is_active": is_active})

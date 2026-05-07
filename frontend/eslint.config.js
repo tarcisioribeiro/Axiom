@@ -90,6 +90,9 @@ export default defineConfig([
       'src/test/**/*.ts',
     ],
     extends: [tseslint.configs.disableTypeChecked],
+    rules: {
+      'max-lines': 'off',
+    },
   },
   {
     // Enforce semantic spacing tokens in layout/common/pages layers.
