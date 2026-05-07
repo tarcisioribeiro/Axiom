@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Filter, RefreshCw, Search, X } from 'lucide-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import i18n from '@/i18n';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 import type { AdminLog } from '@/types';
@@ -59,8 +60,8 @@ function LogRow({ log }: { log: AdminLog }) {
   return (
     <tr className="border-b border-border transition-colors hover:bg-accent/30">
       <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-        <div>{date.toLocaleDateString('pt-BR')}</div>
-        <div className="font-mono">{date.toLocaleTimeString('pt-BR')}</div>
+        <div>{date.toLocaleDateString(i18n.language)}</div>
+        <div className="font-mono">{date.toLocaleTimeString(i18n.language)}</div>
       </td>
       <td className="px-4 py-3">
         <span className="font-medium text-foreground">{log.username ?? '—'}</span>
@@ -138,7 +139,7 @@ export default function AdminLogs() {
           <p className="text-sm text-muted-foreground">
             {data
               ? t('pages.adminLogs.subtitle', {
-                  records: data.count.toLocaleString('pt-BR'),
+                  records: data.count.toLocaleString(i18n.language),
                 })
               : t('pages.adminLogs.loading')}
           </p>
@@ -267,7 +268,7 @@ export default function AdminLogs() {
               {t('pages.adminLogs.page', {
                 page,
                 total: totalPages,
-                records: data?.count.toLocaleString('pt-BR'),
+                records: data?.count.toLocaleString(i18n.language),
               })}
             </p>
             <div className="flex items-center gap-2">

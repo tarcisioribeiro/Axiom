@@ -581,7 +581,7 @@ function RestartModal({ open, onClose }: { open: boolean; onClose: () => void })
               }`}
             >
               <Container className="h-6 w-6" />
-              Docker
+              {t('pages.adminConfig.restartModal.docker')}
               <span className="text-xs font-normal opacity-70">
                 {t('pages.adminConfig.restartModal.dockerDesc')}
               </span>
@@ -596,7 +596,7 @@ function RestartModal({ open, onClose }: { open: boolean; onClose: () => void })
               }`}
             >
               <Server className="h-6 w-6" />
-              Kubernetes
+              {t('pages.adminConfig.restartModal.kubernetes')}
               <span className="text-xs font-normal opacity-70">
                 {t('pages.adminConfig.restartModal.kubernetesDesc')}
               </span>
@@ -687,11 +687,7 @@ export default function AdminConfig() {
       <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
         <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-500" />
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          Configurações marcadas com{' '}
-          <span className="font-semibold">"Requer reinicialização"</span> só terão
-          efeito após reiniciar o container da API. Use o botão{' '}
-          <span className="font-semibold">"Reiniciar e Aplicar"</span> para aplicar as
-          mudanças e atualizar o <code className="text-xs">.env</code>.
+          {t('pages.adminConfig.restartWarning')}
         </p>
       </div>
 
