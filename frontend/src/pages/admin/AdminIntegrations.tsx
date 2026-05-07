@@ -136,7 +136,18 @@ function OllamaRestartPanel() {
 
   const mutation = useMutation({
     mutationFn: () => adminService.restartAll(),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (!data.success) {
+        const details = Object.entries(data.results)
+          .map(([pod, result]) => `${pod}: ${result}`)
+          .join('\n');
+        toast({
+          title: 'Falha ao reiniciar',
+          description: details || data.message,
+          variant: 'destructive',
+        });
+        return;
+      }
       setRedirecting(true);
       toast({
         title: 'Reiniciando todos os pods',
