@@ -140,8 +140,19 @@ function OllamaRestartPanel() {
   const [redirecting, setRedirecting] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: () => adminService.restartAll('kubernetes'),
-    onSuccess: () => {
+    mutationFn: () => adminService.restartAll(),
+    onSuccess: (data) => {
+      if (!data.success) {
+        const details = Object.entries(data.results)
+          .map(([pod, result]) => `${pod}: ${result}`)
+          .join('\n');
+        toast({
+          title: t('pages.adminIntegrations.restartError'),
+          description: details || data.message,
+          variant: 'destructive',
+        });
+        return;
+      }
       setRedirecting(true);
       toast({
         title: t('pages.adminIntegrations.restartingToast'),
