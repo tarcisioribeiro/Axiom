@@ -575,20 +575,26 @@ class AdminRestartAllView(AdminBaseView):
     """
 
     def post(self, request: Request) -> Response:
-        mode = (request.data.get("mode") or "kubernetes").lower()
+        mode = (request.data.get("mode") or "auto").lower()
 
         if mode == "docker":
             result = _restart_via_docker_socket()
-        else:
+        elif mode == "kubernetes":
             result = _restart_deployments()
+        else:
+            # auto: usa Kubernetes se o token existir, senão Docker socket
+            sa_token = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            if os.path.exists(sa_token):
+                result = _restart_deployments()
+            else:
+                result = _restart_via_docker_socket()
 
-        if result["success"]:
-            return Response(
-                {"message": result["message"], "results": result.get("results", {})}
-            )
         return Response(
-            {"error": result["message"], "results": result.get("results", {})},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            {
+                "success": result["success"],
+                "message": result["message"],
+                "results": result.get("results", {}),
+            }
         )
 
 
