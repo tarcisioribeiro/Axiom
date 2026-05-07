@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, UserCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export function AuthorForm({
   onPhotoSelect,
   isLoading = false,
 }: AuthorFormProps) {
+  const { t } = useTranslation();
   const [photoPreview, setPhotoPreview] = useState<string | null>(
     author?.photo ?? null
   );
@@ -110,7 +112,7 @@ export function AuthorForm({
             {photoPreview ? (
               <img
                 src={photoPreview}
-                alt="Foto do autor"
+                alt={t('pages.authors.form.photoAlt')}
                 className="h-24 w-24 rounded-full object-cover"
               />
             ) : (
@@ -123,7 +125,7 @@ export function AuthorForm({
                 type="button"
                 onClick={handleRemovePhoto}
                 className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
-                aria-label="Remover foto"
+                aria-label={t('pages.authors.form.removePhoto')}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -142,14 +144,20 @@ export function AuthorForm({
               htmlFor="author-photo"
               className="cursor-pointer text-sm text-primary underline-offset-4 hover:underline"
             >
-              {photoPreview ? 'Trocar foto' : 'Adicionar foto'}
+              {photoPreview
+                ? t('pages.authors.form.changePhoto')
+                : t('pages.authors.form.addPhoto')}
             </label>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="name">Nome *</Label>
-          <Input id="name" {...register('name')} placeholder="Nome completo do autor" />
+          <Label htmlFor="name">{t('pages.authors.form.nameLabel')}</Label>
+          <Input
+            id="name"
+            {...register('name')}
+            placeholder={t('pages.authors.form.namePlaceholder')}
+          />
           {errors.name && (
             <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
@@ -157,12 +165,12 @@ export function AuthorForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="birth_year">Ano de Nascimento</Label>
+            <Label htmlFor="birth_year">{t('pages.authors.form.birthYearLabel')}</Label>
             <Input
               id="birth_year"
               type="number"
               {...register('birth_year', { valueAsNumber: true })}
-              placeholder="Ex: 384"
+              placeholder={t('pages.authors.form.birthYearPlaceholder')}
             />
             {errors.birth_year && (
               <p className="mt-1 text-sm text-destructive">
@@ -172,13 +180,15 @@ export function AuthorForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="birth_era">Era (Nascimento)</Label>
+            <Label htmlFor="birth_era">{t('pages.authors.form.birthEraLabel')}</Label>
             <Select
               value={watch('birth_era')}
               onValueChange={(value) => setValue('birth_era', value as 'AC' | 'DC')}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a era" />
+                <SelectValue
+                  placeholder={t('pages.authors.form.birthEraPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (
@@ -198,12 +208,12 @@ export function AuthorForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="death_year">Ano de Falecimento</Label>
+            <Label htmlFor="death_year">{t('pages.authors.form.deathYearLabel')}</Label>
             <Input
               id="death_year"
               type="number"
               {...register('death_year', { valueAsNumber: true })}
-              placeholder="Ex: 322 (opcional)"
+              placeholder={t('pages.authors.form.deathYearPlaceholder')}
             />
             {errors.death_year && (
               <p className="mt-1 text-sm text-destructive">
@@ -213,7 +223,7 @@ export function AuthorForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="death_era">Era (Falecimento)</Label>
+            <Label htmlFor="death_era">{t('pages.authors.form.deathEraLabel')}</Label>
             <Select
               value={watch('death_era') || ''}
               onValueChange={(value) =>
@@ -221,7 +231,9 @@ export function AuthorForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a era (opcional)" />
+                <SelectValue
+                  placeholder={t('pages.authors.form.deathEraPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (
@@ -240,7 +252,9 @@ export function AuthorForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="nationality">Nacionalidade *</Label>
+          <Label htmlFor="nationality">
+            {t('pages.authors.form.nationalityLabel')}
+          </Label>
           <Select
             value={watch('nationality')}
             onValueChange={(value) => setValue('nationality', value)}
@@ -264,11 +278,11 @@ export function AuthorForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="biography">Biografia</Label>
+          <Label htmlFor="biography">{t('pages.authors.form.biographyLabel')}</Label>
           <Textarea
             id="biography"
             {...register('biography')}
-            placeholder="Informações sobre o autor..."
+            placeholder={t('pages.authors.form.biographyPlaceholder')}
             rows={4}
           />
           {errors.biography && (
@@ -279,16 +293,16 @@ export function AuthorForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

@@ -163,7 +163,9 @@ export default function Revenues() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
-            <SelectItem value="received">Recebido</SelectItem>
+            <SelectItem value="received">
+              {t('pages.revenues.stats.received')}
+            </SelectItem>
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>
@@ -204,7 +206,7 @@ export default function Revenues() {
               {formatCurrency(totalRevenues)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {revenues.length} lançamentos
+              {t('pages.revenues.entriesCount', { count: revenues.length })}
             </p>
           </CardContent>
         </Card>

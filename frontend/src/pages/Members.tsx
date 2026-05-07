@@ -213,26 +213,32 @@ export default function Members() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">{members.length}</div>
-              <p className="mt-xs text-xs text-muted-foreground">cadastrados</p>
+              <p className="mt-xs text-xs text-muted-foreground">
+                {t('pages.members.stats.registeredSubtitle')}
+              </p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden border-t-2 border-t-success/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-              <p className="text-sm font-medium">Ativos</p>
+              <p className="text-sm font-medium">{t('pages.members.stats.active')}</p>
               <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
                 <UserCheck className="h-4 w-4 text-success" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">{activeCount}</div>
-              <p className="mt-xs text-xs text-muted-foreground">membros ativos</p>
+              <p className="mt-xs text-xs text-muted-foreground">
+                {t('pages.members.stats.activeSubtitle')}
+              </p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden border-t-2 border-t-blue-500/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-              <p className="text-sm font-medium">Credores</p>
+              <p className="text-sm font-medium">
+                {t('pages.members.stats.creditors')}
+              </p>
               <div className="rounded-lg bg-blue-500/10 p-sm ring-1 ring-blue-500/20">
                 <Banknote className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
@@ -241,13 +247,17 @@ export default function Members() {
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {creditorCount}
               </div>
-              <p className="mt-xs text-xs text-muted-foreground">podem emprestar</p>
+              <p className="mt-xs text-xs text-muted-foreground">
+                {t('pages.members.stats.creditorsSubtitle')}
+              </p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden border-t-2 border-t-emerald-500/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-              <p className="text-sm font-medium">Beneficiários</p>
+              <p className="text-sm font-medium">
+                {t('pages.members.stats.beneficiaries')}
+              </p>
               <div className="rounded-lg bg-emerald-500/10 p-sm ring-1 ring-emerald-500/20">
                 <HandCoins className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -256,7 +266,9 @@ export default function Members() {
               <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {beneficiaryCount}
               </div>
-              <p className="mt-xs text-xs text-muted-foreground">podem receber</p>
+              <p className="mt-xs text-xs text-muted-foreground">
+                {t('pages.members.stats.beneficiariesSubtitle')}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -346,7 +358,9 @@ export default function Members() {
                   )}
                   {member.monthly_income && (
                     <div className="rounded bg-muted/50 px-2 py-1 text-xs">
-                      <span className="text-muted-foreground">Renda: </span>
+                      <span className="text-muted-foreground">
+                        {t('pages.members.stats.income')}{' '}
+                      </span>
                       <span className="font-medium">
                         {parseFloat(member.monthly_income).toLocaleString('pt-BR', {
                           style: 'currency',

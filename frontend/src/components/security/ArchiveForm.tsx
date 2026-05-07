@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,23 +18,17 @@ import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
 
-const ARCHIVE_CATEGORIES = [
-  { value: 'personal', label: 'Pessoal' },
-  { value: 'financial', label: 'Financeiro' },
-  { value: 'legal', label: 'Jurídico' },
-  { value: 'medical', label: 'Médico' },
-  { value: 'tax', label: 'Fiscal' },
-  { value: 'work', label: 'Trabalho' },
-  { value: 'other', label: 'Outro' },
-];
+const ARCHIVE_CATEGORY_KEYS = [
+  'personal',
+  'financial',
+  'legal',
+  'medical',
+  'tax',
+  'work',
+  'other',
+] as const;
 
-const ARCHIVE_TYPES = [
-  { value: 'text', label: 'Texto' },
-  { value: 'pdf', label: 'PDF' },
-  { value: 'image', label: 'Imagem' },
-  { value: 'document', label: 'Documento' },
-  { value: 'other', label: 'Outro' },
-];
+const ARCHIVE_TYPE_KEYS = ['text', 'pdf', 'image', 'document', 'other'] as const;
 
 const FILE_TYPES_ACCEPT = [
   '.txt',
@@ -71,6 +66,7 @@ export function ArchiveForm({
   onCancel,
   isLoading = false,
 }: ArchiveFormProps) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
     register,
@@ -151,11 +147,11 @@ export function ArchiveForm({
     <form onSubmit={handleFormSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="title">Título *</Label>
+          <Label htmlFor="title">{t('pages.archives.form.titleLabel')}</Label>
           <Input
             id="title"
             {...register('title')}
-            placeholder="Nome descritivo do arquivo"
+            placeholder={t('pages.archives.form.titlePlaceholder')}
           />
           {errors.title && (
             <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
@@ -163,7 +159,7 @@ export function ArchiveForm({
         </div>
 
         <div>
-          <Label htmlFor="category">Categoria *</Label>
+          <Label htmlFor="category">{t('pages.archives.form.categoryLabel')}</Label>
           <Select
             value={watch('category')}
             onValueChange={(value) =>
@@ -174,9 +170,9 @@ export function ArchiveForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ARCHIVE_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
+              {ARCHIVE_CATEGORY_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {t(`pages.archives.categories.${key}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -187,7 +183,7 @@ export function ArchiveForm({
         </div>
 
         <div>
-          <Label htmlFor="archive_type">Tipo de Arquivo *</Label>
+          <Label htmlFor="archive_type">{t('pages.archives.form.typeLabel')}</Label>
           <Select
             value={watch('archive_type')}
             onValueChange={(value) =>
@@ -198,9 +194,9 @@ export function ArchiveForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ARCHIVE_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+              {ARCHIVE_TYPE_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {t(`pages.archives.types.${key}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -214,11 +210,13 @@ export function ArchiveForm({
 
         {watch('archive_type') === 'text' ? (
           <div className="col-span-2">
-            <Label htmlFor="text_content">Conteúdo de Texto *</Label>
+            <Label htmlFor="text_content">
+              {t('pages.archives.form.contentLabel')}
+            </Label>
             <Textarea
               id="text_content"
               {...register('text_content')}
-              placeholder="Digite ou cole o conteúdo do texto aqui..."
+              placeholder={t('pages.archives.form.contentPlaceholder')}
               rows={10}
               className="font-mono text-sm"
             />
@@ -233,7 +231,10 @@ export function ArchiveForm({
           </div>
         ) : (
           <div className="col-span-2">
-            <Label htmlFor="file">Arquivo {!archive && '*'}</Label>
+            <Label htmlFor="file">
+              {t('pages.archives.form.fileLabel')}
+              {!archive && ' *'}
+            </Label>
             <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
             {archive ? (
               <p className="mt-1 text-xs text-warning">
@@ -259,11 +260,11 @@ export function ArchiveForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.archives.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Notas adicionais sobre o arquivo..."
+            placeholder={t('pages.archives.form.notesPlaceholder')}
             rows={3}
           />
           {errors.notes && (
@@ -274,16 +275,16 @@ export function ArchiveForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

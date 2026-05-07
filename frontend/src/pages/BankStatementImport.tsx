@@ -7,6 +7,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -56,10 +57,11 @@ interface SummaryData {
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
 function StepIndicator({ current }: { current: Step }) {
+  const { t } = useTranslation();
   const steps: { key: Step; label: string }[] = [
-    { key: 'upload', label: '1. Upload' },
-    { key: 'preview', label: '2. Prévia' },
-    { key: 'summary', label: '3. Resumo' },
+    { key: 'upload', label: t('pages.bankStatementImport.step1') },
+    { key: 'preview', label: t('pages.bankStatementImport.step2') },
+    { key: 'summary', label: t('pages.bankStatementImport.step3') },
   ];
   const order: Record<Step, number> = { upload: 0, preview: 1, summary: 2 };
 
@@ -91,6 +93,7 @@ interface UploadStepProps {
 }
 
 function UploadStep({ accounts, onImported }: UploadStepProps) {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [accountId, setAccountId] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -111,7 +114,10 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
 
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (!ext || !['ofx', 'csv'].includes(ext)) {
-      toast({ title: 'Formato inválido. Use .ofx ou .csv', variant: 'destructive' });
+      toast({
+        title: t('pages.bankStatementImport.upload.invalidFormat'),
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -134,9 +140,9 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Selecionar arquivo</CardTitle>
+        <CardTitle>{t('pages.bankStatementImport.upload.cardTitle')}</CardTitle>
         <CardDescription>
-          Faça upload do seu extrato bancário no formato OFX ou CSV.
+          {t('pages.bankStatementImport.upload.cardDesc')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -167,10 +173,10 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
             ) : (
               <>
                 <p className="text-sm font-medium">
-                  Arraste o arquivo ou clique para selecionar
+                  {t('pages.bankStatementImport.upload.dropPrompt')}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Formatos suportados: .ofx, .csv
+                  {t('pages.bankStatementImport.upload.dropFormats')}
                 </p>
               </>
             )}
@@ -185,10 +191,12 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
 
           {/* Account selector */}
           <div className="space-y-1">
-            <Label>Conta de destino</Label>
+            <Label>{t('pages.bankStatementImport.upload.accountLabel')}</Label>
             <Select value={accountId} onValueChange={setAccountId} required>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione uma conta..." />
+                <SelectValue
+                  placeholder={t('pages.bankStatementImport.upload.accountPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((acc) => (
@@ -207,11 +215,11 @@ function UploadStep({ accounts, onImported }: UploadStepProps) {
             className="w-full"
           >
             {isLoading ? (
-              'Importando...'
+              t('pages.bankStatementImport.upload.importing')
             ) : (
               <>
                 <Upload className="mr-2 h-4 w-4" />
-                Importar e visualizar
+                {t('pages.bankStatementImport.upload.importBtn')}
               </>
             )}
           </Button>
@@ -230,6 +238,7 @@ interface PreviewStepProps {
 }
 
 function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const entries = importData.entries ?? [];
@@ -257,10 +266,15 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>Prévia das transações</CardTitle>
+          <CardTitle>{t('pages.bankStatementImport.preview.cardTitle')}</CardTitle>
           <CardDescription>
-            {pending.length} transação(ões) nova(s) detectada(s).
-            {ignored.length > 0 && ` ${ignored.length} duplicata(s) serão ignoradas.`}
+            {t('pages.bankStatementImport.preview.cardDesc', {
+              pending: pending.length,
+            })}
+            {ignored.length > 0 &&
+              t('pages.bankStatementImport.preview.cardDescIgnored', {
+                ignored: ignored.length,
+              })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -268,11 +282,21 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    {t('pages.bankStatementImport.preview.colDate')}
+                  </TableHead>
+                  <TableHead>
+                    {t('pages.bankStatementImport.preview.colDescription')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('pages.bankStatementImport.preview.colAmount')}
+                  </TableHead>
+                  <TableHead>
+                    {t('pages.bankStatementImport.preview.colType')}
+                  </TableHead>
+                  <TableHead>
+                    {t('pages.bankStatementImport.preview.colStatus')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -308,9 +332,13 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
                     </TableCell>
                     <TableCell>
                       {entry.status === 'ignored' ? (
-                        <Badge variant="secondary">Já existe</Badge>
+                        <Badge variant="secondary">
+                          {t('pages.bankStatementImport.preview.statusExists')}
+                        </Badge>
                       ) : (
-                        <Badge variant="outline">Novo</Badge>
+                        <Badge variant="outline">
+                          {t('pages.bankStatementImport.preview.statusNew')}
+                        </Badge>
                       )}
                     </TableCell>
                   </TableRow>
@@ -321,7 +349,7 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
                       colSpan={5}
                       className="py-8 text-center text-muted-foreground"
                     >
-                      Nenhuma transação encontrada.
+                      {t('pages.bankStatementImport.preview.noTransactions')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -333,10 +361,14 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onBack} disabled={isLoading}>
-          Voltar
+          {t('common.actions.back')}
         </Button>
         <Button onClick={handleConfirm} disabled={isLoading || pending.length === 0}>
-          {isLoading ? 'Processando...' : `Confirmar importação (${pending.length})`}
+          {isLoading
+            ? t('pages.bankStatementImport.preview.processing')
+            : t('pages.bankStatementImport.preview.confirmBtn', {
+                count: pending.length,
+              })}
         </Button>
       </div>
     </div>
@@ -346,6 +378,7 @@ function PreviewStep({ importData, onConfirm, onBack }: PreviewStepProps) {
 // ─── Summary Step ─────────────────────────────────────────────────────────────
 
 function SummaryStep({ summary }: { summary: SummaryData }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -353,32 +386,40 @@ function SummaryStep({ summary }: { summary: SummaryData }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-success" />
-          Importação concluída
+          {t('pages.bankStatementImport.summary.cardTitle')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div className="rounded-lg border p-4 text-center">
             <p className="text-2xl font-bold">{summary.total}</p>
-            <p className="text-xs text-muted-foreground">Total detectado</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.bankStatementImport.summary.totalDetected')}
+            </p>
           </div>
           <div className="rounded-lg border border-success/30 bg-success/5 p-4 text-center">
             <p className="text-2xl font-bold text-success">{summary.imported}</p>
-            <p className="text-xs text-muted-foreground">Importado</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.bankStatementImport.summary.imported')}
+            </p>
           </div>
           <div className="rounded-lg border p-4 text-center">
             <p className="text-2xl font-bold text-muted-foreground">
               {summary.ignored}
             </p>
-            <p className="text-xs text-muted-foreground">Duplicatas ignoradas</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.bankStatementImport.summary.ignoredDuplicates')}
+            </p>
           </div>
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
             <p className="text-2xl font-bold text-primary">{summary.matched}</p>
-            <p className="text-xs text-muted-foreground">Vinculados automaticamente</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.bankStatementImport.summary.autoLinked')}
+            </p>
           </div>
         </div>
         <Button onClick={() => void navigate('/bank-reconciliation')}>
-          Ver extratos importados
+          {t('pages.bankStatementImport.summary.viewImports')}
         </Button>
       </CardContent>
     </Card>
@@ -388,6 +429,7 @@ function SummaryStep({ summary }: { summary: SummaryData }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BankStatementImport() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>('upload');
   const [importData, setImportData] = useState<BankStatementImport | null>(null);
   const [summary, setSummary] = useState<SummaryData | null>(null);
@@ -409,7 +451,10 @@ export default function BankStatementImport() {
 
   return (
     <PageContainer>
-      <PageHeader title="Importar extrato bancário" icon={<ArrowLeftRight />} />
+      <PageHeader
+        title={t('pages.bankStatementImport.title')}
+        icon={<ArrowLeftRight />}
+      />
       <StepIndicator current={step} />
 
       {step === 'upload' && (

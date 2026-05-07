@@ -189,6 +189,8 @@ services:
       - ./api/media:/app/media
       - logs_data:/app/logs  # Volume nomeado evita problemas de permissão de owner (UID 1000)
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket para restart via painel admin
+      - ./.env:/app/mindledger.env  # Bind mount para reescrita de variáveis pelo painel admin
     restart: unless-stopped
     healthcheck:
       test:

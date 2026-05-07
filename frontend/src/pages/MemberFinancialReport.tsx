@@ -224,7 +224,9 @@ export default function MemberFinancialReportPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold">{report.member.name}</h2>
-            <p className="text-sm text-muted-foreground">Relatório financeiro</p>
+            <p className="text-sm text-muted-foreground">
+              {t('pages.memberFinancialReport.subtitle')}
+            </p>
             {appliedStart && appliedEnd && (
               <p className="mt-1 text-xs text-muted-foreground">
                 {formatDate(appliedStart)} a {formatDate(appliedEnd)}
@@ -287,7 +289,7 @@ export default function MemberFinancialReportPage() {
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
         <div className="overflow-hidden rounded-lg border-t-2 border-t-success">
           <StatCard
-            title="Receitas"
+            title={t('pages.memberFinancialReport.revenues')}
             value={formatCurrency(summary.total_revenues)}
             icon={<TrendingUp className="h-5 w-5 text-success" />}
             variant="success"
@@ -295,7 +297,7 @@ export default function MemberFinancialReportPage() {
         </div>
         <div className="overflow-hidden rounded-lg border-t-2 border-t-destructive">
           <StatCard
-            title="Despesas"
+            title={t('pages.memberFinancialReport.expenses')}
             value={formatCurrency(summary.total_expenses)}
             icon={<TrendingDown className="h-5 w-5 text-destructive" />}
             variant="danger"
@@ -303,7 +305,7 @@ export default function MemberFinancialReportPage() {
         </div>
         <div className="overflow-hidden rounded-lg border-t-2 border-t-warning">
           <StatCard
-            title="Valores a Pagar"
+            title={t('pages.memberFinancialReport.payables')}
             value={formatCurrency(summary.total_payables)}
             icon={<Receipt className="h-5 w-5 text-warning" />}
             variant="warning"
@@ -313,17 +315,17 @@ export default function MemberFinancialReportPage() {
 
       <div className="mb-lg grid grid-cols-1 gap-md sm:grid-cols-3">
         <StatCard
-          title="Empréstimos Recebidos"
+          title={t('pages.memberFinancialReport.loansReceived')}
           value={formatCurrency(summary.total_loans_as_benefited)}
           icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
         />
         <StatCard
-          title="Empréstimos Concedidos"
+          title={t('pages.memberFinancialReport.loansGranted')}
           value={formatCurrency(summary.total_loans_as_creditor)}
           icon={<HandCoins className="h-5 w-5 text-muted-foreground" />}
         />
         <StatCard
-          title="Transferências"
+          title={t('pages.memberFinancialReport.transfers')}
           value={formatCurrency(summary.total_transfers)}
           icon={<ArrowLeftRight className="h-5 w-5 text-muted-foreground" />}
         />
@@ -332,7 +334,9 @@ export default function MemberFinancialReportPage() {
       {/* Expense Pie Chart */}
       {pieData.length > 0 && (
         <div className="mb-lg overflow-hidden rounded-lg border bg-card p-md">
-          <h3 className="mb-md text-base font-semibold">Despesas por Categoria</h3>
+          <h3 className="mb-md text-base font-semibold">
+            {t('pages.memberFinancialReport.expensesByCategory')}
+          </h3>
           <ChartContainer
             chartId="member-expenses-by-category"
             data={pieData}
@@ -340,7 +344,7 @@ export default function MemberFinancialReportPage() {
             nameKey="name"
             formatter={(value) => formatCurrency(value.toString())}
             colors={chartColors}
-            emptyMessage="Sem despesas por categoria"
+            emptyMessage={t('pages.memberFinancialReport.noExpensesByCategory')}
             lockChartType="pie"
             height={300}
           />
@@ -375,14 +379,14 @@ export default function MemberFinancialReportPage() {
           {activeTab === 'loans_benefited' && (
             <LoansTable
               items={report.loans_as_benefited}
-              counterpartLabel="Credor"
+              counterpartLabel={t('pages.memberFinancialReport.creditor')}
               counterpartKey="creditor"
             />
           )}
           {activeTab === 'loans_creditor' && (
             <LoansTable
               items={report.loans_as_creditor}
-              counterpartLabel="Beneficiado"
+              counterpartLabel={t('pages.memberFinancialReport.benefited')}
               counterpartKey="benefited"
             />
           )}
@@ -421,16 +425,17 @@ function Td({ children, className = '' }: { children: ReactNode; className?: str
 // ─── Table variants ────────────────────────────────────────────────────────────
 
 function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
+  const { t } = useTranslation();
   return (
     <TableWrapper>
       <thead className="border-b bg-muted/50">
         <tr>
-          <Th>Descrição</Th>
-          <Th>Valor</Th>
-          <Th>Data</Th>
-          <Th>Categoria</Th>
-          <Th>Estabelecimento</Th>
-          <Th>Status</Th>
+          <Th>{t('common.fields.description')}</Th>
+          <Th>{t('common.fields.amount')}</Th>
+          <Th>{t('common.fields.date')}</Th>
+          <Th>{t('common.fields.category')}</Th>
+          <Th>{t('common.fields.merchant')}</Th>
+          <Th>{t('common.fields.status')}</Th>
         </tr>
       </thead>
       <tbody className="divide-y">
@@ -448,7 +453,7 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
               <Td className="text-muted-foreground">{item.merchant || '—'}</Td>
               <Td>
                 <Badge variant={item.payed ? 'default' : 'outline'}>
-                  {item.payed ? 'Pago' : 'Pendente'}
+                  {item.payed ? t('common.status.paid') : t('common.status.pending')}
                 </Badge>
               </Td>
             </tr>
@@ -460,16 +465,17 @@ function ExpensesTable({ items }: { items: MemberReportExpense[] }) {
 }
 
 function RevenuesTable({ items }: { items: MemberReportRevenue[] }) {
+  const { t } = useTranslation();
   return (
     <TableWrapper>
       <thead className="border-b bg-muted/50">
         <tr>
-          <Th>Descrição</Th>
-          <Th>Valor</Th>
-          <Th>Data</Th>
-          <Th>Categoria</Th>
-          <Th>Fonte</Th>
-          <Th>Status</Th>
+          <Th>{t('common.fields.description')}</Th>
+          <Th>{t('common.fields.amount')}</Th>
+          <Th>{t('common.fields.date')}</Th>
+          <Th>{t('common.fields.category')}</Th>
+          <Th>{t('common.fields.source')}</Th>
+          <Th>{t('common.fields.status')}</Th>
         </tr>
       </thead>
       <tbody className="divide-y">
@@ -485,7 +491,9 @@ function RevenuesTable({ items }: { items: MemberReportRevenue[] }) {
               <Td className="text-muted-foreground">{item.source || '—'}</Td>
               <Td>
                 <Badge variant={item.received ? 'default' : 'outline'}>
-                  {item.received ? 'Recebido' : 'Pendente'}
+                  {item.received
+                    ? t('common.fields.received')
+                    : t('common.status.pending')}
                 </Badge>
               </Td>
             </tr>
@@ -505,16 +513,17 @@ function LoansTable({
   counterpartLabel: string;
   counterpartKey: 'creditor' | 'benefited';
 }) {
+  const { t } = useTranslation();
   return (
     <TableWrapper>
       <thead className="border-b bg-muted/50">
         <tr>
-          <Th>Descrição</Th>
-          <Th>Valor</Th>
-          <Th>Valor Pago</Th>
-          <Th>Data</Th>
+          <Th>{t('common.fields.description')}</Th>
+          <Th>{t('common.fields.amount')}</Th>
+          <Th>{t('pages.memberFinancialReport.paidAmount')}</Th>
+          <Th>{t('common.fields.date')}</Th>
           <Th>{counterpartLabel}</Th>
-          <Th>Status</Th>
+          <Th>{t('common.fields.status')}</Th>
         </tr>
       </thead>
       <tbody className="divide-y">
@@ -542,16 +551,17 @@ function LoansTable({
 }
 
 function PayablesTable({ items }: { items: MemberReportPayable[] }) {
+  const { t } = useTranslation();
   return (
     <TableWrapper>
       <thead className="border-b bg-muted/50">
         <tr>
-          <Th>Descrição</Th>
-          <Th>Valor Total</Th>
-          <Th>Valor Pago</Th>
-          <Th>Data</Th>
-          <Th>Vencimento</Th>
-          <Th>Status</Th>
+          <Th>{t('common.fields.description')}</Th>
+          <Th>{t('pages.memberFinancialReport.totalAmount')}</Th>
+          <Th>{t('pages.memberFinancialReport.paidAmount')}</Th>
+          <Th>{t('common.fields.date')}</Th>
+          <Th>{t('pages.memberFinancialReport.dueDate')}</Th>
+          <Th>{t('common.fields.status')}</Th>
         </tr>
       </thead>
       <tbody className="divide-y">
@@ -587,15 +597,16 @@ function PayablesTable({ items }: { items: MemberReportPayable[] }) {
 }
 
 function TransfersTable({ items }: { items: MemberReportTransfer[] }) {
+  const { t } = useTranslation();
   return (
     <TableWrapper>
       <thead className="border-b bg-muted/50">
         <tr>
-          <Th>Descrição</Th>
-          <Th>Valor</Th>
-          <Th>Data</Th>
-          <Th>Tipo</Th>
-          <Th>Status</Th>
+          <Th>{t('common.fields.description')}</Th>
+          <Th>{t('common.fields.amount')}</Th>
+          <Th>{t('common.fields.date')}</Th>
+          <Th>{t('common.fields.type')}</Th>
+          <Th>{t('common.fields.status')}</Th>
         </tr>
       </thead>
       <tbody className="divide-y">
@@ -610,7 +621,9 @@ function TransfersTable({ items }: { items: MemberReportTransfer[] }) {
               <Td>{item.category.toUpperCase()}</Td>
               <Td>
                 <Badge variant={item.transfered ? 'default' : 'outline'}>
-                  {item.transfered ? 'Realizado' : 'Pendente'}
+                  {item.transfered
+                    ? t('common.status.completed')
+                    : t('common.status.pending')}
                 </Badge>
               </Td>
             </tr>

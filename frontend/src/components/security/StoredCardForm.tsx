@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ export function StoredCardForm({
   onCancel,
   isLoading = false,
 }: StoredCardFormProps) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -101,19 +103,23 @@ export function StoredCardForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="name">Nome do Cartão *</Label>
-          <Input id="name" {...register('name')} placeholder="Ex: Cartão Pessoal" />
+          <Label htmlFor="name">{t('pages.storedCards.form.nameLabel')}</Label>
+          <Input
+            id="name"
+            {...register('name')}
+            placeholder={t('pages.storedCards.form.namePlaceholder')}
+          />
           {errors.name && (
             <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="card_number">Número do Cartão *</Label>
+          <Label htmlFor="card_number">{t('pages.storedCards.form.numberLabel')}</Label>
           <Input
             id="card_number"
             {...register('card_number')}
-            placeholder="1234567890123456"
+            placeholder={t('pages.storedCards.form.numberPlaceholder')}
             maxLength={16}
             onChange={(e) => {
               const formatted = formatCardNumber(e.target.value);
@@ -125,7 +131,9 @@ export function StoredCardForm({
               {errors.card_number.message}
             </p>
           )}
-          {!card && <p className="mt-1 text-xs">16 dígitos sem espaços ou hífens</p>}
+          {!card && (
+            <p className="mt-1 text-xs">{t('pages.storedCards.form.numberHint')}</p>
+          )}
           {card && (
             <p className="mt-1 text-xs text-warning">
               Deixe vazio para manter o número atual (criptografado)
@@ -134,11 +142,13 @@ export function StoredCardForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="cardholder_name">Nome do Titular *</Label>
+          <Label htmlFor="cardholder_name">
+            {t('pages.storedCards.form.holderLabel')}
+          </Label>
           <Input
             id="cardholder_name"
             {...register('cardholder_name')}
-            placeholder="Nome como está no cartão"
+            placeholder={t('pages.storedCards.form.holderPlaceholder')}
           />
           {errors.cardholder_name && (
             <p className="mt-1 text-sm text-destructive">
@@ -148,11 +158,11 @@ export function StoredCardForm({
         </div>
 
         <div>
-          <Label htmlFor="security_code">CVV *</Label>
+          <Label htmlFor="security_code">{t('pages.storedCards.form.cvvLabel')}</Label>
           <Input
             id="security_code"
             {...register('security_code')}
-            placeholder="123"
+            placeholder={t('pages.storedCards.form.cvvPlaceholder')}
             maxLength={4}
             onChange={(e) => {
               const formatted = formatCVV(e.target.value);
@@ -172,7 +182,7 @@ export function StoredCardForm({
         </div>
 
         <div>
-          <Label htmlFor="flag">Bandeira *</Label>
+          <Label htmlFor="flag">{t('pages.storedCards.form.brandLabel')}</Label>
           <Select
             value={watch('flag')}
             onValueChange={(value) =>
@@ -196,7 +206,9 @@ export function StoredCardForm({
         </div>
 
         <div>
-          <Label htmlFor="expiration_month">Mês de Validade *</Label>
+          <Label htmlFor="expiration_month">
+            {t('pages.storedCards.form.expiryMonthLabel')}
+          </Label>
           <Select
             value={watch('expiration_month')?.toString()}
             onValueChange={(value) => setValue('expiration_month', parseInt(value))}
@@ -220,7 +232,9 @@ export function StoredCardForm({
         </div>
 
         <div>
-          <Label htmlFor="expiration_year">Ano de Validade *</Label>
+          <Label htmlFor="expiration_year">
+            {t('pages.storedCards.form.expiryYearLabel')}
+          </Label>
           <Select
             value={watch('expiration_year')?.toString()}
             onValueChange={(value) => setValue('expiration_year', parseInt(value))}
@@ -245,7 +259,9 @@ export function StoredCardForm({
 
         {creditCards.length > 0 && (
           <div className="col-span-2">
-            <Label htmlFor="finance_card">Cartão Financeiro Vinculado (Opcional)</Label>
+            <Label htmlFor="finance_card">
+              {t('pages.storedCards.form.financeCardLabel')}
+            </Label>
             <Select
               value={watch('finance_card')?.toString() || 'none'}
               onValueChange={(value) =>
@@ -253,10 +269,10 @@ export function StoredCardForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Nenhum" />
+                <SelectValue placeholder={t('common.actions.none')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="none">{t('common.actions.none')}</SelectItem>
                 {creditCards.map((cc) => (
                   <SelectItem key={cc.id} value={cc.id.toString()}>
                     {cc.name} - {cc.on_card_name}
@@ -265,17 +281,17 @@ export function StoredCardForm({
               </SelectContent>
             </Select>
             <p className="mt-1 text-xs">
-              Vincule este cartão armazenado a um cartão do módulo financeiro
+              {t('pages.storedCards.form.financeCardHint')}
             </p>
           </div>
         )}
 
         <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.storedCards.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Notas adicionais sobre o cartão..."
+            placeholder={t('pages.storedCards.form.notesPlaceholder')}
             rows={3}
           />
           {errors.notes && (
@@ -286,16 +302,16 @@ export function StoredCardForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>
