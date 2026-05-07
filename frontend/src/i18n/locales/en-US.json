@@ -2842,7 +2842,7 @@
     },
     "adminLogs": {
       "title": "Activity Logs",
-      "subtitle": "{{count}} records in total",
+      "subtitle": "{{records}} records in total",
       "loading": "Loading...",
       "refresh": "Refresh",
       "filters": "Filters",
@@ -2860,7 +2860,7 @@
       },
       "loadingLogs": "Loading logs...",
       "noLogs": "No logs found",
-      "page": "Page {{page}} of {{total}} · {{count}} records",
+      "page": "Page {{page}} of {{total}} · {{records}} records",
       "actions": {
         "view": "View",
         "create": "Create",

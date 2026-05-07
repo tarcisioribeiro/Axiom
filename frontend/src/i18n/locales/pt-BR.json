@@ -2951,7 +2951,7 @@
     },
     "adminLogs": {
       "title": "Logs de Atividade",
-      "subtitle": "{{count}} registros no total",
+      "subtitle": "{{records}} registros no total",
       "loading": "Carregando...",
       "refresh": "Atualizar",
       "filters": "Filtros",
@@ -2969,7 +2969,7 @@
       },
       "loadingLogs": "Carregando logs...",
       "noLogs": "Nenhum log encontrado",
-      "page": "Página {{page}} de {{total}} · {{count}} registros",
+      "page": "Página {{page}} de {{total}} · {{records}} registros",
       "actions": {
         "view": "Visualização",
         "create": "Criação",
