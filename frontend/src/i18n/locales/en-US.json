@@ -185,7 +185,15 @@
     "search": "Search...",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "userSettings": "Account settings"
+    "userSettings": "Account settings",
+    "adminPanel": "Admin Panel",
+    "superuser": "Superuser",
+    "adminNav": {
+      "overview": "Overview",
+      "config": "Settings",
+      "integrations": "Integrations",
+      "logs": "Activity Logs"
+    }
   },
   "breadcrumb": {
     "home": "Home",
@@ -283,6 +291,15 @@
       "errorTitle": "Invalid or expired link",
       "errorDesc": "Please request a new verification email in your account settings.",
       "backToLogin": "Back to login"
+    },
+    "twoFactor": {
+      "title": "Two-step verification",
+      "description": "Enter the code from your authenticator app.",
+      "codeLabel": "Verification code",
+      "backupHint": "You can also use a backup code.",
+      "submit": "Verify",
+      "loading": "Verifying...",
+      "back": "← Back to login"
     },
     "register": {
       "subtitle": "Create your account",
@@ -2962,11 +2979,14 @@
       "emptyValue": "Empty value",
       "emptyValueDesc": "Please provide a value to save.",
       "restartError": "Error restarting",
+      "restartWarning": "Settings marked with \"Requires restart\" will only take effect after restarting the API container. Use the \"Restart & Apply\" button to apply the changes and update the .env.",
       "restartModal": {
         "title": "Restart & Apply Settings",
         "desc": "Choose the execution environment. Settings saved in the database will be applied on restart. You will be logged out automatically.",
         "countdown": "Restarting... logging out in {{seconds}}s",
+        "docker": "Docker",
         "dockerDesc": "Restarts the container via socket",
+        "kubernetes": "Kubernetes",
         "kubernetesDesc": "Rollout restart of pods",
         "cancel": "Cancel",
         "sending": "Sending...",
