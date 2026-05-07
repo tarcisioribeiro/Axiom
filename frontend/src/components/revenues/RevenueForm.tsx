@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -43,6 +44,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
   const [eligibleLoans, setEligibleLoans] = useState<Loan[]>([]);
 
@@ -115,15 +117,15 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <Label>Descrição *</Label>
+          <Label>{t('pages.revenues.form.descriptionLabel')}</Label>
           <Input
             {...register('description', { required: true })}
-            placeholder="Ex: Salário mensal"
+            placeholder={t('pages.revenues.form.descriptionPlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Valor *</Label>
+          <Label>{t('pages.revenues.form.valueLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -133,16 +135,16 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Data *</Label>
+          <Label>{t('pages.revenues.form.dateLabel')}</Label>
           <DatePicker
             value={watch('date')}
             onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-            placeholder="Selecione a data"
+            placeholder={t('common.fields.selectDate')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Horário *</Label>
+          <Label>{t('pages.revenues.form.horaryLabel')}</Label>
           <Input
             type="time"
             {...register('horary', { required: true })}
@@ -150,13 +152,13 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Categoria *</Label>
+          <Label>{t('pages.revenues.form.categoryLabel')}</Label>
           <Select
             value={watch('category')}
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
@@ -168,13 +170,13 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Conta *</Label>
+          <Label>{t('pages.revenues.form.accountLabel')}</Label>
           <Select
             value={watch('account')?.toString()}
             onValueChange={(v) => setValue('account', parseInt(v))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((a) => (
@@ -186,15 +188,15 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Fonte</Label>
+          <Label>{t('pages.revenues.form.sourceLabel')}</Label>
           <Input
             {...register('source')}
-            placeholder="Ex: Empresa XYZ"
+            placeholder={t('pages.revenues.form.sourcePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Empréstimo Relacionado (Opcional)</Label>
+          <Label>{t('pages.revenues.form.relatedLoanLabel')}</Label>
           <Select
             value={watch('related_loan')?.toString() || 'none'}
             onValueChange={(v) =>
@@ -203,10 +205,10 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione (opcional)" />
+              <SelectValue placeholder={t('common.fields.select_optional')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Nenhum</SelectItem>
+              <SelectItem value="none">{t('common.actions.none')}</SelectItem>
               {eligibleLoans.map((loan) => (
                 <SelectItem key={loan.id} value={loan.id.toString()}>
                   {loan.description} - Saldo: R$ {loan.remaining_balance || '0.00'}
@@ -214,9 +216,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs">
-            Vincule esta receita a um empréstimo que você está recebendo
-          </p>
+          <p className="text-xs">{t('pages.revenues.form.relatedLoanHint')}</p>
         </div>
         <div className="space-y-2">
           <Label className="flex items-center gap-2">
@@ -226,16 +226,20 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               className="rounded"
               disabled={isLoading}
             />
-            Recebido
+            {t('pages.revenues.form.receivedLabel')}
           </Label>
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : revenue ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : revenue
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

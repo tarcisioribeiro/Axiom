@@ -7,6 +7,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -43,6 +44,7 @@ function ConfidenceBadge({
 }: {
   confidence: BankStatementEntry['match_confidence'];
 }) {
+  const { t } = useTranslation();
   if (!confidence) return <span className="text-muted-foreground">—</span>;
 
   const bars =
@@ -63,7 +65,12 @@ function ConfidenceBadge({
           : 'bg-primary';
 
   return (
-    <div className="flex items-end gap-0.5" title={`Confiança: ${confidence}`}>
+    <div
+      className="flex items-end gap-0.5"
+      title={t('pages.bankReconciliation.detail.confidenceLevel', {
+        level: confidence,
+      })}
+    >
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
@@ -79,6 +86,7 @@ function ConfidenceBadge({
 }
 
 function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) {
+  const { t } = useTranslation();
   const variants: Record<string, string> = {
     pending: 'bg-muted text-muted-foreground border-border',
     matched: 'bg-success/10 text-success border-success/30',
@@ -86,10 +94,10 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
     ignored: 'bg-muted text-muted-foreground border-border',
   };
   const labels: Record<string, string> = {
-    pending: 'Pendente',
-    matched: 'Conciliado',
-    unmatched: 'Divergente',
-    ignored: 'Ignorado',
+    pending: t('pages.bankReconciliation.detail.statusPending'),
+    matched: t('pages.bankReconciliation.detail.statusMatched'),
+    unmatched: t('pages.bankReconciliation.detail.statusUnmatched'),
+    ignored: t('pages.bankReconciliation.detail.statusIgnored'),
   };
   return (
     <span
@@ -101,6 +109,7 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
 }
 
 export default function BankReconciliationDetail() {
+  const { t } = useTranslation();
   const { importId } = useParams<{ importId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -150,7 +159,7 @@ export default function BankReconciliationDetail() {
       const updated = await bankReconciliationService.runMatch(importData.id);
       setImportData(updated);
       setEntries(updated.entries ?? []);
-      toast({ title: 'Conciliação executada com sucesso!' });
+      toast({ title: t('pages.bankReconciliation.detail.runSuccess') });
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
     } finally {
@@ -247,7 +256,7 @@ export default function BankReconciliationDetail() {
       const updated = await bankReconciliationService.getImport(importData.id);
       setImportData(updated);
       setEntries(updated.entries ?? []);
-      toast({ title: 'Vinculação manual realizada com sucesso!' });
+      toast({ title: t('pages.bankReconciliation.detail.linkSuccess') });
     } catch (err) {
       toast({ title: getErrorMessage(err), variant: 'destructive' });
     } finally {
@@ -271,12 +280,12 @@ export default function BankReconciliationDetail() {
   const columns: Column<BankStatementEntry>[] = [
     {
       key: 'date',
-      label: 'Data',
+      label: t('common.fields.date'),
       render: (entry) => formatDate(entry.date),
     },
     {
       key: 'amount',
-      label: 'Valor',
+      label: t('common.fields.amount'),
       render: (entry) => {
         const isDebit = entry.transaction_type === 'debit';
         return (
@@ -300,7 +309,7 @@ export default function BankReconciliationDetail() {
     },
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('common.fields.description'),
       render: (entry) => (
         <span className="block max-w-xs truncate" title={entry.description}>
           {entry.description}
@@ -309,7 +318,7 @@ export default function BankReconciliationDetail() {
     },
     {
       key: 'match',
-      label: 'Sugestão de Match',
+      label: t('pages.bankReconciliation.detail.matchSuggestion'),
       render: (entry) => {
         const match = entry.matched_expense ?? entry.matched_revenue;
         if (!match) return <span className="text-muted-foreground">—</span>;
@@ -323,17 +332,17 @@ export default function BankReconciliationDetail() {
     },
     {
       key: 'match_confidence',
-      label: 'Confiança',
+      label: t('pages.bankReconciliation.detail.confidence'),
       render: (entry) => <ConfidenceBadge confidence={entry.match_confidence} />,
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('common.fields.status'),
       render: (entry) => <EntryStatusBadge status={entry.status} />,
     },
     {
       key: 'actions',
-      label: 'Ações',
+      label: t('common.table.actions'),
       render: (entry) => {
         if (entry.status === 'matched' || entry.status === 'ignored') return null;
         const isUpdating = updatingId === entry.id;
@@ -389,11 +398,11 @@ export default function BankReconciliationDetail() {
               variant="outline"
               className="gap-1"
               disabled={isUpdating}
-              title="Vincular manualmente"
+              title={t('pages.bankReconciliation.detail.linkManually')}
               onClick={() => void openManualMatch(entry)}
             >
               <Link2 className="h-3 w-3" />
-              Vincular
+              {t('pages.bankReconciliation.detail.linkBtn')}
             </Button>
 
             {/* Create expense / revenue pre-filled */}
@@ -404,13 +413,15 @@ export default function BankReconciliationDetail() {
               disabled={isUpdating}
               title={
                 isDebit
-                  ? 'Criar despesa a partir desta entrada'
-                  : 'Criar receita a partir desta entrada'
+                  ? t('pages.bankReconciliation.detail.createExpenseTitle')
+                  : t('pages.bankReconciliation.detail.createRevenueTitle')
               }
               onClick={() => handleCreateFromEntry(entry)}
             >
               <Plus className="h-3 w-3" />
-              {isDebit ? 'Despesa' : 'Receita'}
+              {isDebit
+                ? t('pages.bankReconciliation.detail.createExpenseBtn')
+                : t('pages.bankReconciliation.detail.createRevenueBtn')}
             </Button>
           </div>
         );
@@ -444,7 +455,7 @@ export default function BankReconciliationDetail() {
           onClick={() => navigate('/bank-reconciliation')}
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
-          Voltar
+          {t('common.actions.back')}
         </Button>
       </div>
 
@@ -452,7 +463,9 @@ export default function BankReconciliationDetail() {
         title={importData.original_filename}
         icon={<ArrowLeftRight />}
         action={{
-          label: matchLoading ? 'Conciliando...' : 'Executar Conciliação',
+          label: matchLoading
+            ? t('pages.bankReconciliation.detail.running')
+            : t('pages.bankReconciliation.detail.runMatch'),
           icon: (
             <RefreshCw className={`h-4 w-4 ${matchLoading ? 'animate-spin' : ''}`} />
           ),
@@ -465,9 +478,14 @@ export default function BankReconciliationDetail() {
       {/* Progress bar */}
       <div className="mb-4 rounded-lg border bg-card p-4">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium">Progresso da conciliação</span>
+          <span className="text-sm font-medium">
+            {t('pages.bankReconciliation.detail.progress')}
+          </span>
           <span className="text-sm font-semibold">
-            {importData.matched_count} de {importData.total_entries} transações
+            {t('pages.bankReconciliation.detail.transactions', {
+              matched: importData.matched_count,
+              total: importData.total_entries,
+            })}
           </span>
         </div>
         <div className="h-3 overflow-hidden rounded-full bg-muted">
@@ -477,35 +495,56 @@ export default function BankReconciliationDetail() {
           />
         </div>
         <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-          <span className="text-success">{importData.matched_count} conciliados</span>
-          <span className="text-destructive">
-            {importData.unmatched_count} divergências
+          <span className="text-success">
+            {t('pages.bankReconciliation.detail.matchedCount', {
+              count: importData.matched_count,
+            })}
           </span>
-          <span>{importData.ignored_count} ignorados</span>
-          <span>{pendingCount} pendentes</span>
+          <span className="text-destructive">
+            {t('pages.bankReconciliation.detail.unmatchedCount', {
+              count: importData.unmatched_count,
+            })}
+          </span>
+          <span>
+            {t('pages.bankReconciliation.detail.ignoredCount', {
+              count: importData.ignored_count,
+            })}
+          </span>
+          <span>
+            {t('pages.bankReconciliation.detail.pendingCount', { count: pendingCount })}
+          </span>
         </div>
       </div>
 
       <div className="mb-lg mt-lg grid grid-cols-2 gap-md sm:grid-cols-4">
         <StatCard
-          title="Conciliados"
+          title={t('pages.bankReconciliation.detail.matched')}
           value={importData.matched_count}
           variant="success"
         />
         <StatCard
-          title="Divergências"
+          title={t('pages.bankReconciliation.detail.divergences')}
           value={importData.unmatched_count}
           variant="danger"
         />
-        <StatCard title="Ignorados" value={importData.ignored_count} />
-        <StatCard title="Pendentes" value={pendingCount} variant="warning" />
+        <StatCard
+          title={t('pages.bankReconciliation.detail.ignored')}
+          value={importData.ignored_count}
+        />
+        <StatCard
+          title={t('pages.bankReconciliation.detail.pending')}
+          value={pendingCount}
+          variant="warning"
+        />
       </div>
 
       <div className="mb-md flex items-center gap-md">
         <Badge variant="outline">{importData.file_format.toUpperCase()}</Badge>
         <span className="text-sm text-muted-foreground">
-          {importData.total_entries} transações · importado em{' '}
-          {formatDate(importData.created_at)}
+          {t('pages.bankReconciliation.detail.entryInfo', {
+            total: importData.total_entries,
+            date: formatDate(importData.created_at),
+          })}
         </span>
       </div>
 
@@ -515,8 +554,8 @@ export default function BankReconciliationDetail() {
         keyExtractor={(entry) => entry.id}
         emptyState={{
           icon: <ArrowLeftRight className="h-12 w-12" />,
-          title: 'Nenhuma entrada',
-          message: 'Este extrato não possui transações.',
+          title: t('pages.bankReconciliation.detail.emptyTitle'),
+          message: t('pages.bankReconciliation.detail.emptyMessage'),
         }}
         rowClassName={(entry) => {
           if (entry.status === 'matched')
@@ -539,11 +578,12 @@ export default function BankReconciliationDetail() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Link2 className="h-4 w-4" />
-              Vincular manualmente
+              {t('pages.bankReconciliation.detail.dialogTitle')}
             </DialogTitle>
             <DialogDescription>
-              Selecione uma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
-              existente para vincular a esta entrada do extrato.
+              {candidateLabel === 'despesas'
+                ? t('pages.bankReconciliation.detail.dialogDescExpense')
+                : t('pages.bankReconciliation.detail.dialogDescRevenue')}
             </DialogDescription>
           </DialogHeader>
 
@@ -570,7 +610,11 @@ export default function BankReconciliationDetail() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               className="pl-8"
-              placeholder={`Buscar ${candidateLabel} por descrição...`}
+              placeholder={
+                candidateLabel === 'despesas'
+                  ? t('pages.bankReconciliation.detail.searchExpenses')
+                  : t('pages.bankReconciliation.detail.searchRevenues')
+              }
               value={candidateSearch}
               onChange={(e) => setCandidateSearch(e.target.value)}
             />
@@ -579,12 +623,13 @@ export default function BankReconciliationDetail() {
           <div className="max-h-72 space-y-2 overflow-y-auto">
             {candidateLoading ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Carregando...
+                {t('common.actions.loading')}
               </p>
             ) : candidates.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                Nenhuma {candidateLabel === 'despesas' ? 'despesa' : 'receita'}{' '}
-                encontrada com valor e data próximos.
+                {candidateLabel === 'despesas'
+                  ? t('pages.bankReconciliation.detail.noExpensesFound')
+                  : t('pages.bankReconciliation.detail.noRevenuesFound')}
               </p>
             ) : (
               candidates.map((c) => (
@@ -603,7 +648,7 @@ export default function BankReconciliationDetail() {
                     disabled={updatingId === matchingEntry?.id}
                     onClick={() => void handleManualMatch(c.id)}
                   >
-                    Selecionar
+                    {t('pages.bankReconciliation.detail.linkBtn')}
                   </Button>
                 </div>
               ))
