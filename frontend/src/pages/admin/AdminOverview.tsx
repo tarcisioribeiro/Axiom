@@ -11,6 +11,7 @@ import {
   XCircle,
   Zap,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
@@ -18,22 +19,26 @@ import type { ServiceCheck, ServiceStatus } from '@/types';
 
 const statusConfig: Record<
   ServiceStatus,
-  { icon: React.ElementType; color: string; label: string }
+  { icon: React.ElementType; color: string; statusKey: string }
 > = {
-  healthy: { icon: CheckCircle2, color: 'text-green-500', label: 'Operacional' },
-  unhealthy: { icon: XCircle, color: 'text-destructive', label: 'Com problema' },
-  warning: { icon: AlertTriangle, color: 'text-yellow-500', label: 'Atenção' },
+  healthy: { icon: CheckCircle2, color: 'text-green-500', statusKey: 'healthy' },
+  unhealthy: { icon: XCircle, color: 'text-destructive', statusKey: 'unhealthy' },
+  warning: { icon: AlertTriangle, color: 'text-yellow-500', statusKey: 'warning' },
   not_configured: {
     icon: AlertTriangle,
     color: 'text-muted-foreground',
-    label: 'Não configurado',
+    statusKey: 'not_configured',
   },
   unknown: {
     icon: AlertTriangle,
     color: 'text-muted-foreground',
-    label: 'Desconhecido',
+    statusKey: 'unknown',
   },
-  not_active: { icon: AlertTriangle, color: 'text-muted-foreground', label: 'Inativo' },
+  not_active: {
+    icon: AlertTriangle,
+    color: 'text-muted-foreground',
+    statusKey: 'not_active',
+  },
 };
 
 interface ServiceCardProps {
@@ -44,6 +49,7 @@ interface ServiceCardProps {
 }
 
 function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
+  const { t } = useTranslation();
   const s = check?.status ?? 'unknown';
   const cfg = statusConfig[s] ?? statusConfig.unknown;
   const StatusIcon = cfg.icon;
@@ -63,7 +69,9 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
           <StatusIcon className={cn('h-5 w-5', cfg.color)} />
         )}
       </div>
-      <p className={cn('text-sm font-medium', cfg.color)}>{cfg.label}</p>
+      <p className={cn('text-sm font-medium', cfg.color)}>
+        {t(`pages.adminOverview.status.${cfg.statusKey}`)}
+      </p>
       {check?.message && (
         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
           {check.message}
@@ -87,6 +95,7 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
 }
 
 export default function AdminOverview() {
+  const { t } = useTranslation();
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['admin', 'health'],
     queryFn: () => adminService.getHealth(),
@@ -102,15 +111,17 @@ export default function AdminOverview() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Visão Geral do Sistema</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t('pages.adminOverview.title')}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Status em tempo real de todos os serviços
+            {t('pages.adminOverview.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastUpdate && (
             <span className="text-xs text-muted-foreground">
-              Atualizado às {lastUpdate}
+              {t('pages.adminOverview.updatedAt', { time: lastUpdate })}
             </span>
           )}
           <button
@@ -119,7 +130,7 @@ export default function AdminOverview() {
             className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-            Atualizar
+            {t('pages.adminOverview.refresh')}
           </button>
         </div>
       </div>
@@ -145,12 +156,14 @@ export default function AdminOverview() {
           )}
           <div>
             <p className="font-semibold text-foreground">
-              {data.status === 'healthy' && 'Todos os serviços operacionais'}
-              {data.status === 'warning' && 'Sistema operacional com avisos'}
-              {data.status === 'unhealthy' && 'Atenção: serviços com problema'}
+              {data.status === 'healthy' && t('pages.adminOverview.statusHealthy')}
+              {data.status === 'warning' && t('pages.adminOverview.statusWarning')}
+              {data.status === 'unhealthy' && t('pages.adminOverview.statusUnhealthy')}
             </p>
             <p className="text-sm text-muted-foreground">
-              Verificado em {new Date(data.timestamp).toLocaleString('pt-BR')}
+              {t('pages.adminOverview.checkedAt', {
+                time: new Date(data.timestamp).toLocaleString('pt-BR'),
+              })}
             </p>
           </div>
         </div>
@@ -159,37 +172,37 @@ export default function AdminOverview() {
       {/* Service cards grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <ServiceCard
-          name="Banco de Dados"
+          name={t('pages.adminOverview.services.database')}
           icon={Database}
           check={data?.checks.database}
           loading={isLoading}
         />
         <ServiceCard
-          name="Cache (Redis)"
+          name={t('pages.adminOverview.services.cache')}
           icon={Zap}
           check={data?.checks.cache}
           loading={isLoading}
         />
         <ServiceCard
-          name="Armazenamento (MinIO)"
+          name={t('pages.adminOverview.services.storage')}
           icon={HardDrive}
           check={data?.checks.storage}
           loading={isLoading}
         />
         <ServiceCard
-          name="LLM (Ollama)"
+          name={t('pages.adminOverview.services.ollama')}
           icon={Server}
           check={data?.checks.ollama}
           loading={isLoading}
         />
         <ServiceCard
-          name="Email (SMTP)"
+          name={t('pages.adminOverview.services.email')}
           icon={Mail}
           check={data?.checks.email}
           loading={isLoading}
         />
         <ServiceCard
-          name="Disco"
+          name={t('pages.adminOverview.services.disk')}
           icon={Wifi}
           check={data?.checks.disk}
           loading={isLoading}

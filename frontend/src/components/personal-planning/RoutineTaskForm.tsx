@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ export function RoutineTaskForm({
   onCancel,
   isLoading = false,
 }: RoutineTaskFormProps) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -166,11 +168,11 @@ export function RoutineTaskForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="name">Nome da Tarefa *</Label>
+          <Label htmlFor="name">{t('pages.routineTasks.form.nameLabel')}</Label>
           <Input
             id="name"
             {...register('name')}
-            placeholder="Ex: Meditar, Exercitar-se, Estudar..."
+            placeholder={t('pages.routineTasks.form.namePlaceholder')}
           />
           {errors.name && (
             <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
@@ -178,11 +180,13 @@ export function RoutineTaskForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="description">Descrição</Label>
+          <Label htmlFor="description">
+            {t('pages.routineTasks.form.descriptionLabel')}
+          </Label>
           <Textarea
             id="description"
             {...register('description')}
-            placeholder="Descrição da tarefa (opcional)"
+            placeholder={t('pages.routineTasks.form.descriptionPlaceholder')}
             rows={3}
           />
           {errors.description && (
@@ -193,7 +197,7 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="category">Categoria *</Label>
+          <Label htmlFor="category">{t('pages.routineTasks.form.categoryLabel')}</Label>
           <Select
             value={watch('category')}
             onValueChange={(value) => setValue('category', value)}
@@ -215,7 +219,7 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="icon">Icone</Label>
+          <Label htmlFor="icon">{t('pages.routineTasks.form.iconLabel')}</Label>
           <IconPicker
             value={watch('icon')}
             onChange={(value) => setValue('icon', value)}
@@ -226,7 +230,9 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="periodicity">Periodicidade *</Label>
+          <Label htmlFor="periodicity">
+            {t('pages.routineTasks.form.periodicityLabel')}
+          </Label>
           <Select
             value={watch('periodicity')}
             onValueChange={(value) => setValue('periodicity', value)}
@@ -252,13 +258,15 @@ export function RoutineTaskForm({
         {/* Conditional: Weekday (only for weekly tasks) */}
         {periodicity === 'weekly' && (
           <div className="col-span-2">
-            <Label htmlFor="weekday">Dia da Semana *</Label>
+            <Label htmlFor="weekday">{t('pages.routineTasks.form.weekdayLabel')}</Label>
             <Select
               value={watch('weekday')?.toString()}
               onValueChange={(value) => setValue('weekday', parseInt(value))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o dia da semana" />
+                <SelectValue
+                  placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {WEEKDAY_CHOICES.map((day) => (
@@ -277,7 +285,9 @@ export function RoutineTaskForm({
         {/* Conditional: Day of Month (only for monthly tasks) */}
         {periodicity === 'monthly' && (
           <div className="col-span-2">
-            <Label htmlFor="day_of_month">Dia do Mês *</Label>
+            <Label htmlFor="day_of_month">
+              {t('pages.routineTasks.form.dayOfMonthLabel')}
+            </Label>
             <Input
               id="day_of_month"
               type="number"
@@ -300,18 +310,22 @@ export function RoutineTaskForm({
         {/* Conditional: Weekdays (only for weekdays tasks) */}
         {periodicity === 'weekdays' && (
           <div className="col-span-2">
-            <p className="text-sm">Esta tarefa aparecerá de Segunda a Sexta-feira.</p>
+            <p className="text-sm">{t('pages.routineTasks.form.weekdaysNote')}</p>
           </div>
         )}
 
         {/* Conditional: Custom periodicity */}
         {periodicity === 'custom' && (
           <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
-            <h4 className="text-sm font-medium">Configuração Personalizada</h4>
+            <h4 className="text-sm font-medium">
+              {t('pages.routineTasks.form.customSection')}
+            </h4>
 
             {/* Custom Weekdays */}
             <div>
-              <Label className="text-sm">Dias da Semana (opcional)</Label>
+              <Label className="text-sm">
+                {t('pages.routineTasks.form.customWeekdaysLabel')}
+              </Label>
               <div className="mt-2 grid grid-cols-7 gap-2">
                 {WEEKDAY_CHOICES.map((day) => (
                   <div key={day.value} className="flex flex-col items-center gap-1">
@@ -342,7 +356,7 @@ export function RoutineTaskForm({
             {/* Custom Month Days */}
             <div>
               <Label htmlFor="custom_month_days" className="text-sm">
-                Dias do Mês (opcional, separados por vírgula)
+                {t('pages.routineTasks.form.customMonthDaysLabel')}
               </Label>
               <Input
                 id="custom_month_days"
@@ -363,7 +377,7 @@ export function RoutineTaskForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="times_per_week" className="text-sm">
-                  Vezes por Semana
+                  {t('pages.routineTasks.form.timesPerWeekLabel')}
                 </Label>
                 <Input
                   id="times_per_week"
@@ -379,7 +393,7 @@ export function RoutineTaskForm({
               </div>
               <div>
                 <Label htmlFor="times_per_month" className="text-sm">
-                  Vezes por Mês
+                  {t('pages.routineTasks.form.timesPerMonthLabel')}
                 </Label>
                 <Input
                   id="times_per_month"
@@ -399,7 +413,7 @@ export function RoutineTaskForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="interval_days" className="text-sm">
-                  A cada X dias
+                  {t('pages.routineTasks.form.intervalDaysLabel')}
                 </Label>
                 <Input
                   id="interval_days"
@@ -414,7 +428,7 @@ export function RoutineTaskForm({
               </div>
               <div>
                 <Label htmlFor="interval_start_date" className="text-sm">
-                  Data de Início
+                  {t('pages.routineTasks.form.intervalStartDateLabel')}
                 </Label>
                 <DatePicker
                   value={watch('interval_start_date') ?? undefined}
@@ -424,7 +438,9 @@ export function RoutineTaskForm({
                       date ? formatLocalDate(date) : undefined
                     )
                   }
-                  placeholder="Selecione a data de início"
+                  placeholder={t(
+                    'pages.routineTasks.form.intervalStartDatePlaceholder'
+                  )}
                 />
               </div>
             </div>
@@ -438,7 +454,9 @@ export function RoutineTaskForm({
         )}
 
         <div>
-          <Label htmlFor="target_quantity">Quantidade Alvo *</Label>
+          <Label htmlFor="target_quantity">
+            {t('pages.routineTasks.form.targetQuantityLabel')}
+          </Label>
           <Input
             id="target_quantity"
             type="number"
@@ -455,7 +473,7 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="unit">Unidade *</Label>
+          <Label htmlFor="unit">{t('pages.routineTasks.form.unitLabel')}</Label>
           <Select
             value={watch('unit') ?? 'vez'}
             onValueChange={(value) =>
@@ -480,21 +498,25 @@ export function RoutineTaskForm({
 
         {/* Seção de Agendamento de Horários */}
         <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
-          <h4 className="text-sm font-medium">Agendamento de Horários</h4>
-          <p className="text-xs">
-            Configure horários específicos para cada ocorrência da tarefa no dia.
-          </p>
+          <h4 className="text-sm font-medium">
+            {t('pages.routineTasks.form.scheduleSection')}
+          </h4>
+          <p className="text-xs">{t('pages.routineTasks.form.scheduleSectionNote')}</p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="default_time">Horário Padrão</Label>
+              <Label htmlFor="default_time">
+                {t('pages.routineTasks.form.defaultTimeLabel')}
+              </Label>
               <Input
                 id="default_time"
                 type="time"
                 value={watch('default_time') || ''}
                 onChange={(e) => setValue('default_time', e.target.value || null)}
               />
-              <p className="mt-1 text-xs">Horário base para todas as ocorrências</p>
+              <p className="mt-1 text-xs">
+                {t('pages.routineTasks.form.defaultTimeHint')}
+              </p>
               {errors.default_time && (
                 <p className="mt-1 text-sm text-destructive">
                   {errors.default_time.message}
@@ -503,7 +525,9 @@ export function RoutineTaskForm({
             </div>
 
             <div>
-              <Label htmlFor="daily_occurrences">Ocorrências por Dia</Label>
+              <Label htmlFor="daily_occurrences">
+                {t('pages.routineTasks.form.dailyOccurrencesLabel')}
+              </Label>
               <Input
                 id="daily_occurrences"
                 type="number"
@@ -513,12 +537,16 @@ export function RoutineTaskForm({
                   setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
                 })}
               />
-              <p className="mt-1 text-xs">Quantas vezes no dia (1-24)</p>
+              <p className="mt-1 text-xs">
+                {t('pages.routineTasks.form.dailyOccurrencesHint')}
+              </p>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="interval_hours">Intervalo entre Repetições (horas)</Label>
+            <Label htmlFor="interval_hours">
+              {t('pages.routineTasks.form.intervalHoursLabel')}
+            </Label>
             <Input
               id="interval_hours"
               type="number"
@@ -531,11 +559,10 @@ export function RoutineTaskForm({
                   e.target.value ? parseInt(e.target.value) : null
                 )
               }
-              placeholder="Ex: 4 (a cada 4 horas)"
+              placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
             />
             <p className="mt-1 text-xs">
-              Requer horário padrão. Ex: Horário padrão 8:00 + intervalo 4h = 8:00,
-              12:00, 16:00...
+              {t('pages.routineTasks.form.intervalHoursHint')}
             </p>
             {errors.interval_hours && (
               <p className="mt-1 text-sm text-destructive">
@@ -546,7 +573,9 @@ export function RoutineTaskForm({
 
           {(dailyOccurrences ?? 1) === 1 && (
             <div>
-              <Label htmlFor="closing_time">Horário de Encerramento</Label>
+              <Label htmlFor="closing_time">
+                {t('pages.routineTasks.form.closingTimeLabel')}
+              </Label>
               <Input
                 id="closing_time"
                 type="time"
@@ -554,7 +583,7 @@ export function RoutineTaskForm({
                 onChange={(e) => setValue('closing_time', e.target.value || null)}
               />
               <p className="mt-1 text-xs">
-                Horário de encerramento da tarefa (opcional)
+                {t('pages.routineTasks.form.closingTimeHint')}
               </p>
               {errors.closing_time && (
                 <p className="mt-1 text-sm text-destructive">
@@ -565,11 +594,13 @@ export function RoutineTaskForm({
           )}
 
           <div>
-            <Label htmlFor="scheduled_times">Horários Específicos</Label>
+            <Label htmlFor="scheduled_times">
+              {t('pages.routineTasks.form.scheduledTimesLabel')}
+            </Label>
             <Input
               id="scheduled_times"
               type="text"
-              placeholder="Ex: 08:00, 12:00, 18:00"
+              placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
               value={watch('scheduled_times')?.join(', ') || ''}
               onChange={(e) => {
                 const times = e.target.value
@@ -580,7 +611,7 @@ export function RoutineTaskForm({
               }}
             />
             <p className="mt-1 text-xs">
-              Sobrescreve intervalo. Separe por vírgula (HH:MM)
+              {t('pages.routineTasks.form.scheduledTimesHint')}
             </p>
             {errors.scheduled_times && (
               <p className="mt-1 text-sm text-destructive">
@@ -591,7 +622,7 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="priority">Prioridade</Label>
+          <Label htmlFor="priority">{t('pages.routineTasks.form.priorityLabel')}</Label>
           <Select
             value={watch('priority') ?? 'medium'}
             onValueChange={(value) =>
@@ -615,7 +646,9 @@ export function RoutineTaskForm({
         </div>
 
         <div>
-          <Label htmlFor="allowed_skips_per_month">Faltas Toleradas/Mês</Label>
+          <Label htmlFor="allowed_skips_per_month">
+            {t('pages.routineTasks.form.allowedSkipsLabel')}
+          </Label>
           <Input
             id="allowed_skips_per_month"
             type="number"
@@ -626,7 +659,7 @@ export function RoutineTaskForm({
             })}
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Quantas faltas são toleradas por mês sem quebrar o streak
+            {t('pages.routineTasks.form.allowedSkipsHint')}
           </p>
           {errors.allowed_skips_per_month && (
             <p className="mt-1 text-sm text-destructive">
@@ -645,23 +678,23 @@ export function RoutineTaskForm({
             htmlFor="is_active"
             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
-            Tarefa Ativa
+            {t('pages.routineTasks.form.isActiveLabel')}
           </Label>
         </div>
       </div>
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

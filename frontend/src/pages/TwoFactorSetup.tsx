@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Shield, ShieldOff, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -23,16 +24,17 @@ import { getErrorMessage } from '@/utils/error-utils';
 function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
   const [password, setPassword] = useState('');
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: (pw: string) => authService.disableTwoFactor(pw),
     onSuccess: () => {
-      toast({ title: '2FA desativado com sucesso.' });
+      toast({ title: t('pages.twoFactor.disableSuccess') });
       onDisabled();
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Erro ao desativar 2FA',
+        title: t('pages.twoFactor.invalidCode'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -44,11 +46,9 @@ function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-destructive">
           <ShieldOff className="h-5 w-5" />
-          Desativar autenticação de dois fatores
+          {t('pages.twoFactor.disableBtn')}
         </CardTitle>
-        <CardDescription>
-          Para desativar o 2FA, confirme sua senha atual.
-        </CardDescription>
+        <CardDescription>{t('pages.twoFactor.step2Desc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -60,14 +60,16 @@ function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
         >
           <Input
             type="password"
-            placeholder="Senha atual"
+            placeholder={t('userProfile.security.currentPassword')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             className="max-w-xs"
           />
           <Button type="submit" variant="destructive" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Desativando...' : 'Desativar 2FA'}
+            {mutation.isPending
+              ? t('pages.twoFactor.verifying')
+              : t('pages.twoFactor.disableBtn')}
           </Button>
         </form>
       </CardContent>
@@ -80,6 +82,7 @@ function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
 function BackupCodesDisplay({ codes }: { codes: string[] }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codes.join('\n'));
@@ -90,12 +93,8 @@ function BackupCodesDisplay({ codes }: { codes: string[] }) {
   return (
     <Card className="border-warning/40 bg-warning/5">
       <CardHeader>
-        <CardTitle className="text-base">Códigos de backup</CardTitle>
-        <CardDescription>
-          Guarde estes códigos em local seguro. Cada código pode ser usado apenas uma
-          vez se você perder acesso ao seu aplicativo autenticador.{' '}
-          <strong>Esta é a única vez que eles serão exibidos.</strong>
-        </CardDescription>
+        <CardTitle className="text-base">{t('pages.twoFactor.backupCodes')}</CardTitle>
+        <CardDescription>{t('pages.twoFactor.backupDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="relative rounded-md border bg-muted p-4 font-mono text-sm">
@@ -121,22 +120,23 @@ function BackupCodesDisplay({ codes }: { codes: string[] }) {
           <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
             {visible ? (
               <>
-                <EyeOff className="mr-1.5 h-4 w-4" /> Ocultar
+                <EyeOff className="mr-1.5 h-4 w-4" /> {t('common.actions.hide')}
               </>
             ) : (
               <>
-                <Eye className="mr-1.5 h-4 w-4" /> Revelar
+                <Eye className="mr-1.5 h-4 w-4" /> {t('common.actions.reveal')}
               </>
             )}
           </Button>
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {copied ? (
               <>
-                <Check className="mr-1.5 h-4 w-4 text-success" /> Copiado!
+                <Check className="mr-1.5 h-4 w-4 text-success" />{' '}
+                {t('common.messages.copied')}
               </>
             ) : (
               <>
-                <Copy className="mr-1.5 h-4 w-4" /> Copiar todos
+                <Copy className="mr-1.5 h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
               </>
             )}
           </Button>
@@ -152,6 +152,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
   const [code, setCode] = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const {
     data: setupData,
@@ -168,12 +169,12 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     mutationFn: (c: string) => authService.activateTwoFactor(c),
     onSuccess: (data) => {
       setBackupCodes(data.backup_codes);
-      toast({ title: '2FA ativado com sucesso!' });
+      toast({ title: t('pages.twoFactor.enableSuccess') });
       onActivated();
     },
     onError: (error: unknown) => {
       toast({
-        title: 'Código inválido',
+        title: t('pages.twoFactor.invalidCode'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -184,7 +185,9 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     return (
       <Card>
         <CardContent className="flex h-48 items-center justify-center">
-          <span className="text-sm text-muted-foreground">Gerando QR Code...</span>
+          <span className="text-sm text-muted-foreground">
+            {t('pages.twoFactor.loading')}
+          </span>
         </CardContent>
       </Card>
     );
@@ -194,7 +197,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
     return (
       <Card>
         <CardContent className="py-8 text-center text-sm text-destructive">
-          Erro ao gerar QR Code. Tente novamente.
+          {t('pages.twoFactor.invalidCode')}
         </CardContent>
       </Card>
     );
@@ -207,11 +210,8 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configurar autenticação de dois fatores</CardTitle>
-        <CardDescription>
-          Escaneie o QR code com seu aplicativo autenticador (Google Authenticator,
-          Authy, etc.) e confirme com o código gerado.
-        </CardDescription>
+        <CardTitle>{t('pages.twoFactor.setupTitle')}</CardTitle>
+        <CardDescription>{t('pages.twoFactor.step1Desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* QR Code */}
@@ -223,7 +223,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
           />
           <div className="w-full max-w-xs space-y-1">
             <p className="text-xs text-muted-foreground">
-              Não consegue escanear? Use a chave manual:
+              {t('pages.twoFactor.step1')}:
             </p>
             <code className="block break-all rounded bg-muted px-3 py-2 text-xs">
               {setupData.manual_entry_key}
@@ -240,12 +240,12 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
           className="space-y-3"
         >
           <div className="space-y-1">
-            <Label htmlFor="totp-code">Código de confirmação</Label>
+            <Label htmlFor="totp-code">{t('pages.twoFactor.confirmCode')}</Label>
             <Input
               id="totp-code"
               type="text"
               inputMode="numeric"
-              placeholder="000000"
+              placeholder={t('pages.twoFactor.confirmCodePlaceholder')}
               value={code}
               onChange={(e) => setCode(e.target.value)}
               maxLength={6}
@@ -257,7 +257,9 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
             type="submit"
             disabled={activateMutation.isPending || code.length < 6}
           >
-            {activateMutation.isPending ? 'Ativando...' : 'Ativar 2FA'}
+            {activateMutation.isPending
+              ? t('pages.twoFactor.verifying')
+              : t('pages.twoFactor.enableBtn')}
           </Button>
         </form>
       </CardContent>
@@ -268,6 +270,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TwoFactorSetup() {
+  const { t } = useTranslation();
   const {
     data: statusData,
     isLoading,
@@ -282,12 +285,14 @@ export default function TwoFactorSetup() {
 
   return (
     <PageContainer>
-      <PageHeader title="Autenticação de dois fatores (2FA)" icon={<Shield />} />
+      <PageHeader title={t('pages.twoFactor.title')} icon={<Shield />} />
 
       {isLoading ? (
         <Card>
           <CardContent className="flex h-32 items-center justify-center">
-            <span className="text-sm text-muted-foreground">Carregando...</span>
+            <span className="text-sm text-muted-foreground">
+              {t('pages.twoFactor.loading')}
+            </span>
           </CardContent>
         </Card>
       ) : is2FAActive ? (
@@ -296,7 +301,7 @@ export default function TwoFactorSetup() {
             <CardContent className="flex items-center gap-3 py-4">
               <Shield className="h-5 w-5 text-success" />
               <span className="text-sm font-medium">
-                Autenticação de dois fatores está ativa na sua conta.
+                {t('pages.twoFactor.status')}: {t('pages.twoFactor.active')}
               </span>
             </CardContent>
           </Card>

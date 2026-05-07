@@ -74,6 +74,9 @@ const Budgets = lazy(() => import('./pages/Budgets'));
 // Notification Preferences
 const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 
+// User Profile / Settings
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+
 // Bank Reconciliation
 const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
@@ -546,6 +549,14 @@ function AnimatedRoutes() {
           />
 
           {/* Settings */}
+          <Route
+            path="/settings/profile"
+            element={
+              <PageWrapper>
+                <UserProfile />
+              </PageWrapper>
+            }
+          />
           <Route
             path="/settings/permissions"
             element={

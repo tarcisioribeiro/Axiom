@@ -110,12 +110,15 @@ const statusVariant = (status: string): 'success' | 'info' | 'warning' => {
 };
 
 const priorityBadge = (
-  priority: number | null
+  priority: number | null,
+  t: (key: string) => string
 ): { label: string; variant: 'destructive' | 'warning' | 'secondary' } | null => {
   if (priority === null) return null;
-  if (priority === 1) return { label: 'Alta', variant: 'destructive' };
-  if (priority <= 3) return { label: 'Média', variant: 'warning' };
-  return { label: 'Baixa', variant: 'secondary' };
+  if (priority === 1)
+    return { label: t('pages.books.priorityHigh'), variant: 'destructive' };
+  if (priority <= 3)
+    return { label: t('pages.books.priorityMedium'), variant: 'warning' };
+  return { label: t('pages.books.priorityLow'), variant: 'secondary' };
 };
 
 function StarRow({ rating }: { rating: number | null }) {
@@ -157,8 +160,8 @@ function BookGridCard({
   onDelete: (id: number) => void;
   onOpenDetail: (b: Book) => void;
 }) {
-  const pb = priorityBadge(book.reading_priority);
   const { t } = useTranslation();
+  const pb = priorityBadge(book.reading_priority, t);
 
   return (
     <div
@@ -175,7 +178,7 @@ function BookGridCard({
         {book.cover ? (
           <img
             src={book.cover}
-            alt={`Capa de ${book.title}`}
+            alt={t('pages.books.coverAlt', { title: book.title })}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -230,7 +233,12 @@ function BookGridCard({
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7" title="Mais opções">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title={t('pages.books.moreOptions')}
+            >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -240,7 +248,7 @@ function BookGridCard({
                 onClick={() => window.open(`/library/reader/${book.id}`, '_blank')}
               >
                 <BookText className="mr-2 h-4 w-4" />
-                Abrir Leitor
+                {t('pages.books.openReader')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => onOpen(book, 'readings')}>
@@ -256,7 +264,7 @@ function BookGridCard({
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onOpen(book, 'highlights')}>
               <Highlighter className="mr-2 h-4 w-4" />
-              Destaques
+              {t('pages.highlights.title')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -417,8 +425,10 @@ export default function Books() {
       if (alreadyRead && startDate && endDate) {
         const result = await booksService.markAsRead(saved.id, startDate, endDate);
         toast({
-          title: 'Leitura registrada',
-          description: `${result.sessions_created} sessões de leitura geradas automaticamente.`,
+          title: t('pages.books.readingRegistered'),
+          description: t('pages.books.sessionsCreated', {
+            count: result.sessions_created,
+          }),
         });
       }
       setIsFormOpen(false);
@@ -444,7 +454,7 @@ export default function Books() {
       a.click();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao baixar arquivo',
+        title: t('pages.books.downloadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -502,8 +512,8 @@ export default function Books() {
               size="icon"
               className="h-8 w-8 rounded-r-none border-r"
               onClick={() => setViewMode('table')}
-              title="Visualização em lista"
-              aria-label="Visualização em lista"
+              title={t('pages.books.listView')}
+              aria-label={t('pages.books.listView')}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -512,8 +522,8 @@ export default function Books() {
               size="icon"
               className="h-8 w-8 rounded-l-none"
               onClick={() => setViewMode('grid')}
-              title="Visualização em grade"
-              aria-label="Visualização em grade"
+              title={t('pages.books.gridView')}
+              aria-label={t('pages.books.gridView')}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -551,10 +561,10 @@ export default function Books() {
           }}
         >
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('pages.books.statusPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="all">{t('pages.books.allStatuses')}</SelectItem>
             {READ_STATUS.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 {s.label}
@@ -570,10 +580,10 @@ export default function Books() {
           }}
         >
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Gênero" />
+            <SelectValue placeholder={t('pages.books.genrePlaceholder')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os gêneros</SelectItem>
+            <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
             {BOOK_GENRES.map((g) => (
               <SelectItem key={g.value} value={g.value}>
                 {g.label}
@@ -634,7 +644,7 @@ export default function Books() {
             </TableHeader>
             <TableBody>
               {pagedBooks.map((book) => {
-                const pb = priorityBadge(book.reading_priority);
+                const pb = priorityBadge(book.reading_priority, t);
                 return (
                   <TableRow
                     key={book.id}
@@ -647,7 +657,7 @@ export default function Books() {
                         {book.cover ? (
                           <img
                             src={book.cover}
-                            alt={`Capa de ${book.title}`}
+                            alt={t('pages.books.coverAlt', { title: book.title })}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -727,8 +737,8 @@ export default function Books() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              title="Mais opções"
-                              aria-label="Mais opções"
+                              title={t('pages.books.moreOptions')}
+                              aria-label={t('pages.books.moreOptions')}
                             >
                               <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                             </Button>
@@ -737,7 +747,7 @@ export default function Books() {
                             {book.media_type === 'Dig' && book.book_file && (
                               <DropdownMenuItem onClick={() => handleOpenReader(book)}>
                                 <BookText className="mr-2 h-4 w-4" />
-                                Abrir Leitor
+                                {t('pages.books.openReader')}
                               </DropdownMenuItem>
                             )}
                             {book.media_type === 'Dig' && book.book_file && (
@@ -745,7 +755,7 @@ export default function Books() {
                                 onClick={() => void handleDownloadFile(book)}
                               >
                                 <Download className="mr-2 h-4 w-4" />
-                                Baixar Arquivo
+                                {t('pages.books.downloadFile')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
@@ -765,7 +775,7 @@ export default function Books() {
                               onClick={() => openDetail(book, 'highlights')}
                             >
                               <Highlighter className="mr-2 h-4 w-4" />
-                              Destaques
+                              {t('pages.highlights.title')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -803,8 +813,12 @@ export default function Books() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {filteredBooks.length} livro{filteredBooks.length !== 1 ? 's' : ''} — página{' '}
-            {safePage} de {totalPages}
+            {t('pages.books.paginationInfo', {
+              count: filteredBooks.length,
+              total: filteredBooks.length,
+              page: safePage,
+              totalPages,
+            })}
           </span>
           <div className="flex items-center gap-1">
             <Button

@@ -1478,7 +1478,7 @@ export default function Dashboard() {
       <Dialog open={alertsModalOpen} onOpenChange={setAlertsModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Alertas Financeiros</DialogTitle>
+            <DialogTitle>{t('pages.dashboard.financialAlerts.title')}</DialogTitle>
           </DialogHeader>
           <AlertsPanel alerts={financialAlerts} />
         </DialogContent>

@@ -7,6 +7,7 @@ from .cookie_auth import (
     logout_view,
 )
 from .views import (
+    ChangePasswordView,
     EmailVerificationConfirmView,
     EmailVerificationSendView,
     PasswordResetConfirmView,
@@ -63,6 +64,11 @@ urlpatterns = [
         "users/email-verification/confirm/",
         EmailVerificationConfirmView.as_view(),
         name="email-verification-confirm",
+    ),
+    path(
+        "users/change-password/",
+        ChangePasswordView.as_view(),
+        name="change-password",
     ),
     # 2FA / TOTP
     path("users/2fa/setup/", TwoFactorSetupView.as_view(), name="2fa-setup"),

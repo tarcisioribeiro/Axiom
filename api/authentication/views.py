@@ -315,9 +315,8 @@ def create_user_with_member(request: Request) -> Response:
                     ]
                 )
                 try:
-                    _verification_url = (
-                        f"{getattr(settings, 'SITE_URL', '')}/verify-email/{_token}/"
-                    )
+                    _site_url = getattr(settings, "SITE_URL", "")
+                    _verification_url = f"{_site_url}/verify-email?token={_token}"
                     _html_message = render_to_string(
                         "email/email_verification.html",
                         {
@@ -566,14 +565,13 @@ class EmailVerificationSendView(APIView):
             return Response({"message": "E-mail já verificado."})
 
         token = uuid.uuid4()
-        member.email_verification_token = token
-        member.email_verification_sent_at = timezone.now()
-        member.save(
-            update_fields=["email_verification_token", "email_verification_sent_at"]
+        Member.objects.filter(pk=member.pk).update(
+            email_verification_token=token,
+            email_verification_sent_at=timezone.now(),
         )
 
         site_url = getattr(settings, "SITE_URL", "")
-        verification_url = f"{site_url}/verify-email/{token}/"
+        verification_url = f"{site_url}/verify-email?token={token}"
 
         try:
             html_message = render_to_string(
@@ -672,6 +670,60 @@ class EmailVerificationConfirmView(APIView):
         )
 
         return Response({"message": "E-mail verificado com sucesso!"})
+
+
+# ============================================================================
+# CHANGE PASSWORD VIEW
+# ============================================================================
+
+
+class ChangePasswordView(APIView):
+    """
+    POST /api/v1/users/change-password/
+
+    Altera a senha do usuário autenticado.
+    Body: { "current_password": "...", "new_password": "...",
+    "confirm_password": "..." }
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        user = cast(User, request.user)
+        current_password = request.data.get("current_password", "")
+        new_password = request.data.get("new_password", "")
+        confirm_password = request.data.get("confirm_password", "")
+
+        if not all([current_password, new_password, confirm_password]):
+            return Response(
+                {"error": "Todos os campos são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Senha atual incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_password != confirm_password:
+            return Response(
+                {"error": "As senhas não coincidem."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as e:
+            return Response(
+                {"error": "Senha inválida.", "details": list(e.messages)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save(update_fields=["password"])
+
+        return Response({"message": "Senha alterada com sucesso."})
 
 
 # ============================================================================

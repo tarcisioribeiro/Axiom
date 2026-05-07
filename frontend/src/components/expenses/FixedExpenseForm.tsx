@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export const FixedExpenseForm = ({
   isLoading = false,
 }: Props) => {
   const [paymentType, setPaymentType] = useState<'account' | 'credit_card'>('account');
+  const { t } = useTranslation();
 
   const { register, handleSubmit, setValue, watch } = useForm<FixedExpenseFormData>({
     defaultValues: {
@@ -111,17 +113,21 @@ export const FixedExpenseForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="description">Descrição *</Label>
+          <Label htmlFor="description">
+            {t('pages.fixedExpenses.form.descriptionLabel')}
+          </Label>
           <Input
             id="description"
             {...register('description', { required: true })}
-            placeholder="Ex: Aluguel"
+            placeholder={t('pages.fixedExpenses.form.descriptionPlaceholder')}
             disabled={isLoading}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="default_value">Valor Padrão *</Label>
+          <Label htmlFor="default_value">
+            {t('pages.fixedExpenses.form.defaultValueLabel')}
+          </Label>
           <Input
             id="default_value"
             type="number"
@@ -133,7 +139,7 @@ export const FixedExpenseForm = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="due_day">Dia do Vencimento *</Label>
+          <Label htmlFor="due_day">{t('pages.fixedExpenses.form.dueDayLabel')}</Label>
           <Input
             id="due_day"
             type="number"
@@ -145,14 +151,16 @@ export const FixedExpenseForm = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Categoria *</Label>
+          <Label>{t('pages.fixedExpenses.form.categoryLabel')}</Label>
           <Select
             value={watch('category') || ''}
             onValueChange={(v) => setValue('category', v)}
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t('pages.fixedExpenses.form.categoryPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
@@ -165,7 +173,7 @@ export const FixedExpenseForm = ({
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label>Tipo de Pagamento *</Label>
+          <Label>{t('pages.fixedExpenses.form.paymentTypeLabel')}</Label>
           <Select
             value={paymentType}
             onValueChange={(v: 'account' | 'credit_card') => setPaymentType(v)}
@@ -175,26 +183,29 @@ export const FixedExpenseForm = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="account">Conta Bancária</SelectItem>
-              <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+              <SelectItem value="account">
+                {t('pages.fixedExpenses.form.paymentTypeAccount')}
+              </SelectItem>
+              <SelectItem value="credit_card">
+                {t('pages.fixedExpenses.form.paymentTypeCreditCard')}
+              </SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs">
-            Escolha se a despesa será debitada de uma conta bancária ou lançada em um
-            cartão de crédito
-          </p>
+          <p className="text-xs">{t('pages.fixedExpenses.form.paymentTypeHint')}</p>
         </div>
 
         {paymentType === 'account' ? (
           <div className="space-y-2">
-            <Label>Conta Bancária *</Label>
+            <Label>{t('pages.fixedExpenses.form.accountLabel')}</Label>
             <Select
               value={watch('account')?.toString() || ''}
               onValueChange={(v) => setValue('account', parseInt(v))}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue
+                  placeholder={t('pages.fixedExpenses.form.accountPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((a) => (
@@ -207,14 +218,16 @@ export const FixedExpenseForm = ({
           </div>
         ) : (
           <div className="space-y-2">
-            <Label>Cartão de Crédito *</Label>
+            <Label>{t('pages.fixedExpenses.form.creditCardLabel')}</Label>
             <Select
               value={watch('credit_card')?.toString() || ''}
               onValueChange={(v) => setValue('credit_card', parseInt(v))}
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
+                <SelectValue
+                  placeholder={t('pages.fixedExpenses.form.creditCardPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {creditCards.map((c) => (
@@ -224,47 +237,53 @@ export const FixedExpenseForm = ({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs">
-              A despesa será lançada automaticamente na fatura aberta do mês
-            </p>
+            <p className="text-xs">{t('pages.fixedExpenses.form.creditCardHint')}</p>
           </div>
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="merchant">Estabelecimento</Label>
+          <Label htmlFor="merchant">
+            {t('pages.fixedExpenses.form.merchantLabel')}
+          </Label>
           <Input
             id="merchant"
             {...register('merchant')}
-            placeholder="Ex: Imobiliária XYZ"
+            placeholder={t('pages.fixedExpenses.form.merchantPlaceholder')}
             disabled={isLoading}
           />
         </div>
 
         <div className="space-y-2">
-          <Label>Método de Pagamento</Label>
+          <Label>{t('pages.fixedExpenses.form.paymentMethodLabel')}</Label>
           <Select
             value={watch('payment_method') || ''}
             onValueChange={(v) => setValue('payment_method', v)}
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t('pages.fixedExpenses.form.paymentMethodPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pix">PIX</SelectItem>
-              <SelectItem value="debit_card">Cartão de Débito</SelectItem>
-              <SelectItem value="transfer">Transferência</SelectItem>
-              <SelectItem value="other">Outro</SelectItem>
+              <SelectItem value="debit_card">
+                {t('common.paymentMethods.debit_card')}
+              </SelectItem>
+              <SelectItem value="transfer">
+                {t('common.paymentMethods.transfer')}
+              </SelectItem>
+              <SelectItem value="other">{t('common.paymentMethods.other')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.fixedExpenses.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Informações adicionais"
+            placeholder={t('pages.fixedExpenses.form.notesPlaceholder')}
             disabled={isLoading}
             rows={3}
           />
@@ -278,9 +297,9 @@ export const FixedExpenseForm = ({
               className="rounded"
               disabled={isLoading}
             />
-            Despesa Ativa
+            {t('pages.fixedExpenses.form.isActiveLabel')}
           </Label>
-          <p className="text-xs">Desative para não incluir nas próximas gerações</p>
+          <p className="text-xs">{t('pages.fixedExpenses.form.isActiveHint')}</p>
         </div>
 
         <div className="space-y-2">
@@ -291,20 +310,22 @@ export const FixedExpenseForm = ({
               className="rounded"
               disabled={isLoading}
             />
-            Permitir Editar Valor
+            {t('pages.fixedExpenses.form.allowValueEditLabel')}
           </Label>
-          <p className="text-xs">
-            Permite ajustar o valor ao lançar (ex: conta de luz)
-          </p>
+          <p className="text-xs">{t('pages.fixedExpenses.form.allowValueEditHint')}</p>
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : fixedExpense ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : fixedExpense
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

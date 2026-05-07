@@ -174,7 +174,9 @@ export default function Loans() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{loans.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">empréstimos</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.loans.stats.totalSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -187,7 +189,9 @@ export default function Loans() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{activeCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">em andamento</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.loans.stats.activeSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -200,7 +204,9 @@ export default function Loans() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">{paidCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">quitados</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.loans.stats.paidSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -215,7 +221,9 @@ export default function Loans() {
             <div className="text-2xl font-bold text-destructive">
               {formatCurrency(totalDebt)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">saldo devedor</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.loans.stats.debtSubtitle')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -282,7 +290,7 @@ export default function Loans() {
                 {/* Amortization progress */}
                 <div className="space-y-xs">
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Quitação</span>
+                    <span>{t('pages.loans.payoff')}</span>
                     <span className="font-medium">{Math.round(pct)}%</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
