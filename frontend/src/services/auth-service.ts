@@ -2,9 +2,13 @@ import Cookies from 'js-cookie';
 
 import { API_CONFIG, TOKEN_CONFIG } from '@/config/constants';
 import { logger } from '@/lib/logger';
-import type { LoginCredentials, User, Permission } from '@/types';
+import type { LoginCredentials, Permission, User } from '@/types';
 
 import { apiClient } from './api-client';
+
+type LoginResponse =
+  | { message: string; user: { username: string }; requires_2fa?: false }
+  | { requires_2fa: true; temp_token: string; message: string };
 
 /**
  * Servico de autenticacao.
@@ -38,15 +42,8 @@ class AuthService {
    * @returns Promise com mensagem de sucesso e dados basicos do usuario
    * @throws {AuthenticationError} Se credenciais invalidas
    */
-  async login(
-    credentials: LoginCredentials
-  ): Promise<{ message: string; user: { username: string } }> {
-    const response = await apiClient.post<{
-      message: string;
-      user: { username: string };
-    }>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
-
-    return response;
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
   }
 
   /**
@@ -128,10 +125,6 @@ class AuthService {
         return { permissions: [], is_superuser: true };
       }
       throw error;
-    }
-
-    if (response.is_superuser) {
-      return { permissions: [], is_superuser: true };
     }
 
     if (response.is_superuser) {
@@ -330,6 +323,87 @@ class AuthService {
       throw new Error(data.detail ?? 'Token inválido ou expirado.');
     }
     return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Altera a senha do usuário autenticado.
+   */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.CHANGE_PASSWORD, {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+  }
+
+  /**
+   * Consulta o status do 2FA do usuário autenticado.
+   */
+  async getTwoFactorStatus(): Promise<{ is_active: boolean }> {
+    return apiClient.get<{ is_active: boolean }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_STATUS
+    );
+  }
+
+  /**
+   * Busca o QR code para setup inicial do 2FA.
+   */
+  async getTwoFactorSetup(): Promise<{
+    secret: string;
+    qr_code: string;
+    manual_entry_key: string;
+  }> {
+    return apiClient.get<{ secret: string; qr_code: string; manual_entry_key: string }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_SETUP
+    );
+  }
+
+  /**
+   * Ativa 2FA após confirmar o primeiro código TOTP.
+   */
+  async activateTwoFactor(
+    code: string
+  ): Promise<{ message: string; backup_codes: string[] }> {
+    return apiClient.post<{ message: string; backup_codes: string[] }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_ACTIVATE,
+      { code }
+    );
+  }
+
+  /**
+   * Verifica o código TOTP durante o fluxo de login (2FA pendente).
+   */
+  async verifyTwoFactor(tempToken: string, code: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TWO_FACTOR_VERIFY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ temp_token: tempToken, code }),
+      }
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? 'Código inválido.');
+    }
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Desativa 2FA confirmando com a senha atual.
+   */
+  async disableTwoFactor(password: string): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_DISABLE,
+      {
+        password,
+      }
+    );
   }
 
   /**

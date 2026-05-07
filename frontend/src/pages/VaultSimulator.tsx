@@ -333,7 +333,9 @@ export default function VaultSimulator() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="rounded-lg bg-primary/5 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Você acumulará</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('pages.vaultSimulator.accumulation')}
+                        </p>
                         <p className="text-xl font-bold text-primary">
                           {formatCurrency(scenario.final_balance)}
                         </p>
@@ -343,13 +345,17 @@ export default function VaultSimulator() {
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <p className="text-muted-foreground">Total investido</p>
+                          <p className="text-muted-foreground">
+                            {t('pages.vaultSimulator.totalInvested')}
+                          </p>
                           <p className="font-semibold">
                             {formatCurrency(scenario.total_invested)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Rendimento</p>
+                          <p className="text-muted-foreground">
+                            {t('pages.vaultSimulator.yieldLabel')}
+                          </p>
                           <p className="font-semibold text-green-600 dark:text-green-400">
                             {formatCurrency(scenario.total_yield)}
                           </p>

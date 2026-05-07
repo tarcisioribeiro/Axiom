@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FileText, ImagePlus, Loader2, Upload, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ export function BookForm({
   onCancel,
   isLoading = false,
 }: BookFormProps) {
+  const { t } = useTranslation();
   const [selectedAuthors, setSelectedAuthors] = useState<number[]>(book?.authors || []);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(book?.cover || null);
@@ -187,21 +189,21 @@ export function BookForm({
     >
       {/* Cover Image */}
       <div>
-        <Label>Capa do Livro</Label>
+        <Label>{t('pages.books.form.coverLabel')}</Label>
         <div className="mt-2 flex items-start gap-4">
           <div className="relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted shadow-sm">
             {coverPreview ? (
               <>
                 <img
                   src={coverPreview}
-                  alt="Capa"
+                  alt={t('pages.books.form.coverAlt')}
                   className="h-full w-full object-cover"
                 />
                 <button
                   type="button"
                   onClick={handleRemoveCover}
                   className="absolute right-1 top-1 rounded-full bg-background/80 p-0.5 hover:bg-background"
-                  aria-label="Remover capa"
+                  aria-label={t('pages.books.form.removeCover')}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -225,9 +227,13 @@ export function BookForm({
               size="sm"
               onClick={() => fileInputRef.current?.click()}
             >
-              {coverPreview ? 'Trocar imagem' : 'Selecionar imagem'}
+              {coverPreview
+                ? t('pages.books.form.coverChangeBtn')
+                : t('pages.books.form.coverSelectBtn')}
             </Button>
-            <p className="text-xs text-muted-foreground">JPG, PNG ou WebP. Máx. 5MB.</p>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.books.form.coverHint')}
+            </p>
           </div>
         </div>
       </div>
@@ -235,19 +241,19 @@ export function BookForm({
       {/* Book File Upload (Digital only) */}
       {mediaType === 'Dig' && (
         <div>
-          <Label>Arquivo do Livro (EPUB ou PDF)</Label>
+          <Label>{t('pages.books.form.bookFileLabel')}</Label>
           <div className="mt-2 flex items-center gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-muted px-3 py-2">
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="truncate text-sm text-muted-foreground">
-                {bookFileName ?? 'Nenhum arquivo selecionado'}
+                {bookFileName ?? t('pages.books.form.bookFileNone')}
               </span>
               {bookFileName && (
                 <button
                   type="button"
                   onClick={handleRemoveBookFile}
                   className="ml-auto shrink-0 rounded-full p-0.5 hover:bg-background"
-                  aria-label="Remover arquivo"
+                  aria-label={t('pages.books.form.removeBookFile')}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -268,30 +274,36 @@ export function BookForm({
               onClick={() => bookFileInputRef.current?.click()}
             >
               <Upload className="mr-1 h-3 w-3" />
-              {bookFileName ? 'Trocar' : 'Selecionar'}
+              {bookFileName
+                ? t('pages.books.form.bookFileChangeBtn')
+                : t('pages.books.form.bookFileSelectBtn')}
             </Button>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Apenas arquivos .epub ou .pdf. O arquivo é enviado após salvar o livro.
+            {t('pages.books.form.bookFileHint')}
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="title">Título *</Label>
-          <Input id="title" {...register('title')} placeholder="Título do livro" />
+          <Label htmlFor="title">{t('pages.books.form.titleLabel')}</Label>
+          <Input
+            id="title"
+            {...register('title')}
+            placeholder={t('pages.books.form.titlePlaceholder')}
+          />
           {errors.title && (
             <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="isbn">ISBN</Label>
+          <Label htmlFor="isbn">{t('pages.books.form.isbnLabel')}</Label>
           <Input
             id="isbn"
             {...register('isbn')}
-            placeholder="Ex: 9788535902778"
+            placeholder={t('pages.books.form.isbnPlaceholder')}
             maxLength={13}
           />
           {errors.isbn && (
@@ -300,11 +312,11 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="series_name">Série</Label>
+          <Label htmlFor="series_name">{t('pages.books.form.seriesLabel')}</Label>
           <Input
             id="series_name"
             {...register('series_name')}
-            placeholder="Ex: O Senhor dos Anéis"
+            placeholder={t('pages.books.form.seriesPlaceholder')}
           />
           {errors.series_name && (
             <p className="mt-1 text-sm text-destructive">
@@ -315,7 +327,9 @@ export function BookForm({
 
         {watch('series_name') && (
           <div>
-            <Label htmlFor="series_order">Volume</Label>
+            <Label htmlFor="series_order">
+              {t('pages.books.form.seriesOrderLabel')}
+            </Label>
             <Input
               id="series_order"
               type="number"
@@ -323,7 +337,7 @@ export function BookForm({
               {...register('series_order', {
                 setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
               })}
-              placeholder="Ex: 1"
+              placeholder={t('pages.books.form.seriesOrderPlaceholder')}
             />
             {errors.series_order && (
               <p className="mt-1 text-sm text-destructive">
@@ -334,10 +348,10 @@ export function BookForm({
         )}
 
         <div className="col-span-2">
-          <Label>Autores *</Label>
+          <Label>{t('pages.books.form.authorsLabel')}</Label>
           <Select onValueChange={(value) => handleAuthorToggle(parseInt(value))}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione os autores" />
+              <SelectValue placeholder={t('pages.books.form.authorsPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {authors.map((author) => (
@@ -357,7 +371,9 @@ export function BookForm({
                     <button
                       type="button"
                       onClick={() => handleRemoveAuthor(authorId)}
-                      aria-label={`Remover ${author.name}`}
+                      aria-label={t('pages.books.form.removeAuthor', {
+                        name: author.name,
+                      })}
                       className="ml-1 hover:text-destructive"
                     >
                       <X className="h-3 w-3" aria-hidden="true" />
@@ -373,7 +389,7 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="pages">Páginas *</Label>
+          <Label htmlFor="pages">{t('pages.books.form.pagesLabel')}</Label>
           <Input
             id="pages"
             type="number"
@@ -388,13 +404,13 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="publisher">Editora *</Label>
+          <Label htmlFor="publisher">{t('pages.books.form.publisherLabel')}</Label>
           <Select
             value={watch('publisher').toString()}
             onValueChange={(value) => setValue('publisher', parseInt(value))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a editora" />
+              <SelectValue placeholder={t('pages.books.form.publisherPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {publishers.map((publisher) => (
@@ -410,7 +426,7 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="language">Idioma *</Label>
+          <Label htmlFor="language">{t('pages.books.form.languageLabel')}</Label>
           <Select
             value={watch('language')}
             onValueChange={(value) => setValue('language', value)}
@@ -432,7 +448,7 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="genre">Gênero *</Label>
+          <Label htmlFor="genre">{t('pages.books.form.genreLabel')}</Label>
           <Select
             value={watch('genre')}
             onValueChange={(value) => setValue('genre', value)}
@@ -454,7 +470,9 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="literarytype">Tipo Literário *</Label>
+          <Label htmlFor="literarytype">
+            {t('pages.books.form.literaryTypeLabel')}
+          </Label>
           <Select
             value={watch('literarytype')}
             onValueChange={(value) => setValue('literarytype', value)}
@@ -478,13 +496,13 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="media_type">Tipo de Mídia</Label>
+          <Label htmlFor="media_type">{t('pages.books.form.mediaTypeLabel')}</Label>
           <Select
             value={mediaType || undefined}
             onValueChange={(value) => setValue('media_type', value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione o tipo de mídia..." />
+              <SelectValue placeholder={t('pages.books.form.mediaTypePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {MEDIA_TYPES.map((type) => (
@@ -500,21 +518,25 @@ export function BookForm({
         </div>
 
         <div>
-          <Label htmlFor="edition">Edição *</Label>
-          <Input id="edition" {...register('edition')} placeholder="Ex: 1ª edição" />
+          <Label htmlFor="edition">{t('pages.books.form.editionLabel')}</Label>
+          <Input
+            id="edition"
+            {...register('edition')}
+            placeholder={t('pages.books.form.editionPlaceholder')}
+          />
           {errors.edition && (
             <p className="mt-1 text-sm text-destructive">{errors.edition.message}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="publish_date">Data de Publicação</Label>
+          <Label htmlFor="publish_date">{t('pages.books.form.publishDateLabel')}</Label>
           <DatePicker
             value={watch('publish_date')}
             onChange={(date) =>
               setValue('publish_date', date ? formatLocalDate(date) : '')
             }
-            placeholder="Selecione a data de publicação"
+            placeholder={t('pages.books.form.publishDatePlaceholder')}
           />
           {errors.publish_date && (
             <p className="mt-1 text-sm text-destructive">
@@ -538,30 +560,30 @@ export function BookForm({
                 }}
               />
               <Label htmlFor="already-read" className="cursor-pointer font-normal">
-                Já li este livro
+                {t('pages.books.form.alreadyReadLabel')}
               </Label>
             </div>
 
             {alreadyRead && (
               <div className="grid grid-cols-2 gap-4 rounded-md border p-3">
                 <div>
-                  <Label>Data de início *</Label>
+                  <Label>{t('pages.books.form.startDateLabel')}</Label>
                   <DatePicker
                     value={startDate}
                     onChange={(date) => setStartDate(date ? formatLocalDate(date) : '')}
-                    placeholder="Quando começou a ler"
+                    placeholder={t('pages.books.form.startDatePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>Data de fim *</Label>
+                  <Label>{t('pages.books.form.endDateLabel')}</Label>
                   <DatePicker
                     value={endDate}
                     onChange={(date) => setEndDate(date ? formatLocalDate(date) : '')}
-                    placeholder="Quando terminou de ler"
+                    placeholder={t('pages.books.form.endDatePlaceholder')}
                   />
                   {endDate && startDate && endDate < startDate && (
                     <p className="mt-1 text-sm text-destructive">
-                      Data de fim deve ser posterior à data de início
+                      {t('pages.books.form.endDateError')}
                     </p>
                   )}
                 </div>
@@ -572,11 +594,13 @@ export function BookForm({
 
         {watch('read_status') === 'paused' && (
           <div className="col-span-2">
-            <Label htmlFor="pause_reason">Motivo da Pausa</Label>
+            <Label htmlFor="pause_reason">
+              {t('pages.books.form.pauseReasonLabel')}
+            </Label>
             <Textarea
               id="pause_reason"
               {...register('pause_reason')}
-              placeholder="Por que pausou a leitura? (opcional)"
+              placeholder={t('pages.books.form.pauseReasonPlaceholder')}
               rows={2}
             />
             {errors.pause_reason && (
@@ -589,7 +613,7 @@ export function BookForm({
 
         {(watch('read_status') === 'read' || alreadyRead) && (
           <div>
-            <Label htmlFor="rating">Avaliação</Label>
+            <Label htmlFor="rating">{t('pages.books.form.ratingLabel')}</Label>
             <StarRating
               value={watch('rating')}
               onChange={(value) => setValue('rating', value)}
@@ -603,11 +627,11 @@ export function BookForm({
         )}
 
         <div className="col-span-2">
-          <Label htmlFor="synopsis">Sinopse *</Label>
+          <Label htmlFor="synopsis">{t('pages.books.form.synopsisLabel')}</Label>
           <Textarea
             id="synopsis"
             {...register('synopsis')}
-            placeholder="Descrição do livro..."
+            placeholder={t('pages.books.form.synopsisPlaceholder')}
             rows={5}
           />
           {errors.synopsis && (
@@ -618,16 +642,16 @@ export function BookForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

@@ -1,5 +1,6 @@
-import { LogOut, Menu, Search } from 'lucide-react';
+import { LogOut, Menu, Search, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
@@ -15,6 +16,7 @@ export const Header = () => {
   const { toggle: toggleSidebar } = useSidebar();
   const { t } = useTranslation();
   const openCommandPalette = useCommandPaletteStore((s) => s.open);
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-header border-b border-border/60 bg-card/80 px-md py-md backdrop-blur-md md:px-lg">
@@ -69,6 +71,17 @@ export const Header = () => {
           </div>
 
           <NotificationBell />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => void navigate('/settings/profile')}
+            className="hover-lift"
+            aria-label={t('layout.userSettings')}
+            title={t('layout.userSettings')}
+          >
+            <Settings className="h-4 w-4" aria-hidden="true" />
+          </Button>
 
           <Button
             variant="ghost"

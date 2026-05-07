@@ -101,6 +101,7 @@ function HighlightInlineForm({
   const [color, setColor] = useState(highlight?.color ?? 'yellow');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,7 +125,7 @@ function HighlightInlineForm({
       onSaved();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar destaque',
+        title: t('pages.books.detail.highlightSaveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -141,13 +142,13 @@ function HighlightInlineForm({
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Texto do destaque..."
+        placeholder={t('pages.books.detail.hlTextPlaceholder')}
         rows={3}
         required
       />
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-xs">Tipo</Label>
+          <Label className="text-xs">{t('pages.books.detail.hlTypeLbl')}</Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -156,24 +157,40 @@ function HighlightInlineForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="quote">Citação</SelectItem>
-              <SelectItem value="note">Nota</SelectItem>
-              <SelectItem value="idea">Ideia</SelectItem>
+              <SelectItem value="quote">
+                {t('pages.highlights.form.typeQuote')}
+              </SelectItem>
+              <SelectItem value="note">
+                {t('pages.highlights.form.typeNote')}
+              </SelectItem>
+              <SelectItem value="idea">
+                {t('pages.highlights.form.typeIdea')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Cor</Label>
+          <Label className="text-xs">{t('pages.books.detail.hlColorLbl')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yellow">Amarelo</SelectItem>
-              <SelectItem value="green">Verde</SelectItem>
-              <SelectItem value="blue">Azul</SelectItem>
-              <SelectItem value="pink">Rosa</SelectItem>
-              <SelectItem value="orange">Laranja</SelectItem>
+              <SelectItem value="yellow">
+                {t('pages.highlights.form.colorYellow')}
+              </SelectItem>
+              <SelectItem value="green">
+                {t('pages.highlights.form.colorGreen')}
+              </SelectItem>
+              <SelectItem value="blue">
+                {t('pages.highlights.form.colorBlue')}
+              </SelectItem>
+              <SelectItem value="pink">
+                {t('pages.highlights.form.colorPink')}
+              </SelectItem>
+              <SelectItem value="orange">
+                {t('pages.highlights.form.colorOrange')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -182,13 +199,13 @@ function HighlightInlineForm({
         <Input
           type="number"
           min={1}
-          placeholder="Página"
+          placeholder={t('pages.books.detail.hlPagePlaceholder')}
           value={pageNumber}
           onChange={(e) => setPageNumber(e.target.value)}
           className="h-8 text-xs"
         />
         <Input
-          placeholder="Capítulo"
+          placeholder={t('pages.books.detail.hlChapterPlaceholder')}
           value={chapter}
           onChange={(e) => setChapter(e.target.value)}
           className="h-8 text-xs"
@@ -196,10 +213,10 @@ function HighlightInlineForm({
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" size="sm" disabled={isSaving || !text.trim()}>
-          {isSaving ? 'Salvando...' : 'Salvar'}
+          {isSaving ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>
@@ -496,10 +513,10 @@ export function BookDetailModal({
 
   const handleDeleteHighlight = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir destaque',
-      description: 'Tem certeza que deseja excluir este destaque?',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.books.detail.highlightDeleteTitle'),
+      description: t('pages.books.detail.highlightDeleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
@@ -508,7 +525,7 @@ export function BookDetailModal({
       void loadHighlights();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir destaque',
+        title: t('pages.books.detail.highlightDeleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -528,7 +545,7 @@ export function BookDetailModal({
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
+        title: t('common.messages.exportError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -545,7 +562,7 @@ export function BookDetailModal({
         <DialogHeader>
           <DialogTitle className="sr-only">{book.title}</DialogTitle>
           <DialogDescription className="sr-only">
-            Detalhes do livro {book.title}
+            {t('pages.books.detail.dialogDesc', { title: book.title })}
           </DialogDescription>
         </DialogHeader>
 
@@ -553,20 +570,20 @@ export function BookDetailModal({
         <div className="flex shrink-0 gap-1 rounded-md border p-1">
           {(
             [
-              { id: 'info', label: 'Informações', icon: null },
+              { id: 'info', label: t('pages.books.detail.tabInfo'), icon: null },
               {
                 id: 'readings',
-                label: 'Leituras',
+                label: t('pages.books.detail.tabReadings'),
                 icon: <BookMarked className="h-3.5 w-3.5" />,
               },
               {
                 id: 'summaries',
-                label: 'Resumos',
+                label: t('pages.books.detail.tabSummaries'),
                 icon: <FileText className="h-3.5 w-3.5" />,
               },
               {
                 id: 'highlights',
-                label: 'Destaques',
+                label: t('pages.books.detail.tabHighlights'),
                 icon: <Highlighter className="h-3.5 w-3.5" />,
               },
             ] as const
@@ -598,7 +615,7 @@ export function BookDetailModal({
                   {book.cover ? (
                     <img
                       src={book.cover}
-                      alt={`Capa de ${book.title}`}
+                      alt={t('pages.books.detail.coverAlt', { title: book.title })}
                       className="h-64 w-44 rounded-md object-cover shadow-md"
                     />
                   ) : (
@@ -628,7 +645,9 @@ export function BookDetailModal({
                       <Badge variant="outline">{book.media_type_display}</Badge>
                     )}
                     {book.has_summary && (
-                      <Badge variant="outline">✓ Possui resumo</Badge>
+                      <Badge variant="outline">
+                        {t('pages.books.detail.hasSummary')}
+                      </Badge>
                     )}
                   </div>
 
@@ -639,40 +658,40 @@ export function BookDetailModal({
                   <div className="space-y-1.5">
                     <MetaRow
                       icon={<User className="h-4 w-4" />}
-                      label="Editora"
+                      label={t('pages.books.detail.metaPublisher')}
                       value={book.publisher_name}
                     />
                     <MetaRow
                       icon={<BookOpen className="h-4 w-4" />}
-                      label="Páginas"
-                      value={`${book.pages} páginas`}
+                      label={t('pages.books.detail.metaPages')}
+                      value={t('pages.books.detail.pagesCount', { count: book.pages })}
                     />
                     <MetaRow
                       icon={<Globe className="h-4 w-4" />}
-                      label="Idioma"
+                      label={t('pages.books.detail.metaLanguage')}
                       value={book.language_display}
                     />
                     <MetaRow
                       icon={<Library className="h-4 w-4" />}
-                      label="Tipo"
+                      label={t('pages.books.detail.metaType')}
                       value={book.literarytype_display}
                     />
                     <MetaRow
                       icon={<Hash className="h-4 w-4" />}
-                      label="Edição"
+                      label={t('pages.books.detail.metaEdition')}
                       value={book.edition}
                     />
                     {book.publish_date && (
                       <MetaRow
                         icon={<Calendar className="h-4 w-4" />}
-                        label="Publicação"
+                        label={t('pages.books.detail.metaPublishDate')}
                         value={formatDate(book.publish_date, 'dd/MM/yyyy')}
                       />
                     )}
                     {book.genre_display && (
                       <MetaRow
                         icon={<Tag className="h-4 w-4" />}
-                        label="Gênero"
+                        label={t('pages.books.detail.metaGenre')}
                         value={book.genre_display}
                       />
                     )}
@@ -688,13 +707,16 @@ export function BookDetailModal({
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-1 font-medium">
                         <TrendingUp className="h-4 w-4" />
-                        Progresso de Leitura
+                        {t('pages.books.detail.readingProgress')}
                       </span>
                       <span className="font-semibold">{book.reading_progress}%</span>
                     </div>
                     <Progress value={book.reading_progress} className="h-2" />
                     <p className="text-xs text-muted-foreground">
-                      {book.total_pages_read} de {book.pages} páginas lidas
+                      {t('pages.books.detail.pagesRead', {
+                        read: book.total_pages_read,
+                        total: book.pages,
+                      })}
                     </p>
                   </div>
                 </>
@@ -709,16 +731,18 @@ export function BookDetailModal({
                     <div className="space-y-2">
                       <span className="flex items-center gap-1 text-sm font-medium">
                         <Calendar className="h-4 w-4" />
-                        Previsão de Conclusão
+                        {t('pages.books.detail.completionForecast')}
                       </span>
                       <div className="grid grid-cols-1 gap-2 text-xs">
                         {book.estimated_completion_book && (
                           <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
                             <span className="text-muted-foreground">
-                              Média deste livro
+                              {t('pages.books.detail.bookAvg')}
                               {book.book_avg_pages_per_day > 0 && (
                                 <span className="ml-1">
-                                  ({book.book_avg_pages_per_day} pág/dia)
+                                  {t('pages.books.detail.pagesPerDay', {
+                                    count: book.book_avg_pages_per_day,
+                                  })}
                                 </span>
                               )}
                             </span>
@@ -732,10 +756,12 @@ export function BookDetailModal({
                         {book.estimated_completion_general && (
                           <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
                             <span className="text-muted-foreground">
-                              Média geral
+                              {t('pages.books.detail.generalAvg')}
                               {book.general_avg_pages_per_day > 0 && (
                                 <span className="ml-1">
-                                  ({book.general_avg_pages_per_day} pág/dia)
+                                  {t('pages.books.detail.pagesPerDay', {
+                                    count: book.general_avg_pages_per_day,
+                                  })}
                                 </span>
                               )}
                             </span>
@@ -756,7 +782,9 @@ export function BookDetailModal({
                 <>
                   <div className="border-t" />
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">Sinopse</p>
+                    <p className="text-sm font-medium">
+                      {t('pages.books.detail.synopsis')}
+                    </p>
                     <p className="text-sm leading-relaxed text-muted-foreground">
                       {book.synopsis}
                     </p>
@@ -777,7 +805,7 @@ export function BookDetailModal({
                   className="text-destructive hover:text-destructive"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Excluir
+                  {t('common.actions.delete')}
                 </Button>
                 <Button
                   size="sm"
@@ -787,7 +815,7 @@ export function BookDetailModal({
                   }}
                 >
                   <Edit className="mr-2 h-4 w-4" />
-                  Editar
+                  {t('common.actions.edit')}
                 </Button>
               </div>
             </> /* end info tab */
@@ -798,7 +826,9 @@ export function BookDetailModal({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  {highlights.length} destaque{highlights.length !== 1 ? 's' : ''}
+                  {t('pages.books.detail.highlightsCount', {
+                    count: highlights.length,
+                  })}
                 </span>
                 <div className="flex gap-2">
                   {highlights.length > 0 && (
@@ -809,7 +839,9 @@ export function BookDetailModal({
                       disabled={isExporting}
                     >
                       <Download className="mr-1.5 h-3.5 w-3.5" />
-                      {isExporting ? 'Exportando...' : 'Exportar MD'}
+                      {isExporting
+                        ? t('pages.books.detail.exportingBtn')
+                        : t('pages.books.detail.exportBtn')}
                     </Button>
                   )}
                   <Button
@@ -820,7 +852,7 @@ export function BookDetailModal({
                     }}
                   >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    Adicionar
+                    {t('pages.books.detail.addBtn')}
                   </Button>
                 </div>
               </div>
@@ -839,11 +871,11 @@ export function BookDetailModal({
 
               {isLoadingHighlights ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  Carregando destaques...
+                  {t('pages.books.detail.loadingHighlights')}
                 </p>
               ) : highlights.length === 0 && !showAddForm ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Nenhum destaque ainda. Clique em &quot;Adicionar&quot; para começar.
+                  {t('pages.books.detail.noHighlights')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -917,8 +949,7 @@ export function BookDetailModal({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  {readings.length} sess{readings.length !== 1 ? 'ões' : 'ão'} de
-                  leitura
+                  {t('pages.books.detail.readingsCount', { count: readings.length })}
                 </span>
                 <Button
                   size="sm"
@@ -928,17 +959,17 @@ export function BookDetailModal({
                   }}
                 >
                   <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Adicionar
+                  {t('pages.books.detail.addBtn')}
                 </Button>
               </div>
 
               {isLoadingReadings ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  Carregando leituras...
+                  {t('pages.books.detail.loadingReadings')}
                 </p>
               ) : readings.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Nenhuma sessão de leitura registrada.
+                  {t('pages.books.detail.noReadings')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -954,8 +985,18 @@ export function BookDetailModal({
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span>{r.pages_read} páginas lidas</span>
-                              {r.reading_time > 0 && <span>{r.reading_time} min</span>}
+                              <span>
+                                {t('pages.books.detail.readingPagesRead', {
+                                  count: r.pages_read,
+                                })}
+                              </span>
+                              {r.reading_time > 0 && (
+                                <span>
+                                  {t('pages.books.detail.readingTime', {
+                                    count: r.reading_time,
+                                  })}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="flex shrink-0 gap-0.5">
@@ -1002,7 +1043,7 @@ export function BookDetailModal({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  {summaries.length} resumo{summaries.length !== 1 ? 's' : ''}
+                  {t('pages.books.detail.summariesCount', { count: summaries.length })}
                 </span>
                 <Button
                   size="sm"
@@ -1010,28 +1051,30 @@ export function BookDetailModal({
                   disabled={book.read_status !== 'read'}
                   title={
                     book.read_status !== 'read'
-                      ? 'Resumos só podem ser adicionados a livros lidos completamente'
+                      ? t('pages.books.detail.summariesReadOnlyBtn')
                       : undefined
                   }
                 >
                   <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Adicionar
+                  {t('pages.books.detail.addBtn')}
                 </Button>
               </div>
               {book.read_status !== 'read' && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  Resumos só podem ser cadastrados para livros com status{' '}
-                  <strong>Lido</strong>.
-                </p>
+                <p
+                  className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+                  dangerouslySetInnerHTML={{
+                    __html: t('pages.books.detail.summariesReadOnlyNote'),
+                  }}
+                />
               )}
 
               {isLoadingSummaries ? (
                 <p className="py-4 text-center text-sm text-muted-foreground">
-                  Carregando resumos...
+                  {t('pages.books.detail.loadingSummaries')}
                 </p>
               ) : summaries.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Nenhum resumo registrado para este livro.
+                  {t('pages.books.detail.noSummaries')}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1173,7 +1216,7 @@ export function BookDetailModal({
                   </Button>
                   <Button type="submit" disabled={isSummarySubmitting}>
                     {isSummarySubmitting
-                      ? 'Salvando...'
+                      ? t('common.actions.saving')
                       : editingSummary
                         ? t('pages.summaries.saveBtn')
                         : t('pages.summaries.createBtn')}

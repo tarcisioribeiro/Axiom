@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export function PublisherForm({
   onCancel,
   isLoading = false,
 }: PublisherFormProps) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -79,15 +81,19 @@ export function PublisherForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Nome *</Label>
-          <Input id="name" {...register('name')} placeholder="Nome da editora" />
+          <Label htmlFor="name">{t('pages.publishers.form.nameLabel')}</Label>
+          <Input
+            id="name"
+            {...register('name')}
+            placeholder={t('pages.publishers.form.namePlaceholder')}
+          />
           {errors.name && (
             <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="country">País *</Label>
+          <Label htmlFor="country">{t('pages.publishers.form.countryLabel')}</Label>
           <Select
             value={watch('country')}
             onValueChange={(value) => setValue('country', value)}
@@ -109,12 +115,12 @@ export function PublisherForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website">Website</Label>
+          <Label htmlFor="website">{t('pages.publishers.form.websiteLabel')}</Label>
           <Input
             id="website"
             type="url"
             {...register('website')}
-            placeholder="https://exemplo.com.br"
+            placeholder={t('pages.publishers.form.websitePlaceholder')}
           />
           {errors.website && (
             <p className="mt-1 text-sm text-destructive">{errors.website.message}</p>
@@ -122,7 +128,9 @@ export function PublisherForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="founded_year">Ano de Fundação</Label>
+          <Label htmlFor="founded_year">
+            {t('pages.publishers.form.foundedYearLabel')}
+          </Label>
           <Input
             id="founded_year"
             type="number"
@@ -143,16 +151,16 @@ export function PublisherForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

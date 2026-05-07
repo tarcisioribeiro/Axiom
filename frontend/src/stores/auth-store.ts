@@ -2,10 +2,10 @@ import { create } from 'zustand';
 
 import { logger } from '@/lib/logger';
 import { authService } from '@/services/auth-service';
-import { membersService } from '@/services/members-service';
-import type { User, Permission, LoginCredentials } from '@/types';
+import type { LoginCredentials, Permission, User } from '@/types';
 
-// Variável para evitar múltiplas chamadas simultâneas de loadUserData
+import { enrichUserWithMemberData } from './auth-helpers';
+
 let loadUserDataPromise: Promise<void> | null = null;
 
 interface AuthState {
@@ -16,9 +16,11 @@ interface AuthState {
   isInitializing: boolean;
   isAdmin: boolean;
   error: string | null;
+  requires2FA: boolean;
+  tempToken: string | null;
 
-  // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
+  verify2FA: (code: string) => Promise<void>;
   logout: () => void;
   loadUserData: () => Promise<void>;
   setError: (error: string | null) => void;
@@ -34,22 +36,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitializing: true,
   isAdmin: false,
   error: null,
+  requires2FA: false,
+  tempToken: null,
 
   login: async (credentials: LoginCredentials) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, requires2FA: false, tempToken: null });
 
     try {
       const loginResponse = await authService.login(credentials);
-      logger.log('[AuthStore] Login successful:', loginResponse.message);
+      logger.log('[AuthStore] Login response:', loginResponse.message);
 
-      // Os tokens agora são httpOnly cookies definidos pelo backend
-      // Podemos fazer chamadas imediatamente
+      if (loginResponse.requires_2fa) {
+        set({
+          isLoading: false,
+          requires2FA: true,
+          tempToken: loginResponse.temp_token,
+        });
+        return;
+      }
 
-      // Get user permissions and data
       const { permissions: permissionsResponse, is_superuser } =
         await authService.getUserPermissions();
 
-      // Superusuário → acesso exclusivo ao painel admin
       if (is_superuser) {
         const adminUser: User = {
           id: 0,
@@ -74,7 +82,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       authService.savePermissions(permissionsResponse);
 
-      // Construct user object with data from permissions endpoint
       let user: User = {
         id: 1,
         username: credentials.username,
@@ -84,21 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         groups: ['Membros'],
       };
 
-      // Fetch member data to get full name
-      try {
-        const memberData = await membersService.getCurrentUserMember();
-        if (memberData?.name) {
-          const nameParts = memberData.name.trim().split(' ');
-          user = {
-            ...user,
-            first_name: nameParts[0] || '',
-            last_name: nameParts.slice(1).join(' ') || '',
-          };
-        }
-      } catch (memberError) {
-        logger.log('[AuthStore] Could not fetch member data:', memberError);
-      }
-
+      user = await enrichUserWithMemberData(user, '[AuthStore] login:');
       authService.saveUserData(user);
 
       set({
@@ -114,10 +107,72 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         err.name === 'PermissionError'
           ? 'Superusuários não têm acesso ao sistema. Use o painel admin.'
           : err.message || 'Login failed';
+      set({ error: message, isLoading: false });
+      throw error;
+    }
+  },
+
+  verify2FA: async (code: string) => {
+    const { tempToken } = get();
+    if (!tempToken) {
+      set({ error: 'Sessão 2FA expirada. Faça login novamente.' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      await authService.verifyTwoFactor(tempToken, code);
+
+      const { permissions: permissionsResponse, is_superuser } =
+        await authService.getUserPermissions();
+
+      if (is_superuser) {
+        const adminUser: User = {
+          id: 0,
+          username: '',
+          email: '',
+          first_name: 'Admin',
+          last_name: '',
+          groups: [],
+          is_superuser: true,
+        };
+        authService.saveUserData(adminUser);
+        authService.savePermissions([]);
+        set({
+          user: adminUser,
+          permissions: [],
+          isAuthenticated: true,
+          isAdmin: true,
+          isLoading: false,
+          requires2FA: false,
+          tempToken: null,
+        });
+        return;
+      }
+
+      authService.savePermissions(permissionsResponse);
+      let user: User = {
+        id: 1,
+        username: '',
+        email: '',
+        first_name: '',
+        last_name: '',
+        groups: ['Membros'],
+      };
+      user = await enrichUserWithMemberData(user, '[AuthStore] verify2FA:');
+      authService.saveUserData(user);
       set({
-        error: message,
+        user,
+        permissions: permissionsResponse,
+        isAuthenticated: true,
+        isAdmin: false,
         isLoading: false,
+        requires2FA: false,
+        tempToken: null,
       });
+    } catch (error: unknown) {
+      const err = error as Error;
+      set({ error: err.message || 'Código inválido.', isLoading: false });
       throw error;
     }
   },
@@ -130,18 +185,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: false,
       isAdmin: false,
       error: null,
+      requires2FA: false,
+      tempToken: null,
     });
   },
 
   loadUserData: async () => {
-    // Se já há uma chamada em andamento, retorna a Promise existente
     if (loadUserDataPromise) {
       logger.log('[AuthStore] loadUserData já em andamento, reutilizando...');
       return loadUserDataPromise;
     }
 
-    // Set isInitializing synchronously before the IIFE so any concurrent caller
-    // that checks get().isInitializing sees the guard immediately.
     set({ isInitializing: true });
 
     loadUserDataPromise = (async () => {
@@ -149,7 +203,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         let user = authService.getUserData();
         const permissions = authService.getPermissions();
 
-        // Se não há dados do usuário nos cookies, não está autenticado
         if (!user) {
           logger.log('[AuthStore] No user data in cookies - user not authenticated');
           set({
@@ -161,29 +214,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           return;
         }
 
-        // Verifica se o token ainda é válido
         try {
           const isAuthenticated = await authService.isAuthenticated();
 
-          // If authenticated and user has empty first_name, try to fetch member data
           if (isAuthenticated && user && !user.first_name) {
-            try {
-              const memberData = await membersService.getCurrentUserMember();
-              if (memberData?.name) {
-                const nameParts = memberData.name.trim().split(' ');
-                user = {
-                  ...user,
-                  first_name: nameParts[0] || '',
-                  last_name: nameParts.slice(1).join(' ') || '',
-                };
-                authService.saveUserData(user);
-              }
-            } catch (memberError) {
-              logger.log(
-                '[AuthStore] Could not fetch member data on reload:',
-                memberError
-              );
-            }
+            user = await enrichUserWithMemberData(user, '[AuthStore] loadUserData:');
+            authService.saveUserData(user);
           }
 
           const isAdminUser = isAuthenticated ? user?.is_superuser === true : false;
@@ -195,7 +231,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isInitializing: false,
           });
         } catch {
-          // Erro ao verificar token (401, 429, etc) - trata como não autenticado
           logger.log(
             '[AuthStore] Token verification failed - treating as not authenticated'
           );
@@ -215,7 +250,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isInitializing: false,
         });
       } finally {
-        // Limpa a Promise após conclusão para permitir novas chamadas no futuro
         loadUserDataPromise = null;
       }
     })();

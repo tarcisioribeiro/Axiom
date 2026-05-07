@@ -32,12 +32,37 @@ class CookieTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        import secrets as _secrets
+
+        from django.core.cache import cache
+
         serializer = self.get_serializer(data=request.data)
 
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
+
+        # Verificar se o usuário tem 2FA ativo
+        user = serializer.user  # type: ignore[attr-defined]
+        try:
+            from .models import TOTPDevice
+
+            device = user.totp_device  # type: ignore[attr-defined]
+            if device.is_active:
+                # Gerar temp token e armazenar user_id no cache por 5 minutos
+                temp_token = _secrets.token_urlsafe(32)
+                cache.set(f"2fa_temp:{temp_token}", user.pk, timeout=300)
+                return Response(
+                    {
+                        "requires_2fa": True,
+                        "temp_token": temp_token,
+                        "message": "Código de dois fatores necessário.",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except TOTPDevice.DoesNotExist:
+            pass
 
         # Criar response com dados do usuário (sem tokens no body)
         response = Response(
