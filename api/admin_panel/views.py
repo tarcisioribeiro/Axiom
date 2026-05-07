@@ -485,13 +485,12 @@ class AdminRestartAllView(AdminBaseView):
 
     def post(self, request: Request) -> Response:
         result = _restart_deployments()
-        if result["success"]:
-            return Response(
-                {"message": result["message"], "results": result["results"]}
-            )
         return Response(
-            {"error": result["message"], "results": result.get("results", {})},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            {
+                "success": result["success"],
+                "message": result["message"],
+                "results": result.get("results", {}),
+            }
         )
 
 
