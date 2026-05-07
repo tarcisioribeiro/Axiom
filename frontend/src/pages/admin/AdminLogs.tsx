@@ -138,7 +138,7 @@ export default function AdminLogs() {
           <p className="text-sm text-muted-foreground">
             {data
               ? t('pages.adminLogs.subtitle', {
-                  count: data.count.toLocaleString('pt-BR'),
+                  records: data.count.toLocaleString('pt-BR'),
                 })
               : t('pages.adminLogs.loading')}
           </p>
@@ -169,7 +169,7 @@ export default function AdminLogs() {
             </button>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -267,7 +267,7 @@ export default function AdminLogs() {
               {t('pages.adminLogs.page', {
                 page,
                 total: totalPages,
-                count: data?.count.toLocaleString('pt-BR'),
+                records: data?.count.toLocaleString('pt-BR'),
               })}
             </p>
             <div className="flex items-center gap-2">
