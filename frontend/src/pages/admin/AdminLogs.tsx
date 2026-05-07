@@ -1,25 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, Filter, RefreshCw, Search, X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 import type { AdminLog } from '@/types';
 
-const ACTION_LABELS: Record<string, string> = {
-  view: 'Visualização',
-  create: 'Criação',
-  update: 'Atualização',
-  delete: 'Exclusão',
-  reveal: 'Revelação',
-  download: 'Download',
-  login: 'Login',
-  logout: 'Logout',
-  failed_login: 'Login Falho',
-  failed_vault_unlock: 'Cofre Falho',
-  other: 'Outro',
-  purge: 'Purga (LGPD)',
-  shared_reveal: 'Acesso Compartilhado',
+const ACTION_KEYS: Record<string, string> = {
+  view: 'view',
+  create: 'create',
+  update: 'update',
+  delete: 'delete',
+  reveal: 'reveal',
+  download: 'download',
+  login: 'login',
+  logout: 'logout',
+  failed_login: 'failed_login',
+  failed_vault_unlock: 'failed_vault_unlock',
+  other: 'other',
+  purge: 'purge',
+  shared_reveal: 'shared_reveal',
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -39,6 +40,8 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 function ActionBadge({ action, display }: { action: string; display: string }) {
+  const { t } = useTranslation();
+  const key = ACTION_KEYS[action];
   return (
     <span
       className={cn(
@@ -46,7 +49,7 @@ function ActionBadge({ action, display }: { action: string; display: string }) {
         ACTION_COLORS[action] ?? 'bg-secondary text-muted-foreground'
       )}
     >
-      {display || ACTION_LABELS[action] || action}
+      {display || (key ? t(`pages.adminLogs.actions.${key}`) : action)}
     </span>
   );
 }
@@ -79,6 +82,7 @@ function LogRow({ log }: { log: AdminLog }) {
 }
 
 export default function AdminLogs() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [username, setUsername] = useState('');
@@ -128,11 +132,15 @@ export default function AdminLogs() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Logs de Atividade</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t('pages.adminLogs.title')}
+          </h1>
           <p className="text-sm text-muted-foreground">
             {data
-              ? `${data.count.toLocaleString('pt-BR')} registros no total`
-              : 'Carregando...'}
+              ? t('pages.adminLogs.subtitle', {
+                  records: data.count.toLocaleString('pt-BR'),
+                })
+              : t('pages.adminLogs.loading')}
           </p>
         </div>
         <button
@@ -141,7 +149,7 @@ export default function AdminLogs() {
           className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
         >
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-          Atualizar
+          {t('pages.adminLogs.refresh')}
         </button>
       </div>
 
@@ -149,22 +157,24 @@ export default function AdminLogs() {
       <div className="mb-4 rounded-xl border border-border bg-card p-4">
         <div className="mb-3 flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Filtros</span>
+          <span className="text-sm font-medium text-foreground">
+            {t('pages.adminLogs.filters')}
+          </span>
           {hasFilters && (
             <button
               onClick={clearFilters}
               className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3 w-3" /> Limpar
+              <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
             </button>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Usuário"
+              placeholder={t('pages.adminLogs.userPlaceholder')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -175,10 +185,10 @@ export default function AdminLogs() {
             onChange={(e) => setAction(e.target.value)}
             className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <option value="">Todas as ações</option>
-            {Object.entries(ACTION_LABELS).map(([k, v]) => (
+            <option value="">{t('pages.adminLogs.allActions')}</option>
+            {Object.keys(ACTION_KEYS).map((k) => (
               <option key={k} value={k}>
-                {v}
+                {t(`pages.adminLogs.actions.${k}`)}
               </option>
             ))}
           </select>
@@ -199,7 +209,7 @@ export default function AdminLogs() {
           onClick={applyFilters}
           className="mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
-          Aplicar filtros
+          {t('pages.adminLogs.applyFilters')}
         </button>
       </div>
 
@@ -210,22 +220,22 @@ export default function AdminLogs() {
             <thead>
               <tr className="border-b border-border bg-secondary/50">
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Data/Hora
+                  {t('pages.adminLogs.columns.datetime')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Usuário
+                  {t('pages.adminLogs.columns.user')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Ação
+                  {t('pages.adminLogs.columns.action')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Modelo
+                  {t('pages.adminLogs.columns.model')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Descrição
+                  {t('pages.adminLogs.columns.description')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  IP
+                  {t('pages.adminLogs.columns.ip')}
                 </th>
               </tr>
             </thead>
@@ -234,13 +244,13 @@ export default function AdminLogs() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-muted-foreground">
                     <RefreshCw className="mx-auto mb-2 h-6 w-6 animate-spin" />
-                    Carregando logs...
+                    {t('pages.adminLogs.loadingLogs')}
                   </td>
                 </tr>
               ) : data?.results.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-muted-foreground">
-                    Nenhum log encontrado
+                    {t('pages.adminLogs.noLogs')}
                   </td>
                 </tr>
               ) : (
@@ -254,8 +264,11 @@ export default function AdminLogs() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border px-4 py-3">
             <p className="text-sm text-muted-foreground">
-              Página {page} de {totalPages} · {data?.count.toLocaleString('pt-BR')}{' '}
-              registros
+              {t('pages.adminLogs.page', {
+                page,
+                total: totalPages,
+                records: data?.count.toLocaleString('pt-BR'),
+              })}
             </p>
             <div className="flex items-center gap-2">
               <button

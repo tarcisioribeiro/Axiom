@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -15,17 +16,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-const TIME_OF_DAY_OPTIONS = [
-  { value: 'morning', label: 'Manhã' },
-  { value: 'afternoon', label: 'Tarde' },
-  { value: 'evening', label: 'Noite' },
-  { value: 'dawn', label: 'Madrugada' },
-] as const;
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { readingSchema, type ReadingFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { Reading, Book } from '@/types';
+
+const TIME_OF_DAY_KEYS = ['morning', 'afternoon', 'evening', 'dawn'] as const;
 
 interface ReadingFormProps {
   reading?: Reading;
@@ -42,6 +39,7 @@ export function ReadingForm({
   onCancel,
   isLoading = false,
 }: ReadingFormProps) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -100,18 +98,19 @@ export function ReadingForm({
       <div className="grid gap-4">
         {books.length > 1 && (
           <div className="space-y-2">
-            <Label htmlFor="book">Livro *</Label>
+            <Label htmlFor="book">{t('pages.readings.form.bookLabel')}</Label>
             <Select
               value={watch('book').toString()}
               onValueChange={(value) => setValue('book', parseInt(value))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione um livro" />
+                <SelectValue placeholder={t('pages.readings.form.bookPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {books.map((book) => (
                   <SelectItem key={book.id} value={book.id.toString()}>
-                    {book.title} ({book.pages} páginas)
+                    {book.title} (
+                    {t('pages.readings.form.bookPages', { count: book.pages })})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -123,7 +122,7 @@ export function ReadingForm({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="pages_read">Páginas Lidas *</Label>
+          <Label htmlFor="pages_read">{t('pages.readings.form.pagesReadLabel')}</Label>
           <Input
             id="pages_read"
             type="number"
@@ -137,18 +136,24 @@ export function ReadingForm({
             <p className="mt-1 text-sm text-destructive">{errors.pages_read.message}</p>
           )}
           {selectedBook > 0 && (
-            <p className="text-xs">Máximo: {getBookMaxPages(selectedBook)} páginas</p>
+            <p className="text-xs">
+              {t('pages.readings.form.pagesReadMax', {
+                count: getBookMaxPages(selectedBook),
+              })}
+            </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="reading_date">Data da Leitura *</Label>
+          <Label htmlFor="reading_date">
+            {t('pages.readings.form.readingDateLabel')}
+          </Label>
           <DatePicker
             value={watch('reading_date')}
             onChange={(date) =>
               setValue('reading_date', date ? formatLocalDate(date) : '')
             }
-            placeholder="Selecione a data de leitura"
+            placeholder={t('pages.readings.form.readingDatePlaceholder')}
           />
           {errors.reading_date && (
             <p className="mt-1 text-sm text-destructive">
@@ -158,7 +163,9 @@ export function ReadingForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="reading_time">Tempo de Leitura (minutos) *</Label>
+          <Label htmlFor="reading_time">
+            {t('pages.readings.form.readingTimeLabel')}
+          </Label>
           <Input
             id="reading_time"
             type="number"
@@ -176,12 +183,14 @@ export function ReadingForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="current_page">Página Atual</Label>
+            <Label htmlFor="current_page">
+              {t('pages.readings.form.currentPageLabel')}
+            </Label>
             <Input
               id="current_page"
               type="number"
               min="1"
-              placeholder="Opcional"
+              placeholder={t('pages.readings.form.currentPagePlaceholder')}
               {...register('current_page', {
                 setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
               })}
@@ -194,7 +203,9 @@ export function ReadingForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="time_of_day">Período do Dia</Label>
+            <Label htmlFor="time_of_day">
+              {t('pages.readings.form.timeOfDayLabel')}
+            </Label>
             <Select
               value={watch('time_of_day') ?? ''}
               onValueChange={(value) =>
@@ -202,12 +213,16 @@ export function ReadingForm({
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Opcional" />
+                <SelectValue
+                  placeholder={t('pages.readings.form.timeOfDayPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
-                {TIME_OF_DAY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                {TIME_OF_DAY_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(
+                      `pages.readings.form.timeOfDay${key.charAt(0).toUpperCase() + key.slice(1)}`
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -216,11 +231,11 @@ export function ReadingForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="notes">Anotações</Label>
+          <Label htmlFor="notes">{t('pages.readings.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Anotações sobre esta sessão de leitura..."
+            placeholder={t('pages.readings.form.notesPlaceholder')}
             rows={4}
           />
           {errors.notes && (
@@ -231,16 +246,16 @@ export function ReadingForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

@@ -123,10 +123,16 @@ class Member(BaseModel):
         verbose_name_plural = "Membros"
 
     def save(self, *args, **kwargs):
-        if self._document:
-            plain = FieldEncryption.decrypt_data(self._document)
-            if plain:
-                self.document_hash = compute_document_hash(plain)
+        update_fields = kwargs.get("update_fields")
+        # Skip document hash recomputation when _document is not being saved
+        if not update_fields or "_document" in update_fields:
+            if self._document:
+                try:
+                    plain = FieldEncryption.decrypt_data(self._document)
+                    if plain:
+                        self.document_hash = compute_document_hash(plain)
+                except Exception:
+                    pass
         super().save(*args, **kwargs)
 
     def anonymize(self) -> None:

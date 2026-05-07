@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export function GoalForm({
   onCancel,
   isLoading = false,
 }: GoalFormProps) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -101,11 +103,11 @@ export function GoalForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="title">Título *</Label>
+          <Label htmlFor="title">{t('pages.goals.form.titleLabel')}</Label>
           <Input
             id="title"
             {...register('title')}
-            placeholder="Ex: Meditar 30 dias consecutivos"
+            placeholder={t('pages.goals.form.titlePlaceholder')}
           />
           {errors.title && (
             <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
@@ -113,11 +115,11 @@ export function GoalForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="description">Descrição</Label>
+          <Label htmlFor="description">{t('pages.goals.form.descriptionLabel')}</Label>
           <Textarea
             id="description"
             {...register('description')}
-            placeholder="Descrição do objetivo (opcional)"
+            placeholder={t('pages.goals.form.descriptionPlaceholder')}
             rows={3}
           />
           {errors.description && (
@@ -128,7 +130,7 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="goal_type">Tipo de Objetivo *</Label>
+          <Label htmlFor="goal_type">{t('pages.goals.form.goalTypeLabel')}</Label>
           <Select
             value={watch('goal_type')}
             onValueChange={(value) => setValue('goal_type', value)}
@@ -150,7 +152,7 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="related_task">Tarefa Relacionada</Label>
+          <Label htmlFor="related_task">{t('pages.goals.form.relatedTaskLabel')}</Label>
           <Select
             value={watch('related_task')?.toString()}
             onValueChange={(value) =>
@@ -158,10 +160,12 @@ export function GoalForm({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Nenhuma tarefa selecionada" />
+              <SelectValue placeholder={t('pages.goals.form.relatedTaskPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Nenhuma</SelectItem>
+              <SelectItem value="none">
+                {t('pages.goals.form.relatedTaskNone')}
+              </SelectItem>
               {routineTasks.map((task) => (
                 <SelectItem key={task.id} value={task.id.toString()}>
                   {task.name}
@@ -177,7 +181,7 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="target_value">Meta *</Label>
+          <Label htmlFor="target_value">{t('pages.goals.form.targetValueLabel')}</Label>
           <Input
             id="target_value"
             type="number"
@@ -194,7 +198,9 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="current_value">Progresso Atual *</Label>
+          <Label htmlFor="current_value">
+            {t('pages.goals.form.currentValueLabel')}
+          </Label>
           <Input
             id="current_value"
             type="number"
@@ -211,13 +217,13 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="start_date">Data de Início *</Label>
+          <Label htmlFor="start_date">{t('pages.goals.form.startDateLabel')}</Label>
           <DatePicker
             value={watch('start_date')}
             onChange={(date) =>
               setValue('start_date', date ? formatLocalDate(date) : '')
             }
-            placeholder="Selecione a data de início"
+            placeholder={t('pages.goals.form.startDatePlaceholder')}
           />
           {errors.start_date && (
             <p className="mt-1 text-sm text-destructive">{errors.start_date.message}</p>
@@ -225,13 +231,13 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="deadline">Prazo</Label>
+          <Label htmlFor="deadline">{t('pages.goals.form.deadlineLabel')}</Label>
           <DatePicker
             value={watch('deadline') ?? ''}
             onChange={(date) =>
               setValue('deadline', date ? formatLocalDate(date) : null)
             }
-            placeholder="Selecione o prazo (opcional)"
+            placeholder={t('pages.goals.form.deadlinePlaceholder')}
           />
           {errors.deadline && (
             <p className="mt-1 text-sm text-destructive">{errors.deadline.message}</p>
@@ -239,11 +245,11 @@ export function GoalForm({
         </div>
 
         <div>
-          <Label htmlFor="end_date">Data de Término</Label>
+          <Label htmlFor="end_date">{t('pages.goals.form.endDateLabel')}</Label>
           <DatePicker
             value={watch('end_date')}
             onChange={(date) => setValue('end_date', date ? formatLocalDate(date) : '')}
-            placeholder="Selecione a data de término"
+            placeholder={t('pages.goals.form.endDatePlaceholder')}
           />
           {errors.end_date && (
             <p className="mt-1 text-sm text-destructive">{errors.end_date.message}</p>
@@ -251,7 +257,7 @@ export function GoalForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="status">Status *</Label>
+          <Label htmlFor="status">{t('pages.goals.form.statusLabel')}</Label>
           <Select
             value={watch('status')}
             onValueChange={(value) => setValue('status', value)}
@@ -275,16 +281,16 @@ export function GoalForm({
 
       <div className="flex justify-end gap-2 border-t pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

@@ -17,6 +17,7 @@ import {
 // Configure PDF.js worker via Vite ?url import for reliable asset bundling
 import pdfWorkerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -206,6 +207,7 @@ function AnnotationForm({
   onSaved,
   onCancel,
 }: AnnotationFormProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [type, setType] = useState('note');
   const [color, setColor] = useState('yellow');
@@ -229,7 +231,7 @@ function AnnotationForm({
       toast({ title: 'Anotação salva' });
     } catch (err) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.bookReader.annotationError'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -241,7 +243,9 @@ function AnnotationForm({
   return (
     <div className="space-y-3 rounded-lg border bg-background p-3 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Nova anotação</span>
+        <span className="text-sm font-medium">
+          {t('pages.bookReader.newAnnotation')}
+        </span>
         {currentPage && (
           <Badge variant="secondary" className="text-xs">
             p. {currentPage}
@@ -249,7 +253,7 @@ function AnnotationForm({
         )}
       </div>
       <Textarea
-        placeholder="Texto ou citação..."
+        placeholder={t('pages.bookReader.annotationPlaceholder')}
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
@@ -257,20 +261,24 @@ function AnnotationForm({
       />
       <div className="flex gap-2">
         <div className="flex-1">
-          <Label className="mb-1 block text-xs">Tipo</Label>
+          <Label className="mb-1 block text-xs">
+            {t('pages.bookReader.typeLabel')}
+          </Label>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger className="h-7 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="quote">Citação</SelectItem>
-              <SelectItem value="note">Nota</SelectItem>
-              <SelectItem value="idea">Ideia</SelectItem>
+              <SelectItem value="quote">{t('pages.bookReader.typeQuote')}</SelectItem>
+              <SelectItem value="note">{t('pages.bookReader.typeNote')}</SelectItem>
+              <SelectItem value="idea">{t('pages.bookReader.typeIdea')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="flex-1">
-          <Label className="mb-1 block text-xs">Cor</Label>
+          <Label className="mb-1 block text-xs">
+            {t('pages.bookReader.colorLabel')}
+          </Label>
           <Select value={color} onValueChange={setColor}>
             <SelectTrigger className="h-7 text-xs">
               <SelectValue />
@@ -290,7 +298,7 @@ function AnnotationForm({
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button
           size="sm"
@@ -302,7 +310,7 @@ function AnnotationForm({
           ) : (
             <Save className="mr-1 h-3 w-3" />
           )}
-          Salvar
+          {t('common.actions.save')}
         </Button>
       </div>
     </div>
@@ -330,6 +338,7 @@ function EpubReader({
   isDark,
   onLocationChange,
 }: EpubReaderProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<EpubBook | null>(null);
   const renditionRef = useRef<Rendition | null>(null);
@@ -425,7 +434,7 @@ function EpubReader({
           borderColor: cfg.borderColor,
           color: cfg.color,
         }}
-        aria-label="Página anterior"
+        aria-label={t('pages.bookReader.prevPage')}
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -437,7 +446,7 @@ function EpubReader({
           borderColor: cfg.borderColor,
           color: cfg.color,
         }}
-        aria-label="Próxima página"
+        aria-label={t('pages.bookReader.nextPage')}
       >
         <ChevronRight className="h-5 w-5" />
       </button>
@@ -477,6 +486,7 @@ function PdfReader({
   isDark,
   onNumPagesChange,
 }: PdfReaderProps) {
+  const { t } = useTranslation();
   const themes = buildThemes(isDark);
   const cfg = themes[theme];
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
@@ -520,7 +530,7 @@ function PdfReader({
           error={
             <div className="flex h-64 flex-col items-center justify-center gap-2 opacity-60">
               <BookOpen className="h-10 w-10" />
-              <p className="text-sm">Não foi possível carregar o PDF.</p>
+              <p className="text-sm">{t('pages.bookReader.pdfError')}</p>
             </div>
           }
         >
@@ -544,6 +554,7 @@ function PdfReader({
 // ============================================================================
 
 export default function BookReader() {
+  const { t } = useTranslation();
   const { bookId } = useParams<{ bookId: string }>();
   const { toast } = useToast();
   const { isDark } = useTheme();
@@ -716,7 +727,9 @@ export default function BookReader() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background">
         <BookOpen className="h-16 w-16 text-muted-foreground" />
-        <p className="text-lg text-muted-foreground">Arquivo não encontrado.</p>
+        <p className="text-lg text-muted-foreground">
+          {t('pages.bookReader.fileNotFound')}
+        </p>
         <Button variant="outline" onClick={() => window.close()}>
           Fechar
         </Button>
@@ -808,7 +821,7 @@ export default function BookReader() {
             className="h-8 w-8"
             onClick={() => handleWidthChange(-1)}
             disabled={WIDTH_PRESETS.indexOf(contentWidth) === 0}
-            title="Diminuir largura"
+            title={t('pages.bookReader.decreaseWidth')}
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -821,7 +834,7 @@ export default function BookReader() {
             className="h-8 w-8"
             onClick={() => handleWidthChange(1)}
             disabled={WIDTH_PRESETS.indexOf(contentWidth) === WIDTH_PRESETS.length - 1}
-            title="Aumentar largura"
+            title={t('pages.bookReader.increaseWidth')}
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -864,7 +877,7 @@ export default function BookReader() {
             size="icon"
             className="h-8 w-8"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            title="Anotações"
+            title={t('pages.bookReader.annotations')}
             style={
               sidebarOpen
                 ? { backgroundColor: `${cfg.color}20`, color: cfg.color }
@@ -880,7 +893,7 @@ export default function BookReader() {
             size="icon"
             className="h-8 w-8"
             onClick={() => window.close()}
-            title="Fechar leitor"
+            title={t('pages.bookReader.closeReader')}
             style={{ color: cfg.color }}
           >
             <X className="h-4 w-4" />
@@ -937,7 +950,7 @@ export default function BookReader() {
               <div className="flex items-center gap-2">
                 <Highlighter className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  Anotações ({annotations.length})
+                  {t('pages.bookReader.annotations')} ({annotations.length})
                 </span>
               </div>
               <Button
@@ -945,7 +958,7 @@ export default function BookReader() {
                 size="icon"
                 className="h-7 w-7"
                 onClick={() => setShowAnnotationForm(!showAnnotationForm)}
-                title="Nova anotação"
+                title={t('pages.bookReader.addAnnotation')}
                 style={{ color: cfg.color }}
               >
                 <Plus className="h-4 w-4" />
@@ -967,7 +980,7 @@ export default function BookReader() {
               {annotations.length === 0 && !showAnnotationForm && (
                 <div className="flex flex-col items-center gap-2 py-8 text-center text-sm opacity-50">
                   <Highlighter className="h-8 w-8" />
-                  <p>Nenhuma anotação.</p>
+                  <p>{t('pages.bookReader.noAnnotations')}</p>
                   <p className="text-xs">Clique em + para adicionar.</p>
                 </div>
               )}
@@ -991,7 +1004,7 @@ export default function BookReader() {
                     <button
                       onClick={() => void handleDeleteAnnotation(a.id)}
                       className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-destructive"
-                      aria-label="Remover anotação"
+                      aria-label={t('pages.bookReader.removeAnnotation')}
                     >
                       <X className="h-3 w-3" />
                     </button>

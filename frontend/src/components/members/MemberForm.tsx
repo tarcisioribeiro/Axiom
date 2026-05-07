@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,6 +28,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const { register, handleSubmit, setValue, watch } = useForm<MemberFormData>({
     defaultValues: member
       ? {
@@ -50,18 +52,18 @@ export const MemberForm: React.FC<MemberFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Nome *</Label>
+          <Label>{t('pages.members.form.nameLabel')}</Label>
           <Input
             {...register('name', { required: true })}
-            placeholder="Ex: João Silva"
+            placeholder={t('pages.members.form.namePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Documento (CPF/CNPJ) *</Label>
+          <Label>{t('pages.members.form.documentLabel')}</Label>
           <Input
             {...register('document', { required: true })}
-            placeholder="Ex: 123.456.789-00"
+            placeholder={t('pages.members.form.documentPlaceholder')}
             disabled={isLoading}
           />
         </div>
@@ -69,37 +71,37 @@ export const MemberForm: React.FC<MemberFormProps> = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Telefone *</Label>
+          <Label>{t('pages.members.form.phoneLabel')}</Label>
           <Input
             {...register('phone', { required: true })}
-            placeholder="Ex: (11) 98765-4321"
+            placeholder={t('pages.members.form.phonePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label>{t('pages.members.form.emailLabel')}</Label>
           <Input
             {...register('email')}
             type="email"
-            placeholder="Ex: joao@email.com"
+            placeholder={t('pages.members.form.emailPlaceholder')}
             disabled={isLoading}
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Sexo *</Label>
+        <Label>{t('pages.members.form.sexLabel')}</Label>
         <Select
           value={watch('sex')}
           onValueChange={(v) => setValue('sex', v)}
           disabled={isLoading}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
+            <SelectValue placeholder={t('common.actions.select')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="M">Masculino</SelectItem>
-            <SelectItem value="F">Feminino</SelectItem>
+            <SelectItem value="M">{t('pages.members.form.sexMale')}</SelectItem>
+            <SelectItem value="F">{t('pages.members.form.sexFemale')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -113,7 +115,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_creditor" className="cursor-pointer">
-            É Credor
+            {t('pages.members.form.isCreditorLabel')}
           </Label>
         </div>
         <div className="flex items-center space-x-2">
@@ -124,16 +126,16 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_benefited" className="cursor-pointer">
-            É Beneficiário
+            {t('pages.members.form.isBenefitedLabel')}
           </Label>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Observações</Label>
+        <Label>{t('pages.members.form.notesLabel')}</Label>
         <Textarea
           {...register('notes')}
-          placeholder="Observações adicionais..."
+          placeholder={t('pages.members.form.notesPlaceholder')}
           disabled={isLoading}
           rows={3}
         />
@@ -141,10 +143,14 @@ export const MemberForm: React.FC<MemberFormProps> = ({
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : member ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : member
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>
