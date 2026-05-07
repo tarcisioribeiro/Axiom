@@ -63,6 +63,7 @@ function HighlightForm({
   onCancel,
   isLoading,
 }: HighlightFormProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState(highlight?.text ?? '');
   const [bookId, setBookId] = useState<string>(highlight ? String(highlight.book) : '');
   const [pageNumber, setPageNumber] = useState(
@@ -91,10 +92,10 @@ function HighlightForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="hl-book">Livro</Label>
+        <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
-            <SelectValue placeholder="Selecione um livro" />
+            <SelectValue placeholder={t('pages.highlights.form.bookPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {books.map((b) => (
@@ -107,12 +108,12 @@ function HighlightForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="hl-text">Texto do destaque</Label>
+        <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
         <Textarea
           id="hl-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Cole aqui o trecho do livro..."
+          placeholder={t('pages.highlights.form.textPlaceholder')}
           rows={4}
           required
         />
@@ -120,7 +121,7 @@ function HighlightForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="hl-type">Tipo</Label>
+          <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -129,24 +130,40 @@ function HighlightForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="quote">Citação</SelectItem>
-              <SelectItem value="note">Nota</SelectItem>
-              <SelectItem value="idea">Ideia</SelectItem>
+              <SelectItem value="quote">
+                {t('pages.highlights.form.typeQuote')}
+              </SelectItem>
+              <SelectItem value="note">
+                {t('pages.highlights.form.typeNote')}
+              </SelectItem>
+              <SelectItem value="idea">
+                {t('pages.highlights.form.typeIdea')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="hl-color">Cor</Label>
+          <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="yellow">Amarelo</SelectItem>
-              <SelectItem value="green">Verde</SelectItem>
-              <SelectItem value="blue">Azul</SelectItem>
-              <SelectItem value="pink">Rosa</SelectItem>
-              <SelectItem value="orange">Laranja</SelectItem>
+              <SelectItem value="yellow">
+                {t('pages.highlights.form.colorYellow')}
+              </SelectItem>
+              <SelectItem value="green">
+                {t('pages.highlights.form.colorGreen')}
+              </SelectItem>
+              <SelectItem value="blue">
+                {t('pages.highlights.form.colorBlue')}
+              </SelectItem>
+              <SelectItem value="pink">
+                {t('pages.highlights.form.colorPink')}
+              </SelectItem>
+              <SelectItem value="orange">
+                {t('pages.highlights.form.colorOrange')}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -154,33 +171,33 @@ function HighlightForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="hl-page">Página (opcional)</Label>
+          <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
             id="hl-page"
             type="number"
             min={1}
             value={pageNumber}
             onChange={(e) => setPageNumber(e.target.value)}
-            placeholder="Ex: 42"
+            placeholder={t('pages.highlights.form.pagePlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="hl-chapter">Capítulo (opcional)</Label>
+          <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
           <Input
             id="hl-chapter"
             value={chapter}
             onChange={(e) => setChapter(e.target.value)}
-            placeholder="Ex: Cap. 3"
+            placeholder={t('pages.highlights.form.chapterPlaceholder')}
           />
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading || !bookId || !text.trim()}>
-          {isLoading ? 'Salvando...' : 'Salvar'}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>
@@ -240,8 +257,8 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir destaque',
-      description: 'Tem certeza que deseja excluir este destaque?',
+      title: t('pages.highlights.deleteTitle'),
+      description: t('pages.highlights.deleteDesc'),
       confirmText: t('common.actions.delete'),
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
@@ -249,7 +266,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
     if (!confirmed) return;
     try {
       await bookHighlightsService.delete(id);
-      toast({ title: 'Destaque excluído' });
+      toast({ title: t('pages.highlights.deleted') });
       void loadData();
     } catch (error: unknown) {
       toast({
@@ -265,10 +282,10 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       setIsSubmitting(true);
       if (editingHighlight) {
         await bookHighlightsService.update(editingHighlight.id, data);
-        toast({ title: 'Destaque atualizado' });
+        toast({ title: t('pages.highlights.updated') });
       } else {
         await bookHighlightsService.create(data);
-        toast({ title: 'Destaque salvo' });
+        toast({ title: t('pages.highlights.saved') });
       }
       onCreateClose();
       setIsEditOpen(false);
@@ -296,7 +313,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
+        title: t('pages.highlights.exportError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -320,7 +337,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <SearchInput
-          placeholder="Buscar destaques..."
+          placeholder={t('pages.highlights.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
           className="max-w-sm"
@@ -333,7 +350,9 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
             disabled={isExporting}
           >
             <Download className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exportando...' : 'Exportar MD'}
+            {isExporting
+              ? t('pages.highlights.exportingBtn')
+              : t('pages.highlights.exportBtn')}
           </Button>
         )}
       </div>
@@ -343,8 +362,8 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhum destaque encontrado para a pesquisa atual.'
-              : 'Nenhum destaque registrado. Clique em "Novo Destaque" para começar.'
+              ? t('pages.highlights.emptySearch')
+              : t('pages.highlights.emptyState')
           }
         />
       ) : (
@@ -405,10 +424,8 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Novo Destaque</DialogTitle>
-            <DialogDescription>
-              Adicione um novo destaque, citação ou nota de um livro.
-            </DialogDescription>
+            <DialogTitle>{t('pages.highlights.newTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.highlights.newDesc')}</DialogDescription>
           </DialogHeader>
           <HighlightForm
             books={books}
@@ -424,8 +441,8 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar Destaque</DialogTitle>
-            <DialogDescription>Edite os dados do destaque.</DialogDescription>
+            <DialogTitle>{t('pages.highlights.editTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.highlights.editDesc')}</DialogDescription>
           </DialogHeader>
           <HighlightForm
             highlight={editingHighlight}

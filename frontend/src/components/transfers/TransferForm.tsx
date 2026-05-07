@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -31,6 +32,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const { register, handleSubmit, setValue, watch } = useForm<TransferFormData>({
     defaultValues: transfer
       ? {
@@ -96,15 +98,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2 md:col-span-2">
-          <Label>Descrição *</Label>
+          <Label>{t('pages.transfers.form.descriptionLabel')}</Label>
           <Input
             {...register('description', { required: true })}
-            placeholder="Ex: Transferência para poupança"
+            placeholder={t('pages.transfers.form.descriptionPlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Valor *</Label>
+          <Label>{t('pages.transfers.form.valueLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -114,13 +116,13 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Tipo *</Label>
+          <Label>{t('pages.transfers.form.typeLabel')}</Label>
           <Select
             value={watch('category')}
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('pages.transfers.form.typePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => (
@@ -132,16 +134,16 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Data *</Label>
+          <Label>{t('pages.transfers.form.dateLabel')}</Label>
           <DatePicker
             value={watch('date')}
             onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-            placeholder="Selecione a data"
+            placeholder={t('pages.transfers.form.datePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Horário *</Label>
+          <Label>{t('pages.transfers.form.timeLabel')}</Label>
           <Input
             type="time"
             {...register('horary', { required: true })}
@@ -149,13 +151,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Conta de Origem *</Label>
+          <Label>{t('pages.transfers.form.originAccountLabel')}</Label>
           <Select
             value={watch('origin_account')?.toString() || ''}
             onValueChange={(v) => setValue('origin_account', parseInt(v))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t('pages.transfers.form.originAccountPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((a) => (
@@ -167,13 +171,15 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Conta de Destino *</Label>
+          <Label>{t('pages.transfers.form.destinyAccountLabel')}</Label>
           <Select
             value={watch('destiny_account')?.toString() || ''}
             onValueChange={(v) => setValue('destiny_account', parseInt(v))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t('pages.transfers.form.destinyAccountPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {accounts
@@ -195,16 +201,20 @@ export const TransferForm: React.FC<TransferFormProps> = ({
             className="h-4 w-4"
           />
           <Label htmlFor="transfered" className="cursor-pointer">
-            Transferência realizada?
+            {t('pages.transfers.form.transferedLabel')}
           </Label>
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : transfer ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : transfer
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

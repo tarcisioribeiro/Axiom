@@ -53,10 +53,12 @@ class AdminService {
     );
   }
 
-  async restartAll(): Promise<{ message: string; results: Record<string, string> }> {
+  async restartAll(
+    mode: 'docker' | 'kubernetes'
+  ): Promise<{ message: string; results: Record<string, string> }> {
     return apiClient.post<{ message: string; results: Record<string, string> }>(
       API_CONFIG.ENDPOINTS.ADMIN_RESTART_ALL,
-      {}
+      { mode }
     );
   }
 }

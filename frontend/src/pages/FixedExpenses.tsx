@@ -154,7 +154,11 @@ export default function FixedExpenses() {
       key: 'due_day',
       label: t('pages.fixedExpenses.columns.dueDay'),
       align: 'center',
-      render: (item) => <Badge variant="outline">Dia {item.due_day}</Badge>,
+      render: (item) => (
+        <Badge variant="outline">
+          {t('pages.fixedExpenses.dueDayBadge', { day: item.due_day })}
+        </Badge>
+      ),
     },
     {
       key: 'account_name',
@@ -244,7 +248,9 @@ export default function FixedExpenses() {
               <>
                 {/* Card 2: Comprometimento */}
                 <div className="rounded-lg border bg-card p-4">
-                  <p className="text-sm font-medium">Comprometimento mensal fixo</p>
+                  <p className="text-sm font-medium">
+                    {t('pages.fixedExpenses.stats.monthlyCommitment')}
+                  </p>
                   <p className="mt-1 text-2xl font-bold text-destructive">
                     {formatCurrency(totalMonthlyFixed)}
                   </p>

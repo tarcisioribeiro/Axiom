@@ -1,6 +1,10 @@
 import json
 import os
+import re
+import socket as _sock
 import ssl
+import threading
+import time
 import urllib.error
 import urllib.request
 from typing import Any
@@ -25,6 +29,74 @@ from security.serializers import ActivityLogSerializer
 
 class AdminBaseView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
+
+
+# ─── .env helpers ──────────────────────────────────────────────────────────────
+
+_ENV_FILE_PATH = "/app/mindledger.env"
+_DOCKER_SOCKET = "/var/run/docker.sock"
+_DOCKER_CONTAINER = "mindledger-api"
+
+
+def _update_dotenv(key: str, value: str) -> None:
+    """Rewrite only the changed variable in the .env bind-mount."""
+    if not os.path.exists(_ENV_FILE_PATH):
+        return
+    try:
+        with open(_ENV_FILE_PATH) as f:
+            lines = f.readlines()
+        found = False
+        new_lines: list[str] = []
+        for line in lines:
+            if re.match(rf"^{re.escape(key)}\s*=", line):
+                new_lines.append(f"{key}={value}\n")
+                found = True
+            else:
+                new_lines.append(line)
+        if not found:
+            if new_lines and not new_lines[-1].endswith("\n"):
+                new_lines.append("\n")
+            new_lines.append(f"{key}={value}\n")
+        with open(_ENV_FILE_PATH, "w") as f:
+            f.writelines(new_lines)
+    except Exception:
+        pass
+
+
+def _restart_via_docker_socket(
+    container: str = _DOCKER_CONTAINER, delay: int = 3
+) -> dict[str, Any]:
+    """Schedule a container restart via Docker socket, returning immediately."""
+    if not os.path.exists(_DOCKER_SOCKET):
+        return {
+            "success": False,
+            "message": "Docker socket não encontrado em /var/run/docker.sock.",
+        }
+
+    def do_restart() -> None:
+        time.sleep(delay)
+        try:
+            s = _sock.socket(_sock.AF_UNIX, _sock.SOCK_STREAM)
+            s.connect(_DOCKER_SOCKET)
+            req = (
+                f"POST /containers/{container}/restart HTTP/1.1\r\n"
+                "Host: localhost\r\n"
+                "Content-Length: 0\r\n"
+                "\r\n"
+            )
+            s.sendall(req.encode())
+            s.recv(4096)
+            s.close()
+        except Exception:
+            pass
+
+    t = threading.Thread(target=do_restart, daemon=True)
+    t.start()
+    return {
+        "success": True,
+        "message": f"Container {container} será reiniciado em {delay}s.",
+        "results": {container: "reinicialização agendada"},
+    }
 
 
 # ─── System Config ─────────────────────────────────────────────────────────────
@@ -64,9 +136,13 @@ class SystemConfigDetailView(AdminBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        config.set_value(str(value) if value != "" else None)
+        plain_value = str(value) if value != "" else None
+        config.set_value(plain_value)
         config.updated_by = request.user
         config.save()
+
+        if plain_value is not None:
+            _update_dotenv(key, plain_value)
 
         return Response(SystemConfigSerializer(config).data)
 
@@ -136,21 +212,33 @@ def _check_disk() -> dict[str, Any]:
 
 
 def _check_email() -> dict[str, Any]:
-    host = getattr(settings, "EMAIL_HOST", "") or os.getenv("EMAIL_HOST", "")
-    port = getattr(settings, "EMAIL_PORT", 587)
-    backend = getattr(settings, "EMAIL_BACKEND", "")
+    # DB values take precedence over env/settings (reflect what admin configured)
+    backend: str = (
+        _get_config_value("EMAIL_BACKEND")
+        or getattr(settings, "EMAIL_BACKEND", "")
+        or os.getenv("EMAIL_BACKEND", "")
+    ) or ""
+    host = (
+        _get_config_value("EMAIL_HOST")
+        or getattr(settings, "EMAIL_HOST", "")
+        or os.getenv("EMAIL_HOST", "")
+    )
+    _raw_port = _get_config_value("EMAIL_PORT") or getattr(
+        settings, "EMAIL_PORT", "587"
+    )
+    port = int(_raw_port)  # type: ignore[arg-type]
     if "console" in backend:
         return {
             "status": "not_configured",
             "message": "Backend de console ativo (desenvolvimento)",
         }
-    if not host:
+    if not host or host in ("localhost", "smtp.example.com"):
         return {"status": "not_configured", "message": "EMAIL_HOST não configurado"}
     try:
         import socket
 
         socket.setdefaulttimeout(5)
-        s = socket.create_connection((host, int(port)), timeout=5)
+        s = socket.create_connection((host, port), timeout=5)
         s.close()
         return {"status": "healthy", "message": f"SMTP {host}:{port} acessível"}
     except Exception as e:
@@ -481,13 +569,22 @@ def _restart_deployments() -> dict[str, Any]:
 
 
 class AdminRestartAllView(AdminBaseView):
-    """POST /api/v1/admin/restart/ — reinicia todos os deployments da aplicação."""
+    """POST /api/v1/admin/restart/ — reinicia via Docker socket ou Kubernetes.
+
+    Body: { "mode": "docker" | "kubernetes" }
+    """
 
     def post(self, request: Request) -> Response:
-        result = _restart_deployments()
+        mode = (request.data.get("mode") or "kubernetes").lower()
+
+        if mode == "docker":
+            result = _restart_via_docker_socket()
+        else:
+            result = _restart_deployments()
+
         if result["success"]:
             return Response(
-                {"message": result["message"], "results": result["results"]}
+                {"message": result["message"], "results": result.get("results", {})}
             )
         return Response(
             {"error": result["message"], "results": result.get("results", {})},

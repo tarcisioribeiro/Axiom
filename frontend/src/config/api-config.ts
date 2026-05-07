@@ -45,6 +45,7 @@ export const API_CONFIG = {
     PASSWORD_RESET_CONFIRM: '/api/v1/users/password-reset/confirm/',
     EMAIL_VERIFICATION_SEND: '/api/v1/users/email-verification/send/',
     EMAIL_VERIFICATION_CONFIRM: '/api/v1/users/email-verification/confirm/',
+    CHANGE_PASSWORD: '/api/v1/users/change-password/',
     TWO_FACTOR_SETUP: '/api/v1/users/2fa/setup/',
     TWO_FACTOR_ACTIVATE: '/api/v1/users/2fa/activate/',
     TWO_FACTOR_VERIFY: '/api/v1/users/2fa/verify/',

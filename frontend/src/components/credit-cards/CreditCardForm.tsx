@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -30,6 +31,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const { register, handleSubmit, setValue, watch } = useForm<CreditCardFormData>({
     defaultValues: creditCard
       ? {
@@ -67,26 +69,26 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label>Nome do Cartão *</Label>
+          <Label>{t('pages.creditCards.form.nameLabel')}</Label>
           <Input
             {...register('name', { required: true })}
-            placeholder="Ex: Nubank Gold"
+            placeholder={t('pages.creditCards.form.namePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Nome no Cartão *</Label>
+          <Label>{t('pages.creditCards.form.onCardNameLabel')}</Label>
           <Input
             {...register('on_card_name', { required: true })}
-            placeholder="Ex: FULANO DE TAL"
+            placeholder={t('pages.creditCards.form.onCardNamePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Bandeira *</Label>
+          <Label>{t('pages.creditCards.form.flagLabel')}</Label>
           <Select value={watch('flag')} onValueChange={(v) => setValue('flag', v)}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
@@ -98,7 +100,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Número do Cartão *</Label>
+          <Label>{t('pages.creditCards.form.cardNumberLabel')}</Label>
           <Input
             {...register('card_number', { required: true })}
             placeholder="1234567890123456"
@@ -106,7 +108,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>CVV *</Label>
+          <Label>{t('pages.creditCards.form.cvvLabel')}</Label>
           <Input
             {...register('security_code', { required: true })}
             placeholder="123"
@@ -115,18 +117,18 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Data de Validade *</Label>
+          <Label>{t('pages.creditCards.form.validationDateLabel')}</Label>
           <DatePicker
             value={watch('validation_date')}
             onChange={(date) =>
               setValue('validation_date', date ? formatLocalDate(date) : '')
             }
-            placeholder="Selecione a data de validade"
+            placeholder={t('pages.creditCards.form.validationDatePlaceholder')}
             disabled={isLoading}
           />
         </div>
         <div className="space-y-2">
-          <Label>Limite Atual *</Label>
+          <Label>{t('pages.creditCards.form.creditLimitLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -136,7 +138,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Limite Máximo *</Label>
+          <Label>{t('pages.creditCards.form.maxLimitLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -146,13 +148,13 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Conta Associada *</Label>
+          <Label>{t('pages.creditCards.form.associatedAccountLabel')}</Label>
           <Select
             value={watch('associated_account')?.toString()}
             onValueChange={(v) => setValue('associated_account', parseInt(v))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               {accounts.map((a) => (
@@ -164,7 +166,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Dia de Vencimento *</Label>
+          <Label>{t('pages.creditCards.form.dueDayLabel')}</Label>
           <Input
             type="number"
             min="1"
@@ -174,7 +176,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Dia de Fechamento *</Label>
+          <Label>{t('pages.creditCards.form.closingDayLabel')}</Label>
           <Input
             type="number"
             min="1"
@@ -184,7 +186,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Taxa de Juros (%) Anual</Label>
+          <Label>{t('pages.creditCards.form.interestRateLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -194,7 +196,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label>Anuidade</Label>
+          <Label>{t('pages.creditCards.form.annualFeeLabel')}</Label>
           <Input
             type="number"
             step="0.01"
@@ -204,20 +206,24 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
         <div className="space-y-2 md:col-span-2">
-          <Label>Observações</Label>
+          <Label>{t('pages.creditCards.form.notesLabel')}</Label>
           <Input
             {...register('notes')}
-            placeholder="Observações adicionais"
+            placeholder={t('pages.creditCards.form.notesPlaceholder')}
             disabled={isLoading}
           />
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : creditCard ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : creditCard
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

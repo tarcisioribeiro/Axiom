@@ -17,6 +17,7 @@ class MemberSerializer(serializers.ModelSerializer):
             "document",
             "phone",
             "email",
+            "email_verified",
             "sex",
             "user",
             "is_creditor",
@@ -36,6 +37,7 @@ class MemberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "uuid",
+            "email_verified",
             "created_at",
             "updated_at",
             "created_by",

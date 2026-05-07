@@ -336,6 +336,21 @@ class AuthService {
   }
 
   /**
+   * Altera a senha do usuário autenticado.
+   */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.CHANGE_PASSWORD, {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+  }
+
+  /**
    * Consulta o status do 2FA do usuário autenticado.
    */
   async getTwoFactorStatus(): Promise<{ is_active: boolean }> {
