@@ -185,7 +185,15 @@
     "search": "Buscar...",
     "expandSidebar": "Expandir menu lateral",
     "collapseSidebar": "Recolher menu lateral",
-    "userSettings": "Configurações da conta"
+    "userSettings": "Configurações da conta",
+    "adminPanel": "Painel Administrativo",
+    "superuser": "Superusuário",
+    "adminNav": {
+      "overview": "Visão Geral",
+      "config": "Configurações",
+      "integrations": "Integrações",
+      "logs": "Logs de Atividade"
+    }
   },
   "breadcrumb": {
     "home": "Início",
@@ -283,6 +291,15 @@
       "errorTitle": "Link inválido ou expirado",
       "errorDesc": "Solicite um novo e-mail de verificação nas configurações da sua conta.",
       "backToLogin": "Voltar para o login"
+    },
+    "twoFactor": {
+      "title": "Verificação em duas etapas",
+      "description": "Digite o código do seu aplicativo autenticador.",
+      "codeLabel": "Código de verificação",
+      "backupHint": "Você também pode usar um código de backup.",
+      "submit": "Verificar",
+      "loading": "Verificando...",
+      "back": "← Voltar ao login"
     },
     "register": {
       "subtitle": "Crie sua conta",
@@ -3071,11 +3088,14 @@
       "emptyValue": "Valor vazio",
       "emptyValueDesc": "Informe um valor para salvar.",
       "restartError": "Erro ao reiniciar",
+      "restartWarning": "Configurações marcadas com \"Requer reinicialização\" só terão efeito após reiniciar o container da API. Use o botão \"Reiniciar e Aplicar\" para aplicar as mudanças e atualizar o .env.",
       "restartModal": {
         "title": "Reiniciar e Aplicar Configurações",
         "desc": "Escolha o ambiente de execução. As configurações salvas no banco serão aplicadas ao reiniciar. Você será deslogado automaticamente.",
         "countdown": "Reinicializando... logout em {{seconds}}s",
+        "docker": "Docker",
         "dockerDesc": "Reinicia o container via socket",
+        "kubernetes": "Kubernetes",
         "kubernetesDesc": "Rollout restart dos pods",
         "cancel": "Cancelar",
         "sending": "Enviando...",

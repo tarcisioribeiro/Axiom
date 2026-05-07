@@ -7,21 +7,43 @@ import {
   ScrollText,
   Shield,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-const NAV_ITEMS = [
-  { href: '/admin', label: 'Visão Geral', icon: LayoutDashboard, exact: true },
-  { href: '/admin/config', label: 'Configurações', icon: Settings, exact: false },
-  { href: '/admin/integrations', label: 'Integrações', icon: Link2, exact: false },
-  { href: '/admin/logs', label: 'Logs de Atividade', icon: ScrollText, exact: false },
-];
-
 export const AdminLayout = () => {
   const { user, logout } = useAuthStore();
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const NAV_ITEMS = [
+    {
+      href: '/admin',
+      label: t('layout.adminNav.overview'),
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    {
+      href: '/admin/config',
+      label: t('layout.adminNav.config'),
+      icon: Settings,
+      exact: false,
+    },
+    {
+      href: '/admin/integrations',
+      label: t('layout.adminNav.integrations'),
+      icon: Link2,
+      exact: false,
+    },
+    {
+      href: '/admin/logs',
+      label: t('layout.adminNav.logs'),
+      icon: ScrollText,
+      exact: false,
+    },
+  ];
 
   return (
     <div className="flex h-screen bg-background">
@@ -37,7 +59,7 @@ export const AdminLayout = () => {
               MindLedger
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Painel Administrativo
+              {t('layout.adminPanel')}
             </p>
           </div>
         </div>
@@ -80,7 +102,7 @@ export const AdminLayout = () => {
               <p className="truncate text-sm font-medium text-foreground">
                 {user?.username}
               </p>
-              <p className="text-xs text-muted-foreground">Superusuário</p>
+              <p className="text-xs text-muted-foreground">{t('layout.superuser')}</p>
             </div>
           </div>
           <button
@@ -88,7 +110,7 @@ export const AdminLayout = () => {
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
-            Sair
+            {t('layout.logout')}
           </button>
         </div>
       </aside>
