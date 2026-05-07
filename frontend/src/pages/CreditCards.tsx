@@ -515,13 +515,17 @@ export default function CreditCards() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{creditCards.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">cartões cadastrados</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.creditCards.stats.registeredSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="overflow-hidden border-t-2 border-t-success/60">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-            <p className="text-sm font-medium">Crédito disponível</p>
+            <p className="text-sm font-medium">
+              {t('pages.creditCards.stats.availableCredit')}
+            </p>
             <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
               <Wallet className="h-4 w-4 text-success" />
             </div>
@@ -538,7 +542,9 @@ export default function CreditCards() {
 
         <Card className="overflow-hidden border-t-2 border-t-destructive/60">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-            <p className="text-sm font-medium">Crédito utilizado</p>
+            <p className="text-sm font-medium">
+              {t('pages.creditCards.stats.usedCredit')}
+            </p>
             <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
               <TrendingDown className="h-4 w-4 text-destructive" />
             </div>

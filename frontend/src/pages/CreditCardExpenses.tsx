@@ -820,8 +820,8 @@ export default function CreditCardExpenses() {
               <SelectItem value="all">
                 {t('pages.creditCardExpenses.allStatus')}
               </SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

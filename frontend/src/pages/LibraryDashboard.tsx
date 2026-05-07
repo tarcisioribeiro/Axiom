@@ -207,7 +207,9 @@ export default function LibraryDashboard() {
                   <span className="text-2xl font-bold text-info">
                     {stats?.books_reading || 0}
                   </span>
-                  <p className="text-xs text-muted-foreground">em andamento</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.inProgressSubtitle')}
+                  </p>
                 </div>
               </div>
               <div className="border-t" />
@@ -222,7 +224,9 @@ export default function LibraryDashboard() {
                   <span className="text-2xl font-bold text-warning">
                     {stats?.books_to_read || 0}
                   </span>
-                  <p className="text-xs text-muted-foreground">na fila</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.inQueueSubtitle')}
+                  </p>
                 </div>
               </div>
               <div className="border-t" />
@@ -257,7 +261,9 @@ export default function LibraryDashboard() {
       {/* Block 2: Estatísticas Gerais */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">Estatísticas Gerais</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {t('pages.libraryDashboard.generalStats')}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
@@ -870,7 +876,7 @@ export default function LibraryDashboard() {
         {/* Quando você mais lê */}
         <Card>
           <CardHeader>
-            <CardTitle>Quando você mais lê</CardTitle>
+            <CardTitle>{t('pages.libraryDashboard.whenYouRead')}</CardTitle>
             <p className="text-sm text-muted-foreground">
               Distribuição das sessões por período do dia
             </p>

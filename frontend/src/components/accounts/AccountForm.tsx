@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -84,7 +86,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="account_type">Tipo de Conta *</Label>
+          <Label htmlFor="account_type">{t('pages.accounts.form.typeLabel')}</Label>
           <Select
             value={accountType}
             onValueChange={(value) =>
@@ -92,7 +94,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione o tipo" />
+              <SelectValue placeholder={t('pages.accounts.form.typePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.accountTypes).map(([key, value]) => (
@@ -108,7 +110,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="institution">Instituição *</Label>
+          <Label htmlFor="institution">
+            {t('pages.accounts.form.institutionLabel')}
+          </Label>
           <Select
             value={institution}
             onValueChange={(value) =>
@@ -116,7 +120,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione a instituição" />
+              <SelectValue
+                placeholder={t('pages.accounts.form.institutionPlaceholder')}
+              />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TRANSLATIONS.institutions).map(([key, value]) => (
@@ -132,11 +138,11 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="account_name">Nome da Conta *</Label>
+          <Label htmlFor="account_name">{t('pages.accounts.form.nameLabel')}</Label>
           <Input
             id="account_name"
             {...register('account_name')}
-            placeholder="Ex: Conta Corrente Principal"
+            placeholder={t('pages.accounts.form.namePlaceholder')}
             disabled={isLoading}
           />
           {errors.account_name && (
@@ -145,11 +151,11 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="account_number">Número da Conta *</Label>
+          <Label htmlFor="account_number">{t('pages.accounts.form.numberLabel')}</Label>
           <Input
             id="account_number"
             {...register('account_number')}
-            placeholder="Ex: 12345-6"
+            placeholder={t('pages.accounts.form.numberPlaceholder')}
             disabled={isLoading}
           />
           {errors.account_number && (
@@ -158,7 +164,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="balance">Saldo Inicial</Label>
+          <Label htmlFor="balance">{t('pages.accounts.form.balanceLabel')}</Label>
           <Input
             id="balance"
             type="number"
@@ -169,7 +175,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           />
           {watch('overdraft_limit') > 0 && (
             <p className="text-xs text-muted-foreground">
-              Saldo mínimo permitido:{' '}
+              {t('pages.accounts.form.balanceMinHint')}{' '}
               {(-watch('overdraft_limit')).toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
@@ -182,7 +188,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="overdraft_limit">Limite de Cheque Especial</Label>
+          <Label htmlFor="overdraft_limit">
+            {t('pages.accounts.form.overdraftLabel')}
+          </Label>
           <Input
             id="overdraft_limit"
             type="number"
@@ -199,10 +207,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({
 
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : account ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : account
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

@@ -93,12 +93,12 @@ const TYPE_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
   idea: 'outline',
 };
 
-const COLOR_OPTIONS = [
-  { value: 'yellow', label: 'Amarelo', bg: '#facc15' },
-  { value: 'green', label: 'Verde', bg: '#4ade80' },
-  { value: 'blue', label: 'Azul', bg: '#60a5fa' },
-  { value: 'pink', label: 'Rosa', bg: '#f472b6' },
-  { value: 'orange', label: 'Laranja', bg: '#fb923c' },
+const COLOR_OPTION_KEYS = [
+  { value: 'yellow', bg: '#facc15' },
+  { value: 'green', bg: '#4ade80' },
+  { value: 'blue', bg: '#60a5fa' },
+  { value: 'pink', bg: '#f472b6' },
+  { value: 'orange', bg: '#fb923c' },
 ];
 
 function HighlightCard({
@@ -218,6 +218,7 @@ function HighlightForm({
   onCancel,
   isLoading,
 }: HighlightFormProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState(highlight?.text ?? '');
   const [bookId, setBookId] = useState<string>(highlight ? String(highlight.book) : '');
   const [pageNumber, setPageNumber] = useState(
@@ -246,10 +247,10 @@ function HighlightForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="hl-book">Livro</Label>
+        <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
-            <SelectValue placeholder="Selecione um livro" />
+            <SelectValue placeholder={t('pages.highlights.form.bookPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {books.map((b) => (
@@ -262,12 +263,12 @@ function HighlightForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="hl-text">Texto do destaque</Label>
+        <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
         <Textarea
           id="hl-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Cole aqui o trecho do livro..."
+          placeholder={t('pages.highlights.form.textPlaceholder')}
           rows={4}
           required
         />
@@ -275,7 +276,7 @@ function HighlightForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="hl-type">Tipo</Label>
+          <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
             value={highlightType}
             onValueChange={(v) => setHighlightType(v as typeof highlightType)}
@@ -286,37 +287,42 @@ function HighlightForm({
             <SelectContent>
               <SelectItem value="quote">
                 <div className="flex items-center gap-2">
-                  <Quote className="h-3.5 w-3.5" /> Citação
+                  <Quote className="h-3.5 w-3.5" />{' '}
+                  {t('pages.highlights.form.typeQuote')}
                 </div>
               </SelectItem>
               <SelectItem value="note">
                 <div className="flex items-center gap-2">
-                  <StickyNote className="h-3.5 w-3.5" /> Nota
+                  <StickyNote className="h-3.5 w-3.5" />{' '}
+                  {t('pages.highlights.form.typeNote')}
                 </div>
               </SelectItem>
               <SelectItem value="idea">
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="h-3.5 w-3.5" /> Ideia
+                  <Lightbulb className="h-3.5 w-3.5" />{' '}
+                  {t('pages.highlights.form.typeIdea')}
                 </div>
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="hl-color">Cor</Label>
+          <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {COLOR_OPTIONS.map((opt) => (
+              {COLOR_OPTION_KEYS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   <div className="flex items-center gap-2">
                     <span
                       className="inline-block h-3 w-3 rounded-full border border-black/10"
                       style={{ backgroundColor: opt.bg }}
                     />
-                    {opt.label}
+                    {t(
+                      `pages.highlights.form.color${opt.value.charAt(0).toUpperCase() + opt.value.slice(1)}`
+                    )}
                   </div>
                 </SelectItem>
               ))}
@@ -327,33 +333,33 @@ function HighlightForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="hl-page">Página (opcional)</Label>
+          <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
             id="hl-page"
             type="number"
             min={1}
             value={pageNumber}
             onChange={(e) => setPageNumber(e.target.value)}
-            placeholder="Ex: 42"
+            placeholder={t('pages.highlights.form.pagePlaceholder')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="hl-chapter">Capítulo (opcional)</Label>
+          <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
           <Input
             id="hl-chapter"
             value={chapter}
             onChange={(e) => setChapter(e.target.value)}
-            placeholder="Ex: Cap. 3"
+            placeholder={t('pages.highlights.form.chapterPlaceholder')}
           />
         </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading || !bookId || !text.trim()}>
-          {isLoading ? 'Salvando...' : 'Salvar'}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>
@@ -422,8 +428,8 @@ export default function Highlights() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir destaque',
-      description: 'Tem certeza que deseja excluir este destaque?',
+      title: t('pages.highlights.deleteTitle'),
+      description: t('pages.highlights.deleteDesc'),
       confirmText: t('common.actions.delete'),
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
@@ -432,7 +438,7 @@ export default function Highlights() {
 
     try {
       await bookHighlightsService.delete(id);
-      toast({ title: 'Destaque excluído' });
+      toast({ title: t('pages.highlights.deleted') });
       void loadData();
     } catch (error: unknown) {
       toast({
@@ -448,10 +454,10 @@ export default function Highlights() {
       setIsSubmitting(true);
       if (editingHighlight) {
         await bookHighlightsService.update(editingHighlight.id, data);
-        toast({ title: 'Destaque atualizado' });
+        toast({ title: t('pages.highlights.editTitle') });
       } else {
         await bookHighlightsService.create(data);
-        toast({ title: 'Destaque salvo' });
+        toast({ title: t('pages.highlights.newTitle') });
       }
       setIsFormOpen(false);
       void loadData();
@@ -479,7 +485,7 @@ export default function Highlights() {
       URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao exportar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -514,10 +520,10 @@ export default function Highlights() {
   return (
     <PageContainer>
       <PageHeader
-        title="Destaques"
+        title={t('pages.highlights.title')}
         icon={<Highlighter />}
         action={{
-          label: 'Novo Destaque',
+          label: t('pages.highlights.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
@@ -533,7 +539,7 @@ export default function Highlights() {
         }}
       >
         <SearchInput
-          placeholder="Buscar destaques..."
+          placeholder={t('pages.highlights.searchPlaceholder')}
           value={searchTerm}
           onValueChange={(v) => {
             setSearchTerm(v);
@@ -554,20 +560,22 @@ export default function Highlights() {
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os tipos</SelectItem>
+            <SelectItem value="all">{t('pages.highlights.form.allTypes')}</SelectItem>
             <SelectItem value="quote">
               <div className="flex items-center gap-2">
-                <Quote className="h-3.5 w-3.5" /> Citação
+                <Quote className="h-3.5 w-3.5" /> {t('pages.highlights.form.typeQuote')}
               </div>
             </SelectItem>
             <SelectItem value="note">
               <div className="flex items-center gap-2">
-                <StickyNote className="h-3.5 w-3.5" /> Nota
+                <StickyNote className="h-3.5 w-3.5" />{' '}
+                {t('pages.highlights.form.typeNote')}
               </div>
             </SelectItem>
             <SelectItem value="idea">
               <div className="flex items-center gap-2">
-                <Lightbulb className="h-3.5 w-3.5" /> Ideia
+                <Lightbulb className="h-3.5 w-3.5" />{' '}
+                {t('pages.highlights.form.typeIdea')}
               </div>
             </SelectItem>
           </SelectContent>
@@ -585,15 +593,17 @@ export default function Highlights() {
             <SelectValue placeholder="Cor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas as cores</SelectItem>
-            {COLOR_OPTIONS.map((opt) => (
+            <SelectItem value="all">{t('pages.highlights.form.allColors')}</SelectItem>
+            {COLOR_OPTION_KEYS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-block h-3 w-3 rounded-full border border-black/10"
                     style={{ backgroundColor: opt.bg }}
                   />
-                  {opt.label}
+                  {t(
+                    `pages.highlights.form.color${opt.value.charAt(0).toUpperCase() + opt.value.slice(1)}`
+                  )}
                 </div>
               </SelectItem>
             ))}
@@ -605,7 +615,7 @@ export default function Highlights() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" disabled={isExporting}>
                 <Download className="mr-2 h-4 w-4" />
-                {isExporting ? 'Exportando...' : 'Exportar'}
+                {isExporting ? t('common.actions.loading') : t('common.actions.export')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -628,8 +638,8 @@ export default function Highlights() {
           icon={<BookMarked className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhum destaque encontrado para a pesquisa atual.'
-              : 'Nenhum destaque registrado. Clique em "Novo Destaque" para começar.'
+              ? t('pages.highlights.emptySearch')
+              : t('pages.highlights.emptyState')
           }
         />
       ) : (
@@ -680,12 +690,14 @@ export default function Highlights() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingHighlight ? 'Editar Destaque' : 'Novo Destaque'}
+              {editingHighlight
+                ? t('pages.highlights.editTitle')
+                : t('pages.highlights.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {editingHighlight
-                ? 'Edite os dados do destaque.'
-                : 'Adicione um novo destaque, citação ou nota de um livro.'}
+                ? t('pages.highlights.editDesc')
+                : t('pages.highlights.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <HighlightForm

@@ -377,7 +377,9 @@ export default function Accounts() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{accounts.length}</div>
-            <p className="mt-xs text-xs text-muted-foreground">instituições</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.accounts.stats.institutionsSubtitle')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -593,12 +595,24 @@ export default function Accounts() {
               <table className="w-full text-sm">
                 <thead className="border-b bg-muted/50">
                   <tr>
-                    <th className="p-3 text-left font-medium">Arquivo</th>
-                    <th className="p-3 text-left font-medium">Formato</th>
-                    <th className="p-3 text-left font-medium">Status</th>
-                    <th className="p-3 text-right font-medium">Entradas</th>
-                    <th className="p-3 text-right font-medium">Conciliados</th>
-                    <th className="p-3 text-left font-medium">Importado em</th>
+                    <th className="p-3 text-left font-medium">
+                      {t('pages.accounts.imports.file')}
+                    </th>
+                    <th className="p-3 text-left font-medium">
+                      {t('pages.accounts.imports.format')}
+                    </th>
+                    <th className="p-3 text-left font-medium">
+                      {t('pages.accounts.imports.status')}
+                    </th>
+                    <th className="p-3 text-right font-medium">
+                      {t('pages.accounts.imports.entries')}
+                    </th>
+                    <th className="p-3 text-right font-medium">
+                      {t('pages.accounts.imports.matched')}
+                    </th>
+                    <th className="p-3 text-left font-medium">
+                      {t('pages.accounts.imports.importedAt')}
+                    </th>
                     <th className="p-3" />
                   </tr>
                 </thead>
@@ -628,7 +642,7 @@ export default function Accounts() {
                             void navigate(`/bank-reconciliation/${imp.id}`);
                           }}
                         >
-                          Ver
+                          {t('pages.bankReconciliation.viewBtn')}
                         </Button>
                       </td>
                     </tr>
@@ -644,7 +658,7 @@ export default function Accounts() {
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Importar Extrato Bancário</DialogTitle>
+            <DialogTitle>{t('pages.accounts.imports.dialogTitle')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={(e) => void handleUploadSubmit(e)} className="space-y-md">
             <div className="space-y-sm">

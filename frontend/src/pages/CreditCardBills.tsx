@@ -478,7 +478,9 @@ export default function CreditCardBills() {
             <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
               <Card className="overflow-hidden border-t-2 border-t-destructive/60">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                  <p className="text-sm font-medium">Em Aberto</p>
+                  <p className="text-sm font-medium">
+                    {t('pages.creditCardBills.stats.open')}
+                  </p>
                   <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
                   </div>
@@ -496,7 +498,9 @@ export default function CreditCardBills() {
 
               <Card className="overflow-hidden border-t-2 border-t-success/60">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                  <p className="text-sm font-medium">Pagas</p>
+                  <p className="text-sm font-medium">
+                    {t('pages.creditCardBills.stats.paid')}
+                  </p>
                   <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
                     <CheckCircle2 className="h-4 w-4 text-success" />
                   </div>
@@ -517,7 +521,9 @@ export default function CreditCardBills() {
 
               <Card className="overflow-hidden border-t-2 border-t-warning/60">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
-                  <p className="text-sm font-medium">Mínimo Pendente</p>
+                  <p className="text-sm font-medium">
+                    {t('pages.creditCardBills.stats.minPending')}
+                  </p>
                   <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
                     <Wallet className="h-4 w-4 text-warning" />
                   </div>
