@@ -2,9 +2,13 @@ import Cookies from 'js-cookie';
 
 import { API_CONFIG, TOKEN_CONFIG } from '@/config/constants';
 import { logger } from '@/lib/logger';
-import type { LoginCredentials, User, Permission } from '@/types';
+import type { LoginCredentials, Permission, User } from '@/types';
 
 import { apiClient } from './api-client';
+
+type LoginResponse =
+  | { message: string; user: { username: string }; requires_2fa?: false }
+  | { requires_2fa: true; temp_token: string; message: string };
 
 /**
  * Servico de autenticacao.
@@ -38,18 +42,8 @@ class AuthService {
    * @returns Promise com mensagem de sucesso e dados basicos do usuario
    * @throws {AuthenticationError} Se credenciais invalidas
    */
-  async login(
-    credentials: LoginCredentials
-  ): Promise<
-    | { message: string; user: { username: string }; requires_2fa?: false }
-    | { requires_2fa: true; temp_token: string; message: string }
-  > {
-    const response = await apiClient.post<
-      | { message: string; user: { username: string }; requires_2fa?: false }
-      | { requires_2fa: true; temp_token: string; message: string }
-    >(API_CONFIG.ENDPOINTS.LOGIN, credentials);
-
-    return response;
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
   }
 
   /**
@@ -131,10 +125,6 @@ class AuthService {
         return { permissions: [], is_superuser: true };
       }
       throw error;
-    }
-
-    if (response.is_superuser) {
-      return { permissions: [], is_superuser: true };
     }
 
     if (response.is_superuser) {
