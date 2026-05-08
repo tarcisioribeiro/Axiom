@@ -22,6 +22,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { translate } from '@/config/constants';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
@@ -60,7 +61,7 @@ export default function PersonalPlanningDashboard() {
   const tasksByCategoryData = stats?.tasks_by_category
     ? stats.tasks_by_category.map((item) => ({
         category: item.category,
-        name: item.category_display,
+        name: translate('taskCategories', item.category),
         count: item.count,
       }))
     : [];
