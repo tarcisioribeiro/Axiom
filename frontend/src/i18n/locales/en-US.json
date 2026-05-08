@@ -463,8 +463,12 @@
         "entries": "Entries",
         "matched": "Matched",
         "importedAt": "Imported at",
-        "dialogTitle": "Import Bank Statement"
-      }
+        "dialogTitle": "Import Bank Statement",
+        "statusCompleted": "Completed",
+        "statusProcessing": "Processing",
+        "statusFailed": "Failed"
+      },
+      "available": "Available: {{value}}"
     },
     "expenses": {
       "title": "Expenses",
@@ -593,7 +597,8 @@
         "none": "None",
         "receivedLabel": "Received"
       },
-      "entriesCount": "{{count}} entries"
+      "entriesCount": "{{count}} entries",
+      "statusReceived": "Received"
     },
     "transfers": {
       "title": "Transfers",
@@ -621,7 +626,10 @@
       "stats": {
         "totalAmount": "Total Volume",
         "completed": "Completed",
-        "pending": "Pending"
+        "pending": "Pending",
+        "transfersCount": "{{count}} transfers",
+        "completedSubtitle": "completed",
+        "pendingSubtitle": "pending"
       },
       "columns": {
         "description": "Description",
@@ -720,7 +728,9 @@
         "paidSubtitle": "paid off",
         "debtSubtitle": "outstanding balance"
       },
-      "payoff": "Payoff"
+      "payoff": "Payoff",
+      "paidAmount": "{{value}} paid",
+      "remainingAmount": "{{value}} remaining"
     },
     "members": {
       "title": "Members",
@@ -830,9 +840,33 @@
         "allowValueEditHint": "Allows adjusting the value when launching (e.g. electricity bill)"
       },
       "stats": {
-        "monthlyCommitment": "Monthly fixed commitment"
+        "monthlyCommitment": "Monthly fixed commitment",
+        "activeTemplates": "Active Templates",
+        "monthTotal": "Month Total",
+        "paidPending": "Paid / Pending",
+        "vsLastMonth": "Vs. Last Month",
+        "loading": "Loading statistics...",
+        "activeCountDesc": "{{count}} active recurring expenses every month"
       },
-      "dueDayBadge": "Day {{day}}"
+      "dueDayBadge": "Day {{day}}",
+      "dueDayDesc": "Day {{day}} of each month",
+      "scheduleTitle": "Due dates calendar",
+      "launchDialog": {
+        "title": "Launch Fixed Expenses for the Month",
+        "desc": "Select the month and adjust values before generating expenses",
+        "selectMonth": "Select Month",
+        "selectMonthPlaceholder": "Select month",
+        "expensesLabel": "Expenses ({{selected}} of {{total}} selected)",
+        "selectAll": "Select all",
+        "dueDate": "Due: day {{day}} • {{account}}",
+        "total": "Total:",
+        "generating": "Generating...",
+        "generateBtn_one": "Generate {{count}} Expense",
+        "generateBtn_other": "Generate {{count}} Expenses",
+        "success": "Expenses launched successfully!",
+        "successDesc": "{{count}} expenses were created for {{month}}",
+        "error": "Error launching expenses"
+      }
     },
     "creditCards": {
       "title": "Credit Cards",
@@ -886,7 +920,11 @@
         "registeredSubtitle": "registered cards",
         "availableCredit": "Available credit",
         "usedCredit": "Used credit"
-      }
+      },
+      "ofLimit": "of {{value}} available",
+      "usedPercent": "{{percent}}% of limit",
+      "billAmount": "Bill: {{amount}}",
+      "dueDayText": "• due day {{day}}"
     },
     "creditCardBills": {
       "title": "Card Bills",
@@ -1084,7 +1122,15 @@
         "billLabel": "Bill",
         "billPlaceholder": "Select",
         "billNone": "None"
-      }
+      },
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "closed": "Closed",
+        "open": "Open"
+      },
+      "billPaidProgress": "Paid"
     },
     "payables": {
       "title": "Payables",
@@ -1135,8 +1181,13 @@
         "total": "Total Payables",
         "active": "Active",
         "overdue": "Overdue",
-        "paid": "Paid Off"
-      }
+        "paid": "Paid Off",
+        "totalSubtitle": "total amount",
+        "activeSubtitle": "open",
+        "overdueSubtitle": "overdue",
+        "paidSubtitle": "paid off"
+      },
+      "paidAmount": "{{value}} paid"
     },
     "budgets": {
       "title": "Budgets",
@@ -1171,6 +1222,7 @@
         "December"
       ],
       "limit": "Limit:",
+      "ofLimit": "of {{value}}",
       "member": "Member:",
       "columns": {
         "category": "Category",
@@ -1231,6 +1283,8 @@
         "monthLabel": "Month",
         "yearLabel": "Year"
       },
+      "dueDayBadge": "Day {{day}}",
+      "dueDayDesc": "Day {{day}} of each month",
       "stats": {
         "activeModels": "Active Models",
         "monthTotal": "Month Total",
@@ -1486,7 +1540,12 @@
           "payable_due": "Payable",
           "loan_due": "Loan"
         }
-      }
+      },
+      "greetingMorning": "Good morning",
+      "greetingAfternoon": "Good afternoon",
+      "greetingEvening": "Good evening",
+      "surplusThisMonth": "Surplus of {{amount}} this month",
+      "deficitThisMonth": "Deficit of {{amount}} this month"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -1895,7 +1954,27 @@
       "inProgressSubtitle": "in progress",
       "inQueueSubtitle": "in queue",
       "generalStats": "General Statistics",
-      "whenYouRead": "When you read the most"
+      "whenYouRead": "When you read the most",
+      "readingGoals": {
+        "title": "Reading Goals {{year}}",
+        "editTitle": "Edit goal",
+        "deleteTitle": "Delete goal",
+        "newTitle": "New goal",
+        "achieved": "🎉 Goal achieved! Congrats!",
+        "setGoalFor": "Set a reading goal for {{year}}",
+        "setGoal": "Set goal",
+        "deleted": "Goal deleted successfully!",
+        "deleteError": "Error deleting goal",
+        "updated": "Goal updated!",
+        "created": "Goal created!",
+        "saveError": "Error saving goal",
+        "goalFallbackName": "Goal {{year}}",
+        "pages": "Pages",
+        "booksRead_one": "{{count}} book read",
+        "booksRead_other": "{{count}} books read",
+        "pagesAbbrev": "{{count}} pgs.",
+        "deleteConfirm": "the goal \"{{name}}\""
+      }
     },
     "books": {
       "title": "Reading List",
@@ -2256,7 +2335,9 @@
       "noData": "No data available",
       "weekdayAnalytics": "Performance by Day of Week",
       "analyticsPeriod": "Based on the last {{days}} days",
-      "insights": "Habit Insights"
+      "insights": "Habit Insights",
+      "taskCount_one": "{{count}} task",
+      "taskCount_other": "{{count}} tasks"
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -2594,6 +2675,8 @@
       "saveError": "Error saving",
       "deleteError": "Error deleting",
       "applyError": "Error applying rules",
+      "contains": "contains",
+      "categorizeAs": "categorize as",
       "columns": {
         "merchantContains": "Merchant contains",
         "category": "Category",
@@ -2784,8 +2867,74 @@
         "viewImports": "View imported statements"
       }
     },
+    "vaultGuard": {
+      "verifying": "Verifying vault...",
+      "locked": {
+        "title": "Vault Locked",
+        "desc": "Enter your master password to unlock the vault.",
+        "passwordLabel": "Master Password",
+        "passwordPlaceholder": "Enter your master password",
+        "unlocking": "Unlocking...",
+        "unlockBtn": "Unlock Vault",
+        "failTitle": "Vault not unlocked"
+      },
+      "setup": {
+        "title": "Protect Your Vault",
+        "desc": "Set a master password to add an extra layer of security. Your data will be re-encrypted with this password. It is never stored — keep it in a safe place.",
+        "passwordLabel": "Master Password",
+        "confirmLabel": "Confirm Master Password",
+        "passwordPlaceholder": "Minimum 8 characters",
+        "confirmPlaceholder": "Repeat the master password",
+        "passwordsMismatch": "Master passwords do not match.",
+        "passwordsMismatchShort": "Passwords do not match.",
+        "passwordHint": "Use at least 3 of: uppercase, lowercase, numbers, special characters.",
+        "configuring": "Setting up...",
+        "setupBtn": "Set Master Password",
+        "successTitle": "Vault configured!",
+        "successDesc": "All your data has been protected with your master password.",
+        "errorTitle": "Error setting up vault",
+        "strength": {
+          "veryWeak": "Very weak",
+          "weak": "Weak",
+          "fair": "Fair",
+          "good": "Good",
+          "strong": "Strong"
+        }
+      },
+      "expiry": {
+        "hours": "Vault expires in {{hours}}h {{minutes}}min",
+        "minutes": "Vault expires in {{minutes}} min",
+        "soon": "Vault expiring soon"
+      }
+    },
     "vaultHealth": {
-      "title": "Vault Health"
+      "title": "Vault Health",
+      "analyzing": "Analyzing passwords...",
+      "loadError": "Error loading health report",
+      "securityLevel": "{{level}} Security",
+      "levels": {
+        "good": "Good",
+        "fair": "Fair",
+        "critical": "Critical"
+      },
+      "issues": {
+        "weak": "Weak",
+        "medium": "Medium",
+        "duplicate": "Duplicate",
+        "outdated": "Outdated"
+      },
+      "issueCounts": {
+        "weak": "Weak",
+        "duplicate": "Duplicate",
+        "medium": "Medium",
+        "outdated": "Outdated"
+      },
+      "duplicateGroup": "Duplicate group #{{group}}",
+      "noPasswords": "No passwords registered",
+      "analysisOf_one": "Analysis of {{count}} password",
+      "analysisOf_other": "Analysis of {{count}} passwords",
+      "needsAttention": "Passwords that need attention",
+      "allGood": "All passwords are in good shape!"
     },
     "bookReader": {
       "themeLight": "Light",

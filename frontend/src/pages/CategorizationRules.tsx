@@ -327,7 +327,9 @@ export default function CategorizationRules() {
                 <div className="flex flex-shrink-0 items-center gap-2 rounded-md bg-muted px-3 py-2">
                   <Tag className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">contém</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.categorizationRules.contains')}
+                    </p>
                     <p className="font-mono text-sm font-semibold">
                       &ldquo;{rule.merchant_contains}&rdquo;
                     </p>
@@ -364,7 +366,9 @@ export default function CategorizationRules() {
                     {getCategoryIcon(rule.category)}
                   </span>
                   <div>
-                    <p className="text-xs text-muted-foreground">categorizar como</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.categorizationRules.categorizeAs')}
+                    </p>
                     <p className="text-sm font-semibold">
                       {translate('expenseCategories', rule.category)}
                     </p>
