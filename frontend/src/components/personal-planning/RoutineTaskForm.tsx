@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -19,10 +20,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
+import { financialGoalsService } from '@/services/vaults-service';
 import {
   TASK_CATEGORIES,
   PERIODICITY_CHOICES,
@@ -77,6 +80,7 @@ export function RoutineTaskForm({
           daily_occurrences: task.daily_occurrences || 1,
           interval_hours: task.interval_hours || null,
           scheduled_times: task.scheduled_times || null,
+          linked_financial_goal: task.linked_financial_goal ?? null,
         }
       : {
           name: '',
@@ -97,6 +101,7 @@ export function RoutineTaskForm({
           daily_occurrences: 1,
           interval_hours: null,
           scheduled_times: null,
+          linked_financial_goal: null,
         },
   });
 
@@ -126,6 +131,7 @@ export function RoutineTaskForm({
         daily_occurrences: task.daily_occurrences || 1,
         interval_hours: task.interval_hours || null,
         scheduled_times: task.scheduled_times || null,
+        linked_financial_goal: task.linked_financial_goal ?? null,
       });
     }
   }, [task, reset]);
@@ -145,6 +151,12 @@ export function RoutineTaskForm({
 
     void loadCurrentUserMember();
   }, [task, setValue]);
+
+  const { data: financialGoals = [] } = useQuery({
+    queryKey: ['financial-goals-active'],
+    queryFn: () => financialGoalsService.getAll({ is_active: 'true' }),
+    staleTime: 60_000,
+  });
 
   // Reset conditional fields when periodicity changes
   useEffect(() => {
@@ -208,7 +220,7 @@ export function RoutineTaskForm({
             <SelectContent>
               {TASK_CATEGORIES.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
+                  {translate('taskCategories', cat.value)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -666,6 +678,42 @@ export function RoutineTaskForm({
               {errors.allowed_skips_per_month.message}
             </p>
           )}
+        </div>
+
+        <div className="col-span-2">
+          <Label htmlFor="linked_financial_goal">
+            {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
+          </Label>
+          <Select
+            value={watch('linked_financial_goal')?.toString() ?? ''}
+            onValueChange={(value) =>
+              setValue(
+                'linked_financial_goal',
+                value && value !== 'none' ? parseInt(value) : null
+              )
+            }
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t(
+                  'pages.routineTasks.form.linkedFinancialGoalPlaceholder'
+                )}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                {t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+              </SelectItem>
+              {financialGoals.map((goal) => (
+                <SelectItem key={goal.id} value={goal.id.toString()}>
+                  {goal.description}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('pages.routineTasks.form.linkedFinancialGoalHint')}
+          </p>
         </div>
 
         <div className="col-span-2 flex items-center space-x-2">

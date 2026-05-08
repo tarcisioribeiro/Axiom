@@ -35,6 +35,8 @@ export interface RoutineTask {
   unit_display?: string;
   completion_rate: number;
   total_completions: number;
+  linked_financial_goal?: number | null;
+  linked_financial_goal_description?: string | null;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -65,6 +67,7 @@ export interface RoutineTaskFormData {
   allowed_skips_per_month: number;
   target_quantity: number;
   unit: string;
+  linked_financial_goal?: number | null;
   owner: number;
 }
 

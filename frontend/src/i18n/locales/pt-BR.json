@@ -2464,7 +2464,10 @@
         "priorityLabel": "Prioridade",
         "allowedSkipsLabel": "Faltas Toleradas/Mês",
         "allowedSkipsHint": "Quantas faltas são toleradas por mês sem quebrar o streak",
-        "isActiveLabel": "Tarefa Ativa"
+        "isActiveLabel": "Tarefa Ativa",
+        "linkedFinancialGoalLabel": "Meta Financeira Vinculada",
+        "linkedFinancialGoalPlaceholder": "Selecione uma meta financeira (opcional)",
+        "linkedFinancialGoalHint": "Vincule esta rotina a uma meta financeira que ela alimenta"
       }
     },
     "goals": {

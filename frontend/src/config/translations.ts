@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+
 // Translations - English (API) to Portuguese (UI)
 export const TRANSLATIONS = {
   // Account Types
@@ -554,8 +556,134 @@ export const REVERSE_TRANSLATIONS = {
   ),
 };
 
+// English display labels (for en-US locale)
+export const TRANSLATIONS_EN = {
+  expenseCategories: {
+    'food and drink': 'Food and Drink',
+    food: 'Food',
+    'bills and services': 'Bills and Services',
+    electronics: 'Electronics',
+    'family and friends': 'Family and Friends',
+    pets: 'Pets',
+    'digital signs': 'Digital Subscriptions',
+    subscriptions: 'Subscriptions',
+    house: 'Home',
+    home: 'Home',
+    housing: 'Housing',
+    purchases: 'Purchases',
+    shopping: 'Shopping',
+    donate: 'Donations',
+    donation: 'Donation',
+    education: 'Education',
+    loans: 'Loans',
+    entertainment: 'Entertainment',
+    leisure: 'Leisure',
+    taxes: 'Taxes',
+    investments: 'Investments',
+    others: 'Others',
+    other: 'Other',
+    vestuary: 'Clothing',
+    clothing: 'Clothing',
+    'health and care': 'Health and Personal Care',
+    health: 'Health',
+    healthcare: 'Healthcare',
+    'professional services': 'Professional Services',
+    services: 'Services',
+    supermarket: 'Supermarket',
+    groceries: 'Groceries',
+    rates: 'Fees',
+    fees: 'Fees',
+    transport: 'Transport',
+    transportation: 'Transport',
+    travels: 'Travel',
+    travel: 'Travel',
+    utilities: 'Utilities',
+    insurance: 'Insurance',
+    personal: 'Personal',
+    beauty: 'Beauty',
+    fitness: 'Fitness',
+    gym: 'Gym',
+    restaurant: 'Restaurant',
+    restaurants: 'Restaurants',
+    cafe: 'Café',
+    delivery: 'Delivery',
+    rent: 'Rent',
+    fuel: 'Fuel',
+    parking: 'Parking',
+    maintenance: 'Maintenance',
+    repairs: 'Repairs',
+    gifts: 'Gifts',
+    charity: 'Charity',
+    kids: 'Kids',
+    baby: 'Baby',
+    pharmacy: 'Pharmacy',
+    medical: 'Medical',
+    dental: 'Dental',
+    vision: 'Vision',
+    streaming: 'Streaming',
+    games: 'Games',
+    books: 'Books',
+    hobbies: 'Hobbies',
+    sports: 'Sports',
+    vacation: 'Vacation',
+    flight: 'Flight',
+    hotel: 'Hotel',
+    accommodation: 'Accommodation',
+    fatura_cartao: 'Credit Card Bill',
+  },
+  revenueCategories: {
+    deposit: 'Deposit',
+    award: 'Award',
+    salary: 'Salary',
+    ticket: 'Voucher',
+    income: 'Income',
+    refund: 'Refund',
+    cashback: 'Cashback',
+    transfer: 'Transfer Received',
+    received_loan: 'Loan Received',
+    loan_devolution: 'Loan Repayment',
+  },
+  taskCategories: {
+    health: 'Health',
+    intellect: 'Intellect',
+    studies: 'Studies',
+    spiritual: 'Spiritual',
+    exercise: 'Exercise',
+    nutrition: 'Nutrition',
+    meditation: 'Meditation',
+    reading: 'Reading',
+    writing: 'Writing',
+    work: 'Work',
+    leisure: 'Leisure',
+    family: 'Family',
+    social: 'Social',
+    finance: 'Finance',
+    household: 'Household',
+    personal_care: 'Personal Care',
+    creativity: 'Creativity',
+    learning: 'Learning',
+    career: 'Career',
+    relationships: 'Relationships',
+    mindfulness: 'Mindfulness',
+    sleep: 'Sleep',
+    hydration: 'Hydration',
+    gratitude: 'Gratitude',
+    journaling: 'Journaling',
+    planning: 'Planning',
+    review: 'Review',
+    other: 'Other',
+    others: 'Others',
+  },
+};
+
 // Helper function to translate
 export const translate = (category: keyof typeof TRANSLATIONS, key: string): string => {
+  if (i18next.language === 'en-US' && category in TRANSLATIONS_EN) {
+    const enSection = TRANSLATIONS_EN[category as keyof typeof TRANSLATIONS_EN];
+    const found = (enSection as Record<string, string>)[key];
+    if (found) return found;
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+  }
   return (
     TRANSLATIONS[category][key as keyof (typeof TRANSLATIONS)[typeof category]] || key
   );
@@ -589,21 +717,32 @@ export const autoTranslate = (key: string): string => {
   if (!key) return key;
 
   const normalizedKey = key.toLowerCase().trim();
+  const isEnglish = i18next.language === 'en-US';
+  const primaryMap = isEnglish ? TRANSLATIONS_EN : TRANSLATIONS;
 
-  // Procura em todas as seções de tradução
-  for (const section of Object.values(TRANSLATIONS)) {
+  for (const section of Object.values(primaryMap)) {
     const found = (section as Record<string, string>)[normalizedKey];
     if (found) return found;
   }
 
-  // Se não encontrou, tenta com underscores convertidos para espaços
   const withSpaces = normalizedKey.replace(/_/g, ' ');
-  for (const section of Object.values(TRANSLATIONS)) {
+  for (const section of Object.values(primaryMap)) {
     const found = (section as Record<string, string>)[withSpaces];
     if (found) return found;
   }
 
-  // Retorna o termo original com primeira letra maiúscula
+  if (!isEnglish) {
+    for (const section of Object.values(TRANSLATIONS)) {
+      const found = (section as Record<string, string>)[normalizedKey];
+      if (found) return found;
+    }
+    const withSpacesFallback = normalizedKey.replace(/_/g, ' ');
+    for (const section of Object.values(TRANSLATIONS)) {
+      const found = (section as Record<string, string>)[withSpacesFallback];
+      if (found) return found;
+    }
+  }
+
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
 };
 

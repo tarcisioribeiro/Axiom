@@ -788,6 +788,7 @@ export const routineTaskSchema = z
       { message: 'Selecione uma unidade válida' }
     ),
     owner: z.number().positive(requiredError('Proprietario')),
+    linked_financial_goal: z.number().positive().optional().nullable(),
   })
   .refine(
     (data) => {

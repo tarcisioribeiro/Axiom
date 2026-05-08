@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { TRANSLATIONS } from '@/config/constants';
+import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -170,9 +170,7 @@ export default function FixedExpenses() {
       label: t('pages.fixedExpenses.columns.category'),
       render: (item) => (
         <Badge variant="secondary">
-          {TRANSLATIONS.expenseCategories[
-            item.category as keyof typeof TRANSLATIONS.expenseCategories
-          ] || item.category}
+          {translate('expenseCategories', item.category)}
         </Badge>
       ),
     },

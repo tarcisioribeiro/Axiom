@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useRoutineExport } from '@/hooks/use-routine-export';
 import { useToast } from '@/hooks/use-toast';
@@ -281,7 +282,7 @@ export default function RoutineTasks() {
       label: t('pages.routineTasks.columns.category'),
       render: (task) => (
         <Badge className={getCategoryColor(task.category)}>
-          {task.category_display}
+          {translate('taskCategories', task.category)}
         </Badge>
       ),
     },
