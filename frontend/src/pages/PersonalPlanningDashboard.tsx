@@ -260,7 +260,7 @@ export default function PersonalPlanningDashboard() {
                 dataKey="count"
                 nameKey="name"
                 formatter={(value) =>
-                  t('pages.planningDashboard.taskCount', { count: value })
+                  t('pages.planningDashboard.taskCount', { count: Number(value) })
                 }
                 colors={COLORS}
                 customColors={(entry) =>

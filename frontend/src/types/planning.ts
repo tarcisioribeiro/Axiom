@@ -37,6 +37,8 @@ export interface RoutineTask {
   total_completions: number;
   linked_financial_goal?: number | null;
   linked_financial_goal_description?: string | null;
+  linked_book?: number | null;
+  linked_book_title?: string | null;
   owner: number;
   owner_name: string;
   created_at: string;
@@ -68,6 +70,7 @@ export interface RoutineTaskFormData {
   target_quantity: number;
   unit: string;
   linked_financial_goal?: number | null;
+  linked_book?: number | null;
   owner: number;
 }
 
