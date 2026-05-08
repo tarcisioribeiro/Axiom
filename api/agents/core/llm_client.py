@@ -11,6 +11,8 @@ from app.config import cfg as _cfg
 logger = logging.getLogger(__name__)
 
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
+_PROVIDER: str = _cfg("LLM_PROVIDER", "ollama")
+_OLLAMA_MODEL: str = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
 
 
 class LLMClient:
@@ -25,7 +27,7 @@ class LLMClient:
     ) -> str:
         """Envia lista de mensagens ao LLM. model sobrescreve o env var global."""
         try:
-            provider = _cfg("LLM_PROVIDER", "ollama")
+            provider = _PROVIDER
             if provider == "anthropic":
                 return cls._anthropic_chat(messages, model=model)
             if provider == "groq":
@@ -43,7 +45,7 @@ class LLMClient:
     ) -> Generator[str, None, None]:
         """Yields tokens conforme chegam do LLM."""
         try:
-            provider = _cfg("LLM_PROVIDER", "ollama")
+            provider = _PROVIDER
             if provider == "anthropic":
                 yield from cls._anthropic_stream(messages, model=model)
             elif provider == "groq":
@@ -78,7 +80,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
-        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+        ollama_model = _OLLAMA_MODEL
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or ollama_model
         try:
@@ -106,7 +108,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
-        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+        ollama_model = _OLLAMA_MODEL
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or ollama_model
         try:

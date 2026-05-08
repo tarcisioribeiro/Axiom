@@ -54,6 +54,15 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
   const cfg = statusConfig[s] ?? statusConfig.unknown;
   const StatusIcon = cfg.icon;
 
+  const messageText = check?.message_key
+    ? t(`pages.adminOverview.messages.${check.message_key}`, {
+        count: check.model_count,
+        percent: check.free_percent,
+        host: check.smtp_host,
+        port: check.smtp_port,
+      })
+    : check?.message;
+
   return (
     <div className="rounded-xl border border-border bg-card p-5">
       <div className="mb-4 flex items-center justify-between">
@@ -72,10 +81,8 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
       <p className={cn('text-sm font-medium', cfg.color)}>
         {t(`pages.adminOverview.status.${cfg.statusKey}`)}
       </p>
-      {check?.message && (
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-          {check.message}
-        </p>
+      {messageText && (
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{messageText}</p>
       )}
       {check?.free_percent !== undefined && (
         <div className="mt-2">
@@ -95,7 +102,7 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
 }
 
 export default function AdminOverview() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['admin', 'health'],
     queryFn: () => adminService.getHealth(),
@@ -104,7 +111,7 @@ export default function AdminOverview() {
   });
 
   const lastUpdate = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString('pt-BR')
+    ? new Date(dataUpdatedAt).toLocaleTimeString(i18n.language)
     : null;
 
   return (
@@ -162,7 +169,7 @@ export default function AdminOverview() {
             </p>
             <p className="text-sm text-muted-foreground">
               {t('pages.adminOverview.checkedAt', {
-                time: new Date(data.timestamp).toLocaleString('pt-BR'),
+                time: new Date(data.timestamp).toLocaleString(i18n.language),
               })}
             </p>
           </div>

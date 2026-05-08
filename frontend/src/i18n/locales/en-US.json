@@ -118,6 +118,15 @@
       "completed": "Completed",
       "failed": "Failed",
       "cancelled": "Cancelled"
+    },
+    "emailVerificationBanner": {
+      "message": "Please confirm your email address to ensure full access to your account.",
+      "resend": "Resend email",
+      "sending": "Sending...",
+      "dismiss": "Dismiss notice",
+      "sentTitle": "Email sent",
+      "sentDesc": "Check your inbox.",
+      "errorTitle": "Error sending email"
     }
   },
   "nav": {
@@ -2446,6 +2455,7 @@
     "activityLogs": {
       "title": "Activity Logs",
       "emptyState": "No activity logs found.",
+      "dateGroupFormat": "EEEE, MMMM d, yyyy",
       "columns": {
         "dateTime": "Date/Time",
         "action": "Action",
@@ -2918,6 +2928,19 @@
         "not_configured": "Not configured",
         "unknown": "Unknown",
         "not_active": "Inactive"
+      },
+      "messages": {
+        "connection_successful": "Connection successful",
+        "connection_failed": "Connection failed",
+        "cache_operational": "Cache operational",
+        "cache_read_failed": "Cache read failed",
+        "models_available": "{{count}} model(s) available",
+        "disk_free": "{{percent}}% free",
+        "smtp_accessible": "SMTP {{host}}:{{port}} accessible",
+        "console_backend": "Console backend active (development)",
+        "email_host_not_configured": "EMAIL_HOST not configured",
+        "storage_successful": "Storage connection successful",
+        "storage_unreachable": "Storage endpoint unreachable"
       }
     },
     "adminIntegrations": {
@@ -2999,6 +3022,148 @@
         "app": "Application",
         "security": "Security",
         "storage": "Storage (MinIO)"
+      },
+      "variables": {
+        "LLM_PROVIDER": {
+          "description": "Language model provider: 'ollama' (local) or 'anthropic' (cloud).",
+          "hint": "Defines which provider the agent system uses. Switching between providers requires a container restart."
+        },
+        "OLLAMA_BASE_URL": {
+          "description": "HTTP address of the Ollama server.",
+          "hint": "HTTP address of the Ollama server. Inside Docker Compose, the service name 'ollama' resolves automatically. For Ollama installed on the host (outside Docker), use http://host.docker.internal:11434."
+        },
+        "OLLAMA_MODEL": {
+          "description": "Ollama model tag for text generation (chat).",
+          "hint": "Ollama model tag for text generation (chat). The model must be downloaded beforehand. Recommended for development: mistral:7b-instruct (works well with 16 GB RAM)."
+        },
+        "OLLAMA_EMBED_MODEL": {
+          "description": "Ollama model for vector embeddings (RAG).",
+          "hint": "Ollama model for generating vector embeddings (RAG). Must be aligned with vectors already stored in pgvector — switching models without re-indexing produces poor search results."
+        },
+        "LLM_TIMEOUT_CHAT": {
+          "description": "Maximum seconds to wait for a chat response.",
+          "hint": "Maximum seconds to wait for a chat response. On hardware without GPU or with large models, increase to 300 or more to avoid timeouts."
+        },
+        "LLM_TIMEOUT_EMBED": {
+          "description": "Maximum seconds to wait for an embedding.",
+          "hint": "Maximum seconds to wait for an embedding. Embeddings are generally faster than chat; rarely needs to be increased."
+        },
+        "ANTHROPIC_API_KEY": {
+          "description": "API key for use with Claude (required if LLM_PROVIDER=anthropic).",
+          "hint": "Anthropic API secret key. Required when LLM_PROVIDER=anthropic. Obtained at console.anthropic.com → API Keys. Stored encrypted in the database.",
+          "warning": "Never commit this key to code. It is only displayed once in the Anthropic Console when created."
+        },
+        "ANTHROPIC_MODEL": {
+          "description": "Claude model to use (e.g.: claude-sonnet-4-6).",
+          "hint": "Claude model ID to use. IDs are versioned; see docs.anthropic.com/en/docs/about-claude/models for the latest recommended ID."
+        },
+        "EMAIL_BACKEND": {
+          "description": "Django email backend Python class. Use SMTP in production.",
+          "hint": "Django email backend Python class. In production, use the SMTP backend. In development, the 'console' backend prints emails to the container stdout instead of sending them."
+        },
+        "EMAIL_HOST": {
+          "description": "SMTP server hostname (e.g.: smtp.gmail.com).",
+          "hint": "SMTP server hostname. Examples by provider: Gmail → smtp.gmail.com, Outlook → smtp.office365.com, SES → email-smtp.<region>.amazonaws.com, SendGrid → smtp.sendgrid.net."
+        },
+        "EMAIL_PORT": {
+          "description": "SMTP port. Use 587 with TLS, 465 with SSL.",
+          "hint": "SMTP port. Use 587 with STARTTLS (EMAIL_USE_TLS=True), 465 with implicit SSL (EMAIL_USE_SSL=True), or 25 without encryption (not recommended in production)."
+        },
+        "EMAIL_USE_TLS": {
+          "description": "Enable STARTTLS. Use with port 587.",
+          "hint": "Enables STARTTLS. Use with port 587. Never set EMAIL_USE_TLS=True and EMAIL_USE_SSL=True at the same time — this will cause a connection error.",
+          "warning": "Do not enable simultaneously with EMAIL_USE_SSL=True."
+        },
+        "EMAIL_HOST_USER": {
+          "description": "SMTP authentication user (usually the email address).",
+          "hint": "SMTP authentication user — usually the full email address. For SendGrid, the value is always the literal word 'apikey'."
+        },
+        "EMAIL_HOST_PASSWORD": {
+          "description": "SMTP password. For Gmail with 2FA, use an App Password.",
+          "hint": "SMTP password. Stored encrypted. For Gmail with 2-step verification, use an App Password (myaccount.google.com/apppasswords) — not your Google account password. For SendGrid, use the API key (starts with SG.).",
+          "warning": "For Gmail, create a specific App Password. The Google account password does not work when 2-step verification is active."
+        },
+        "DEFAULT_FROM_EMAIL": {
+          "description": "Address displayed in the 'From' field of sent emails.",
+          "hint": "Address displayed in the 'From' field of sent emails. The address must be authorized by the SMTP provider to avoid emails being marked as spam."
+        },
+        "SITE_URL": {
+          "description": "Public frontend URL, used for links in emails.",
+          "hint": "Public URL of the frontend, used to generate clickable links in emails (e.g., password reset link). Must include the protocol (https://)."
+        },
+        "BACKUP_CRON": {
+          "description": "Cron expression for automatic backup scheduling.",
+          "hint": "Cron expression for automatic database backup scheduling. Requires a backup service restart to take effect after the change."
+        },
+        "KEEP_DAILY": {
+          "description": "Number of daily backups to keep.",
+          "hint": "Number of daily backups to keep. Older backups are automatically deleted by the retention service."
+        },
+        "KEEP_WEEKLY": {
+          "description": "Number of weekly backups to keep.",
+          "hint": "Number of weekly backups to keep (one per ISO week). Complements daily retention for older data recovery."
+        },
+        "KEEP_MONTHLY": {
+          "description": "Number of monthly backups to keep.",
+          "hint": "Number of monthly backups to keep. Recommended to keep at least 3 months for compliance and disaster recovery."
+        },
+        "BACKUP_ENCRYPTION_KEY": {
+          "description": "AES-256 password for encrypting backup files.",
+          "hint": "AES-256 password for encrypting backup files. Independent from the application ENCRYPTION_KEY — they are distinct keys with different purposes.",
+          "warning": "Changing this key invalidates decryption of all previous backups. Save the current value before switching."
+        },
+        "DEBUG": {
+          "description": "Django debug mode. Never enable in production.",
+          "hint": "Activates Django debug mode. In debug mode, full tracebacks are shown in error responses and production optimizations are disabled.",
+          "warning": "Never use True in production — it exposes sensitive server information in error responses."
+        },
+        "LOG_FORMAT": {
+          "description": "Log format: 'json' (production) or 'verbose' (development).",
+          "hint": "'json' is structured and integrable with tools like Grafana/Loki. 'verbose' is readable in the terminal and recommended for development."
+        },
+        "BUDGET_ENFORCEMENT_MODE": {
+          "description": "Budget enforcement: 'soft' (alert) or 'hard' (blocks).",
+          "hint": "Behavior when a configured budget is exceeded. 'soft' allows the operation and returns a warning (HTTP 201). 'hard' blocks the operation with an error (HTTP 400)."
+        },
+        "ALLOWED_HOSTS": {
+          "description": "Domains accepted by Django, comma-separated.",
+          "hint": "Domains accepted by Django, comma-separated. Requests with a Host header not listed are rejected with HTTP 400. In development: localhost,127.0.0.1."
+        },
+        "CORS_ALLOWED_ORIGINS": {
+          "description": "Origins allowed for CORS, comma-separated.",
+          "hint": "Origins allowed for CORS requests, comma-separated. Must include the frontend URL. In development: http://localhost:39101."
+        },
+        "GUNICORN_WORKERS": {
+          "description": "Number of Gunicorn worker processes.",
+          "hint": "Number of Gunicorn worker processes. General rule: 2 × CPU_cores + 1. More workers increase throughput but also RAM usage."
+        },
+        "SECRET_KEY": {
+          "description": "Django secret key for signing sessions and tokens.",
+          "hint": "Django secret key used to sign sessions, CSRF tokens, and cookies. Must be long, random, and unique per environment.",
+          "warning": "Changing this key immediately invalidates all active sessions — all users will be logged out. Generate a new one with: docker compose exec api python -c \"from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())\""
+        },
+        "ENCRYPTION_KEY": {
+          "description": "Fernet key for encrypting sensitive database fields.",
+          "hint": "Fernet key (44 chars base64) for encrypting sensitive fields in the database: Account._account_number, CreditCard._card_number/_security_code, Member._document, among others.",
+          "warning": "Never change this key directly. Use the management command 'rotate_encryption_key' with --old-key and --new-key. Changing without rotation makes all encrypted data unreadable and unrecoverable. See documentation for the complete procedure."
+        },
+        "MINIO_ENDPOINT": {
+          "description": "Internal MinIO address (host:port).",
+          "hint": "Internal MinIO address (host:port). Inside Docker Compose, the service name 'minio' resolves automatically. For external access (outside Docker), use localhost:39105."
+        },
+        "MINIO_BUCKET_NAME": {
+          "description": "Name of the main bucket for media storage.",
+          "hint": "Name of the main bucket for media storage. The bucket is automatically created on first startup if it doesn't exist. Use only lowercase letters, numbers, and hyphens."
+        },
+        "MINIO_ROOT_USER": {
+          "description": "MinIO root user.",
+          "hint": "MinIO root user, equivalent to the MINIO_ROOT_USER variable defined in docker-compose. Must match the value configured in the MinIO service."
+        },
+        "MINIO_ROOT_PASSWORD": {
+          "description": "MinIO root password.",
+          "hint": "MinIO root password. Stored encrypted in the database. Must match the password configured in the MinIO service. The MinIO Console is available at http://localhost:39106.",
+          "warning": "This password must match the one configured in the MinIO service. A mismatch causes authentication failure and makes file storage inaccessible."
+        }
       }
     }
   },
@@ -3042,6 +3207,114 @@
       "twoFactorInactive": "Inactive",
       "twoFactorManage": "Manage 2FA",
       "twoFactorDesc": "Add an extra layer of protection to your account"
+    }
+  },
+  "activityDescriptions": {
+    "password": {
+      "create": "Created password: {{name}}",
+      "update": "Updated password: {{name}}",
+      "delete": "Deleted password: {{name}}",
+      "reveal": "Revealed password: {{name}}",
+      "import": "Imported password: {{name}}",
+      "import_complete": "Import complete: {{imported}} imported, {{duplicates}} duplicates, {{errors}} errors"
+    },
+    "card": {
+      "create": "Added card: {{name}}",
+      "update": "Updated card: {{name}}",
+      "delete": "Removed card: {{name}}",
+      "reveal": "Revealed card data: {{name}}"
+    },
+    "bank_account": {
+      "create": "Added bank account: {{name}}",
+      "update": "Updated bank account: {{name}}",
+      "delete": "Removed bank account: {{name}}",
+      "reveal": "Revealed bank account data: {{name}}"
+    },
+    "archive": {
+      "create": "Created archive: {{name}}",
+      "update": "Updated archive: {{name}}",
+      "delete": "Removed archive: {{name}}",
+      "reveal": "Revealed archive content: {{name}}",
+      "download": "Downloaded archive: {{name}}"
+    },
+    "credential_share": {
+      "create": "Created sharing token for password: {{name}}",
+      "revoke": "Revoked sharing token for password: {{name}}",
+      "access": "Password accessed via shared token: {{name}}"
+    },
+    "vault": {
+      "health_check": "Vault integrity check",
+      "failed_unlock": "Vault unlock attempt failed (attempt {{attempts}})"
+    },
+    "author": {
+      "create": "Added author: {{name}}",
+      "update": "Updated author: {{name}}",
+      "delete": "Removed author: {{name}}"
+    },
+    "publisher": {
+      "create": "Added publisher: {{name}}",
+      "update": "Updated publisher: {{name}}",
+      "delete": "Removed publisher: {{name}}"
+    },
+    "book": {
+      "create": "Added book: {{name}}",
+      "update": "Updated book: {{name}}",
+      "delete": "Removed book: {{name}}",
+      "upload_file": "Uploaded file for book: {{name}}",
+      "remove_file": "Removed file from book: {{name}}",
+      "mark_read": "Marked book as read: {{name}} ({{sessions}} sessions)"
+    },
+    "summary": {
+      "create": "Created summary: {{name}}",
+      "update": "Updated summary: {{name}}",
+      "delete": "Removed summary: {{name}}"
+    },
+    "reading": {
+      "create": "Logged reading of: {{name}}",
+      "update": "Updated reading of: {{name}}",
+      "delete": "Removed reading of: {{name}}"
+    },
+    "reading_goal": {
+      "create": "Created reading goal for {{year}}: {{count}} books",
+      "update": "Updated reading goal for {{year}}: {{count}} books",
+      "delete": "Removed reading goal for {{year}}"
+    },
+    "literary_goal": {
+      "create": "Created literary goal ({{type}}): {{count}}",
+      "update": "Updated literary goal ({{type}}): {{count}}",
+      "delete": "Removed literary goal: {{type}}"
+    },
+    "highlight": {
+      "create": "Added highlight in book: {{name}}",
+      "update": "Updated highlight in book: {{name}}",
+      "delete": "Removed highlight from book: {{name}}"
+    },
+    "routine_task": {
+      "create": "Created routine task: {{name}}",
+      "update": "Updated routine task: {{name}}",
+      "delete": "Removed routine task: {{name}}",
+      "import_template": "Imported '{{task_name}}' from template '{{template_name}}'"
+    },
+    "goal": {
+      "create": "Created goal: {{title}}",
+      "update": "Updated goal: {{title}}",
+      "delete": "Removed goal: {{title}}",
+      "recalculate": "Recalculated goal progress: {{title}}",
+      "reset_progress": "Reset goal progress: {{title}}"
+    },
+    "reflection": {
+      "create": "Created reflection for {{date}}",
+      "update": "Updated reflection for {{date}}",
+      "delete": "Removed reflection for {{date}}"
+    },
+    "task_instance": {
+      "create": "Created ad-hoc task: {{name}}",
+      "update": "Updated instance: {{name}} — {{status}}",
+      "delete": "Removed instance: {{name}}",
+      "update_status": "Updated status: {{name}} → {{status}}"
+    },
+    "record": {
+      "purge": "Record {{label}} id={{id}} permanently removed by LGPD/GDPR retention policy"
     }
   }
 }

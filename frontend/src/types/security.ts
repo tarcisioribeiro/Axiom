@@ -233,6 +233,8 @@ export interface ActivityLog {
   model_name?: string;
   object_id?: number;
   description: string;
+  description_key?: string;
+  description_params?: Record<string, string | number>;
   ip_address?: string;
   user_agent?: string;
   user?: number;
