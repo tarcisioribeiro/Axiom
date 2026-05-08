@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATIONS } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -50,9 +50,7 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const REVENUE_CATEGORIES = Object.entries(TRANSLATIONS.revenueCategories).map(
-  ([key, label]) => ({ key, label })
-);
+const REVENUE_CATEGORY_KEYS = Object.keys(TRANSLATIONS.revenueCategories);
 
 const MONTHS = [
   { value: '01' },
@@ -261,9 +259,7 @@ export default function FixedRevenues() {
       label: t('pages.fixedRevenues.columns.category'),
       render: (item) => (
         <Badge variant="secondary">
-          {TRANSLATIONS.revenueCategories[
-            item.category as keyof typeof TRANSLATIONS.revenueCategories
-          ] || item.category}
+          {translate('revenueCategories', item.category)}
         </Badge>
       ),
     },
@@ -543,9 +539,9 @@ export default function FixedRevenues() {
                   <SelectValue placeholder={t('common.actions.select')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {REVENUE_CATEGORIES.map(({ key, label }) => (
+                  {REVENUE_CATEGORY_KEYS.map((key) => (
                     <SelectItem key={key} value={key}>
-                      {label}
+                      {translate('revenueCategories', key)}
                     </SelectItem>
                   ))}
                 </SelectContent>

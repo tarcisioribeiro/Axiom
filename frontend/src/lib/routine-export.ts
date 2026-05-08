@@ -1,5 +1,6 @@
 import { Workbook } from 'exceljs';
 
+import { translate } from '@/config/constants';
 import type { RoutineTask } from '@/types';
 
 export interface DayScheduleEntry {
@@ -160,7 +161,7 @@ export async function exportScheduleToExcel(schedule: DaySchedule[]): Promise<vo
         entry.task.name,
         entry.task.description ?? '',
         entry.task.priority_display,
-        entry.task.category_display,
+        translate('taskCategories', entry.task.category),
       ]);
     }
   }

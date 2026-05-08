@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
@@ -161,9 +161,9 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
+              {Object.keys(TRANSLATIONS.revenueCategories).map((k) => (
                 <SelectItem key={k} value={k}>
-                  {v}
+                  {translate('revenueCategories', k)}
                 </SelectItem>
               ))}
             </SelectContent>

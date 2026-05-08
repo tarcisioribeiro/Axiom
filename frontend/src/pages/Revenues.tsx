@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -150,9 +150,9 @@ export default function Revenues() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
-            {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
+            {Object.keys(TRANSLATIONS.revenueCategories).map((k) => (
               <SelectItem key={k} value={k}>
-                {v}
+                {translate('revenueCategories', k)}
               </SelectItem>
             ))}
           </SelectContent>
