@@ -31,8 +31,12 @@ export type ServiceStatus =
 export interface ServiceCheck {
   status: ServiceStatus;
   message?: string;
+  message_key?: string;
   models?: string[];
+  model_count?: number;
   free_percent?: number;
+  smtp_host?: string;
+  smtp_port?: number;
 }
 
 export interface HealthResponse {

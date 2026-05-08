@@ -571,6 +571,8 @@ class VaultUnlockView(APIView):
                 ),
                 model_name="VaultConfig",
                 object_id=vault_config.id,
+                description_key="vault.failed_unlock",
+                description_params={"attempts": attempts},
             )
             msg = "Senha mestre incorreta."
             if remaining > 0:
