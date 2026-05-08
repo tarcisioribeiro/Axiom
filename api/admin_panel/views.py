@@ -154,17 +154,33 @@ def _check_database() -> dict[str, Any]:
     try:
         with connections["default"].cursor() as cursor:
             cursor.execute("SELECT 1")
-        return {"status": "healthy", "message": "Conexão bem-sucedida"}
+        return {
+            "status": "healthy",
+            "message": "Conexão bem-sucedida",
+            "message_key": "connection_successful",
+        }
     except Exception as e:
-        return {"status": "unhealthy", "message": str(e)}
+        return {
+            "status": "unhealthy",
+            "message": str(e),
+            "message_key": "connection_failed",
+        }
 
 
 def _check_cache() -> dict[str, Any]:
     try:
         cache.set("admin_health_check", "ok", 10)
         if cache.get("admin_health_check") == "ok":
-            return {"status": "healthy", "message": "Redis operacional"}
-        return {"status": "unhealthy", "message": "Leitura do cache falhou"}
+            return {
+                "status": "healthy",
+                "message": "Redis operacional",
+                "message_key": "cache_operational",
+            }
+        return {
+            "status": "unhealthy",
+            "message": "Leitura do cache falhou",
+            "message_key": "cache_read_failed",
+        }
     except Exception as e:
         return {"status": "unhealthy", "message": str(e)}
 
@@ -188,6 +204,8 @@ def _check_ollama() -> dict[str, Any]:
             return {
                 "status": "healthy",
                 "message": f"{len(models)} modelo(s) disponível(is)",
+                "message_key": "models_available",
+                "model_count": len(models),
                 "models": models,
             }
     except urllib.error.URLError as e:
@@ -207,6 +225,7 @@ def _check_disk() -> dict[str, Any]:
         return {
             "status": st,
             "message": f"{pct:.1f}% livre",
+            "message_key": "disk_free",
             "free_percent": round(pct, 1),
         }
     except Exception as e:
@@ -233,16 +252,27 @@ def _check_email() -> dict[str, Any]:
         return {
             "status": "not_configured",
             "message": "Backend de console ativo (desenvolvimento)",
+            "message_key": "console_backend",
         }
     if not host or host in ("localhost", "smtp.example.com"):
-        return {"status": "not_configured", "message": "EMAIL_HOST não configurado"}
+        return {
+            "status": "not_configured",
+            "message": "EMAIL_HOST não configurado",
+            "message_key": "email_host_not_configured",
+        }
     try:
         import socket
 
         socket.setdefaulttimeout(5)
         s = socket.create_connection((host, port), timeout=5)
         s.close()
-        return {"status": "healthy", "message": f"SMTP {host}:{port} acessível"}
+        return {
+            "status": "healthy",
+            "message": f"SMTP {host}:{port} acessível",
+            "message_key": "smtp_accessible",
+            "smtp_host": host,
+            "smtp_port": port,
+        }
     except Exception as e:
         return {"status": "unhealthy", "message": str(e)}
 

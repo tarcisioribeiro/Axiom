@@ -53,9 +53,17 @@ def check_storage() -> dict[str, str]:
             ),
         )
         client.head_bucket(Bucket=bucket_name)
-        return {"status": "healthy", "message": "Storage connection successful"}
+        return {
+            "status": "healthy",
+            "message": "Storage connection successful",
+            "message_key": "storage_successful",
+        }
     except EndpointConnectionError:
-        return {"status": "unhealthy", "message": "Storage endpoint unreachable"}
+        return {
+            "status": "unhealthy",
+            "message": "Storage endpoint unreachable",
+            "message_key": "storage_unreachable",
+        }
     except Exception as e:
         return {"status": "unhealthy", "message": f"Storage error: {str(e)}"}
 

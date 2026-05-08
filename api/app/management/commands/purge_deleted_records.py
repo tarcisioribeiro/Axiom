@@ -290,6 +290,12 @@ class Command(BaseCommand):
                 object_id=instance.pk,
                 ip_address=None,
                 user_agent="management_command:purge_deleted_records",
+                description_key="record.purge",
+                description_params={
+                    "label": label,
+                    "id": instance.pk,
+                    "uuid": str(instance.uuid),
+                },
             )
         except Exception:
             # ActivityLog failure must never block the purge itself.

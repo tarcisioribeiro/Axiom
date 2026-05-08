@@ -437,6 +437,19 @@ class ActivityLog(models.Model):
     description = models.TextField(
         verbose_name="Descrição", help_text="Descrição detalhada da ação realizada"
     )
+    description_key = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Chave de descrição",
+        help_text="Chave i18n para descrição traduzível (ex: password.create)",
+    )
+    description_params = models.JSONField(
+        blank=True,
+        null=True,
+        verbose_name="Parâmetros da descrição",
+        help_text="Parâmetros dinâmicos para interpolação da chave de descrição",
+    )
     ip_address = models.GenericIPAddressField(
         blank=True,
         null=True,
@@ -489,11 +502,15 @@ class ActivityLog(models.Model):
         object_uuid=None,
         ip_address=None,
         user_agent=None,
+        description_key=None,
+        description_params=None,
     ):
         return cls.objects.create(
             user=user,
             action=action,
             description=description,
+            description_key=description_key,
+            description_params=description_params,
             model_name=model_name,
             object_id=object_id,
             object_uuid=object_uuid,
