@@ -170,8 +170,10 @@ def _check_cache() -> dict[str, Any]:
 
 
 def _check_ollama() -> dict[str, Any]:
-    base_url = getattr(settings, "OLLAMA_BASE_URL", "") or os.getenv(
-        "OLLAMA_BASE_URL", "http://ollama:11434"
+    base_url = (
+        _get_config_value("OLLAMA_BASE_URL")
+        or getattr(settings, "OLLAMA_BASE_URL", "")
+        or os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
     )
     try:
         req = urllib.request.Request(
@@ -289,7 +291,7 @@ class AdminIntegrationsView(AdminBaseView):
     """GET /api/v1/admin/integrations/ — status em tempo real das integrações."""
 
     def get(self, request: Request) -> Response:
-        provider = getattr(
+        provider = _get_config_value("LLM_PROVIDER") or getattr(
             settings, "LLM_PROVIDER", os.getenv("LLM_PROVIDER", "ollama")
         )
         ollama_info = _check_ollama()
@@ -299,7 +301,7 @@ class AdminIntegrationsView(AdminBaseView):
             "message": "Não configurado",
         }
         if provider == "anthropic":
-            api_key = os.getenv("ANTHROPIC_API_KEY") or _get_config_value(
+            api_key = _get_config_value("ANTHROPIC_API_KEY") or os.getenv(
                 "ANTHROPIC_API_KEY"
             )
             if api_key:
@@ -319,10 +321,10 @@ class AdminIntegrationsView(AdminBaseView):
                 "anthropic": anthropic_status,
                 "email": _check_email(),
                 "llm_provider": provider,
-                "ollama_model": getattr(
-                    settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", "")
-                ),
-                "anthropic_model": os.getenv("ANTHROPIC_MODEL", ""),
+                "ollama_model": _get_config_value("OLLAMA_MODEL")
+                or getattr(settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", "")),
+                "anthropic_model": _get_config_value("ANTHROPIC_MODEL")
+                or os.getenv("ANTHROPIC_MODEL", ""),
             }
         )
 
@@ -605,17 +607,21 @@ class AdminAgentsStatusView(AdminBaseView):
     """GET /api/v1/admin/agents/status/ — status do sistema de agentes LLM."""
 
     def get(self, request: Request) -> Response:
-        provider = getattr(
+        provider = _get_config_value("LLM_PROVIDER") or getattr(
             settings, "LLM_PROVIDER", os.getenv("LLM_PROVIDER", "ollama")
         )
-        ollama_url = getattr(
+        ollama_url = _get_config_value("OLLAMA_BASE_URL") or getattr(
             settings, "OLLAMA_BASE_URL", os.getenv("OLLAMA_BASE_URL", "")
         )
-        ollama_model = getattr(settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", ""))
-        embed_model = getattr(
+        ollama_model = _get_config_value("OLLAMA_MODEL") or getattr(
+            settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", "")
+        )
+        embed_model = _get_config_value("OLLAMA_EMBED_MODEL") or getattr(
             settings, "OLLAMA_EMBED_MODEL", os.getenv("OLLAMA_EMBED_MODEL", "")
         )
-        anthropic_model = os.getenv("ANTHROPIC_MODEL", "")
+        anthropic_model = _get_config_value("ANTHROPIC_MODEL") or os.getenv(
+            "ANTHROPIC_MODEL", ""
+        )
 
         ollama_check = (
             _check_ollama() if provider == "ollama" else {"status": "not_active"}
@@ -641,12 +647,20 @@ class AdminAgentsStatusView(AdminBaseView):
                 "anthropic": {
                     "model": anthropic_model,
                     "api_key_configured": bool(
-                        os.getenv("ANTHROPIC_API_KEY")
-                        or _get_config_value("ANTHROPIC_API_KEY")
+                        _get_config_value("ANTHROPIC_API_KEY")
+                        or os.getenv("ANTHROPIC_API_KEY")
                     ),
                 },
                 "total_conversations": total_conversations,
-                "timeout_chat": getattr(settings, "LLM_TIMEOUT_CHAT", 120),
-                "timeout_embed": getattr(settings, "LLM_TIMEOUT_EMBED", 30),
+                "timeout_chat": int(
+                    _get_config_value("LLM_TIMEOUT_CHAT")
+                    or getattr(settings, "LLM_TIMEOUT_CHAT", "120")
+                    or "120"
+                ),
+                "timeout_embed": int(
+                    _get_config_value("LLM_TIMEOUT_EMBED")
+                    or getattr(settings, "LLM_TIMEOUT_EMBED", "30")
+                    or "30"
+                ),
             }
         )

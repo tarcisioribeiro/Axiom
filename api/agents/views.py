@@ -1,5 +1,4 @@
 import json
-import os
 import uuid
 from collections.abc import Generator
 from typing import cast
@@ -163,9 +162,9 @@ class AgentStatusView(APIView):
         from agents.agents.insight_agent import InsightAgent
         from agents.agents.library_agent import LibraryAgent
         from agents.agents.planning_agent import PlanningAgent
-        from agents.core.llm_client import LLMClient
+        from agents.core.llm_client import LLMClient, _cfg
 
-        provider = os.getenv("LLM_PROVIDER", "ollama")
+        provider = _cfg("LLM_PROVIDER", "ollama")
         available = LLMClient.is_available()
         models = LLMClient.list_models() if provider == "ollama" else []
 
