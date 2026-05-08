@@ -192,6 +192,12 @@ class PurgeDeletedView(APIView):
                 object_id=instance.pk,
                 ip_address=None,
                 user_agent="admin_api:purge_deleted_records",
+                description_key="record.purge",
+                description_params={
+                    "label": label,
+                    "id": instance.pk,
+                    "uuid": str(instance.uuid),
+                },
             )
         except Exception:
             pass

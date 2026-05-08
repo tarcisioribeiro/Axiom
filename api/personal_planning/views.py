@@ -26,7 +26,15 @@ from personal_planning.serializers import (
 )
 
 
-def log_activity(request, action, model_name, object_id, description):
+def log_activity(
+    request,
+    action,
+    model_name,
+    object_id,
+    description,
+    description_key=None,
+    description_params=None,
+):
     """Helper para registrar atividades."""
     try:
         from security.models import ActivityLog
@@ -35,6 +43,8 @@ def log_activity(request, action, model_name, object_id, description):
             user=request.user,
             action=action,
             description=description,
+            description_key=description_key,
+            description_params=description_params,
             model_name=model_name,
             object_id=object_id,
             ip_address=get_client_ip(request),
@@ -88,6 +98,8 @@ class RoutineTaskListCreateView(BaseListCreateView):
             "RoutineTask",
             task.id,
             f"Criou tarefa rotineira: {task.name}",
+            description_key="routine_task.create",
+            description_params={"name": task.name},
         )
 
 
@@ -118,6 +130,8 @@ class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
             "RoutineTask",
             task.id,
             f"Atualizou tarefa rotineira: {task.name}",
+            description_key="routine_task.update",
+            description_params={"name": task.name},
         )
 
     def perform_destroy(self, instance):
@@ -129,6 +143,8 @@ class RoutineTaskDetailView(BaseRetrieveUpdateDestroyView):
             "RoutineTask",
             instance.id,
             f"Deletou tarefa rotineira: {instance.name}",
+            description_key="routine_task.delete",
+            description_params={"name": instance.name},
         )
 
 
@@ -249,6 +265,11 @@ class RoutineTemplateImportView(APIView):
                 "RoutineTask",
                 task.id,
                 f"Importou tarefa do template '{template['name']}': {task.name}",
+                description_key="routine_task.import_template",
+                description_params={
+                    "task_name": task.name,
+                    "template_name": template["name"],
+                },
             )
 
         return Response(
@@ -286,7 +307,13 @@ class GoalListCreateView(BaseListCreateView):
             created_by=self.request.user, updated_by=self.request.user
         )
         log_activity(
-            self.request, "create", "Goal", goal.id, f"Criou objetivo: {goal.title}"
+            self.request,
+            "create",
+            "Goal",
+            goal.id,
+            f"Criou objetivo: {goal.title}",
+            description_key="goal.create",
+            description_params={"title": goal.title},
         )
 
 
@@ -308,7 +335,13 @@ class GoalDetailView(BaseRetrieveUpdateDestroyView):
     def perform_update(self, serializer):
         goal = serializer.save(updated_by=self.request.user)
         log_activity(
-            self.request, "update", "Goal", goal.id, f"Atualizou objetivo: {goal.title}"
+            self.request,
+            "update",
+            "Goal",
+            goal.id,
+            f"Atualizou objetivo: {goal.title}",
+            description_key="goal.update",
+            description_params={"title": goal.title},
         )
 
     def perform_destroy(self, instance):
@@ -320,6 +353,8 @@ class GoalDetailView(BaseRetrieveUpdateDestroyView):
             "Goal",
             instance.id,
             f"Deletou objetivo: {instance.title}",
+            description_key="goal.delete",
+            description_params={"title": instance.title},
         )
 
 
@@ -368,6 +403,8 @@ class GoalRecalculateView(APIView):
             "Goal",
             goal.id,
             f"Recalculou progresso do objetivo: {goal.title}",
+            description_key="goal.recalculate",
+            description_params={"title": goal.title},
         )
 
         serializer = GoalSerializer(goal)
@@ -413,6 +450,8 @@ class GoalResetView(APIView):
             "Goal",
             goal.id,
             f"Resetou progresso do objetivo: {goal.title}",
+            description_key="goal.reset_progress",
+            description_params={"title": goal.title},
         )
 
         serializer = GoalSerializer(goal)
@@ -449,6 +488,8 @@ class DailyReflectionListCreateView(BaseListCreateView):
             "DailyReflection",
             reflection.id,
             f"Criou reflexao de {reflection.date}",
+            description_key="reflection.create",
+            description_params={"date": str(reflection.date)},
         )
 
 
@@ -475,6 +516,8 @@ class DailyReflectionDetailView(BaseRetrieveUpdateDestroyView):
             "DailyReflection",
             reflection.id,
             f"Atualizou reflexao de {reflection.date}",
+            description_key="reflection.update",
+            description_params={"date": str(reflection.date)},
         )
 
     def perform_destroy(self, instance):
@@ -486,6 +529,8 @@ class DailyReflectionDetailView(BaseRetrieveUpdateDestroyView):
             "DailyReflection",
             instance.id,
             f"Deletou reflexao de {instance.date}",
+            description_key="reflection.delete",
+            description_params={"date": str(instance.date)},
         )
 
 
@@ -799,6 +844,8 @@ class TaskInstanceListCreateView(BaseListCreateView):
             "TaskInstance",
             instance.id,
             f"Criou tarefa avulsa: {instance.task_name}",
+            description_key="task_instance.create",
+            description_params={"name": instance.task_name},
         )
 
 
@@ -823,6 +870,8 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
             "TaskInstance",
             instance.id,
             f"Atualizou instancia: {instance.task_name} - {instance.status}",
+            description_key="task_instance.update",
+            description_params={"name": instance.task_name, "status": instance.status},
         )
 
     def perform_destroy(self, instance):
@@ -834,6 +883,8 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
             "TaskInstance",
             instance.id,
             f"Deletou instancia: {instance.task_name}",
+            description_key="task_instance.delete",
+            description_params={"name": instance.task_name},
         )
 
 
@@ -949,6 +1000,8 @@ class TaskInstanceStatusUpdateView(APIView):
             "TaskInstance",
             instance.id,
             f"Atualizou status: {instance.task_name} -> {new_status}",
+            description_key="task_instance.update_status",
+            description_params={"name": instance.task_name, "status": new_status},
         )
 
         return Response(TaskInstanceSerializer(instance).data)
