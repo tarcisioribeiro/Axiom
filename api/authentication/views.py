@@ -13,6 +13,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from app.config import cfg
+
 from .throttles import RegisterRateThrottle
 
 
@@ -315,8 +317,7 @@ def create_user_with_member(request: Request) -> Response:
                     ]
                 )
                 try:
-                    _site_url = getattr(settings, "SITE_URL", "")
-                    _verification_url = f"{_site_url}/verify-email?token={_token}"
+                    _verification_url = f"{cfg('SITE_URL')}/verify-email?token={_token}"
                     _html_message = render_to_string(
                         "email/email_verification.html",
                         {
@@ -415,8 +416,7 @@ class PasswordResetRequestView(APIView):
         token_generator = PasswordResetTokenGenerator()
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = token_generator.make_token(user)
-        site_url = getattr(settings, "SITE_URL", "")
-        reset_url = f"{site_url}/reset-password/{uid}/{token}/"
+        reset_url = f"{cfg('SITE_URL')}/reset-password/{uid}/{token}/"
 
         try:
             html_message = render_to_string(
@@ -570,8 +570,7 @@ class EmailVerificationSendView(APIView):
             email_verification_sent_at=timezone.now(),
         )
 
-        site_url = getattr(settings, "SITE_URL", "")
-        verification_url = f"{site_url}/verify-email?token={token}"
+        verification_url = f"{cfg('SITE_URL')}/verify-email?token={token}"
 
         try:
             html_message = render_to_string(
