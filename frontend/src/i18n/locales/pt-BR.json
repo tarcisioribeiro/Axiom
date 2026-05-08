@@ -2548,7 +2548,10 @@
         "isActiveLabel": "Tarefa Ativa",
         "linkedFinancialGoalLabel": "Meta Financeira Vinculada",
         "linkedFinancialGoalPlaceholder": "Selecione uma meta financeira (opcional)",
-        "linkedFinancialGoalHint": "Vincule esta rotina a uma meta financeira que ela alimenta"
+        "linkedFinancialGoalHint": "Vincule esta rotina a uma meta financeira que ela alimenta",
+        "linkedBookLabel": "Livro Vinculado",
+        "linkedBookPlaceholder": "Selecione um livro em andamento (opcional)",
+        "linkedBookHint": "Vincule esta rotina a um livro que você está lendo atualmente"
       }
     },
     "goals": {

@@ -2439,7 +2439,10 @@
         "isActiveLabel": "Active Task",
         "linkedFinancialGoalLabel": "Linked Financial Goal",
         "linkedFinancialGoalPlaceholder": "Select a financial goal (optional)",
-        "linkedFinancialGoalHint": "Link this routine to a financial goal it feeds into"
+        "linkedFinancialGoalHint": "Link this routine to a financial goal it feeds into",
+        "linkedBookLabel": "Linked Book",
+        "linkedBookPlaceholder": "Select a book you are reading (optional)",
+        "linkedBookHint": "Link this routine to a book you are currently reading"
       }
     },
     "goals": {

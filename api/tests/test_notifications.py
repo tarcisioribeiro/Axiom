@@ -670,3 +670,318 @@ class AgentInsightNotificationCommandTest(BaseNotificationTestCase):
                 notification_type="agent_insight",
             ).exists()
         )
+
+
+class ReadingGoalNotificationCommandTest(BaseNotificationTestCase):
+    """Tests for reading_goal_achieved / reading_goal_behind notifications."""
+
+    def setUp(self):
+        super().setUp()
+        from library.models import Publisher, ReadingGoal
+
+        self.today = date.today()
+        self.publisher = Publisher.objects.create(
+            name="Test Publisher RG",
+            owner=self.member,
+            created_by=self.user,
+        )
+        self.goal = ReadingGoal.objects.create(
+            year=self.today.year,
+            books_goal=10,
+            owner=self.member,
+            created_by=self.user,
+        )
+
+    def _run_command(self, dry_run=False):
+        from django.core.management import call_command
+
+        out = StringIO()
+        args = ["send_due_notifications", f"--member-id={self.member.pk}"]
+        if dry_run:
+            args.append("--dry-run")
+        call_command(*args, stdout=out)
+        return out.getvalue()
+
+    def _create_read_book_with_reading(self, title):
+        from library.models import Book, Reading
+
+        book = Book.objects.create(
+            title=title,
+            publisher=self.publisher,
+            genre="Philosophy",
+            literarytype="book",
+            read_status="read",
+            owner=self.member,
+            created_by=self.user,
+        )
+        Reading.objects.create(
+            book=book,
+            owner=self.member,
+            reading_date=date(self.today.year, 1, 15),
+            pages_read=1,
+            created_by=self.user,
+        )
+        return book
+
+    def test_reading_goal_achieved_notification_created(self):
+        """Creates reading_goal_achieved when books_read >= books_goal."""
+        for i in range(10):
+            self._create_read_book_with_reading(f"Goal Book {i}")
+        self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reading_goal_achieved",
+                content_type="reading_goal",
+                object_id=self.goal.id,
+            ).exists()
+        )
+
+    def test_reading_goal_behind_notification_created_in_second_half(self):
+        """Creates reading_goal_behind in second half of year with < 50% progress."""
+        import datetime as dt
+        from unittest.mock import patch
+
+        mock_now = dt.datetime(self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc)
+        with patch("django.utils.timezone.now", return_value=mock_now):
+            self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reading_goal_behind",
+                content_type="reading_goal",
+                object_id=self.goal.id,
+            ).exists()
+        )
+
+    def test_no_behind_notification_in_first_half(self):
+        """No reading_goal_behind in the first half of year even with low progress."""
+        import datetime as dt
+        from unittest.mock import patch
+
+        mock_now = dt.datetime(self.today.year, 3, 15, 8, 0, tzinfo=dt.timezone.utc)
+        with patch("django.utils.timezone.now", return_value=mock_now):
+            self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reading_goal_behind",
+                content_type="reading_goal",
+                object_id=self.goal.id,
+            ).exists()
+        )
+
+    def test_no_behind_notification_when_progress_gte_50(self):
+        """No reading_goal_behind when progress >= 50% even in second half."""
+        import datetime as dt
+        from unittest.mock import patch
+
+        for i in range(5):
+            self._create_read_book_with_reading(f"Half Book {i}")
+        mock_now = dt.datetime(self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc)
+        with patch("django.utils.timezone.now", return_value=mock_now):
+            self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reading_goal_behind",
+                content_type="reading_goal",
+                object_id=self.goal.id,
+            ).exists()
+        )
+
+    def test_idempotent_does_not_duplicate(self):
+        """Running the command twice does not create duplicate notifications."""
+        for i in range(10):
+            self._create_read_book_with_reading(f"Idem Book {i}")
+        self._run_command()
+        self._run_command()
+        self.assertEqual(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reading_goal_achieved",
+                content_type="reading_goal",
+                object_id=self.goal.id,
+            ).count(),
+            1,
+        )
+
+    def test_dry_run_does_not_persist(self):
+        """--dry-run does not save notifications."""
+        for i in range(10):
+            self._create_read_book_with_reading(f"Dry Book {i}")
+        output = self._run_command(dry_run=True)
+        self.assertIn("dry-run", output)
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                content_type="reading_goal",
+            ).exists()
+        )
+
+
+class ReconciliationPendingNotificationCommandTest(BaseNotificationTestCase):
+    """Tests for reconciliation_pending in send_due_notifications."""
+
+    def setUp(self):
+        super().setUp()
+        from datetime import timedelta
+        from decimal import Decimal
+
+        from accounts.models import Account
+        from bank_reconciliation.models import BankStatementEntry, BankStatementImport
+
+        self.today = date.today()
+        self.account = Account.objects.create(
+            account_name="Recon Test Account",
+            institution_name="Bank",
+            account_type="CS",
+            is_active=True,
+            current_balance=Decimal("10000.00"),
+        )
+        self.stmt_import = BankStatementImport.objects.create(
+            owner=self.user,
+            account=self.account,
+            file_hash="abc123",
+            original_filename="extrato_maio.ofx",
+            file_format="ofx",
+            status="completed",
+        )
+        # Backdating created_at to simulate import older than 3 days
+        from django.utils import timezone as tz
+
+        BankStatementImport.objects.filter(pk=self.stmt_import.pk).update(
+            created_at=tz.now() - timedelta(days=4)
+        )
+        self.entry = BankStatementEntry.objects.create(
+            statement_import=self.stmt_import,
+            date=self.today - timedelta(days=4),
+            amount=Decimal("150.00"),
+            description="Compra supermercado",
+            transaction_type="debit",
+            status="pending",
+        )
+
+    def _run_command(self, dry_run=False):
+        from django.core.management import call_command
+
+        out = StringIO()
+        args = ["send_due_notifications", f"--member-id={self.member.pk}"]
+        if dry_run:
+            args.append("--dry-run")
+        call_command(*args, stdout=out)
+        return out.getvalue()
+
+    def test_reconciliation_pending_notification_created(self):
+        """Creates reconciliation_pending for import with pending entries > 3 days."""
+        self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+                content_type="bank_statement_import",
+                object_id=self.stmt_import.id,
+            ).exists()
+        )
+
+    def test_no_notification_when_all_entries_matched(self):
+        """No notification when all entries are matched or ignored."""
+        from datetime import timedelta
+        from decimal import Decimal
+
+        from bank_reconciliation.models import BankStatementEntry
+
+        self.entry.status = "matched"
+        self.entry.save()
+        BankStatementEntry.objects.create(
+            statement_import=self.stmt_import,
+            date=self.today - timedelta(days=4),
+            amount=Decimal("50.00"),
+            description="Ignorado",
+            transaction_type="credit",
+            status="ignored",
+        )
+        self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+                content_type="bank_statement_import",
+                object_id=self.stmt_import.id,
+            ).exists()
+        )
+
+    def test_no_notification_when_import_is_recent(self):
+        """No notification when the import is less than 3 days old."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from bank_reconciliation.models import BankStatementImport
+
+        BankStatementImport.objects.filter(pk=self.stmt_import.pk).update(
+            created_at=timezone.now() - timedelta(days=2)
+        )
+        self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+                content_type="bank_statement_import",
+                object_id=self.stmt_import.id,
+            ).exists()
+        )
+
+    def test_unmatched_entries_also_trigger_notification(self):
+        """Creates notification when entries have status=unmatched."""
+        self.entry.status = "unmatched"
+        self.entry.save()
+        self._run_command()
+        self.assertTrue(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+                content_type="bank_statement_import",
+                object_id=self.stmt_import.id,
+            ).exists()
+        )
+
+    def test_idempotent_does_not_duplicate(self):
+        """Running the command twice does not create duplicate notifications."""
+        self._run_command()
+        self._run_command()
+        self.assertEqual(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+                content_type="bank_statement_import",
+                object_id=self.stmt_import.id,
+            ).count(),
+            1,
+        )
+
+    def test_dry_run_does_not_persist(self):
+        """--dry-run does not save notifications."""
+        output = self._run_command(dry_run=True)
+        self.assertIn("dry-run", output)
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                content_type="bank_statement_import",
+            ).exists()
+        )
+
+    def test_no_notification_when_import_belongs_to_other_user(self):
+        """Does not create notifications for imports owned by another user."""
+        other_user = User.objects.create_user(
+            username="recon_other_user", password="pass", is_superuser=True
+        )
+        self.stmt_import.owner = other_user
+        self.stmt_import.save()
+        self._run_command()
+        self.assertFalse(
+            Notification.objects.filter(
+                owner=self.member,
+                notification_type="reconciliation_pending",
+            ).exists()
+        )
