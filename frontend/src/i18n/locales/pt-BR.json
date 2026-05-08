@@ -2081,7 +2081,7 @@
         "pages": "Páginas",
         "booksRead_one": "{{count}} livro lido",
         "booksRead_other": "{{count}} livros lidos",
-        "pagesAbbrev": "{{count}} pág.",
+        "pagesAbbrev": "{{pages}} pág.",
         "deleteConfirm": "a meta \"{{name}}\""
       }
     },

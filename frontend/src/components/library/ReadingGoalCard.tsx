@@ -181,7 +181,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
             </span>
             <span>
               {t('pages.libraryDashboard.readingGoals.pagesAbbrev', {
-                count: goal.pages_read_this_year,
+                pages: goal.pages_read_this_year,
               })}
             </span>
           </div>
