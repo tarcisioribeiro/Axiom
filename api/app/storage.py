@@ -5,6 +5,8 @@ import boto3
 from botocore.config import Config
 from storages.backends.s3boto3 import S3Boto3Storage
 
+from app.config import cfg
+
 
 class MinIOStorage(S3Boto3Storage):
     """
@@ -32,8 +34,10 @@ class MinIOStorage(S3Boto3Storage):
             self._url_signing_client = boto3.client(
                 "s3",
                 endpoint_url=f"{protocol}://{self.external_endpoint}",
-                aws_access_key_id=os.getenv("MINIO_ROOT_USER"),
-                aws_secret_access_key=os.getenv("MINIO_ROOT_PASSWORD"),
+                aws_access_key_id=cfg("MINIO_ROOT_USER")
+                or os.getenv("MINIO_ROOT_USER"),
+                aws_secret_access_key=cfg("MINIO_ROOT_PASSWORD")
+                or os.getenv("MINIO_ROOT_PASSWORD"),
                 region_name="us-east-1",
                 verify=verify,
                 config=Config(
