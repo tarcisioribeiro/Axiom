@@ -26,6 +26,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     unit_display = serializers.CharField(source="get_unit_display", read_only=True)
     completion_rate = serializers.SerializerMethodField()
     total_completions = serializers.SerializerMethodField()
+    linked_financial_goal_description = serializers.CharField(
+        source="linked_financial_goal.description", read_only=True, default=None
+    )
 
     class Meta:
         model = RoutineTask
@@ -62,6 +65,8 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "scheduled_times",
             "completion_rate",
             "total_completions",
+            "linked_financial_goal",
+            "linked_financial_goal_description",
             "owner",
             "owner_name",
             "created_at",
@@ -122,6 +127,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "daily_occurrences",
             "interval_hours",
             "scheduled_times",
+            "linked_financial_goal",
         ]
 
     def validate(self, data):

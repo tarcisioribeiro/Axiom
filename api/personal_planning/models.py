@@ -236,6 +236,18 @@ class RoutineTask(BaseModel):
         verbose_name="Faltas Permitidas por Mês",
         help_text="Quantas faltas por mes sem quebrar o streak (0 = sem tolerancia)",
     )
+    linked_financial_goal = models.ForeignKey(
+        "vaults.FinancialGoal",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_routine_tasks",
+        verbose_name="Meta Financeira Vinculada",
+        help_text=(
+            "Meta financeira que este hábito alimenta"
+            " (ex: depósito mensal → meta de viagem)"
+        ),
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

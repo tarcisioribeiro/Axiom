@@ -56,6 +56,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { cn, formatLocalDate, parseLocalDate } from '@/lib/utils';
 import { appService } from '@/services/app-service';
@@ -654,10 +655,10 @@ export default function TodayTasks() {
                         <p className="text-sm text-muted-foreground">{task.notes}</p>
                       )}
                     </div>
-                    {task.category_display && (
+                    {task.category && (
                       <TaskCategoryBadge
                         icon={task.icon}
-                        label={task.category_display}
+                        label={translate('taskCategories', task.category)}
                         category={task.category}
                       />
                     )}

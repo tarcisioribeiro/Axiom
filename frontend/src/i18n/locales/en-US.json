@@ -2355,7 +2355,10 @@
         "priorityLabel": "Priority",
         "allowedSkipsLabel": "Allowed Skips/Month",
         "allowedSkipsHint": "How many skips are allowed per month without breaking the streak",
-        "isActiveLabel": "Active Task"
+        "isActiveLabel": "Active Task",
+        "linkedFinancialGoalLabel": "Linked Financial Goal",
+        "linkedFinancialGoalPlaceholder": "Select a financial goal (optional)",
+        "linkedFinancialGoalHint": "Link this routine to a financial goal it feeds into"
       }
     },
     "goals": {
