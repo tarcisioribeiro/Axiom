@@ -675,6 +675,8 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "object_id",
             "object_uuid",
             "description",
+            "description_key",
+            "description_params",
             "ip_address",
             "user_agent",
             "user",

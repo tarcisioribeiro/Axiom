@@ -68,12 +68,23 @@ def get_client_ip(request):
     return _get_trusted_client_ip(request)
 
 
-def log_activity(request, action, model_name, object_id, description, object_uuid=None):
+def log_activity(
+    request,
+    action,
+    model_name,
+    object_id,
+    description,
+    object_uuid=None,
+    description_key=None,
+    description_params=None,
+):
     """Helper para registrar atividades."""
     ActivityLog.log_action(
         user=request.user,
         action=action,
         description=description,
+        description_key=description_key,
+        description_params=description_params,
         model_name=model_name,
         object_id=object_id,
         object_uuid=object_uuid,
@@ -116,6 +127,8 @@ class PasswordListCreateView(VaultLockedMixin, BaseListCreateView):
             password.id,
             f"Criou senha: {password.title}",
             object_uuid=password.uuid,
+            description_key="password.create",
+            description_params={"name": password.title},
         )
 
 
@@ -143,6 +156,8 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             password.id,
             f"Atualizou senha: {password.title}",
             object_uuid=password.uuid,
+            description_key="password.update",
+            description_params={"name": password.title},
         )
 
     def perform_destroy(self, instance):
@@ -157,6 +172,8 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             instance.id,
             f"Deletou senha: {instance.title}",
             object_uuid=instance.uuid,
+            description_key="password.delete",
+            description_params={"name": instance.title},
         )
 
 
@@ -180,6 +197,8 @@ class PasswordRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             instance.id,
             f"Revelou senha: {instance.title}",
             object_uuid=instance.uuid,
+            description_key="password.reveal",
+            description_params={"name": instance.title},
         )
 
         serializer = self.get_serializer(instance)
@@ -219,6 +238,8 @@ class StoredCreditCardListCreateView(VaultLockedMixin, BaseListCreateView):
             "StoredCreditCard",
             card.id,
             f"Criou cartão: {card.name}",
+            description_key="card.create",
+            description_params={"name": card.name},
         )
 
 
@@ -245,6 +266,8 @@ class StoredCreditCardDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView
             "StoredCreditCard",
             card.id,
             f"Atualizou cartão: {card.name}",
+            description_key="card.update",
+            description_params={"name": card.name},
         )
 
     def perform_destroy(self, instance):
@@ -258,6 +281,8 @@ class StoredCreditCardDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView
             "StoredCreditCard",
             instance.id,
             f"Deletou cartão: {instance.name}",
+            description_key="card.delete",
+            description_params={"name": instance.name},
         )
 
 
@@ -280,6 +305,8 @@ class StoredCreditCardRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             "StoredCreditCard",
             instance.id,
             f"Revelou dados do cartão: {instance.name}",
+            description_key="card.reveal",
+            description_params={"name": instance.name},
         )
 
         serializer = self.get_serializer(instance)
@@ -319,6 +346,8 @@ class StoredBankAccountListCreateView(VaultLockedMixin, BaseListCreateView):
             "StoredBankAccount",
             account.id,
             f"Criou conta bancária: {account.name}",
+            description_key="bank_account.create",
+            description_params={"name": account.name},
         )
 
 
@@ -345,6 +374,8 @@ class StoredBankAccountDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyVie
             "StoredBankAccount",
             account.id,
             f"Atualizou conta bancária: {account.name}",
+            description_key="bank_account.update",
+            description_params={"name": account.name},
         )
 
     def perform_destroy(self, instance):
@@ -358,6 +389,8 @@ class StoredBankAccountDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyVie
             "StoredBankAccount",
             instance.id,
             f"Deletou conta bancária: {instance.name}",
+            description_key="bank_account.delete",
+            description_params={"name": instance.name},
         )
 
 
@@ -380,6 +413,8 @@ class StoredBankAccountRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             "StoredBankAccount",
             instance.id,
             f"Revelou dados da conta: {instance.name}",
+            description_key="bank_account.reveal",
+            description_params={"name": instance.name},
         )
 
         serializer = self.get_serializer(instance)
@@ -442,6 +477,8 @@ class ArchiveListCreateView(VaultLockedMixin, BaseListCreateView):
             "Archive",
             archive.id,
             f"Criou arquivo: {archive.title}",
+            description_key="archive.create",
+            description_params={"name": archive.title},
         )
 
 
@@ -493,6 +530,8 @@ class ArchiveDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             "Archive",
             archive.id,
             f"Atualizou arquivo: {archive.title}",
+            description_key="archive.update",
+            description_params={"name": archive.title},
         )
 
     def perform_destroy(self, instance):
@@ -506,6 +545,8 @@ class ArchiveDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             "Archive",
             instance.id,
             f"Deletou arquivo: {instance.title}",
+            description_key="archive.delete",
+            description_params={"name": instance.title},
         )
 
 
@@ -528,6 +569,8 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             "Archive",
             instance.id,
             f"Revelou conteúdo do arquivo: {instance.title}",
+            description_key="archive.reveal",
+            description_params={"name": instance.title},
         )
 
         response_data = {
@@ -599,6 +642,8 @@ class ArchiveDownloadView(APIView):
             "Archive",
             archive.id,
             f"Fez download do arquivo: {archive.title}",
+            description_key="archive.download",
+            description_params={"name": archive.title},
         )
 
         # Retornar o arquivo via streaming (proxy through Django to avoid CORS)
@@ -1037,6 +1082,8 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             "Password",
             None,
             "Consultou relatório de saúde do cofre",
+            description_key="vault.health_check",
+            description_params={},
         )
 
         # Analyse stored credit cards
@@ -1100,6 +1147,8 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             "Password",
             None,
             "Consultou relatório de saúde do cofre",
+            description_key="vault.health_check",
+            description_params={},
         )
 
         return Response(
@@ -1402,6 +1451,8 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
                     "Password",
                     pw.id,
                     f"Importou senha: {title}",
+                    description_key="password.import",
+                    description_params={"name": title},
                 )
             except Exception as e:
                 logger.error(f"Erro ao importar senha '{title}': {e}")
@@ -1416,6 +1467,12 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
                 f"Importação concluída: {imported} importadas, "
                 f"{duplicates_skipped} duplicatas ignoradas, {errors} erros."
             ),
+            description_key="password.import_complete",
+            description_params={
+                "imported": imported,
+                "duplicates": duplicates_skipped,
+                "errors": errors,
+            },
         )
 
         return Response(
@@ -1604,6 +1661,8 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
             "CredentialShareToken",
             token_obj.id,
             f"Criou link de compartilhamento para senha: {password_obj.title}",
+            description_key="credential_share.create",
+            description_params={"name": password_obj.title},
         )
 
         return Response(
@@ -1638,6 +1697,8 @@ class RevokeShareTokenView(APIView):
             "CredentialShareToken",
             token_obj.id,
             f"Revogou link de compartilhamento: {token_obj.password.title}",
+            description_key="credential_share.revoke",
+            description_params={"name": token_obj.password.title},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -1728,6 +1789,8 @@ class RedeemShareTokenView(APIView):
             user=None,
             action="shared_reveal",
             description=f"Acesso via link compartilhado: {token_obj.password.title}",
+            description_key="credential_share.access",
+            description_params={"name": token_obj.password.title},
             model_name="CredentialShareToken",
             object_id=token_obj.id,
             ip_address=get_client_ip(request),

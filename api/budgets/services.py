@@ -1,9 +1,8 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.db.models import Sum
 from rest_framework import serializers
-
-from app.config import cfg
 
 
 def validate_budget_limit(category, value, month, year, user, exclude_expense_id=None):
@@ -22,7 +21,7 @@ def validate_budget_limit(category, value, month, year, user, exclude_expense_id
     from budgets.models import Budget
     from expenses.models import Expense
 
-    mode = cfg("BUDGET_ENFORCEMENT_MODE", "soft")
+    mode = getattr(settings, "BUDGET_ENFORCEMENT_MODE", "soft")
     if mode == "off":
         return None
 
