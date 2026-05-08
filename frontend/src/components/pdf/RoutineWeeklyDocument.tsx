@@ -9,6 +9,7 @@ import {
   View,
 } from '@react-pdf/renderer';
 
+import { translate } from '@/config/constants';
 import {
   CATEGORY_COLORS,
   PRIORITY_PDF_COLORS,
@@ -200,7 +201,9 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                               fill={CATEGORY_COLORS[entry.task.category] ?? C.muted}
                             />
                           </Svg>
-                          <Text style={s.valueText}>{entry.task.category_display}</Text>
+                          <Text style={s.valueText}>
+                            {translate('taskCategories', entry.task.category)}
+                          </Text>
                         </View>
                       </View>
 

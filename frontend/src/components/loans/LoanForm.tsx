@@ -173,9 +173,9 @@ export function LoanForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
                 <SelectItem key={key} value={key}>
-                  {label}
+                  {translate('expenseCategories', key)}
                 </SelectItem>
               ))}
             </SelectContent>

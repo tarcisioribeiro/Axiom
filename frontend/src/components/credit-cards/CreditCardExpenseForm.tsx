@@ -14,7 +14,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import {
+  TRANSLATIONS,
+  EXPENSE_CATEGORIES_CANONICAL,
+  translate,
+} from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { formatLocalDate } from '@/lib/utils';
 import type {
@@ -229,9 +233,9 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
                 <SelectItem key={key} value={key}>
-                  {label}
+                  {translate('expenseCategories', key)}
                 </SelectItem>
               ))}
             </SelectContent>

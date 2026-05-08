@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { membersService } from '@/services/members-service';
 import type { FixedExpense, FixedExpenseFormData, Account, CreditCard } from '@/types';
@@ -163,9 +163,9 @@ export const FixedExpenseForm = ({
               />
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
                 <SelectItem key={key} value={key}>
-                  {label}
+                  {translate('expenseCategories', key)}
                 </SelectItem>
               ))}
             </SelectContent>
