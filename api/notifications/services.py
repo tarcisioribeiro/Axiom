@@ -1,10 +1,10 @@
 import logging
 
-from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
+from app.config import cfg
 from notifications.models import Notification, NotificationPreference
 
 logger = logging.getLogger("mindledger")
@@ -41,14 +41,14 @@ def _send_email_notification(notification: Notification) -> None:
         "notification": notification,
         "owner_name": notification.owner.name,
         "app_name": "MindLedger",
-        "site_url": getattr(settings, "SITE_URL", ""),
+        "site_url": cfg("SITE_URL"),
     }
 
     subject = notification.title
     html_body = render_to_string("email/notification_email.html", context)
     text_body = strip_tags(html_body)
 
-    from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app")
+    from_email = cfg("DEFAULT_FROM_EMAIL", "noreply@mindledger.app")
     msg = EmailMultiAlternatives(
         subject=subject,
         body=text_body,

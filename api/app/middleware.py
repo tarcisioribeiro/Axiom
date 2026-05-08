@@ -9,6 +9,7 @@ from django.http import HttpRequest, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.timezone import now
 
+from app.config import cfg
 from app.ip_utils import get_client_ip as _get_trusted_client_ip
 
 logger = logging.getLogger("mindledger.audit")
@@ -247,7 +248,13 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             # uses WAAPI and does not inject <style> tags for standard animations.
             nonce = getattr(request, "_csp_nonce", "")
             nonce_src = f"'nonce-{nonce}'" if nonce else ""
-            cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
+            _cors_cfg = cfg("CORS_ALLOWED_ORIGINS")
+            if _cors_cfg:
+                cors_origins = " ".join(
+                    o.strip() for o in _cors_cfg.split(",") if o.strip()
+                )
+            else:
+                cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
             connect_src = f"'self' http://localhost:* {cors_origins}".strip()
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "

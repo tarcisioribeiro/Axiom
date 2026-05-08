@@ -9,6 +9,8 @@ from django.db import connections
 from django.http import HttpRequest, JsonResponse
 from django.utils.timezone import now
 
+from app.config import cfg
+
 
 def check_storage() -> dict[str, str]:
     """
@@ -16,9 +18,7 @@ def check_storage() -> dict[str, str]:
     Uses a HEAD bucket request with a 2-second timeout.
     Returns not_configured when MINIO_ENDPOINT is not set.
     """
-    minio_endpoint = getattr(settings, "MINIO_ENDPOINT", "") or os.getenv(
-        "MINIO_ENDPOINT", ""
-    )
+    minio_endpoint = cfg("MINIO_ENDPOINT") or getattr(settings, "MINIO_ENDPOINT", "")
     if not minio_endpoint:
         return {"status": "not_configured", "message": "Storage not configured"}
 
@@ -33,17 +33,17 @@ def check_storage() -> dict[str, str]:
         use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
         protocol = "https" if use_ssl else "http"
         endpoint_url = f"{protocol}://{minio_endpoint}"
-        bucket_name = getattr(
-            settings,
-            "AWS_STORAGE_BUCKET_NAME",
-            os.getenv("MINIO_BUCKET_NAME", "mindledger"),
+        bucket_name = cfg("MINIO_BUCKET_NAME") or getattr(
+            settings, "AWS_STORAGE_BUCKET_NAME", "mindledger"
         )
         verify = getattr(settings, "AWS_S3_VERIFY", os.getenv("MINIO_CA_BUNDLE", True))
         client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
-            aws_access_key_id=getattr(settings, "AWS_ACCESS_KEY_ID", None),
-            aws_secret_access_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
+            aws_access_key_id=cfg("MINIO_ROOT_USER")
+            or getattr(settings, "AWS_ACCESS_KEY_ID", None),
+            aws_secret_access_key=cfg("MINIO_ROOT_PASSWORD")
+            or getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
             region_name=getattr(settings, "AWS_S3_REGION_NAME", "us-east-1"),
             verify=verify,
             config=Config(

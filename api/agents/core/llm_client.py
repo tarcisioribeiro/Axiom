@@ -6,17 +6,11 @@ from typing import Any
 
 import requests
 
+from app.config import cfg as _cfg
+
 logger = logging.getLogger(__name__)
 
-_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
-_OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
-_OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
-_OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-_GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-_GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-_TIMEOUT_CHAT = int(os.getenv("LLM_TIMEOUT_CHAT", "120"))
-_TIMEOUT_EMBED = int(os.getenv("LLM_TIMEOUT_EMBED", "30"))
 
 
 class LLMClient:
@@ -31,9 +25,10 @@ class LLMClient:
     ) -> str:
         """Envia lista de mensagens ao LLM. model sobrescreve o env var global."""
         try:
-            if _PROVIDER == "anthropic":
+            provider = _cfg("LLM_PROVIDER", "ollama")
+            if provider == "anthropic":
                 return cls._anthropic_chat(messages, model=model)
-            if _PROVIDER == "groq":
+            if provider == "groq":
                 return cls._groq_chat(messages, model=model)
             return cls._ollama_chat(messages, model=model)
         except Exception as exc:
@@ -48,9 +43,10 @@ class LLMClient:
     ) -> Generator[str, None, None]:
         """Yields tokens conforme chegam do LLM."""
         try:
-            if _PROVIDER == "anthropic":
+            provider = _cfg("LLM_PROVIDER", "ollama")
+            if provider == "anthropic":
                 yield from cls._anthropic_stream(messages, model=model)
-            elif _PROVIDER == "groq":
+            elif provider == "groq":
                 yield from cls._groq_stream(messages, model=model)
             else:
                 yield from cls._ollama_stream(messages, model=model)
@@ -81,49 +77,55 @@ class LLMClient:
     def _ollama_chat(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
-        effective_model = model or _OLLAMA_MODEL
+        ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or ollama_model
         try:
             resp = requests.post(
-                f"{_OLLAMA_URL}/api/chat",
+                f"{ollama_url}/api/chat",
                 json={"model": effective_model, "messages": messages, "stream": False},
-                timeout=_TIMEOUT_CHAT,
+                timeout=timeout_chat,
             )
             resp.raise_for_status()
             data: dict[str, Any] = resp.json()
             return str(data["message"]["content"])
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 404:
-                if effective_model != _OLLAMA_MODEL:
+                if effective_model != ollama_model:
                     logger.warning(
                         "Ollama: modelo '%s' não encontrado, usando fallback '%s'",
                         effective_model,
-                        _OLLAMA_MODEL,
+                        ollama_model,
                     )
-                    return cls._ollama_chat(messages, model=_OLLAMA_MODEL)
+                    return cls._ollama_chat(messages, model=ollama_model)
             raise
 
     @classmethod
     def _ollama_stream(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
-        effective_model = model or _OLLAMA_MODEL
+        ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or ollama_model
         try:
             resp = requests.post(
-                f"{_OLLAMA_URL}/api/chat",
+                f"{ollama_url}/api/chat",
                 json={"model": effective_model, "messages": messages, "stream": True},
-                timeout=_TIMEOUT_CHAT,
+                timeout=timeout_chat,
                 stream=True,
             )
             resp.raise_for_status()
         except requests.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 404:
-                if effective_model != _OLLAMA_MODEL:
+                if effective_model != ollama_model:
                     logger.warning(
                         "Ollama: modelo '%s' não encontrado, usando fallback '%s'",
                         effective_model,
-                        _OLLAMA_MODEL,
+                        ollama_model,
                     )
-                    yield from cls._ollama_stream(messages, model=_OLLAMA_MODEL)
+                    yield from cls._ollama_stream(messages, model=ollama_model)
                     return
             raise
         for line in resp.iter_lines():
@@ -139,15 +141,18 @@ class LLMClient:
     def _groq_chat(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
-        effective_model = model or _GROQ_MODEL
+        groq_api_key = _cfg("GROQ_API_KEY", "")
+        groq_model = _cfg("GROQ_MODEL", "llama-3.1-8b-instant")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or groq_model
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
             headers={
-                "Authorization": f"Bearer {_GROQ_API_KEY}",
+                "Authorization": f"Bearer {groq_api_key}",
                 "Content-Type": "application/json",
             },
             json={"model": effective_model, "messages": messages, "stream": False},
-            timeout=_TIMEOUT_CHAT,
+            timeout=timeout_chat,
         )
         resp.raise_for_status()
         data: dict[str, Any] = resp.json()
@@ -157,15 +162,18 @@ class LLMClient:
     def _groq_stream(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
-        effective_model = model or _GROQ_MODEL
+        groq_api_key = _cfg("GROQ_API_KEY", "")
+        groq_model = _cfg("GROQ_MODEL", "llama-3.1-8b-instant")
+        timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
+        effective_model = model or groq_model
         resp = requests.post(
             f"{_GROQ_BASE_URL}/chat/completions",
             headers={
-                "Authorization": f"Bearer {_GROQ_API_KEY}",
+                "Authorization": f"Bearer {groq_api_key}",
                 "Content-Type": "application/json",
             },
             json={"model": effective_model, "messages": messages, "stream": True},
-            timeout=_TIMEOUT_CHAT,
+            timeout=timeout_chat,
             stream=True,
         )
         resp.raise_for_status()
@@ -206,7 +214,7 @@ class LLMClient:
 
         effective_model: str = (
             model
-            or os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+            or _cfg("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
             or "claude-haiku-4-5-20251001"
         )
         sdk_messages: list[Any] = chat_messages
@@ -235,7 +243,7 @@ class LLMClient:
 
         effective_model: str = (
             model
-            or os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
+            or _cfg("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
             or "claude-haiku-4-5-20251001"
         )
         sdk_messages: list[Any] = chat_messages
@@ -253,10 +261,13 @@ class LLMClient:
 
     @classmethod
     def _ollama_embed(cls, text: str) -> list[float]:
+        ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+        ollama_embed_model = _cfg("OLLAMA_EMBED_MODEL", "nomic-embed-text")
+        timeout_embed = int(_cfg("LLM_TIMEOUT_EMBED", "30"))
         resp = requests.post(
-            f"{_OLLAMA_URL}/api/embeddings",
-            json={"model": _OLLAMA_EMBED_MODEL, "prompt": text},
-            timeout=_TIMEOUT_EMBED,
+            f"{ollama_url}/api/embeddings",
+            json={"model": ollama_embed_model, "prompt": text},
+            timeout=timeout_embed,
         )
         resp.raise_for_status()
         data: dict[str, Any] = resp.json()
@@ -268,11 +279,13 @@ class LLMClient:
     def is_available(cls) -> bool:
         """Verifica se o LLM está acessível."""
         try:
-            if _PROVIDER == "anthropic":
-                return bool(os.getenv("ANTHROPIC_API_KEY"))
-            if _PROVIDER == "groq":
-                return bool(_GROQ_API_KEY)
-            resp = requests.get(f"{_OLLAMA_URL}/api/tags", timeout=5)
+            provider = _cfg("LLM_PROVIDER", "ollama")
+            if provider == "anthropic":
+                return bool(_cfg("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
+            if provider == "groq":
+                return bool(_cfg("GROQ_API_KEY"))
+            ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
+            resp = requests.get(f"{ollama_url}/api/tags", timeout=5)
             return resp.status_code == 200
         except Exception:
             return False
@@ -280,10 +293,12 @@ class LLMClient:
     @classmethod
     def list_models(cls) -> list[str]:
         """Retorna modelos disponíveis."""
-        if _PROVIDER == "groq":
-            return [_GROQ_MODEL]
+        provider = _cfg("LLM_PROVIDER", "ollama")
+        if provider == "groq":
+            return [_cfg("GROQ_MODEL", "llama-3.1-8b-instant")]
+        ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
         try:
-            resp = requests.get(f"{_OLLAMA_URL}/api/tags", timeout=5)
+            resp = requests.get(f"{ollama_url}/api/tags", timeout=5)
             resp.raise_for_status()
             data: dict[str, Any] = resp.json()
             return [m["name"] for m in data.get("models", [])]
