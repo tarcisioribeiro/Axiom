@@ -1,8 +1,9 @@
-import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 from dataclasses import dataclass, field
 from typing import Any
+
+from app.config import cfg
 
 
 @dataclass
@@ -23,16 +24,16 @@ class AgentResponse:
 class BaseAgent(ABC):
     name: str
     description: str
-    # Modelos por provider — subclasses podem sobrescrever individualmente.
-    # Ollama: usa o env var OLLAMA_MODEL como fallback automático se o modelo não
-    # estiver instalado (tratado em LLMClient._ollama_chat/_ollama_stream).
-    ollama_model: str = os.getenv("OLLAMA_MODEL", "mistral:7b-instruct")
-    anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
-    groq_model: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    # Modelos por provider — subclasses devem sobrescrever individualmente.
+    # Ollama: usa OLLAMA_MODEL do SystemConfig/env como fallback automático se o
+    # modelo não estiver instalado (tratado em LLMClient._ollama_chat/_ollama_stream).
+    ollama_model: str = "mistral:7b-instruct"
+    anthropic_model: str = "claude-haiku-4-5-20251001"
+    groq_model: str = "llama-3.1-8b-instant"
 
     def get_model(self) -> str:
         """Retorna o modelo adequado para o provider configurado."""
-        provider = os.getenv("LLM_PROVIDER", "ollama")
+        provider = cfg("LLM_PROVIDER", "ollama")
         if provider == "anthropic":
             return self.anthropic_model
         if provider == "groq":
