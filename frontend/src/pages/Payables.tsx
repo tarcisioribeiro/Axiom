@@ -147,7 +147,9 @@ export default function Payables() {
             <div className="text-2xl font-bold text-destructive">
               {formatCurrency(totalValue)}
             </div>
-            <p className="mt-xs text-xs text-muted-foreground">valor total</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.totalSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -160,7 +162,9 @@ export default function Payables() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{activeCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">em aberto</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.activeSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -173,7 +177,9 @@ export default function Payables() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{overdueCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">vencidos</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.overdueSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -186,7 +192,9 @@ export default function Payables() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">{paidCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">quitados</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.paidSubtitle')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -291,7 +299,11 @@ export default function Payables() {
                         />
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{formatCurrency(paid)} pago</span>
+                        <span>
+                          {t('pages.payables.paidAmount', {
+                            value: formatCurrency(paid),
+                          })}
+                        </span>
                         <span>{pct.toFixed(0)}%</span>
                       </div>
                     </div>

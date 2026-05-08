@@ -97,7 +97,9 @@ export function RevenuesFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
-            <SelectItem value="received">Recebido</SelectItem>
+            <SelectItem value="received">
+              {t('pages.revenues.statusReceived')}
+            </SelectItem>
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>

@@ -134,7 +134,7 @@ export default function FixedExpenses() {
           <div>
             <div className="font-medium">{item.description}</div>
             <div className="text-xs text-muted-foreground">
-              Dia {item.due_day} de cada mês
+              {t('pages.fixedExpenses.dueDayDesc', { day: item.due_day })}
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function FixedExpenses() {
       label: t('pages.fixedExpenses.columns.status'),
       render: (item) => (
         <Badge variant={item.is_active ? 'default' : 'secondary'}>
-          {item.is_active ? 'Ativa' : 'Inativa'}
+          {item.is_active ? t('common.status.active') : t('common.status.inactive')}
         </Badge>
       ),
     },
@@ -253,14 +253,16 @@ export default function FixedExpenses() {
                     {formatCurrency(totalMonthlyFixed)}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {activeExpenses.length} despesas ativas recorrentes todo mês
+                    {t('pages.fixedExpenses.stats.activeCountDesc', {
+                      count: activeExpenses.length,
+                    })}
                   </p>
                 </div>
 
                 {/* Card 3: Calendário */}
                 <div className="rounded-lg border bg-card p-4">
                   <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Calendário de vencimentos
+                    {t('pages.fixedExpenses.scheduleTitle')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {

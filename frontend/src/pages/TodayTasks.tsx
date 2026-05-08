@@ -157,7 +157,7 @@ function TaskCategoryBadge({
 }
 
 export default function TodayTasks() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
 
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -524,7 +524,7 @@ export default function TodayTasks() {
         : 'hsl(var(--primary))';
 
   const dateLabel = selectedDate
-    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('pt-BR', {
+    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

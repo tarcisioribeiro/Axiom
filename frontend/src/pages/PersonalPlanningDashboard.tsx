@@ -259,7 +259,9 @@ export default function PersonalPlanningDashboard() {
                 data={tasksByCategoryData}
                 dataKey="count"
                 nameKey="name"
-                formatter={(value) => `${value} ${value === 1 ? 'tarefa' : 'tarefas'}`}
+                formatter={(value) =>
+                  t('pages.planningDashboard.taskCount', { count: value })
+                }
                 colors={COLORS}
                 customColors={(entry) =>
                   getCategoryColor(String(entry.category || 'other'))

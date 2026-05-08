@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -38,6 +39,7 @@ export const LaunchExpensesDialog = ({
   fixedExpenses,
   onSuccess,
 }: Props) => {
+  const { t, i18n } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState('');
   const [expenseValues, setExpenseValues] = useState<Record<number, number>>({});
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<number>>(new Set());
@@ -50,7 +52,7 @@ export const LaunchExpensesDialog = ({
     date.setMonth(date.getMonth() + i);
     return {
       value: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
-      label: date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      label: date.toLocaleDateString(i18n.language, { month: 'long', year: 'numeric' }),
     };
   });
 
@@ -116,20 +118,22 @@ export const LaunchExpensesDialog = ({
 
       const response = await fixedExpensesService.bulkGenerate(request);
 
-      // Formatar mês para exibição (YYYY-MM -> Mês/Ano)
       const monthLabel =
         monthOptions.find((m) => m.value === selectedMonth)?.label || selectedMonth;
 
       toast({
-        title: 'Despesas lançadas com sucesso!',
-        description: `${response.created_count} despesas foram criadas para ${monthLabel}`,
+        title: t('pages.fixedExpenses.launchDialog.success'),
+        description: t('pages.fixedExpenses.launchDialog.successDesc', {
+          count: response.created_count,
+          month: monthLabel,
+        }),
       });
 
       onSuccess();
       onClose();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao lançar despesas',
+        title: t('pages.fixedExpenses.launchDialog.error'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -147,19 +151,23 @@ export const LaunchExpensesDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Lançar Despesas Fixas do Mês</DialogTitle>
+          <DialogTitle>{t('pages.fixedExpenses.launchDialog.title')}</DialogTitle>
           <DialogDescription>
-            Selecione o mês e ajuste os valores antes de gerar as despesas
+            {t('pages.fixedExpenses.launchDialog.desc')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Month selector */}
           <div className="space-y-2">
-            <Label>Selecione o Mês</Label>
+            <Label>{t('pages.fixedExpenses.launchDialog.selectMonth')}</Label>
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o mês" />
+                <SelectValue
+                  placeholder={t(
+                    'pages.fixedExpenses.launchDialog.selectMonthPlaceholder'
+                  )}
+                />
               </SelectTrigger>
               <SelectContent>
                 {monthOptions.map((option) => (
@@ -175,8 +183,10 @@ export const LaunchExpensesDialog = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>
-                Despesas ({selectedExpenses.length} de {fixedExpenses.length}{' '}
-                selecionadas)
+                {t('pages.fixedExpenses.launchDialog.expensesLabel', {
+                  selected: selectedExpenses.length,
+                  total: fixedExpenses.length,
+                })}
               </Label>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -188,7 +198,7 @@ export const LaunchExpensesDialog = ({
                   htmlFor="select-all"
                   className="cursor-pointer text-sm font-medium"
                 >
-                  Selecionar todas
+                  {t('pages.fixedExpenses.launchDialog.selectAll')}
                 </label>
               </div>
             </div>
@@ -211,7 +221,10 @@ export const LaunchExpensesDialog = ({
                     <div className="flex-1">
                       <p className="font-medium">{exp.description}</p>
                       <p className="text-sm">
-                        Vencimento: dia {exp.due_day} • {exp.account_name}
+                        {t('pages.fixedExpenses.launchDialog.dueDate', {
+                          day: exp.due_day,
+                          account: exp.account_name,
+                        })}
                       </p>
                     </div>
                     <div className="w-32">
@@ -237,7 +250,9 @@ export const LaunchExpensesDialog = ({
 
           {/* Total */}
           <div className="flex items-center justify-between rounded-lg bg-muted p-4">
-            <span className="font-semibold">Total:</span>
+            <span className="font-semibold">
+              {t('pages.fixedExpenses.launchDialog.total')}
+            </span>
             <span className="text-2xl font-bold text-destructive">
               {formatCurrency(totalValue)}
             </span>
@@ -251,15 +266,17 @@ export const LaunchExpensesDialog = ({
               onClick={onClose}
               disabled={isSubmitting}
             >
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || selectedExpenses.length === 0}
             >
               {isSubmitting
-                ? 'Gerando...'
-                : `Gerar ${selectedExpenses.length} Despesa${selectedExpenses.length !== 1 ? 's' : ''}`}
+                ? t('pages.fixedExpenses.launchDialog.generating')
+                : t('pages.fixedExpenses.launchDialog.generateBtn', {
+                    count: selectedExpenses.length,
+                  })}
             </Button>
           </div>
         </div>

@@ -463,8 +463,12 @@
         "entries": "Entradas",
         "matched": "Conciliados",
         "importedAt": "Importado em",
-        "dialogTitle": "Importar Extrato Bancário"
-      }
+        "dialogTitle": "Importar Extrato Bancário",
+        "statusCompleted": "Concluído",
+        "statusProcessing": "Processando",
+        "statusFailed": "Falhou"
+      },
+      "available": "Disponível: {{value}}"
     },
     "expenses": {
       "title": "Despesas",
@@ -593,7 +597,8 @@
         "none": "Nenhum",
         "receivedLabel": "Recebido"
       },
-      "entriesCount": "{{count}} lançamentos"
+      "entriesCount": "{{count}} lançamentos",
+      "statusReceived": "Recebido"
     },
     "transfers": {
       "title": "Transferências",
@@ -621,7 +626,10 @@
       "stats": {
         "totalAmount": "Volume Total",
         "completed": "Concluídas",
-        "pending": "Pendentes"
+        "pending": "Pendentes",
+        "transfersCount": "{{count}} transferências",
+        "completedSubtitle": "concluídas",
+        "pendingSubtitle": "pendentes"
       },
       "columns": {
         "description": "Descrição",
@@ -720,7 +728,9 @@
         "paidSubtitle": "quitados",
         "debtSubtitle": "saldo devedor"
       },
-      "payoff": "Quitação"
+      "payoff": "Quitação",
+      "paidAmount": "{{value}} pago",
+      "remainingAmount": "{{value}} restante"
     },
     "members": {
       "title": "Membros",
@@ -830,9 +840,33 @@
         "allowValueEditHint": "Permite ajustar o valor ao lançar (ex: conta de luz)"
       },
       "stats": {
-        "monthlyCommitment": "Comprometimento mensal fixo"
+        "monthlyCommitment": "Comprometimento mensal fixo",
+        "activeTemplates": "Modelos Ativos",
+        "monthTotal": "Total do Mês",
+        "paidPending": "Pagas / Pendentes",
+        "vsLastMonth": "Vs. Mês Anterior",
+        "loading": "Carregando estatísticas...",
+        "activeCountDesc": "{{count}} despesas ativas recorrentes todo mês"
       },
-      "dueDayBadge": "Dia {{day}}"
+      "dueDayBadge": "Dia {{day}}",
+      "dueDayDesc": "Dia {{day}} de cada mês",
+      "scheduleTitle": "Calendário de vencimentos",
+      "launchDialog": {
+        "title": "Lançar Despesas Fixas do Mês",
+        "desc": "Selecione o mês e ajuste os valores antes de gerar as despesas",
+        "selectMonth": "Selecione o Mês",
+        "selectMonthPlaceholder": "Selecione o mês",
+        "expensesLabel": "Despesas ({{selected}} de {{total}} selecionadas)",
+        "selectAll": "Selecionar todas",
+        "dueDate": "Vencimento: dia {{day}} • {{account}}",
+        "total": "Total:",
+        "generating": "Gerando...",
+        "generateBtn_one": "Gerar {{count}} Despesa",
+        "generateBtn_other": "Gerar {{count}} Despesas",
+        "success": "Despesas lançadas com sucesso!",
+        "successDesc": "{{count}} despesas foram criadas para {{month}}",
+        "error": "Erro ao lançar despesas"
+      }
     },
     "creditCards": {
       "title": "Cartões de Crédito",
@@ -886,7 +920,11 @@
         "registeredSubtitle": "cartões cadastrados",
         "availableCredit": "Crédito disponível",
         "usedCredit": "Crédito utilizado"
-      }
+      },
+      "ofLimit": "de {{value}} disponível",
+      "usedPercent": "{{percent}}% do limite",
+      "billAmount": "Fatura: {{amount}}",
+      "dueDayText": "• vence dia {{day}}"
     },
     "creditCardBills": {
       "title": "Faturas de Cartão",
@@ -1084,7 +1122,15 @@
         "billLabel": "Fatura",
         "billPlaceholder": "Selecione",
         "billNone": "Nenhuma"
-      }
+      },
+      "status": {
+        "paid": "Paga",
+        "pending": "Pendente",
+        "overdue": "Vencida",
+        "closed": "Fechada",
+        "open": "Aberta"
+      },
+      "billPaidProgress": "Pago"
     },
     "payables": {
       "title": "Valores a Pagar",
@@ -1135,8 +1181,13 @@
         "total": "Total a Pagar",
         "active": "Ativos",
         "overdue": "Vencidos",
-        "paid": "Quitados"
-      }
+        "paid": "Quitados",
+        "totalSubtitle": "valor total",
+        "activeSubtitle": "em aberto",
+        "overdueSubtitle": "vencidos",
+        "paidSubtitle": "quitados"
+      },
+      "paidAmount": "{{value}} pago"
     },
     "budgets": {
       "title": "Orçamentos",
@@ -1171,6 +1222,7 @@
         "Dezembro"
       ],
       "limit": "Limite:",
+      "ofLimit": "de {{value}}",
       "member": "Membro:",
       "columns": {
         "category": "Categoria",
@@ -1220,6 +1272,8 @@
         "status": "Status",
         "generated": "Geradas"
       },
+      "dueDayBadge": "Dia {{day}}",
+      "dueDayDesc": "Dia {{day}} de cada mês",
       "form": {
         "descriptionLabel": "Descrição *",
         "descriptionPlaceholder": "Ex: Salário",
@@ -1571,7 +1625,12 @@
         "statementBalance": "Saldo no Extrato",
         "difference": "Diferença",
         "unmatchedEntries": "Entradas Não Conciliadas"
-      }
+      },
+      "greetingMorning": "Bom dia",
+      "greetingAfternoon": "Boa tarde",
+      "greetingEvening": "Boa noite",
+      "surplusThisMonth": "Superávit de {{amount}} este mês",
+      "deficitThisMonth": "Déficit de {{amount}} este mês"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -2004,7 +2063,27 @@
       "inProgressSubtitle": "em andamento",
       "inQueueSubtitle": "na fila",
       "generalStats": "Estatísticas Gerais",
-      "whenYouRead": "Quando você mais lê"
+      "whenYouRead": "Quando você mais lê",
+      "readingGoals": {
+        "title": "Metas de Leitura {{year}}",
+        "editTitle": "Editar meta",
+        "deleteTitle": "Excluir meta",
+        "newTitle": "Nova meta",
+        "achieved": "🎉 Meta atingida! Parabéns!",
+        "setGoalFor": "Defina uma meta de leitura para {{year}}",
+        "setGoal": "Definir meta",
+        "deleted": "Meta excluída com sucesso!",
+        "deleteError": "Erro ao excluir meta",
+        "updated": "Meta atualizada!",
+        "created": "Meta criada!",
+        "saveError": "Erro ao salvar meta",
+        "goalFallbackName": "Meta {{year}}",
+        "pages": "Páginas",
+        "booksRead_one": "{{count}} livro lido",
+        "booksRead_other": "{{count}} livros lidos",
+        "pagesAbbrev": "{{count}} pág.",
+        "deleteConfirm": "a meta \"{{name}}\""
+      }
     },
     "books": {
       "title": "Lista de Leitura",
@@ -2365,7 +2444,9 @@
       "noData": "Nenhum dado disponível",
       "weekdayAnalytics": "Desempenho por Dia da Semana",
       "analyticsPeriod": "Baseado nos últimos {{days}} dias",
-      "insights": "Insights de Hábitos"
+      "insights": "Insights de Hábitos",
+      "taskCount_one": "{{count}} tarefa",
+      "taskCount_other": "{{count}} tarefas"
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -2703,6 +2784,8 @@
       "saveError": "Erro ao salvar",
       "deleteError": "Erro ao excluir",
       "applyError": "Erro ao aplicar regras",
+      "contains": "contém",
+      "categorizeAs": "categorizar como",
       "columns": {
         "merchantContains": "Estabelecimento contém",
         "category": "Categoria",
@@ -2893,8 +2976,74 @@
         "viewImports": "Ver extratos importados"
       }
     },
+    "vaultGuard": {
+      "verifying": "Verificando cofre...",
+      "locked": {
+        "title": "Cofre Bloqueado",
+        "desc": "Digite sua senha mestre para desbloquear o cofre.",
+        "passwordLabel": "Senha Mestre",
+        "passwordPlaceholder": "Digite sua senha mestre",
+        "unlocking": "Desbloqueando...",
+        "unlockBtn": "Desbloquear Cofre",
+        "failTitle": "Cofre não desbloqueado"
+      },
+      "setup": {
+        "title": "Proteja seu Cofre",
+        "desc": "Configure uma senha mestre para adicionar uma camada extra de segurança. Seus dados serão re-criptografados com essa senha. Ela nunca é armazenada — guarde-a em local seguro.",
+        "passwordLabel": "Senha Mestre",
+        "confirmLabel": "Confirmar Senha Mestre",
+        "passwordPlaceholder": "Mínimo 8 caracteres",
+        "confirmPlaceholder": "Repita a senha mestre",
+        "passwordsMismatch": "As senhas mestres não coincidem.",
+        "passwordsMismatchShort": "As senhas não coincidem.",
+        "passwordHint": "Use ao menos 3 de: maiúsculas, minúsculas, números, caracteres especiais.",
+        "configuring": "Configurando...",
+        "setupBtn": "Configurar Senha Mestre",
+        "successTitle": "Cofre configurado!",
+        "successDesc": "Todos os seus dados foram protegidos com sua senha mestre.",
+        "errorTitle": "Erro ao configurar cofre",
+        "strength": {
+          "veryWeak": "Muito fraca",
+          "weak": "Fraca",
+          "fair": "Razoável",
+          "good": "Boa",
+          "strong": "Forte"
+        }
+      },
+      "expiry": {
+        "hours": "Cofre expira em {{hours}}h {{minutes}}min",
+        "minutes": "Cofre expira em {{minutes}} min",
+        "soon": "Cofre expira em breve"
+      }
+    },
     "vaultHealth": {
-      "title": "Saúde do Cofre"
+      "title": "Saúde do Cofre",
+      "analyzing": "Analisando senhas...",
+      "loadError": "Erro ao carregar relatório de saúde",
+      "securityLevel": "Segurança {{level}}",
+      "levels": {
+        "good": "Boa",
+        "fair": "Regular",
+        "critical": "Crítica"
+      },
+      "issues": {
+        "weak": "Fraca",
+        "medium": "Média",
+        "duplicate": "Duplicada",
+        "outdated": "Desatualizada"
+      },
+      "issueCounts": {
+        "weak": "Fracas",
+        "duplicate": "Duplicadas",
+        "medium": "Médias",
+        "outdated": "Desatualizadas"
+      },
+      "duplicateGroup": "Grupo de duplicatas #{{group}}",
+      "noPasswords": "Nenhuma senha cadastrada",
+      "analysisOf_one": "Análise de {{count}} senha",
+      "analysisOf_other": "Análise de {{count}} senhas",
+      "needsAttention": "Senhas que precisam de atenção",
+      "allGood": "Todas as senhas estão em boa forma!"
     },
     "bookReader": {
       "themeLight": "Claro",

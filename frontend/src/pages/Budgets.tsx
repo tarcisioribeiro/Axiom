@@ -1,5 +1,5 @@
 import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -54,21 +54,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   others: '📦',
 };
 
-const MONTHS = [
-  { value: 1, label: 'Janeiro' },
-  { value: 2, label: 'Fevereiro' },
-  { value: 3, label: 'Março' },
-  { value: 4, label: 'Abril' },
-  { value: 5, label: 'Maio' },
-  { value: 6, label: 'Junho' },
-  { value: 7, label: 'Julho' },
-  { value: 8, label: 'Agosto' },
-  { value: 9, label: 'Setembro' },
-  { value: 10, label: 'Outubro' },
-  { value: 11, label: 'Novembro' },
-  { value: 12, label: 'Dezembro' },
-];
-
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
 
@@ -87,6 +72,13 @@ function getDefaultFormData(): BudgetFormData {
 
 export default function Budgets() {
   const { t } = useTranslation();
+  const MONTHS = useMemo(
+    () =>
+      (t('pages.budgets.months', { returnObjects: true }) as string[]).map(
+        (label, i) => ({ value: i + 1, label })
+      ),
+    [t]
+  );
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -531,8 +523,8 @@ function BudgetCard({
   onDelete: (b: Budget) => Promise<void>;
 }) {
   const { t } = useTranslation();
-  const monthLabel =
-    MONTHS.find((m) => m.value === budget.month)?.label ?? String(budget.month);
+  const months = t('pages.budgets.months', { returnObjects: true }) as string[];
+  const monthLabel = months[budget.month - 1] ?? String(budget.month);
   const categoryLabel = translate('expenseCategories', budget.category);
 
   const pct = status ? status.percentage : 0;
@@ -599,7 +591,9 @@ function BudgetCard({
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{formatCurrency(actualSpent ?? 0)}</span>
-              <span>de {formatCurrency(limitAmount)}</span>
+              <span>
+                {t('pages.budgets.ofLimit', { value: formatCurrency(limitAmount) })}
+              </span>
             </div>
           </div>
         )}

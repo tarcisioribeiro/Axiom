@@ -87,19 +87,17 @@ import { useAuthStore } from '@/stores/auth-store';
 
 type CategoryStat = { category: string; name: string; value: number };
 
-function getGreeting(): { emoji: string; text: string } {
-  const hour = new Date().getHours();
-  if (hour < 12) return { emoji: '☀️', text: 'Bom dia' };
-  if (hour < 18) return { emoji: '🌤️', text: 'Boa tarde' };
-  return { emoji: '🌙', text: 'Boa noite' };
-}
-
 export default function Dashboard() {
   const { t, i18n } = useTranslation();
   const dateFnsLocale: Locale = i18n.language === 'pt-BR' ? ptBR : enUS;
   const user = useAuthStore((s) => s.user);
 
-  const greeting = getGreeting();
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return { emoji: '☀️', text: t('pages.dashboard.greetingMorning') };
+    if (hour < 18) return { emoji: '🌤️', text: t('pages.dashboard.greetingAfternoon') };
+    return { emoji: '🌙', text: t('pages.dashboard.greetingEvening') };
+  }, [t]);
   const displayName = user?.first_name || user?.username || '';
 
   // Filter state
@@ -645,8 +643,12 @@ export default function Dashboard() {
             )}
             <span>
               {stats.total_revenues > stats.total_expenses
-                ? `Superávit de ${formatCurrency(stats.total_revenues - stats.total_expenses)} este mês`
-                : `Déficit de ${formatCurrency(stats.total_expenses - stats.total_revenues)} este mês`}
+                ? t('pages.dashboard.surplusThisMonth', {
+                    amount: formatCurrency(stats.total_revenues - stats.total_expenses),
+                  })
+                : t('pages.dashboard.deficitThisMonth', {
+                    amount: formatCurrency(stats.total_expenses - stats.total_revenues),
+                  })}
             </span>
           </div>
         )}
