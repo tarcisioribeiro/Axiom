@@ -58,7 +58,15 @@ READING_SPEED_FALLBACK = {
 DEFAULT_READING_SPEED = 2.0
 
 
-def log_activity(request, action, model_name, object_id, description):
+def log_activity(
+    request,
+    action,
+    model_name,
+    object_id,
+    description,
+    description_key=None,
+    description_params=None,
+):
     """Helper para registrar atividades de biblioteca."""
     try:
         from security.models import ActivityLog
@@ -67,6 +75,8 @@ def log_activity(request, action, model_name, object_id, description):
             user=request.user,
             action=action,
             description=description,
+            description_key=description_key,
+            description_params=description_params,
             model_name=model_name,
             object_id=object_id,
             ip_address=get_client_ip(request),
@@ -115,7 +125,13 @@ class AuthorListCreateView(BaseListCreateView):
             created_by=self.request.user, updated_by=self.request.user
         )
         log_activity(
-            self.request, "create", "Author", author.id, f"Criou autor: {author.name}"
+            self.request,
+            "create",
+            "Author",
+            author.id,
+            f"Criou autor: {author.name}",
+            description_key="author.create",
+            description_params={"name": author.name},
         )
 
 
@@ -146,6 +162,8 @@ class AuthorDetailView(BaseRetrieveUpdateDestroyView):
             "Author",
             author.id,
             f"Atualizou autor: {author.name}",
+            description_key="author.update",
+            description_params={"name": author.name},
         )
 
     def perform_destroy(self, instance):
@@ -158,6 +176,8 @@ class AuthorDetailView(BaseRetrieveUpdateDestroyView):
             "Author",
             instance.id,
             f"Deletou autor: {instance.name}",
+            description_key="author.delete",
+            description_params={"name": instance.name},
         )
 
 
@@ -195,6 +215,8 @@ class PublisherListCreateView(BaseListCreateView):
             "Publisher",
             publisher.id,
             f"Criou editora: {publisher.name}",
+            description_key="publisher.create",
+            description_params={"name": publisher.name},
         )
 
 
@@ -225,6 +247,8 @@ class PublisherDetailView(BaseRetrieveUpdateDestroyView):
             "Publisher",
             publisher.id,
             f"Atualizou editora: {publisher.name}",
+            description_key="publisher.update",
+            description_params={"name": publisher.name},
         )
 
     def perform_destroy(self, instance):
@@ -237,6 +261,8 @@ class PublisherDetailView(BaseRetrieveUpdateDestroyView):
             "Publisher",
             instance.id,
             f"Deletou editora: {instance.name}",
+            description_key="publisher.delete",
+            description_params={"name": instance.name},
         )
 
 
@@ -289,8 +315,9 @@ class BookListCreateView(BaseListCreateView):
             "create",
             "Book",
             book.id,
-            f"Criou livro: {
-                book.title}",
+            f"Criou livro: {book.title}",
+            description_key="book.create",
+            description_params={"name": book.title},
         )
 
 
@@ -315,7 +342,13 @@ class BookDetailView(BaseRetrieveUpdateDestroyView):
     def perform_update(self, serializer):
         book = serializer.save(updated_by=self.request.user)
         log_activity(
-            self.request, "update", "Book", book.id, f"Atualizou livro: {book.title}"
+            self.request,
+            "update",
+            "Book",
+            book.id,
+            f"Atualizou livro: {book.title}",
+            description_key="book.update",
+            description_params={"name": book.title},
         )
 
     def perform_destroy(self, instance):
@@ -328,6 +361,8 @@ class BookDetailView(BaseRetrieveUpdateDestroyView):
             "Book",
             instance.id,
             f"Deletou livro: {instance.title}",
+            description_key="book.delete",
+            description_params={"name": instance.title},
         )
 
 
@@ -412,6 +447,8 @@ class BookFileView(APIView):
             "Book",
             book.id,
             f"Fez upload do arquivo do livro: {book.title}",
+            description_key="book.upload_file",
+            description_params={"name": book.title},
         )
         file_name = book.book_file.name.split("/")[-1]
         return Response({"detail": "Arquivo enviado com sucesso.", "name": file_name})
@@ -439,6 +476,8 @@ class BookFileView(APIView):
             "Book",
             book.id,
             f"Removeu arquivo do livro: {book.title}",
+            description_key="book.remove_file",
+            description_params={"name": book.title},
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -651,6 +690,8 @@ class BookMarkAsReadView(APIView):
             "Book",
             book.id,
             f"Marcou '{book.title}' como lido com {len(readings)} sessões geradas.",
+            description_key="book.mark_read",
+            description_params={"name": book.title, "sessions": len(readings)},
         )
 
         return Response(
@@ -710,6 +751,8 @@ class SummaryListCreateView(BaseListCreateView):
             "Summary",
             summary.id,
             f"Criou resumo: {summary.title}",
+            description_key="summary.create",
+            description_params={"name": summary.title},
         )
 
 
@@ -736,6 +779,8 @@ class SummaryDetailView(BaseRetrieveUpdateDestroyView):
             "Summary",
             summary.id,
             f"Atualizou resumo: {summary.title}",
+            description_key="summary.update",
+            description_params={"name": summary.title},
         )
 
     def perform_destroy(self, instance):
@@ -748,6 +793,8 @@ class SummaryDetailView(BaseRetrieveUpdateDestroyView):
             "Summary",
             instance.id,
             f"Deletou resumo: {instance.title}",
+            description_key="summary.delete",
+            description_params={"name": instance.title},
         )
 
 
@@ -799,6 +846,8 @@ class ReadingListCreateView(BaseListCreateView):
             "Reading",
             reading.id,
             f"Registrou leitura de: {reading.book.title}",
+            description_key="reading.create",
+            description_params={"name": reading.book.title},
         )
 
 
@@ -825,6 +874,8 @@ class ReadingDetailView(BaseRetrieveUpdateDestroyView):
             "Reading",
             reading.id,
             f"Atualizou leitura de: {reading.book.title}",
+            description_key="reading.update",
+            description_params={"name": reading.book.title},
         )
 
     def perform_destroy(self, instance):
@@ -837,6 +888,8 @@ class ReadingDetailView(BaseRetrieveUpdateDestroyView):
             "Reading",
             instance.id,
             f"Deletou leitura de: {instance.book.title}",
+            description_key="reading.delete",
+            description_params={"name": instance.book.title},
         )
 
 
@@ -873,11 +926,9 @@ class ReadingGoalListCreateView(BaseListCreateView):
             "create",
             "ReadingGoal",
             goal.id,
-            f"""Criou meta de leitura para {
-                goal.year
-            }: {
-                goal.books_goal
-            } livros""",
+            f"Criou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            description_key="reading_goal.create",
+            description_params={"year": goal.year, "count": goal.books_goal},
         )
 
 
@@ -903,11 +954,9 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
             "update",
             "ReadingGoal",
             goal.id,
-            f"""Atualizou meta de leitura para {
-                goal.year
-            }: {
-                goal.books_goal
-            } livros""",
+            f"Atualizou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            description_key="reading_goal.update",
+            description_params={"year": goal.year, "count": goal.books_goal},
         )
 
     def perform_destroy(self, instance):
@@ -920,6 +969,8 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
             "ReadingGoal",
             instance.id,
             f"Deletou meta de leitura para {instance.year}",
+            description_key="reading_goal.delete",
+            description_params={"year": instance.year},
         )
 
 
@@ -957,6 +1008,8 @@ class LiteraryTypeGoalListCreateView(BaseListCreateView):
             "LiteraryTypeGoal",
             goal.id,
             f"Criou meta de {goal.literary_type}: {goal.goal_count}",
+            description_key="literary_goal.create",
+            description_params={"type": goal.literary_type, "count": goal.goal_count},
         )
 
 
@@ -984,6 +1037,8 @@ class LiteraryTypeGoalDetailView(BaseRetrieveUpdateDestroyView):
             "LiteraryTypeGoal",
             goal.id,
             f"Atualizou meta de {goal.literary_type}: {goal.goal_count}",
+            description_key="literary_goal.update",
+            description_params={"type": goal.literary_type, "count": goal.goal_count},
         )
 
     def perform_destroy(self, instance):
@@ -996,6 +1051,8 @@ class LiteraryTypeGoalDetailView(BaseRetrieveUpdateDestroyView):
             "LiteraryTypeGoal",
             instance.id,
             f"Deletou meta de {instance.literary_type}",
+            description_key="literary_goal.delete",
+            description_params={"type": instance.literary_type},
         )
 
 
@@ -1671,6 +1728,8 @@ class BookHighlightListCreateView(BaseListCreateView):
             "BookHighlight",
             highlight.id,
             f"Criou destaque no livro: {highlight.book.title}",
+            description_key="highlight.create",
+            description_params={"name": highlight.book.title},
         )
 
 
@@ -1697,6 +1756,8 @@ class BookHighlightDetailView(BaseRetrieveUpdateDestroyView):
             "BookHighlight",
             highlight.id,
             f"Atualizou destaque no livro: {highlight.book.title}",
+            description_key="highlight.update",
+            description_params={"name": highlight.book.title},
         )
 
     def perform_destroy(self, instance):
@@ -1709,6 +1770,8 @@ class BookHighlightDetailView(BaseRetrieveUpdateDestroyView):
             "BookHighlight",
             instance.id,
             f"Deletou destaque no livro: {instance.book.title}",
+            description_key="highlight.delete",
+            description_params={"name": instance.book.title},
         )
 
 

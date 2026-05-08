@@ -155,9 +155,11 @@ export default function ActivityLogs() {
     }
     return Array.from(map.entries()).map(([key, items]) => ({
       dateKey: key,
-      dateLabel: format(new Date(key + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", {
-        locale: dateFnsLocale,
-      }),
+      dateLabel: format(
+        new Date(key + 'T12:00:00'),
+        t('pages.activityLogs.dateGroupFormat'),
+        { locale: dateFnsLocale }
+      ),
       items,
     }));
   }, [logs, dateFnsLocale]);
@@ -204,10 +206,17 @@ export default function ActivityLogs() {
                       <div className="min-w-0 flex-1 space-y-xs">
                         <div className="flex flex-wrap items-center gap-sm">
                           <Badge variant="outline" className={config.badge}>
-                            {log.action_display}
+                            {t(`pages.adminLogs.actions.${log.action}`, {
+                              defaultValue: log.action_display,
+                            })}
                           </Badge>
                           <span className="text-sm text-foreground">
-                            {log.description}
+                            {log.description_key
+                              ? t(`activityDescriptions.${log.description_key}`, {
+                                  ...(log.description_params ?? {}),
+                                  defaultValue: log.description,
+                                })
+                              : log.description}
                           </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

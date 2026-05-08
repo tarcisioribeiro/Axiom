@@ -231,6 +231,15 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
   const helper = VARIABLE_HELPERS[configKey];
   if (!helper) return null;
 
+  const hint = t(`pages.adminConfig.variables.${configKey}.hint`, {
+    defaultValue: helper.hint,
+  });
+  const warning = helper.warning
+    ? t(`pages.adminConfig.variables.${configKey}.warning`, {
+        defaultValue: helper.warning,
+      })
+    : undefined;
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -243,7 +252,7 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" side="bottom" className="w-80 space-y-2.5 text-sm">
-        <p className="leading-snug text-foreground">{helper.hint}</p>
+        <p className="leading-snug text-foreground">{hint}</p>
 
         {helper.accepted_values && (
           <div>
@@ -278,11 +287,11 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
           </div>
         )}
 
-        {helper.warning && (
+        {warning && (
           <div className="flex gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-500" />
             <p className="text-xs leading-snug text-amber-700 dark:text-amber-400">
-              {helper.warning}
+              {warning}
             </p>
           </div>
         )}
@@ -293,6 +302,9 @@ function VariableHelperPopover({ configKey }: { configKey: string }) {
 
 function ConfigRow({ config }: { config: SystemConfig }) {
   const { t } = useTranslation();
+  const varDescription = t(`pages.adminConfig.variables.${config.key}.description`, {
+    defaultValue: config.description ?? '',
+  });
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState('');
   const [showValue, setShowValue] = useState(false);
@@ -373,8 +385,8 @@ function ConfigRow({ config }: { config: SystemConfig }) {
             )}
           </div>
           <p className="mt-0.5 font-mono text-xs text-muted-foreground">{config.key}</p>
-          {config.description && (
-            <p className="mt-1 text-xs text-muted-foreground">{config.description}</p>
+          {varDescription && (
+            <p className="mt-1 text-xs text-muted-foreground">{varDescription}</p>
           )}
 
           {/* Editing mode */}

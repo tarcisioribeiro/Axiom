@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { MailWarning, X } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ export function EmailVerificationBanner() {
   const [dismissed, setDismissed] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { isAuthenticated, isAdmin } = useAuthStore();
 
   const { data } = useQuery<MeResponse>({
@@ -48,12 +50,12 @@ export function EmailVerificationBanner() {
     try {
       await authService.sendEmailVerification();
       toast({
-        title: 'Email enviado',
-        description: 'Verifique sua caixa de entrada.',
+        title: t('common.emailVerificationBanner.sentTitle'),
+        description: t('common.emailVerificationBanner.sentDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao enviar email',
+        title: t('common.emailVerificationBanner.errorTitle'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -66,7 +68,7 @@ export function EmailVerificationBanner() {
     <div className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
       <MailWarning className="h-4 w-4 shrink-0 text-warning" />
       <span className="flex-1 text-foreground">
-        Confirme seu endereço de email para garantir acesso completo à sua conta.
+        {t('common.emailVerificationBanner.message')}
       </span>
       <Button
         variant="outline"
@@ -75,13 +77,15 @@ export function EmailVerificationBanner() {
         disabled={isSending}
         className="shrink-0 border-warning/40 text-xs hover:bg-warning/10"
       >
-        {isSending ? 'Enviando...' : 'Reenviar email'}
+        {isSending
+          ? t('common.emailVerificationBanner.sending')
+          : t('common.emailVerificationBanner.resend')}
       </Button>
       <button
         type="button"
         onClick={() => setDismissed(true)}
         className="shrink-0 text-muted-foreground hover:text-foreground"
-        aria-label="Dispensar aviso"
+        aria-label={t('common.emailVerificationBanner.dismiss')}
       >
         <X className="h-4 w-4" />
       </button>
