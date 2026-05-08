@@ -1972,7 +1972,7 @@
         "pages": "Pages",
         "booksRead_one": "{{count}} book read",
         "booksRead_other": "{{count}} books read",
-        "pagesAbbrev": "{{count}} pgs.",
+        "pagesAbbrev": "{{pages}} pgs.",
         "deleteConfirm": "the goal \"{{name}}\""
       }
     },
