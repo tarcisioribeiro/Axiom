@@ -220,7 +220,7 @@ export function DataTable<T>({
                     {column.sortable && sorting ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1 rounded hover:text-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
+                        className="inline-flex items-center gap-xs rounded hover:text-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
                         onClick={() => sorting.onSort(column.key)}
                       >
                         {column.label}

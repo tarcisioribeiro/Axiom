@@ -100,8 +100,8 @@ export function LoanForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="description">{t('pages.loans.form.descriptionLabel')}</Label>
           <Input
@@ -140,7 +140,7 @@ export function LoanForm({
             className={loan ? 'cursor-not-allowed bg-muted' : ''}
           />
           {loan && (
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-xs text-xs text-muted-foreground">
               {t('pages.loans.form.paidValueNote')}
             </p>
           )}
@@ -372,7 +372,7 @@ export function LoanForm({
           />
         </div>
 
-        <div className="col-span-2 flex items-center gap-2">
+        <div className="col-span-2 flex items-center gap-sm">
           <input
             type="checkbox"
             id="payed"
@@ -386,14 +386,14 @@ export function LoanForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

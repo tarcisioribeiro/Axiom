@@ -122,7 +122,7 @@ export function StatementExportModal({
             </div>
           </div>
 
-          <div className="space-y-1 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-xs text-muted-foreground">
+          <div className="space-y-xs rounded-lg border border-border/60 bg-muted/20 px-3 py-sm text-xs text-muted-foreground">
             <p className="font-medium text-foreground/70">O extrato incluirá:</p>
             <ul className="list-none space-y-0.5">
               <li>· Resumo de receitas, despesas e saldo</li>

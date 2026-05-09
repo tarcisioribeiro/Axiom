@@ -66,9 +66,9 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.nameLabel')}</Label>
           <Input
             {...register('name', { required: true })}
@@ -76,7 +76,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.onCardNameLabel')}</Label>
           <Input
             {...register('on_card_name', { required: true })}
@@ -84,7 +84,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.flagLabel')}</Label>
           <Select value={watch('flag')} onValueChange={(v) => setValue('flag', v)}>
             <SelectTrigger>
@@ -99,7 +99,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.cardNumberLabel')}</Label>
           <Input
             {...register('card_number', { required: true })}
@@ -107,7 +107,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.cvvLabel')}</Label>
           <Input
             {...register('security_code', { required: true })}
@@ -116,7 +116,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.validationDateLabel')}</Label>
           <DatePicker
             value={watch('validation_date')}
@@ -127,7 +127,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.creditLimitLabel')}</Label>
           <Input
             type="number"
@@ -137,7 +137,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.maxLimitLabel')}</Label>
           <Input
             type="number"
@@ -147,7 +147,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.associatedAccountLabel')}</Label>
           <Select
             value={watch('associated_account')?.toString()}
@@ -165,7 +165,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.dueDayLabel')}</Label>
           <Input
             type="number"
@@ -175,7 +175,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.closingDayLabel')}</Label>
           <Input
             type="number"
@@ -185,7 +185,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.interestRateLabel')}</Label>
           <Input
             type="number"
@@ -195,7 +195,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCards.form.annualFeeLabel')}</Label>
           <Input
             type="number"
@@ -205,7 +205,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-sm md:col-span-2">
           <Label>{t('pages.creditCards.form.notesLabel')}</Label>
           <Input
             {...register('notes')}
@@ -214,7 +214,7 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
           />
         </div>
       </div>
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

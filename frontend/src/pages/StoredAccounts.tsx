@@ -280,7 +280,7 @@ export default function StoredAccounts() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-md md:grid-cols-2 xl:grid-cols-3">
             {filteredAccounts.map((acc) => {
               const typeCfg =
                 ACCOUNT_TYPE_CONFIG[acc.account_type] ?? DEFAULT_ACCOUNT_TYPE;
@@ -297,7 +297,7 @@ export default function StoredAccounts() {
                     <div className="flex items-start gap-3">
                       <div
                         className={cn(
-                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-bold',
+                          'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-sm font-bold',
                           typeCfg.avatar
                         )}
                       >
@@ -322,7 +322,7 @@ export default function StoredAccounts() {
 
                   <CardContent className="space-y-3 pt-0">
                     {/* Account details */}
-                    <div className="space-y-1.5 rounded-lg bg-muted/40 px-3 py-2">
+                    <div className="space-y-sm rounded-lg bg-muted/40 px-3 py-sm">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                           {t('pages.storedAccounts.columns.number')}
@@ -341,13 +341,13 @@ export default function StoredAccounts() {
 
                     {/* Passwords section */}
                     {revealed ? (
-                      <div className="space-y-1.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+                      <div className="space-y-sm rounded-lg border border-primary/20 bg-primary/5 px-3 py-sm">
                         {revealed.password && (
-                          <div className="flex items-center justify-between gap-2 text-sm">
+                          <div className="flex items-center justify-between gap-sm text-sm">
                             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                               {t('pages.storedAccounts.password1')}
                             </span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-xs">
                               <span className="font-mono">{revealed.password}</span>
                               <Button
                                 size="sm"
@@ -367,11 +367,11 @@ export default function StoredAccounts() {
                           </div>
                         )}
                         {revealed.password2 && (
-                          <div className="flex items-center justify-between gap-2 text-sm">
+                          <div className="flex items-center justify-between gap-sm text-sm">
                             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                               {t('pages.storedAccounts.password2')}
                             </span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-xs">
                               <span className="font-mono">{revealed.password2}</span>
                               <Button
                                 size="sm"
@@ -392,7 +392,7 @@ export default function StoredAccounts() {
                         )}
                       </div>
                     ) : (
-                      <div className="rounded-lg bg-muted/40 px-3 py-2">
+                      <div className="rounded-lg bg-muted/40 px-3 py-sm">
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                           {t('pages.storedAccounts.columns.passwords')}
                         </p>
@@ -403,7 +403,7 @@ export default function StoredAccounts() {
                     )}
 
                     {/* Footer: finance link + actions */}
-                    <div className="flex items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center justify-between gap-sm pt-xs">
                       <div className="min-w-0">
                         {acc.finance_account_name && (
                           <p className="truncate text-xs text-muted-foreground">

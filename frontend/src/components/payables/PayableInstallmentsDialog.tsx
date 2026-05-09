@@ -34,11 +34,11 @@ export function PayableInstallmentsDialog({
           <DialogDescription>{payable?.description}</DialogDescription>
         </DialogHeader>
         {isLoading ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div className="py-xl text-center text-sm text-muted-foreground">
             {t('common.actions.loading')}
           </div>
         ) : installments.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div className="py-xl text-center text-sm text-muted-foreground">
             {t('pages.payables.installments.emptyState')}
           </div>
         ) : (
@@ -46,29 +46,29 @@ export function PayableInstallmentsDialog({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-4">
+                  <th className="pb-sm pr-md">
                     {t('pages.payables.installments.number')}
                   </th>
-                  <th className="pb-2 pr-4">
+                  <th className="pb-sm pr-md">
                     {t('pages.payables.installments.dueDate')}
                   </th>
-                  <th className="pb-2 pr-4 text-right">
+                  <th className="pb-sm pr-md text-right">
                     {t('pages.payables.installments.value')}
                   </th>
-                  <th className="pb-2">{t('pages.payables.installments.status')}</th>
+                  <th className="pb-sm">{t('pages.payables.installments.status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {installments.map((inst) => (
                   <tr key={inst.id} className="border-b last:border-0">
-                    <td className="py-2 pr-4">{inst.installment_number}</td>
-                    <td className="py-2 pr-4">
+                    <td className="py-sm pr-md">{inst.installment_number}</td>
+                    <td className="py-sm pr-md">
                       {formatDate(inst.due_date, 'dd/MM/yyyy')}
                     </td>
-                    <td className="py-2 pr-4 text-right">
+                    <td className="py-sm pr-md text-right">
                       {formatCurrency(inst.value)}
                     </td>
-                    <td className="py-2">
+                    <td className="py-sm">
                       <Badge variant={inst.payed ? 'secondary' : 'outline'}>
                         {inst.payed
                           ? t('pages.payables.installments.paid')

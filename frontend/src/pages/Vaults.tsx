@@ -148,9 +148,9 @@ function VaultCard({
   return (
     <Card className={`overflow-hidden border ${color.border}`}>
       {/* Hero com gradiente */}
-      <div className={`bg-gradient-to-br ${color.bg} px-4 pb-4 pt-4`}>
+      <div className={`bg-gradient-to-br ${color.bg} px-md pb-md pt-md`}>
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <Vault className={`h-8 w-8 ${color.accent}`} />
             <div>
               <p className="font-semibold leading-tight">{vault.description}</p>
@@ -174,7 +174,7 @@ function VaultCard({
       <CardContent className="space-y-3 pt-3">
         {/* Rendimento acumulado */}
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-1 text-amber-500">
+          <div className="flex items-center gap-xs text-amber-500">
             <Sparkles className="h-3.5 w-3.5" />
             <span>{t('pages.vaults.columns.yields')}</span>
           </div>
@@ -205,7 +205,7 @@ function VaultCard({
 
         {/* Barra de proporção no total */}
         {totalBalance > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{t('pages.vaults.proportionLabel')}</span>
               <span>{proportion.toFixed(1)}%</span>
@@ -223,7 +223,7 @@ function VaultCard({
         )}
 
         {/* Botões de ação */}
-        <div className="flex flex-wrap items-center gap-1 border-t pt-2">
+        <div className="flex flex-wrap items-center gap-xs border-t pt-sm">
           <Button
             variant="ghost"
             size="icon"
@@ -905,23 +905,23 @@ export default function Vaults() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Button variant="outline" onClick={() => setIsGenerateDialogOpen(true)}>
-            <Zap className="mr-2 h-4 w-4" />
+            <Zap className="mr-sm h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
           </Button>
           <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-sm h-4 w-4" />
             {t('pages.vaults.newBtn')}
           </Button>
         </div>
       </PageHeader>
 
       {/* Summary Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-3">
         <Card className="border-t-2 border-t-success">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <PiggyBank className="h-4 w-4 text-success" />
               {t('pages.vaults.totalBalance')}
             </CardTitle>
@@ -933,8 +933,8 @@ export default function Vaults() {
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <Sparkles className="h-4 w-4 text-amber-500" />
               {t('pages.vaults.totalYield')}
             </CardTitle>
@@ -946,8 +946,8 @@ export default function Vaults() {
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-info">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <TrendingUp className="h-4 w-4 text-info" />
               {t('pages.vaults.pendingYield')}
             </CardTitle>
@@ -965,11 +965,11 @@ export default function Vaults() {
         <LoadingState />
       ) : vaults.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Vault className="mb-4 h-12 w-12" />
+          <Vault className="mb-md h-12 w-12" />
           <p>{t('pages.vaults.emptyState')}</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {vaults.map((vault, index) => (
             <VaultCard
               key={vault.id}
@@ -1001,7 +1001,7 @@ export default function Vaults() {
               {selectedVault ? t('pages.vaults.editDesc') : t('pages.vaults.newDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div>
               <Label htmlFor="description">{t('common.fields.description')} *</Label>
               <Input
@@ -1052,7 +1052,7 @@ export default function Vaults() {
                 }
                 placeholder="Ex: 12.00"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-xs text-xs text-muted-foreground">
                 {t('pages.vaults.yieldRateHint')}
               </p>
             </div>
@@ -1065,7 +1065,7 @@ export default function Vaults() {
                 placeholder="Anotações sobre o cofre..."
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-sm">
               <Checkbox
                 id="is_active"
                 checked={formData.is_active}
@@ -1114,7 +1114,7 @@ export default function Vaults() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div>
               <Label htmlFor="deposit_amount">
                 {t('pages.vaults.depositAmountLabel')}
@@ -1175,7 +1175,7 @@ export default function Vaults() {
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div>
               <Label htmlFor="withdraw_amount">
                 {t('pages.vaults.withdrawAmountLabel')}
@@ -1246,9 +1246,9 @@ export default function Vaults() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-md">
             {/* Filter */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-sm">
               <Label>{t('pages.vaults.filterByType')}</Label>
               <Select
                 value={transactionsFilter}
@@ -1297,7 +1297,7 @@ export default function Vaults() {
                     <TableRow>
                       <TableCell
                         colSpan={6}
-                        className="py-8 text-center text-muted-foreground"
+                        className="py-xl text-center text-muted-foreground"
                       >
                         {t('pages.vaults.noTransactions')}
                       </TableCell>
@@ -1366,7 +1366,7 @@ export default function Vaults() {
                           {formatCurrency(parseFloat(transaction.balance_after))}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-xs">
                             {(transaction.transaction_type === 'deposit' ||
                               transaction.transaction_type === 'withdrawal') &&
                               selectedVault && (
@@ -1461,7 +1461,7 @@ export default function Vaults() {
               {t('pages.vaults.recurringContributions.generateDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div>
               <Label htmlFor="generate_month">
                 {t('pages.vaults.recurringContributions.generateMonth')}
@@ -1504,12 +1504,12 @@ export default function Vaults() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-md">
             {/* New contribution button */}
             {!isContributionFormOpen && (
               <div className="flex justify-end">
                 <Button size="sm" onClick={() => openContributionForm()}>
-                  <Plus className="mr-1 h-4 w-4" />
+                  <Plus className="mr-xs h-4 w-4" />
                   {t('pages.vaults.recurringContributions.newBtn')}
                 </Button>
               </div>
@@ -1517,7 +1517,7 @@ export default function Vaults() {
 
             {/* Inline form */}
             {isContributionFormOpen && (
-              <div className="space-y-3 rounded-md border p-4">
+              <div className="space-y-3 rounded-md border p-md">
                 <h4 className="text-sm font-medium">
                   {editingContribution
                     ? t('common.actions.edit')
@@ -1609,7 +1609,7 @@ export default function Vaults() {
                       }
                     />
                   </div>
-                  <div className="col-span-2 flex items-center gap-2">
+                  <div className="col-span-2 flex items-center gap-sm">
                     <Checkbox
                       id="contrib_active"
                       checked={contributionFormData.is_active}
@@ -1625,7 +1625,7 @@ export default function Vaults() {
                     </Label>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-sm">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1655,22 +1655,22 @@ export default function Vaults() {
 
             {/* Contributions list */}
             {isContributionsLoading ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-xl text-center text-sm text-muted-foreground">
                 {t('common.messages.loading')}
               </div>
             ) : contributions.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-xl text-center text-sm text-muted-foreground">
                 {t('pages.vaults.recurringContributions.emptyState')}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 {contributions.map((contribution) => (
                   <div
                     key={contribution.id}
                     className="flex items-start justify-between gap-3 rounded-md border p-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-sm">
                         <span className="truncate text-sm font-medium">
                           {contribution.description}
                         </span>
@@ -1686,7 +1686,7 @@ export default function Vaults() {
                       <div className="mt-0.5 text-sm font-semibold text-success">
                         {formatCurrency(parseFloat(contribution.amount))}
                       </div>
-                      <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      <div className="mt-xs space-y-0.5 text-xs text-muted-foreground">
                         <div>
                           {t('pages.vaults.columns.date')}: {contribution.day_of_month}{' '}
                           &bull; {contribution.start_date}
@@ -1709,7 +1709,7 @@ export default function Vaults() {
                         )}
                       </div>
                     </div>
-                    <div className="flex shrink-0 gap-1">
+                    <div className="flex shrink-0 gap-xs">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1753,15 +1753,15 @@ export default function Vaults() {
       <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-sm">
               <TrendingUp className="h-5 w-5" />
               {t('pages.vaultSimulator.title')} — {simulatorVault?.description}
             </DialogTitle>
             <DialogDescription>{t('pages.vaults.simulatorDesc')}</DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
+          <div className="grid gap-md sm:grid-cols-2">
+            <div className="space-y-xs">
               <Label className="text-xs">
                 {t('pages.vaultSimulator.initialAmount')}
               </Label>
@@ -1774,7 +1774,7 @@ export default function Vaults() {
                 placeholder="0,00"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <Label className="text-xs">
                 {t('pages.vaultSimulator.monthlyDeposit')}
               </Label>
@@ -1787,7 +1787,7 @@ export default function Vaults() {
                 placeholder="0,00"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
               <Input
                 type="number"
@@ -1798,7 +1798,7 @@ export default function Vaults() {
                 placeholder="12,00"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
               <Input
                 type="number"
@@ -1813,18 +1813,18 @@ export default function Vaults() {
           </div>
 
           <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
-            <Calculator className="mr-2 h-4 w-4" />
+            <Calculator className="mr-sm h-4 w-4" />
             {isSimulating
               ? t('pages.vaultSimulator.calculating')
               : t('pages.vaultSimulator.calculate')}
           </Button>
 
           {simResults && simResults.length > 0 && (
-            <div className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-3 rounded-lg border p-md">
               {simResults.map((s, idx) => (
                 <div
                   key={`${simFormId}-${idx}`}
-                  className="grid grid-cols-2 gap-2 text-sm"
+                  className="grid grid-cols-2 gap-sm text-sm"
                 >
                   <div>
                     <p className="text-xs text-muted-foreground">
@@ -1859,7 +1859,7 @@ export default function Vaults() {
                 </div>
               ))}
               {simChartData.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-xs">
                   <p className="text-xs text-muted-foreground">
                     {t('pages.vaults.simulatorFinalBalance', {
                       months: simResults[0].months,

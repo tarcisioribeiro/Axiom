@@ -147,7 +147,7 @@ function TaskCategoryBadge({
   const Icon = getIconByName(icon);
   return (
     <div
-      className={`flex shrink-0 items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold ${getCategoryColor(category)}`}
+      className={`flex shrink-0 items-center gap-sm rounded-md border px-sm py-xs text-xs font-semibold ${getCategoryColor(category)}`}
     >
       {/* eslint-disable-next-line react-hooks/static-components -- Icon is a stable Lucide reference, not a dynamic component */}
       {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -475,7 +475,7 @@ export default function TodayTasks() {
         onClick={() => changeViewMode('list')}
         title={t('pages.todayTasks.listMode')}
         className={cn(
-          'rounded px-2 py-1 transition-colors',
+          'rounded px-sm py-xs transition-colors',
           viewMode === 'list'
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:text-foreground'
@@ -488,7 +488,7 @@ export default function TodayTasks() {
         onClick={() => changeViewMode('kanban')}
         title={t('pages.todayTasks.kanbanMode')}
         className={cn(
-          'rounded px-2 py-1 transition-colors',
+          'rounded px-sm py-xs transition-colors',
           viewMode === 'kanban'
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:text-foreground'
@@ -538,7 +538,7 @@ export default function TodayTasks() {
       </PageHeader>
 
       {/* ─── BANNER DO DIA ─── */}
-      <div className="flex items-center gap-6 rounded-xl border bg-card px-6 py-4">
+      <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
         <CircularProgress
           value={dayRate}
           size={72}
@@ -548,7 +548,7 @@ export default function TodayTasks() {
           <span className="text-sm font-bold">{doneCount}</span>
         </CircularProgress>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <GreetIcon className="h-5 w-5 text-muted-foreground" />
             <span className="text-lg font-semibold">{greeting.label}</span>
           </div>
@@ -570,7 +570,7 @@ export default function TodayTasks() {
       {/* ─── LIST MODE ─── */}
       {viewMode === 'list' && (
         <>
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-sm">
             <div>
               <Label htmlFor="list-date">{t('common.fields.date')}</Label>
               <DatePicker
@@ -598,7 +598,7 @@ export default function TodayTasks() {
               message={t('pages.todayTasks.emptyState')}
             />
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-sm">
               {todayTasks.map((task) => {
                 const badge = getStatusBadge(task.status);
                 const isCompleted = task.status === 'completed';
@@ -607,7 +607,7 @@ export default function TodayTasks() {
                   <div
                     key={task.id}
                     className={cn(
-                      'flex items-center gap-4 rounded-lg border p-4 transition-opacity',
+                      'flex items-center gap-md rounded-lg border p-md transition-opacity',
                       isCompleted && 'opacity-60'
                     )}
                   >
@@ -627,7 +627,7 @@ export default function TodayTasks() {
                       )}
                     </button>
                     <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-sm">
                         <h3
                           className={cn('font-semibold', isCompleted && 'line-through')}
                         >
@@ -673,8 +673,8 @@ export default function TodayTasks() {
       {/* ─── KANBAN MODE ─── */}
       {viewMode === 'kanban' && (
         <>
-          <div className="flex items-center gap-4">
-            <div className="flex items-end gap-2">
+          <div className="flex items-center gap-md">
+            <div className="flex items-end gap-sm">
               <div>
                 <Label htmlFor="date">{t('common.fields.date')}</Label>
                 <DatePicker
@@ -723,7 +723,7 @@ export default function TodayTasks() {
                       {t('pages.dailyChecklist.reflectionPlaceholder')}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-md py-md">
                     <div>
                       <Label htmlFor="mood">
                         {t('pages.dailyChecklist.moodQuestion')}
@@ -757,7 +757,7 @@ export default function TodayTasks() {
                         rows={6}
                       />
                       {reflection.length > 0 && reflection.length < 10 && (
-                        <p className="mt-1 text-sm text-destructive">
+                        <p className="mt-xs text-sm text-destructive">
                           {t('pages.dailyChecklist.reflectionMinLength')}
                         </p>
                       )}
@@ -779,7 +779,7 @@ export default function TodayTasks() {
               {cardsByStatus.done.length}{' '}
               {t('pages.dailyChecklist.itemsCompleted', { total: cards.length })}
               {summary.completion_rate > 0 && (
-                <span className="ml-2 text-sm">
+                <span className="ml-sm text-sm">
                   ({summary.completion_rate.toFixed(0)}%)
                 </span>
               )}
@@ -801,7 +801,7 @@ export default function TodayTasks() {
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-3 gap-lg">
                 <KanbanColumn
                   status="todo"
                   title={t('pages.dailyChecklist.todo')}
@@ -832,12 +832,12 @@ export default function TodayTasks() {
             >
               {isSaving ? (
                 <>
-                  <Save className="mr-2 h-4 w-4 animate-pulse" />
+                  <Save className="mr-sm h-4 w-4 animate-pulse" />
                   {t('common.actions.saving')}
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="mr-sm h-4 w-4" />
                   {t('common.actions.save')}
                 </>
               )}

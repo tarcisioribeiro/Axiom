@@ -77,8 +77,8 @@ function ScenarioCard({
 }) {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
+      <CardHeader className="flex flex-row items-center justify-between pb-sm">
+        <CardTitle className="flex items-center gap-sm text-base">
           <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
             {index + 1}
           </div>
@@ -103,8 +103,8 @@ function ScenarioCard({
           </Button>
         )}
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1">
+      <CardContent className="grid gap-md sm:grid-cols-2">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.initialAmount')}</Label>
           <Input
             type="number"
@@ -115,7 +115,7 @@ function ScenarioCard({
             placeholder="0,00"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.monthlyDeposit')}</Label>
           <Input
             type="number"
@@ -126,7 +126,7 @@ function ScenarioCard({
             placeholder="0,00"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
           <Input
             type="number"
@@ -138,7 +138,7 @@ function ScenarioCard({
             placeholder="12,00"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
           <Input
             type="number"
@@ -165,9 +165,9 @@ function SimulatorTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border bg-card p-3 shadow-lg">
-      <p className="mb-2 text-sm font-medium text-muted-foreground">{label}</p>
+      <p className="mb-sm text-sm font-medium text-muted-foreground">{label}</p>
       {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 text-sm">
+        <div key={entry.name} className="flex items-center gap-sm text-sm">
           <span
             className="inline-block h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: entry.color }}
@@ -258,7 +258,7 @@ export default function VaultSimulator() {
       <PageHeader title={t('pages.vaultSimulator.title')} icon={<TrendingUp />} />
 
       {/* Scenario Forms */}
-      <div className="space-y-4">
+      <div className="space-y-md">
         {scenarios.map((scenario, i) => (
           <ScenarioCard
             key={scenario.id}
@@ -274,12 +274,12 @@ export default function VaultSimulator() {
         <div className="flex flex-wrap gap-3">
           {scenarios.length < 3 && (
             <Button variant="outline" size="sm" onClick={addScenario}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-sm h-4 w-4" />
               {t('pages.vaultSimulator.addScenario')}
             </Button>
           )}
           <Button onClick={() => void handleSimulate()} disabled={isLoading}>
-            <Calculator className="mr-2 h-4 w-4" />
+            <Calculator className="mr-sm h-4 w-4" />
             {isLoading
               ? t('pages.vaultSimulator.calculating')
               : t('pages.vaultSimulator.calculate')}
@@ -289,9 +289,9 @@ export default function VaultSimulator() {
 
       {/* Results */}
       {results && results.length > 0 && (
-        <div className="mt-6 space-y-6">
+        <div className="mt-lg space-y-lg">
           {/* Separador temático */}
-          <div className="flex items-center gap-3 py-2">
+          <div className="flex items-center gap-3 py-sm">
             <div className="h-px flex-1 bg-border" />
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Projeção calculada
@@ -310,7 +310,7 @@ export default function VaultSimulator() {
               results[0]?.name ?? ''
             );
             return (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
                 {results.map((scenario) => (
                   <Card
                     key={scenario.name}
@@ -319,7 +319,7 @@ export default function VaultSimulator() {
                       scenario.name === bestScenarioName && 'border-amber-500/40'
                     )}
                   >
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-sm">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
                           {scenario.name}
@@ -343,7 +343,7 @@ export default function VaultSimulator() {
                           em {getProjectedDate(scenario.months)}
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="grid grid-cols-2 gap-sm text-xs">
                         <div>
                           <p className="text-muted-foreground">
                             {t('pages.vaultSimulator.totalInvested')}
@@ -511,7 +511,7 @@ export default function VaultSimulator() {
                     return (
                       <TableRow key={`${formId}-${idx}`}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-sm">
                             <span
                               className="inline-block h-3 w-3 rounded-full"
                               style={{ backgroundColor: chartColors[idx] }}

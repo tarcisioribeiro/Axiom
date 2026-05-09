@@ -36,23 +36,23 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
       <ThemeToggle className="absolute right-4 top-4" />
 
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
+        <CardHeader className="space-y-md text-center">
           <div className="mx-auto flex items-center justify-center">
             <img src={logo} alt="MindLedger" className="h-auto w-64" />
           </div>
         </CardHeader>
         <CardContent>
           {submitted ? (
-            <div className="space-y-4 text-center">
-              <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-4 dark:border-green-800 dark:bg-green-950/30">
+            <div className="space-y-md text-center">
+              <div className="rounded-lg border border-green-200 bg-green-50 px-md py-md dark:border-green-800 dark:bg-green-950/30">
                 <p className="font-medium text-green-800 dark:text-green-300">
                   {t('auth.forgotPassword.successTitle')}
                 </p>
-                <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+                <p className="mt-xs text-sm text-green-700 dark:text-green-400">
                   {t('auth.forgotPassword.successDesc')}
                 </p>
               </div>
@@ -64,18 +64,18 @@ export default function ForgotPassword() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+            <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
               <p className="text-center text-sm text-muted-foreground">
                 {t('auth.forgotPassword.description')}
               </p>
 
               {error && (
-                <div className="rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
                   {error}
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="email">{t('auth.forgotPassword.emailLabel')}</Label>
                 <Input
                   id="email"

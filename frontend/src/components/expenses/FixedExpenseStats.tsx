@@ -34,7 +34,7 @@ export const FixedExpenseStats = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
       <StatCard
         title={t('pages.fixedExpenses.stats.activeTemplates')}
         value={stats.active_templates}

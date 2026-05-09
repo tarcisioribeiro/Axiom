@@ -92,17 +92,17 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-md">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border bg-card p-8 shadow-2xl">
-          <div className="mb-8 text-center">
+        <div className="rounded-2xl border bg-card p-xl shadow-2xl">
+          <div className="mb-xl text-center">
             <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
               MindLedger
             </h1>
-            <p className="mt-2">{t('auth.register.subtitle')}</p>
+            <p className="mt-sm">{t('auth.register.subtitle')}</p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-md" noValidate>
             <FormField
               id="name"
               label={t('auth.register.fullName')}
@@ -258,7 +258,7 @@ export default function Register() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                   {t('auth.register.loading')}
                 </>
               ) : (
@@ -267,7 +267,7 @@ export default function Register() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-lg text-center text-sm">
             <span>{t('auth.register.hasAccount')} </span>
             <Link to="/login" className="font-medium text-primary hover:underline">
               {t('auth.register.login')}

@@ -50,7 +50,7 @@ export const AdminLayout = () => {
       {/* Sidebar */}
       <aside className="flex w-64 flex-shrink-0 flex-col border-r border-border bg-card">
         {/* Logo */}
-        <div className="flex items-center gap-3 border-b border-border px-6 py-5">
+        <div className="flex items-center gap-3 border-b border-border px-lg py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
             <Shield className="h-5 w-5 text-primary-foreground" />
           </div>
@@ -65,7 +65,7 @@ export const AdminLayout = () => {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-xs p-3">
           {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
             const isActive = exact
               ? location.pathname === href
@@ -79,7 +79,7 @@ export const AdminLayout = () => {
                 to={href}
                 end={exact}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-sm text-sm font-medium transition-colors',
                   active
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -94,7 +94,7 @@ export const AdminLayout = () => {
 
         {/* Footer */}
         <div className="border-t border-border p-3">
-          <div className="mb-2 flex items-center gap-3 rounded-lg px-3 py-2">
+          <div className="mb-sm flex items-center gap-3 rounded-lg px-3 py-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
               {user?.username?.charAt(0).toUpperCase() ?? 'A'}
             </div>
@@ -107,7 +107,7 @@ export const AdminLayout = () => {
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-sm text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
             {t('layout.logout')}
@@ -118,7 +118,7 @@ export const AdminLayout = () => {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-6">
+        <header className="flex h-14 items-center gap-sm border-b border-border bg-card px-lg">
           <Activity className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium text-foreground">
             {NAV_ITEMS.find((n) =>
@@ -129,7 +129,7 @@ export const AdminLayout = () => {
           </span>
         </header>
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-lg">
           <Outlet />
         </main>
       </div>

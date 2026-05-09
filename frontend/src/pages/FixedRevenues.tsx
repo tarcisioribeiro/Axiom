@@ -306,7 +306,7 @@ export default function FixedRevenues() {
 
       {/* 4 stat cards: modelos ativos | total mês | recebidas/pendentes | vs mês anterior */}
       {stats && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title={t('pages.fixedRevenues.stats.activeModels')}
             value={stats.active_templates}
@@ -351,25 +351,25 @@ export default function FixedRevenues() {
       {/* 3 cards horizontais: lançamento | comprometimento | calendário */}
       <div
         className={cn(
-          'grid gap-4',
+          'grid gap-md',
           activeRevenues.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
         )}
       >
         {/* Card 1: Lançamento */}
-        <div className="flex flex-col justify-between rounded-lg border bg-card p-4">
+        <div className="flex flex-col justify-between rounded-lg border bg-card p-md">
           <div>
             <h3 className="text-base font-semibold">
               {t('pages.fixedRevenues.launchSection')}
             </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-xs text-sm text-muted-foreground">
               {t('pages.fixedRevenues.launchDesc')}
             </p>
           </div>
           <Button
             onClick={() => setIsLaunchDialogOpen(true)}
-            className="mt-4 w-full bg-success hover:bg-success/90"
+            className="mt-md w-full bg-success hover:bg-success/90"
           >
-            <TrendingUp className="mr-2 h-4 w-4" />
+            <TrendingUp className="mr-sm h-4 w-4" />
             {t('pages.fixedRevenues.launchBtn')}
           </Button>
         </div>
@@ -377,24 +377,24 @@ export default function FixedRevenues() {
         {activeRevenues.length > 0 && (
           <>
             {/* Card 2: Comprometimento */}
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-lg border bg-card p-md">
               <p className="text-sm font-medium">
                 {t('pages.fixedRevenues.stats.monthlyDesc')}
               </p>
-              <p className="mt-1 text-2xl font-bold text-success">
+              <p className="mt-xs text-2xl font-bold text-success">
                 {formatCurrency(totalMonthlyFixed)}
               </p>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-sm text-xs text-muted-foreground">
                 {activeRevenues.length} {t('pages.fixedRevenues.stats.activeCount')}
               </p>
             </div>
 
             {/* Card 3: Calendário */}
-            <div className="rounded-lg border bg-card p-4">
+            <div className="rounded-lg border bg-card p-md">
               <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {t('pages.fixedRevenues.stats.scheduleTitle')}
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-sm">
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                   const revsOnDay = activeRevenues.filter((r) => r.due_day === day);
                   const hasRevenue = revsOnDay.length > 0;
@@ -439,7 +439,7 @@ export default function FixedRevenues() {
             : 'border-l-4 border-l-muted opacity-60'
         }
         actions={(item) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             <Button
               variant="ghost"
               size="icon"
@@ -477,8 +477,8 @@ export default function FixedRevenues() {
                 : t('pages.fixedRevenues.newDesc')}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+            <div className="space-y-sm">
               <Label htmlFor="description">
                 {t('pages.fixedRevenues.form.descriptionLabel')}
               </Label>
@@ -492,8 +492,8 @@ export default function FixedRevenues() {
                 placeholder={t('pages.fixedRevenues.form.descriptionPlaceholder')}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-md">
+              <div className="space-y-sm">
                 <Label htmlFor="default_value">
                   {t('pages.fixedRevenues.form.defaultAmountLabel')}
                 </Label>
@@ -513,7 +513,7 @@ export default function FixedRevenues() {
                   placeholder="0.00"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="due_day">
                   {t('pages.fixedRevenues.form.dueDayLabel')}
                 </Label>
@@ -533,7 +533,7 @@ export default function FixedRevenues() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label>{t('pages.fixedRevenues.form.categoryLabel')}</Label>
               <Select
                 value={formData.category}
@@ -551,7 +551,7 @@ export default function FixedRevenues() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label>{t('pages.fixedRevenues.form.accountLabel')}</Label>
               <Select
                 value={formData.account ? String(formData.account) : ''}
@@ -573,7 +573,7 @@ export default function FixedRevenues() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="notes">{t('pages.fixedRevenues.form.notesLabel')}</Label>
               <Textarea
                 id="notes"
@@ -708,7 +708,7 @@ function LaunchRevenuesDialog({
         </DialogHeader>
 
         <div className="flex gap-3">
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-xs">
             <Label>{t('pages.fixedRevenues.form.monthLabel')}</Label>
             <Select
               value={monthPart}
@@ -726,7 +726,7 @@ function LaunchRevenuesDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="w-28 space-y-1">
+          <div className="w-28 space-y-xs">
             <Label>{t('pages.fixedRevenues.form.yearLabel')}</Label>
             <Select
               value={yearPart}
@@ -763,7 +763,7 @@ function LaunchRevenuesDialog({
               />
               <Label htmlFor={`rev-${r.id}`} className="flex-1 cursor-pointer text-sm">
                 {r.description}
-                <span className="ml-1 text-xs text-muted-foreground">
+                <span className="ml-xs text-xs text-muted-foreground">
                   (Dia {r.due_day})
                 </span>
               </Label>

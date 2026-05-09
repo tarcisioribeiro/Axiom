@@ -94,9 +94,9 @@ function MoodTimeline({ reflections }: { reflections: DailyReflection[] }) {
   });
 
   return (
-    <div className="mb-6 flex items-end gap-1.5">
+    <div className="mb-lg flex items-end gap-sm">
       {days.map(({ date, key, mood }) => (
-        <div key={key} className="flex flex-col items-center gap-1">
+        <div key={key} className="flex flex-col items-center gap-xs">
           <div
             title={`${format(date, 'dd/MM')}${mood ? ` — ${mood}` : ''}`}
             className={cn(
@@ -137,9 +137,9 @@ function ReflectionCard({
   return (
     <Card className="group">
       <CardContent className="p-5">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-md">
           {/* Data estilo calendário */}
-          <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border bg-muted/40 py-1.5 text-center">
+          <div className="flex w-14 shrink-0 flex-col items-center rounded-lg border bg-muted/40 py-sm text-center">
             <span className="text-[10px] font-semibold uppercase text-muted-foreground">
               {format(date, 'MMM', { locale: ptBR })}
             </span>
@@ -153,11 +153,11 @@ function ReflectionCard({
 
           {/* Conteúdo */}
           <div className="min-w-0 flex-1">
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-sm flex items-center gap-sm">
               {reflection.mood && (
                 <Badge
                   className={cn(
-                    'gap-1.5',
+                    'gap-sm',
                     MOOD_COLOR[reflection.mood] ?? 'bg-secondary'
                   )}
                 >
@@ -174,7 +174,7 @@ function ReflectionCard({
               <button
                 type="button"
                 onClick={() => setExpanded(!expanded)}
-                className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                className="mt-xs flex items-center gap-xs text-xs text-primary hover:underline"
               >
                 {expanded ? (
                   <>
@@ -190,7 +190,7 @@ function ReflectionCard({
           </div>
 
           {/* Ações */}
-          <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
             <Button
               variant="ghost"
               size="icon"
@@ -340,19 +340,19 @@ export default function DailyReflections() {
 
       {/* Timeline de humores dos últimos 21 dias */}
       {reflections.length > 0 && (
-        <div className="rounded-xl border bg-card px-5 py-4">
+        <div className="rounded-lg border bg-card px-5 py-md">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t('pages.dailyReflections.moodTimeline')}
           </p>
           <MoodTimeline reflections={reflections} />
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-md text-xs text-muted-foreground">
             {MOOD_CHOICES.map((c) => (
-              <span key={c.value} className="flex items-center gap-1">
+              <span key={c.value} className="flex items-center gap-xs">
                 <span className={cn('h-2.5 w-2.5 rounded-full', MOOD_DOT[c.value])} />
                 {c.label}
               </span>
             ))}
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-xs">
               <span className="h-2.5 w-2.5 rounded-full bg-muted" />
               {t('pages.dailyReflections.noMood')}
             </span>
@@ -361,7 +361,7 @@ export default function DailyReflections() {
       )}
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-end gap-4">
+      <div className="flex flex-wrap items-end gap-md">
         <div className="w-48">
           <Select value={moodFilter} onValueChange={setMoodFilter}>
             <SelectTrigger>
@@ -380,7 +380,7 @@ export default function DailyReflections() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-sm text-muted-foreground">
+          <label className="mb-xs block text-sm text-muted-foreground">
             {t('pages.dailyReflections.filters.startDate')}
           </label>
           <DatePicker
@@ -390,7 +390,7 @@ export default function DailyReflections() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm text-muted-foreground">
+          <label className="mb-xs block text-sm text-muted-foreground">
             {t('pages.dailyReflections.filters.endDate')}
           </label>
           <DatePicker

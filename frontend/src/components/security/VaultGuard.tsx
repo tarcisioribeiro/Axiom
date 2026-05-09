@@ -89,8 +89,8 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
   if (!password) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="flex gap-1">
+    <div className="space-y-xs">
+      <div className="flex gap-xs">
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
@@ -170,7 +170,7 @@ function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs',
+        'flex items-center gap-sm rounded-md px-sm py-xs text-xs',
         isWarning
           ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
           : 'bg-muted text-muted-foreground'

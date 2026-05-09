@@ -196,9 +196,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">
             {t('pages.expenses.form.descriptionLabel')}
           </Label>
@@ -212,7 +212,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <p className="text-sm text-destructive">{errors.description.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="value">{t('pages.expenses.form.valueLabel')}</Label>
           <Input
             id="value"
@@ -226,7 +226,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <p className="text-sm text-destructive">{errors.value.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="date">{t('pages.expenses.form.dateLabel')}</Label>
           <DatePicker
             value={watch('date')}
@@ -238,14 +238,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <p className="text-sm text-destructive">{errors.date.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="horary">{t('pages.expenses.form.horaryLabel')}</Label>
           <Input id="horary" type="time" {...register('horary')} disabled={isLoading} />
           {errors.horary && (
             <p className="text-sm text-destructive">{errors.horary.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="merchant">{t('pages.expenses.form.merchantLabel')}</Label>
           <Input
             id="merchant"
@@ -258,7 +258,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             {t('pages.expenses.form.merchantHint')}
           </p>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.expenses.form.categoryLabel')}</Label>
           <Select
             value={watch('category') || ''}
@@ -279,7 +279,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <p className="text-sm text-destructive">{errors.category.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.expenses.form.paymentStatusLabel')}</Label>
           <Select
             value={watch('payed') ? 'true' : 'false'}
@@ -294,7 +294,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.expenses.form.accountLabel')}</Label>
           <Select
             value={watch('account')?.toString() || ''}
@@ -315,7 +315,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <p className="text-sm text-destructive">{errors.account.message}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.expenses.form.relatedLoanLabel')}</Label>
           <Select
             value={watch('related_loan')?.toString() || 'none'}
@@ -338,7 +338,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </Select>
           <p className="text-xs">{t('pages.expenses.form.relatedLoanHint')}</p>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.expenses.form.relatedPayableLabel')}</Label>
           <Select
             value={watch('related_payable')?.toString() || 'none'}
@@ -362,7 +362,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <p className="text-xs">{t('pages.expenses.form.relatedPayableHint')}</p>
         </div>
       </div>
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

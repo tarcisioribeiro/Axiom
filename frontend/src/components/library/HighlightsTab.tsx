@@ -90,8 +90,8 @@ function HighlightForm({
   };
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+      <div className="space-y-sm">
         <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
@@ -107,7 +107,7 @@ function HighlightForm({
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
         <Textarea
           id="hl-text"
@@ -119,8 +119,8 @@ function HighlightForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
             value={highlightType}
@@ -142,7 +142,7 @@ function HighlightForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
@@ -169,8 +169,8 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
             id="hl-page"
@@ -181,7 +181,7 @@ function HighlightForm({
             placeholder={t('pages.highlights.form.pagePlaceholder')}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
           <Input
             id="hl-chapter"
@@ -192,7 +192,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -334,8 +334,8 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
   if (isLoading) return <LoadingState />;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
+    <div className="space-y-md">
+      <div className="flex items-center gap-sm">
         <SearchInput
           placeholder={t('pages.highlights.searchPlaceholder')}
           value={searchTerm}
@@ -349,7 +349,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
             onClick={() => void handleExportAll()}
             disabled={isExporting}
           >
-            <Download className="mr-2 h-4 w-4" />
+            <Download className="mr-sm h-4 w-4" />
             {isExporting
               ? t('pages.highlights.exportingBtn')
               : t('pages.highlights.exportBtn')}
@@ -371,9 +371,9 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
           {filtered.map((h) => {
             const colorClass = COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow;
             return (
-              <div key={h.id} className={`rounded-lg border-l-4 p-4 ${colorClass}`}>
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
+              <div key={h.id} className={`rounded-lg border-l-4 p-md ${colorClass}`}>
+                <div className="mb-sm flex items-start justify-between gap-sm">
+                  <div className="flex flex-wrap items-center gap-sm">
                     <Badge variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}>
                       {h.highlight_type_display}
                     </Badge>
@@ -389,7 +389,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
                       {h.book_title}
                     </span>
                   </div>
-                  <div className="flex shrink-0 gap-1">
+                  <div className="flex shrink-0 gap-xs">
                     <Button
                       variant="ghost"
                       size="sm"

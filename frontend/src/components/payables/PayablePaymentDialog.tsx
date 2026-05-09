@@ -97,8 +97,8 @@ export function PayablePaymentDialog({
             {formatCurrency(remaining)}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
+        <div className="space-y-md">
+          <div className="space-y-xs">
             <Label>{t('pages.payables.payment.value')} *</Label>
             <Input
               type="number"
@@ -108,7 +108,7 @@ export function PayablePaymentDialog({
               placeholder="0,00"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.payables.payment.account')} *</Label>
             <Select
               value={form.account}
@@ -126,7 +126,7 @@ export function PayablePaymentDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.payables.payment.date')} *</Label>
             <Input
               type="date"
@@ -134,7 +134,7 @@ export function PayablePaymentDialog({
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.payables.payment.notes')}</Label>
             <Input
               value={form.notes}

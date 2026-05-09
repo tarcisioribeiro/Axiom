@@ -100,8 +100,8 @@ export function GoalForm({
   }, [goal, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="title">{t('pages.goals.form.titleLabel')}</Label>
           <Input
@@ -110,7 +110,7 @@ export function GoalForm({
             placeholder={t('pages.goals.form.titlePlaceholder')}
           />
           {errors.title && (
-            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -123,7 +123,7 @@ export function GoalForm({
             rows={3}
           />
           {errors.description && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.description.message}
             </p>
           )}
@@ -147,7 +147,7 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.goal_type && (
-            <p className="mt-1 text-sm text-destructive">{errors.goal_type.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.goal_type.message}</p>
           )}
         </div>
 
@@ -174,7 +174,7 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.related_task && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.related_task.message}
             </p>
           )}
@@ -191,7 +191,7 @@ export function GoalForm({
             })}
           />
           {errors.target_value && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.target_value.message}
             </p>
           )}
@@ -210,7 +210,7 @@ export function GoalForm({
             })}
           />
           {errors.current_value && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.current_value.message}
             </p>
           )}
@@ -226,7 +226,9 @@ export function GoalForm({
             placeholder={t('pages.goals.form.startDatePlaceholder')}
           />
           {errors.start_date && (
-            <p className="mt-1 text-sm text-destructive">{errors.start_date.message}</p>
+            <p className="mt-xs text-sm text-destructive">
+              {errors.start_date.message}
+            </p>
           )}
         </div>
 
@@ -240,7 +242,7 @@ export function GoalForm({
             placeholder={t('pages.goals.form.deadlinePlaceholder')}
           />
           {errors.deadline && (
-            <p className="mt-1 text-sm text-destructive">{errors.deadline.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.deadline.message}</p>
           )}
         </div>
 
@@ -252,7 +254,7 @@ export function GoalForm({
             placeholder={t('pages.goals.form.endDatePlaceholder')}
           />
           {errors.end_date && (
-            <p className="mt-1 text-sm text-destructive">{errors.end_date.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.end_date.message}</p>
           )}
         </div>
 
@@ -274,19 +276,19 @@ export function GoalForm({
             </SelectContent>
           </Select>
           {errors.status && (
-            <p className="mt-1 text-sm text-destructive">{errors.status.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.status.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

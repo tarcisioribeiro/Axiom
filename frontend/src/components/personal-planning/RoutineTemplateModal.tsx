@@ -176,9 +176,9 @@ export function RoutineTemplateModal({
                         disabled={isImporting}
                       >
                         {isImporting ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                         ) : (
-                          <Download className="mr-2 h-4 w-4" />
+                          <Download className="mr-sm h-4 w-4" />
                         )}
                         {t('pages.routineTasks.templates.importBtn')}
                       </Button>

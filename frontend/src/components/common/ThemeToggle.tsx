@@ -108,7 +108,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
             <DropdownMenuItem
               key={variant.id}
               onClick={() => setLightVariant(variant.id)}
-              className="flex cursor-pointer items-center gap-2"
+              className="flex cursor-pointer items-center gap-sm"
             >
               <span
                 className="h-4 w-4 flex-shrink-0 rounded-full border border-border/50"
@@ -137,7 +137,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
             <DropdownMenuItem
               key={variant.id}
               onClick={() => setDarkVariant(variant.id)}
-              className="flex cursor-pointer items-center gap-2"
+              className="flex cursor-pointer items-center gap-sm"
             >
               <span
                 className="h-4 w-4 flex-shrink-0 rounded-full border border-border/50"

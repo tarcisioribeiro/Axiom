@@ -38,7 +38,7 @@ function CircularScore({ score }: CircularScoreProps) {
   const label = t(`pages.vaultHealth.levels.${levelKey}`);
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-sm">
       <svg width="140" height="140" viewBox="0 0 140 140">
         {/* Track */}
         <circle
@@ -117,7 +117,7 @@ interface IssueCountProps {
 
 function IssueCount({ icon, count, label, color }: IssueCountProps) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-xs">
       <div
         className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"
         style={{ color }}
@@ -141,7 +141,7 @@ interface PasswordRowProps {
 function PasswordRow({ pw }: PasswordRowProps) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-1 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-xs rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <p className="truncate font-medium">{pw.title}</p>
         <p className="truncate text-xs text-muted-foreground">{pw.username}</p>
@@ -151,7 +151,7 @@ function PasswordRow({ pw }: PasswordRowProps) {
           </p>
         )}
       </div>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-xs">
         {pw.issues.map((issue) => (
           <Badge key={issue} variant={ISSUE_VARIANTS[issue] ?? 'outline'}>
             {t(`pages.vaultHealth.issues.${issue}`, { defaultValue: issue })}
@@ -196,7 +196,7 @@ export function VaultHealthSection() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-sm">
             <ShieldCheck className="h-5 w-5" />
             {t('pages.vaultHealth.title')}
           </CardTitle>
@@ -220,7 +220,7 @@ export function VaultHealthSection() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-sm">
           <ShieldCheck className="h-5 w-5" />
           {t('pages.vaultHealth.title')}
         </CardTitle>
@@ -231,12 +231,12 @@ export function VaultHealthSection() {
         </p>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-lg">
         {/* Score + issue counts side by side */}
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:justify-around">
+        <div className="flex flex-col items-center gap-lg sm:flex-row sm:items-start sm:justify-around">
           <CircularScore score={score} />
 
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-lg sm:grid-cols-2">
             <IssueCount
               icon={<ShieldAlert className="h-5 w-5" />}
               count={issues_summary.weak}
@@ -266,18 +266,18 @@ export function VaultHealthSection() {
 
         {/* Problematic passwords list */}
         {hasIssues ? (
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <p className="text-sm font-medium">
               {t('pages.vaultHealth.needsAttention')}
             </p>
-            <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-72 space-y-sm overflow-y-auto pr-xs">
               {problematic_passwords.map((pw) => (
                 <PasswordRow key={pw.id} pw={pw} />
               ))}
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 py-4">
+          <div className="flex flex-col items-center gap-sm py-md">
             <ShieldCheck className="text-chart-2 h-10 w-10" />
             <p className="text-sm font-medium">{t('pages.vaultHealth.allGood')}</p>
           </div>

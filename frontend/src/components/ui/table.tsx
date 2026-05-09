@@ -74,7 +74,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-10 px-4 text-left align-middle text-xs font-medium uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0',
+      'h-10 px-md text-left align-middle text-xs font-medium uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0',
       className
     )}
     {...props}
@@ -89,7 +89,7 @@ const TableCell = React.forwardRef<
   <td
     ref={ref}
     className={cn(
-      'px-4 py-3 align-middle text-sm [&:has([role=checkbox])]:pr-0',
+      'px-md py-3 align-middle text-sm [&:has([role=checkbox])]:pr-0',
       className
     )}
     {...props}
@@ -101,7 +101,7 @@ const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={cn('mt-4 text-sm', className)} {...props} />
+  <caption ref={ref} className={cn('mt-md text-sm', className)} {...props} />
 ));
 TableCaption.displayName = 'TableCaption';
 

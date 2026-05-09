@@ -74,15 +74,15 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const accountName = bill.credit_card_associated_account_name || 'N/A';
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Bill Summary */}
-      <div className="space-y-3 rounded-lg bg-muted/50 p-4">
+      <div className="space-y-3 rounded-lg bg-muted/50 p-md">
         <h4 className="text-sm font-semibold text-muted-foreground">
           {t('pages.creditCardBills.payForm.billSummary')}
         </h4>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-md">
+          <div className="flex items-center gap-sm">
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">
@@ -95,7 +95,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <Building2 className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">
@@ -105,7 +105,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">
@@ -117,7 +117,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">
@@ -131,7 +131,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
 
         <div className="mt-3 border-t pt-3">
-          <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-3 gap-md text-center">
             <div>
               <p className="text-xs text-muted-foreground">
                 {t('pages.creditCardBills.payForm.totalAmountLabel')}
@@ -160,7 +160,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {/* Warning if bill is already paid */}
       {remaining <= 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-md">
           <AlertCircle className="h-5 w-5 text-warning" />
           <p className="text-sm text-warning">
             {t('pages.creditCardBills.payForm.alreadyPaidWarning')}
@@ -170,8 +170,8 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
       {/* Payment Form */}
       {remaining > 0 && (
-        <div className="space-y-4">
-          <div className="space-y-2">
+        <div className="space-y-md">
+          <div className="space-y-sm">
             <Label htmlFor="amount">
               {t('pages.creditCardBills.payForm.paymentAmountLabel')}
             </Label>
@@ -210,7 +210,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="payment_date">
               {t('pages.creditCardBills.payForm.paymentDateLabel')}
             </Label>
@@ -224,7 +224,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="notes">
               {t('pages.creditCardBills.payForm.notesLabel')}
             </Label>
@@ -239,7 +239,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -247,7 +247,7 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <Button
             type="submit"
             disabled={isLoading || !isAmountValid}
-            className="gap-2"
+            className="gap-sm"
           >
             <Wallet className="h-4 w-4" />
             {isLoading

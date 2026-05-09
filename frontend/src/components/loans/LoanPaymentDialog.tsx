@@ -95,8 +95,8 @@ export function LoanPaymentDialog({
             {formatCurrency(remaining)}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
+        <div className="space-y-md">
+          <div className="space-y-xs">
             <Label>{t('pages.loans.payment.value')} *</Label>
             <Input
               type="number"
@@ -106,7 +106,7 @@ export function LoanPaymentDialog({
               placeholder="0,00"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.loans.payment.account')} *</Label>
             <Select
               value={form.account}
@@ -124,7 +124,7 @@ export function LoanPaymentDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.loans.payment.date')} *</Label>
             <Input
               type="date"
@@ -132,7 +132,7 @@ export function LoanPaymentDialog({
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label>{t('pages.loans.payment.notes')}</Label>
             <Input
               value={form.notes}

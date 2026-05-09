@@ -75,11 +75,11 @@ export function Toaster() {
                 role={isDestructive ? 'alert' : 'status'}
                 aria-live={isDestructive ? 'assertive' : 'polite'}
               >
-                <div className="grid flex-1 gap-1">
+                <div className="grid flex-1 gap-xs">
                   {title && <ToastTitle>{title}</ToastTitle>}
                   {description && <ToastDescription>{description}</ToastDescription>}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   {(title || description) && (
                     <Button
                       variant="ghost"

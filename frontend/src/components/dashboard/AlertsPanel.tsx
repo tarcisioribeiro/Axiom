@@ -68,16 +68,16 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <AlertTriangle className="h-5 w-5 text-warning" />
           <CardTitle>{t('pages.dashboard.financialAlerts.title')}</CardTitle>
-          <span className="ml-auto rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+          <span className="ml-auto rounded-full bg-destructive px-sm py-0.5 text-xs font-semibold text-destructive-foreground">
             {visibleAlerts.length}
           </span>
         </div>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-2">
+        <ul className="space-y-sm">
           {visibleAlerts.map((alert, index) => {
             const key = `${alert.type}-${index}`;
             const config = severityConfig[alert.severity] ?? severityConfig.info;
@@ -98,10 +98,10 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                   <TypeIcon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center gap-2">
+                  <div className="mb-xs flex items-center gap-sm">
                     <span
                       className={cn(
-                        'rounded px-1.5 py-0.5 text-xs font-medium',
+                        'rounded px-sm py-0.5 text-xs font-medium',
                         config.badgeClass
                       )}
                     >
@@ -113,7 +113,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                     <Link
                       to={alert.link}
                       className={cn(
-                        'mt-1 inline-block text-xs underline underline-offset-2',
+                        'mt-xs inline-block text-xs underline underline-offset-2',
                         config.iconClass
                       )}
                     >

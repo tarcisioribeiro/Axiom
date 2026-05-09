@@ -193,11 +193,11 @@ export default function Publishers() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {filteredPublishers.map((publisher) => (
             <Card key={publisher.id} className="flex flex-col">
               <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-sm">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <PublisherInitials name={publisher.name} />
                     <div className="min-w-0">
@@ -209,7 +209,7 @@ export default function Publishers() {
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-1">
+                  <div className="flex shrink-0 gap-xs">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -236,7 +236,7 @@ export default function Publishers() {
 
               <CardContent className="flex flex-1 flex-col gap-3">
                 {publisher.founded_year && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <Badge variant="outline" className="text-xs font-normal">
                       {t('pages.publishers.foundedYear', {
@@ -246,7 +246,7 @@ export default function Publishers() {
                   </div>
                 )}
                 {publisher.website && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <a
                       href={publisher.website}
@@ -259,10 +259,10 @@ export default function Publishers() {
                     </a>
                   </div>
                 )}
-                <div className="mt-auto pt-2">
+                <div className="mt-auto pt-sm">
                   <Badge
                     variant="secondary"
-                    className="flex w-fit items-center gap-1.5 text-xs"
+                    className="flex w-fit items-center gap-sm text-xs"
                   >
                     <BookOpen className="h-3 w-3" />
                     {t('pages.publishers.booksCount', { count: publisher.books_count })}

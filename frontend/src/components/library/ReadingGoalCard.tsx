@@ -143,7 +143,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-md">
         <div className="relative flex items-center justify-center">
           <CircularProgress
             percentage={goal.progress_percentage}
@@ -172,7 +172,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           </div>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 space-y-sm">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
               {t('pages.libraryDashboard.readingGoals.booksRead', {
@@ -206,7 +206,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           )}
 
           {ltgs.length > 0 && (
-            <div className="space-y-1 border-t pt-1">
+            <div className="space-y-xs border-t pt-xs">
               {ltgs.map((ltg) => (
                 <div key={ltg.id} className="space-y-0.5">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
@@ -379,11 +379,11 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   return (
     <>
       <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
           <CardTitle className="text-sm font-medium">
             {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
           </CardTitle>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-xs">
             <Button
               variant="ghost"
               size="icon"
@@ -416,7 +416,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-3 py-4">
+            <div className="flex flex-col items-center gap-3 py-md">
               <Target className="h-10 w-10 text-muted-foreground/40" />
               <p className="text-center text-sm text-muted-foreground">
                 {t('pages.libraryDashboard.readingGoals.setGoalFor', {
@@ -424,7 +424,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
                 })}
               </p>
               <Button size="sm" variant="outline" onClick={openNewGoal}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+                <Plus className="mr-xs h-3.5 w-3.5" />
                 {t('pages.libraryDashboard.readingGoals.setGoal')}
               </Button>
             </div>

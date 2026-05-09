@@ -189,9 +189,9 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
   const years = Array.from({ length: 5 }, (_, i) => (currentYear - 1 + i).toString());
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label>{t('pages.creditCardBills.form.creditCardLabel')}</Label>
           <Select
             value={watch('credit_card') > 0 ? watch('credit_card').toString() : ''}
@@ -225,7 +225,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCardBills.form.yearLabel')}</Label>
           <Select value={watch('year')} onValueChange={(v) => setValue('year', v)}>
             <SelectTrigger>
@@ -243,7 +243,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCardBills.form.monthLabel')}</Label>
           <Select value={watch('month')} onValueChange={(v) => setValue('month', v)}>
             <SelectTrigger>
@@ -261,7 +261,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="invoice_beginning_date">
             {t('pages.creditCardBills.form.startDateLabel')}
           </Label>
@@ -275,7 +275,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="invoice_ending_date">
             {t('pages.creditCardBills.form.endDateLabel')}
           </Label>
@@ -289,7 +289,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="due_date">
             {t('pages.creditCardBills.form.dueDateLabel')}
           </Label>
@@ -303,7 +303,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
 
         {bill && (
           <>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <div className="flex items-center justify-between">
                 <Label htmlFor="total_amount">
                   {t('pages.creditCardBills.form.totalAmountLabel')}
@@ -327,7 +327,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="minimum_payment">
                 {t('pages.creditCardBills.form.minPaymentLabel')}
               </Label>
@@ -345,7 +345,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="paid_amount">
                 {t('pages.creditCardBills.form.paidAmountLabel')}
               </Label>
@@ -363,7 +363,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="payment_date">
                 {t('pages.creditCardBills.form.paymentDateLabel')}
               </Label>
@@ -380,7 +380,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
         )}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

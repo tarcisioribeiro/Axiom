@@ -123,7 +123,7 @@ function GoalCard({
 
       <CardContent className="p-5">
         {/* Header: ícone do tipo + título */}
-        <div className="mb-4 flex items-start gap-3">
+        <div className="mb-md flex items-start gap-3">
           <div
             className={cn(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
@@ -143,11 +143,11 @@ function GoalCard({
         </div>
 
         {/* Progresso circular + stats */}
-        <div className="mb-4 flex items-center gap-4">
+        <div className="mb-md flex items-center gap-md">
           <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
             <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
           </CircularProgress>
-          <div className="flex-1 space-y-1">
+          <div className="flex-1 space-y-xs">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {t('pages.goals.columns.progress')}
@@ -169,7 +169,7 @@ function GoalCard({
                 </span>
                 <span
                   className={cn(
-                    'flex items-center gap-1 font-medium',
+                    'flex items-center gap-xs font-medium',
                     isOverdue && 'text-destructive',
                     isUrgent && !isOverdue && 'text-warning'
                   )}
@@ -198,7 +198,7 @@ function GoalCard({
           >
             {goal.status_display}
           </Badge>
-          <div className="flex gap-1">
+          <div className="flex gap-xs">
             {goal.goal_type === 'consecutive_days' && goal.status === 'active' && (
               <Button
                 variant="ghost"
@@ -433,14 +433,14 @@ export default function Goals() {
           message={t('pages.goals.emptyStateDesc')}
         />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-xl">
           {activeGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <span className="h-2 w-2 rounded-full bg-info" />
                 {t('pages.goals.sectionActive')} ({activeGoals.length})
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
                 {activeGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}
@@ -450,11 +450,11 @@ export default function Goals() {
 
           {completedGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <span className="h-2 w-2 rounded-full bg-success" />
                 {t('pages.goals.sectionCompleted')} ({completedGoals.length})
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
                 {completedGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}
@@ -464,11 +464,11 @@ export default function Goals() {
 
           {otherGoals.length > 0 && (
             <section>
-              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="mb-3 flex items-center gap-sm text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 <span className="h-2 w-2 rounded-full bg-muted-foreground" />
                 {t('pages.goals.sectionOther')} ({otherGoals.length})
               </h2>
-              <div className="grid gap-4 opacity-70 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-md opacity-70 sm:grid-cols-2 lg:grid-cols-3">
                 {otherGoals.map((goal) => (
                   <GoalCard key={goal.id} goal={goal} {...cardProps} />
                 ))}

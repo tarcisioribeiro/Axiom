@@ -114,9 +114,9 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
   }, [revenue, prefillData, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label>{t('pages.revenues.form.descriptionLabel')}</Label>
           <Input
             {...register('description', { required: true })}
@@ -124,7 +124,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.valueLabel')}</Label>
           <Input
             type="number"
@@ -134,7 +134,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.dateLabel')}</Label>
           <DatePicker
             value={watch('date')}
@@ -143,7 +143,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.horaryLabel')}</Label>
           <Input
             type="time"
@@ -151,7 +151,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.categoryLabel')}</Label>
           <Select
             value={watch('category')}
@@ -169,7 +169,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.accountLabel')}</Label>
           <Select
             value={watch('account')?.toString()}
@@ -187,7 +187,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.sourceLabel')}</Label>
           <Input
             {...register('source')}
@@ -195,7 +195,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.revenues.form.relatedLoanLabel')}</Label>
           <Select
             value={watch('related_loan')?.toString() || 'none'}
@@ -218,8 +218,8 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </Select>
           <p className="text-xs">{t('pages.revenues.form.relatedLoanHint')}</p>
         </div>
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
+        <div className="space-y-sm">
+          <Label className="flex items-center gap-sm">
             <input
               type="checkbox"
               {...register('received')}
@@ -230,7 +230,7 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
           </Label>
         </div>
       </div>
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
