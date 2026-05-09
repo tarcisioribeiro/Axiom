@@ -291,10 +291,8 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
             <div className="space-y-xs">
               <Label htmlFor="confirm-password">
                 {t('pages.vaultGuard.setup.confirmLabel')}
+                {t('security.vaultGuard.setup.confirmLabel')}
               </Label>
-              <Input
-                id="confirm-password"
-                type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder={t('pages.vaultGuard.setup.confirmPlaceholder')}

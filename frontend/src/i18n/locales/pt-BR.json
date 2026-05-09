@@ -1764,6 +1764,19 @@
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
       }
+      },
+      "reconciliation": {
+        "title": "Reconciliação de Saldo",
+        "systemBalance": "Saldo no Sistema",
+        "statementBalance": "Saldo no Extrato",
+        "difference": "Diferença",
+        "unmatchedEntries": "Entradas Não Conciliadas"
+      },
+      "greetingMorning": "Bom dia",
+      "greetingAfternoon": "Boa tarde",
+      "greetingEvening": "Boa noite",
+      "surplusThisMonth": "Superávit de {{amount}} este mês",
+      "deficitThisMonth": "Déficit de {{amount}} este mês"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
