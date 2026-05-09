@@ -334,7 +334,9 @@ export function useRevenuesPage(): UseRevenuesPageReturn {
       label: t('pages.revenues.columns.status'),
       render: (revenue) => (
         <Badge variant={revenue.received ? 'success' : 'destructive'}>
-          {revenue.received ? 'Recebido' : t('common.status.pending')}
+          {revenue.received
+            ? t('pages.revenues.statusReceived')
+            : t('common.status.pending')}
         </Badge>
       ),
     },

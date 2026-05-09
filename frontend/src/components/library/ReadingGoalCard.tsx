@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Target, Pencil, Plus, Trophy, BookOpen, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,6 +105,7 @@ interface GoalPanelProps {
 }
 
 function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) {
+  const { t, i18n } = useTranslation();
   const isCompleted = goal.progress_percentage >= 100;
   const ltgs = goal.literary_type_goals ?? [];
 
@@ -113,7 +115,11 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
 
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">
-          {goal.name ? goal.name : `Meta ${goal.year}`}
+          {goal.name
+            ? goal.name
+            : t('pages.libraryDashboard.readingGoals.goalFallbackName', {
+                year: goal.year,
+              })}
         </span>
         <div className="flex items-center gap-0.5">
           <Button
@@ -121,7 +127,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
             size="icon"
             className="h-6 w-6"
             onClick={onEdit}
-            title="Editar meta"
+            title={t('pages.libraryDashboard.readingGoals.editTitle')}
           >
             <Pencil className="h-3 w-3" />
           </Button>
@@ -130,7 +136,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
             size="icon"
             className="h-6 w-6 text-destructive hover:text-destructive"
             onClick={onDelete}
-            title="Excluir meta"
+            title={t('pages.libraryDashboard.readingGoals.deleteTitle')}
           >
             <Trash2 className="h-3 w-3" />
           </Button>
@@ -169,20 +175,24 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
-              {goal.books_read_this_year === 1
-                ? '1 livro lido'
-                : `${goal.books_read_this_year} livros lidos`}
+              {t('pages.libraryDashboard.readingGoals.booksRead', {
+                count: goal.books_read_this_year,
+              })}
             </span>
-            <span>{goal.pages_read_this_year.toLocaleString('pt-BR')} pág.</span>
+            <span>
+              {t('pages.libraryDashboard.readingGoals.pagesAbbrev', {
+                pages: goal.pages_read_this_year,
+              })}
+            </span>
           </div>
 
           {goal.pages_goal > 0 && (
             <div className="space-y-0.5">
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Páginas</span>
+                <span>{t('pages.libraryDashboard.readingGoals.pages')}</span>
                 <span>
-                  {goal.pages_read_this_year.toLocaleString('pt-BR')} /{' '}
-                  {goal.pages_goal.toLocaleString('pt-BR')} (
+                  {goal.pages_read_this_year.toLocaleString(i18n.language)} /{' '}
+                  {goal.pages_goal.toLocaleString(i18n.language)} (
                   {goal.pages_progress_percentage.toFixed(0)}%)
                 </span>
               </div>
@@ -224,7 +234,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          🎉 Meta atingida! Parabéns!
+          {t('pages.libraryDashboard.readingGoals.achieved')}
         </motion.p>
       )}
     </div>
@@ -238,6 +248,7 @@ interface ReadingGoalCardProps {
 }
 
 export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
+  const { t } = useTranslation();
   const [goals, setGoals] = useState<ReadingGoal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -283,16 +294,24 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
   };
 
   const handleDeleteGoal = async (goal: ReadingGoal) => {
-    const confirmed = await showDelete(`a meta "${goal.name ?? `Meta ${goal.year}`}"`);
+    const confirmed = await showDelete(
+      t('pages.libraryDashboard.readingGoals.deleteConfirm', {
+        name:
+          goal.name ??
+          t('pages.libraryDashboard.readingGoals.goalFallbackName', {
+            year: goal.year,
+          }),
+      })
+    );
     if (!confirmed) return;
     try {
       await readingGoalsService.delete(goal.id);
-      toast({ title: 'Meta excluída com sucesso!' });
+      toast({ title: t('pages.libraryDashboard.readingGoals.deleted') });
       await loadGoals();
       onGoalChange?.();
     } catch (error) {
       toast({
-        title: 'Erro ao excluir meta',
+        title: t('pages.libraryDashboard.readingGoals.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -339,14 +358,16 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       await loadGoals();
 
       toast({
-        title: editingGoal ? 'Meta atualizada!' : 'Meta criada!',
+        title: editingGoal
+          ? t('pages.libraryDashboard.readingGoals.updated')
+          : t('pages.libraryDashboard.readingGoals.created'),
         description: `Meta de ${data.books_goal} livros para ${data.year}.`,
       });
       setIsModalOpen(false);
       onGoalChange?.();
     } catch (error) {
       toast({
-        title: 'Erro ao salvar meta',
+        title: t('pages.libraryDashboard.readingGoals.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -360,7 +381,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
       <Card className="relative overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
-            Metas de Leitura {currentYear}
+            {t('pages.libraryDashboard.readingGoals.title', { year: currentYear })}
           </CardTitle>
           <div className="flex items-center gap-1">
             <Button
@@ -368,7 +389,7 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
               size="icon"
               className="h-7 w-7"
               onClick={openNewGoal}
-              title="Nova meta"
+              title={t('pages.libraryDashboard.readingGoals.newTitle')}
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
@@ -398,11 +419,13 @@ export function ReadingGoalCard({ onGoalChange }: ReadingGoalCardProps) {
             <div className="flex flex-col items-center gap-3 py-4">
               <Target className="h-10 w-10 text-muted-foreground/40" />
               <p className="text-center text-sm text-muted-foreground">
-                Defina uma meta de leitura para {currentYear}
+                {t('pages.libraryDashboard.readingGoals.setGoalFor', {
+                  year: currentYear,
+                })}
               </p>
               <Button size="sm" variant="outline" onClick={openNewGoal}>
                 <Plus className="mr-1 h-3.5 w-3.5" />
-                Definir meta
+                {t('pages.libraryDashboard.readingGoals.setGoal')}
               </Button>
             </div>
           )}

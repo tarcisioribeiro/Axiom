@@ -24,6 +24,7 @@ import { translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
+import { booksService } from '@/services/books-service';
 import { membersService } from '@/services/members-service';
 import { financialGoalsService } from '@/services/vaults-service';
 import {
@@ -81,6 +82,7 @@ export function RoutineTaskForm({
           interval_hours: task.interval_hours || null,
           scheduled_times: task.scheduled_times || null,
           linked_financial_goal: task.linked_financial_goal ?? null,
+          linked_book: task.linked_book ?? null,
         }
       : {
           name: '',
@@ -102,6 +104,7 @@ export function RoutineTaskForm({
           interval_hours: null,
           scheduled_times: null,
           linked_financial_goal: null,
+          linked_book: null,
         },
   });
 
@@ -132,6 +135,7 @@ export function RoutineTaskForm({
         interval_hours: task.interval_hours || null,
         scheduled_times: task.scheduled_times || null,
         linked_financial_goal: task.linked_financial_goal ?? null,
+        linked_book: task.linked_book ?? null,
       });
     }
   }, [task, reset]);
@@ -155,6 +159,12 @@ export function RoutineTaskForm({
   const { data: financialGoals = [] } = useQuery({
     queryKey: ['financial-goals-active'],
     queryFn: () => financialGoalsService.getAll({ is_active: 'true' }),
+    staleTime: 60_000,
+  });
+
+  const { data: readingBooksList = [] } = useQuery({
+    queryKey: ['books-reading'],
+    queryFn: () => booksService.getAll({ read_status: 'reading' }),
     staleTime: 60_000,
   });
 
@@ -713,6 +723,40 @@ export function RoutineTaskForm({
           </Select>
           <p className="mt-1 text-xs text-muted-foreground">
             {t('pages.routineTasks.form.linkedFinancialGoalHint')}
+          </p>
+        </div>
+
+        <div className="col-span-2">
+          <Label htmlFor="linked_book">
+            {t('pages.routineTasks.form.linkedBookLabel')}
+          </Label>
+          <Select
+            value={watch('linked_book')?.toString() ?? ''}
+            onValueChange={(value) =>
+              setValue(
+                'linked_book',
+                value && value !== 'none' ? parseInt(value) : null
+              )
+            }
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={t('pages.routineTasks.form.linkedBookPlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">
+                {t('pages.routineTasks.form.linkedBookPlaceholder')}
+              </SelectItem>
+              {readingBooksList.map((book) => (
+                <SelectItem key={book.id} value={book.id.toString()}>
+                  {book.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('pages.routineTasks.form.linkedBookHint')}
           </p>
         </div>
 
