@@ -193,7 +193,7 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {era.label}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -238,7 +238,7 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {era.label}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -265,7 +265,7 @@ export function AuthorForm({
             <SelectContent>
               {NATIONALITIES.map((nat) => (
                 <SelectItem key={nat.value} value={nat.value}>
-                  {nat.label}
+                  {t(`pages.authors.nationalities.${nat.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>

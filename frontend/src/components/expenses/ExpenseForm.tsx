@@ -289,12 +289,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="false">
-                {t('pages.expenses.form.pending')}
-              </SelectItem>
-              <SelectItem value="true">
-                {t('pages.expenses.form.paid')}
-              </SelectItem>
+              <SelectItem value="false">{t('pages.expenses.form.pending')}</SelectItem>
+              <SelectItem value="true">{t('pages.expenses.form.paid')}</SelectItem>
             </SelectContent>
           </Select>
         </div>

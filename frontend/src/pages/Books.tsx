@@ -567,7 +567,7 @@ export default function Books() {
             <SelectItem value="all">{t('pages.books.allStatuses')}</SelectItem>
             {READ_STATUS.map((s) => (
               <SelectItem key={s.value} value={s.value}>
-                {s.label}
+                {t(`pages.books.readStatuses.${s.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -586,7 +586,7 @@ export default function Books() {
             <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
             {BOOK_GENRES.map((g) => (
               <SelectItem key={g.value} value={g.value}>
-                {g.label}
+                {t(`pages.books.genres.${g.value}`)}
               </SelectItem>
             ))}
           </SelectContent>

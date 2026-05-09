@@ -1858,7 +1858,18 @@
       "sitePlaceholder": "https://exemplo.com",
       "usernamePlaceholder": "usuario@email.com",
       "keepCurrentPassword": "Deixe vazio para manter a atual",
-      "notesSitePlaceholder": "Notas adicionais..."
+      "notesSitePlaceholder": "Notas adicionais...",
+      "categories": {
+        "social": "Redes Sociais",
+        "email": "E-mail",
+        "banking": "Bancário",
+        "work": "Trabalho",
+        "entertainment": "Entretenimento",
+        "shopping": "Compras",
+        "streaming": "Streaming",
+        "gaming": "Games",
+        "other": "Outro"
+      }
     },
     "sharePassword": {
       "title": "Compartilhar Credencial",
@@ -1987,8 +1998,16 @@
         "expiryPlaceholder": "MM/AAAA",
         "brandLabel": "Bandeira",
         "notesLabel": "Observações",
-        "notesPlaceholder": "Notas adicionais sobre o cartão..."
-      }
+        "notesPlaceholder": "Notas adicionais sobre o cartão...",
+        "numberHint": "O número do cartão é criptografado e armazenado com segurança.",
+        "expiryMonthLabel": "Mês de Validade *",
+        "expiryYearLabel": "Ano de Validade *",
+        "financeCardLabel": "Cartão Financeiro",
+        "financeCardHint": "Associe a um cartão do módulo financeiro para integração.",
+        "keepCurrentNumber": "Deixe vazio para manter o número atual",
+        "keepCurrentCvv": "Deixe vazio para manter o CVV atual"
+      },
+      "otherBrand": "Outro"
     },
     "storedAccounts": {
       "title": "Contas Bancárias",
@@ -2047,7 +2066,12 @@
         "password2Label": "Senha 2",
         "password2Placeholder": "Senha secundária",
         "notesLabel": "Observações",
-        "notesPlaceholder": "Notas adicionais..."
+        "notesPlaceholder": "Notas adicionais...",
+        "financeAccountLabel": "Conta Financeira",
+        "financeAccountHint": "Associe a uma conta do módulo financeiro para integração.",
+        "password1EditPlaceholder": "Deixe vazio para manter a atual",
+        "password2EditPlaceholder": "Deixe vazio para manter a atual",
+        "keepCurrentPassword": "Deixe vazio para manter a senha atual"
       }
     },
     "archives": {
@@ -2110,7 +2134,16 @@
         "contentPlaceholder": "Digite o conteúdo confidencial aqui...",
         "fileLabel": "Arquivo",
         "notesLabel": "Observações",
-        "notesPlaceholder": "Notas adicionais..."
+        "notesPlaceholder": "Notas adicionais...",
+        "tagsLabel": "Tags",
+        "tagsPlaceholder": "tag1, tag2, tag3",
+        "tagsHint": "Separe as tags com vírgulas",
+        "fileHintNew": "O arquivo será criptografado antes de ser armazenado. Tipos suportados: PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.",
+        "fileHintEdit": "Deixe vazio para manter o arquivo atual. Upload de novo arquivo substituirá o existente.",
+        "textContentHint": "O texto será criptografado antes de ser armazenado",
+        "alertSelectFile": "Por favor, selecione um arquivo.",
+        "alertEnterText": "Por favor, insira o conteúdo do texto.",
+        "alertTextNotEmpty": "Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo."
       }
     },
     "passwordGenerator": {
@@ -2215,8 +2248,49 @@
         "booksRead_one": "{{count}} livro lido",
         "booksRead_other": "{{count}} livros lidos",
         "pagesAbbrev": "{{pages}} pág.",
-        "deleteConfirm": "a meta \"{{name}}\""
-      }
+        "deleteConfirm": "a meta \"{{name}}\"",
+        "formYear": "Ano *",
+        "formName": "Nome da Meta",
+        "formNamePlaceholder": "Ex: Meta de Férias, Clássicos...",
+        "formNameHint": "Opcional — útil quando há múltiplas metas no mesmo ano",
+        "formBooksGoal": "Meta de Livros *",
+        "formBooksGoalHint": "Quantos livros você quer ler em {{year}}?",
+        "formPagesGoal": "Meta de Páginas",
+        "formPagesGoalPlaceholder": "0 = sem meta de páginas",
+        "formPagesGoalHint": "Quantas páginas você quer ler? (opcional)",
+        "formLiteraryTypesLabel": "Metas por Tipo Literário",
+        "formLiteraryTypesHint": "Defina metas para outros tipos (revistas, artigos, ensaios…). Livros são contados pela meta principal. As páginas de todas as obras somam ao total.",
+        "formAddType": "Adicionar",
+        "literaryTypes": {
+          "collection": "Coletânea",
+          "magazine": "Revista",
+          "article": "Artigo",
+          "essay": "Ensaio"
+        }
+      },
+      "exportCSV": "Exportar CSV",
+      "exportCSVTitle": "Exportar estatísticas em CSV",
+      "completedCount_one": "{{count}} completo",
+      "completedCount_other": "{{count}} completos",
+      "sessionsAndPace": "Sessões & Ritmo",
+      "streakUnit_one": "dia",
+      "streakUnit_other": "dias",
+      "speedUnit": "pág/h",
+      "pagesUnit": "págs",
+      "completionDaysLabel_one": "~{{count}} dia",
+      "completionDaysLabel_other": "~{{count}} dias",
+      "completionForecast": "previsão: {{date}}",
+      "sessionDistribution": "Distribuição das sessões por período do dia",
+      "noSessionPeriods": "Registre o período nas suas sessões de leitura",
+      "sessionCount_one": "{{count}} sessão",
+      "sessionCount_other": "{{count}} sessões",
+      "pageAbbrev": "pág.",
+      "booksCount_one": "{{count}} livro",
+      "booksCount_other": "{{count}} livros",
+      "booksReadCount_one": "{{count}} livro lido",
+      "booksReadCount_other": "{{count}} livros lidos",
+      "pagesReadCount_one": "{{count}} página",
+      "pagesReadCount_other": "{{count}} páginas"
     },
     "books": {
       "title": "Lista de Leitura",
@@ -2364,7 +2438,40 @@
         "hlColorLbl": "Cor",
         "hlPagePlaceholder": "Página",
         "hlChapterPlaceholder": "Capítulo"
-      }
+      },
+      "genres": {
+        "Philosophy": "Filosofia",
+        "History": "História",
+        "Psychology": "Psicologia",
+        "Fiction": "Ficção",
+        "Policy": "Política",
+        "Technology": "Tecnologia",
+        "Theology": "Teologia"
+      },
+      "literaryTypes": {
+        "book": "Livro",
+        "collection": "Coletânea",
+        "magazine": "Revista",
+        "article": "Artigo",
+        "essay": "Ensaio"
+      },
+      "mediaTypes": {
+        "Dig": "Digital",
+        "Phi": "Física"
+      },
+      "languages": {
+        "Por": "Português",
+        "Ing": "Inglês",
+        "Esp": "Espanhol"
+      },
+      "readStatuses": {
+        "to_read": "Para ler",
+        "reading": "Lendo",
+        "read": "Lido",
+        "paused": "Pausado"
+      },
+      "booksCount_one": "{{count}} livro",
+      "booksCount_other": "{{count}} livros"
     },
     "authors": {
       "title": "Autores",
@@ -2402,7 +2509,55 @@
         "nationalityLabel": "Nacionalidade *",
         "biographyLabel": "Biografia",
         "biographyPlaceholder": "Informações sobre o autor..."
-      }
+      },
+      "eras": {
+        "DC": "Depois de Cristo (DC)",
+        "AC": "Antes de Cristo (AC)"
+      },
+      "nationalities": {
+        "ALE": "Alemã",
+        "USA": "Americana",
+        "ARG": "Argentina",
+        "AUL": "Australiana",
+        "AUS": "Austríaca",
+        "BEL": "Belga",
+        "BRA": "Brasileira",
+        "CAN": "Canadense",
+        "CZE": "Checa",
+        "CHL": "Chilena",
+        "CHN": "Chinesa",
+        "COL": "Colombiana",
+        "CUB": "Cubana",
+        "DEN": "Dinamarquesa",
+        "EGI": "Egípcia",
+        "SCO": "Escocesa",
+        "ESP": "Espanhola",
+        "FIN": "Finlandesa",
+        "FRA": "Francesa",
+        "GRE": "Grega",
+        "NLD": "Holandesa",
+        "HUN": "Húngara",
+        "IND": "Indiana",
+        "ING": "Inglesa",
+        "IRL": "Irlandesa",
+        "ISR": "Israelense",
+        "ITA": "Italiana",
+        "JPN": "Japonesa",
+        "MEX": "Mexicana",
+        "NGA": "Nigeriana",
+        "NOR": "Norueguesa",
+        "PER": "Peruana",
+        "POL": "Polonesa",
+        "POR": "Portuguesa",
+        "ROM": "Romana",
+        "RUS": "Russa",
+        "SUE": "Sueca",
+        "SUI": "Suíça",
+        "TUR": "Turca",
+        "UKR": "Ucraniana"
+      },
+      "booksCount_one": "{{count}} livro",
+      "booksCount_other": "{{count}} livros"
     },
     "publishers": {
       "title": "Editoras",
@@ -2430,7 +2585,15 @@
         "websiteLabel": "Website",
         "websitePlaceholder": "https://exemplo.com.br",
         "foundedYearLabel": "Ano de Fundação"
-      }
+      },
+      "countries": {
+        "BRA": "Brasil",
+        "USA": "Estados Unidos da América",
+        "UK": "Reino Unido",
+        "POR": "Portugal"
+      },
+      "booksCount_one": "{{count}} livro",
+      "booksCount_other": "{{count}} livros"
     },
     "summaries": {
       "title": "Resumos",

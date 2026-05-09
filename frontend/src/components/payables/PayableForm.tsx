@@ -68,7 +68,9 @@ export function PayableForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="description">{t('pages.payables.form.descriptionLabel')}</Label>
+          <Label htmlFor="description">
+            {t('pages.payables.form.descriptionLabel')}
+          </Label>
           <Input
             id="description"
             value={formData.description}

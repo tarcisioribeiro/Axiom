@@ -265,8 +265,7 @@ export default function Publishers() {
                     className="flex w-fit items-center gap-1.5 text-xs"
                   >
                     <BookOpen className="h-3 w-3" />
-                    {publisher.books_count}{' '}
-                    {publisher.books_count === 1 ? 'livro' : 'livros'}
+                    {t('pages.publishers.booksCount', { count: publisher.books_count })}
                   </Badge>
                 </div>
               </CardContent>

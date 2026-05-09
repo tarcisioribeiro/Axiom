@@ -137,11 +137,11 @@ function AuthorCard({
               >
                 {bioExpanded ? (
                   <>
-                    <ChevronUp className="h-3 w-3" /> Ver menos
+                    <ChevronUp className="h-3 w-3" /> {t('common.actions.seeLess')}
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-3 w-3" /> Ver mais
+                    <ChevronDown className="h-3 w-3" /> {t('common.actions.seeMore')}
                   </>
                 )}
               </button>
@@ -152,7 +152,7 @@ function AuthorCard({
         <div className="mt-auto flex items-center justify-between pt-2">
           <Badge variant="secondary" className="flex items-center gap-1.5 text-xs">
             <BookOpen className="h-3 w-3" />
-            {author.books_count} {author.books_count === 1 ? 'livro' : 'livros'}
+            {t('pages.authors.booksCount', { count: author.books_count })}
           </Badge>
         </div>
       </CardContent>

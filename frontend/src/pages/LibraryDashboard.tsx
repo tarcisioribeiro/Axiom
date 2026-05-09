@@ -114,10 +114,10 @@ export default function LibraryDashboard() {
         <button
           onClick={exportCSV}
           className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
-          title="Exportar estatísticas em CSV"
+          title={t('pages.libraryDashboard.exportCSVTitle')}
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          {t('pages.libraryDashboard.exportCSV')}
         </button>
       </div>
 
@@ -242,7 +242,9 @@ export default function LibraryDashboard() {
                     {stats?.books_read || 0}
                   </span>
                   <p className="text-xs text-muted-foreground">
-                    {stats?.books_read === 1 ? 'completo' : 'completos'}
+                    {t('pages.libraryDashboard.completedCount', {
+                      count: stats?.books_read || 0,
+                    })}
                   </p>
                 </div>
               </div>
@@ -311,10 +313,9 @@ export default function LibraryDashboard() {
                     {stats.most_read_author.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {stats.most_read_author.books_count}{' '}
-                    {stats.most_read_author.books_count === 1
-                      ? 'livro lido'
-                      : 'livros lidos'}
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_author.books_count,
+                    })}
                   </span>
                 </>
               ) : (
@@ -339,10 +340,9 @@ export default function LibraryDashboard() {
                     {stats.most_read_publisher.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {stats.most_read_publisher.books_count}{' '}
-                    {stats.most_read_publisher.books_count === 1
-                      ? 'livro lido'
-                      : 'livros lidos'}
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_publisher.books_count,
+                    })}
                   </span>
                 </>
               ) : (
@@ -360,7 +360,9 @@ export default function LibraryDashboard() {
         {/* Sessões & Ritmo */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Sessões & Ritmo</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.sessionsAndPace')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {/* Streak em destaque */}
@@ -376,7 +378,9 @@ export default function LibraryDashboard() {
                   {stats?.reading_streak?.current_streak || 0}
                 </span>
                 <span className="ml-1 text-xs text-orange-500">
-                  {(stats?.reading_streak?.current_streak || 0) === 1 ? 'dia' : 'dias'}
+                  {t('pages.libraryDashboard.streakUnit', {
+                    count: stats?.reading_streak?.current_streak || 0,
+                  })}
                 </span>
               </div>
             </div>
@@ -391,7 +395,7 @@ export default function LibraryDashboard() {
                   value:
                     stats?.avg_speed_pages_per_hour &&
                     stats.avg_speed_pages_per_hour > 0
-                      ? `${stats.avg_speed_pages_per_hour} pág/h`
+                      ? `${stats.avg_speed_pages_per_hour} ${t('pages.libraryDashboard.speedUnit')}`
                       : '—',
                 },
                 {
@@ -402,12 +406,12 @@ export default function LibraryDashboard() {
                 {
                   icon: <FileText className="h-4 w-4" />,
                   label: t('pages.libraryDashboard.avgPerSession'),
-                  value: `${stats?.avg_pages_per_session || 0} págs`,
+                  value: `${stats?.avg_pages_per_session || 0} ${t('pages.libraryDashboard.pagesUnit')}`,
                 },
                 {
                   icon: <Zap className="h-4 w-4" />,
                   label: t('pages.libraryDashboard.longestSession'),
-                  value: `${stats?.longest_session_pages || 0} págs`,
+                  value: `${stats?.longest_session_pages || 0} ${t('pages.libraryDashboard.pagesUnit')}`,
                 },
                 {
                   icon: <CalendarClock className="h-4 w-4" />,
@@ -458,16 +462,18 @@ export default function LibraryDashboard() {
                         {book.estimated_days_to_finish !== null ? (
                           <div className="flex flex-wrap items-baseline gap-2">
                             <span className="text-lg font-bold">
-                              ~{book.estimated_days_to_finish}{' '}
-                              {book.estimated_days_to_finish === 1 ? 'dia' : 'dias'}
+                              {t('pages.libraryDashboard.completionDaysLabel', {
+                                count: book.estimated_days_to_finish,
+                              })}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              previsão:{' '}
-                              {format(
-                                addDays(new Date(), book.estimated_days_to_finish),
-                                'dd/MM/yyyy',
-                                { locale: ptBR }
-                              )}
+                              {t('pages.libraryDashboard.completionForecast', {
+                                date: format(
+                                  addDays(new Date(), book.estimated_days_to_finish),
+                                  'dd/MM/yyyy',
+                                  { locale: ptBR }
+                                ),
+                              })}
                             </span>
                           </div>
                         ) : (
@@ -476,7 +482,8 @@ export default function LibraryDashboard() {
                           </span>
                         )}
                         <span className="text-xs text-muted-foreground">
-                          {book.pages_read} / {book.total_pages} págs
+                          {book.pages_read} / {book.total_pages}{' '}
+                          {t('pages.libraryDashboard.pagesUnit')}
                           {book.total_pages > 0 && (
                             <>
                               {' '}
@@ -666,7 +673,9 @@ export default function LibraryDashboard() {
               data={stats?.books_by_genre || []}
               dataKey="count"
               nameKey="genre_display"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -687,7 +696,9 @@ export default function LibraryDashboard() {
               data={stats?.reading_status_distribution || []}
               dataKey="count"
               nameKey="status_display"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -774,7 +785,9 @@ export default function LibraryDashboard() {
               data={stats?.top_authors || []}
               dataKey="books_count"
               nameKey="name"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -799,7 +812,9 @@ export default function LibraryDashboard() {
               data={stats?.rating_distribution || []}
               dataKey="count"
               nameKey="rating_range"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noRatings')}
               lockChartType="pie"
@@ -827,7 +842,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_language || []}
                   dataKey="count"
                   nameKey="language_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS}
                   emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
@@ -843,7 +860,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_media_type || []}
                   dataKey="count"
                   nameKey="media_type_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS.slice(3)}
                   emptyMessage={t('pages.libraryDashboard.noMediaDefined')}
                   lockChartType="pie"
@@ -859,7 +878,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_literary_type || []}
                   dataKey="count"
                   nameKey="literary_type_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS.slice(1)}
                   emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
@@ -878,13 +899,13 @@ export default function LibraryDashboard() {
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.whenYouRead')}</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Distribuição das sessões por período do dia
+              {t('pages.libraryDashboard.sessionDistribution')}
             </p>
           </CardHeader>
           <CardContent>
             {!stats || (stats.reading_by_time_of_day || []).length === 0 ? (
               <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-                Registre o período nas suas sessões de leitura
+                {t('pages.libraryDashboard.noSessionPeriods')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -909,9 +930,10 @@ export default function LibraryDashboard() {
                           <span>{item.time_of_day_display}</span>
                         </div>
                         <span className="text-muted-foreground">
-                          {item.session_count}{' '}
-                          {item.session_count === 1 ? 'sessão' : 'sessões'} ·{' '}
-                          {item.total_pages} pág.
+                          {t('pages.libraryDashboard.sessionCount', {
+                            count: item.session_count,
+                          })}{' '}
+                          · {item.total_pages} {t('pages.libraryDashboard.pageAbbrev')}
                         </span>
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -951,8 +973,9 @@ export default function LibraryDashboard() {
                       <div>
                         <p className="text-sm font-medium">{reading.book_title}</p>
                         <p className="text-xs">
-                          {reading.pages_read}{' '}
-                          {reading.pages_read === 1 ? 'página' : 'páginas'}
+                          {t('pages.libraryDashboard.pagesReadCount', {
+                            count: reading.pages_read,
+                          })}
                         </p>
                       </div>
                     </div>

@@ -103,12 +103,12 @@ export function ArchiveForm({
 
     // Validação: para novos arquivos, deve ter arquivo OU conteúdo de texto
     if (!archive && !file && data.archive_type !== 'text') {
-      alert('Por favor, selecione um arquivo.');
+      alert(t('pages.archives.form.alertSelectFile'));
       return;
     }
 
     if (!archive && data.archive_type === 'text' && !data.text_content) {
-      alert('Por favor, insira o conteúdo do texto.');
+      alert(t('pages.archives.form.alertEnterText'));
       return;
     }
 
@@ -134,9 +134,7 @@ export function ArchiveForm({
       archive.archive_type === 'text'
     ) {
       // Avisar que não pode deixar vazio
-      alert(
-        'Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.'
-      );
+      alert(t('pages.archives.form.alertTextNotEmpty'));
       return;
     }
 
@@ -225,9 +223,7 @@ export function ArchiveForm({
                 {errors.text_content.message}
               </p>
             )}
-            <p className="mt-1 text-xs">
-              O texto será criptografado antes de ser armazenado
-            </p>
+            <p className="mt-1 text-xs">{t('pages.archives.form.textContentHint')}</p>
           </div>
         ) : (
           <div className="col-span-2">
@@ -238,25 +234,25 @@ export function ArchiveForm({
             <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
             {archive ? (
               <p className="mt-1 text-xs text-warning">
-                Deixe vazio para manter o arquivo atual. Upload de novo arquivo
-                substituirá o existente.
+                {t('pages.archives.form.fileHintEdit')}
               </p>
             ) : (
-              <p className="mt-1 text-xs">
-                O arquivo será criptografado antes de ser armazenado. Tipos suportados:
-                PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.
-              </p>
+              <p className="mt-1 text-xs">{t('pages.archives.form.fileHintNew')}</p>
             )}
           </div>
         )}
 
         <div className="col-span-2">
-          <Label htmlFor="tags">Tags</Label>
-          <Input id="tags" {...register('tags')} placeholder="tag1, tag2, tag3" />
+          <Label htmlFor="tags">{t('pages.archives.form.tagsLabel')}</Label>
+          <Input
+            id="tags"
+            {...register('tags')}
+            placeholder={t('pages.archives.form.tagsPlaceholder')}
+          />
           {errors.tags && (
             <p className="mt-1 text-sm text-destructive">{errors.tags.message}</p>
           )}
-          <p className="mt-1 text-xs">Separe as tags com vírgulas</p>
+          <p className="mt-1 text-xs">{t('pages.archives.form.tagsHint')}</p>
         </div>
 
         <div className="col-span-2">

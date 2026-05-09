@@ -18,13 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { storedAccountSchema, type StoredBankAccountFormData } from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
 
-const ACCOUNT_TYPES = [
-  { value: 'CC', label: 'Conta Corrente' },
-  { value: 'CS', label: 'Conta Salário' },
-  { value: 'CP', label: 'Conta Poupança' },
-  { value: 'CI', label: 'Conta Investimento' },
-  { value: 'OTHER', label: 'Outro' },
-];
+const ACCOUNT_TYPE_VALUES = ['CC', 'CS', 'CP', 'CI', 'OTHER'] as const;
 
 // Mapeamento de instituições do módulo financeiro (backend)
 const INSTITUTIONS = [
@@ -152,9 +146,9 @@ export function StoredAccountForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ACCOUNT_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+              {ACCOUNT_TYPE_VALUES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {t(`pages.storedAccounts.accountTypes.${value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -204,7 +198,9 @@ export function StoredAccountForm({
               type={showPassword ? 'text' : 'password'}
               {...register('password')}
               placeholder={
-                account ? 'Deixe vazio para manter a atual' : 'Senha do app/site'
+                account
+                  ? t('pages.storedAccounts.form.password1EditPlaceholder')
+                  : t('pages.storedAccounts.form.password1Placeholder')
               }
             />
             <Button
@@ -226,7 +222,7 @@ export function StoredAccountForm({
           )}
           {account && (
             <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter a senha atual (criptografada)
+              {t('pages.storedAccounts.form.keepCurrentPassword')}
             </p>
           )}
         </div>
@@ -241,7 +237,9 @@ export function StoredAccountForm({
               type={showSecondPassword ? 'text' : 'password'}
               {...register('digital_password')}
               placeholder={
-                account ? 'Deixe vazio para manter a atual' : 'Senha do cartão'
+                account
+                  ? t('pages.storedAccounts.form.password2EditPlaceholder')
+                  : t('pages.storedAccounts.form.password2Placeholder')
               }
             />
             <Button
