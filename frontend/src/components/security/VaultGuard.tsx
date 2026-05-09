@@ -1,5 +1,6 @@
 import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { Button } from '@/components/ui/button';
@@ -26,13 +27,8 @@ interface PasswordStrengthProps {
   password: string;
 }
 
-function getStrength(password: string): {
-  score: number;
-  label: string;
-  color: string;
-} {
-  if (!password) return { score: 0, label: '', color: '' };
-
+function getStrengthScore(password: string): number {
+  if (!password) return 0;
   const criteria = [
     /[A-Z]/.test(password),
     /[a-z]/.test(password),
@@ -41,18 +37,54 @@ function getStrength(password: string): {
   ];
   const met = criteria.filter(Boolean).length;
   const long = password.length >= 12;
+  if (password.length < 8) return 1;
+  if (met < 2) return 2;
+  if (met === 2 || !long) return 3;
+  if (met === 3) return 4;
+  return 5;
+}
 
-  if (password.length < 8)
-    return { score: 1, label: 'Muito fraca', color: 'bg-red-500' };
-  if (met < 2) return { score: 2, label: 'Fraca', color: 'bg-orange-500' };
-  if (met === 2 || !long)
-    return { score: 3, label: 'Razoável', color: 'bg-yellow-500' };
-  if (met === 3) return { score: 4, label: 'Boa', color: 'bg-blue-500' };
-  return { score: 5, label: 'Forte', color: 'bg-green-500' };
+function getStrengthLabel(score: number, t: (key: string) => string): string {
+  switch (score) {
+    case 1:
+      return t('security.vaultGuard.setup.strength.veryWeak');
+    case 2:
+      return t('security.vaultGuard.setup.strength.weak');
+    case 3:
+      return t('security.vaultGuard.setup.strength.fair');
+    case 4:
+      return t('security.vaultGuard.setup.strength.good');
+    case 5:
+      return t('security.vaultGuard.setup.strength.strong');
+    default:
+      return '';
+  }
+}
+
+function getStrength(
+  password: string,
+  t: (key: string) => string
+): {
+  score: number;
+  label: string;
+  color: string;
+} {
+  const score = getStrengthScore(password);
+  if (!password) return { score: 0, label: '', color: '' };
+  const colors = [
+    '',
+    'bg-red-500',
+    'bg-orange-500',
+    'bg-yellow-500',
+    'bg-blue-500',
+    'bg-green-500',
+  ];
+  return { score, label: getStrengthLabel(score, t), color: colors[score] ?? '' };
 }
 
 function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
-  const { score, label, color } = getStrength(password);
+  const { t } = useTranslation();
+  const { score, label, color } = getStrength(password, t);
 
   if (!password) return null;
 
@@ -119,6 +151,7 @@ function useVaultCountdown(expiresAt: string | null) {
 }
 
 function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
+  const { t } = useTranslation();
   const secondsLeft = useVaultCountdown(expiresAt);
 
   if (secondsLeft === null) return null;
@@ -129,10 +162,10 @@ function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
 
   const label =
     hours > 0
-      ? `Cofre expira em ${hours}h ${minutes % 60}min`
+      ? t('security.vaultGuard.expiry.hours', { hours, minutes: minutes % 60 })
       : minutes > 0
-        ? `Cofre expira em ${minutes} min`
-        : 'Cofre expira em breve';
+        ? t('security.vaultGuard.expiry.minutes', { minutes })
+        : t('security.vaultGuard.expiry.soon');
 
   return (
     <div
@@ -162,21 +195,22 @@ interface VaultSetupScreenProps {
 }
 
 function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
+  const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const strength = getStrength(masterPassword);
+  const strength = getStrength(masterPassword, t);
   const isWeakPassword = masterPassword.length > 0 && strength.score < 3;
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (masterPassword !== confirmPassword) {
       toast({
-        title: 'Erro',
-        description: 'As senhas mestres não coincidem.',
+        title: t('common.messages.invalidData'),
+        description: t('security.vaultGuard.setup.passwordsMismatch'),
         variant: 'destructive',
       });
       return;
@@ -188,13 +222,13 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         confirm_master_password: confirmPassword,
       });
       toast({
-        title: 'Cofre configurado!',
-        description: 'Todos os seus dados foram protegidos com sua senha mestre.',
+        title: t('security.vaultGuard.setup.successTitle'),
+        description: t('security.vaultGuard.setup.successDesc'),
       });
       await onSuccess();
     } catch (err) {
       toast({
-        title: 'Erro ao configurar cofre',
+        title: t('security.vaultGuard.setup.errorTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -210,24 +244,24 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
           <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Shield className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Proteja seu Cofre</CardTitle>
-          <CardDescription>
-            Configure uma senha mestre para adicionar uma camada extra de segurança.
-            Seus dados serão re-criptografados com essa senha. Ela nunca é armazenada —
-            guarde-a em local seguro.
-          </CardDescription>
+          <CardTitle className="text-2xl">
+            {t('security.vaultGuard.setup.title')}
+          </CardTitle>
+          <CardDescription>{t('security.vaultGuard.setup.desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="master-password">Senha Mestre</Label>
+              <Label htmlFor="master-password">
+                {t('security.vaultGuard.setup.passwordLabel')}
+              </Label>
               <div className="relative">
                 <Input
                   id="master-password"
                   type={showPassword ? 'text' : 'password'}
                   value={masterPassword}
                   onChange={(e) => setMasterPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder={t('security.vaultGuard.setup.passwordPlaceholder')}
                   required
                   minLength={8}
                   className="pr-10"
@@ -249,30 +283,35 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
               )}
               {isWeakPassword && (
                 <p className="text-xs text-muted-foreground">
-                  Use ao menos 3 de: maiúsculas, minúsculas, números, caracteres
-                  especiais.
+                  {t('security.vaultGuard.setup.passwordHint')}
                 </p>
               )}
             </div>
 
             <div className="space-y-xs">
-              <Label htmlFor="confirm-password">Confirmar Senha Mestre</Label>
+              <Label htmlFor="confirm-password">
+                {t('security.vaultGuard.setup.confirmLabel')}
+              </Label>
               <Input
                 id="confirm-password"
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a senha mestre"
+                placeholder={t('security.vaultGuard.setup.confirmPlaceholder')}
                 required
                 minLength={8}
               />
               {confirmPassword && masterPassword !== confirmPassword && (
-                <p className="text-xs text-destructive">As senhas não coincidem.</p>
+                <p className="text-xs text-destructive">
+                  {t('security.vaultGuard.setup.passwordsMismatchShort')}
+                </p>
               )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Configurando...' : 'Configurar Senha Mestre'}
+              {isSubmitting
+                ? t('security.vaultGuard.setup.configuring')
+                : t('security.vaultGuard.setup.setupBtn')}
             </Button>
           </form>
         </CardContent>
@@ -290,6 +329,7 @@ interface VaultUnlockScreenProps {
 }
 
 function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
+  const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -303,7 +343,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
       await onSuccess();
     } catch (err) {
       toast({
-        title: 'Cofre não desbloqueado',
+        title: t('security.vaultGuard.locked.failTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -319,22 +359,24 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
           <div className="mx-auto mb-md flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Lock className="h-8 w-8 text-muted-foreground" />
           </div>
-          <CardTitle className="text-2xl">Cofre Bloqueado</CardTitle>
-          <CardDescription>
-            Digite sua senha mestre para desbloquear o cofre.
-          </CardDescription>
+          <CardTitle className="text-2xl">
+            {t('security.vaultGuard.locked.title')}
+          </CardTitle>
+          <CardDescription>{t('security.vaultGuard.locked.desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUnlock} className="space-y-md">
             <div className="space-y-xs">
-              <Label htmlFor="unlock-password">Senha Mestre</Label>
+              <Label htmlFor="unlock-password">
+                {t('security.vaultGuard.locked.passwordLabel')}
+              </Label>
               <div className="relative">
                 <Input
                   id="unlock-password"
                   type={showPassword ? 'text' : 'password'}
                   value={masterPassword}
                   onChange={(e) => setMasterPassword(e.target.value)}
-                  placeholder="Digite sua senha mestre"
+                  placeholder={t('security.vaultGuard.locked.passwordPlaceholder')}
                   required
                   className="pr-10"
                 />
@@ -353,7 +395,9 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Desbloqueando...' : 'Desbloquear Cofre'}
+              {isSubmitting
+                ? t('security.vaultGuard.locked.unlocking')
+                : t('security.vaultGuard.locked.unlockBtn')}
             </Button>
           </form>
         </CardContent>
@@ -378,10 +422,11 @@ interface VaultGuardProps {
  * - Desbloqueado → renderiza children + badge de expiração
  */
 export function VaultGuard({ children }: VaultGuardProps) {
+  const { t } = useTranslation();
   const { status, isLoading, refresh } = useVaultStatus();
 
   if (isLoading) {
-    return <LoadingState message="Verificando cofre..." />;
+    return <LoadingState message={t('security.vaultGuard.verifying')} />;
   }
 
   if (!status?.is_configured) {

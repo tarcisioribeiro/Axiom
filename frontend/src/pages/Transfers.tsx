@@ -399,7 +399,7 @@ export default function Transfers() {
               {formatCurrency(totalVolume)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {transfers.length} transferências
+              {t('pages.transfers.stats.transfersCount', { count: transfers.length })}
             </p>
           </CardContent>
         </Card>
@@ -415,7 +415,9 @@ export default function Transfers() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">{completedCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">concluídas</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.transfers.stats.completedSubtitle')}
+            </p>
           </CardContent>
         </Card>
 
@@ -428,7 +430,9 @@ export default function Transfers() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{pendingCount}</div>
-            <p className="mt-xs text-xs text-muted-foreground">pendentes</p>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.transfers.stats.pendingSubtitle')}
+            </p>
           </CardContent>
         </Card>
       </div>

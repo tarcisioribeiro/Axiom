@@ -227,7 +227,7 @@ export default function FixedRevenues() {
           <div>
             <div className="font-medium">{item.description}</div>
             <div className="text-xs text-muted-foreground">
-              Dia {item.due_day} de cada mês
+              {t('pages.fixedRevenues.dueDayDesc', { day: item.due_day })}
             </div>
           </div>
         </div>
@@ -247,7 +247,11 @@ export default function FixedRevenues() {
       key: 'due_day',
       label: t('pages.fixedRevenues.columns.dueDay'),
       align: 'center',
-      render: (item) => <Badge variant="outline">Dia {item.due_day}</Badge>,
+      render: (item) => (
+        <Badge variant="outline">
+          {t('pages.fixedRevenues.dueDayBadge', { day: item.due_day })}
+        </Badge>
+      ),
     },
     {
       key: 'account_name',

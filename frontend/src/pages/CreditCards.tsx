@@ -554,10 +554,12 @@ export default function CreditCards() {
               {formatCurrency(totalLimit - totalAvailable)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {totalLimit > 0
-                ? Math.round(((totalLimit - totalAvailable) / totalLimit) * 100)
-                : 0}
-              % do limite
+              {t('pages.creditCards.usedPercent', {
+                percent:
+                  totalLimit > 0
+                    ? Math.round(((totalLimit - totalAvailable) / totalLimit) * 100)
+                    : 0,
+              })}
             </p>
           </CardContent>
         </Card>
@@ -619,7 +621,9 @@ export default function CreditCards() {
                       </p>
                       <p className="text-xl font-bold">{formatCurrency(available)}</p>
                       <p className="text-xs text-muted-foreground">
-                        de {formatCurrency(limit)} disponível
+                        {t('pages.creditCards.ofLimit', {
+                          value: formatCurrency(limit),
+                        })}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -685,9 +689,11 @@ export default function CreditCards() {
                               : 'text-muted-foreground'
                           )}
                         >
-                          Fatura: {formatCurrency(openBill.total_amount)}
+                          {t('pages.creditCards.billAmount', {
+                            amount: formatCurrency(openBill.total_amount),
+                          })}
                           {openBill.due_date &&
-                            ` • vence dia ${new Date(openBill.due_date).getUTCDate()}`}
+                            ` • ${t('pages.creditCards.dueDayText', { day: new Date(openBill.due_date).getUTCDate() })}`}
                         </p>
                       )}
                     </div>
