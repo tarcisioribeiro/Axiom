@@ -155,7 +155,11 @@ function GoalCard({
             {config.icon}
             <div>
               <p className="font-semibold leading-tight">{goal.description}</p>
-              <p className="text-xs text-muted-foreground">{t(`pages.financialGoals.categories.${goal.category}`, { defaultValue: goal.category_display })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(`pages.financialGoals.categories.${goal.category}`, {
+                  defaultValue: goal.category_display,
+                })}
+              </p>
             </div>
           </div>
           <div className="flex gap-1">
@@ -675,7 +679,11 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('pages.financialGoals.form.linkedExpenseCategoryPlaceholder')} />
+                    <SelectValue
+                      placeholder={t(
+                        'pages.financialGoals.form.linkedExpenseCategoryPlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
@@ -689,7 +697,9 @@ export default function FinancialGoals() {
             )}
             {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
               <div>
-                <Label htmlFor="linked_account">{t('pages.financialGoals.form.linkedAccountLabel')}</Label>
+                <Label htmlFor="linked_account">
+                  {t('pages.financialGoals.form.linkedAccountLabel')}
+                </Label>
                 <Select
                   value={formData.linked_account?.toString() ?? ''}
                   onValueChange={(value) =>
@@ -700,7 +710,11 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={t('pages.financialGoals.form.linkedAccountPlaceholder')} />
+                    <SelectValue
+                      placeholder={t(
+                        'pages.financialGoals.form.linkedAccountPlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((acc) => (

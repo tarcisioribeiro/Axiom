@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,11 +18,11 @@ import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import type { LiteraryTypeGoal, ReadingGoal } from '@/types';
 
-const LITERARY_TYPE_GOAL_OPTIONS = [
-  { value: 'collection', label: 'Coletânea' },
-  { value: 'magazine', label: 'Revista' },
-  { value: 'article', label: 'Artigo' },
-  { value: 'essay', label: 'Ensaio' },
+const LITERARY_TYPE_GOAL_VALUES = [
+  'collection',
+  'magazine',
+  'article',
+  'essay',
 ] as const;
 
 export interface LiteraryTypeGoalDraft {
@@ -45,6 +46,7 @@ export function ReadingGoalModal({
   goal,
   isLoading = false,
 }: ReadingGoalModalProps) {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const {
@@ -102,15 +104,13 @@ export function ReadingGoalModal({
   }, [goal, reset, setValue, currentYear]);
 
   const usedTypes = new Set(ltgDrafts.map((d) => d.literary_type));
-  const availableTypes = LITERARY_TYPE_GOAL_OPTIONS.filter(
-    (t) => !usedTypes.has(t.value)
-  );
+  const availableValues = LITERARY_TYPE_GOAL_VALUES.filter((v) => !usedTypes.has(v));
 
   const addLtg = () => {
-    if (availableTypes.length === 0) return;
+    if (availableValues.length === 0) return;
     setLtgDrafts((prev) => [
       ...prev,
-      { literary_type: availableTypes[0].value, goal_count: 1 },
+      { literary_type: availableValues[0], goal_count: 1 },
     ]);
   };
 
@@ -137,13 +137,17 @@ export function ReadingGoalModal({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {goal ? 'Editar Meta de Leitura' : 'Nova Meta de Leitura'}
+            {goal
+              ? t('pages.libraryDashboard.readingGoals.editTitle')
+              : t('pages.libraryDashboard.readingGoals.newTitle')}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="year">Ano *</Label>
+            <Label htmlFor="year">
+              {t('pages.libraryDashboard.readingGoals.formYear')}
+            </Label>
             <Input
               id="year"
               type="number"
@@ -159,14 +163,16 @@ export function ReadingGoalModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Meta</Label>
+            <Label htmlFor="name">
+              {t('pages.libraryDashboard.readingGoals.formName')}
+            </Label>
             <Input
               id="name"
               {...register('name')}
-              placeholder="Ex: Meta de Férias, Clássicos..."
+              placeholder={t('pages.libraryDashboard.readingGoals.formNamePlaceholder')}
             />
             <p className="text-xs text-muted-foreground">
-              Opcional — útil quando há múltiplas metas no mesmo ano
+              {t('pages.libraryDashboard.readingGoals.formNameHint')}
             </p>
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -174,7 +180,9 @@ export function ReadingGoalModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="books_goal">Meta de Livros *</Label>
+            <Label htmlFor="books_goal">
+              {t('pages.libraryDashboard.readingGoals.formBooksGoal')}
+            </Label>
             <Input
               id="books_goal"
               type="number"
@@ -185,7 +193,9 @@ export function ReadingGoalModal({
               })}
             />
             <p className="text-xs text-muted-foreground">
-              Quantos livros você quer ler em {new Date().getFullYear()}?
+              {t('pages.libraryDashboard.readingGoals.formBooksGoalHint', {
+                year: currentYear,
+              })}
             </p>
             {errors.books_goal && (
               <p className="text-sm text-destructive">{errors.books_goal.message}</p>
@@ -193,7 +203,9 @@ export function ReadingGoalModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pages_goal">Meta de Páginas</Label>
+            <Label htmlFor="pages_goal">
+              {t('pages.libraryDashboard.readingGoals.formPagesGoal')}
+            </Label>
             <Input
               id="pages_goal"
               type="number"
@@ -202,21 +214,24 @@ export function ReadingGoalModal({
               {...register('pages_goal', {
                 setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
               })}
-              placeholder="0 = sem meta de páginas"
+              placeholder={t(
+                'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+              )}
             />
             <p className="text-xs text-muted-foreground">
-              Quantas páginas você quer ler? (opcional)
+              {t('pages.libraryDashboard.readingGoals.formPagesGoalHint')}
             </p>
             {errors.pages_goal && (
               <p className="text-sm text-destructive">{errors.pages_goal.message}</p>
             )}
           </div>
 
-          {/* Metas por tipo literário */}
           <div className="space-y-3 border-t pt-4">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Metas por Tipo Literário</Label>
-              {availableTypes.length > 0 && (
+              <Label className="text-sm font-medium">
+                {t('pages.libraryDashboard.readingGoals.formLiteraryTypesLabel')}
+              </Label>
+              {availableValues.length > 0 && (
                 <Button
                   type="button"
                   variant="outline"
@@ -225,13 +240,12 @@ export function ReadingGoalModal({
                   className="h-7 gap-1 text-xs"
                 >
                   <Plus className="h-3 w-3" />
-                  Adicionar
+                  {t('pages.libraryDashboard.readingGoals.formAddType')}
                 </Button>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Defina metas para outros tipos (revistas, artigos, ensaios…). Livros são
-              contados pela meta principal. As páginas de todas as obras somam ao total.
+              {t('pages.libraryDashboard.readingGoals.formLiteraryTypesHint')}
             </p>
 
             {ltgDrafts.length > 0 && (
@@ -245,17 +259,16 @@ export function ReadingGoalModal({
                         updateLtg(index, 'literary_type', e.target.value)
                       }
                     >
-                      {/* Show current value + available options */}
-                      {LITERARY_TYPE_GOAL_OPTIONS.filter(
-                        (t) =>
-                          t.value === draft.literary_type ||
-                          !usedTypes.has(t.value) ||
+                      {LITERARY_TYPE_GOAL_VALUES.filter(
+                        (v) =>
+                          v === draft.literary_type ||
+                          !usedTypes.has(v) ||
                           ltgDrafts.findIndex(
-                            (d, i) => i !== index && d.literary_type === t.value
+                            (d, i) => i !== index && d.literary_type === v
                           ) === -1
-                      ).map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
+                      ).map((v) => (
+                        <option key={v} value={v}>
+                          {t(`pages.libraryDashboard.readingGoals.literaryTypes.${v}`)}
                         </option>
                       ))}
                     </select>
@@ -290,16 +303,16 @@ export function ReadingGoalModal({
 
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
+              {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {t('common.actions.saving')}
                 </>
               ) : (
-                'Salvar'
+                t('common.actions.save')
               )}
             </Button>
           </div>

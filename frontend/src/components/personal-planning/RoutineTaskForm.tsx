@@ -368,7 +368,9 @@ export function RoutineTaskForm({
                       htmlFor={`custom-weekday-${day.value}`}
                       className="cursor-pointer text-xs"
                     >
-                      {t(`pages.routineTasks.form.weekdayOptions.${day.value}`).substring(0, 3)}
+                      {t(
+                        `pages.routineTasks.form.weekdayOptions.${day.value}`
+                      ).substring(0, 3)}
                     </Label>
                   </div>
                 ))}

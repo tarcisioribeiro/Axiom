@@ -125,7 +125,10 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="payed_value">{t('pages.loans.form.paidValueLabel')}{loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}</Label>
+          <Label htmlFor="payed_value">
+            {t('pages.loans.form.paidValueLabel')}
+            {loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}
+          </Label>
           <Input
             id="payed_value"
             type="number"
@@ -240,7 +243,9 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="installments">{t('pages.loans.form.installmentsLabel')}</Label>
+          <Label htmlFor="installments">
+            {t('pages.loans.form.installmentsLabel')}
+          </Label>
           <Input
             id="installments"
             type="number"
@@ -250,7 +255,9 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="interest_rate">{t('pages.loans.form.interestRateLabel')}</Label>
+          <Label htmlFor="interest_rate">
+            {t('pages.loans.form.interestRateLabel')}
+          </Label>
           <Input
             id="interest_rate"
             type="number"
@@ -270,7 +277,9 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="payment_frequency">{t('pages.loans.form.paymentFrequencyLabel')}</Label>
+          <Label htmlFor="payment_frequency">
+            {t('pages.loans.form.paymentFrequencyLabel')}
+          </Label>
           <Select
             value={formData.payment_frequency}
             onValueChange={(value) => set({ payment_frequency: value })}
@@ -330,7 +339,9 @@ export function LoanForm({
               <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">{t('pages.loans.form.guarantorNone')}</SelectItem>
+              <SelectItem value="none">
+                {t('pages.loans.form.guarantorNone')}
+              </SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
                   {m.name}
@@ -351,7 +362,9 @@ export function LoanForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="contract_document">{t('pages.loans.form.contractDocumentLabel')}</Label>
+          <Label htmlFor="contract_document">
+            {t('pages.loans.form.contractDocumentLabel')}
+          </Label>
           <Input
             id="contract_document"
             type="file"

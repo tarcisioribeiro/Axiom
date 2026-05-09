@@ -287,7 +287,7 @@ export default function Passwords() {
   const onFormSubmit = async (data: PasswordFormData) => {
     // Password required on create
     if (!selectedPassword && !data.password) {
-      setError('password', { message: 'Senha é obrigatória' });
+      setError('password', { message: t('pages.passwords.passwordRequired') });
       return;
     }
 
@@ -638,7 +638,7 @@ export default function Passwords() {
                   <SelectContent>
                     {PASSWORD_CATEGORIES.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
+                        {t(`pages.passwords.categories.${cat.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>

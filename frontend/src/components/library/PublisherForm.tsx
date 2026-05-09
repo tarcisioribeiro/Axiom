@@ -104,7 +104,7 @@ export function PublisherForm({
             <SelectContent>
               {COUNTRIES.map((country) => (
                 <SelectItem key={country.value} value={country.value}>
-                  {country.label}
+                  {t(`pages.publishers.countries.${country.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>

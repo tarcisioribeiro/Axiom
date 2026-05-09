@@ -375,7 +375,9 @@ export default function Members() {
                       variant={member.active ? 'success' : 'outline'}
                       className="text-xs"
                     >
-                      {member.active ? t('common.status.active') : t('common.status.inactive')}
+                      {member.active
+                        ? t('common.status.active')
+                        : t('common.status.inactive')}
                     </Badge>
                     <div className="flex gap-1">
                       {isCurrentUser && (

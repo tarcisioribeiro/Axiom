@@ -437,7 +437,7 @@ export function BookForm({
             <SelectContent>
               {BOOK_LANGUAGES.map((lang) => (
                 <SelectItem key={lang.value} value={lang.value}>
-                  {lang.label}
+                  {t(`pages.books.languages.${lang.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -459,7 +459,7 @@ export function BookForm({
             <SelectContent>
               {BOOK_GENRES.map((genre) => (
                 <SelectItem key={genre.value} value={genre.value}>
-                  {genre.label}
+                  {t(`pages.books.genres.${genre.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -483,7 +483,7 @@ export function BookForm({
             <SelectContent>
               {LITERARY_TYPES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+                  {t(`pages.books.literaryTypes.${type.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -507,7 +507,7 @@ export function BookForm({
             <SelectContent>
               {MEDIA_TYPES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+                  {t(`pages.books.mediaTypes.${type.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -15,17 +15,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { storedCardSchema, type StoredCreditCardFormData } from '@/lib/validations';
+import { CARD_FLAGS } from '@/types';
 import type { StoredCreditCard, CreditCard, Member } from '@/types';
-
-const CARD_FLAGS = [
-  { value: 'MSC', label: 'Mastercard' },
-  { value: 'VSA', label: 'Visa' },
-  { value: 'ELO', label: 'Elo' },
-  { value: 'EXP', label: 'American Express' },
-  { value: 'HCD', label: 'Hipercard' },
-  { value: 'DIN', label: 'Diners Club' },
-  { value: 'OTHER', label: 'Outro' },
-];
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: i + 1,
@@ -136,7 +127,7 @@ export function StoredCardForm({
           )}
           {card && (
             <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter o número atual (criptografado)
+              {t('pages.storedCards.form.keepCurrentNumber')}
             </p>
           )}
         </div>
@@ -176,7 +167,7 @@ export function StoredCardForm({
           )}
           {card && (
             <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter o CVV atual
+              {t('pages.storedCards.form.keepCurrentCvv')}
             </p>
           )}
         </div>
@@ -195,7 +186,9 @@ export function StoredCardForm({
             <SelectContent>
               {CARD_FLAGS.map((flag) => (
                 <SelectItem key={flag.value} value={flag.value}>
-                  {flag.label}
+                  {flag.value === 'OTHER'
+                    ? t('pages.storedCards.otherBrand')
+                    : flag.label}
                 </SelectItem>
               ))}
             </SelectContent>
