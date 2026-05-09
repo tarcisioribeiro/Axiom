@@ -642,7 +642,7 @@ export default function FinancialGoals() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Ex: Viagem para Europa"
+                placeholder={t('pages.financialGoals.form.descriptionPlaceholder')}
               />
             </div>
             <div>
@@ -657,7 +657,7 @@ export default function FinancialGoals() {
                 <SelectContent>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
+                      {t(`pages.financialGoals.categories.${cat.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -666,7 +666,7 @@ export default function FinancialGoals() {
             {formData.category === 'reduce_expenses' && (
               <div>
                 <Label htmlFor="linked_expense_category">
-                  Categoria de Despesa Vinculada
+                  {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
                 </Label>
                 <Select
                   value={formData.linked_expense_category || ''}
@@ -675,7 +675,7 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Todas as categorias" />
+                    <SelectValue placeholder={t('pages.financialGoals.form.linkedExpenseCategoryPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
@@ -689,7 +689,7 @@ export default function FinancialGoals() {
             )}
             {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
               <div>
-                <Label htmlFor="linked_account">Conta Vinculada (opcional)</Label>
+                <Label htmlFor="linked_account">{t('pages.financialGoals.form.linkedAccountLabel')}</Label>
                 <Select
                   value={formData.linked_account?.toString() ?? ''}
                   onValueChange={(value) =>
@@ -700,7 +700,7 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Todas as contas" />
+                    <SelectValue placeholder={t('pages.financialGoals.form.linkedAccountPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((acc) => (
@@ -791,7 +791,7 @@ export default function FinancialGoals() {
                 id="notes"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Anotações sobre a meta..."
+                placeholder={t('pages.financialGoals.form.notesPlaceholder')}
               />
             </div>
             <div className="flex items-center gap-2">

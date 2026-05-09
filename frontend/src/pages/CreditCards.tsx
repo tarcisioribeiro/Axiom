@@ -535,7 +535,7 @@ export default function CreditCards() {
               {formatCurrency(totalAvailable)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              de {formatCurrency(totalLimit)} no total
+              {t('pages.creditCards.stats.ofTotalLimit', { value: formatCurrency(totalLimit) })}
             </p>
           </CardContent>
         </Card>

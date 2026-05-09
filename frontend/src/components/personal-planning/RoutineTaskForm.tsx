@@ -265,7 +265,7 @@ export function RoutineTaskForm({
             <SelectContent>
               {PERIODICITY_CHOICES.map((period) => (
                 <SelectItem key={period.value} value={period.value}>
-                  {period.label}
+                  {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -293,7 +293,7 @@ export function RoutineTaskForm({
               <SelectContent>
                 {WEEKDAY_CHOICES.map((day) => (
                   <SelectItem key={day.value} value={day.value.toString()}>
-                    {day.label}
+                    {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -368,7 +368,7 @@ export function RoutineTaskForm({
                       htmlFor={`custom-weekday-${day.value}`}
                       className="cursor-pointer text-xs"
                     >
-                      {day.label.substring(0, 3)}
+                      {t(`pages.routineTasks.form.weekdayOptions.${day.value}`).substring(0, 3)}
                     </Label>
                   </div>
                 ))}
@@ -508,7 +508,7 @@ export function RoutineTaskForm({
             <SelectContent>
               {UNIT_CHOICES.map((u) => (
                 <SelectItem key={u.value} value={u.value}>
-                  {u.label}
+                  {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -657,7 +657,7 @@ export function RoutineTaskForm({
             <SelectContent>
               {PRIORITY_CHOICES.map((p) => (
                 <SelectItem key={p.value} value={p.value}>
-                  {p.label}
+                  {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>

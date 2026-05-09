@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -97,9 +97,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               <SelectValue placeholder={t('pages.accounts.form.typePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(TRANSLATIONS.accountTypes).map(([key, value]) => (
+              {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
                 <SelectItem key={key} value={key}>
-                  {value}
+                  {translate('accountTypes', key)}
                 </SelectItem>
               ))}
             </SelectContent>

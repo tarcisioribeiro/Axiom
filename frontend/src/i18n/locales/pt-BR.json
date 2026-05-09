@@ -454,7 +454,16 @@
         "accountNumberPlaceholder": "Ex: 12345-6",
         "balance": "Saldo Inicial",
         "balanceMin": "Saldo mínimo permitido: {{value}}",
-        "overdraftLimit": "Limite de Cheque Especial"
+        "overdraftLimit": "Limite de Cheque Especial",
+        "typeLabel": "Tipo de Conta *",
+        "typePlaceholder": "Selecione o tipo",
+        "nameLabel": "Nome da Conta *",
+        "namePlaceholder": "Ex: Conta Corrente Principal",
+        "numberLabel": "Número da Conta",
+        "numberPlaceholder": "Ex: 12345-6",
+        "balanceLabel": "Saldo Inicial",
+        "balanceMinHint": "Saldo mínimo permitido:",
+        "overdraftLabel": "Limite de Cheque Especial"
       },
       "imports": {
         "file": "Arquivo",
@@ -914,12 +923,25 @@
         "interestRate": "Taxa de Juros (%) Anual",
         "annualFee": "Anuidade",
         "notesLabel": "Observações",
-        "notesPlaceholder": "Observações adicionais"
+        "notesPlaceholder": "Observações adicionais",
+        "onCardNameLabel": "Nome no Cartão *",
+        "flagLabel": "Bandeira *",
+        "cardNumberLabel": "Número do Cartão *",
+        "cvvLabel": "CVV *",
+        "validationDateLabel": "Data de Validade *",
+        "creditLimitLabel": "Limite Atual *",
+        "maxLimitLabel": "Limite Máximo *",
+        "associatedAccountLabel": "Conta Associada *",
+        "dueDayLabel": "Dia de Vencimento *",
+        "closingDayLabel": "Dia de Fechamento *",
+        "interestRateLabel": "Taxa de Juros (%) Anual",
+        "annualFeeLabel": "Anuidade"
       },
       "stats": {
         "registeredSubtitle": "cartões cadastrados",
         "availableCredit": "Crédito disponível",
-        "usedCredit": "Crédito utilizado"
+        "usedCredit": "Crédito utilizado",
+        "ofTotalLimit": "de {{value}} no total"
       },
       "ofLimit": "de {{value}} disponível",
       "usedPercent": "{{percent}}% do limite",
@@ -1187,7 +1209,20 @@
         "overdueSubtitle": "vencidos",
         "paidSubtitle": "quitados"
       },
-      "paidAmount": "{{value}} pago"
+      "paidAmount": "{{value}} pago",
+      "form": {
+        "descriptionLabel": "Descrição *",
+        "descriptionPlaceholder": "Ex: Tratamento dentário, Conserto do carro",
+        "valueTotalLabel": "Valor Total *",
+        "paidValueLabel": "Valor Já Pago",
+        "dateLabel": "Data de Registro *",
+        "dueDateLabel": "Data de Vencimento",
+        "dueDatePlaceholder": "Selecione a data de vencimento",
+        "categoryLabel": "Categoria *",
+        "statusLabel": "Status",
+        "notesLabel": "Observações",
+        "notesPlaceholder": "Informações adicionais sobre este valor a pagar"
+      }
     },
     "budgets": {
       "title": "Orçamentos",
@@ -1242,6 +1277,12 @@
         "enabled": "Habilitar rolagem de saldo",
         "description": "O saldo não utilizado do mês anterior é adicionado ao limite do mês atual.",
         "amount": "Saldo rolado (R$)"
+      },
+      "health": {
+        "title": "Saúde dos orçamentos este mês",
+        "withinLimit": "dentro do limite",
+        "warning": "em alerta",
+        "exceeded": "excedidos"
       }
     },
     "fixedRevenues": {
@@ -1510,7 +1551,36 @@
       },
       "daysLeft": "{{count}} dia(s) restante(s)",
       "deadlinePassed": "Prazo encerrado",
-      "goalCompletedLabel": "Meta Concluída!"
+      "goalCompletedLabel": "Meta Concluída!",
+      "form": {
+        "descriptionLabel": "Descrição *",
+        "descriptionPlaceholder": "Ex: Viagem para Europa",
+        "categoryLabel": "Categoria *",
+        "linkedExpenseCategoryLabel": "Categoria de Despesa Vinculada",
+        "linkedExpenseCategoryPlaceholder": "Todas as categorias",
+        "linkedAccountLabel": "Conta Vinculada (opcional)",
+        "linkedAccountPlaceholder": "Todas as contas",
+        "targetValueLabel": "Valor Alvo *",
+        "targetDateLabel": "Data Alvo",
+        "vaultsLabel": "Cofres Associados",
+        "notesLabel": "Anotações",
+        "notesPlaceholder": "Anotações sobre a meta...",
+        "activeGoalLabel": "Meta ativa"
+      },
+      "categories": {
+        "savings": "Poupança",
+        "investment": "Investimento",
+        "emergency": "Reserva de Emergência",
+        "travel": "Viagem",
+        "education": "Educação",
+        "property": "Imóvel",
+        "vehicle": "Veículo",
+        "retirement": "Aposentadoria",
+        "health": "Saúde",
+        "reduce_expenses": "Reduzir Despesas",
+        "increase_revenue": "Aumentar Receitas",
+        "other": "Outro"
+      }
     },
     "dashboard": {
       "title": "Dashboard de Controle Financeiro",
@@ -1603,22 +1673,6 @@
         "average": "Média",
         "zScore": "Z-Score"
       },
-      "lgpdExport": {
-        "title": "Exportar Dados (LGPD)",
-        "description": "Baixe todos os seus dados financeiros em formato JSON.",
-        "btn": "Exportar Meus Dados",
-        "rateLimitMsg": "Exportação limitada a 1 por dia. Tente novamente amanhã.",
-        "success": "Exportação iniciada com sucesso."
-      },
-      "irReport": {
-        "title": "Relatório IR",
-        "description": "Relatório estruturado para declaração de Imposto de Renda.",
-        "year": "Ano",
-        "btn": "Gerar Relatório",
-        "revenues": "Receitas por Categoria",
-        "deductible": "Despesas Dedutíveis",
-        "loans": "Empréstimos"
-      },
       "reconciliation": {
         "title": "Reconciliação de Saldo",
         "systemBalance": "Saldo no Sistema",
@@ -1630,7 +1684,30 @@
       "greetingAfternoon": "Boa tarde",
       "greetingEvening": "Boa noite",
       "surplusThisMonth": "Superávit de {{amount}} este mês",
-      "deficitThisMonth": "Déficit de {{amount}} este mês"
+      "deficitThisMonth": "Déficit de {{amount}} este mês",
+      "exportStatement": "Exportar Extrato",
+      "subtitle": "Aqui está seu resumo financeiro de hoje.",
+      "lgpdExport": {
+        "title": "Exportar Dados (LGPD)",
+        "description": "Baixe todos os seus dados financeiros em formato JSON.",
+        "btn": "Exportar Meus Dados",
+        "rateLimitMsg": "Exportação limitada a 1 por dia. Tente novamente amanhã.",
+        "success": "Exportação iniciada com sucesso.",
+        "successTitle": "Exportação LGPD solicitada",
+        "successDesc": "Você receberá o arquivo em breve.",
+        "errorTitle": "Erro",
+        "errorDesc": "Não foi possível solicitar a exportação."
+      },
+      "irReport": {
+        "title": "Relatório IR",
+        "description": "Relatório estruturado para declaração de Imposto de Renda.",
+        "year": "Ano",
+        "btn": "Gerar Relatório",
+        "revenues": "Receitas por Categoria",
+        "deductible": "Despesas Dedutíveis",
+        "loans": "Empréstimos",
+        "errorDesc": "Não foi possível gerar o relatório IR."
+      }
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -2551,7 +2628,47 @@
         "linkedFinancialGoalHint": "Vincule esta rotina a uma meta financeira que ela alimenta",
         "linkedBookLabel": "Livro Vinculado",
         "linkedBookPlaceholder": "Selecione um livro em andamento (opcional)",
-        "linkedBookHint": "Vincule esta rotina a um livro que você está lendo atualmente"
+        "linkedBookHint": "Vincule esta rotina a um livro que você está lendo atualmente",
+        "periodicityOptions": {
+          "daily": "Diária",
+          "weekdays": "Dias Úteis",
+          "weekly": "Semanal",
+          "monthly": "Mensal",
+          "custom": "Personalizado"
+        },
+        "priorityOptions": {
+          "low": "Baixa",
+          "medium": "Média",
+          "high": "Alta",
+          "critical": "Crítica"
+        },
+        "unitOptions": {
+          "vez": "vez",
+          "minuto": "minuto",
+          "hora": "hora",
+          "ml": "ml",
+          "copo": "copo",
+          "litro": "litro",
+          "página": "página",
+          "km": "km",
+          "metro": "metro",
+          "passo": "passo",
+          "repetição": "repetição",
+          "série": "série",
+          "capítulo": "capítulo",
+          "exercício": "exercício",
+          "dose": "dose",
+          "comprimido": "comprimido"
+        },
+        "weekdayOptions": {
+          "0": "Segunda-feira",
+          "1": "Terça-feira",
+          "2": "Quarta-feira",
+          "3": "Quinta-feira",
+          "4": "Sexta-feira",
+          "5": "Sábado",
+          "6": "Domingo"
+        }
       }
     },
     "goals": {
@@ -2618,7 +2735,19 @@
         "deadlinePlaceholder": "Selecione o prazo (opcional)",
         "endDateLabel": "Data de Término",
         "endDatePlaceholder": "Selecione a data de término",
-        "statusLabel": "Status *"
+        "statusLabel": "Status *",
+        "goalTypeOptions": {
+          "consecutive_days": "Dias Consecutivos",
+          "total_days": "Total de Dias",
+          "avoid_habit": "Evitar Hábito",
+          "custom": "Personalizado"
+        },
+        "statusOptions": {
+          "active": "Ativo",
+          "completed": "Concluído",
+          "failed": "Falhou",
+          "cancelled": "Cancelado"
+        }
       }
     },
     "dailyChecklist": {

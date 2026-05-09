@@ -286,7 +286,7 @@ export default function Budgets() {
               <>
                 <div className="rounded-lg border bg-card p-4">
                   <p className="mb-2 text-sm font-medium">
-                    Saúde dos orçamentos este mês
+                    {t('pages.budgets.health.title')}
                   </p>
                   <div className="flex h-3 overflow-hidden rounded-full bg-muted">
                     {exceededCount > 0 && (
@@ -317,17 +317,17 @@ export default function Budgets() {
                   <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
                     <span>
                       <span className="font-semibold text-success">{okCount}</span>{' '}
-                      dentro do limite
+                      {t('pages.budgets.health.withinLimit')}
                     </span>
                     <span>
                       <span className="font-semibold text-warning">{warningCount}</span>{' '}
-                      em alerta
+                      {t('pages.budgets.health.warning')}
                     </span>
                     <span>
                       <span className="font-semibold text-destructive">
                         {exceededCount}
                       </span>{' '}
-                      excedidos
+                      {t('pages.budgets.health.exceeded')}
                     </span>
                   </div>
                 </div>
