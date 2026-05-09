@@ -1,4 +1,4 @@
-import { QueryClient, QueryCache } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 
 import { toast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/utils';
@@ -55,6 +55,13 @@ export const queryClient = new QueryClient({
           variant: 'destructive',
         });
       }
+    },
+  }),
+  mutationCache: new MutationCache({
+    // After any successful mutation (create/update/delete), invalidate all
+    // active queries so every view that reads from the database is refreshed.
+    onSuccess: () => {
+      void queryClient.invalidateQueries();
     },
   }),
   defaultOptions: {
