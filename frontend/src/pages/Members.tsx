@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { formatCurrency } from '@/lib/formatters';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -278,7 +280,7 @@ export default function Members() {
         <EmptyState
           icon={<Users className="h-12 w-12 text-muted-foreground" />}
           message={
-            searchTerm ? 'Nenhum membro encontrado.' : t('pages.members.emptyState')
+            searchTerm ? t('pages.members.emptySearch') : t('pages.members.emptyState')
           }
         />
       ) : (
@@ -319,18 +321,18 @@ export default function Members() {
                       {member.is_creditor && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
                           <Banknote className="h-2.5 w-2.5" />
-                          Credor
+                          {t('pages.members.form.isCreditor')}
                         </span>
                       )}
                       {member.is_benefited && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
                           <HandCoins className="h-2.5 w-2.5" />
-                          Beneficiário
+                          {t('pages.members.form.isBenefited')}
                         </span>
                       )}
                       {!member.is_creditor && !member.is_benefited && (
                         <span className="text-[10px] text-muted-foreground">
-                          Sem papel definido
+                          {t('pages.members.noRole')}
                         </span>
                       )}
                     </div>
@@ -362,10 +364,7 @@ export default function Members() {
                         {t('pages.members.stats.income')}{' '}
                       </span>
                       <span className="font-medium">
-                        {parseFloat(member.monthly_income).toLocaleString('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL',
-                        })}
+                        {formatCurrency(parseFloat(member.monthly_income))}
                       </span>
                     </div>
                   )}
@@ -376,7 +375,7 @@ export default function Members() {
                       variant={member.active ? 'success' : 'outline'}
                       className="text-xs"
                     >
-                      {member.active ? 'Ativo' : 'Inativo'}
+                      {member.active ? t('common.status.active') : t('common.status.inactive')}
                     </Badge>
                     <div className="flex gap-1">
                       {isCurrentUser && (

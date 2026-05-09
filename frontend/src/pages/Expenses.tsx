@@ -208,7 +208,7 @@ export default function Expenses() {
               {formatCurrency(totalExpenses)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {expenses.length} lançamentos
+              {t('pages.expenses.stats.entriesCount', { count: expenses.length })}
             </p>
           </CardContent>
         </Card>

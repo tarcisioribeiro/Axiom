@@ -134,7 +134,7 @@ function GoalCard({
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="truncate font-semibold leading-tight">{goal.title}</h3>
-            <p className="text-xs text-muted-foreground">{goal.goal_type_display}</p>
+            <p className="text-xs text-muted-foreground">{t(`pages.goals.goalTypes.${goal.goal_type}`, { defaultValue: goal.goal_type_display })}</p>
           </div>
         </div>
 

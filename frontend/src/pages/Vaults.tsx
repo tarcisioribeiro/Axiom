@@ -1469,6 +1469,7 @@ export default function Vaults() {
               <Input
                 id="generate_month"
                 type="month"
+                lang={i18n.language}
                 value={generateMonth}
                 onChange={(e) => setGenerateMonth(e.target.value)}
               />

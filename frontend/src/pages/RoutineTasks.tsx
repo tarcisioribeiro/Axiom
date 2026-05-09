@@ -323,7 +323,7 @@ export default function RoutineTasks() {
         };
         return (
           <Badge variant={priorityVariant[task.priority] ?? 'secondary'}>
-            {task.priority_display}
+            {t(`pages.routineTasks.form.priorityOptions.${task.priority}`, { defaultValue: task.priority_display })}
           </Badge>
         );
       },

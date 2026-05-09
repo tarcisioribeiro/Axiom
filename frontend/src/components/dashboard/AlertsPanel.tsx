@@ -35,21 +35,18 @@ const severityConfig = {
     cardClass: 'border-destructive/50 bg-destructive/5',
     iconClass: 'text-destructive',
     badgeClass: 'bg-destructive/10 text-destructive',
-    badgeLabel: 'Urgente',
   },
   warning: {
     icon: AlertTriangle,
     cardClass: 'border-warning/50 bg-warning/5',
     iconClass: 'text-warning',
     badgeClass: 'bg-warning/10 text-warning',
-    badgeLabel: 'Atenção',
   },
   info: {
     icon: AlertCircle,
     cardClass: 'border-primary/50 bg-primary/5',
     iconClass: 'text-primary',
     badgeClass: 'bg-primary/10 text-primary',
-    badgeLabel: 'Info',
   },
 } as const;
 
@@ -120,7 +117,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                         config.iconClass
                       )}
                     >
-                      Ver detalhes →
+                      {t('pages.dashboard.financialAlerts.viewDetails')} →
                     </Link>
                   )}
                 </div>
