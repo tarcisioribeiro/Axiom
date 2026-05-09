@@ -31,11 +31,9 @@ spec:
     - Ingress
   ingress:
     - from:
-        # k3s default ingress controller (Traefik) runs in kube-system.
-        # If nginx-ingress is installed instead, change this to ingress-nginx.
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: kube-system
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: 80
@@ -57,13 +55,9 @@ spec:
     - Ingress
   ingress:
     - from:
-        # k3s default ingress controller (Traefik) runs in kube-system.
-        # If nginx-ingress is installed instead, change this to ingress-nginx.
-        # NetworkPolicies apply at the pod level, so use the container port (39100),
-        # not the Service port (39100).
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: kube-system
+              kubernetes.io/metadata.name: ingress-nginx
       ports:
         - protocol: TCP
           port: 39100
