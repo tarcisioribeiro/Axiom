@@ -308,10 +308,14 @@ export default function Loans() {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-success">
-                      {formatCurrency(loan.payed_value)} pago
+                      {t('pages.loans.paidAmount', {
+                        value: formatCurrency(loan.payed_value),
+                      })}
                     </span>
                     <span className="text-destructive">
-                      {formatCurrency(total - paid)} restante
+                      {t('pages.loans.remainingAmount', {
+                        value: formatCurrency(total - paid),
+                      })}
                     </span>
                   </div>
                 </div>

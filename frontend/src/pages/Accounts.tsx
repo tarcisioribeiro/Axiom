@@ -44,15 +44,16 @@ import { bankReconciliationService } from '@/services/bank-reconciliation-servic
 import type { Account, AccountFormData, BankStatementImport } from '@/types';
 
 function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }) {
+  const { t } = useTranslation();
   const variants: Record<string, string> = {
     completed: 'bg-success/10 text-success border-success/30',
     processing: 'bg-warning/10 text-warning border-warning/30',
     failed: 'bg-destructive/10 text-destructive border-destructive/30',
   };
   const labels: Record<string, string> = {
-    completed: 'Concluído',
-    processing: 'Processando',
-    failed: 'Falhou',
+    completed: t('pages.accounts.imports.statusCompleted'),
+    processing: t('pages.accounts.imports.statusProcessing'),
+    failed: t('pages.accounts.imports.statusFailed'),
   };
   return (
     <span
@@ -486,7 +487,9 @@ export default function Accounts() {
                       <p
                         className={`text-xs ${available >= 0 ? 'text-muted-foreground' : 'text-destructive'}`}
                       >
-                        Disponível: {formatCurrency(String(available))}
+                        {t('pages.accounts.available', {
+                          value: formatCurrency(String(available)),
+                        })}
                       </p>
                     )}
                   </div>

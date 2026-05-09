@@ -634,7 +634,9 @@ export default function CreditCardExpenses() {
           className="cursor-pointer"
           onClick={() => handleTogglePaid(installment)}
         >
-          {installment.payed ? 'Paga' : 'Pendente'}
+          {installment.payed
+            ? t('pages.creditCardExpenses.status.paid')
+            : t('pages.creditCardExpenses.status.pending')}
         </Badge>
       ),
     },
@@ -900,12 +902,12 @@ export default function CreditCardExpenses() {
                               className="text-xs"
                             >
                               {bill.status === 'paid'
-                                ? 'Paga'
+                                ? t('pages.creditCardExpenses.status.paid')
                                 : bill.status === 'overdue'
-                                  ? 'Vencida'
+                                  ? t('pages.creditCardExpenses.status.overdue')
                                   : bill.status === 'closed'
-                                    ? 'Fechada'
-                                    : 'Aberta'}
+                                    ? t('pages.creditCardExpenses.status.closed')
+                                    : t('pages.creditCardExpenses.status.open')}
                             </Badge>
                           )}
                         </CardTitle>
@@ -921,7 +923,9 @@ export default function CreditCardExpenses() {
                         {bill && (
                           <div className="mt-2 space-y-1">
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span>Pago</span>
+                              <span>
+                                {t('pages.creditCardExpenses.billPaidProgress')}
+                              </span>
                               <span>
                                 {total > 0 ? Math.round((paid / total) * 100) : 0}%
                               </span>

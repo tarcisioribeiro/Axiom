@@ -789,6 +789,7 @@ export const routineTaskSchema = z
     ),
     owner: z.number().positive(requiredError('Proprietario')),
     linked_financial_goal: z.number().positive().optional().nullable(),
+    linked_book: z.number().positive().optional().nullable(),
   })
   .refine(
     (data) => {
