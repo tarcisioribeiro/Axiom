@@ -358,3 +358,81 @@ class BudgetAdditionalViewTest(APITestCase):
         url = reverse("budget-detail", args=[budget.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+# ---------------------------------------------------------------------------
+# RoutineTask linked_book
+# ---------------------------------------------------------------------------
+
+
+class RoutineTaskLinkedBookTest(BasePlanningTestCase):
+    def setUp(self):
+        super().setUp()
+        from library.models import Author, Book, Publisher
+
+        self.author = Author.objects.create(name="Author Test", owner=self.member)
+        self.publisher = Publisher.objects.create(
+            name="Publisher Test", owner=self.member
+        )
+        self.book = Book.objects.create(
+            title="Reading Book Test",
+            pages=300,
+            publisher=self.publisher,
+            language="Por",
+            genre="Fiction",
+            literarytype="book",
+            read_status="reading",
+            owner=self.member,
+        )
+        self.book.authors.set([self.author])
+
+    def test_create_routine_task_with_linked_book(self):
+        url = reverse("routine-task-list-create")
+        data = {
+            "name": "Ler 30 páginas",
+            "category": "intellect",
+            "periodicity": "daily",
+            "target_quantity": 30,
+            "unit": "página",
+            "is_active": True,
+            "priority": "medium",
+            "allowed_skips_per_month": 0,
+            "daily_occurrences": 1,
+            "owner": self.member.pk,
+            "linked_book": self.book.pk,
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["linked_book"], self.book.pk)
+
+    def test_routine_task_serializer_includes_linked_book_title(self):
+        from personal_planning.models import RoutineTask
+
+        task = RoutineTask.objects.create(
+            name="Ler Kafka",
+            category="intellect",
+            periodicity="daily",
+            owner=self.member,
+            linked_book=self.book,
+        )
+        url = reverse("routine-task-detail", args=[task.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["linked_book"], self.book.pk)
+        self.assertEqual(response.data["linked_book_title"], self.book.title)
+
+    def test_update_routine_task_linked_book_to_null(self):
+        from personal_planning.models import RoutineTask
+
+        task = RoutineTask.objects.create(
+            name="Ler Kafka",
+            category="intellect",
+            periodicity="daily",
+            owner=self.member,
+            linked_book=self.book,
+        )
+        url = reverse("routine-task-detail", args=[task.pk])
+        response = self.client.patch(url, {"linked_book": None}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.refresh_from_db()
+        self.assertIsNone(task.linked_book)

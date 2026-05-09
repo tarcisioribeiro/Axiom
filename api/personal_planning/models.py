@@ -248,6 +248,15 @@ class RoutineTask(BaseModel):
             " (ex: depósito mensal → meta de viagem)"
         ),
     )
+    linked_book = models.ForeignKey(
+        "library.Book",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="linked_routine_tasks",
+        verbose_name="Livro Vinculado",
+        help_text="Livro em andamento vinculado a esta rotina de leitura",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

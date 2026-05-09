@@ -16,6 +16,9 @@ NOTIFICATION_TYPE_CHOICES = (
     ("financial_goal_reached", "Meta Financeira Atingida"),
     ("financial_goal_approaching", "Meta Financeira Próxima do Prazo"),
     ("agent_insight", "Insight do Agente"),
+    ("reading_goal_achieved", "Meta de Leitura Atingida"),
+    ("reading_goal_behind", "Meta de Leitura Atrasada"),
+    ("reconciliation_pending", "Reconciliação Bancária Pendente"),
 )
 
 NOTIFICATION_CHANNEL_CHOICES = (

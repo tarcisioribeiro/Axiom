@@ -241,6 +241,12 @@ class Command(BaseCommand):
         # --- Agent Insights ---
         dispatched += self._process_member_agent_insights(member, today, dry_run)
 
+        # --- ReadingGoal ---
+        dispatched += self._process_member_reading_goals(member, today, dry_run)
+
+        # --- BankReconciliation ---
+        dispatched += self._process_member_reconciliations(member, today, dry_run)
+
         return dispatched
 
     def _process_member_budgets(self, member, today, dry_run: bool) -> int:
@@ -440,6 +446,95 @@ class Command(BaseCommand):
                     },
                     dry_run,
                 )
+
+        return dispatched
+
+    def _process_member_reading_goals(self, member, today, dry_run: bool) -> int:
+        from library.models import ReadingGoal
+
+        dispatched = 0
+        in_second_half = today.month >= 7
+
+        goals = ReadingGoal.objects.filter(owner=member, year=today.year)
+
+        for goal in goals:
+            if goal.books_goal == 0:
+                continue
+
+            books_read = goal.books_read_this_year
+            pct = round(min((books_read / goal.books_goal) * 100, 100.0), 1)
+            goal_name = goal.name or f"Meta {goal.year}"
+
+            if pct >= 100:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "reading_goal_achieved",
+                    "reading_goal",
+                    goal.id,
+                    {
+                        "title": f"Meta de leitura atingida: {goal_name}",
+                        "message": (
+                            f"Parabéns! Você leu {books_read}"
+                            f" de {goal.books_goal} livros planejados."
+                        ),
+                        "due_date": None,
+                    },
+                    dry_run,
+                )
+            elif in_second_half and pct < 50:
+                dispatched += self._maybe_dispatch(
+                    member,
+                    "reading_goal_behind",
+                    "reading_goal",
+                    goal.id,
+                    {
+                        "title": f"Meta de leitura atrasada: {goal_name}",
+                        "message": (
+                            f"Você completou {pct:.0f}% da meta. Acelere o ritmo"
+                            f" para atingir {goal.books_goal} livros até o fim do ano."
+                        ),
+                        "due_date": None,
+                    },
+                    dry_run,
+                )
+
+        return dispatched
+
+    def _process_member_reconciliations(self, member, today, dry_run: bool) -> int:
+        from bank_reconciliation.models import BankStatementImport
+
+        dispatched = 0
+        threshold = today - timedelta(days=3)
+
+        pending_imports = BankStatementImport.objects.filter(
+            owner=member.user,
+            status="completed",
+            is_deleted=False,
+            created_at__date__lte=threshold,
+            entries__status__in=["pending", "unmatched"],
+        ).distinct()
+
+        for stmt_import in pending_imports:
+            pending_count = stmt_import.entries.filter(
+                status__in=["pending", "unmatched"]
+            ).count()
+            entry_word = (
+                "entrada não reconciliada"
+                if pending_count == 1
+                else "entradas não reconciliadas"
+            )
+            dispatched += self._maybe_dispatch(
+                member,
+                "reconciliation_pending",
+                "bank_statement_import",
+                stmt_import.id,
+                {
+                    "title": f"Extrato pendente: {stmt_import.original_filename}",
+                    "message": (f"{pending_count} {entry_word} há mais de 3 dias."),
+                    "due_date": None,
+                },
+                dry_run,
+            )
 
         return dispatched
 

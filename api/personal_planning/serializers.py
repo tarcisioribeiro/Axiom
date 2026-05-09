@@ -29,6 +29,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     linked_financial_goal_description = serializers.CharField(
         source="linked_financial_goal.description", read_only=True, default=None
     )
+    linked_book_title = serializers.CharField(
+        source="linked_book.title", read_only=True, default=None
+    )
 
     class Meta:
         model = RoutineTask
@@ -67,6 +70,8 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
             "total_completions",
             "linked_financial_goal",
             "linked_financial_goal_description",
+            "linked_book",
+            "linked_book_title",
             "owner",
             "owner_name",
             "created_at",
@@ -128,6 +133,7 @@ class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
             "interval_hours",
             "scheduled_times",
             "linked_financial_goal",
+            "linked_book",
         ]
 
     def validate(self, data):

@@ -1,5 +1,6 @@
 import { AlertTriangle, Clock, Copy, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,7 @@ interface CircularScoreProps {
 }
 
 function CircularScore({ score }: CircularScoreProps) {
+  const { t } = useTranslation();
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const filled = (score / 100) * circumference;
@@ -32,7 +34,8 @@ function CircularScore({ score }: CircularScoreProps) {
         ? 'hsl(var(--warning))'
         : 'hsl(var(--destructive))';
 
-  const label = score >= 75 ? 'Boa' : score >= 45 ? 'Regular' : 'Crítica';
+  const levelKey = score >= 75 ? 'good' : score >= 45 ? 'fair' : 'critical';
+  const label = t(`security.vaultHealth.levels.${levelKey}`);
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -84,7 +87,7 @@ function CircularScore({ score }: CircularScoreProps) {
         </text>
       </svg>
       <span className="text-sm font-medium" style={{ color }}>
-        Segurança {label}
+        {t('security.vaultHealth.securityLevel', { level: label })}
       </span>
     </div>
   );
@@ -94,14 +97,11 @@ function CircularScore({ score }: CircularScoreProps) {
 // Issue Badge
 // ============================================================================
 
-const ISSUE_META: Record<
-  string,
-  { label: string; variant: 'destructive' | 'secondary' | 'outline' }
-> = {
-  weak: { label: 'Fraca', variant: 'destructive' },
-  medium: { label: 'Média', variant: 'secondary' },
-  duplicate: { label: 'Duplicada', variant: 'outline' },
-  outdated: { label: 'Desatualizada', variant: 'outline' },
+const ISSUE_VARIANTS: Record<string, 'destructive' | 'secondary' | 'outline'> = {
+  weak: 'destructive',
+  medium: 'secondary',
+  duplicate: 'outline',
+  outdated: 'outline',
 };
 
 // ============================================================================
@@ -139,6 +139,7 @@ interface PasswordRowProps {
 }
 
 function PasswordRow({ pw }: PasswordRowProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-1 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
@@ -146,19 +147,16 @@ function PasswordRow({ pw }: PasswordRowProps) {
         <p className="truncate text-xs text-muted-foreground">{pw.username}</p>
         {pw.duplicate_group !== null && (
           <p className="text-xs text-muted-foreground">
-            Grupo de duplicatas #{pw.duplicate_group}
+            {t('security.vaultHealth.duplicateGroup', { group: pw.duplicate_group })}
           </p>
         )}
       </div>
       <div className="flex flex-wrap gap-1">
-        {pw.issues.map((issue) => {
-          const meta = ISSUE_META[issue];
-          return (
-            <Badge key={issue} variant={meta.variant}>
-              {meta.label}
-            </Badge>
-          );
-        })}
+        {pw.issues.map((issue) => (
+          <Badge key={issue} variant={ISSUE_VARIANTS[issue] ?? 'outline'}>
+            {t(`security.vaultHealth.issues.${issue}`, { defaultValue: issue })}
+          </Badge>
+        ))}
       </div>
     </div>
   );
@@ -172,6 +170,7 @@ export function VaultHealthSection() {
   const [report, setReport] = useState<VaultHealthReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void load();
@@ -184,7 +183,7 @@ export function VaultHealthSection() {
       setReport(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar relatório de saúde',
+        title: t('security.vaultHealth.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -199,12 +198,14 @@ export function VaultHealthSection() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" />
-            Saúde do Cofre
+            {t('security.vaultHealth.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex h-32 items-center justify-center">
-            <span className="text-sm text-muted-foreground">Analisando senhas...</span>
+            <span className="text-sm text-muted-foreground">
+              {t('security.vaultHealth.analyzing')}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -221,12 +222,12 @@ export function VaultHealthSection() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5" />
-          Saúde do Cofre
+          {t('security.vaultHealth.title')}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           {total_passwords === 0
-            ? 'Nenhuma senha cadastrada'
-            : `Análise de ${total_passwords} ${total_passwords === 1 ? 'senha' : 'senhas'}`}
+            ? t('security.vaultHealth.noPasswords')
+            : t('security.vaultHealth.analysisOf', { count: total_passwords })}
         </p>
       </CardHeader>
 
@@ -239,25 +240,25 @@ export function VaultHealthSection() {
             <IssueCount
               icon={<ShieldAlert className="h-5 w-5" />}
               count={issues_summary.weak}
-              label="Fracas"
+              label={t('security.vaultHealth.issueCounts.weak')}
               color="hsl(var(--destructive))"
             />
             <IssueCount
               icon={<AlertTriangle className="h-5 w-5" />}
               count={issues_summary.duplicate}
-              label="Duplicadas"
+              label={t('security.vaultHealth.issueCounts.duplicate')}
               color="hsl(var(--warning))"
             />
             <IssueCount
               icon={<Copy className="h-5 w-5" />}
               count={issues_summary.medium}
-              label="Médias"
+              label={t('security.vaultHealth.issueCounts.medium')}
               color="hsl(var(--muted-foreground))"
             />
             <IssueCount
               icon={<Clock className="h-5 w-5" />}
               count={issues_summary.outdated}
-              label="Desatualizadas"
+              label={t('security.vaultHealth.issueCounts.outdated')}
               color="hsl(var(--muted-foreground))"
             />
           </div>
@@ -266,7 +267,9 @@ export function VaultHealthSection() {
         {/* Problematic passwords list */}
         {hasIssues ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Senhas que precisam de atenção</p>
+            <p className="text-sm font-medium">
+              {t('security.vaultHealth.needsAttention')}
+            </p>
             <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
               {problematic_passwords.map((pw) => (
                 <PasswordRow key={pw.id} pw={pw} />
@@ -276,7 +279,7 @@ export function VaultHealthSection() {
         ) : (
           <div className="flex flex-col items-center gap-2 py-4">
             <ShieldCheck className="text-chart-2 h-10 w-10" />
-            <p className="text-sm font-medium">Todas as senhas estão em boa forma!</p>
+            <p className="text-sm font-medium">{t('security.vaultHealth.allGood')}</p>
           </div>
         )}
       </CardContent>
