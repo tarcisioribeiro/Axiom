@@ -143,8 +143,8 @@ export function ReadingGoalModal({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+          <div className="space-y-sm">
             <Label htmlFor="year">
               {t('pages.libraryDashboard.readingGoals.formYear')}
             </Label>
@@ -162,7 +162,7 @@ export function ReadingGoalModal({
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="name">
               {t('pages.libraryDashboard.readingGoals.formName')}
             </Label>
@@ -179,7 +179,7 @@ export function ReadingGoalModal({
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="books_goal">
               {t('pages.libraryDashboard.readingGoals.formBooksGoal')}
             </Label>
@@ -202,7 +202,7 @@ export function ReadingGoalModal({
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="pages_goal">
               {t('pages.libraryDashboard.readingGoals.formPagesGoal')}
             </Label>
@@ -226,7 +226,7 @@ export function ReadingGoalModal({
             )}
           </div>
 
-          <div className="space-y-3 border-t pt-4">
+          <div className="space-y-3 border-t pt-md">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">
                 {t('pages.libraryDashboard.readingGoals.formLiteraryTypesLabel')}
@@ -237,7 +237,7 @@ export function ReadingGoalModal({
                   variant="outline"
                   size="sm"
                   onClick={addLtg}
-                  className="h-7 gap-1 text-xs"
+                  className="h-7 gap-xs text-xs"
                 >
                   <Plus className="h-3 w-3" />
                   {t('pages.libraryDashboard.readingGoals.formAddType')}
@@ -249,11 +249,11 @@ export function ReadingGoalModal({
             </p>
 
             {ltgDrafts.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 {ltgDrafts.map((draft, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className="flex items-center gap-sm">
                     <select
-                      className="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                      className="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-xs text-sm shadow-sm"
                       value={draft.literary_type}
                       onChange={(e) =>
                         updateLtg(index, 'literary_type', e.target.value)
@@ -301,14 +301,14 @@ export function ReadingGoalModal({
             )}
           </div>
 
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="flex justify-end gap-sm border-t pt-md">
             <Button type="button" variant="outline" onClick={onClose}>
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                   {t('common.actions.saving')}
                 </>
               ) : (

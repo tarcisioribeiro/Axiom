@@ -338,7 +338,7 @@ export default function Passwords() {
     <VaultGuard>
       <PageContainer>
         <PageHeader title={t('pages.passwords.title')} icon={<Key />}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <Button
               variant="outline"
               onClick={() => setIsImportOpen(true)}

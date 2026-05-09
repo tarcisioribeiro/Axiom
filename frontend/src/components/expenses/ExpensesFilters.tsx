@@ -59,9 +59,9 @@ export function ExpensesFilters({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-4 rounded-lg border bg-card p-4">
+    <div className="space-y-md rounded-lg border bg-card p-md">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Filter className="h-4 w-4" />
           <span className="font-semibold">{t('common.actions.filter')}</span>
         </div>
@@ -72,7 +72,7 @@ export function ExpensesFilters({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-3">
         <Input
           placeholder={t('pages.expenses.searchPlaceholder')}
           value={searchTerm}
@@ -103,8 +103,8 @@ export function ExpensesFilters({
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="space-y-1">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-3">
+        <div className="space-y-xs">
           <span className="text-sm">{t('pages.expenses.dateFrom')}</span>
           <DatePicker
             value={startDate}
@@ -113,7 +113,7 @@ export function ExpensesFilters({
             clearable
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <span className="text-sm">{t('pages.expenses.dateTo')}</span>
           <DatePicker
             value={endDate}
@@ -122,7 +122,7 @@ export function ExpensesFilters({
             clearable
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <span className="text-sm">{t('common.fields.account')}</span>
           <Popover>
             <PopoverTrigger asChild>
@@ -132,16 +132,16 @@ export function ExpensesFilters({
                   : t('pages.expenses.selectedAccounts', {
                       count: selectedAccounts.length,
                     })}
-                <ChevronDown className="ml-2 h-4 w-4" />
+                <ChevronDown className="ml-sm h-4 w-4" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-full p-2">
-              <div className="max-h-60 space-y-2 overflow-y-auto">
+            <PopoverContent className="w-full p-sm">
+              <div className="max-h-60 space-y-sm overflow-y-auto">
                 {accounts.map((account) => (
                   // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
                   <div
                     key={account.id}
-                    className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"
+                    className="flex cursor-pointer items-center gap-sm rounded p-sm hover:bg-accent"
                     onClick={() => toggleAccount(account.id)}
                   >
                     <Checkbox
@@ -157,7 +157,7 @@ export function ExpensesFilters({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t pt-2">
+      <div className="flex items-center justify-between border-t pt-sm">
         <span className="text-sm">{t('pages.expenses.foundExpenses', { count })}</span>
         <span className="text-lg font-bold text-destructive">
           {t('pages.expenses.total')} {formatCurrency(totalExpenses)}

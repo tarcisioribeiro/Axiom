@@ -67,7 +67,7 @@ function Section({
 }) {
   return (
     <Card>
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-md">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             {icon}
@@ -78,8 +78,8 @@ function Section({
           </div>
         </div>
       </CardHeader>
-      <div className="mb-4 h-px bg-border" />
-      <CardContent className="space-y-4">{children}</CardContent>
+      <div className="mb-md h-px bg-border" />
+      <CardContent className="space-y-md">{children}</CardContent>
     </Card>
   );
 }
@@ -131,19 +131,19 @@ function PersonalDataForm({
       title={t('userProfile.personalData.title')}
       description={t('userProfile.personalData.description')}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-md sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Label htmlFor="name">{t('userProfile.personalData.name')}</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1"
+            className="mt-xs"
           />
         </div>
         <div>
           <Label htmlFor="email">{t('userProfile.personalData.email')}</Label>
-          <div className="relative mt-1">
+          <div className="relative mt-xs">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="email"
@@ -156,7 +156,7 @@ function PersonalDataForm({
         </div>
         <div>
           <Label htmlFor="phone">{t('userProfile.personalData.phone')}</Label>
-          <div className="relative mt-1">
+          <div className="relative mt-xs">
             <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="phone"
@@ -167,7 +167,7 @@ function PersonalDataForm({
           </div>
         </div>
       </div>
-      <div className="flex justify-end pt-2">
+      <div className="flex justify-end pt-sm">
         <Button
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
@@ -227,7 +227,7 @@ function EmailVerificationSection({ emailVerified }: { emailVerified: boolean })
       title={t('userProfile.emailVerification.title')}
       description={t('userProfile.emailVerification.description')}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-md">
         <div className="flex items-center gap-3">
           {emailVerified ? (
             <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -258,7 +258,7 @@ function EmailVerificationSection({ emailVerified }: { emailVerified: boolean })
           size="sm"
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
-          className="gap-2"
+          className="gap-sm"
         >
           <Send className="h-4 w-4" />
           {mutation.isPending
@@ -306,7 +306,7 @@ function PasswordSection() {
           <Label htmlFor="current-pw">
             {t('userProfile.security.currentPassword')}
           </Label>
-          <div className="relative mt-1">
+          <div className="relative mt-xs">
             <Input
               id="current-pw"
               type={showCurrent ? 'text' : 'password'}
@@ -329,7 +329,7 @@ function PasswordSection() {
         </div>
         <div>
           <Label htmlFor="new-pw">{t('userProfile.security.newPassword')}</Label>
-          <div className="relative mt-1">
+          <div className="relative mt-xs">
             <Input
               id="new-pw"
               type={showNext ? 'text' : 'password'}
@@ -355,7 +355,7 @@ function PasswordSection() {
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1"
+            className="mt-xs"
           />
         </div>
       </div>
@@ -364,7 +364,7 @@ function PasswordSection() {
           variant="outline"
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending || !current || !next || !confirm}
-          className="gap-2"
+          className="gap-sm"
         >
           <KeyRound className="h-4 w-4" />
           {mutation.isPending
@@ -390,7 +390,7 @@ function TwoFactorRow() {
   const isActive = data?.is_active ?? false;
 
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-md">
       <div className="flex items-center gap-3">
         {isActive ? (
           <ShieldCheck className="h-5 w-5 text-green-500" />
@@ -404,7 +404,7 @@ function TwoFactorRow() {
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-sm">
         <Badge
           variant={isActive ? 'default' : 'outline'}
           className={
@@ -445,32 +445,32 @@ export default function UserProfile() {
   return (
     <PageContainer>
       {/* ── Profile hero ── */}
-      <div className="relative mb-8 overflow-hidden rounded-2xl border border-border/60 bg-card">
+      <div className="relative mb-xl overflow-hidden rounded-2xl border border-border/60 bg-card">
         {/* Decorative background */}
         <div className="from-primary/8 to-primary/4 absolute inset-0 bg-gradient-to-br via-transparent" />
         <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
         <div className="bg-primary/8 absolute -bottom-8 -left-8 h-32 w-32 rounded-full blur-2xl" />
 
-        <div className="relative flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8">
+        <div className="relative flex flex-col gap-md p-lg sm:flex-row sm:items-center sm:gap-lg sm:p-xl">
           <ProfileAvatar name={fullName} />
 
-          <div className="flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex-1 space-y-xs">
+            <div className="flex flex-wrap items-center gap-sm">
               <h1 className="text-2xl font-bold tracking-tight">{fullName || '—'}</h1>
               {emailVerified && (
                 <Badge className="bg-green-500/15 text-green-600 hover:bg-green-500/15">
-                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  <CheckCircle2 className="mr-xs h-3 w-3" />
                   Verificado
                 </Badge>
               )}
             </div>
             {email && (
-              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <p className="flex items-center gap-sm text-sm text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" />
                 {email}
               </p>
             )}
-            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <p className="flex items-center gap-sm text-xs text-muted-foreground">
               <Settings className="h-3 w-3" />
               {t('userProfile.subtitle')}
             </p>
@@ -479,7 +479,7 @@ export default function UserProfile() {
       </div>
 
       {/* ── Sections ── */}
-      <div className="space-y-6">
+      <div className="space-y-lg">
         {member && <PersonalDataSection memberId={member.id} />}
 
         <EmailVerificationSection emailVerified={emailVerified} />

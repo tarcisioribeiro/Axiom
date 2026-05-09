@@ -44,7 +44,7 @@ function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
   return (
     <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
+        <CardTitle className="flex items-center gap-sm text-destructive">
           <ShieldOff className="h-5 w-5" />
           {t('pages.twoFactor.disableBtn')}
         </CardTitle>
@@ -97,9 +97,9 @@ function BackupCodesDisplay({ codes }: { codes: string[] }) {
         <CardDescription>{t('pages.twoFactor.backupDesc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="relative rounded-md border bg-muted p-4 font-mono text-sm">
+        <div className="relative rounded-md border bg-muted p-md font-mono text-sm">
           {visible ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-sm">
               {codes.map((code, i) => (
                 <span key={i} className="tracking-widest">
                   {code}
@@ -107,7 +107,7 @@ function BackupCodesDisplay({ codes }: { codes: string[] }) {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-sm">
               {codes.map((_, i) => (
                 <span key={i} className="tracking-widest text-muted-foreground">
                   ••••••••••
@@ -116,27 +116,27 @@ function BackupCodesDisplay({ codes }: { codes: string[] }) {
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-sm">
           <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
             {visible ? (
               <>
-                <EyeOff className="mr-1.5 h-4 w-4" /> {t('common.actions.hide')}
+                <EyeOff className="mr-sm h-4 w-4" /> {t('common.actions.hide')}
               </>
             ) : (
               <>
-                <Eye className="mr-1.5 h-4 w-4" /> {t('common.actions.reveal')}
+                <Eye className="mr-sm h-4 w-4" /> {t('common.actions.reveal')}
               </>
             )}
           </Button>
           <Button variant="outline" size="sm" onClick={handleCopy}>
             {copied ? (
               <>
-                <Check className="mr-1.5 h-4 w-4 text-success" />{' '}
+                <Check className="mr-sm h-4 w-4 text-success" />{' '}
                 {t('common.messages.copied')}
               </>
             ) : (
               <>
-                <Copy className="mr-1.5 h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
+                <Copy className="mr-sm h-4 w-4" /> {t('pages.twoFactor.copyBackup')}
               </>
             )}
           </Button>
@@ -196,7 +196,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
   if (setupError || !setupData) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-sm text-destructive">
+        <CardContent className="py-xl text-center text-sm text-destructive">
           {t('pages.twoFactor.invalidCode')}
         </CardContent>
       </Card>
@@ -213,19 +213,19 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
         <CardTitle>{t('pages.twoFactor.setupTitle')}</CardTitle>
         <CardDescription>{t('pages.twoFactor.step1Desc')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-lg">
         {/* QR Code */}
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-md">
           <img
             src={setupData.qr_code}
             alt="QR Code 2FA"
-            className="h-48 w-48 rounded-md border bg-white p-2"
+            className="h-48 w-48 rounded-md border bg-white p-sm"
           />
-          <div className="w-full max-w-xs space-y-1">
+          <div className="w-full max-w-xs space-y-xs">
             <p className="text-xs text-muted-foreground">
               {t('pages.twoFactor.step1')}:
             </p>
-            <code className="block break-all rounded bg-muted px-3 py-2 text-xs">
+            <code className="block break-all rounded bg-muted px-3 py-sm text-xs">
               {setupData.manual_entry_key}
             </code>
           </div>
@@ -239,7 +239,7 @@ function SetupTwoFactor({ onActivated }: { onActivated: () => void }) {
           }}
           className="space-y-3"
         >
-          <div className="space-y-1">
+          <div className="space-y-xs">
             <Label htmlFor="totp-code">{t('pages.twoFactor.confirmCode')}</Label>
             <Input
               id="totp-code"
@@ -296,9 +296,9 @@ export default function TwoFactorSetup() {
           </CardContent>
         </Card>
       ) : is2FAActive ? (
-        <div className="space-y-4">
+        <div className="space-y-md">
           <Card className="border-success/30 bg-success/5">
-            <CardContent className="flex items-center gap-3 py-4">
+            <CardContent className="flex items-center gap-3 py-md">
               <Shield className="h-5 w-5 text-success" />
               <span className="text-sm font-medium">
                 {t('pages.twoFactor.status')}: {t('pages.twoFactor.active')}

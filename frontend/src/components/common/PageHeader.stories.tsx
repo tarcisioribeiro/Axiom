@@ -45,13 +45,13 @@ export const WithChildren: Story = {
   },
   render: (args) => (
     <PageHeader {...args}>
-      <div className="flex gap-2">
+      <div className="flex gap-sm">
         <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
+          <Filter className="mr-sm h-4 w-4" />
           Filtros
         </Button>
         <Button size="sm">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-sm h-4 w-4" />
           Nova despesa
         </Button>
       </div>

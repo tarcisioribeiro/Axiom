@@ -199,9 +199,9 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Input
             id="description"
@@ -211,7 +211,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="value">Valor *</Label>
           <Input
             id="value"
@@ -223,7 +223,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>Categoria *</Label>
           <Select
             value={watch('category') || ''}
@@ -242,7 +242,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="date">Data *</Label>
           <DatePicker
             value={watch('date')}
@@ -252,7 +252,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="horary">Horário *</Label>
           <Input
             id="horary"
@@ -262,7 +262,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>Cartão de Crédito *</Label>
           <Select
             value={watch('card')?.toString() || ''}
@@ -277,7 +277,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                   getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-sm">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-sm">
                         {hasNumber ? `**** ${last4}` : 'Não cadastrado'}
@@ -294,7 +294,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="total_installments">Número de Parcelas *</Label>
           <Input
             id="total_installments"
@@ -310,7 +310,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>Fatura Associada</Label>
           <Select
             value={watch('bill')?.toString() || 'none'}
@@ -331,10 +331,10 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
                   {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
                   {b.year}
                   {b.status === 'open' && (
-                    <span className="ml-2 text-xs text-success">(Aberta)</span>
+                    <span className="ml-sm text-xs text-success">(Aberta)</span>
                   )}
                   {b.status === 'closed' && (
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="ml-sm text-xs text-muted-foreground">
                       (Fechada)
                     </span>
                   )}
@@ -349,7 +349,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="notes">Observações</Label>
           <Textarea
             id="notes"
@@ -360,7 +360,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           Cancelar
         </Button>

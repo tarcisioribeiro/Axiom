@@ -62,10 +62,10 @@ function BookProgressBar({ book, readings }: BookProgressProps) {
   const pct = book.pages > 0 ? Math.min((totalRead / book.pages) * 100, 100) : 0;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-xs">
       <div className="flex justify-between text-xs text-muted-foreground">
         <span className="truncate font-medium">{book.title}</span>
-        <span className="ml-2 shrink-0">
+        <span className="ml-sm shrink-0">
           {totalRead}/{book.pages} ({pct.toFixed(0)}%)
         </span>
       </div>
@@ -161,9 +161,9 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-md">
           {eligibleBooks.length > 1 && (
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label>Livro *</Label>
               <Select
                 value={selectedBook ? selectedBook.toString() : ''}
@@ -183,8 +183,8 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-md">
+            <div className="space-y-sm">
               <Label>Data de início *</Label>
               <DatePicker
                 value={startDate}
@@ -192,7 +192,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
                 placeholder="Quando começou"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label>Data de fim *</Label>
               <DatePicker
                 value={endDate}
@@ -202,7 +202,7 @@ function MarkAsReadModal({ isOpen, onClose, books }: MarkAsReadModalProps) {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="flex justify-end gap-sm border-t pt-md">
             <Button variant="outline" onClick={onClose}>
               Cancelar
             </Button>
@@ -351,7 +351,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
   if (loading) return <LoadingState />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-md">
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           placeholder={t('pages.readings.searchPlaceholder')}
@@ -363,7 +363,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           variant="outline"
           size="sm"
           onClick={() => setShowProgress((p) => !p)}
-          className="gap-2"
+          className="gap-sm"
         >
           <BarChart2 className="h-4 w-4" />
           {showProgress ? 'Ver sessões' : 'Ver progresso'}
@@ -372,7 +372,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           variant="outline"
           size="sm"
           onClick={() => setIsMarkAsReadOpen(true)}
-          className="gap-2"
+          className="gap-sm"
         >
           <CalendarRange className="h-4 w-4" />
           Marcar como lido (período)
@@ -387,10 +387,10 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
             message="Nenhuma leitura registrada ainda."
           />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
             {booksWithReadings.map((book) => (
               <Card key={book.id}>
-                <CardContent className="pt-4">
+                <CardContent className="pt-md">
                   <BookProgressBar book={book} readings={readings} />
                 </CardContent>
               </Card>
@@ -407,20 +407,20 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {readings.map((reading) => (
             <Card key={reading.id}>
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-sm">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
+                    <div className="mb-xs flex items-center gap-sm">
                       <BookOpen className="h-4 w-4 flex-shrink-0" />
                       <CardTitle className="truncate text-base">
                         {reading.book_title}
                       </CardTitle>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-sm text-xs">
+                      <div className="flex items-center gap-xs">
                         <Calendar className="h-3 w-3" />
                         {formatDate(reading.reading_date, 'dd/MM/yyyy')}
                       </div>
@@ -428,7 +428,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                         {t('pages.readings.pagesRead', { count: reading.pages_read })}
                       </Badge>
                       {reading.reading_time > 0 && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
+                        <div className="flex items-center gap-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           {reading.reading_time}min
                         </div>
@@ -445,7 +445,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-shrink-0 gap-1">
+                  <div className="flex flex-shrink-0 gap-xs">
                     <Button
                       variant="ghost"
                       size="icon"

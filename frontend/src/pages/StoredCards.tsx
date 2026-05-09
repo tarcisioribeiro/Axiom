@@ -261,13 +261,13 @@ export default function StoredCards() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2 xl:grid-cols-3">
             {filteredCards.map((card) => {
               const flagCfg = FLAG_CONFIG[card.flag] ?? DEFAULT_FLAG;
               const revealed = revealedData.get(card.id);
 
               return (
-                <div key={card.id} className="flex flex-col gap-2">
+                <div key={card.id} className="flex flex-col gap-sm">
                   {/* Card face */}
                   <div
                     className={cn(
@@ -288,7 +288,7 @@ export default function StoredCards() {
                     </div>
 
                     {/* Card number */}
-                    <div className="relative mt-6 flex items-center gap-2">
+                    <div className="relative mt-lg flex items-center gap-sm">
                       <span className="font-mono text-base tracking-widest">
                         {revealed
                           ? revealed.number
@@ -313,7 +313,7 @@ export default function StoredCards() {
                     </div>
 
                     {/* Bottom row: holder + expiry/cvv */}
-                    <div className="relative mt-4 flex items-end justify-between gap-2">
+                    <div className="relative mt-md flex items-end justify-between gap-sm">
                       <div className="min-w-0">
                         <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
                           {t('pages.storedCards.columns.holder')}
@@ -331,7 +331,7 @@ export default function StoredCards() {
                           {card.expiration_year}
                         </p>
                         {revealed && (
-                          <div className="mt-0.5 flex items-center justify-end gap-1">
+                          <div className="mt-0.5 flex items-center justify-end gap-xs">
                             <span className="font-mono text-xs opacity-70">
                               CVV: {revealed.cvv}
                             </span>
@@ -351,7 +351,7 @@ export default function StoredCards() {
                   </div>
 
                   {/* Action bar */}
-                  <div className="flex items-center justify-between gap-2 px-1">
+                  <div className="flex items-center justify-between gap-sm px-xs">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{card.name}</p>
                       {card.finance_card_name && (

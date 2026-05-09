@@ -109,7 +109,7 @@ export const WithActions: Story = {
       columns={columns}
       keyExtractor={(item) => item.id}
       actions={(item) => (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-sm">
           <Button
             variant="ghost"
             size="icon"

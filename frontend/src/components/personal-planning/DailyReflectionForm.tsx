@@ -76,8 +76,8 @@ export function DailyReflectionForm({
   }, [reflection, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div>
           <Label htmlFor="date">{t('pages.dailyReflections.form.date')}</Label>
           <DatePicker
@@ -86,7 +86,7 @@ export function DailyReflectionForm({
             placeholder={t('pages.dailyReflections.form.date')}
           />
           {errors.date && (
-            <p className="mt-1 text-sm text-destructive">{errors.date.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.date.message}</p>
           )}
         </div>
 
@@ -113,7 +113,7 @@ export function DailyReflectionForm({
             </SelectContent>
           </Select>
           {errors.mood && (
-            <p className="mt-1 text-sm text-destructive">{errors.mood.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.mood.message}</p>
           )}
         </div>
 
@@ -128,19 +128,21 @@ export function DailyReflectionForm({
             rows={6}
           />
           {errors.reflection && (
-            <p className="mt-1 text-sm text-destructive">{errors.reflection.message}</p>
+            <p className="mt-xs text-sm text-destructive">
+              {errors.reflection.message}
+            </p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('pages.dailyReflections.form.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('pages.dailyReflections.form.saving')}
             </>
           ) : (

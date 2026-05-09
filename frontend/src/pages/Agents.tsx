@@ -51,7 +51,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
+        'inline-flex items-center gap-sm rounded-full px-sm py-xs text-xs font-medium',
         available
           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
           : 'bg-red-500/10 text-red-600 dark:text-red-400'
@@ -101,11 +101,11 @@ function MessageBubble({
         )}
       </div>
 
-      <div className={cn('flex max-w-[75%] flex-col gap-1', isUser && 'items-end')}>
+      <div className={cn('flex max-w-[75%] flex-col gap-xs', isUser && 'items-end')}>
         {!isUser && message.agent_name && (
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-xs font-medium',
+              'rounded-full px-sm py-0.5 text-xs font-medium',
               agentColorClass
             )}
           >
@@ -114,7 +114,7 @@ function MessageBubble({
         )}
         <div
           className={cn(
-            'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+            'rounded-2xl px-md py-sm text-sm leading-relaxed',
             isUser
               ? 'rounded-tr-sm bg-primary text-primary-foreground'
               : 'rounded-tl-sm bg-muted text-foreground'
@@ -123,7 +123,7 @@ function MessageBubble({
           {isUser ? (
             <p className="whitespace-pre-wrap">{message.content}</p>
           ) : (
-            <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 prose-code:rounded prose-code:bg-black/10 prose-code:px-1 prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
+            <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {message.content}
               </ReactMarkdown>
@@ -174,11 +174,11 @@ function StreamingBubble({
         )}
       </div>
 
-      <div className="flex max-w-[75%] flex-col gap-1">
+      <div className="flex max-w-[75%] flex-col gap-xs">
         {agentName && (
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-xs font-medium',
+              'rounded-full px-sm py-0.5 text-xs font-medium',
               agentColorClass
             )}
           >
@@ -186,13 +186,13 @@ function StreamingBubble({
           </span>
         )}
 
-        <div className="rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-sm leading-relaxed text-foreground">
+        <div className="rounded-2xl rounded-tl-sm bg-muted px-md py-sm text-sm leading-relaxed text-foreground">
           {!text && isStreaming ? (
             <span className="text-muted-foreground">
               {t('agents.streaming.processing')}
             </span>
           ) : (
-            <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 prose-code:rounded prose-code:bg-black/10 prose-code:px-1 prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
+            <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
               {isStreaming && (
                 <span
@@ -205,14 +205,14 @@ function StreamingBubble({
         </div>
 
         {!isStreaming && sources.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-0.5">
+          <div className="flex flex-wrap gap-xs pt-0.5">
             <span className="text-[11px] text-muted-foreground/70">
               {t('agents.streaming.sources')}:
             </span>
             {sources.map((src) => (
               <span
                 key={src}
-                className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                className="rounded-full bg-muted px-sm py-0.5 text-[11px] text-muted-foreground"
               >
                 {src}
               </span>
@@ -237,7 +237,7 @@ function ThinkingBubble() {
       <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
         <BotMessageSquare className="h-4 w-4" />
       </div>
-      <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-muted px-4 py-2.5 text-sm text-muted-foreground">
+      <div className="flex items-center gap-sm rounded-2xl rounded-tl-sm bg-muted px-md py-sm text-sm text-muted-foreground">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
         {t('pages.agents.thinking')}
       </div>
@@ -398,9 +398,9 @@ export default function Agents() {
 
   return (
     <PageContainer>
-      <div className="flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-lg border border-border bg-card">
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="flex flex-shrink-0 items-center justify-between gap-3 border-b border-border px-md py-3">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <BotMessageSquare className="h-4 w-4 text-primary" />
@@ -420,10 +420,10 @@ export default function Agents() {
             </div>
           </div>
 
-          <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="flex flex-shrink-0 items-center gap-sm">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground hover:bg-accent">
+                <button className="flex items-center gap-sm rounded-lg border border-border bg-background px-3 py-sm text-xs text-foreground hover:bg-accent">
                   <span className="max-w-[80px] truncate font-mono">
                     {sessionLabel(sessionId)}
                   </span>
@@ -450,7 +450,7 @@ export default function Agents() {
               onClick={() => newSessionMutation.mutate()}
               disabled={newSessionMutation.isPending}
               title={t('pages.agents.newSession')}
-              className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground hover:bg-accent disabled:opacity-50"
+              className="flex items-center gap-sm rounded-lg border border-border bg-background px-3 py-sm text-xs text-foreground hover:bg-accent disabled:opacity-50"
             >
               {newSessionMutation.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -464,7 +464,7 @@ export default function Agents() {
               <button
                 onClick={() => void handleClearHistory()}
                 title={t('pages.agents.clearHistory')}
-                className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                className="rounded-lg border border-border bg-background p-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -474,14 +474,14 @@ export default function Agents() {
 
         {/* LLM unavailable banner */}
         {status && !status.available && (
-          <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+          <div className="flex items-center gap-sm border-b border-amber-500/20 bg-amber-500/10 px-md py-sm text-xs text-amber-700 dark:text-amber-400">
             <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
             {t('pages.agents.unavailable')}
           </div>
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-md py-md">
           {historyLoading ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -496,7 +496,7 @@ export default function Agents() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-md">
               <AnimatePresence initial={false}>
                 {messages.map((msg) => (
                   <MessageBubble
@@ -523,8 +523,8 @@ export default function Agents() {
         </div>
 
         {/* Input area */}
-        <div className="flex-shrink-0 border-t border-border bg-card px-4 py-3">
-          <div className="flex items-end gap-2 rounded-xl border border-border bg-background px-3 py-2 focus-within:ring-2 focus-within:ring-primary/40">
+        <div className="flex-shrink-0 border-t border-border bg-card px-md py-3">
+          <div className="flex items-end gap-sm rounded-lg border border-border bg-background px-3 py-sm focus-within:ring-2 focus-within:ring-primary/40">
             <textarea
               ref={textareaRef}
               rows={1}
@@ -549,7 +549,7 @@ export default function Agents() {
               )}
             </button>
           </div>
-          <p className="mt-1.5 text-center text-[11px] text-muted-foreground/60">
+          <p className="mt-sm text-center text-[11px] text-muted-foreground/60">
             Enter para enviar · Shift+Enter para nova linha
           </p>
         </div>

@@ -229,7 +229,7 @@ export default function RoutineTasks() {
     const barColor =
       rate >= 80 ? 'bg-success' : rate >= 50 ? 'bg-warning' : 'bg-destructive';
     return (
-      <div className="flex w-28 items-center gap-2">
+      <div className="flex w-28 items-center gap-sm">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
           <div
             className={cn('h-full rounded-full transition-all', barColor)}
@@ -268,7 +268,7 @@ export default function RoutineTasks() {
       render: (task) => {
         const TaskIcon = getIconByName(task.icon);
         return (
-          <div className="flex items-center gap-2 font-medium">
+          <div className="flex items-center gap-sm font-medium">
             {TaskIcon && (
               <TaskIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
@@ -290,7 +290,7 @@ export default function RoutineTasks() {
       key: 'periodicity',
       label: t('pages.routineTasks.columns.frequency'),
       render: (task) => (
-        <div className="space-y-1.5">
+        <div className="space-y-sm">
           <div className="text-sm">{task.periodicity_display}</div>
           <WeekdayDots task={task} />
         </div>
@@ -346,7 +346,7 @@ export default function RoutineTasks() {
       label: t('common.table.actions'),
       align: 'center',
       render: (task) => (
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-sm">
           <Button
             variant="ghost"
             size="icon"
@@ -394,7 +394,7 @@ export default function RoutineTasks() {
                 size="sm"
                 disabled={isExporting || tasks.length === 0}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-sm h-4 w-4" />
                 {isExporting
                   ? t('pages.routineTasks.export.exporting')
                   : t('pages.routineTasks.export.btn')}
@@ -402,11 +402,11 @@ export default function RoutineTasks() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => void handleExport('pdf')}>
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-sm h-4 w-4" />
                 {t('pages.routineTasks.export.pdf')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => void handleExport('excel')}>
-                <Sheet className="mr-2 h-4 w-4" />
+                <Sheet className="mr-sm h-4 w-4" />
                 {t('pages.routineTasks.export.excel')}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -416,10 +416,10 @@ export default function RoutineTasks() {
             size="sm"
             onClick={() => setIsTemplateModalOpen(true)}
           >
-            <Library className="mr-2 h-4 w-4" />
+            <Library className="mr-sm h-4 w-4" />
             {t('pages.routineTasks.templates.importBtn')}
           </Button>
-          <Button onClick={handleCreate} className="gap-2">
+          <Button onClick={handleCreate} className="gap-sm">
             <Plus className="h-4 w-4" />
             {t('pages.routineTasks.newBtn')}
           </Button>
@@ -479,7 +479,7 @@ export default function RoutineTasks() {
       >
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-sm">
               <BarChart2 className="h-5 w-5" />
               {t('pages.routineTasks.heatmapConsistency')} — {heatmapTask?.name}
             </DialogTitle>

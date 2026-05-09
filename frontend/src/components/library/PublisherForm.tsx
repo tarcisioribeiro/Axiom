@@ -78,9 +78,9 @@ export function PublisherForm({
   }, [publisher, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid gap-4">
-        <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid gap-md">
+        <div className="space-y-sm">
           <Label htmlFor="name">{t('pages.publishers.form.nameLabel')}</Label>
           <Input
             id="name"
@@ -88,11 +88,11 @@ export function PublisherForm({
             placeholder={t('pages.publishers.form.namePlaceholder')}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="country">{t('pages.publishers.form.countryLabel')}</Label>
           <Select
             value={watch('country')}
@@ -110,11 +110,11 @@ export function PublisherForm({
             </SelectContent>
           </Select>
           {errors.country && (
-            <p className="mt-1 text-sm text-destructive">{errors.country.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.country.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="website">{t('pages.publishers.form.websiteLabel')}</Label>
           <Input
             id="website"
@@ -123,11 +123,11 @@ export function PublisherForm({
             placeholder={t('pages.publishers.form.websitePlaceholder')}
           />
           {errors.website && (
-            <p className="mt-1 text-sm text-destructive">{errors.website.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.website.message}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="founded_year">
             {t('pages.publishers.form.foundedYearLabel')}
           </Label>
@@ -142,21 +142,21 @@ export function PublisherForm({
             })}
           />
           {errors.founded_year && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.founded_year.message}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

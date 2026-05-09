@@ -209,7 +209,7 @@ export default function Payables() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {filteredPayables.map((payable) => {
             const getDueBadge = () => {
               if (payable.status === 'overdue') {
@@ -252,7 +252,7 @@ export default function Payables() {
               <div
                 key={payable.id}
                 className={cn(
-                  'space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md',
+                  'space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md',
                   urgencyClass
                 )}
               >
@@ -291,7 +291,7 @@ export default function Payables() {
                         ? 'bg-warning'
                         : 'bg-destructive';
                   return (
-                    <div className="space-y-1">
+                    <div className="space-y-xs">
                       <div className="h-2 overflow-hidden rounded-full bg-muted">
                         <div
                           className={cn('h-full rounded-full transition-all', barColor)}
@@ -310,7 +310,7 @@ export default function Payables() {
                   );
                 })()}
 
-                <div className="space-y-1 text-sm">
+                <div className="space-y-xs text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       {t('pages.payables.totalValue')}
@@ -347,13 +347,13 @@ export default function Payables() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-1 border-t pt-2">
+                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPaymentPayable(payable)}
                     title={t('pages.payables.payment.title')}
-                    className="gap-1 text-xs"
+                    className="gap-xs text-xs"
                   >
                     <CreditCard className="h-3 w-3" />
                     {t('pages.payables.payBtn')}
@@ -364,7 +364,7 @@ export default function Payables() {
                       size="sm"
                       onClick={() => void handleOpenInstallments(payable)}
                       title={t('pages.payables.installments.title')}
-                      className="gap-1 text-xs"
+                      className="gap-xs text-xs"
                     >
                       <List className="h-3 w-3" />
                       {t('pages.payables.installmentsBtn')}

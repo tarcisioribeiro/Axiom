@@ -13,8 +13,6 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { formatCurrency } from '@/lib/formatters';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -36,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type { Member, MemberFormData } from '@/types';
@@ -297,17 +296,17 @@ export default function Members() {
                 )}
               >
                 {/* Header com avatar e nome */}
-                <div className="flex items-start gap-3 bg-gradient-to-r from-muted/50 to-transparent p-4">
+                <div className="flex items-start gap-3 bg-gradient-to-r from-muted/50 to-transparent p-md">
                   <MemberInitials name={member.name} sex={member.sex} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-sm">
                       <p className="truncate font-semibold leading-tight">
                         {member.name}
                       </p>
                       {isCurrentUser && (
                         <Badge
                           variant="secondary"
-                          className="shrink-0 px-1.5 py-0 text-[10px]"
+                          className="shrink-0 px-sm py-0 text-[10px]"
                         >
                           Você
                         </Badge>
@@ -317,15 +316,15 @@ export default function Members() {
                       {format(new Date(member.created_at), 'dd/MM/yyyy')}
                     </p>
                     {/* Papéis */}
-                    <div className="mt-1.5 flex flex-wrap gap-1">
+                    <div className="mt-sm flex flex-wrap gap-xs">
                       {member.is_creditor && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
+                        <span className="inline-flex items-center gap-xs rounded-full bg-blue-500/10 px-sm py-0.5 text-[10px] font-semibold text-blue-600 ring-1 ring-blue-500/20 dark:text-blue-400">
                           <Banknote className="h-2.5 w-2.5" />
                           {t('pages.members.form.isCreditor')}
                         </span>
                       )}
                       {member.is_benefited && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-xs rounded-full bg-emerald-500/10 px-sm py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
                           <HandCoins className="h-2.5 w-2.5" />
                           {t('pages.members.form.isBenefited')}
                         </span>
@@ -340,15 +339,15 @@ export default function Members() {
                 </div>
 
                 {/* Dados de contato */}
-                <CardContent className="space-y-2 py-3">
+                <CardContent className="space-y-sm py-3">
                   {member.phone && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-sm text-xs text-muted-foreground">
                       <Phone className="h-3 w-3 shrink-0" />
                       <span>{member.phone}</span>
                     </div>
                   )}
                   {member.email && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-sm text-xs text-muted-foreground">
                       <Mail className="h-3 w-3 shrink-0" />
                       <span className="truncate">{member.email}</span>
                     </div>
@@ -359,7 +358,7 @@ export default function Members() {
                     </p>
                   )}
                   {member.monthly_income && (
-                    <div className="rounded bg-muted/50 px-2 py-1 text-xs">
+                    <div className="rounded bg-muted/50 px-sm py-xs text-xs">
                       <span className="text-muted-foreground">
                         {t('pages.members.stats.income')}{' '}
                       </span>
@@ -370,7 +369,7 @@ export default function Members() {
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between border-t pt-2">
+                  <div className="flex items-center justify-between border-t pt-sm">
                     <Badge
                       variant={member.active ? 'success' : 'outline'}
                       className="text-xs"
@@ -379,7 +378,7 @@ export default function Members() {
                         ? t('common.status.active')
                         : t('common.status.inactive')}
                     </Badge>
-                    <div className="flex gap-1">
+                    <div className="flex gap-xs">
                       {isCurrentUser && (
                         <Button
                           variant="ghost"

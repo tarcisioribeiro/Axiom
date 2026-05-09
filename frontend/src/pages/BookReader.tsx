@@ -259,9 +259,9 @@ function AnnotationForm({
         rows={3}
         className="resize-none text-sm"
       />
-      <div className="flex gap-2">
+      <div className="flex gap-sm">
         <div className="flex-1">
-          <Label className="mb-1 block text-xs">
+          <Label className="mb-xs block text-xs">
             {t('pages.bookReader.typeLabel')}
           </Label>
           <Select value={type} onValueChange={setType}>
@@ -276,7 +276,7 @@ function AnnotationForm({
           </Select>
         </div>
         <div className="flex-1">
-          <Label className="mb-1 block text-xs">
+          <Label className="mb-xs block text-xs">
             {t('pages.bookReader.colorLabel')}
           </Label>
           <Select value={color} onValueChange={setColor}>
@@ -286,7 +286,7 @@ function AnnotationForm({
             <SelectContent>
               {HIGHLIGHT_COLORS.map((c) => (
                 <SelectItem key={c.value} value={c.value}>
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-sm">
                     <span className={`inline-block h-3 w-3 rounded-full ${c.dot}`} />
                     {c.label}
                   </span>
@@ -296,7 +296,7 @@ function AnnotationForm({
           </Select>
         </div>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-sm">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -306,9 +306,9 @@ function AnnotationForm({
           onClick={() => void handleSave()}
         >
           {isSaving ? (
-            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            <Loader2 className="mr-xs h-3 w-3 animate-spin" />
           ) : (
-            <Save className="mr-1 h-3 w-3" />
+            <Save className="mr-xs h-3 w-3" />
           )}
           {t('common.actions.save')}
         </Button>
@@ -428,7 +428,7 @@ function EpubReader({
       />
       <button
         onClick={prev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border p-2 shadow backdrop-blur-sm"
+        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full border p-sm shadow backdrop-blur-sm"
         style={{
           backgroundColor: `${cfg.backgroundColor}cc`,
           borderColor: cfg.borderColor,
@@ -440,7 +440,7 @@ function EpubReader({
       </button>
       <button
         onClick={next}
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border p-2 shadow backdrop-blur-sm"
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full border p-sm shadow backdrop-blur-sm"
         style={{
           backgroundColor: `${cfg.backgroundColor}cc`,
           borderColor: cfg.borderColor,
@@ -516,7 +516,7 @@ function PdfReader({
   return (
     <div className="flex h-full flex-col" style={themeStyle(cfg)}>
       <div
-        className="flex flex-1 items-start justify-center overflow-auto py-6"
+        className="flex flex-1 items-start justify-center overflow-auto py-lg"
         style={themeStyle(cfg)}
       >
         <Document
@@ -528,7 +528,7 @@ function PdfReader({
             </div>
           }
           error={
-            <div className="flex h-64 flex-col items-center justify-center gap-2 opacity-60">
+            <div className="flex h-64 flex-col items-center justify-center gap-sm opacity-60">
               <BookOpen className="h-10 w-10" />
               <p className="text-sm">{t('pages.bookReader.pdfError')}</p>
             </div>
@@ -725,7 +725,7 @@ export default function BookReader() {
 
   if (!book || !fileUrl || !fileType) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background">
+      <div className="flex h-screen flex-col items-center justify-center gap-md bg-background">
         <BookOpen className="h-16 w-16 text-muted-foreground" />
         <p className="text-lg text-muted-foreground">
           {t('pages.bookReader.fileNotFound')}
@@ -751,7 +751,7 @@ export default function BookReader() {
       style={{ backgroundColor: cfg.backgroundColor, color: cfg.color }}
     >
       {/* ── Toolbar ── */}
-      <header className="flex shrink-0 items-center px-4 py-2" style={tbStyle}>
+      <header className="flex shrink-0 items-center px-md py-sm" style={tbStyle}>
         {/* Left: book title (+ page badge for EPUB) */}
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <BookOpen className="h-5 w-5 shrink-0 opacity-60" />
@@ -769,7 +769,7 @@ export default function BookReader() {
 
         {/* Center: PDF page navigation */}
         {fileType === 'pdf' && (
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-xs">
             <Button
               variant="ghost"
               size="icon"
@@ -780,7 +780,7 @@ export default function BookReader() {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-1.5 text-sm">
+            <div className="flex items-center gap-sm text-sm">
               <Input
                 className="h-7 w-14 text-center text-sm"
                 value={pageInput}
@@ -813,7 +813,7 @@ export default function BookReader() {
         )}
 
         {/* Right: controls */}
-        <div className="flex flex-1 shrink-0 items-center justify-end gap-1">
+        <div className="flex flex-1 shrink-0 items-center justify-end gap-xs">
           {/* Width controls */}
           <Button
             variant="ghost"
@@ -840,7 +840,7 @@ export default function BookReader() {
           </Button>
 
           <div
-            className="mx-1 h-4 w-px opacity-20"
+            className="mx-xs h-4 w-px opacity-20"
             style={{ backgroundColor: cfg.color }}
           />
 
@@ -867,7 +867,7 @@ export default function BookReader() {
           ))}
 
           <div
-            className="mx-1 h-4 w-px opacity-20"
+            className="mx-xs h-4 w-px opacity-20"
             style={{ backgroundColor: cfg.color }}
           />
 
@@ -940,14 +940,14 @@ export default function BookReader() {
           >
             {/* Sidebar header */}
             <div
-              className="flex items-center justify-between px-3 py-2"
+              className="flex items-center justify-between px-3 py-sm"
               style={{
                 borderBottomWidth: 1,
                 borderBottomStyle: 'solid',
                 borderBottomColor: cfg.borderColor,
               }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <Highlighter className="h-4 w-4" />
                 <span className="text-sm font-medium">
                   {t('pages.bookReader.annotations')} ({annotations.length})
@@ -978,7 +978,7 @@ export default function BookReader() {
               )}
 
               {annotations.length === 0 && !showAnnotationForm && (
-                <div className="flex flex-col items-center gap-2 py-8 text-center text-sm opacity-50">
+                <div className="flex flex-col items-center gap-sm py-xl text-center text-sm opacity-50">
                   <Highlighter className="h-8 w-8" />
                   <p>{t('pages.bookReader.noAnnotations')}</p>
                   <p className="text-xs">Clique em + para adicionar.</p>
@@ -990,8 +990,8 @@ export default function BookReader() {
                   key={a.id}
                   className={`rounded-lg border-l-4 p-3 text-sm ${COLOR_BG[a.color] ?? 'border-l-gray-300 bg-gray-50'}`}
                 >
-                  <div className="mb-1 flex items-start justify-between gap-1">
-                    <div className="flex flex-wrap gap-1">
+                  <div className="mb-xs flex items-start justify-between gap-xs">
+                    <div className="flex flex-wrap gap-xs">
                       <Badge variant="secondary" className="text-xs">
                         {a.highlight_type_display}
                       </Badge>
@@ -1010,7 +1010,7 @@ export default function BookReader() {
                     </button>
                   </div>
                   <p className="leading-snug">{a.text}</p>
-                  {a.chapter && <p className="mt-1 text-xs opacity-60">{a.chapter}</p>}
+                  {a.chapter && <p className="mt-xs text-xs opacity-60">{a.chapter}</p>}
                 </div>
               ))}
             </div>

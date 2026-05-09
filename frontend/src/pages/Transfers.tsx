@@ -323,7 +323,7 @@ export default function Transfers() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.transfers.title')} icon={<ArrowLeftRight />}>
-        <Button onClick={handleCreate} className="gap-2">
+        <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
           {t('pages.transfers.newBtn')}
         </Button>
@@ -362,7 +362,7 @@ export default function Transfers() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-xs">
           <span className="whitespace-nowrap text-xs text-muted-foreground">
             {t('pages.transfers.dateFrom')}
           </span>
@@ -447,7 +447,7 @@ export default function Transfers() {
           message: emptyMessage,
         }}
         actions={(transfer) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             <ReceiptButton
               source={{ type: 'transfer', data: transfer }}
               memberName={getMemberDisplayName(null, user)}

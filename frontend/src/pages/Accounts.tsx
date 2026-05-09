@@ -57,7 +57,7 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
+      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
     >
       {labels[status] ?? status}
     </span>
@@ -420,7 +420,7 @@ export default function Accounts() {
       {isLoading ? (
         <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-52 animate-pulse rounded-xl border bg-muted/30" />
+            <div key={i} className="h-52 animate-pulse rounded-lg border bg-muted/30" />
           ))}
         </div>
       ) : filteredAccounts.length === 0 ? (
@@ -446,9 +446,9 @@ export default function Accounts() {
                 key={account.id}
                 className={`overflow-hidden transition-shadow hover:shadow-md ${typeColors ? `border-l-4 ${typeColors.border}` : ''}`}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                <CardHeader className="pb-sm">
+                  <div className="flex items-start justify-between gap-sm">
+                    <div className="flex items-center gap-sm">
                       <div
                         className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${typeColors ? `${typeColors.bg} ${typeColors.icon}` : 'bg-muted text-muted-foreground'}`}
                       >
@@ -493,11 +493,11 @@ export default function Accounts() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center justify-between border-t pt-2">
+                  <div className="flex items-center justify-between border-t pt-sm">
                     <span className="text-xs text-muted-foreground">
                       {formatDate(account.created_at)}
                     </span>
-                    <div className="flex gap-1">
+                    <div className="flex gap-xs">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -567,7 +567,7 @@ export default function Accounts() {
       <Dialog open={isReconciliationOpen} onOpenChange={setIsReconciliationOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-sm">
               <ArrowLeftRight className="h-5 w-5" />
               Conciliação Bancária — {reconciliationAccount?.account_name}
             </DialogTitle>
@@ -578,13 +578,13 @@ export default function Accounts() {
 
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setIsUploadOpen(true)}>
-              <FileUp className="mr-2 h-4 w-4" />
+              <FileUp className="mr-sm h-4 w-4" />
               Importar Extrato
             </Button>
           </div>
 
           {importsLoading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-xl">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : imports.length === 0 ? (
@@ -670,7 +670,7 @@ export default function Accounts() {
                 id="upload-file"
                 type="file"
                 accept=".ofx,.csv"
-                className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
+                className="block w-full text-sm text-muted-foreground file:mr-md file:rounded-md file:border-0 file:bg-primary/10 file:px-md file:py-sm file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20"
                 onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
               />
               {uploadFile && (
