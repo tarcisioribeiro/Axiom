@@ -115,7 +115,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_creditor" className="cursor-pointer">
-            {t('pages.members.form.isCreditorLabel')}
+            {t('pages.members.form.isCreditor')}
           </Label>
         </div>
         <div className="flex items-center space-x-2">
@@ -126,7 +126,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_benefited" className="cursor-pointer">
-            {t('pages.members.form.isBenefitedLabel')}
+            {t('pages.members.form.isBenefited')}
           </Label>
         </div>
       </div>

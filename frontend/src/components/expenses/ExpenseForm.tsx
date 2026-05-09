@@ -290,10 +290,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="false">
-                {t('pages.expenses.form.statusPending')}
+                {t('pages.expenses.form.pending')}
               </SelectItem>
               <SelectItem value="true">
-                {t('pages.expenses.form.statusPaid')}
+                {t('pages.expenses.form.paid')}
               </SelectItem>
             </SelectContent>
           </Select>

@@ -155,7 +155,7 @@ function GoalCard({
             {config.icon}
             <div>
               <p className="font-semibold leading-tight">{goal.description}</p>
-              <p className="text-xs text-muted-foreground">{goal.category_display}</p>
+              <p className="text-xs text-muted-foreground">{t(`pages.financialGoals.categories.${goal.category}`, { defaultValue: goal.category_display })}</p>
             </div>
           </div>
           <div className="flex gap-1">

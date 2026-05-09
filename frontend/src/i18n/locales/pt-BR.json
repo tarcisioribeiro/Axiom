@@ -433,7 +433,9 @@
         "totalBalance": "Saldo Consolidado",
         "availableBalance": "Disponível Total",
         "count": "Contas Ativas",
-        "institutionsSubtitle": "instituições"
+        "institutionsSubtitle": "instituições",
+        "accountsCount": "{{count}} contas",
+        "overdraftIncluded": "incluindo cheque especial"
       },
       "columns": {
         "name": "Conta",
@@ -521,7 +523,8 @@
       "stats": {
         "totalAmount": "Total de Despesas",
         "paid": "Pagas",
-        "pending": "Pendentes"
+        "pending": "Pendentes",
+        "entriesCount": "{{count}} lançamentos"
       },
       "form": {
         "descriptionLabel": "Descrição *",
@@ -739,7 +742,49 @@
       },
       "payoff": "Quitação",
       "paidAmount": "{{value}} pago",
-      "remainingAmount": "{{value}} restante"
+      "remainingAmount": "{{value}} restante",
+      "form": {
+        "descriptionLabel": "Descrição *",
+        "totalValueLabel": "Valor Total *",
+        "paidValueLabel": "Valor Pago",
+        "paidValueCalculated": "(Calculado)",
+        "paidValueNote": "Calculado automaticamente a partir das receitas/despesas vinculadas",
+        "dateLabel": "Data *",
+        "datePlaceholder": "Selecione a data",
+        "timeLabel": "Horário *",
+        "categoryLabel": "Categoria *",
+        "accountLabel": "Conta *",
+        "benefitedLabel": "Beneficiado *",
+        "creditorLabel": "Credor *",
+        "installmentsLabel": "Parcelas",
+        "interestRateLabel": "Taxa de Juros (%)",
+        "dueDateLabel": "Data de Vencimento",
+        "dueDatePlaceholder": "Selecione a data de vencimento",
+        "paymentFrequencyLabel": "Frequência de Pagamento",
+        "lateFeeLabel": "Multa por Atraso",
+        "statusLabel": "Status",
+        "guarantorLabel": "Avalista",
+        "guarantorNone": "Nenhum",
+        "notesLabel": "Observações",
+        "contractDocumentLabel": "Documento do Contrato",
+        "loanPaidLabel": "Empréstimo Pago"
+      },
+      "frequencies": {
+        "daily": "Diário",
+        "weekly": "Semanal",
+        "biweekly": "Quinzenal",
+        "monthly": "Mensal",
+        "bimonthly": "Bimestral",
+        "quarterly": "Trimestral",
+        "semiannual": "Semestral",
+        "annual": "Anual"
+      },
+      "statuses": {
+        "active": "Ativo",
+        "paid": "Pago",
+        "defaulted": "Inadimplente",
+        "cancelled": "Cancelado"
+      }
     },
     "members": {
       "title": "Membros",
@@ -791,7 +836,9 @@
         "beneficiaries": "Beneficiários",
         "beneficiariesSubtitle": "podem receber",
         "income": "Renda:"
-      }
+      },
+      "noRole": "Sem papel definido",
+      "emptySearch": "Nenhum membro encontrado."
     },
     "fixedExpenses": {
       "title": "Gastos Fixos Mensais",
@@ -1129,7 +1176,9 @@
         "limitInsufficientDesc": "O valor de {{value}} excede o limite disponível de {{limit}} no cartão selecionado.",
         "requiredField": "Campo obrigatório",
         "createBtn": "Criar Compra",
-        "none": "Nenhum"
+        "none": "Nenhum",
+        "noCardNumber": "Número não cadastrado",
+        "cashPayment": "À vista"
       },
       "installmentForm": {
         "purchaseLabel": "Compra",
@@ -1152,7 +1201,8 @@
         "closed": "Fechada",
         "open": "Aberta"
       },
-      "billPaidProgress": "Pago"
+      "billPaidProgress": "Pago",
+      "byCategory": "Por categoria"
     },
     "payables": {
       "title": "Valores a Pagar",
@@ -1659,6 +1709,12 @@
           "low_balance": "Saldo",
           "payable_due": "A Pagar",
           "loan_due": "Empréstimo"
+        },
+        "viewDetails": "Ver detalhes",
+        "severity": {
+          "danger": "Urgente",
+          "warning": "Atenção",
+          "info": "Info"
         }
       },
       "selectForecastPeriod": "Selecionar período da projeção",
@@ -2748,6 +2804,12 @@
           "failed": "Falhou",
           "cancelled": "Cancelado"
         }
+      },
+      "goalTypes": {
+        "consecutive_days": "Dias Consecutivos",
+        "total_days": "Total de Dias",
+        "avoid_habit": "Evitar Hábito",
+        "custom": "Personalizado"
       }
     },
     "dailyChecklist": {

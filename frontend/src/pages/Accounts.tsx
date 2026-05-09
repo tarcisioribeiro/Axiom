@@ -337,7 +337,7 @@ export default function Accounts() {
               {formatCurrency(totalBalance)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {accounts.length} contas
+              {t('pages.accounts.stats.accountsCount', { count: accounts.length })}
             </p>
           </CardContent>
         </Card>
@@ -364,7 +364,7 @@ export default function Accounts() {
               {formatCurrency(totalAvailable)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              incluindo cheque especial
+              {t('pages.accounts.stats.overdraftIncluded')}
             </p>
           </CardContent>
         </Card>

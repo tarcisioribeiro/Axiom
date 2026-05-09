@@ -103,7 +103,7 @@ export function LoanForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
-          <Label htmlFor="description">Descrição *</Label>
+          <Label htmlFor="description">{t('pages.loans.form.descriptionLabel')}</Label>
           <Input
             id="description"
             value={formData.description}
@@ -113,7 +113,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="value">Valor Total *</Label>
+          <Label htmlFor="value">{t('pages.loans.form.totalValueLabel')}</Label>
           <Input
             id="value"
             type="number"
@@ -125,7 +125,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="payed_value">Valor Pago {loan ? '(Calculado)' : '*'}</Label>
+          <Label htmlFor="payed_value">{t('pages.loans.form.paidValueLabel')}{loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}</Label>
           <Input
             id="payed_value"
             type="number"
@@ -138,22 +138,22 @@ export function LoanForm({
           />
           {loan && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Calculado automaticamente a partir das receitas/despesas vinculadas
+              {t('pages.loans.form.paidValueNote')}
             </p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="date">Data *</Label>
+          <Label htmlFor="date">{t('pages.loans.form.dateLabel')}</Label>
           <DatePicker
             value={formData.date ?? undefined}
             onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-            placeholder="Selecione a data"
+            placeholder={t('pages.loans.form.datePlaceholder')}
           />
         </div>
 
         <div>
-          <Label htmlFor="horary">Horário *</Label>
+          <Label htmlFor="horary">{t('pages.loans.form.timeLabel')}</Label>
           <Input
             id="horary"
             type="time"
@@ -164,7 +164,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="category">Categoria *</Label>
+          <Label htmlFor="category">{t('pages.loans.form.categoryLabel')}</Label>
           <Select
             value={formData.category}
             onValueChange={(value) => set({ category: value })}
@@ -183,7 +183,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="account">Conta *</Label>
+          <Label htmlFor="account">{t('pages.loans.form.accountLabel')}</Label>
           <Select
             value={formData.account.toString()}
             onValueChange={(value) => set({ account: parseInt(value) })}
@@ -202,7 +202,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="benefited">Beneficiado *</Label>
+          <Label htmlFor="benefited">{t('pages.loans.form.benefitedLabel')}</Label>
           <Select
             value={formData.benefited.toString()}
             onValueChange={(value) => set({ benefited: parseInt(value) })}
@@ -221,7 +221,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="creditor">Credor *</Label>
+          <Label htmlFor="creditor">{t('pages.loans.form.creditorLabel')}</Label>
           <Select
             value={formData.creditor.toString()}
             onValueChange={(value) => set({ creditor: parseInt(value) })}
@@ -240,7 +240,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="installments">Parcelas</Label>
+          <Label htmlFor="installments">{t('pages.loans.form.installmentsLabel')}</Label>
           <Input
             id="installments"
             type="number"
@@ -250,7 +250,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="interest_rate">Taxa de Juros (%)</Label>
+          <Label htmlFor="interest_rate">{t('pages.loans.form.interestRateLabel')}</Label>
           <Input
             id="interest_rate"
             type="number"
@@ -261,16 +261,16 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="due_date">Data de Vencimento</Label>
+          <Label htmlFor="due_date">{t('pages.loans.form.dueDateLabel')}</Label>
           <DatePicker
             value={formData.due_date ?? undefined}
             onChange={(date) => set({ due_date: date ? formatLocalDate(date) : '' })}
-            placeholder="Selecione a data de vencimento"
+            placeholder={t('pages.loans.form.dueDatePlaceholder')}
           />
         </div>
 
         <div>
-          <Label htmlFor="payment_frequency">Frequência de Pagamento</Label>
+          <Label htmlFor="payment_frequency">{t('pages.loans.form.paymentFrequencyLabel')}</Label>
           <Select
             value={formData.payment_frequency}
             onValueChange={(value) => set({ payment_frequency: value })}
@@ -281,7 +281,7 @@ export function LoanForm({
             <SelectContent>
               {PAYMENT_FREQUENCIES.map((freq) => (
                 <SelectItem key={freq} value={freq}>
-                  {translate('paymentFrequency', freq)}
+                  {t(`pages.loans.frequencies.${freq}`, { defaultValue: freq })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -289,7 +289,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="late_fee">Multa por Atraso</Label>
+          <Label htmlFor="late_fee">{t('pages.loans.form.lateFeeLabel')}</Label>
           <Input
             id="late_fee"
             type="number"
@@ -300,7 +300,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="status">{t('pages.loans.form.statusLabel')}</Label>
           <Select
             value={formData.status}
             onValueChange={(value) => set({ status: value })}
@@ -311,7 +311,7 @@ export function LoanForm({
             <SelectContent>
               {LOAN_STATUSES.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {translate('loanStatus', status)}
+                  {t(`pages.loans.statuses.${status}`, { defaultValue: status })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -319,7 +319,7 @@ export function LoanForm({
         </div>
 
         <div>
-          <Label htmlFor="guarantor">Avalista</Label>
+          <Label htmlFor="guarantor">{t('pages.loans.form.guarantorLabel')}</Label>
           <Select
             value={formData.guarantor?.toString() ?? 'none'}
             onValueChange={(value) =>
@@ -327,10 +327,10 @@ export function LoanForm({
             }
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione..." />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Nenhum</SelectItem>
+              <SelectItem value="none">{t('pages.loans.form.guarantorNone')}</SelectItem>
               {members.map((m) => (
                 <SelectItem key={m.id} value={m.id.toString()}>
                   {m.name}
@@ -341,7 +341,7 @@ export function LoanForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.loans.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             value={formData.notes ?? ''}
@@ -351,7 +351,7 @@ export function LoanForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="contract_document">Documento do Contrato</Label>
+          <Label htmlFor="contract_document">{t('pages.loans.form.contractDocumentLabel')}</Label>
           <Input
             id="contract_document"
             type="file"
@@ -368,7 +368,7 @@ export function LoanForm({
             className="rounded"
           />
           <Label htmlFor="payed" className="cursor-pointer">
-            Empréstimo Pago
+            {t('pages.loans.form.loanPaidLabel')}
           </Label>
         </div>
       </div>

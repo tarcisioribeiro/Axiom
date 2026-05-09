@@ -433,7 +433,9 @@
         "totalBalance": "Consolidated Balance",
         "availableBalance": "Total Available",
         "count": "Active Accounts",
-        "institutionsSubtitle": "institutions"
+        "institutionsSubtitle": "institutions",
+        "accountsCount": "{{count}} accounts",
+        "overdraftIncluded": "including overdraft"
       },
       "columns": {
         "name": "Account",
@@ -521,7 +523,8 @@
       "stats": {
         "totalAmount": "Total Expenses",
         "paid": "Paid",
-        "pending": "Pending"
+        "pending": "Pending",
+        "entriesCount": "{{count}} entries"
       },
       "form": {
         "descriptionLabel": "Description *",
@@ -739,7 +742,49 @@
       },
       "payoff": "Payoff",
       "paidAmount": "{{value}} paid",
-      "remainingAmount": "{{value}} remaining"
+      "remainingAmount": "{{value}} remaining",
+      "form": {
+        "descriptionLabel": "Description *",
+        "totalValueLabel": "Total Amount *",
+        "paidValueLabel": "Paid Amount",
+        "paidValueCalculated": "(Calculated)",
+        "paidValueNote": "Automatically calculated from linked revenues/expenses",
+        "dateLabel": "Date *",
+        "datePlaceholder": "Select date",
+        "timeLabel": "Time *",
+        "categoryLabel": "Category *",
+        "accountLabel": "Account *",
+        "benefitedLabel": "Beneficiary *",
+        "creditorLabel": "Creditor *",
+        "installmentsLabel": "Installments",
+        "interestRateLabel": "Interest Rate (%)",
+        "dueDateLabel": "Due Date",
+        "dueDatePlaceholder": "Select due date",
+        "paymentFrequencyLabel": "Payment Frequency",
+        "lateFeeLabel": "Late Fee",
+        "statusLabel": "Status",
+        "guarantorLabel": "Guarantor",
+        "guarantorNone": "None",
+        "notesLabel": "Notes",
+        "contractDocumentLabel": "Contract Document",
+        "loanPaidLabel": "Loan Paid"
+      },
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "biweekly": "Biweekly",
+        "monthly": "Monthly",
+        "bimonthly": "Bimonthly",
+        "quarterly": "Quarterly",
+        "semiannual": "Semiannual",
+        "annual": "Annual"
+      },
+      "statuses": {
+        "active": "Active",
+        "paid": "Paid",
+        "defaulted": "Defaulted",
+        "cancelled": "Cancelled"
+      }
     },
     "members": {
       "title": "Members",
@@ -791,7 +836,9 @@
         "beneficiaries": "Beneficiaries",
         "beneficiariesSubtitle": "can receive",
         "income": "Income:"
-      }
+      },
+      "noRole": "No role defined",
+      "emptySearch": "No members found."
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",
@@ -1129,7 +1176,9 @@
         "limitInsufficientDesc": "The amount of {{value}} exceeds the available limit of {{limit}} on the selected card.",
         "requiredField": "Required field",
         "createBtn": "Create Purchase",
-        "none": "None"
+        "none": "None",
+        "noCardNumber": "Number not registered",
+        "cashPayment": "One-time payment"
       },
       "installmentForm": {
         "purchaseLabel": "Purchase",
@@ -1152,7 +1201,8 @@
         "closed": "Closed",
         "open": "Open"
       },
-      "billPaidProgress": "Paid"
+      "billPaidProgress": "Paid",
+      "byCategory": "By category"
     },
     "payables": {
       "title": "Payables",
@@ -1614,6 +1664,12 @@
           "low_balance": "Balance",
           "payable_due": "Payable",
           "loan_due": "Loan"
+        },
+        "viewDetails": "View details",
+        "severity": {
+          "danger": "Urgent",
+          "warning": "Warning",
+          "info": "Info"
         }
       },
       "greetingMorning": "Good morning",
@@ -2660,6 +2716,12 @@
           "failed": "Failed",
           "cancelled": "Cancelled"
         }
+      },
+      "goalTypes": {
+        "consecutive_days": "Consecutive Days",
+        "total_days": "Total Days",
+        "avoid_habit": "Avoid Habit",
+        "custom": "Custom"
       }
     },
     "dailyChecklist": {
