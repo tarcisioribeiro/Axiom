@@ -141,7 +141,7 @@ export function GoalForm({
             <SelectContent>
               {GOAL_TYPE_CHOICES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+                  {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -268,7 +268,7 @@ export function GoalForm({
             <SelectContent>
               {GOAL_STATUS_CHOICES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
-                  {status.label}
+                  {t(`pages.goals.form.statusOptions.${status.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -224,14 +224,14 @@ export default function Dashboard() {
     mutationFn: () => dashboardService.requestLGPDExport(),
     onSuccess: () => {
       toast({
-        title: 'Exportação LGPD solicitada',
-        description: 'Você receberá o arquivo em breve.',
+        title: t('pages.dashboard.lgpdExport.successTitle'),
+        description: t('pages.dashboard.lgpdExport.successDesc'),
       });
     },
     onError: () => {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível solicitar a exportação.',
+        title: t('pages.dashboard.lgpdExport.errorTitle'),
+        description: t('pages.dashboard.lgpdExport.errorDesc'),
         variant: 'destructive',
       });
     },
@@ -244,8 +244,8 @@ export default function Dashboard() {
       setShowIrReport(true);
     } catch {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível gerar o relatório IR.',
+        title: t('pages.dashboard.lgpdExport.errorTitle'),
+        description: t('pages.dashboard.irReport.errorDesc'),
         variant: 'destructive',
       });
     }
@@ -501,10 +501,10 @@ export default function Dashboard() {
         {/* 1. PageHeader */}
         <PageHeader
           title={`${greeting.emoji} ${greeting.text}${displayName ? `, ${displayName}` : ''}`}
-          subtitle="Aqui está seu resumo financeiro de hoje."
+          subtitle={t('pages.dashboard.subtitle')}
           icon={<LayoutDashboard />}
           action={{
-            label: 'Exportar Extrato',
+            label: t('pages.dashboard.exportStatement'),
             icon: <FileDown className="h-4 w-4" />,
             onClick: () => setStatementModalOpen(true),
           }}

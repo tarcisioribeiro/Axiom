@@ -558,6 +558,34 @@ export const REVERSE_TRANSLATIONS = {
 
 // English display labels (for en-US locale)
 export const TRANSLATIONS_EN = {
+  accountTypes: {
+    CC: 'Checking Account',
+    CS: 'Salary Account',
+    FG: 'Severance Fund',
+    VA: 'Meal Voucher',
+    VR: 'Food Voucher',
+    CP: 'Savings Account',
+  },
+  institutions: {
+    NUB: 'Nubank',
+    SIC: 'Sicoob',
+    MPG: 'Mercado Pago',
+    IFB: 'Ifood Benefícios',
+    CEF: 'Caixa Econômica Federal',
+    BB: 'Banco do Brasil',
+    SAN: 'Santander',
+    ITA: 'Itaú',
+    BRA: 'Bradesco',
+    INT: 'Inter',
+    C6B: 'C6 Bank',
+    PIC: 'PicPay',
+  },
+  payableStatus: {
+    active: 'Active',
+    paid: 'Paid',
+    overdue: 'Overdue',
+    cancelled: 'Cancelled',
+  },
   expenseCategories: {
     'food and drink': 'Food and Drink',
     food: 'Food',
