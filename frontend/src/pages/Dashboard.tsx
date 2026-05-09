@@ -249,7 +249,7 @@ export default function Dashboard() {
         variant: 'destructive',
       });
     }
-  }, [irYear, toast]);
+  }, [irYear, toast, t]);
 
   // ── Derived data ───────────────────────────────────────────────────────────
   // Arrays are wrapped in useMemo so the `?? []` fallback doesn't create a new
