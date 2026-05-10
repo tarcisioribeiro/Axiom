@@ -188,9 +188,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   const isEditMode = !!purchase;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">
             {t('pages.creditCardExpenses.form.descriptionLabel')}
           </Label>
@@ -202,7 +202,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="total_value">
             {t('pages.creditCardExpenses.form.totalValueLabel')}
           </Label>
@@ -221,7 +221,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.categoryLabel')}</Label>
           <Select
             value={watch('category') || ''}
@@ -240,7 +240,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="purchase_date">
             {t('pages.creditCardExpenses.form.purchaseDateLabel')}
           </Label>
@@ -254,7 +254,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="purchase_time">
             {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
           </Label>
@@ -266,7 +266,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.form.cardLabel')}</Label>
           <Select
             value={watch('card')?.toString() || ''}
@@ -282,7 +282,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                   getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-sm">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-sm">
                         {hasNumber
@@ -307,7 +307,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           {/* Exibir limite disponível do cartão selecionado */}
           {selectedCardInfo && !isEditMode && (
             <div
-              className={`rounded-md p-2 text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
+              className={`rounded-md p-sm text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
@@ -320,7 +320,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                 </span>
               </div>
               {exceedsLimit && watchedTotalValue > 0 && (
-                <p className="mt-1 text-xs text-destructive">
+                <p className="mt-xs text-xs text-destructive">
                   {t('pages.creditCardExpenses.form.exceedsLimitBy', {
                     amount: formatCurrency(
                       watchedTotalValue - selectedCardInfo.availableCredit
@@ -332,7 +332,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="total_installments">
             {t('pages.creditCardExpenses.form.installmentsLabel')}
           </Label>
@@ -349,7 +349,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             })}
             disabled={isLoading || isEditMode}
           />
-          <div className="rounded-md bg-muted p-2">
+          <div className="rounded-md bg-muted p-sm">
             {watchedTotalInstallments > 1 ? (
               <p className="text-sm font-medium text-primary">
                 {t('pages.creditCardExpenses.form.installmentsSummary', {
@@ -371,7 +371,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="merchant">
             {t('pages.creditCardExpenses.form.merchantLabel')}
           </Label>
@@ -383,7 +383,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="notes">{t('pages.creditCardExpenses.form.notesLabel')}</Label>
           <Textarea
             id="notes"
@@ -394,7 +394,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

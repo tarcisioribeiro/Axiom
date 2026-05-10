@@ -55,32 +55,32 @@ export function KanbanCard({ card }: KanbanCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="cursor-grab rounded-lg border-2 border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      className="cursor-grab rounded-lg border-2 border-border bg-card p-md shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
     >
       <div className="flex items-start gap-3">
         {/* Drag Handle */}
-        <div className="mt-1 hover:text-foreground">
+        <div className="mt-xs hover:text-foreground">
           <GripVertical className="h-5 w-5" />
         </div>
 
         {/* Card Content */}
-        <div className="flex-1 space-y-2.5">
+        <div className="flex-1 space-y-sm">
           {/* Title and Category */}
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-sm">
             <div className="flex-1">
-              <h4 className="flex items-center gap-1.5 text-sm font-semibold leading-tight">
+              <h4 className="flex items-center gap-sm text-sm font-semibold leading-tight">
                 <TaskIconDisplay icon={card.icon} />
                 <span>
                   {card.task_name}
                   {card.total_instances > 1 && (
-                    <span className="ml-2 text-xs font-normal">
+                    <span className="ml-sm text-xs font-normal">
                       ({card.index + 1}º {card.unit})
                     </span>
                   )}
                 </span>
               </h4>
               {(card.scheduled_time || card.closing_time) && (
-                <div className="mt-1 flex items-center gap-1 text-xs">
+                <div className="mt-xs flex items-center gap-xs text-xs">
                   <Clock className="h-3 w-3" />
                   <span>
                     {card.scheduled_time}
@@ -104,8 +104,8 @@ export function KanbanCard({ card }: KanbanCardProps) {
 
           {/* Daily Notes */}
           {card.notes && (
-            <div className="rounded-md border border-warning bg-warning/20 p-2.5">
-              <p className="mb-1 text-xs font-medium">Notas:</p>
+            <div className="rounded-md border border-warning bg-warning/20 p-sm">
+              <p className="mb-xs text-xs font-medium">Notas:</p>
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
                 {card.notes}
               </p>

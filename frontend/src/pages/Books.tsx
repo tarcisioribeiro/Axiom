@@ -199,17 +199,17 @@ function BookGridCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col gap-1 p-3">
+      <div className="flex flex-1 flex-col gap-xs p-3">
         <p className="line-clamp-2 text-sm font-semibold leading-tight">{book.title}</p>
         <p className="line-clamp-1 text-xs text-muted-foreground">
           {book.authors_names.join(', ')}
         </p>
-        <Badge variant="secondary" className="mt-1 w-fit text-xs">
+        <Badge variant="secondary" className="mt-xs w-fit text-xs">
           {book.genre_display}
         </Badge>
 
         {book.reading_progress > 0 && (
-          <div className="mt-auto flex items-center gap-2 pt-2">
+          <div className="mt-auto flex items-center gap-sm pt-sm">
             <Progress value={book.reading_progress} className="h-1.5 flex-1" />
             <span className="text-xs text-muted-foreground">
               {book.reading_progress}%
@@ -218,7 +218,7 @@ function BookGridCard({
         )}
 
         {book.rating && (
-          <div className="mt-1">
+          <div className="mt-xs">
             <StarRow rating={book.rating} />
           </div>
         )}
@@ -227,7 +227,7 @@ function BookGridCard({
       {/* Actions */}
       <div
         role="presentation"
-        className="flex items-center justify-end gap-1 border-t px-2 py-1"
+        className="flex items-center justify-end gap-xs border-t px-sm py-xs"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -247,23 +247,23 @@ function BookGridCard({
               <DropdownMenuItem
                 onClick={() => window.open(`/library/reader/${book.id}`, '_blank')}
               >
-                <BookText className="mr-2 h-4 w-4" />
+                <BookText className="mr-sm h-4 w-4" />
                 {t('pages.books.openReader')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => onOpen(book, 'readings')}>
-              <BookMarked className="mr-2 h-4 w-4" />
+              <BookMarked className="mr-sm h-4 w-4" />
               {t('pages.readings.title')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onOpen(book, 'summaries')}
               disabled={book.read_status !== 'read'}
             >
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="mr-sm h-4 w-4" />
               {t('pages.summaries.title')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onOpen(book, 'highlights')}>
-              <Highlighter className="mr-2 h-4 w-4" />
+              <Highlighter className="mr-sm h-4 w-4" />
               {t('pages.highlights.title')}
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -505,7 +505,7 @@ export default function Books() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.books.title')} icon={<BookOpen />}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <div className="flex items-center rounded-md border">
             <Button
               variant={viewMode === 'table' ? 'secondary' : 'ghost'}
@@ -529,7 +529,7 @@ export default function Books() {
             </Button>
           </div>
           <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-sm h-4 w-4" />
             {t('pages.books.newBtn')}
           </Button>
         </div>
@@ -567,7 +567,7 @@ export default function Books() {
             <SelectItem value="all">{t('pages.books.allStatuses')}</SelectItem>
             {READ_STATUS.map((s) => (
               <SelectItem key={s.value} value={s.value}>
-                {s.label}
+                {t(`pages.books.readStatuses.${s.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -586,7 +586,7 @@ export default function Books() {
             <SelectItem value="all">{t('pages.books.allGenres')}</SelectItem>
             {BOOK_GENRES.map((g) => (
               <SelectItem key={g.value} value={g.value}>
-                {g.label}
+                {t(`pages.books.genres.${g.value}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -601,7 +601,7 @@ export default function Books() {
           }
         />
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-md sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {pagedBooks.map((book) => (
             <BookGridCard
               key={book.id}
@@ -652,7 +652,7 @@ export default function Books() {
                     onClick={() => openDetail(book, 'info')}
                   >
                     {/* Cover — compact in table view */}
-                    <TableCell className="py-2">
+                    <TableCell className="py-sm">
                       <div className="h-20 w-14 overflow-hidden rounded-md shadow-sm">
                         {book.cover ? (
                           <img
@@ -670,7 +670,7 @@ export default function Books() {
                     <TableCell>
                       <p className="font-semibold leading-tight">{book.title}</p>
                       {pb && (
-                        <Badge variant={pb.variant} className="mt-1 text-xs">
+                        <Badge variant={pb.variant} className="mt-xs text-xs">
                           {pb.label}
                         </Badge>
                       )}
@@ -716,7 +716,7 @@ export default function Books() {
                     {/* Progress */}
                     <TableCell className="hidden sm:table-cell">
                       {book.reading_progress > 0 ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-sm">
                           <Progress
                             value={book.reading_progress}
                             className="h-2 w-28"
@@ -729,8 +729,8 @@ export default function Books() {
                     </TableCell>
 
                     {/* Actions */}
-                    <TableCell onClick={(e) => e.stopPropagation()} className="py-2">
-                      <div className="flex gap-1">
+                    <TableCell onClick={(e) => e.stopPropagation()} className="py-sm">
+                      <div className="flex gap-xs">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -746,7 +746,7 @@ export default function Books() {
                           <DropdownMenuContent align="end">
                             {book.media_type === 'Dig' && book.book_file && (
                               <DropdownMenuItem onClick={() => handleOpenReader(book)}>
-                                <BookText className="mr-2 h-4 w-4" />
+                                <BookText className="mr-sm h-4 w-4" />
                                 {t('pages.books.openReader')}
                               </DropdownMenuItem>
                             )}
@@ -754,27 +754,27 @@ export default function Books() {
                               <DropdownMenuItem
                                 onClick={() => void handleDownloadFile(book)}
                               >
-                                <Download className="mr-2 h-4 w-4" />
+                                <Download className="mr-sm h-4 w-4" />
                                 {t('pages.books.downloadFile')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'readings')}
                             >
-                              <BookMarked className="mr-2 h-4 w-4" />
+                              <BookMarked className="mr-sm h-4 w-4" />
                               {t('pages.readings.title')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'summaries')}
                               disabled={book.read_status !== 'read'}
                             >
-                              <FileText className="mr-2 h-4 w-4" />
+                              <FileText className="mr-sm h-4 w-4" />
                               {t('pages.summaries.title')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => openDetail(book, 'highlights')}
                             >
-                              <Highlighter className="mr-2 h-4 w-4" />
+                              <Highlighter className="mr-sm h-4 w-4" />
                               {t('pages.highlights.title')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -820,7 +820,7 @@ export default function Books() {
               totalPages,
             })}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-xs">
             <Button
               variant="outline"
               size="icon"

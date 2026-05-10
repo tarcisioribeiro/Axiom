@@ -105,8 +105,8 @@ export function AuthorForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid gap-md">
         <div className="flex flex-col items-center gap-sm">
           <div className="relative">
             {photoPreview ? (
@@ -151,7 +151,7 @@ export function AuthorForm({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="name">{t('pages.authors.form.nameLabel')}</Label>
           <Input
             id="name"
@@ -159,12 +159,12 @@ export function AuthorForm({
             placeholder={t('pages.authors.form.namePlaceholder')}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-md">
+          <div className="space-y-sm">
             <Label htmlFor="birth_year">{t('pages.authors.form.birthYearLabel')}</Label>
             <Input
               id="birth_year"
@@ -173,13 +173,13 @@ export function AuthorForm({
               placeholder={t('pages.authors.form.birthYearPlaceholder')}
             />
             {errors.birth_year && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.birth_year.message}
               </p>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="birth_era">{t('pages.authors.form.birthEraLabel')}</Label>
             <Select
               value={watch('birth_era')}
@@ -193,21 +193,21 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {era.label}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.birth_era && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.birth_era.message}
               </p>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-md">
+          <div className="space-y-sm">
             <Label htmlFor="death_year">{t('pages.authors.form.deathYearLabel')}</Label>
             <Input
               id="death_year"
@@ -216,13 +216,13 @@ export function AuthorForm({
               placeholder={t('pages.authors.form.deathYearPlaceholder')}
             />
             {errors.death_year && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.death_year.message}
               </p>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="death_era">{t('pages.authors.form.deathEraLabel')}</Label>
             <Select
               value={watch('death_era') || ''}
@@ -238,20 +238,20 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {era.label}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.death_era && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.death_era.message}
               </p>
             )}
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="nationality">
             {t('pages.authors.form.nationalityLabel')}
           </Label>
@@ -265,19 +265,19 @@ export function AuthorForm({
             <SelectContent>
               {NATIONALITIES.map((nat) => (
                 <SelectItem key={nat.value} value={nat.value}>
-                  {nat.label}
+                  {t(`pages.authors.nationalities.${nat.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.nationality && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.nationality.message}
             </p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="biography">{t('pages.authors.form.biographyLabel')}</Label>
           <Textarea
             id="biography"
@@ -286,19 +286,19 @@ export function AuthorForm({
             rows={4}
           />
           {errors.biography && (
-            <p className="mt-1 text-sm text-destructive">{errors.biography.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.biography.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

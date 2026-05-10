@@ -144,7 +144,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     <div className="space-y-3">
       {/* Header: year selector + task label */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-xs">
           <Button
             variant="ghost"
             size="icon"
@@ -181,7 +181,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
       {isLoading ? (
         <div className="h-[110px] animate-pulse rounded-md bg-muted" />
       ) : (
-        <div className="relative overflow-x-auto pb-1">
+        <div className="relative overflow-x-auto pb-xs">
           {/* CSS variables for colours — works in both light and dark mode */}
           <style>{`
             :root {
@@ -203,7 +203,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
           `}</style>
 
           {/* Wrapper with left padding for weekday labels */}
-          <div className="flex gap-1">
+          <div className="flex gap-xs">
             {/* Weekday labels */}
             <div
               className="flex shrink-0 flex-col"
@@ -290,14 +290,14 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
             pointerEvents: 'none',
             zIndex: 9999,
           }}
-          className="rounded-md border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md"
+          className="rounded-md border bg-popover px-sm py-xs text-xs text-popover-foreground shadow-md"
         >
           {tooltip.text}
         </div>
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+      <div className="flex items-center gap-xs text-xs text-muted-foreground">
         <span>Menos</span>
         {[
           'var(--heatmap-empty)',

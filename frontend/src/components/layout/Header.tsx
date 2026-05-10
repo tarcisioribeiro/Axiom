@@ -42,12 +42,12 @@ export const Header = () => {
           {/* Command palette trigger — styled as a search bar on desktop */}
           <button
             onClick={openCommandPalette}
-            className="hover-lift hidden items-center gap-sm rounded-md border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex"
+            className="hover-lift hidden items-center gap-sm rounded-md border border-border/60 bg-background/60 px-3 py-sm text-sm text-muted-foreground transition-colors hover:border-border hover:text-foreground md:flex"
             aria-label={t('layout.openCommandPalette')}
           >
             <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span className="hidden lg:inline">{t('layout.search')}</span>
-            <kbd className="ml-xs hidden items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground lg:flex">
+            <kbd className="ml-xs hidden items-center gap-0.5 rounded bg-muted px-sm py-0.5 font-mono text-xs text-muted-foreground lg:flex">
               <span className="text-sm">⌘</span>K
             </kbd>
           </button>

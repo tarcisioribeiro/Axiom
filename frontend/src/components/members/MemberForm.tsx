@@ -49,9 +49,9 @@ export const MemberForm: React.FC<MemberFormProps> = ({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label>{t('pages.members.form.nameLabel')}</Label>
           <Input
             {...register('name', { required: true })}
@@ -59,7 +59,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.members.form.documentLabel')}</Label>
           <Input
             {...register('document', { required: true })}
@@ -69,8 +69,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label>{t('pages.members.form.phoneLabel')}</Label>
           <Input
             {...register('phone', { required: true })}
@@ -78,7 +78,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.members.form.emailLabel')}</Label>
           <Input
             {...register('email')}
@@ -89,7 +89,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <Label>{t('pages.members.form.sexLabel')}</Label>
         <Select
           value={watch('sex')}
@@ -106,8 +106,8 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         </Select>
       </div>
 
-      <div className="flex gap-6">
-        <div className="flex items-center space-x-2">
+      <div className="flex gap-lg">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="is_creditor"
             checked={watch('is_creditor')}
@@ -115,10 +115,10 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_creditor" className="cursor-pointer">
-            {t('pages.members.form.isCreditorLabel')}
+            {t('pages.members.form.isCreditor')}
           </Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="is_benefited"
             checked={watch('is_benefited')}
@@ -126,12 +126,12 @@ export const MemberForm: React.FC<MemberFormProps> = ({
             disabled={isLoading}
           />
           <Label htmlFor="is_benefited" className="cursor-pointer">
-            {t('pages.members.form.isBenefitedLabel')}
+            {t('pages.members.form.isBenefited')}
           </Label>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <Label>{t('pages.members.form.notesLabel')}</Label>
         <Textarea
           {...register('notes')}
@@ -141,7 +141,7 @@ export const MemberForm: React.FC<MemberFormProps> = ({
         />
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

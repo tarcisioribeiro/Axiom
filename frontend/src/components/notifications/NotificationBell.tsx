@@ -37,7 +37,7 @@ export function NotificationBell() {
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-primary-foreground">
+            <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-xs text-[10px] font-bold text-primary-foreground">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -52,7 +52,7 @@ export function NotificationBell() {
           <h4 className="text-sm font-semibold">Notificações</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="xs" onClick={markAllAsRead}>
-              <CheckCheck className="mr-1 h-3 w-3" />
+              <CheckCheck className="mr-xs h-3 w-3" />
               Marcar todas como lidas
             </Button>
           )}
@@ -60,15 +60,15 @@ export function NotificationBell() {
 
         <ScrollArea className="h-80 max-h-80">
           {isLoading ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="p-md text-center text-sm text-muted-foreground">
               Carregando...
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="p-md text-center text-sm text-muted-foreground">
               Nenhuma notificação
             </div>
           ) : (
-            <div className="flex flex-col divide-y divide-border py-1">
+            <div className="flex flex-col divide-y divide-border py-xs">
               {notifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}

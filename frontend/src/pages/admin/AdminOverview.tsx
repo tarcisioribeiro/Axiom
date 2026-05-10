@@ -64,9 +64,9 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
     : check?.message;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <div className="rounded-lg border border-border bg-card p-5">
+      <div className="mb-md flex items-center justify-between">
+        <div className="flex items-center gap-sm">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Icon className="h-4 w-4 text-primary" />
           </div>
@@ -82,10 +82,12 @@ function ServiceCard({ name, icon: Icon, check, loading }: ServiceCardProps) {
         {t(`pages.adminOverview.status.${cfg.statusKey}`)}
       </p>
       {messageText && (
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{messageText}</p>
+        <p className="mt-xs line-clamp-2 text-xs text-muted-foreground">
+          {messageText}
+        </p>
       )}
       {check?.free_percent !== undefined && (
-        <div className="mt-2">
+        <div className="mt-sm">
           <div className="h-1.5 w-full rounded-full bg-secondary">
             <div
               className={cn(
@@ -116,7 +118,7 @@ export default function AdminOverview() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-lg flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {t('pages.adminOverview.title')}
@@ -134,7 +136,7 @@ export default function AdminOverview() {
           <button
             onClick={() => void refetch()}
             disabled={isLoading}
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+            className="flex items-center gap-sm rounded-lg border border-border bg-card px-3 py-sm text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
           >
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
             {t('pages.adminOverview.refresh')}
@@ -146,7 +148,7 @@ export default function AdminOverview() {
       {data && (
         <div
           className={cn(
-            'mb-6 flex items-center gap-3 rounded-xl border px-5 py-4',
+            'mb-lg flex items-center gap-3 rounded-lg border px-5 py-md',
             data.status === 'healthy' && 'border-green-500/30 bg-green-500/10',
             data.status === 'warning' && 'border-yellow-500/30 bg-yellow-500/10',
             data.status === 'unhealthy' && 'border-destructive/30 bg-destructive/10'
@@ -177,7 +179,7 @@ export default function AdminOverview() {
       )}
 
       {/* Service cards grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-md sm:grid-cols-2 lg:grid-cols-3">
         <ServiceCard
           name={t('pages.adminOverview.services.database')}
           icon={Database}

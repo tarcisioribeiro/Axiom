@@ -177,7 +177,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
   if (loading) return <LoadingState />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-md">
       <SearchInput
         placeholder={t('pages.summaries.searchPlaceholder')}
         value={searchTerm}
@@ -195,24 +195,24 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
           }
         />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-md">
           {filteredSummaries.map((summary) => (
             <Card key={summary.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-2">
+                    <div className="mb-sm flex items-center gap-sm">
                       <BookOpen className="h-5 w-5" />
                       <CardTitle className="text-xl">{summary.book_title}</CardTitle>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-sm">
                       {summary.is_vectorized ? (
-                        <Badge variant="default" className="gap-1">
+                        <Badge variant="default" className="gap-xs">
                           <CheckCircle2 className="h-3 w-3" />
                           {t('pages.summaries.vectorized')}
                         </Badge>
                       ) : (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary" className="gap-xs">
                           <XCircle className="h-3 w-3" />
                           {t('pages.summaries.notVectorized')}
                         </Badge>
@@ -228,7 +228,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-sm">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -259,17 +259,17 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   if (bookHighlights.length === 0) return null;
                   return (
                     <div className="border-t pt-3">
-                      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                      <p className="mb-sm flex items-center gap-sm text-xs font-medium text-muted-foreground">
                         <Highlighter className="h-3.5 w-3.5" />
                         {bookHighlights.length} destaque
                         {bookHighlights.length !== 1 ? 's' : ''} relacionado
                         {bookHighlights.length !== 1 ? 's' : ''}
                       </p>
-                      <div className="space-y-1.5">
+                      <div className="space-y-sm">
                         {bookHighlights.slice(0, 3).map((h) => (
                           <p
                             key={h.id}
-                            className="line-clamp-2 border-l-2 border-primary/40 pl-2 text-xs text-muted-foreground"
+                            className="line-clamp-2 border-l-2 border-primary/40 pl-sm text-xs text-muted-foreground"
                           >
                             {h.text}
                           </p>
@@ -302,8 +302,8 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.createTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.createDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
+            <div className="grid gap-md py-md">
+              <div className="space-y-sm">
                 <Label htmlFor="title">{t('pages.summaries.titleField')}</Label>
                 <Input
                   id="title"
@@ -312,7 +312,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   required
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="book">{t('pages.summaries.bookField')}</Label>
                 <Select
                   value={formData.book.toString()}
@@ -330,7 +330,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="text">{t('pages.summaries.contentField')}</Label>
                 <Textarea
                   id="text"
@@ -356,8 +356,8 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
               <DialogTitle>{t('pages.summaries.editTitle')}</DialogTitle>
               <DialogDescription>{t('pages.summaries.editDesc')}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
+            <div className="grid gap-md py-md">
+              <div className="space-y-sm">
                 <Label htmlFor="edit-title">{t('pages.summaries.titleField')}</Label>
                 <Input
                   id="edit-title"
@@ -366,7 +366,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   required
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="edit-book">{t('pages.summaries.bookField')}</Label>
                 <Select
                   value={formData.book.toString()}
@@ -384,7 +384,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="edit-text">{t('pages.summaries.contentField')}</Label>
                 <Textarea
                   id="edit-text"

@@ -211,14 +211,14 @@ export default function MemberFinancialReportPage() {
 
       <div className="mb-md">
         <Button variant="ghost" size="sm" onClick={() => navigate('/members')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-sm h-4 w-4" />
           Voltar para Membros
         </Button>
       </div>
 
       {/* Member identity header */}
-      <div className="mb-6 overflow-hidden rounded-xl border bg-gradient-to-r from-primary/10 via-transparent to-transparent p-6">
-        <div className="flex items-center gap-4">
+      <div className="mb-lg overflow-hidden rounded-lg border bg-gradient-to-r from-primary/10 via-transparent to-transparent p-lg">
+        <div className="flex items-center gap-md">
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">
             {report.member.name?.charAt(0).toUpperCase() ?? '?'}
           </div>
@@ -228,7 +228,7 @@ export default function MemberFinancialReportPage() {
               {t('pages.memberFinancialReport.subtitle')}
             </p>
             {appliedStart && appliedEnd && (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-xs text-xs text-muted-foreground">
                 {formatDate(appliedStart)} a {formatDate(appliedEnd)}
               </p>
             )}
@@ -358,7 +358,7 @@ export default function MemberFinancialReportPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-md py-sm text-sm font-medium transition-colors ${
+              className={`flex items-center gap-sm px-md py-sm text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'border-b-2 border-primary text-primary'
                   : 'text-muted-foreground hover:text-foreground'
@@ -403,7 +403,10 @@ export default function MemberFinancialReportPage() {
 function EmptyRows() {
   return (
     <tr>
-      <td colSpan={99} className="px-6 py-8 text-center text-sm text-muted-foreground">
+      <td
+        colSpan={99}
+        className="px-lg py-xl text-center text-sm text-muted-foreground"
+      >
         Nenhum registro encontrado
       </td>
     </tr>
@@ -415,11 +418,11 @@ function TableWrapper({ children }: { children: ReactNode }) {
 }
 
 function Th({ children }: { children: ReactNode }) {
-  return <th className="px-6 py-4 text-left text-sm font-semibold">{children}</th>;
+  return <th className="px-lg py-md text-left text-sm font-semibold">{children}</th>;
 }
 
 function Td({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <td className={`px-6 py-4 text-sm ${className}`}>{children}</td>;
+  return <td className={`px-lg py-md text-sm ${className}`}>{children}</td>;
 }
 
 // ─── Table variants ────────────────────────────────────────────────────────────

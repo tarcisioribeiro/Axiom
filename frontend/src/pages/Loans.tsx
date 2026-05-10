@@ -228,7 +228,7 @@ export default function Loans() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-md">
         {currentMemberId !== null && (
           <div className="flex overflow-hidden rounded-lg border">
             {(
@@ -243,7 +243,7 @@ export default function Loans() {
                 type="button"
                 onClick={() => setRoleFilter(key)}
                 className={cn(
-                  'flex items-center gap-1.5 border-r px-3 py-1.5 text-sm transition-colors last:border-r-0',
+                  'flex items-center gap-sm border-r px-3 py-sm text-sm transition-colors last:border-r-0',
                   roleFilter === key
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-background text-muted-foreground hover:bg-muted'
@@ -265,7 +265,7 @@ export default function Loans() {
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {roleFilteredLoans.map((loan) => {
             const total = parseFloat(loan.value);
             const paid = parseFloat(loan.payed_value);
@@ -273,7 +273,7 @@ export default function Loans() {
             return (
               <div
                 key={loan.id}
-                className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md"
+                className="space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -320,7 +320,7 @@ export default function Loans() {
                   </div>
                 </div>
 
-                <div className="space-y-1 text-sm">
+                <div className="space-y-xs text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       {t('pages.loans.totalValue')}
@@ -357,13 +357,13 @@ export default function Loans() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-1 border-t pt-2">
+                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setPaymentLoan(loan)}
                     title={t('pages.loans.payment.title')}
-                    className="gap-1 text-xs"
+                    className="gap-xs text-xs"
                   >
                     <CreditCard className="h-3 w-3" />
                     {t('pages.loans.payBtn')}
@@ -374,7 +374,7 @@ export default function Loans() {
                       size="sm"
                       onClick={() => void handleOpenInstallments(loan)}
                       title={t('pages.loans.installments.title')}
-                      className="gap-1 text-xs"
+                      className="gap-xs text-xs"
                     >
                       <List className="h-3 w-3" />
                       {t('pages.loans.installments.title')}
@@ -385,7 +385,7 @@ export default function Loans() {
                     size="sm"
                     onClick={() => void handleOpenAmortization(loan)}
                     title={t('pages.loans.amortization.title')}
-                    className="gap-1 text-xs"
+                    className="gap-xs text-xs"
                   >
                     <TableProperties className="h-3 w-3" />
                     {t('pages.loans.amortizationBtn')}

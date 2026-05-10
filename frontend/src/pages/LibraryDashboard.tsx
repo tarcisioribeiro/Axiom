@@ -113,35 +113,35 @@ export default function LibraryDashboard() {
         <PageHeader title={t('pages.libraryDashboard.title')} icon={<Library />} />
         <button
           onClick={exportCSV}
-          className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted"
-          title="Exportar estatísticas em CSV"
+          className="flex items-center gap-sm rounded-md border px-3 py-sm text-sm text-muted-foreground hover:bg-muted"
+          title={t('pages.libraryDashboard.exportCSVTitle')}
         >
           <Download className="h-4 w-4" />
-          Exportar CSV
+          {t('pages.libraryDashboard.exportCSV')}
         </button>
       </div>
 
       {/* Block 1: Métricas + Status de Leitura (esquerda) | Meta de Leitura (direita) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-3">
+        <div className="flex flex-col gap-md lg:col-span-2">
           {/* Métricas Principais */}
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-sm">
               <CardTitle className="text-sm font-medium">
                 {t('pages.libraryDashboard.overview')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="grid grid-cols-2 gap-md sm:grid-cols-5">
+                <div className="flex flex-col gap-xs">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     <BookOpen className="h-4 w-4" />
                     <span className="text-xs">{t('pages.libraryDashboard.books')}</span>
                   </div>
                   <span className="text-2xl font-bold">{stats?.total_books || 0}</span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex flex-col gap-xs">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     <User className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.authors')}
@@ -151,8 +151,8 @@ export default function LibraryDashboard() {
                     {stats?.total_authors || 0}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex flex-col gap-xs">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     <Building2 className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.publishers')}
@@ -162,8 +162,8 @@ export default function LibraryDashboard() {
                     {stats?.total_publishers || 0}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex flex-col gap-xs">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     <FileText className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.pagesRead')}
@@ -173,8 +173,8 @@ export default function LibraryDashboard() {
                     {stats?.total_pages_read || 0}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="flex flex-col gap-xs">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     <Star className="h-4 w-4" />
                     <span className="text-xs">
                       {t('pages.libraryDashboard.averageRating')}
@@ -190,12 +190,12 @@ export default function LibraryDashboard() {
 
           {/* Status de Leitura */}
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-sm">
               <CardTitle className="text-sm font-medium">
                 {t('pages.libraryDashboard.readingStatus')}
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col justify-between gap-4">
+            <CardContent className="flex flex-col justify-between gap-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <BookMarked className="h-5 w-5 text-info" />
@@ -242,7 +242,9 @@ export default function LibraryDashboard() {
                     {stats?.books_read || 0}
                   </span>
                   <p className="text-xs text-muted-foreground">
-                    {stats?.books_read === 1 ? 'completo' : 'completos'}
+                    {t('pages.libraryDashboard.completedCount', {
+                      count: stats?.books_read || 0,
+                    })}
                   </p>
                 </div>
               </div>
@@ -260,15 +262,15 @@ export default function LibraryDashboard() {
 
       {/* Block 2: Estatísticas Gerais */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-sm">
           <CardTitle className="text-sm font-medium">
             {t('pages.libraryDashboard.generalStats')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.readingTime')}
@@ -281,8 +283,8 @@ export default function LibraryDashboard() {
                 {t('pages.libraryDashboard.readingTimeTotal')}
               </span>
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
                 <FileText className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.avgPerBook')}
@@ -295,8 +297,8 @@ export default function LibraryDashboard() {
                 {t('pages.libraryDashboard.pagesPerBook')}
               </span>
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.mostReadAuthor')}
@@ -311,10 +313,9 @@ export default function LibraryDashboard() {
                     {stats.most_read_author.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {stats.most_read_author.books_count}{' '}
-                    {stats.most_read_author.books_count === 1
-                      ? 'livro lido'
-                      : 'livros lidos'}
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_author.books_count,
+                    })}
                   </span>
                 </>
               ) : (
@@ -323,8 +324,8 @@ export default function LibraryDashboard() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
                 <span className="text-xs">
                   {t('pages.libraryDashboard.mostReadPublisher')}
@@ -339,10 +340,9 @@ export default function LibraryDashboard() {
                     {stats.most_read_publisher.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {stats.most_read_publisher.books_count}{' '}
-                    {stats.most_read_publisher.books_count === 1
-                      ? 'livro lido'
-                      : 'livros lidos'}
+                    {t('pages.libraryDashboard.booksReadCount', {
+                      count: stats.most_read_publisher.books_count,
+                    })}
                   </span>
                 </>
               ) : (
@@ -356,16 +356,18 @@ export default function LibraryDashboard() {
       </Card>
 
       {/* Block 3: Sessões & Ritmo | Previsão de Conclusão */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
         {/* Sessões & Ritmo */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Sessões & Ritmo</CardTitle>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.sessionsAndPace')}
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {/* Streak em destaque */}
-            <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2 dark:bg-orange-950/20">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between rounded-lg bg-orange-50 px-3 py-sm dark:bg-orange-950/20">
+              <div className="flex items-center gap-sm">
                 <Flame className="h-5 w-5 text-orange-500" />
                 <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
                   {t('pages.libraryDashboard.currentStreak')}
@@ -375,8 +377,10 @@ export default function LibraryDashboard() {
                 <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {stats?.reading_streak?.current_streak || 0}
                 </span>
-                <span className="ml-1 text-xs text-orange-500">
-                  {(stats?.reading_streak?.current_streak || 0) === 1 ? 'dia' : 'dias'}
+                <span className="ml-xs text-xs text-orange-500">
+                  {t('pages.libraryDashboard.streakUnit', {
+                    count: stats?.reading_streak?.current_streak || 0,
+                  })}
                 </span>
               </div>
             </div>
@@ -391,7 +395,7 @@ export default function LibraryDashboard() {
                   value:
                     stats?.avg_speed_pages_per_hour &&
                     stats.avg_speed_pages_per_hour > 0
-                      ? `${stats.avg_speed_pages_per_hour} pág/h`
+                      ? `${stats.avg_speed_pages_per_hour} ${t('pages.libraryDashboard.speedUnit')}`
                       : '—',
                 },
                 {
@@ -402,12 +406,12 @@ export default function LibraryDashboard() {
                 {
                   icon: <FileText className="h-4 w-4" />,
                   label: t('pages.libraryDashboard.avgPerSession'),
-                  value: `${stats?.avg_pages_per_session || 0} págs`,
+                  value: `${stats?.avg_pages_per_session || 0} ${t('pages.libraryDashboard.pagesUnit')}`,
                 },
                 {
                   icon: <Zap className="h-4 w-4" />,
                   label: t('pages.libraryDashboard.longestSession'),
-                  value: `${stats?.longest_session_pages || 0} págs`,
+                  value: `${stats?.longest_session_pages || 0} ${t('pages.libraryDashboard.pagesUnit')}`,
                 },
                 {
                   icon: <CalendarClock className="h-4 w-4" />,
@@ -418,7 +422,7 @@ export default function LibraryDashboard() {
             ).map(({ icon, label, value }, i, arr) => (
               <div key={label}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="flex items-center gap-sm text-muted-foreground">
                     {icon}
                     <span className="text-sm">{label}</span>
                   </div>
@@ -432,7 +436,7 @@ export default function LibraryDashboard() {
 
         {/* Previsão de Conclusão — todos os livros em leitura */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-sm">
             <CardTitle className="text-sm font-medium">
               {t('pages.libraryDashboard.completionEstimate')}
             </CardTitle>
@@ -440,34 +444,36 @@ export default function LibraryDashboard() {
           <CardContent>
             {!stats?.current_reading_books ||
             stats.current_reading_books.length === 0 ? (
-              <div className="flex h-full items-center justify-center py-8 text-sm text-muted-foreground">
+              <div className="flex h-full items-center justify-center py-xl text-sm text-muted-foreground">
                 {t('pages.libraryDashboard.completionNoBook')}
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {stats.current_reading_books.map((book, i, arr) => (
                   <div key={book.title}>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-start gap-2">
+                    <div className="flex flex-col gap-xs">
+                      <div className="flex items-start gap-sm">
                         <BookMarked className="mt-0.5 h-4 w-4 shrink-0 text-info" />
                         <p className="truncate text-sm font-medium" title={book.title}>
                           {book.title}
                         </p>
                       </div>
-                      <div className="ml-6 flex flex-col gap-0.5">
+                      <div className="ml-lg flex flex-col gap-0.5">
                         {book.estimated_days_to_finish !== null ? (
-                          <div className="flex flex-wrap items-baseline gap-2">
+                          <div className="flex flex-wrap items-baseline gap-sm">
                             <span className="text-lg font-bold">
-                              ~{book.estimated_days_to_finish}{' '}
-                              {book.estimated_days_to_finish === 1 ? 'dia' : 'dias'}
+                              {t('pages.libraryDashboard.completionDaysLabel', {
+                                count: book.estimated_days_to_finish,
+                              })}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              previsão:{' '}
-                              {format(
-                                addDays(new Date(), book.estimated_days_to_finish),
-                                'dd/MM/yyyy',
-                                { locale: ptBR }
-                              )}
+                              {t('pages.libraryDashboard.completionForecast', {
+                                date: format(
+                                  addDays(new Date(), book.estimated_days_to_finish),
+                                  'dd/MM/yyyy',
+                                  { locale: ptBR }
+                                ),
+                              })}
                             </span>
                           </div>
                         ) : (
@@ -476,7 +482,8 @@ export default function LibraryDashboard() {
                           </span>
                         )}
                         <span className="text-xs text-muted-foreground">
-                          {book.pages_read} / {book.total_pages} págs
+                          {book.pages_read} / {book.total_pages}{' '}
+                          {t('pages.libraryDashboard.pagesUnit')}
                           {book.total_pages > 0 && (
                             <>
                               {' '}
@@ -497,7 +504,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Block 4: Comparativo Mensal (barras independentes) + Top 3 Gêneros */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
@@ -537,14 +544,14 @@ export default function LibraryDashboard() {
                 ];
 
                 return (
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-md">
                     {metrics.map(({ label, unit, curr, prev, change }) => {
                       const data = [
                         { name: currLabel, value: curr },
                         { name: prevLabel, value: prev },
                       ];
                       return (
-                        <div key={label} className="flex flex-col items-center gap-2">
+                        <div key={label} className="flex flex-col items-center gap-sm">
                           <p className="text-xs font-semibold">{label}</p>
                           <ResponsiveContainer width="100%" height={130}>
                             <BarChart
@@ -574,22 +581,22 @@ export default function LibraryDashboard() {
                             </BarChart>
                           </ResponsiveContainer>
                           {change === null ? (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-xs text-xs text-muted-foreground">
                               <Minus className="h-3 w-3" />
                               <span>—</span>
                             </div>
                           ) : change > 0 ? (
-                            <div className="flex items-center gap-1 text-xs text-success">
+                            <div className="flex items-center gap-xs text-xs text-success">
                               <TrendingUp className="h-3 w-3" />
                               <span>+{change}%</span>
                             </div>
                           ) : change < 0 ? (
-                            <div className="flex items-center gap-1 text-xs text-destructive">
+                            <div className="flex items-center gap-xs text-xs text-destructive">
                               <TrendingDown className="h-3 w-3" />
                               <span>{change}%</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-xs text-xs text-muted-foreground">
                               <Minus className="h-3 w-3" />
                               <span>0%</span>
                             </div>
@@ -623,9 +630,9 @@ export default function LibraryDashboard() {
                       ? Math.round((item.total_time_hours / maxHours) * 100)
                       : 0;
                   return (
-                    <div key={item.genre} className="space-y-1">
+                    <div key={item.genre} className="space-y-xs">
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-sm">
                           <span
                             className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-white"
                             style={{ backgroundColor: COLORS[index] }}
@@ -651,7 +658,7 @@ export default function LibraryDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         {/* Livros por Gênero */}
         <Card>
           <CardHeader>
@@ -666,7 +673,9 @@ export default function LibraryDashboard() {
               data={stats?.books_by_genre || []}
               dataKey="count"
               nameKey="genre_display"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -687,7 +696,9 @@ export default function LibraryDashboard() {
               data={stats?.reading_status_distribution || []}
               dataKey="count"
               nameKey="status_display"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -698,7 +709,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Timeline e Top Autores */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
@@ -774,7 +785,9 @@ export default function LibraryDashboard() {
               data={stats?.top_authors || []}
               dataKey="books_count"
               nameKey="name"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noBooks')}
               lockChartType="pie"
@@ -785,7 +798,7 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Ratings e Distribuições */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
@@ -799,7 +812,9 @@ export default function LibraryDashboard() {
               data={stats?.rating_distribution || []}
               dataKey="count"
               nameKey="rating_range"
-              formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.booksCount', { count: Number(value) })
+              }
               colors={COLORS}
               emptyMessage={t('pages.libraryDashboard.noRatings')}
               lockChartType="pie"
@@ -817,7 +832,7 @@ export default function LibraryDashboard() {
             </p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-lg md:grid-cols-3">
               <div>
                 <h4 className="mb-3 text-sm font-semibold">
                   {t('pages.libraryDashboard.byLanguage')}
@@ -827,7 +842,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_language || []}
                   dataKey="count"
                   nameKey="language_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS}
                   emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
@@ -843,7 +860,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_media_type || []}
                   dataKey="count"
                   nameKey="media_type_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS.slice(3)}
                   emptyMessage={t('pages.libraryDashboard.noMediaDefined')}
                   lockChartType="pie"
@@ -859,7 +878,9 @@ export default function LibraryDashboard() {
                   data={stats?.books_by_literary_type || []}
                   dataKey="count"
                   nameKey="literary_type_display"
-                  formatter={(value) => `${value} ${value === 1 ? 'livro' : 'livros'}`}
+                  formatter={(value) =>
+                    t('pages.libraryDashboard.booksCount', { count: Number(value) })
+                  }
                   colors={COLORS.slice(1)}
                   emptyMessage={t('pages.libraryDashboard.noBooks')}
                   lockChartType="pie"
@@ -872,19 +893,19 @@ export default function LibraryDashboard() {
       </div>
 
       {/* Período do Dia + Leituras Recentes */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         {/* Quando você mais lê */}
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.whenYouRead')}</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Distribuição das sessões por período do dia
+              {t('pages.libraryDashboard.sessionDistribution')}
             </p>
           </CardHeader>
           <CardContent>
             {!stats || (stats.reading_by_time_of_day || []).length === 0 ? (
               <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-                Registre o período nas suas sessões de leitura
+                {t('pages.libraryDashboard.noSessionPeriods')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -902,16 +923,17 @@ export default function LibraryDashboard() {
                   };
                   const barColor = barColors[item.time_of_day] ?? '#6b7280';
                   return (
-                    <div key={item.time_of_day} className="space-y-1">
+                    <div key={item.time_of_day} className="space-y-xs">
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-sm">
                           {timeOfDayIcons[item.time_of_day]}
                           <span>{item.time_of_day_display}</span>
                         </div>
                         <span className="text-muted-foreground">
-                          {item.session_count}{' '}
-                          {item.session_count === 1 ? 'sessão' : 'sessões'} ·{' '}
-                          {item.total_pages} pág.
+                          {t('pages.libraryDashboard.sessionCount', {
+                            count: item.session_count,
+                          })}{' '}
+                          · {item.total_pages} {t('pages.libraryDashboard.pageAbbrev')}
                         </span>
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -951,8 +973,9 @@ export default function LibraryDashboard() {
                       <div>
                         <p className="text-sm font-medium">{reading.book_title}</p>
                         <p className="text-xs">
-                          {reading.pages_read}{' '}
-                          {reading.pages_read === 1 ? 'página' : 'páginas'}
+                          {t('pages.libraryDashboard.pagesReadCount', {
+                            count: reading.pages_read,
+                          })}
                         </p>
                       </div>
                     </div>

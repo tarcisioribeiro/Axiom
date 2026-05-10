@@ -122,16 +122,16 @@ export default function Expenses() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
-            className="gap-2"
+            className="gap-sm"
           >
             <Download className="h-4 w-4" />
             {t('common.actions.export')}
           </Button>
-          <Button onClick={handleCreate} className="gap-2">
+          <Button onClick={handleCreate} className="gap-sm">
             <Plus className="h-4 w-4" />
             {t('pages.expenses.newBtn')}
           </Button>
@@ -171,7 +171,7 @@ export default function Expenses() {
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-xs">
           <span className="whitespace-nowrap text-xs text-muted-foreground">
             {t('pages.expenses.dateFrom')}
           </span>
@@ -208,7 +208,7 @@ export default function Expenses() {
               {formatCurrency(totalExpenses)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              {expenses.length} lançamentos
+              {t('pages.expenses.stats.entriesCount', { count: expenses.length })}
             </p>
           </CardContent>
         </Card>
@@ -284,7 +284,7 @@ export default function Expenses() {
           message: t('pages.expenses.emptyState'),
         }}
         actions={(expense) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             {expense.payed && (
               <ReceiptButton
                 source={{ type: 'expense', data: expense }}

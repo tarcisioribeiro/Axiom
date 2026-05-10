@@ -172,21 +172,21 @@ export function ReceiptButton({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-2" align="end">
+        <PopoverContent className="w-48 p-sm" align="end">
           {isLoadingItems ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <div className="flex items-center justify-center py-md">
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               <span className="text-sm text-muted-foreground">Carregando...</span>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-xs">
               <Button
                 variant="ghost"
                 size="sm"
                 className="justify-start"
                 onClick={handlePreview}
               >
-                <Eye className="mr-2 h-4 w-4" />
+                <Eye className="mr-sm h-4 w-4" />
                 Visualizar
               </Button>
               <Button
@@ -195,7 +195,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('pdf')}
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-sm h-4 w-4" />
                 Exportar PDF
               </Button>
               <Button
@@ -204,7 +204,7 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('png')}
               >
-                <Image className="mr-2 h-4 w-4" />
+                <Image className="mr-sm h-4 w-4" />
                 Exportar PNG
               </Button>
             </div>

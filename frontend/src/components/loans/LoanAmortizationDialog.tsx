@@ -43,9 +43,9 @@ export function LoanAmortizationDialog({
           <DialogTitle>{t('pages.loans.amortization.title')}</DialogTitle>
           <DialogDescription>{loan?.description}</DialogDescription>
         </DialogHeader>
-        <div className="mb-4 flex items-center gap-3">
+        <div className="mb-md flex items-center gap-3">
           <Label>{t('pages.loans.amortization.method')}:</Label>
-          <div className="flex gap-2">
+          <div className="flex gap-sm">
             {(['price', 'sac'] as const).map((m) => (
               <Button
                 key={m}
@@ -59,11 +59,11 @@ export function LoanAmortizationDialog({
           </div>
         </div>
         {isLoading ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div className="py-xl text-center text-sm text-muted-foreground">
             {t('pages.loans.amortization.loading')}
           </div>
         ) : !amortization ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div className="py-xl text-center text-sm text-muted-foreground">
             {t('pages.loans.amortization.noData')}
           </div>
         ) : (
@@ -71,18 +71,20 @@ export function LoanAmortizationDialog({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-3">#</th>
-                  <th className="pb-2 pr-3">{t('pages.loans.amortization.dueDate')}</th>
-                  <th className="pb-2 pr-3 text-right">
+                  <th className="pb-sm pr-3">#</th>
+                  <th className="pb-sm pr-3">
+                    {t('pages.loans.amortization.dueDate')}
+                  </th>
+                  <th className="pb-sm pr-3 text-right">
                     {t('pages.loans.amortization.payment')}
                   </th>
-                  <th className="pb-2 pr-3 text-right">
+                  <th className="pb-sm pr-3 text-right">
                     {t('pages.loans.amortization.principal')}
                   </th>
-                  <th className="pb-2 pr-3 text-right">
+                  <th className="pb-sm pr-3 text-right">
                     {t('pages.loans.amortization.interest')}
                   </th>
-                  <th className="pb-2 text-right">
+                  <th className="pb-sm text-right">
                     {t('pages.loans.amortization.balance')}
                   </th>
                 </tr>
@@ -90,20 +92,22 @@ export function LoanAmortizationDialog({
               <tbody>
                 {amortization.schedule.map((entry) => (
                   <tr key={entry.installment} className="border-b last:border-0">
-                    <td className="py-1 pr-3">{entry.installment}</td>
-                    <td className="py-1 pr-3">
+                    <td className="py-xs pr-3">{entry.installment}</td>
+                    <td className="py-xs pr-3">
                       {formatDate(entry.due_date, 'dd/MM/yyyy')}
                     </td>
-                    <td className="py-1 pr-3 text-right">
+                    <td className="py-xs pr-3 text-right">
                       {formatCurrency(entry.payment)}
                     </td>
-                    <td className="py-1 pr-3 text-right">
+                    <td className="py-xs pr-3 text-right">
                       {formatCurrency(entry.principal)}
                     </td>
-                    <td className="py-1 pr-3 text-right">
+                    <td className="py-xs pr-3 text-right">
                       {formatCurrency(entry.interest)}
                     </td>
-                    <td className="py-1 text-right">{formatCurrency(entry.balance)}</td>
+                    <td className="py-xs text-right">
+                      {formatCurrency(entry.balance)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -44,10 +44,10 @@ export default function Login() {
   // Etapa 2FA
   if (requires2FA) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-4">
+      <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
         <ThemeToggle className="absolute right-4 top-4" />
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-4 text-center">
+          <CardHeader className="space-y-md text-center">
             <div className="mx-auto flex items-center justify-center">
               <img src={logo} alt="MindLedger" className="h-auto w-64" />
             </div>
@@ -57,7 +57,7 @@ export default function Login() {
                   defaultValue: 'Verificação em duas etapas',
                 })}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-xs text-sm text-muted-foreground">
                 {t('auth.twoFactor.description', {
                   defaultValue: 'Digite o código do seu aplicativo autenticador.',
                 })}
@@ -65,13 +65,13 @@ export default function Login() {
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleVerify2FA} className="space-y-4">
+            <form onSubmit={handleVerify2FA} className="space-y-md">
               {error && (
-                <div className="rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
                   {error}
                 </div>
               )}
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="twoFactorCode">
                   {t('auth.twoFactor.codeLabel', {
                     defaultValue: 'Código de verificação',
@@ -104,7 +104,7 @@ export default function Login() {
                   : t('auth.twoFactor.submit', { defaultValue: 'Verificar' })}
               </Button>
             </form>
-            <div className="mt-4 text-center">
+            <div className="mt-md text-center">
               <button
                 type="button"
                 onClick={() => {
@@ -127,24 +127,24 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
       <ThemeToggle className="absolute right-4 top-4" />
 
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
+        <CardHeader className="space-y-md text-center">
           <div className="mx-auto flex items-center justify-center">
             <img src={logo} alt="MindLedger" className="h-auto w-64" />
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-md">
             {error && (
-              <div className="rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <div className="rounded-lg border border-destructive bg-destructive/10 px-md py-3 text-sm text-destructive">
                 {error}
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="username">{t('auth.login.username')}</Label>
               <Input
                 id="username"
@@ -157,7 +157,7 @@ export default function Login() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="password">{t('auth.login.password')}</Label>
               <Input
                 id="password"
@@ -179,7 +179,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-md text-center">
             <Link
               to="/forgot-password"
               className="text-sm text-muted-foreground hover:text-primary hover:underline"
@@ -188,7 +188,7 @@ export default function Login() {
             </Link>
           </div>
 
-          <div className="mt-4 text-center text-sm">
+          <div className="mt-md text-center text-sm">
             <span>{t('auth.login.noAccount')} </span>
             <Link to="/register" className="font-medium text-primary hover:underline">
               {t('auth.login.register')}

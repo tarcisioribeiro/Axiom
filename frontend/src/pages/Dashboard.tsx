@@ -224,14 +224,14 @@ export default function Dashboard() {
     mutationFn: () => dashboardService.requestLGPDExport(),
     onSuccess: () => {
       toast({
-        title: 'Exportação LGPD solicitada',
-        description: 'Você receberá o arquivo em breve.',
+        title: t('pages.dashboard.lgpdExport.successTitle'),
+        description: t('pages.dashboard.lgpdExport.successDesc'),
       });
     },
     onError: () => {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível solicitar a exportação.',
+        title: t('pages.dashboard.lgpdExport.errorTitle'),
+        description: t('pages.dashboard.lgpdExport.errorDesc'),
         variant: 'destructive',
       });
     },
@@ -244,12 +244,12 @@ export default function Dashboard() {
       setShowIrReport(true);
     } catch {
       toast({
-        title: 'Erro',
-        description: 'Não foi possível gerar o relatório IR.',
+        title: t('pages.dashboard.lgpdExport.errorTitle'),
+        description: t('pages.dashboard.irReport.errorDesc'),
         variant: 'destructive',
       });
     }
-  }, [irYear, toast]);
+  }, [irYear, toast, t]);
 
   // ── Derived data ───────────────────────────────────────────────────────────
   // Arrays are wrapped in useMemo so the `?? []` fallback doesn't create a new
@@ -497,14 +497,14 @@ export default function Dashboard() {
 
   return (
     <AnimatedPage>
-      <div className="space-y-6 px-sm py-md md:px-4 md:py-8">
+      <div className="space-y-lg px-sm py-md md:px-md md:py-xl">
         {/* 1. PageHeader */}
         <PageHeader
           title={`${greeting.emoji} ${greeting.text}${displayName ? `, ${displayName}` : ''}`}
-          subtitle="Aqui está seu resumo financeiro de hoje."
+          subtitle={t('pages.dashboard.subtitle')}
           icon={<LayoutDashboard />}
           action={{
-            label: 'Exportar Extrato',
+            label: t('pages.dashboard.exportStatement'),
             icon: <FileDown className="h-4 w-4" />,
             onClick: () => setStatementModalOpen(true),
           }}
@@ -517,18 +517,18 @@ export default function Dashboard() {
         />
 
         {/* 3. Ferramentas: LGPD + IR + Botão Alertas Financeiros */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-sm">
           <Button
             variant="outline"
             size="sm"
             onClick={() => lgpdMutation.mutate()}
             disabled={lgpdMutation.isPending}
-            className="gap-1"
+            className="gap-xs"
           >
             <Download className="h-4 w-4" />
             {t('pages.dashboard.lgpdExport.title')}
           </Button>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-xs">
             <Select
               value={String(irYear)}
               onValueChange={(v) => setIrYear(parseInt(v))}
@@ -553,7 +553,7 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               onClick={() => void handleLoadIRReport()}
-              className="gap-1"
+              className="gap-xs"
             >
               <FileText className="h-4 w-4" />
               {t('pages.dashboard.irReport.title')}
@@ -564,11 +564,11 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               onClick={() => setAlertsModalOpen(true)}
-              className="gap-1"
+              className="gap-xs"
             >
               <AlertTriangle className="h-4 w-4" />
               Alertas Financeiros
-              <Badge variant="destructive" className="ml-1 h-5 min-w-5 px-1 text-xs">
+              <Badge variant="destructive" className="ml-xs h-5 min-w-5 px-xs text-xs">
                 {financialAlerts.length}
               </Badge>
             </Button>
@@ -581,7 +581,7 @@ export default function Dashboard() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <FileText className="h-5 w-5" />
                     <CardTitle as="h2">
                       {t('pages.dashboard.irReport.title')} {irReport.year}
@@ -597,9 +597,9 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-md md:grid-cols-2">
                   <div>
-                    <h3 className="mb-2 font-semibold">
+                    <h3 className="mb-sm font-semibold">
                       {t('pages.dashboard.irReport.revenues')}
                     </h3>
                     {irReport.revenues.map((r) => (
@@ -610,7 +610,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                   <div>
-                    <h3 className="mb-2 font-semibold">
+                    <h3 className="mb-sm font-semibold">
                       {t('pages.dashboard.irReport.deductible')}
                     </h3>
                     {irReport.deductible_expenses.map((d) => (
@@ -630,7 +630,7 @@ export default function Dashboard() {
         {stats && (
           <div
             className={cn(
-              'flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium',
+              'flex items-center gap-3 rounded-lg px-md py-sm text-sm font-medium',
               stats.total_revenues > stats.total_expenses
                 ? 'bg-success/10 text-success'
                 : 'bg-destructive/10 text-destructive'
@@ -655,7 +655,7 @@ export default function Dashboard() {
 
         {/* 6. 4 StatCards */}
         <motion.div
-          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -700,14 +700,14 @@ export default function Dashboard() {
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <AlertTriangle className="h-5 w-5 text-warning" />
                   <CardTitle as="h2">{t('pages.dashboard.anomalies.title')}</CardTitle>
                 </div>
                 <p className="text-sm">{t('pages.dashboard.anomalies.subtitle')}</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-sm">
                   {anomalies.map((anomaly) => (
                     <div
                       key={anomaly.category}
@@ -724,12 +724,12 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="ml-4 flex flex-col items-end gap-1">
+                      <div className="ml-md flex flex-col items-end gap-xs">
                         <p className="font-semibold">
                           {formatCurrency(anomaly.current_amount)}
                         </p>
-                        <div className="flex items-center gap-1.5">
-                          <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs font-bold text-destructive">
+                        <div className="flex items-center gap-sm">
+                          <span className="rounded bg-destructive/10 px-sm py-0.5 text-xs font-bold text-destructive">
                             +
                             {anomaly.average > 0
                               ? (
@@ -754,12 +754,12 @@ export default function Dashboard() {
         )}
 
         {/* 8. Balanço de Contas | Previsão de Saldo (2 cols) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
           {/* Balanço de Contas */}
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card className="h-full">
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <Building2 className="h-5 w-5" />
                   <CardTitle as="h2">{t('pages.dashboard.accountBalance')}</CardTitle>
                 </div>
@@ -784,7 +784,7 @@ export default function Dashboard() {
                         {accountBalances.map((account) => (
                           <TableRow key={account.id}>
                             <TableCell className="font-medium">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-sm">
                                 <div
                                   className={cn(
                                     'h-2 w-2 shrink-0 rounded-full',
@@ -830,7 +830,7 @@ export default function Dashboard() {
                                 </span>
                                 {(account.pending_revenues > 0 ||
                                   account.pending_expenses > 0) && (
-                                  <div className="mt-1 text-xs">
+                                  <div className="mt-xs text-xs">
                                     {account.pending_revenues > 0 && (
                                       <span className="text-success">
                                         +{formatCurrency(account.pending_revenues)}
@@ -854,7 +854,7 @@ export default function Dashboard() {
                     </Table>
                   </div>
                 ) : (
-                  <div className="py-8 text-center">
+                  <div className="py-xl text-center">
                     {t('pages.dashboard.noAccounts')}
                   </div>
                 )}
@@ -867,7 +867,7 @@ export default function Dashboard() {
             <motion.div variants={itemVariants} initial="hidden" animate="visible">
               <Card className="h-full">
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <Calculator className="h-5 w-5" />
                     <CardTitle as="h2">
                       {t('pages.dashboard.balanceForecast')}
@@ -876,9 +876,9 @@ export default function Dashboard() {
                   <p className="text-sm">{t('pages.dashboard.balanceForecastDesc')}</p>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="rounded-lg bg-muted/50 p-4 text-center">
-                      <p className="mb-1 text-xs text-muted-foreground">
+                  <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg bg-muted/50 p-md text-center">
+                      <p className="mb-xs text-xs text-muted-foreground">
                         {t('pages.dashboard.currentBalance')}
                       </p>
                       <p
@@ -892,13 +892,13 @@ export default function Dashboard() {
                         {formatCurrency(balanceForecast.current_total_balance)}
                       </p>
                     </div>
-                    <div className="rounded-lg bg-muted/50 p-4 text-center">
-                      <p className="mb-1 text-xs text-muted-foreground">
+                    <div className="rounded-lg bg-muted/50 p-md text-center">
+                      <p className="mb-xs text-xs text-muted-foreground">
                         {t('pages.dashboard.expectedChange')}
                       </p>
                       <p
                         className={cn(
-                          'flex items-center justify-center gap-1 text-xl font-bold',
+                          'flex items-center justify-center gap-xs text-xl font-bold',
                           balanceForecast.summary.net_change >= 0
                             ? 'text-success'
                             : 'text-destructive'
@@ -912,8 +912,8 @@ export default function Dashboard() {
                         {formatCurrency(Math.abs(balanceForecast.summary.net_change))}
                       </p>
                     </div>
-                    <div className="col-span-1 rounded-lg bg-muted/50 p-4 text-center md:col-span-2">
-                      <p className="mb-1 text-xs text-muted-foreground">
+                    <div className="col-span-1 rounded-lg bg-muted/50 p-md text-center md:col-span-2">
+                      <p className="mb-xs text-xs text-muted-foreground">
                         {t('pages.dashboard.expectedBalance')}
                       </p>
                       <p
@@ -929,14 +929,14 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-lg md:grid-cols-2">
                     {/* Entradas Previstas */}
                     <div className="space-y-3">
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-success">
+                      <h3 className="flex items-center gap-sm text-sm font-semibold text-success">
                         <ArrowUpRight className="h-4 w-4" />
                         {t('pages.dashboard.inflows')}
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-sm">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">
                             {t('pages.dashboard.pendingRevenues')}
@@ -953,7 +953,7 @@ export default function Dashboard() {
                             +{formatCurrency(balanceForecast.loans_to_receive)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between border-t pt-2 text-sm">
+                        <div className="flex items-center justify-between border-t pt-sm text-sm">
                           <span className="font-semibold">
                             {t('pages.dashboard.totalInflows')}
                           </span>
@@ -966,11 +966,11 @@ export default function Dashboard() {
 
                     {/* Saídas Previstas */}
                     <div className="space-y-3">
-                      <h3 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                      <h3 className="flex items-center gap-sm text-sm font-semibold text-destructive">
                         <ArrowDownRight className="h-4 w-4" />
                         {t('pages.dashboard.outflows')}
                       </h3>
-                      <div className="space-y-2">
+                      <div className="space-y-sm">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">
                             {t('pages.dashboard.pendingExpenses')}
@@ -1003,7 +1003,7 @@ export default function Dashboard() {
                             -{formatCurrency(balanceForecast.pending_payables)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between border-t pt-2 text-sm">
+                        <div className="flex items-center justify-between border-t pt-sm text-sm">
                           <span className="font-semibold">
                             {t('pages.dashboard.totalOutflows')}
                           </span>
@@ -1021,13 +1021,13 @@ export default function Dashboard() {
         </div>
 
         {/* 9. Projeção de Fluxo de Caixa | Evolução Diária (2 cols) */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
           {/* Projeção de Fluxo de Caixa */}
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card className="h-full">
               <CardHeader>
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-sm">
                     <Calculator className="h-5 w-5" />
                     <CardTitle as="h2">
                       {t('pages.dashboard.cashFlowProjection')}
@@ -1057,7 +1057,7 @@ export default function Dashboard() {
                   </Select>
                 </div>
                 {cashFlowForecast && (
-                  <div className="flex flex-wrap gap-4 pt-1 text-sm">
+                  <div className="flex flex-wrap gap-md pt-xs text-sm">
                     <div>
                       <span className="text-muted-foreground">
                         {t('pages.dashboard.startBalance')}:{' '}
@@ -1157,7 +1157,7 @@ export default function Dashboard() {
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card className="h-full">
               <CardHeader>
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-md md:flex-row md:items-center md:justify-between">
                   <CardTitle as="h2">
                     {evolutionPeriod === 'daily'
                       ? t('pages.dashboard.evolutionDaily')
@@ -1231,7 +1231,7 @@ export default function Dashboard() {
         </div>
 
         {/* 10. Separador: Composição do mês */}
-        <div className="flex items-center gap-3 py-2">
+        <div className="flex items-center gap-3 py-sm">
           <div className="h-px flex-1 bg-border" />
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Composição do mês
@@ -1240,7 +1240,7 @@ export default function Dashboard() {
         </div>
 
         {/* 11. Despesas por Cat | Receitas por Cat | Cartão por Cat | Orçamentos (4 cols) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-md sm:grid-cols-2 xl:grid-cols-4">
           {/* Despesas por Categoria */}
           <Card>
             <CardHeader>
@@ -1286,14 +1286,14 @@ export default function Dashboard() {
           {/* Despesas de Cartão por Categoria */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle as="h2" className="flex items-center gap-2">
+              <CardTitle as="h2" className="flex items-center gap-sm">
                 <CreditCard className="h-4 w-4" />
                 {t('pages.dashboard.cardExpensesByCategory')}
               </CardTitle>
               <p className="text-sm">
                 {t('pages.dashboard.cardExpensesByCategoryDesc')}
               </p>
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-wrap gap-sm pt-sm">
                 <Select
                   value={selectedCard}
                   onValueChange={(v) => {
@@ -1362,8 +1362,8 @@ export default function Dashboard() {
                 height={280}
               />
               {creditCardExpensesChartData.length > 0 && (
-                <div className="mt-3 space-y-1.5">
-                  <div className="flex items-center justify-between border-b pb-1 text-sm">
+                <div className="mt-3 space-y-sm">
+                  <div className="flex items-center justify-between border-b pb-xs text-sm">
                     <span className="font-semibold">{t('pages.dashboard.total')}</span>
                     <span className="font-bold text-destructive">
                       {formatCurrency(creditCardExpensesTotal)}
@@ -1374,7 +1374,7 @@ export default function Dashboard() {
                       key={index}
                       className="flex items-center justify-between text-xs"
                     >
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-sm">
                         <div
                           className="h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: COLORS[index % COLORS.length] }}
@@ -1399,7 +1399,7 @@ export default function Dashboard() {
             <motion.div variants={itemVariants} initial="hidden" animate="visible">
               <Card className="h-full">
                 <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <PiggyBank className="h-4 w-4" />
                     <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
                   </div>
@@ -1408,7 +1408,7 @@ export default function Dashboard() {
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-md">
                     {budgetStatus.map((item) => {
                       const pct = Math.min(item.percentage, 100);
                       const barColor =
@@ -1418,19 +1418,19 @@ export default function Dashboard() {
                             ? 'bg-yellow-500'
                             : 'bg-success';
                       return (
-                        <div key={item.id} className="space-y-1">
+                        <div key={item.id} className="space-y-xs">
                           <div className="flex items-center justify-between text-sm">
                             <span className="font-medium">
                               {translate('expenseCategories', item.category)}
                             </span>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-sm">
                               <span className="text-muted-foreground">
                                 {formatCurrency(item.actual_spent)} /{' '}
                                 {formatCurrency(item.limit_amount)}
                               </span>
                               <span
                                 className={cn(
-                                  'rounded px-1.5 py-0.5 text-xs font-semibold',
+                                  'rounded px-sm py-0.5 text-xs font-semibold',
                                   item.status === 'exceeded'
                                     ? 'bg-destructive/10 text-destructive'
                                     : item.status === 'warning'
@@ -1461,13 +1461,13 @@ export default function Dashboard() {
           ) : (
             <Card>
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <PiggyBank className="h-4 w-4" />
                   <CardTitle as="h2">{t('pages.dashboard.monthBudgets')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="py-8 text-center text-sm text-muted-foreground">
+                <div className="py-xl text-center text-sm text-muted-foreground">
                   {t('pages.dashboard.monthBudgetsDesc')}
                 </div>
               </CardContent>
