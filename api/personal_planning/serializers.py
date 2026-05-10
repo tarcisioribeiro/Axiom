@@ -162,7 +162,6 @@ class GoalSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.ReadOnlyField()
     days_active = serializers.ReadOnlyField()
     calculated_current_value = serializers.ReadOnlyField()
-    days_until_deadline = serializers.ReadOnlyField()
 
     class Meta:
         model = Goal
@@ -179,8 +178,6 @@ class GoalSerializer(serializers.ModelSerializer):
             "current_value",
             "calculated_current_value",
             "start_date",
-            "deadline",
-            "days_until_deadline",
             "end_date",
             "status",
             "status_display",
@@ -197,6 +194,14 @@ class GoalSerializer(serializers.ModelSerializer):
 class GoalCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criacao/atualizacao de objetivos."""
 
+    end_date = serializers.DateField(required=False, allow_null=True)
+
+    def to_internal_value(self, data):
+        # Normaliza string vazia para null antes da validacao do campo
+        if data.get("end_date") == "":
+            data = {**data, "end_date": None}
+        return super().to_internal_value(data)
+
     class Meta:
         model = Goal
         fields = [
@@ -208,7 +213,6 @@ class GoalCreateUpdateSerializer(serializers.ModelSerializer):
             "target_value",
             "current_value",
             "start_date",
-            "deadline",
             "end_date",
             "status",
             "owner",

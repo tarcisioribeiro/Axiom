@@ -90,9 +90,6 @@ def embed_goal(sender, instance, **kwargs):
     source_title = instance.title
 
     def _embed():
-        deadline = (
-            instance.deadline.strftime("%d/%m/%Y") if instance.deadline else "sem prazo"
-        )
         target = instance.target_value or 1
         progress = int(instance.current_value / target * 100)
         generate_embedding_for_instance(
@@ -100,8 +97,7 @@ def embed_goal(sender, instance, **kwargs):
             domain="planning",
             source_type="goal",
             content_fn=lambda i: (
-                f"Meta '{i.title}': {i.description or ''},"
-                f" progresso {progress}%, prazo {deadline}"
+                f"Meta '{i.title}': {i.description or ''}," f" progresso {progress}%"
             ),
             source_title=source_title,
         )

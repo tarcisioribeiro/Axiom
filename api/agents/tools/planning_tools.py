@@ -94,7 +94,7 @@ def get_active_goals(user: User) -> list[dict[str, Any]]:
         owner__user=user,
         status="active",
         is_deleted=False,
-    ).values("title", "goal_type", "target_value", "current_value", "deadline")[:10]
+    ).values("title", "goal_type", "target_value", "current_value", "end_date")[:10]
 
     result = []
     for g in goals:
@@ -109,7 +109,7 @@ def get_active_goals(user: User) -> list[dict[str, Any]]:
                 "target": target,
                 "current": current,
                 "target_date": (
-                    g["deadline"].strftime("%d/%m/%Y") if g["deadline"] else None
+                    g["end_date"].strftime("%d/%m/%Y") if g["end_date"] else None
                 ),
             }
         )
