@@ -1,385 +1,49 @@
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Vault,
-  ArrowDownToLine,
-  ArrowUpFromLine,
-  RefreshCcw,
-  History,
-  CalendarClock,
-  Zap,
-  TrendingUp,
-  Calculator,
-  PiggyBank,
-  Sparkles,
-} from 'lucide-react';
-import { useState, useEffect, useMemo, useId } from 'react';
+import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { ReceiptButton } from '@/components/receipts';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { VaultCard } from '@/components/vaults/VaultCard';
+import { VaultContributionsDialog } from '@/components/vaults/VaultContributionsDialog';
+import { VaultFormDialog } from '@/components/vaults/VaultFormDialog';
+import { VaultGenerateDialog } from '@/components/vaults/VaultGenerateDialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
+  VaultDepositDialog,
+  VaultWithdrawDialog,
+} from '@/components/vaults/VaultOperationDialogs';
+import { VaultSimulatorDialog } from '@/components/vaults/VaultSimulatorDialog';
+import { VaultTransactionsDialog } from '@/components/vaults/VaultTransactionsDialog';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
-import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
-import type { SimulatorScenarioResult } from '@/services/vault-simulator-service';
-import { vaultSimulatorService } from '@/services/vault-simulator-service';
 import { vaultsService } from '@/services/vaults-service';
-import { useAuthStore } from '@/stores/auth-store';
-import type {
-  Vault as VaultType,
-  VaultFormData,
-  Account,
-  VaultTransaction,
-  VaultRecurringContribution,
-  VaultRecurringContributionFormData,
-} from '@/types';
+import type { Account, Vault as VaultType } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const VAULT_COLORS = [
-  {
-    bg: 'from-emerald-500/20 to-teal-500/10',
-    accent: 'text-emerald-600 dark:text-emerald-400',
-    border: 'border-emerald-500/30',
-    barColor: '#10b981',
-  },
-  {
-    bg: 'from-blue-500/20 to-indigo-500/10',
-    accent: 'text-blue-600 dark:text-blue-400',
-    border: 'border-blue-500/30',
-    barColor: '#3b82f6',
-  },
-  {
-    bg: 'from-violet-500/20 to-purple-500/10',
-    accent: 'text-violet-600 dark:text-violet-400',
-    border: 'border-violet-500/30',
-    barColor: '#8b5cf6',
-  },
-  {
-    bg: 'from-amber-500/20 to-orange-500/10',
-    accent: 'text-amber-600 dark:text-amber-400',
-    border: 'border-amber-500/30',
-    barColor: '#f59e0b',
-  },
-  {
-    bg: 'from-rose-500/20 to-pink-500/10',
-    accent: 'text-rose-600 dark:text-rose-400',
-    border: 'border-rose-500/30',
-    barColor: '#f43f5e',
-  },
-  {
-    bg: 'from-cyan-500/20 to-sky-500/10',
-    accent: 'text-cyan-600 dark:text-cyan-400',
-    border: 'border-cyan-500/30',
-    barColor: '#06b6d4',
-  },
-];
-
-interface VaultCardProps {
-  vault: VaultType;
-  index: number;
-  totalBalance: number;
-  t: (key: string, opts?: Record<string, unknown>) => string;
-  onDeposit: (v: VaultType) => void;
-  onWithdraw: (v: VaultType) => void;
-  onApplyYield: (v: VaultType) => void;
-  onTransactions: (v: VaultType) => void;
-  onContributions: (v: VaultType) => void;
-  onSimulator: (v: VaultType) => void;
-  onEdit: (v: VaultType) => void;
-  onDelete: (id: number) => void;
-}
-
-function VaultCard({
-  vault,
-  index,
-  totalBalance,
-  t,
-  onDeposit,
-  onWithdraw,
-  onApplyYield,
-  onTransactions,
-  onContributions,
-  onSimulator,
-  onEdit,
-  onDelete,
-}: VaultCardProps) {
-  const color = VAULT_COLORS[index % VAULT_COLORS.length];
-  const balance = parseFloat(vault.current_balance);
-  const accYield = parseFloat(vault.accumulated_yield);
-  const proportion =
-    totalBalance > 0 ? Math.min(100, (balance / totalBalance) * 100) : 0;
-
-  return (
-    <Card className={`overflow-hidden border ${color.border}`}>
-      {/* Hero com gradiente */}
-      <div className={`bg-gradient-to-br ${color.bg} px-md pb-md pt-md`}>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-sm">
-            <Vault className={`h-8 w-8 ${color.accent}`} />
-            <div>
-              <p className="font-semibold leading-tight">{vault.description}</p>
-              <p className="text-xs text-muted-foreground">{vault.account_name}</p>
-            </div>
-          </div>
-          <Badge variant={vault.is_active ? 'default' : 'secondary'}>
-            {vault.is_active ? t('common.status.active') : t('common.status.inactive')}
-          </Badge>
-        </div>
-        <div className="mt-3">
-          <p className="text-xs text-muted-foreground">
-            {t('pages.vaults.columns.currentBalance')}
-          </p>
-          <p className={`text-2xl font-bold ${color.accent}`}>
-            {formatCurrency(balance)}
-          </p>
-        </div>
-      </div>
-
-      <CardContent className="space-y-3 pt-3">
-        {/* Rendimento acumulado */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-xs text-amber-500">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{t('pages.vaults.columns.yields')}</span>
-          </div>
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
-            {formatCurrency(accYield)}
-          </span>
-        </div>
-
-        {/* Rendimento pendente */}
-        {vault.pending_yield > 0 && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('pages.vaults.pending')}</span>
-            <span className="font-medium text-info">
-              +{formatCurrency(vault.pending_yield)}
-            </span>
-          </div>
-        )}
-
-        {/* Taxa anual */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {t('pages.vaults.columns.rate')}
-          </span>
-          <Badge variant="outline">
-            {vault.annual_yield_rate_percentage.toFixed(2)}% {t('pages.vaults.perYear')}
-          </Badge>
-        </div>
-
-        {/* Barra de proporção no total */}
-        {totalBalance > 0 && (
-          <div className="space-y-xs">
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{t('pages.vaults.proportionLabel')}</span>
-              <span>{proportion.toFixed(1)}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${proportion}%`,
-                  backgroundColor: color.barColor,
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Botões de ação */}
-        <div className="flex flex-wrap items-center gap-xs border-t pt-sm">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDeposit(vault)}
-            aria-label={t('pages.vaults.depositBtn')}
-            title={t('pages.vaults.depositBtn')}
-            disabled={!vault.is_active}
-          >
-            <ArrowDownToLine className="h-4 w-4 text-success" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onWithdraw(vault)}
-            aria-label={t('pages.vaults.withdrawBtn')}
-            title={t('pages.vaults.withdrawBtn')}
-            disabled={!vault.is_active || balance <= 0}
-          >
-            <ArrowUpFromLine className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onApplyYield(vault)}
-            aria-label={t('pages.vaults.applyYieldBtn')}
-            title={t('pages.vaults.applyYieldBtn')}
-            disabled={!vault.is_active || vault.pending_yield <= 0}
-          >
-            <RefreshCcw className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onTransactions(vault)}
-            aria-label={t('pages.vaults.transactionsBtn')}
-            title={t('pages.vaults.transactionsBtn')}
-          >
-            <History className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onContributions(vault)}
-            aria-label={t('pages.vaults.recurringContributions.btn')}
-            title={t('pages.vaults.recurringContributions.btn')}
-          >
-            <CalendarClock className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onSimulator(vault)}
-            title={t('pages.vaultSimulator.title')}
-            aria-label={t('pages.vaultSimulator.title')}
-          >
-            <TrendingUp className="h-4 w-4 text-info" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(vault)}
-            title={t('common.actions.edit')}
-            aria-label={t('common.actions.edit')}
-          >
-            <Pencil className="h-4 w-4" aria-hidden="true" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onDelete(vault.id)}
-            title={t('common.actions.delete')}
-            aria-label={t('common.actions.delete')}
-          >
-            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export default function Vaults() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const { showConfirm } = useAlertDialog();
+
   const [vaults, setVaults] = useState<VaultType[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
-  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [selectedVault, setSelectedVault] = useState<VaultType | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [operationAmount, setOperationAmount] = useState<string>('');
-  const [operationDescription, setOperationDescription] = useState<string>('');
 
-  // Transactions dialog state
-  const [isTransactionsDialogOpen, setIsTransactionsDialogOpen] = useState(false);
-  const [transactions, setTransactions] = useState<VaultTransaction[]>([]);
-  const [transactionsFilter, setTransactionsFilter] = useState<string>('all');
-  const [editingTransaction, setEditingTransaction] = useState<VaultTransaction | null>(
-    null
-  );
-  const [editTransactionAmount, setEditTransactionAmount] = useState<string>('');
-  const [editTransactionDescription, setEditTransactionDescription] =
-    useState<string>('');
-
-  // Recurring contributions state
-  const [isContributionsDialogOpen, setIsContributionsDialogOpen] = useState(false);
-  const [contributions, setContributions] = useState<VaultRecurringContribution[]>([]);
-  const [isContributionsLoading, setIsContributionsLoading] = useState(false);
-  const [isContributionFormOpen, setIsContributionFormOpen] = useState(false);
-  const [editingContribution, setEditingContribution] =
-    useState<VaultRecurringContribution | null>(null);
-  const [contributionFormData, setContributionFormData] =
-    useState<VaultRecurringContributionFormData>({
-      amount: 0,
-      day_of_month: 1,
-      is_active: true,
-      start_date: new Date().toISOString().slice(0, 10),
-      end_date: undefined,
-      description: '',
-    });
-  const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
-  const [generateMonth, setGenerateMonth] = useState<string>(
-    new Date().toISOString().slice(0, 7)
-  );
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState<VaultFormData>({
-    description: '',
-    account: 0,
-    annual_yield_rate: 0,
-    is_active: true,
-    notes: '',
-  });
-
-  // Simulator state
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isTransactionsOpen, setIsTransactionsOpen] = useState(false);
+  const [isContributionsOpen, setIsContributionsOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
-  const [simulatorVault, setSimulatorVault] = useState<VaultType | null>(null);
-  const [simInitialAmount, setSimInitialAmount] = useState('');
-  const [simMonthlyDeposit, setSimMonthlyDeposit] = useState('');
-  const [simAnnualRate, setSimAnnualRate] = useState('');
-  const [simMonths, setSimMonths] = useState('12');
-  const [simResults, setSimResults] = useState<SimulatorScenarioResult[] | null>(null);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const simFormId = useId();
 
-  const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
-  const { user } = useAuthStore();
-
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [vaultsData, accountsData] = await Promise.all([
@@ -397,7 +61,11 @@ export default function Vaults() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast, t]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const handleCreate = () => {
     if (accounts.length === 0) {
@@ -409,26 +77,12 @@ export default function Vaults() {
       return;
     }
     setSelectedVault(undefined);
-    setFormData({
-      description: '',
-      account: accounts[0]?.id || 0,
-      annual_yield_rate: 0,
-      is_active: true,
-      notes: '',
-    });
-    setIsDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleEdit = (vault: VaultType) => {
     setSelectedVault(vault);
-    setFormData({
-      description: vault.description,
-      account: vault.account,
-      annual_yield_rate: vault.annual_yield_rate_percentage, // Already in percentage
-      is_active: vault.is_active,
-      notes: vault.notes || '',
-    });
-    setIsDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -441,382 +95,18 @@ export default function Vaults() {
       });
       return;
     }
-
     const confirmed = await showConfirm({
       title: t('pages.vaults.deleteTitle'),
       description: t('pages.vaults.deleteDesc'),
     });
-
-    if (confirmed) {
-      try {
-        await vaultsService.delete(id);
-        toast({
-          title: t('pages.vaults.deleted'),
-          description: t('pages.vaults.deletedDesc'),
-        });
-        void loadData();
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.deleteError'),
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
-  const handleSubmit = async () => {
+    if (!confirmed) return;
     try {
-      setIsSubmitting(true);
-      const dataToSend = {
-        ...formData,
-        annual_yield_rate: formData.annual_yield_rate / 100, // Convert from percentage to decimal
-      };
-
-      if (selectedVault) {
-        await vaultsService.update(selectedVault.id, dataToSend);
-        toast({
-          title: t('pages.vaults.updated'),
-          description: t('pages.vaults.updatedDesc'),
-        });
-      } else {
-        await vaultsService.create(dataToSend);
-        toast({
-          title: t('pages.vaults.created'),
-          description: t('pages.vaults.createdDesc'),
-        });
-      }
-      setIsDialogOpen(false);
+      await vaultsService.delete(id);
+      toast({
+        title: t('pages.vaults.deleted'),
+        description: t('pages.vaults.deletedDesc'),
+      });
       void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeposit = async () => {
-    if (!selectedVault) return;
-    const amount = parseFloat(operationAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('pages.vaults.invalidDepositDesc'),
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await vaultsService.deposit(selectedVault.id, {
-        amount,
-        description: operationDescription || undefined,
-      });
-      toast({
-        title: t('pages.vaults.depositSuccess'),
-        description: t('pages.vaults.depositSuccessDesc', {
-          amount: formatCurrency(amount),
-        }),
-      });
-      setIsDepositDialogOpen(false);
-      setOperationAmount('');
-      setOperationDescription('');
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    if (!selectedVault) return;
-    const amount = parseFloat(operationAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('pages.vaults.invalidWithdrawDesc'),
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await vaultsService.withdraw(selectedVault.id, {
-        amount,
-        description: operationDescription || undefined,
-      });
-      toast({
-        title: t('pages.vaults.withdrawSuccess'),
-        description: t('pages.vaults.withdrawSuccessDesc', {
-          amount: formatCurrency(amount),
-        }),
-      });
-      setIsWithdrawDialogOpen(false);
-      setOperationAmount('');
-      setOperationDescription('');
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleApplyYield = async (vault: VaultType) => {
-    try {
-      const response = await vaultsService.applyYield(vault.id);
-      if (response.yield_applied > 0) {
-        toast({
-          title: t('pages.vaults.yieldApplied'),
-          description: t('pages.vaults.yieldAppliedDesc', {
-            amount: formatCurrency(response.yield_applied),
-          }),
-        });
-      } else {
-        toast({
-          title: t('pages.vaults.noYield'),
-          description: t('pages.vaults.noYieldDesc'),
-        });
-      }
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const openDepositDialog = (vault: VaultType) => {
-    setSelectedVault(vault);
-    setOperationAmount('');
-    setOperationDescription('');
-    setIsDepositDialogOpen(true);
-  };
-
-  const openWithdrawDialog = (vault: VaultType) => {
-    setSelectedVault(vault);
-    setOperationAmount('');
-    setOperationDescription('');
-    setIsWithdrawDialogOpen(true);
-  };
-
-  const openTransactionsDialog = async (vault: VaultType) => {
-    setSelectedVault(vault);
-    setTransactionsFilter('all');
-    setEditingTransaction(null);
-    try {
-      const data = await vaultsService.getTransactions(vault.id);
-      setTransactions(data);
-      setIsTransactionsDialogOpen(true);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const loadTransactions = async () => {
-    if (!selectedVault) return;
-    try {
-      const typeFilter = transactionsFilter === 'all' ? undefined : transactionsFilter;
-      const data = await vaultsService.getTransactions(selectedVault.id, typeFilter);
-      setTransactions(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const startEditTransaction = (transaction: VaultTransaction) => {
-    setEditingTransaction(transaction);
-    setEditTransactionAmount(transaction.amount);
-    setEditTransactionDescription(transaction.description || '');
-  };
-
-  const cancelEditTransaction = () => {
-    setEditingTransaction(null);
-    setEditTransactionAmount('');
-    setEditTransactionDescription('');
-  };
-
-  const handleUpdateTransaction = async () => {
-    if (!editingTransaction) return;
-    const amount = parseFloat(editTransactionAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: t('pages.vaults.invalidAmount'),
-        description: t('common.messages.fillRequired'),
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      await vaultsService.updateTransaction(editingTransaction.id, {
-        amount,
-        description: editTransactionDescription || undefined,
-      });
-      toast({
-        title: t('pages.vaults.transactionUpdated'),
-        description: t('pages.vaults.transactionUpdatedDesc'),
-      });
-      cancelEditTransaction();
-      void loadTransactions();
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.updateError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteTransaction = async (transaction: VaultTransaction) => {
-    const confirmed = await showConfirm({
-      title: t('pages.vaults.deleteTransactionTitle'),
-      description: `${t('pages.vaults.deleteTransactionTitle')}: ${formatCurrency(parseFloat(transaction.amount))}`,
-    });
-
-    if (confirmed) {
-      try {
-        await vaultsService.deleteTransaction(transaction.id);
-        toast({
-          title: t('pages.vaults.transactionDeleted'),
-          description: t('pages.vaults.transactionDeletedDesc'),
-        });
-        void loadTransactions();
-        void loadData();
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.deleteError'),
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
-  // Recurring Contributions handlers
-  const openContributionsDialog = async (vault: VaultType) => {
-    setSelectedVault(vault);
-    setIsContributionFormOpen(false);
-    setEditingContribution(null);
-    setIsContributionsLoading(true);
-    setIsContributionsDialogOpen(true);
-    try {
-      const data = await vaultsService.getContributions(vault.id);
-      setContributions(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsContributionsLoading(false);
-    }
-  };
-
-  const openContributionForm = (contribution?: VaultRecurringContribution) => {
-    if (contribution) {
-      setEditingContribution(contribution);
-      setContributionFormData({
-        amount: parseFloat(contribution.amount),
-        day_of_month: contribution.day_of_month,
-        is_active: contribution.is_active,
-        start_date: contribution.start_date,
-        end_date: contribution.end_date,
-        description: contribution.description,
-      });
-    } else {
-      setEditingContribution(null);
-      setContributionFormData({
-        amount: 0,
-        day_of_month: 10,
-        is_active: true,
-        start_date: new Date().toISOString().slice(0, 10),
-        end_date: undefined,
-        description: '',
-      });
-    }
-    setIsContributionFormOpen(true);
-  };
-
-  const handleSaveContribution = async () => {
-    if (!selectedVault) return;
-    try {
-      setIsSubmitting(true);
-      if (editingContribution) {
-        await vaultsService.updateContribution(
-          editingContribution.id,
-          contributionFormData
-        );
-        toast({
-          title: t('pages.vaults.recurringContributions.updated'),
-          description: t('pages.vaults.recurringContributions.updatedDesc'),
-        });
-      } else {
-        await vaultsService.createContribution(selectedVault.id, contributionFormData);
-        toast({
-          title: t('pages.vaults.recurringContributions.created'),
-          description: t('pages.vaults.recurringContributions.createdDesc'),
-        });
-      }
-      setIsContributionFormOpen(false);
-      setEditingContribution(null);
-      const data = await vaultsService.getContributions(selectedVault.id);
-      setContributions(data);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteContribution = async (contribution: VaultRecurringContribution) => {
-    const confirmed = await showConfirm({
-      title: t('pages.vaults.recurringContributions.deleteTitle'),
-      description: t('pages.vaults.recurringContributions.deleteDesc'),
-    });
-    if (!confirmed || !selectedVault) return;
-    try {
-      await vaultsService.deleteContribution(contribution.id);
-      toast({
-        title: t('pages.vaults.recurringContributions.deleted'),
-        description: t('pages.vaults.recurringContributions.deletedDesc'),
-      });
-      const data = await vaultsService.getContributions(selectedVault.id);
-      setContributions(data);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.deleteError'),
@@ -826,30 +116,32 @@ export default function Vaults() {
     }
   };
 
-  const handleGenerateContributions = async () => {
+  const handleApplyYield = async (vault: VaultType) => {
     try {
-      setIsGenerating(true);
-      const result = await vaultsService.generateContributions(generateMonth);
-      toast({
-        title: t('pages.vaults.recurringContributions.generateSuccess'),
-        description: t('pages.vaults.recurringContributions.generateSuccessDesc', {
-          count: result.generated_count,
-        }),
-      });
-      setIsGenerateDialogOpen(false);
+      const response = await vaultsService.applyYield(vault.id);
+      toast(
+        response.yield_applied > 0
+          ? {
+              title: t('pages.vaults.yieldApplied'),
+              description: t('pages.vaults.yieldAppliedDesc', {
+                amount: formatCurrency(response.yield_applied),
+              }),
+            }
+          : {
+              title: t('pages.vaults.noYield'),
+              description: t('pages.vaults.noYieldDesc'),
+            }
+      );
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: t('pages.vaults.recurringContributions.generateError'),
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
-    } finally {
-      setIsGenerating(false);
     }
   };
 
-  // Calculate totals
   const totalBalance = vaults.reduce(
     (sum, v) => sum + parseFloat(v.current_balance),
     0
@@ -860,53 +152,11 @@ export default function Vaults() {
   );
   const totalPendingYield = vaults.reduce((sum, v) => sum + v.pending_yield, 0);
 
-  const openSimulator = (vault: VaultType) => {
-    setSimulatorVault(vault);
-    setSimInitialAmount(vault.current_balance);
-    setSimMonthlyDeposit('');
-    setSimAnnualRate(String(vault.annual_yield_rate_percentage.toFixed(2)));
-    setSimMonths('12');
-    setSimResults(null);
-    setIsSimulatorOpen(true);
-  };
-
-  const handleSimulate = async () => {
-    setIsSimulating(true);
-    try {
-      const data = await vaultSimulatorService.simulate([
-        {
-          name: simulatorVault?.description || 'Simulação',
-          initial_amount: parseFloat(simInitialAmount) || 0,
-          monthly_deposit: parseFloat(simMonthlyDeposit) || 0,
-          annual_rate: parseFloat(simAnnualRate) || 0,
-          months: parseInt(simMonths) || 12,
-        },
-      ]);
-      setSimResults(data.scenarios);
-    } catch (err) {
-      toast({
-        title: t('pages.vaultSimulator.simulationError'),
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSimulating(false);
-    }
-  };
-
-  const simChartData = useMemo(() => {
-    if (!simResults?.length) return [];
-    return simResults[0].data_points.map((dp) => ({
-      label: dp.label,
-      value: dp.balance,
-    }));
-  }, [simResults]);
-
   return (
     <PageContainer>
       <PageHeader title={t('pages.vaults.title')} icon={<Vault />}>
         <div className="flex items-center gap-sm">
-          <Button variant="outline" onClick={() => setIsGenerateDialogOpen(true)}>
+          <Button variant="outline" onClick={() => setIsGenerateOpen(true)}>
             <Zap className="mr-sm h-4 w-4" />
             {t('pages.vaults.recurringContributions.generateBtn')}
           </Button>
@@ -917,7 +167,6 @@ export default function Vaults() {
         </div>
       </PageHeader>
 
-      {/* Summary Cards */}
       <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-3">
         <Card className="border-t-2 border-t-success">
           <CardHeader className="pb-sm">
@@ -960,7 +209,6 @@ export default function Vaults() {
         </Card>
       </div>
 
-      {/* Vault Cards Grid */}
       {isLoading ? (
         <LoadingState />
       ) : vaults.length === 0 ? (
@@ -976,920 +224,74 @@ export default function Vaults() {
               vault={vault}
               index={index}
               totalBalance={totalBalance}
-              t={t}
-              onDeposit={openDepositDialog}
-              onWithdraw={openWithdrawDialog}
-              onApplyYield={handleApplyYield}
-              onTransactions={openTransactionsDialog}
-              onContributions={openContributionsDialog}
-              onSimulator={openSimulator}
+              onDeposit={(v) => {
+                setSelectedVault(v);
+                setIsDepositOpen(true);
+              }}
+              onWithdraw={(v) => {
+                setSelectedVault(v);
+                setIsWithdrawOpen(true);
+              }}
+              onApplyYield={(v) => void handleApplyYield(v)}
+              onTransactions={(v) => {
+                setSelectedVault(v);
+                setIsTransactionsOpen(true);
+              }}
+              onContributions={(v) => {
+                setSelectedVault(v);
+                setIsContributionsOpen(true);
+              }}
+              onSimulator={(v) => {
+                setSelectedVault(v);
+                setIsSimulatorOpen(true);
+              }}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={(id) => void handleDelete(id)}
             />
           ))}
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedVault ? t('pages.vaults.editTitle') : t('pages.vaults.newTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedVault ? t('pages.vaults.editDesc') : t('pages.vaults.newDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-md">
-            <div>
-              <Label htmlFor="description">{t('common.fields.description')} *</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Ex: Reserva de Emergência"
-              />
-            </div>
-            <div>
-              <Label htmlFor="account">{t('common.fields.account')} *</Label>
-              <Select
-                value={formData.account.toString()}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, account: parseInt(value) })
-                }
-                disabled={!!selectedVault}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.fields.selectAccount')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id.toString()}>
-                      {account.account_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="annual_yield_rate">
-                {t('pages.vaults.yieldRateLabel')}
-              </Label>
-              <Input
-                id="annual_yield_rate"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.annual_yield_rate}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    annual_yield_rate: parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="Ex: 12.00"
-              />
-              <p className="mt-xs text-xs text-muted-foreground">
-                {t('pages.vaults.yieldRateHint')}
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="notes">{t('common.fields.notes')}</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Anotações sobre o cofre..."
-              />
-            </div>
-            <div className="flex items-center gap-sm">
-              <Checkbox
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, is_active: checked === true })
-                }
-              />
-              <Label htmlFor="is_active" className="cursor-pointer">
-                {t('pages.vaults.activeVault')}
-              </Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !formData.description}
-            >
-              {isSubmitting
-                ? t('common.actions.saving')
-                : selectedVault
-                  ? t('common.actions.save')
-                  : t('common.actions.create')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Deposit Dialog */}
-      <Dialog open={isDepositDialogOpen} onOpenChange={setIsDepositDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('pages.vaults.depositTitle')}</DialogTitle>
-            <DialogDescription>
-              {selectedVault && (
-                <>
-                  {t('pages.vaults.depositVaultDesc', {
-                    name: selectedVault.description,
-                  })}
-                  <br />
-                  {t('pages.vaults.availableAccountBalance')}{' '}
-                  {formatCurrency(parseFloat(selectedVault.account_balance))}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-md">
-            <div>
-              <Label htmlFor="deposit_amount">
-                {t('pages.vaults.depositAmountLabel')}
-              </Label>
-              <Input
-                id="deposit_amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={
-                  selectedVault ? parseFloat(selectedVault.account_balance) : undefined
-                }
-                value={operationAmount}
-                onChange={(e) => setOperationAmount(e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="deposit_description">
-                {t('common.fields.description')}
-              </Label>
-              <Input
-                id="deposit_description"
-                value={operationDescription}
-                onChange={(e) => setOperationDescription(e.target.value)}
-                placeholder="Ex: Depósito mensal"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDepositDialogOpen(false)}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button onClick={handleDeposit} disabled={isSubmitting || !operationAmount}>
-              {isSubmitting
-                ? t('pages.vaults.depositAction')
-                : t('pages.vaults.depositBtn')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Withdraw Dialog */}
-      <Dialog open={isWithdrawDialogOpen} onOpenChange={setIsWithdrawDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('pages.vaults.withdrawTitle')}</DialogTitle>
-            <DialogDescription>
-              {selectedVault && (
-                <>
-                  {t('pages.vaults.withdrawVaultDesc', {
-                    name: selectedVault.description,
-                  })}
-                  <br />
-                  {t('pages.vaults.availableVaultBalance')}{' '}
-                  {formatCurrency(parseFloat(selectedVault.current_balance))}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-md">
-            <div>
-              <Label htmlFor="withdraw_amount">
-                {t('pages.vaults.withdrawAmountLabel')}
-              </Label>
-              <Input
-                id="withdraw_amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={
-                  selectedVault ? parseFloat(selectedVault.current_balance) : undefined
-                }
-                value={operationAmount}
-                onChange={(e) => setOperationAmount(e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="withdraw_description">
-                {t('common.fields.description')}
-              </Label>
-              <Input
-                id="withdraw_description"
-                value={operationDescription}
-                onChange={(e) => setOperationDescription(e.target.value)}
-                placeholder="Ex: Saque para emergência"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsWithdrawDialogOpen(false)}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleWithdraw}
-              disabled={isSubmitting || !operationAmount}
-            >
-              {isSubmitting
-                ? t('pages.vaults.withdrawAction')
-                : t('pages.vaults.withdrawBtn')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Transactions Dialog */}
-      <Dialog
-        open={isTransactionsDialogOpen}
-        onOpenChange={setIsTransactionsDialogOpen}
-      >
-        <DialogContent className="custom-scrollbar max-h-[80vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('pages.vaults.transactionsTitle')}</DialogTitle>
-            <DialogDescription>
-              {selectedVault && (
-                <>
-                  {t('pages.vaults.transactionHistoryDesc', {
-                    name: selectedVault.description,
-                  })}
-                  <br />
-                  {t('pages.vaults.columns.currentBalance')}:{' '}
-                  {formatCurrency(parseFloat(selectedVault.current_balance))} |
-                  {t('pages.vaults.columns.yields')}:{' '}
-                  {formatCurrency(parseFloat(selectedVault.accumulated_yield))}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-md">
-            {/* Filter */}
-            <div className="flex items-center gap-sm">
-              <Label>{t('pages.vaults.filterByType')}</Label>
-              <Select
-                value={transactionsFilter}
-                onValueChange={(value) => {
-                  setTransactionsFilter(value);
-                  setTimeout(() => {
-                    void loadTransactions();
-                  }, 0);
-                }}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('pages.vaults.filterAll')}</SelectItem>
-                  <SelectItem value="deposit">
-                    {t('pages.vaults.filterDeposits')}
-                  </SelectItem>
-                  <SelectItem value="withdrawal">
-                    {t('pages.vaults.filterWithdrawals')}
-                  </SelectItem>
-                  <SelectItem value="yield">
-                    {t('pages.vaults.filterYields')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Transactions Table */}
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('pages.vaults.columns.date')}</TableHead>
-                    <TableHead>{t('pages.vaults.columns.type')}</TableHead>
-                    <TableHead>{t('pages.vaults.columns.amount')}</TableHead>
-                    <TableHead>{t('common.fields.description')}</TableHead>
-                    <TableHead>{t('pages.vaults.columns.afterBalance')}</TableHead>
-                    <TableHead className="text-right">
-                      {t('common.table.actions')}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="py-xl text-center text-muted-foreground"
-                      >
-                        {t('pages.vaults.noTransactions')}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          {new Date(transaction.transaction_date).toLocaleDateString(
-                            i18n.language
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              transaction.transaction_type === 'deposit'
-                                ? 'default'
-                                : transaction.transaction_type === 'withdrawal'
-                                  ? 'destructive'
-                                  : 'secondary'
-                            }
-                          >
-                            {transaction.transaction_type_display}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {editingTransaction?.id === transaction.id ? (
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0.01"
-                              value={editTransactionAmount}
-                              onChange={(e) => setEditTransactionAmount(e.target.value)}
-                              className="w-24"
-                            />
-                          ) : (
-                            <span
-                              className={cn(
-                                transaction.transaction_type === 'deposit' ||
-                                  transaction.transaction_type === 'yield'
-                                  ? 'text-success'
-                                  : 'text-destructive'
-                              )}
-                            >
-                              {transaction.transaction_type === 'withdrawal'
-                                ? '-'
-                                : '+'}
-                              {formatCurrency(parseFloat(transaction.amount))}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingTransaction?.id === transaction.id ? (
-                            <Input
-                              value={editTransactionDescription}
-                              onChange={(e) =>
-                                setEditTransactionDescription(e.target.value)
-                              }
-                              className="w-40"
-                            />
-                          ) : (
-                            transaction.description || '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {formatCurrency(parseFloat(transaction.balance_after))}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-xs">
-                            {(transaction.transaction_type === 'deposit' ||
-                              transaction.transaction_type === 'withdrawal') &&
-                              selectedVault && (
-                                <ReceiptButton
-                                  source={{
-                                    type:
-                                      transaction.transaction_type === 'deposit'
-                                        ? 'vault_deposit'
-                                        : 'vault_withdrawal',
-                                    data: { vault: selectedVault, transaction },
-                                  }}
-                                  memberName={getMemberDisplayName(null, user)}
-                                />
-                              )}
-                            {transaction.transaction_type === 'yield' && (
-                              <>
-                                {editingTransaction?.id === transaction.id ? (
-                                  <>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={handleUpdateTransaction}
-                                      disabled={isSubmitting}
-                                    >
-                                      {t('common.actions.save')}
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={cancelEditTransaction}
-                                    >
-                                      {t('common.actions.cancel')}
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => startEditTransaction(transaction)}
-                                      aria-label={t('common.actions.edit')}
-                                      title={t('common.actions.edit')}
-                                    >
-                                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleDeleteTransaction(transaction)
-                                      }
-                                      aria-label={t('common.actions.delete')}
-                                      title={t('common.actions.delete')}
-                                    >
-                                      <Trash2
-                                        className="h-4 w-4 text-destructive"
-                                        aria-hidden="true"
-                                      />
-                                    </Button>
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsTransactionsDialogOpen(false)}
-            >
-              {t('common.actions.close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      {/* Generate Contributions Dialog */}
-      <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('pages.vaults.recurringContributions.generateTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('pages.vaults.recurringContributions.generateDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-md">
-            <div>
-              <Label htmlFor="generate_month">
-                {t('pages.vaults.recurringContributions.generateMonth')}
-              </Label>
-              <Input
-                id="generate_month"
-                type="month"
-                lang={i18n.language}
-                value={generateMonth}
-                onChange={(e) => setGenerateMonth(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsGenerateDialogOpen(false)}>
-              {t('common.actions.cancel')}
-            </Button>
-            <Button onClick={handleGenerateContributions} disabled={isGenerating}>
-              {isGenerating
-                ? t('common.actions.saving')
-                : t('pages.vaults.recurringContributions.generateConfirm')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Recurring Contributions Dialog */}
-      <Dialog
-        open={isContributionsDialogOpen}
-        onOpenChange={setIsContributionsDialogOpen}
-      >
-        <DialogContent className="custom-scrollbar max-h-[85vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('pages.vaults.recurringContributions.title')}</DialogTitle>
-            <DialogDescription>
-              {selectedVault &&
-                t('pages.vaults.recurringContributions.desc', {
-                  name: selectedVault.description,
-                })}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-md">
-            {/* New contribution button */}
-            {!isContributionFormOpen && (
-              <div className="flex justify-end">
-                <Button size="sm" onClick={() => openContributionForm()}>
-                  <Plus className="mr-xs h-4 w-4" />
-                  {t('pages.vaults.recurringContributions.newBtn')}
-                </Button>
-              </div>
-            )}
-
-            {/* Inline form */}
-            {isContributionFormOpen && (
-              <div className="space-y-3 rounded-md border p-md">
-                <h4 className="text-sm font-medium">
-                  {editingContribution
-                    ? t('common.actions.edit')
-                    : t('pages.vaults.recurringContributions.newBtn')}
-                </h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <Label htmlFor="contrib_description">
-                      {t('pages.vaults.recurringContributions.fields.description')}
-                    </Label>
-                    <Input
-                      id="contrib_description"
-                      value={contributionFormData.description}
-                      onChange={(e) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          description: e.target.value,
-                        })
-                      }
-                      placeholder="Ex: Poupança mensal"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contrib_amount">
-                      {t('pages.vaults.recurringContributions.fields.amount')}
-                    </Label>
-                    <Input
-                      id="contrib_amount"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={contributionFormData.amount}
-                      onChange={(e) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          amount: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      placeholder="0,00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contrib_day">
-                      {t('pages.vaults.recurringContributions.fields.dayOfMonth')}
-                    </Label>
-                    <Input
-                      id="contrib_day"
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={contributionFormData.day_of_month}
-                      onChange={(e) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          day_of_month: parseInt(e.target.value) || 1,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contrib_start">
-                      {t('pages.vaults.recurringContributions.fields.startDate')}
-                    </Label>
-                    <Input
-                      id="contrib_start"
-                      type="date"
-                      value={contributionFormData.start_date}
-                      onChange={(e) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          start_date: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="contrib_end">
-                      {t('pages.vaults.recurringContributions.fields.endDate')}
-                    </Label>
-                    <Input
-                      id="contrib_end"
-                      type="date"
-                      value={contributionFormData.end_date || ''}
-                      onChange={(e) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          end_date: e.target.value || undefined,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-sm">
-                    <Checkbox
-                      id="contrib_active"
-                      checked={contributionFormData.is_active}
-                      onCheckedChange={(checked) =>
-                        setContributionFormData({
-                          ...contributionFormData,
-                          is_active: checked === true,
-                        })
-                      }
-                    />
-                    <Label htmlFor="contrib_active" className="cursor-pointer">
-                      {t('pages.vaults.recurringContributions.fields.isActive')}
-                    </Label>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-sm">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setIsContributionFormOpen(false);
-                      setEditingContribution(null);
-                    }}
-                  >
-                    {t('common.actions.cancel')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveContribution}
-                    disabled={
-                      isSubmitting ||
-                      !contributionFormData.description ||
-                      contributionFormData.amount <= 0
-                    }
-                  >
-                    {isSubmitting
-                      ? t('common.actions.saving')
-                      : t('common.actions.save')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Contributions list */}
-            {isContributionsLoading ? (
-              <div className="py-xl text-center text-sm text-muted-foreground">
-                {t('common.messages.loading')}
-              </div>
-            ) : contributions.length === 0 ? (
-              <div className="py-xl text-center text-sm text-muted-foreground">
-                {t('pages.vaults.recurringContributions.emptyState')}
-              </div>
-            ) : (
-              <div className="space-y-sm">
-                {contributions.map((contribution) => (
-                  <div
-                    key={contribution.id}
-                    className="flex items-start justify-between gap-3 rounded-md border p-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-sm">
-                        <span className="truncate text-sm font-medium">
-                          {contribution.description}
-                        </span>
-                        <Badge
-                          variant={contribution.is_active ? 'default' : 'secondary'}
-                          className="shrink-0 text-xs"
-                        >
-                          {contribution.is_active
-                            ? t('pages.vaults.recurringContributions.active')
-                            : t('pages.vaults.recurringContributions.inactive')}
-                        </Badge>
-                      </div>
-                      <div className="mt-0.5 text-sm font-semibold text-success">
-                        {formatCurrency(parseFloat(contribution.amount))}
-                      </div>
-                      <div className="mt-xs space-y-0.5 text-xs text-muted-foreground">
-                        <div>
-                          {t('pages.vaults.columns.date')}: {contribution.day_of_month}{' '}
-                          &bull; {contribution.start_date}
-                          {contribution.end_date && ` → ${contribution.end_date}`}
-                        </div>
-                        {contribution.next_contribution_date &&
-                          contribution.is_active && (
-                            <div>
-                              {t('pages.vaults.recurringContributions.nextDate')}{' '}
-                              {new Date(
-                                contribution.next_contribution_date
-                              ).toLocaleDateString(i18n.language)}
-                            </div>
-                          )}
-                        {contribution.last_generated_month && (
-                          <div>
-                            {t('pages.vaults.recurringContributions.lastGenerated')}{' '}
-                            {contribution.last_generated_month}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 gap-xs">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openContributionForm(contribution)}
-                        aria-label={t('common.actions.edit')}
-                        title={t('common.actions.edit')}
-                      >
-                        <Pencil className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteContribution(contribution)}
-                        aria-label={t('common.actions.delete')}
-                        title={t('common.actions.delete')}
-                      >
-                        <Trash2
-                          className="h-4 w-4 text-destructive"
-                          aria-hidden="true"
-                        />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsContributionsDialogOpen(false)}
-            >
-              {t('common.actions.close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Simulator dialog */}
-      <Dialog open={isSimulatorOpen} onOpenChange={setIsSimulatorOpen}>
-        <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-sm">
-              <TrendingUp className="h-5 w-5" />
-              {t('pages.vaultSimulator.title')} — {simulatorVault?.description}
-            </DialogTitle>
-            <DialogDescription>{t('pages.vaults.simulatorDesc')}</DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-md sm:grid-cols-2">
-            <div className="space-y-xs">
-              <Label className="text-xs">
-                {t('pages.vaultSimulator.initialAmount')}
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                step="100"
-                value={simInitialAmount}
-                onChange={(e) => setSimInitialAmount(e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-            <div className="space-y-xs">
-              <Label className="text-xs">
-                {t('pages.vaultSimulator.monthlyDeposit')}
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                step="100"
-                value={simMonthlyDeposit}
-                onChange={(e) => setSimMonthlyDeposit(e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-            <div className="space-y-xs">
-              <Label className="text-xs">{t('pages.vaultSimulator.annualRate')}</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={simAnnualRate}
-                onChange={(e) => setSimAnnualRate(e.target.value)}
-                placeholder="12,00"
-              />
-            </div>
-            <div className="space-y-xs">
-              <Label className="text-xs">{t('pages.vaultSimulator.termMonths')}</Label>
-              <Input
-                type="number"
-                min="1"
-                max="600"
-                step="1"
-                value={simMonths}
-                onChange={(e) => setSimMonths(e.target.value)}
-                placeholder="12"
-              />
-            </div>
-          </div>
-
-          <Button onClick={() => void handleSimulate()} disabled={isSimulating}>
-            <Calculator className="mr-sm h-4 w-4" />
-            {isSimulating
-              ? t('pages.vaultSimulator.calculating')
-              : t('pages.vaultSimulator.calculate')}
-          </Button>
-
-          {simResults && simResults.length > 0 && (
-            <div className="space-y-3 rounded-lg border p-md">
-              {simResults.map((s, idx) => (
-                <div
-                  key={`${simFormId}-${idx}`}
-                  className="grid grid-cols-2 gap-sm text-sm"
-                >
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.vaultSimulator.columns.totalInvested')}
-                    </p>
-                    <p className="font-semibold">{formatCurrency(s.total_invested)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.vaultSimulator.columns.yield')}
-                    </p>
-                    <p className="font-semibold text-success">
-                      {formatCurrency(s.total_yield)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.vaultSimulator.columns.finalBalance')}
-                    </p>
-                    <p className="text-lg font-bold text-primary">
-                      {formatCurrency(s.final_balance)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.vaultSimulator.columns.term')}
-                    </p>
-                    <p className="font-semibold">
-                      {t('pages.vaultSimulator.monthsValue', { count: s.months })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {simChartData.length > 0 && (
-                <div className="space-y-xs">
-                  <p className="text-xs text-muted-foreground">
-                    {t('pages.vaults.simulatorFinalBalance', {
-                      months: simResults[0].months,
-                    })}
-                  </p>
-                  <div className="flex h-16 items-end gap-0.5">
-                    {simChartData
-                      .filter(
-                        (_, i) =>
-                          i % Math.max(1, Math.floor(simChartData.length / 20)) === 0
-                      )
-                      .map((d, i) => {
-                        const max = Math.max(...simChartData.map((x) => x.value));
-                        const pct = max > 0 ? (d.value / max) * 100 : 0;
-                        return (
-                          <div
-                            key={i}
-                            title={`${d.label}: ${formatCurrency(d.value)}`}
-                            className="flex-1 rounded-sm bg-primary/60 transition-colors hover:bg-primary"
-                            style={{ height: `${pct}%`, minHeight: '2px' }}
-                          />
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <VaultFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        selectedVault={selectedVault}
+        accounts={accounts}
+        onSuccess={() => void loadData()}
+      />
+      <VaultDepositDialog
+        open={isDepositOpen}
+        onOpenChange={setIsDepositOpen}
+        vault={selectedVault}
+        onSuccess={() => void loadData()}
+      />
+      <VaultWithdrawDialog
+        open={isWithdrawOpen}
+        onOpenChange={setIsWithdrawOpen}
+        vault={selectedVault}
+        onSuccess={() => void loadData()}
+      />
+      <VaultTransactionsDialog
+        open={isTransactionsOpen}
+        onOpenChange={setIsTransactionsOpen}
+        vault={selectedVault}
+        onSuccess={() => void loadData()}
+      />
+      <VaultContributionsDialog
+        open={isContributionsOpen}
+        onOpenChange={setIsContributionsOpen}
+        vault={selectedVault}
+      />
+      <VaultGenerateDialog
+        open={isGenerateOpen}
+        onOpenChange={setIsGenerateOpen}
+        onSuccess={() => void loadData()}
+      />
+      <VaultSimulatorDialog
+        open={isSimulatorOpen}
+        onOpenChange={setIsSimulatorOpen}
+        vault={selectedVault ?? null}
+      />
     </PageContainer>
   );
 }
