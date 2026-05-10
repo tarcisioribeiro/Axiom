@@ -6,7 +6,8 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     GoalDetailView,
     GoalListCreateView,
     GoalRecalculateView,
-    GoalResetView,
+    GoalRegisterFailureView,
+    GoalRestartView,
     InstancesForDateView,
     PersonalPlanningAnalyticsView,
     PersonalPlanningDashboardStatsView,
@@ -69,7 +70,12 @@ urlpatterns = [
         GoalRecalculateView.as_view(),
         name="goal-recalculate",
     ),
-    path("goals/<int:pk>/reset/", GoalResetView.as_view(), name="goal-reset"),
+    path("goals/<int:pk>/restart/", GoalRestartView.as_view(), name="goal-restart"),
+    path(
+        "goals/<int:pk>/register-failure/",
+        GoalRegisterFailureView.as_view(),
+        name="goal-register-failure",
+    ),
     # Daily Reflections
     path(
         "reflections/",
