@@ -5,11 +5,12 @@ import {
   Trash2,
   RefreshCw,
   RotateCcw,
-  Clock,
-  Flame,
-  Calendar,
   Ban,
   Star,
+  Flame,
+  Calendar,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,16 +25,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { type goalSchema } from '@/lib/validations';
 import { goalsService } from '@/services/goals-service';
 import { routineTasksService } from '@/services/routine-tasks-service';
@@ -41,6 +45,8 @@ import type { Goal, RoutineTask, GoalFormData as GoalApiFormData } from '@/types
 import { getErrorMessage } from '@/utils/error-utils';
 
 type GoalFormData = z.infer<typeof goalSchema>;
+
+const AUTO_GOAL_TYPES = ['consecutive_days', 'total_days', 'avoid_habit'];
 
 const GOAL_TYPE_META: Record<
   string,
@@ -73,33 +79,28 @@ function GoalCard({
   onEdit,
   onDelete,
   onRecalculate,
-  onReset,
+  onRegisterFailure,
+  onRestart,
 }: {
   goal: Goal;
   onEdit: (g: Goal) => void;
   onDelete: (id: number) => void;
   onRecalculate: (g: Goal) => void;
-  onReset: (g: Goal) => void;
+  onRegisterFailure: (g: Goal) => void;
+  onRestart: (g: Goal) => void;
 }) {
   const { t } = useTranslation();
   const pct = goal.progress_percentage;
   const typeMeta = GOAL_TYPE_META[goal.goal_type] ?? GOAL_TYPE_META.custom;
   const TypeIcon = typeMeta.icon;
-
-  const days = goal.days_until_deadline;
-  const isUrgent = days !== null && days !== undefined && days <= 7 && days >= 0;
-  const isOverdue = days !== null && days !== undefined && days < 0;
+  const isAutoType = AUTO_GOAL_TYPES.includes(goal.goal_type);
 
   const ringColor =
     goal.status === 'completed'
       ? 'hsl(var(--chart-2))'
-      : isOverdue
-        ? 'hsl(var(--destructive))'
-        : isUrgent
-          ? 'hsl(var(--warning))'
-          : pct >= 80
-            ? 'hsl(var(--chart-2))'
-            : 'hsl(var(--primary))';
+      : pct >= 80
+        ? 'hsl(var(--chart-2))'
+        : 'hsl(var(--primary))';
 
   const displayValue =
     goal.calculated_current_value !== undefined
@@ -107,22 +108,8 @@ function GoalCard({
       : goal.current_value;
 
   return (
-    <Card
-      className={cn(
-        'relative overflow-hidden transition-shadow hover:shadow-md',
-        isUrgent && goal.status === 'active' && 'ring-1 ring-warning/50',
-        isOverdue && goal.status === 'active' && 'ring-1 ring-destructive/50'
-      )}
-    >
-      {isUrgent && goal.status === 'active' && (
-        <div className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full bg-warning" />
-      )}
-      {isOverdue && goal.status === 'active' && (
-        <div className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full bg-destructive" />
-      )}
-
+    <Card className="relative overflow-hidden transition-shadow hover:shadow-md">
       <CardContent className="p-5">
-        {/* Header: ícone do tipo + título */}
         <div className="mb-md flex items-start gap-3">
           <div
             className={cn(
@@ -142,7 +129,6 @@ function GoalCard({
           </div>
         </div>
 
-        {/* Progresso circular + stats */}
         <div className="mb-md flex items-center gap-md">
           <CircularProgress value={pct} size={72} strokeWidth={6} color={ringColor}>
             <span className="text-sm font-bold">{pct.toFixed(0)}%</span>
@@ -162,31 +148,9 @@ function GoalCard({
               </span>
               <span className="font-medium">{goal.days_active}</span>
             </div>
-            {goal.deadline && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t('pages.goals.columns.deadline')}
-                </span>
-                <span
-                  className={cn(
-                    'flex items-center gap-xs font-medium',
-                    isOverdue && 'text-destructive',
-                    isUrgent && !isOverdue && 'text-warning'
-                  )}
-                >
-                  <Clock className="h-3 w-3" />
-                  {isOverdue
-                    ? t('pages.goals.deadlineOverdue', { days: Math.abs(days ?? 0) })
-                    : days === 0
-                      ? t('pages.goals.deadlineToday')
-                      : t('pages.goals.deadlineDays', { days })}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Status + ações */}
         <div className="flex items-center justify-between border-t pt-3">
           <Badge
             className={cn(
@@ -199,7 +163,7 @@ function GoalCard({
             {goal.status_display}
           </Badge>
           <div className="flex gap-xs">
-            {goal.goal_type === 'consecutive_days' && goal.status === 'active' && (
+            {isAutoType && goal.status === 'active' && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -210,15 +174,26 @@ function GoalCard({
                 <RefreshCw className="h-4 w-4 text-primary" />
               </Button>
             )}
+            {isAutoType && goal.status === 'active' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onRegisterFailure(goal)}
+                title={t('pages.goals.registerFailureBtn')}
+                aria-label={t('pages.goals.registerFailureBtn')}
+              >
+                <AlertTriangle className="h-4 w-4 text-warning" />
+              </Button>
+            )}
             {goal.status === 'active' && (
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => onReset(goal)}
-                title={t('pages.goals.resetBtn2')}
-                aria-label={t('pages.goals.resetBtn2')}
+                onClick={() => onRestart(goal)}
+                title={t('pages.goals.restartBtn')}
+                aria-label={t('pages.goals.restartBtn')}
               >
-                <RotateCcw className="h-4 w-4 text-warning" />
+                <RotateCcw className="h-4 w-4 text-muted-foreground" />
               </Button>
             )}
             <Button
@@ -254,6 +229,9 @@ export default function Goals() {
   const [selectedGoal, setSelectedGoal] = useState<Goal | undefined>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [failureGoal, setFailureGoal] = useState<Goal | undefined>();
+  const [failureDate, setFailureDate] = useState<string>('');
+  const [isRegisteringFailure, setIsRegisteringFailure] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -317,19 +295,11 @@ export default function Goals() {
   };
 
   const handleRecalculate = async (goal: Goal) => {
-    if (goal.goal_type !== 'consecutive_days') {
-      toast({
-        title: t('common.messages.actionDenied'),
-        description: t('pages.goals.recalculateNotAvailable'),
-        variant: 'destructive',
-      });
-      return;
-    }
     try {
       await goalsService.recalculate(goal.id);
       toast({
         title: t('pages.goals.recalculated'),
-        description: t('pages.goals.recalculatedDesc', { days: goal.days_active }),
+        description: t('pages.goals.recalculatedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
@@ -341,25 +311,53 @@ export default function Goals() {
     }
   };
 
-  const handleReset = async (goal: Goal) => {
+  const handleRegisterFailure = (goal: Goal) => {
+    setFailureGoal(goal);
+    setFailureDate(formatLocalDate(new Date()));
+  };
+
+  const handleConfirmFailure = async () => {
+    if (!failureGoal || !failureDate) return;
+    try {
+      setIsRegisteringFailure(true);
+      await goalsService.registerFailure(failureGoal.id, failureDate);
+      toast({
+        title: t('pages.goals.failureRegistered'),
+        description: t('pages.goals.failureRegisteredDesc'),
+      });
+      setFailureGoal(undefined);
+      setFailureDate('');
+      void loadData();
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.goals.failureError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRegisteringFailure(false);
+    }
+  };
+
+  const handleRestart = async (goal: Goal) => {
     const confirmed = await showConfirm({
-      title: t('pages.goals.resetTitle'),
-      description: t('pages.goals.resetDesc', { name: goal.title }),
-      confirmText: t('pages.goals.resetBtn'),
+      title: t('pages.goals.restartTitle'),
+      description: t('pages.goals.restartDesc', { name: goal.title }),
+      confirmText: t('pages.goals.restartConfirmBtn'),
       cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
-      await goalsService.reset(goal.id);
+      await goalsService.restart(goal.id);
       toast({
-        title: t('pages.goals.resetSuccess'),
-        description: t('pages.goals.resetSuccessDesc'),
+        title: t('pages.goals.restartSuccess'),
+        description: t('pages.goals.restartSuccessDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: t('pages.goals.resetError'),
+        title: t('pages.goals.restartError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -372,6 +370,7 @@ export default function Goals() {
       const apiData = {
         ...data,
         related_task: data.related_task === null ? undefined : data.related_task,
+        end_date: data.end_date === '' ? null : data.end_date,
       };
       if (selectedGoal) {
         await goalsService.update(selectedGoal.id, apiData as GoalApiFormData);
@@ -411,7 +410,8 @@ export default function Goals() {
     onEdit: handleEdit,
     onDelete: (id: number) => void handleDelete(id),
     onRecalculate: (g: Goal) => void handleRecalculate(g),
-    onReset: (g: Goal) => void handleReset(g),
+    onRegisterFailure: handleRegisterFailure,
+    onRestart: (g: Goal) => void handleRestart(g),
   };
 
   return (
@@ -478,6 +478,7 @@ export default function Goals() {
         </div>
       )}
 
+      {/* Modal edição/criação */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
@@ -495,6 +496,59 @@ export default function Goals() {
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal registrar falha */}
+      <Dialog
+        open={!!failureGoal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setFailureGoal(undefined);
+            setFailureDate('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('pages.goals.registerFailureTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('pages.goals.registerFailureDesc', { name: failureGoal?.title })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-sm">
+            <Label>{t('pages.goals.failureDateLabel')}</Label>
+            <DatePicker
+              value={failureDate}
+              onChange={(date) => setFailureDate(date ? formatLocalDate(date) : '')}
+              placeholder={t('pages.goals.failureDatePlaceholder')}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFailureGoal(undefined);
+                setFailureDate('');
+              }}
+            >
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleConfirmFailure()}
+              disabled={!failureDate || isRegisteringFailure}
+            >
+              {isRegisteringFailure ? (
+                <>
+                  <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+                  {t('common.actions.saving')}
+                </>
+              ) : (
+                t('pages.goals.registerFailureConfirmBtn')
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </PageContainer>

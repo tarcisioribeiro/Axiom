@@ -411,15 +411,18 @@ class GoalRecalculateView(APIView):
         return Response(serializer.data)
 
 
-class GoalResetView(APIView):
+class GoalRestartView(APIView):
     """
-    Reseta o progresso do objetivo.
-    Define current_value = 0 e start_date = hoje, mantendo o status como ativo.
+    Reinicia totalmente o progresso do objetivo.
+    Define start_date = amanha para garantir progresso 0 imediato,
+    zera current_value e reativa o objetivo.
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
+        from datetime import timedelta
+
         try:
             goal = Goal.objects.get(
                 pk=pk, owner__user=request.user, deleted_at__isnull=True
@@ -429,9 +432,8 @@ class GoalResetView(APIView):
                 {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Reseta o progresso
         goal.current_value = 0
-        goal.start_date = timezone.now().date()
+        goal.start_date = timezone.now().date() + timedelta(days=1)
         goal.end_date = None
         goal.status = "active"
         goal.save(
@@ -449,9 +451,80 @@ class GoalResetView(APIView):
             "update",
             "Goal",
             goal.id,
-            f"Resetou progresso do objetivo: {goal.title}",
-            description_key="goal.reset_progress",
+            f"Reiniciou progresso do objetivo: {goal.title}",
+            description_key="goal.restart",
             description_params={"title": goal.title},
+        )
+
+        serializer = GoalSerializer(goal)
+        return Response(serializer.data)
+
+
+class GoalRegisterFailureView(APIView):
+    """
+    Registra uma falha no objetivo a partir de uma data informada.
+    Define start_date = failure_date para que o progresso seja recalculado
+    desde essa data, preservando o historico anterior.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            goal = Goal.objects.get(
+                pk=pk, owner__user=request.user, deleted_at__isnull=True
+            )
+        except Goal.DoesNotExist:
+            return Response(
+                {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        failure_date_str = request.data.get("failure_date")
+        if not failure_date_str:
+            return Response(
+                {"detail": "O campo 'failure_date' é obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            from datetime import date
+
+            failure_date = date.fromisoformat(failure_date_str)
+        except ValueError:
+            return Response(
+                {"detail": "Formato de data inválido. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        today = timezone.now().date()
+        if failure_date > today:
+            return Response(
+                {"detail": "A data da falha não pode ser no futuro."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        goal.start_date = failure_date
+        goal.current_value = 0
+        goal.end_date = None
+        goal.status = "active"
+        goal.save(
+            update_fields=[
+                "start_date",
+                "current_value",
+                "end_date",
+                "status",
+                "updated_at",
+            ]
+        )
+
+        log_activity(
+            request,
+            "update",
+            "Goal",
+            goal.id,
+            f"Registrou falha no objetivo: {goal.title} em {failure_date}",
+            description_key="goal.register_failure",
+            description_params={"title": goal.title, "date": failure_date_str},
         )
 
         serializer = GoalSerializer(goal)
