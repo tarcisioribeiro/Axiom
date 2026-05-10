@@ -157,9 +157,9 @@ export const LaunchExpensesDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-md">
           {/* Month selector */}
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label>{t('pages.fixedExpenses.launchDialog.selectMonth')}</Label>
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger>
@@ -180,7 +180,7 @@ export const LaunchExpensesDialog = ({
           </div>
 
           {/* Expense list with editable values */}
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <div className="flex items-center justify-between">
               <Label>
                 {t('pages.fixedExpenses.launchDialog.expensesLabel', {
@@ -188,7 +188,7 @@ export const LaunchExpensesDialog = ({
                   total: fixedExpenses.length,
                 })}
               </Label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <Checkbox
                   id="select-all"
                   checked={selectedExpenseIds.size === fixedExpenses.length}
@@ -202,12 +202,12 @@ export const LaunchExpensesDialog = ({
                 </label>
               </div>
             </div>
-            <ScrollArea className="h-[400px] rounded-md border p-4">
+            <ScrollArea className="h-[400px] rounded-md border p-md">
               <div className="space-y-3">
                 {fixedExpenses.map((exp) => (
                   <div
                     key={exp.id}
-                    className={`flex items-center gap-4 rounded-lg border p-3 transition-colors ${
+                    className={`flex items-center gap-md rounded-lg border p-3 transition-colors ${
                       selectedExpenseIds.has(exp.id)
                         ? 'bg-background'
                         : 'bg-muted/50 opacity-60'
@@ -249,7 +249,7 @@ export const LaunchExpensesDialog = ({
           </div>
 
           {/* Total */}
-          <div className="flex items-center justify-between rounded-lg bg-muted p-4">
+          <div className="flex items-center justify-between rounded-lg bg-muted p-md">
             <span className="font-semibold">
               {t('pages.fixedExpenses.launchDialog.total')}
             </span>
@@ -259,7 +259,7 @@ export const LaunchExpensesDialog = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-sm">
             <Button
               type="button"
               variant="outline"

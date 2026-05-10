@@ -74,7 +74,7 @@ export const AsRatio: Story = {
 
 export const Grid: Story = {
   render: () => (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
       <StatCard
         title="Saldo total"
         value="R$ 12.540,00"

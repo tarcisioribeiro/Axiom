@@ -160,27 +160,27 @@ export default function Permissions() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-lg">
       <div>
-        <h1 className="flex items-center gap-2 text-3xl font-bold">
+        <h1 className="flex items-center gap-sm text-3xl font-bold">
           <Shield className="h-8 w-8" />
           {t('pages.permissions.title')}
         </h1>
-        <p className="mt-2">{t('pages.permissions.subtitle')}</p>
+        <p className="mt-sm">{t('pages.permissions.subtitle')}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-3">
         {/* Lista de Membros */}
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-sm">
               <Users className="h-5 w-5" />
               {t('pages.permissions.membersTitle')}
             </CardTitle>
             <CardDescription>{t('pages.permissions.membersDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               {members.map((member) => (
                 <Button
                   key={member.id}
@@ -188,7 +188,7 @@ export default function Permissions() {
                   className="w-full justify-start"
                   onClick={() => loadMemberPermissions(member)}
                 >
-                  <div className="flex w-full items-center gap-2">
+                  <div className="flex w-full items-center gap-sm">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold">
                       {member.name.charAt(0).toUpperCase()}
                     </div>
@@ -207,7 +207,7 @@ export default function Permissions() {
                 </Button>
               ))}
               {members.length === 0 && (
-                <p className="py-4 text-center text-sm">
+                <p className="py-md text-center text-sm">
                   {t('pages.permissions.noMembers')}
                 </p>
               )}
@@ -236,10 +236,10 @@ export default function Permissions() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-lg">
                   {availableApps.map((app) => (
                     <div key={app.code} className="space-y-3">
-                      <div className="flex items-center gap-2 border-b pb-2">
+                      <div className="flex items-center gap-sm border-b pb-sm">
                         <h3 className="text-lg font-semibold">{app.name}</h3>
                         <Badge variant="secondary">
                           {t('pages.permissions.permissionsCount', {
@@ -247,7 +247,7 @@ export default function Permissions() {
                           })}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                      <div className="grid grid-cols-1 gap-sm md:grid-cols-2">
                         {app.permissions.map((permission) => {
                           const isActive = memberPermissions.has(permission.codename);
                           return (
@@ -261,9 +261,9 @@ export default function Permissions() {
                             >
                               <span>{permission.name}</span>
                               {isActive ? (
-                                <Check className="ml-2 h-4 w-4" />
+                                <Check className="ml-sm h-4 w-4" />
                               ) : (
-                                <X className="ml-2 h-4 w-4 opacity-30" />
+                                <X className="ml-sm h-4 w-4 opacity-30" />
                               )}
                             </Button>
                           );
@@ -272,7 +272,7 @@ export default function Permissions() {
                     </div>
                   ))}
 
-                  <div className="flex justify-end gap-2 border-t pt-4">
+                  <div className="flex justify-end gap-sm border-t pt-md">
                     <Button variant="outline" onClick={() => setSelectedMember(null)}>
                       {t('common.actions.cancel')}
                     </Button>
@@ -282,12 +282,12 @@ export default function Permissions() {
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                           {t('common.actions.saving')}
                         </>
                       ) : (
                         <>
-                          <Check className="mr-2 h-4 w-4" />
+                          <Check className="mr-sm h-4 w-4" />
                           {t('pages.permissions.savePermissions')}
                         </>
                       )}
@@ -297,7 +297,7 @@ export default function Permissions() {
               )
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
-                <Shield className="mb-4 h-16 w-16 opacity-20" />
+                <Shield className="mb-md h-16 w-16 opacity-20" />
                 <p className="text-lg">{t('pages.permissions.selectMemberStart')}</p>
               </div>
             )}
@@ -311,9 +311,9 @@ export default function Permissions() {
           <CardTitle className="text-sm">{t('pages.permissions.howItWorks')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
-            <div className="flex items-start gap-2">
-              <div className="mt-1.5 h-2 w-2 rounded-full bg-success" />
+          <div className="grid grid-cols-1 gap-md text-sm md:grid-cols-3">
+            <div className="flex items-start gap-sm">
+              <div className="mt-sm h-2 w-2 rounded-full bg-success" />
               <div>
                 <p className="font-medium">
                   {t('pages.permissions.activePermissions')}
@@ -321,8 +321,8 @@ export default function Permissions() {
                 <p>{t('pages.permissions.activePermissionsDesc')}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="mt-1.5 h-2 w-2 rounded-full bg-muted-foreground" />
+            <div className="flex items-start gap-sm">
+              <div className="mt-sm h-2 w-2 rounded-full bg-muted-foreground" />
               <div>
                 <p className="font-medium">
                   {t('pages.permissions.inactivePermissions')}
@@ -330,8 +330,8 @@ export default function Permissions() {
                 <p>{t('pages.permissions.inactivePermissionsDesc')}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2">
-              <div className="mt-1.5 h-2 w-2 rounded-full bg-info" />
+            <div className="flex items-start gap-sm">
+              <div className="mt-sm h-2 w-2 rounded-full bg-info" />
               <div>
                 <p className="font-medium">{t('pages.permissions.granularity')}</p>
                 <p>{t('pages.permissions.granularityDesc')}</p>

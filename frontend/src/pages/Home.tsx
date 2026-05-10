@@ -154,7 +154,7 @@ export default function Home() {
                 <Card className="h-full border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl">
                   <CardHeader>
                     <motion.div
-                      className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-4 flex items-center justify-center text-white`}
+                      className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-md flex items-center justify-center text-white`}
                       whileHover={{ scale: 1.15, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >

@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 
 import { API_CONFIG } from '@/config/constants';
 import { logger } from '@/lib/logger';
+import { queryClient } from '@/lib/query-client';
 
 import {
   AuthenticationError,
@@ -64,7 +65,13 @@ class ApiClient {
     );
 
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        const method = response.config.method?.toUpperCase();
+        if (method && method !== 'GET') {
+          void queryClient.invalidateQueries();
+        }
+        return response;
+      },
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & {
           _retry?: boolean;

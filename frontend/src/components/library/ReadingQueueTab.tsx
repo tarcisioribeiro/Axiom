@@ -84,7 +84,7 @@ function SortableBookItem({ book, rank }: SortableBookItemProps) {
         {book.estimated_days_to_finish != null && (
           <Badge
             variant="outline"
-            className="hidden items-center gap-1 text-xs lg:inline-flex"
+            className="hidden items-center gap-xs text-xs lg:inline-flex"
           >
             <Clock className="h-3 w-3" />~{book.estimated_days_to_finish}d
           </Badge>

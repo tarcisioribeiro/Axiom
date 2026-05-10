@@ -42,7 +42,7 @@ export function StarRating({
 
   return (
     <div
-      className={cn('flex gap-1', className)}
+      className={cn('flex gap-xs', className)}
       onMouseLeave={() => !disabled && setHoverValue(null)}
     >
       {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (
@@ -76,7 +76,7 @@ export function StarRating({
         <button
           type="button"
           onClick={() => onChange?.(null)}
-          className="ml-2 text-xs transition-colors hover:text-destructive"
+          className="ml-sm text-xs transition-colors hover:text-destructive"
         >
           Limpar
         </button>

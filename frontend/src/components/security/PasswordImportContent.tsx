@@ -172,7 +172,7 @@ export function PasswordImportContent() {
       {step === 'upload' && (
         <Card className="mx-auto max-w-xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-sm">
               <Upload className="h-5 w-5" />
               {t('pages.passwordImport.title')}
             </CardTitle>
@@ -210,7 +210,7 @@ export function PasswordImportContent() {
               <div
                 role="button"
                 tabIndex={0}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-xl transition-colors ${
                   isDragging
                     ? 'border-primary bg-primary/5'
                     : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/20'
@@ -226,7 +226,7 @@ export function PasswordImportContent() {
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={handleDrop}
               >
-                <FileUp className="mb-2 h-8 w-8 text-muted-foreground" />
+                <FileUp className="mb-sm h-8 w-8 text-muted-foreground" />
                 {file ? (
                   <p className="text-sm font-medium">{file.name}</p>
                 ) : (
@@ -235,7 +235,7 @@ export function PasswordImportContent() {
                       {t('pages.passwordImport.uploadHint')}
                     </p>
                     {format && (
-                      <p className="mt-1 text-xs text-muted-foreground">
+                      <p className="mt-xs text-xs text-muted-foreground">
                         {t('pages.passwordImport.uploadHintFormat', {
                           format: format === 'bitwarden_json' ? '.json' : '.csv',
                         })}
@@ -254,7 +254,7 @@ export function PasswordImportContent() {
               />
             </div>
 
-            <div className="flex items-start gap-2 rounded-md bg-muted/40 p-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-sm rounded-md bg-muted/40 p-3 text-sm text-muted-foreground">
               <Info className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{t('pages.passwordImport.description')}</span>
             </div>
@@ -268,7 +268,7 @@ export function PasswordImportContent() {
                 <LoadingState size="sm" />
               ) : (
                 <>
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="mr-sm h-4 w-4" />
                   {t('pages.passwordImport.previewBtn')}
                 </>
               )}
@@ -289,13 +289,13 @@ export function PasswordImportContent() {
                     {t('pages.passwordImport.previewDesc')}
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <Button variant="outline" size="sm" onClick={selectAll}>
-                    <CheckSquare className="mr-1 h-4 w-4" />
+                    <CheckSquare className="mr-xs h-4 w-4" />
                     {t('pages.passwordImport.selectAll')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={deselectAll}>
-                    <Square className="mr-1 h-4 w-4" />
+                    <Square className="mr-xs h-4 w-4" />
                     {t('pages.passwordImport.deselectAll')}
                   </Button>
                 </div>
@@ -303,7 +303,7 @@ export function PasswordImportContent() {
             </CardHeader>
             <CardContent>
               {preview.entries.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
+                <p className="py-xl text-center text-muted-foreground">
                   {t('pages.passwordImport.emptyFile')}
                 </p>
               ) : (
@@ -390,14 +390,14 @@ export function PasswordImportContent() {
       {step === 'summary' && summary && (
         <Card className="mx-auto max-w-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-sm">
               <CheckCircle2 className="h-5 w-5 text-green-600" />
               {t('pages.passwordImport.summaryTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-md">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="space-y-1 rounded-lg bg-green-50 p-4 dark:bg-green-950/20">
+            <div className="grid grid-cols-3 gap-md text-center">
+              <div className="space-y-xs rounded-lg bg-green-50 p-md dark:bg-green-950/20">
                 <p className="text-2xl font-bold text-green-700 dark:text-green-400">
                   {summary.imported}
                 </p>
@@ -405,7 +405,7 @@ export function PasswordImportContent() {
                   {t('pages.passwordImport.summaryImported')}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950/20">
+              <div className="space-y-xs rounded-lg bg-yellow-50 p-md dark:bg-yellow-950/20">
                 <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
                   {summary.duplicates_skipped}
                 </p>
@@ -413,7 +413,7 @@ export function PasswordImportContent() {
                   {t('pages.passwordImport.summaryDuplicates')}
                 </p>
               </div>
-              <div className="space-y-1 rounded-lg bg-red-50 p-4 dark:bg-red-950/20">
+              <div className="space-y-xs rounded-lg bg-red-50 p-md dark:bg-red-950/20">
                 <p className="text-2xl font-bold text-red-700 dark:text-red-400">
                   {summary.errors}
                 </p>
@@ -424,7 +424,7 @@ export function PasswordImportContent() {
             </div>
 
             {summary.errors > 0 && (
-              <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/20 dark:text-red-400">
+              <div className="flex items-start gap-sm rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/20 dark:text-red-400">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
                   {summary.errors}{' '}

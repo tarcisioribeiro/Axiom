@@ -54,13 +54,13 @@ export const EnhancedPieChart = ({
     if (!payload) return null;
 
     return (
-      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 px-2">
+      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 px-sm">
         {payload.map((entry, index) => {
           const value = Number(entry.payload[dataKey] || 0);
           const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
 
           return (
-            <li key={`legend-${index}`} className="flex items-center gap-2 text-xs">
+            <li key={`legend-${index}`} className="flex items-center gap-sm text-xs">
               <span
                 className="h-3 w-3 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}

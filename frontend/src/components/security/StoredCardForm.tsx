@@ -15,17 +15,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { storedCardSchema, type StoredCreditCardFormData } from '@/lib/validations';
+import { CARD_FLAGS } from '@/types';
 import type { StoredCreditCard, CreditCard, Member } from '@/types';
-
-const CARD_FLAGS = [
-  { value: 'MSC', label: 'Mastercard' },
-  { value: 'VSA', label: 'Visa' },
-  { value: 'ELO', label: 'Elo' },
-  { value: 'EXP', label: 'American Express' },
-  { value: 'HCD', label: 'Hipercard' },
-  { value: 'DIN', label: 'Diners Club' },
-  { value: 'OTHER', label: 'Outro' },
-];
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => ({
   value: i + 1,
@@ -100,8 +91,8 @@ export function StoredCardForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="name">{t('pages.storedCards.form.nameLabel')}</Label>
           <Input
@@ -110,7 +101,7 @@ export function StoredCardForm({
             placeholder={t('pages.storedCards.form.namePlaceholder')}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -127,16 +118,16 @@ export function StoredCardForm({
             }}
           />
           {errors.card_number && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.card_number.message}
             </p>
           )}
           {!card && (
-            <p className="mt-1 text-xs">{t('pages.storedCards.form.numberHint')}</p>
+            <p className="mt-xs text-xs">{t('pages.storedCards.form.numberHint')}</p>
           )}
           {card && (
-            <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter o número atual (criptografado)
+            <p className="mt-xs text-xs text-warning">
+              {t('pages.storedCards.form.keepCurrentNumber')}
             </p>
           )}
         </div>
@@ -151,7 +142,7 @@ export function StoredCardForm({
             placeholder={t('pages.storedCards.form.holderPlaceholder')}
           />
           {errors.cardholder_name && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.cardholder_name.message}
             </p>
           )}
@@ -170,13 +161,13 @@ export function StoredCardForm({
             }}
           />
           {errors.security_code && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.security_code.message}
             </p>
           )}
           {card && (
-            <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter o CVV atual
+            <p className="mt-xs text-xs text-warning">
+              {t('pages.storedCards.form.keepCurrentCvv')}
             </p>
           )}
         </div>
@@ -195,13 +186,15 @@ export function StoredCardForm({
             <SelectContent>
               {CARD_FLAGS.map((flag) => (
                 <SelectItem key={flag.value} value={flag.value}>
-                  {flag.label}
+                  {flag.value === 'OTHER'
+                    ? t('pages.storedCards.otherBrand')
+                    : flag.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.flag && (
-            <p className="mt-1 text-sm text-destructive">{errors.flag.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.flag.message}</p>
           )}
         </div>
 
@@ -225,7 +218,7 @@ export function StoredCardForm({
             </SelectContent>
           </Select>
           {errors.expiration_month && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.expiration_month.message}
             </p>
           )}
@@ -251,7 +244,7 @@ export function StoredCardForm({
             </SelectContent>
           </Select>
           {errors.expiration_year && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.expiration_year.message}
             </p>
           )}
@@ -280,7 +273,7 @@ export function StoredCardForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-1 text-xs">
+            <p className="mt-xs text-xs">
               {t('pages.storedCards.form.financeCardHint')}
             </p>
           </div>
@@ -295,19 +288,19 @@ export function StoredCardForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

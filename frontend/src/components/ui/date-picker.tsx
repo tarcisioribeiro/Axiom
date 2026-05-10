@@ -163,7 +163,7 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'h-10 w-full py-2 pl-10 pr-10',
+          'h-10 w-full py-sm pl-10 pr-10',
           'rounded-md border border-input bg-background',
           'text-sm text-foreground placeholder:text-foreground',
           'focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring',

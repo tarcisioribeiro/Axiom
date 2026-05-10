@@ -440,7 +440,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         >
           {SelectedIcon ? (
             <>
-              <SelectedIcon className="mr-2 h-4 w-4" />
+              <SelectedIcon className="mr-sm h-4 w-4" />
               {value}
             </>
           ) : (
@@ -449,7 +449,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
-        <div className="border-b p-2">
+        <div className="border-b p-sm">
           <Input
             placeholder="Buscar icone..."
             value={search}
@@ -458,27 +458,27 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           />
         </div>
         <ScrollArea className="h-[320px]">
-          <div className="p-2 pr-4">
+          <div className="p-sm pr-md">
             {/* Clear option */}
             <Button
               variant="ghost"
               size="sm"
-              className="mb-2 w-full justify-start text-muted-foreground"
+              className="mb-sm w-full justify-start text-muted-foreground"
               onClick={() => {
                 onChange(null);
                 setOpen(false);
               }}
             >
-              <MoreHorizontal className="mr-2 h-4 w-4 opacity-50" />
+              <MoreHorizontal className="mr-sm h-4 w-4 opacity-50" />
               Sem ícone
             </Button>
 
             {Object.entries(filteredCategories).map(([category, icons]) => (
               <div key={category} className="mb-3">
-                <div className="mb-1 px-2 text-xs font-medium text-muted-foreground">
+                <div className="mb-xs px-sm text-xs font-medium text-muted-foreground">
                   {category}
                 </div>
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-4 gap-xs">
                   {icons.map((iconName) => {
                     const Icon = TASK_ICONS[iconName];
                     return (
@@ -502,7 +502,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             ))}
 
             {Object.keys(filteredCategories).length === 0 && (
-              <div className="py-4 text-center text-sm text-muted-foreground">
+              <div className="py-md text-center text-sm text-muted-foreground">
                 Nenhum icone encontrado
               </div>
             )}

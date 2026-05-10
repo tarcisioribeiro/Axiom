@@ -113,7 +113,7 @@ export const ChartContainer = ({
           <motion.button
             onClick={handleToggle}
             disabled={isAnimating}
-            className="rounded-lg border border-border bg-background/80 p-2 shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
+            className="rounded-lg border border-border bg-background/80 p-sm shadow-sm backdrop-blur-sm transition-colors hover:bg-accent/10 disabled:opacity-50"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Alternar tipo de gráfico"
@@ -127,7 +127,7 @@ export const ChartContainer = ({
           </motion.button>
 
           {/* Tooltip no hover */}
-          <div className="pointer-events-none absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded-md border border-border bg-popover/95 px-2 py-1 text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
+          <div className="pointer-events-none absolute right-0 top-full z-20 mt-xs whitespace-nowrap rounded-md border border-border bg-popover/95 px-sm py-xs text-xs opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
             Alternar visualização
           </div>
         </div>

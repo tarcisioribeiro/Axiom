@@ -185,12 +185,12 @@ export function BookForm({
       onSubmit={handleSubmit((data) =>
         onSubmit(data, coverFile, bookFile, alreadyRead, startDate, endDate)
       )}
-      className="space-y-4"
+      className="space-y-md"
     >
       {/* Cover Image */}
       <div>
         <Label>{t('pages.books.form.coverLabel')}</Label>
-        <div className="mt-2 flex items-start gap-4">
+        <div className="mt-sm flex items-start gap-md">
           <div className="relative flex h-52 w-36 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted shadow-sm">
             {coverPreview ? (
               <>
@@ -212,7 +212,7 @@ export function BookForm({
               <ImagePlus className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-sm">
             <input
               ref={fileInputRef}
               type="file"
@@ -242,8 +242,8 @@ export function BookForm({
       {mediaType === 'Dig' && (
         <div>
           <Label>{t('pages.books.form.bookFileLabel')}</Label>
-          <div className="mt-2 flex items-center gap-4">
-            <div className="flex min-w-0 flex-1 items-center gap-2 rounded-md border bg-muted px-3 py-2">
+          <div className="mt-sm flex items-center gap-md">
+            <div className="flex min-w-0 flex-1 items-center gap-sm rounded-md border bg-muted px-3 py-sm">
               <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="truncate text-sm text-muted-foreground">
                 {bookFileName ?? t('pages.books.form.bookFileNone')}
@@ -273,19 +273,19 @@ export function BookForm({
               size="sm"
               onClick={() => bookFileInputRef.current?.click()}
             >
-              <Upload className="mr-1 h-3 w-3" />
+              <Upload className="mr-xs h-3 w-3" />
               {bookFileName
                 ? t('pages.books.form.bookFileChangeBtn')
                 : t('pages.books.form.bookFileSelectBtn')}
             </Button>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-xs text-xs text-muted-foreground">
             {t('pages.books.form.bookFileHint')}
           </p>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="title">{t('pages.books.form.titleLabel')}</Label>
           <Input
@@ -294,7 +294,7 @@ export function BookForm({
             placeholder={t('pages.books.form.titlePlaceholder')}
           />
           {errors.title && (
-            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -307,7 +307,7 @@ export function BookForm({
             maxLength={13}
           />
           {errors.isbn && (
-            <p className="mt-1 text-sm text-destructive">{errors.isbn.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.isbn.message}</p>
           )}
         </div>
 
@@ -319,7 +319,7 @@ export function BookForm({
             placeholder={t('pages.books.form.seriesPlaceholder')}
           />
           {errors.series_name && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.series_name.message}
             </p>
           )}
@@ -340,7 +340,7 @@ export function BookForm({
               placeholder={t('pages.books.form.seriesOrderPlaceholder')}
             />
             {errors.series_order && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.series_order.message}
               </p>
             )}
@@ -362,7 +362,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {selectedAuthors.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-sm flex flex-wrap gap-sm">
               {selectedAuthors.map((authorId) => {
                 const author = authors.find((a) => a.id === authorId);
                 return author ? (
@@ -374,7 +374,7 @@ export function BookForm({
                       aria-label={t('pages.books.form.removeAuthor', {
                         name: author.name,
                       })}
-                      className="ml-1 hover:text-destructive"
+                      className="ml-xs hover:text-destructive"
                     >
                       <X className="h-3 w-3" aria-hidden="true" />
                     </button>
@@ -384,7 +384,7 @@ export function BookForm({
             </div>
           )}
           {errors.authors && (
-            <p className="mt-1 text-sm text-destructive">{errors.authors.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.authors.message}</p>
           )}
         </div>
 
@@ -399,7 +399,7 @@ export function BookForm({
             })}
           />
           {errors.pages && (
-            <p className="mt-1 text-sm text-destructive">{errors.pages.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.pages.message}</p>
           )}
         </div>
 
@@ -421,7 +421,7 @@ export function BookForm({
             </SelectContent>
           </Select>
           {errors.publisher && (
-            <p className="mt-1 text-sm text-destructive">{errors.publisher.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.publisher.message}</p>
           )}
         </div>
 
@@ -437,13 +437,13 @@ export function BookForm({
             <SelectContent>
               {BOOK_LANGUAGES.map((lang) => (
                 <SelectItem key={lang.value} value={lang.value}>
-                  {lang.label}
+                  {t(`pages.books.languages.${lang.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.language && (
-            <p className="mt-1 text-sm text-destructive">{errors.language.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.language.message}</p>
           )}
         </div>
 
@@ -459,13 +459,13 @@ export function BookForm({
             <SelectContent>
               {BOOK_GENRES.map((genre) => (
                 <SelectItem key={genre.value} value={genre.value}>
-                  {genre.label}
+                  {t(`pages.books.genres.${genre.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.genre && (
-            <p className="mt-1 text-sm text-destructive">{errors.genre.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.genre.message}</p>
           )}
         </div>
 
@@ -483,13 +483,13 @@ export function BookForm({
             <SelectContent>
               {LITERARY_TYPES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+                  {t(`pages.books.literaryTypes.${type.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.literarytype && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.literarytype.message}
             </p>
           )}
@@ -507,13 +507,15 @@ export function BookForm({
             <SelectContent>
               {MEDIA_TYPES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+                  {t(`pages.books.mediaTypes.${type.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.media_type && (
-            <p className="mt-1 text-sm text-destructive">{errors.media_type.message}</p>
+            <p className="mt-xs text-sm text-destructive">
+              {errors.media_type.message}
+            </p>
           )}
         </div>
 
@@ -525,7 +527,7 @@ export function BookForm({
             placeholder={t('pages.books.form.editionPlaceholder')}
           />
           {errors.edition && (
-            <p className="mt-1 text-sm text-destructive">{errors.edition.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.edition.message}</p>
           )}
         </div>
 
@@ -539,7 +541,7 @@ export function BookForm({
             placeholder={t('pages.books.form.publishDatePlaceholder')}
           />
           {errors.publish_date && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.publish_date.message}
             </p>
           )}
@@ -547,7 +549,7 @@ export function BookForm({
 
         {!book && (
           <div className="col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-sm">
               <Checkbox
                 id="already-read"
                 checked={alreadyRead}
@@ -565,7 +567,7 @@ export function BookForm({
             </div>
 
             {alreadyRead && (
-              <div className="grid grid-cols-2 gap-4 rounded-md border p-3">
+              <div className="grid grid-cols-2 gap-md rounded-md border p-3">
                 <div>
                   <Label>{t('pages.books.form.startDateLabel')}</Label>
                   <DatePicker
@@ -582,7 +584,7 @@ export function BookForm({
                     placeholder={t('pages.books.form.endDatePlaceholder')}
                   />
                   {endDate && startDate && endDate < startDate && (
-                    <p className="mt-1 text-sm text-destructive">
+                    <p className="mt-xs text-sm text-destructive">
                       {t('pages.books.form.endDateError')}
                     </p>
                   )}
@@ -604,7 +606,7 @@ export function BookForm({
               rows={2}
             />
             {errors.pause_reason && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.pause_reason.message}
               </p>
             )}
@@ -618,10 +620,10 @@ export function BookForm({
               value={watch('rating')}
               onChange={(value) => setValue('rating', value)}
               size="md"
-              className="mt-2"
+              className="mt-sm"
             />
             {errors.rating && (
-              <p className="mt-1 text-sm text-destructive">{errors.rating.message}</p>
+              <p className="mt-xs text-sm text-destructive">{errors.rating.message}</p>
             )}
           </div>
         )}
@@ -635,19 +637,19 @@ export function BookForm({
             rows={5}
           />
           {errors.synopsis && (
-            <p className="mt-1 text-sm text-destructive">{errors.synopsis.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.synopsis.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

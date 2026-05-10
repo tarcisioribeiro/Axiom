@@ -64,7 +64,7 @@ export function ReceiptPreviewDialog({
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-4">
+        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-md">
           <div className="origin-top scale-[0.65] transform">
             <ReceiptTemplate data={data} />
           </div>
@@ -91,7 +91,7 @@ export function ReceiptPreviewDialog({
         )}
 
         {/* Export Buttons */}
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
+        <DialogFooter className="flex-col gap-sm sm:flex-row">
           <Button
             variant="outline"
             onClick={() => handleExport('png')}
@@ -99,9 +99,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
             ) : (
-              <Image className="mr-2 h-4 w-4" />
+              <Image className="mr-sm h-4 w-4" />
             )}
             Exportar PNG
           </Button>
@@ -111,9 +111,9 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
             ) : (
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="mr-sm h-4 w-4" />
             )}
             Exportar PDF
           </Button>

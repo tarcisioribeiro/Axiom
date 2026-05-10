@@ -187,8 +187,8 @@ export function RoutineTaskForm({
   }, [periodicity, setValue, watch]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="name">{t('pages.routineTasks.form.nameLabel')}</Label>
           <Input
@@ -197,7 +197,7 @@ export function RoutineTaskForm({
             placeholder={t('pages.routineTasks.form.namePlaceholder')}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -212,7 +212,7 @@ export function RoutineTaskForm({
             rows={3}
           />
           {errors.description && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.description.message}
             </p>
           )}
@@ -236,7 +236,7 @@ export function RoutineTaskForm({
             </SelectContent>
           </Select>
           {errors.category && (
-            <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
           )}
         </div>
 
@@ -247,7 +247,7 @@ export function RoutineTaskForm({
             onChange={(value) => setValue('icon', value)}
           />
           {errors.icon && (
-            <p className="mt-1 text-sm text-destructive">{errors.icon.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.icon.message}</p>
           )}
         </div>
 
@@ -265,13 +265,13 @@ export function RoutineTaskForm({
             <SelectContent>
               {PERIODICITY_CHOICES.map((period) => (
                 <SelectItem key={period.value} value={period.value}>
-                  {period.label}
+                  {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.periodicity && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.periodicity.message}
             </p>
           )}
@@ -293,13 +293,13 @@ export function RoutineTaskForm({
               <SelectContent>
                 {WEEKDAY_CHOICES.map((day) => (
                   <SelectItem key={day.value} value={day.value.toString()}>
-                    {day.label}
+                    {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.weekday && (
-              <p className="mt-1 text-sm text-destructive">{errors.weekday.message}</p>
+              <p className="mt-xs text-sm text-destructive">{errors.weekday.message}</p>
             )}
           </div>
         )}
@@ -322,7 +322,7 @@ export function RoutineTaskForm({
               placeholder="1-31"
             />
             {errors.day_of_month && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.day_of_month.message}
               </p>
             )}
@@ -338,7 +338,7 @@ export function RoutineTaskForm({
 
         {/* Conditional: Custom periodicity */}
         {periodicity === 'custom' && (
-          <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
+          <div className="col-span-2 space-y-md rounded-lg border bg-muted/50 p-md">
             <h4 className="text-sm font-medium">
               {t('pages.routineTasks.form.customSection')}
             </h4>
@@ -348,9 +348,9 @@ export function RoutineTaskForm({
               <Label className="text-sm">
                 {t('pages.routineTasks.form.customWeekdaysLabel')}
               </Label>
-              <div className="mt-2 grid grid-cols-7 gap-2">
+              <div className="mt-sm grid grid-cols-7 gap-sm">
                 {WEEKDAY_CHOICES.map((day) => (
-                  <div key={day.value} className="flex flex-col items-center gap-1">
+                  <div key={day.value} className="flex flex-col items-center gap-xs">
                     <Checkbox
                       id={`custom-weekday-${day.value}`}
                       checked={watch('custom_weekdays')?.includes(day.value) || false}
@@ -368,7 +368,9 @@ export function RoutineTaskForm({
                       htmlFor={`custom-weekday-${day.value}`}
                       className="cursor-pointer text-xs"
                     >
-                      {day.label.substring(0, 3)}
+                      {t(
+                        `pages.routineTasks.form.weekdayOptions.${day.value}`
+                      ).substring(0, 3)}
                     </Label>
                   </div>
                 ))}
@@ -396,7 +398,7 @@ export function RoutineTaskForm({
             </div>
 
             {/* Frequency Options */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-md">
               <div>
                 <Label htmlFor="times_per_week" className="text-sm">
                   {t('pages.routineTasks.form.timesPerWeekLabel')}
@@ -432,7 +434,7 @@ export function RoutineTaskForm({
             </div>
 
             {/* Interval Options */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-md">
               <div>
                 <Label htmlFor="interval_days" className="text-sm">
                   {t('pages.routineTasks.form.intervalDaysLabel')}
@@ -488,7 +490,7 @@ export function RoutineTaskForm({
             })}
           />
           {errors.target_quantity && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.target_quantity.message}
             </p>
           )}
@@ -508,24 +510,24 @@ export function RoutineTaskForm({
             <SelectContent>
               {UNIT_CHOICES.map((u) => (
                 <SelectItem key={u.value} value={u.value}>
-                  {u.label}
+                  {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.unit && (
-            <p className="mt-1 text-sm text-destructive">{errors.unit.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.unit.message}</p>
           )}
         </div>
 
         {/* Seção de Agendamento de Horários */}
-        <div className="col-span-2 space-y-4 rounded-lg border bg-muted/50 p-4">
+        <div className="col-span-2 space-y-md rounded-lg border bg-muted/50 p-md">
           <h4 className="text-sm font-medium">
             {t('pages.routineTasks.form.scheduleSection')}
           </h4>
           <p className="text-xs">{t('pages.routineTasks.form.scheduleSectionNote')}</p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-md">
             <div>
               <Label htmlFor="default_time">
                 {t('pages.routineTasks.form.defaultTimeLabel')}
@@ -536,11 +538,11 @@ export function RoutineTaskForm({
                 value={watch('default_time') || ''}
                 onChange={(e) => setValue('default_time', e.target.value || null)}
               />
-              <p className="mt-1 text-xs">
+              <p className="mt-xs text-xs">
                 {t('pages.routineTasks.form.defaultTimeHint')}
               </p>
               {errors.default_time && (
-                <p className="mt-1 text-sm text-destructive">
+                <p className="mt-xs text-sm text-destructive">
                   {errors.default_time.message}
                 </p>
               )}
@@ -559,7 +561,7 @@ export function RoutineTaskForm({
                   setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
                 })}
               />
-              <p className="mt-1 text-xs">
+              <p className="mt-xs text-xs">
                 {t('pages.routineTasks.form.dailyOccurrencesHint')}
               </p>
             </div>
@@ -583,11 +585,11 @@ export function RoutineTaskForm({
               }
               placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
             />
-            <p className="mt-1 text-xs">
+            <p className="mt-xs text-xs">
               {t('pages.routineTasks.form.intervalHoursHint')}
             </p>
             {errors.interval_hours && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.interval_hours.message}
               </p>
             )}
@@ -604,11 +606,11 @@ export function RoutineTaskForm({
                 value={watch('closing_time') || ''}
                 onChange={(e) => setValue('closing_time', e.target.value || null)}
               />
-              <p className="mt-1 text-xs">
+              <p className="mt-xs text-xs">
                 {t('pages.routineTasks.form.closingTimeHint')}
               </p>
               {errors.closing_time && (
-                <p className="mt-1 text-sm text-destructive">
+                <p className="mt-xs text-sm text-destructive">
                   {errors.closing_time.message}
                 </p>
               )}
@@ -632,11 +634,11 @@ export function RoutineTaskForm({
                 setValue('scheduled_times', times.length > 0 ? times : null);
               }}
             />
-            <p className="mt-1 text-xs">
+            <p className="mt-xs text-xs">
               {t('pages.routineTasks.form.scheduledTimesHint')}
             </p>
             {errors.scheduled_times && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.scheduled_times.message}
               </p>
             )}
@@ -657,13 +659,13 @@ export function RoutineTaskForm({
             <SelectContent>
               {PRIORITY_CHOICES.map((p) => (
                 <SelectItem key={p.value} value={p.value}>
-                  {p.label}
+                  {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.priority && (
-            <p className="mt-1 text-sm text-destructive">{errors.priority.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.priority.message}</p>
           )}
         </div>
 
@@ -680,11 +682,11 @@ export function RoutineTaskForm({
               setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
             })}
           />
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-xs text-xs text-muted-foreground">
             {t('pages.routineTasks.form.allowedSkipsHint')}
           </p>
           {errors.allowed_skips_per_month && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.allowed_skips_per_month.message}
             </p>
           )}
@@ -721,7 +723,7 @@ export function RoutineTaskForm({
               ))}
             </SelectContent>
           </Select>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-xs text-xs text-muted-foreground">
             {t('pages.routineTasks.form.linkedFinancialGoalHint')}
           </p>
         </div>
@@ -755,12 +757,12 @@ export function RoutineTaskForm({
               ))}
             </SelectContent>
           </Select>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-xs text-xs text-muted-foreground">
             {t('pages.routineTasks.form.linkedBookHint')}
           </p>
         </div>
 
-        <div className="col-span-2 flex items-center space-x-2">
+        <div className="col-span-2 flex items-center space-x-sm">
           <Checkbox
             id="is_active"
             checked={isActive}
@@ -775,14 +777,14 @@ export function RoutineTaskForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

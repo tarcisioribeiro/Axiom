@@ -6,81 +6,9 @@ import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
 import { cn } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
-import type { AdminLog } from '@/types';
 
-const ACTION_KEYS: Record<string, string> = {
-  view: 'view',
-  create: 'create',
-  update: 'update',
-  delete: 'delete',
-  reveal: 'reveal',
-  download: 'download',
-  login: 'login',
-  logout: 'logout',
-  failed_login: 'failed_login',
-  failed_vault_unlock: 'failed_vault_unlock',
-  other: 'other',
-  purge: 'purge',
-  shared_reveal: 'shared_reveal',
-};
-
-const ACTION_COLORS: Record<string, string> = {
-  login: 'bg-green-500/10 text-green-700 dark:text-green-400',
-  logout: 'bg-secondary text-muted-foreground',
-  create: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
-  update: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
-  delete: 'bg-destructive/10 text-destructive',
-  reveal: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  download: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  failed_login: 'bg-destructive/10 text-destructive',
-  failed_vault_unlock: 'bg-destructive/10 text-destructive',
-  purge: 'bg-red-900/20 text-red-600 dark:text-red-400',
-  shared_reveal: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  view: 'bg-secondary text-muted-foreground',
-  other: 'bg-secondary text-muted-foreground',
-};
-
-function ActionBadge({ action, display }: { action: string; display: string }) {
-  const { t } = useTranslation();
-  const key = ACTION_KEYS[action];
-  return (
-    <span
-      className={cn(
-        'rounded-full px-2 py-0.5 text-xs font-medium',
-        ACTION_COLORS[action] ?? 'bg-secondary text-muted-foreground'
-      )}
-    >
-      {display || (key ? t(`pages.adminLogs.actions.${key}`) : action)}
-    </span>
-  );
-}
-
-function LogRow({ log }: { log: AdminLog }) {
-  const date = new Date(log.created_at);
-  return (
-    <tr className="border-b border-border transition-colors hover:bg-accent/30">
-      <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-        <div>{date.toLocaleDateString(i18n.language)}</div>
-        <div className="font-mono">{date.toLocaleTimeString(i18n.language)}</div>
-      </td>
-      <td className="px-4 py-3">
-        <span className="font-medium text-foreground">{log.username ?? '—'}</span>
-      </td>
-      <td className="px-4 py-3">
-        <ActionBadge action={log.action} display={log.action_display} />
-      </td>
-      <td className="px-4 py-3 text-sm text-muted-foreground">
-        {log.model_name ?? '—'}
-      </td>
-      <td className="max-w-xs px-4 py-3 text-sm text-foreground">
-        <span className="line-clamp-2">{log.description}</span>
-      </td>
-      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground">
-        {log.ip_address ?? '—'}
-      </td>
-    </tr>
-  );
-}
+import { LogRow } from './AdminLogsComponents';
+import { ACTION_KEYS } from './AdminLogsConstants';
 
 export default function AdminLogs() {
   const { t } = useTranslation();
@@ -131,7 +59,7 @@ export default function AdminLogs() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-lg flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {t('pages.adminLogs.title')}
@@ -147,7 +75,7 @@ export default function AdminLogs() {
         <button
           onClick={() => void refetch()}
           disabled={isLoading}
-          className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
+          className="flex items-center gap-sm rounded-lg border border-border bg-card px-3 py-sm text-sm font-medium text-foreground hover:bg-accent disabled:opacity-50"
         >
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
           {t('pages.adminLogs.refresh')}
@@ -155,8 +83,8 @@ export default function AdminLogs() {
       </div>
 
       {/* Filters */}
-      <div className="mb-4 rounded-xl border border-border bg-card p-4">
-        <div className="mb-3 flex items-center gap-2">
+      <div className="mb-md rounded-lg border border-border bg-card p-md">
+        <div className="mb-3 flex items-center gap-sm">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">
             {t('pages.adminLogs.filters')}
@@ -164,7 +92,7 @@ export default function AdminLogs() {
           {hasFilters && (
             <button
               onClick={clearFilters}
-              className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="ml-auto flex items-center gap-xs text-xs text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" /> {t('pages.adminLogs.clearFilters')}
             </button>
@@ -178,13 +106,13 @@ export default function AdminLogs() {
               placeholder={t('pages.adminLogs.userPlaceholder')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full rounded-lg border border-border bg-background py-sm pl-xl pr-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <select
             value={action}
             onChange={(e) => setAction(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="">{t('pages.adminLogs.allActions')}</option>
             {Object.keys(ACTION_KEYS).map((k) => (
@@ -197,45 +125,45 @@ export default function AdminLogs() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
         <button
           onClick={applyFilters}
-          className="mt-3 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="mt-3 rounded-lg bg-primary px-md py-sm text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           {t('pages.adminLogs.applyFilters')}
         </button>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-border bg-secondary/50">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.datetime')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.user')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.action')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.model')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.description')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-md py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {t('pages.adminLogs.columns.ip')}
                 </th>
               </tr>
@@ -244,7 +172,7 @@ export default function AdminLogs() {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-muted-foreground">
-                    <RefreshCw className="mx-auto mb-2 h-6 w-6 animate-spin" />
+                    <RefreshCw className="mx-auto mb-sm h-6 w-6 animate-spin" />
                     {t('pages.adminLogs.loadingLogs')}
                   </td>
                 </tr>
@@ -263,7 +191,7 @@ export default function AdminLogs() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+          <div className="flex items-center justify-between border-t border-border px-md py-3">
             <p className="text-sm text-muted-foreground">
               {t('pages.adminLogs.page', {
                 page,
@@ -271,18 +199,18 @@ export default function AdminLogs() {
                 records: data?.count.toLocaleString(i18n.language),
               })}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-sm">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-accent disabled:opacity-40"
+                className="rounded-lg border border-border p-sm text-muted-foreground hover:bg-accent disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-accent disabled:opacity-40"
+                className="rounded-lg border border-border p-sm text-muted-foreground hover:bg-accent disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

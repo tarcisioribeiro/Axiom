@@ -110,9 +110,9 @@ export const FixedExpenseForm = ({
   }, [paymentType, accounts, creditCards, setValue, watch]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="description">
             {t('pages.fixedExpenses.form.descriptionLabel')}
           </Label>
@@ -124,7 +124,7 @@ export const FixedExpenseForm = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="default_value">
             {t('pages.fixedExpenses.form.defaultValueLabel')}
           </Label>
@@ -138,7 +138,7 @@ export const FixedExpenseForm = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="due_day">{t('pages.fixedExpenses.form.dueDayLabel')}</Label>
           <Input
             id="due_day"
@@ -150,7 +150,7 @@ export const FixedExpenseForm = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.fixedExpenses.form.categoryLabel')}</Label>
           <Select
             value={watch('category') || ''}
@@ -172,7 +172,7 @@ export const FixedExpenseForm = ({
           </Select>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-sm md:col-span-2">
           <Label>{t('pages.fixedExpenses.form.paymentTypeLabel')}</Label>
           <Select
             value={paymentType}
@@ -195,7 +195,7 @@ export const FixedExpenseForm = ({
         </div>
 
         {paymentType === 'account' ? (
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label>{t('pages.fixedExpenses.form.accountLabel')}</Label>
             <Select
               value={watch('account')?.toString() || ''}
@@ -217,7 +217,7 @@ export const FixedExpenseForm = ({
             </Select>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label>{t('pages.fixedExpenses.form.creditCardLabel')}</Label>
             <Select
               value={watch('credit_card')?.toString() || ''}
@@ -241,7 +241,7 @@ export const FixedExpenseForm = ({
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="merchant">
             {t('pages.fixedExpenses.form.merchantLabel')}
           </Label>
@@ -253,7 +253,7 @@ export const FixedExpenseForm = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.fixedExpenses.form.paymentMethodLabel')}</Label>
           <Select
             value={watch('payment_method') || ''}
@@ -278,7 +278,7 @@ export const FixedExpenseForm = ({
           </Select>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
+        <div className="space-y-sm md:col-span-2">
           <Label htmlFor="notes">{t('pages.fixedExpenses.form.notesLabel')}</Label>
           <Textarea
             id="notes"
@@ -289,8 +289,8 @@ export const FixedExpenseForm = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
+        <div className="space-y-sm">
+          <Label className="flex items-center gap-sm">
             <input
               type="checkbox"
               {...register('is_active')}
@@ -302,8 +302,8 @@ export const FixedExpenseForm = ({
           <p className="text-xs">{t('pages.fixedExpenses.form.isActiveHint')}</p>
         </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
+        <div className="space-y-sm">
+          <Label className="flex items-center gap-sm">
             <input
               type="checkbox"
               {...register('allow_value_edit')}
@@ -316,7 +316,7 @@ export const FixedExpenseForm = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
