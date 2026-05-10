@@ -172,6 +172,21 @@ class PayCreditCardBillViewTest(BaseTestCase):
         self.assertEqual(self.bill.status, "paid")
         self.assertTrue(self.bill.closed)
 
+    def test_pay_bill_updates_account_balance(self):
+        self.account.refresh_from_db()
+        balance_before = self.account.current_balance
+        url = reverse("credit-card-bill-pay", args=[self.bill.pk])
+        response = self.client.post(
+            url,
+            {"amount": "100.00", "payment_date": "2026-02-10"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.account.refresh_from_db()
+        self.assertEqual(
+            self.account.current_balance, balance_before - Decimal("100.00")
+        )
+
     def test_pay_bill_partial_payment(self):
         url = reverse("credit-card-bill-pay", args=[self.bill.pk])
         response = self.client.post(
