@@ -1763,7 +1763,6 @@
         "deductible": "Despesas Dedutíveis",
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
-      }
       },
       "reconciliation": {
         "title": "Reconciliação de Saldo",
