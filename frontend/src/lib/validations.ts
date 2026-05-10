@@ -888,8 +888,7 @@ export const goalSchema = z.object({
     .positive(positiveError('Meta')),
   current_value: z.number().min(0, 'Valor atual nao pode ser negativo'),
   start_date: z.string().min(1, requiredError('Data de inicio')),
-  deadline: z.string().optional().nullable().or(z.literal('')),
-  end_date: z.string().optional().or(z.literal('')),
+  end_date: z.string().optional().nullable().or(z.literal('')),
   status: z.string().min(1, requiredError('Status')),
   owner: z.number().positive(requiredError('Proprietario')),
 });

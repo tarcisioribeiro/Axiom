@@ -14,8 +14,6 @@ export interface Goal {
   current_value: number;
   calculated_current_value?: number;
   start_date: string;
-  deadline?: string | null;
-  days_until_deadline?: number | null;
   end_date?: string;
   status: string;
   status_display: string;
@@ -35,7 +33,6 @@ export interface GoalFormData {
   target_value: number;
   current_value: number;
   start_date: string;
-  deadline?: string | null;
   end_date?: string;
   status: string;
   owner: number;

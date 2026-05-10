@@ -134,13 +134,10 @@ class GoalActionsViewTest(BasePlanningTestCase):
             [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
         )
 
-    def test_goal_reset(self):
-        url = reverse("goal-reset", args=[self.goal.pk])
+    def test_goal_restart(self):
+        url = reverse("goal-restart", args=[self.goal.pk])
         response = self.client.post(url)
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 # ---------------------------------------------------------------------------
