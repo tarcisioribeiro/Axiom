@@ -103,12 +103,12 @@ export function ArchiveForm({
 
     // Validação: para novos arquivos, deve ter arquivo OU conteúdo de texto
     if (!archive && !file && data.archive_type !== 'text') {
-      alert('Por favor, selecione um arquivo.');
+      alert(t('pages.archives.form.alertSelectFile'));
       return;
     }
 
     if (!archive && data.archive_type === 'text' && !data.text_content) {
-      alert('Por favor, insira o conteúdo do texto.');
+      alert(t('pages.archives.form.alertEnterText'));
       return;
     }
 
@@ -134,9 +134,7 @@ export function ArchiveForm({
       archive.archive_type === 'text'
     ) {
       // Avisar que não pode deixar vazio
-      alert(
-        'Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.'
-      );
+      alert(t('pages.archives.form.alertTextNotEmpty'));
       return;
     }
 
@@ -144,8 +142,8 @@ export function ArchiveForm({
   });
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleFormSubmit} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="title">{t('pages.archives.form.titleLabel')}</Label>
           <Input
@@ -154,7 +152,7 @@ export function ArchiveForm({
             placeholder={t('pages.archives.form.titlePlaceholder')}
           />
           {errors.title && (
-            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
           )}
         </div>
 
@@ -178,7 +176,7 @@ export function ArchiveForm({
             </SelectContent>
           </Select>
           {errors.category && (
-            <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
           )}
         </div>
 
@@ -202,7 +200,7 @@ export function ArchiveForm({
             </SelectContent>
           </Select>
           {errors.archive_type && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.archive_type.message}
             </p>
           )}
@@ -221,13 +219,11 @@ export function ArchiveForm({
               className="font-mono text-sm"
             />
             {errors.text_content && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.text_content.message}
               </p>
             )}
-            <p className="mt-1 text-xs">
-              O texto será criptografado antes de ser armazenado
-            </p>
+            <p className="mt-xs text-xs">{t('pages.archives.form.textContentHint')}</p>
           </div>
         ) : (
           <div className="col-span-2">
@@ -237,26 +233,26 @@ export function ArchiveForm({
             </Label>
             <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
             {archive ? (
-              <p className="mt-1 text-xs text-warning">
-                Deixe vazio para manter o arquivo atual. Upload de novo arquivo
-                substituirá o existente.
+              <p className="mt-xs text-xs text-warning">
+                {t('pages.archives.form.fileHintEdit')}
               </p>
             ) : (
-              <p className="mt-1 text-xs">
-                O arquivo será criptografado antes de ser armazenado. Tipos suportados:
-                PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.
-              </p>
+              <p className="mt-xs text-xs">{t('pages.archives.form.fileHintNew')}</p>
             )}
           </div>
         )}
 
         <div className="col-span-2">
-          <Label htmlFor="tags">Tags</Label>
-          <Input id="tags" {...register('tags')} placeholder="tag1, tag2, tag3" />
+          <Label htmlFor="tags">{t('pages.archives.form.tagsLabel')}</Label>
+          <Input
+            id="tags"
+            {...register('tags')}
+            placeholder={t('pages.archives.form.tagsPlaceholder')}
+          />
           {errors.tags && (
-            <p className="mt-1 text-sm text-destructive">{errors.tags.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.tags.message}</p>
           )}
-          <p className="mt-1 text-xs">Separe as tags com vírgulas</p>
+          <p className="mt-xs text-xs">{t('pages.archives.form.tagsHint')}</p>
         </div>
 
         <div className="col-span-2">
@@ -268,19 +264,19 @@ export function ArchiveForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

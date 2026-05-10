@@ -43,7 +43,7 @@ function ImportStatusBadge({ status }: { status: BankStatementImport['status'] }
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
+      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status] ?? ''}`}
     >
       {t(`pages.bankReconciliation.statuses.${status}`, { defaultValue: status })}
     </span>
@@ -137,7 +137,7 @@ function UploadDialog({
               role="button"
               tabIndex={0}
               className={cn(
-                'flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors',
+                'flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-xl transition-colors',
                 file
                   ? 'border-success/50 bg-success/5'
                   : 'border-muted-foreground/30 bg-muted/30 hover:border-primary/50 hover:bg-muted/50'
@@ -155,7 +155,7 @@ function UploadDialog({
                     <FileUp className="h-6 w-6 text-success" />
                   </div>
                   <p className="font-medium">{file.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-xs text-xs text-muted-foreground">
                     {t('pages.bankReconciliation.upload.detectedFormat')}:{' '}
                     <strong>
                       {detectFormat(file.name).toUpperCase() ||
@@ -173,7 +173,7 @@ function UploadDialog({
                       defaultValue: 'Arraste ou clique para selecionar',
                     })}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-xs text-xs text-muted-foreground">
                     {t('pages.bankReconciliation.upload.supportedFormats', {
                       defaultValue: 'Suporte: OFX, CSV',
                     })}
@@ -335,15 +335,15 @@ export default function BankReconciliation() {
                 ? Math.round((imp.matched_count / imp.total_entries) * 100)
                 : 0;
             return (
-              <div key={imp.id} className="rounded-lg border bg-card p-4">
-                <div className="flex items-start justify-between gap-4">
+              <div key={imp.id} className="rounded-lg border bg-card p-md">
+                <div className="flex items-start justify-between gap-md">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
+                    <div className="mb-xs flex items-center gap-sm">
                       <Badge variant="outline">{imp.file_format.toUpperCase()}</Badge>
                       <ImportStatusBadge status={imp.status} />
                     </div>
                     <p className="truncate font-medium">{imp.original_filename}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-xs text-xs text-muted-foreground">
                       {imp.total_entries}{' '}
                       {t('pages.bankReconciliation.transactionsLabel', {
                         defaultValue: 'transações',
@@ -356,7 +356,7 @@ export default function BankReconciliation() {
                     </p>
 
                     {/* Barra de progresso de conciliação */}
-                    <div className="mt-3 space-y-1">
+                    <div className="mt-3 space-y-xs">
                       <div className="flex justify-between text-xs">
                         <span className="text-muted-foreground">
                           {t('pages.bankReconciliation.reconciliationLabel', {

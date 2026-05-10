@@ -75,7 +75,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
     isCollapsed
       ? 'justify-center px-0 py-sm'
       : indent === 'sm'
-        ? 'px-3 py-1.5'
+        ? 'px-3 py-sm'
         : 'px-md py-sm',
     isCollapsed ? 'w-10 h-10' : 'text-sm'
   );
@@ -236,7 +236,7 @@ export const Sidebar = () => {
             aria-expanded={isExpanded}
             aria-controls={`module-${module.id}`}
             className={cn(
-              'flex w-full items-center gap-3 rounded-lg px-md py-2.5 text-sm transition-all duration-200',
+              'flex w-full items-center gap-3 rounded-lg px-md py-sm text-sm transition-all duration-200',
               hasActiveItem
                 ? 'font-medium text-primary'
                 : 'sidebar-text hover:bg-accent/60 hover:text-accent-foreground'
@@ -264,7 +264,7 @@ export const Sidebar = () => {
             )}
           >
             <div className="overflow-hidden">
-              <div className="ml-md space-y-xs py-1">
+              <div className="ml-md space-y-xs py-xs">
                 {module.topItems?.map((item) => (
                   <NavLink
                     key={item.href}
@@ -327,7 +327,7 @@ export const Sidebar = () => {
                         )}
                       >
                         <div className="overflow-hidden">
-                          <div className="ml-md space-y-xs py-1">
+                          <div className="ml-md space-y-xs py-xs">
                             {subModule.items.map((item) => (
                               <NavLink
                                 key={item.href}
@@ -361,7 +361,7 @@ export const Sidebar = () => {
 
   // ── Desktop collapsed icon grid ─────────────────────────────────────────────
   const collapsedNav = (
-    <div className="flex flex-col items-center gap-xs py-1">
+    <div className="flex flex-col items-center gap-xs py-xs">
       {filteredNavItems.map((item) => (
         <NavLink key={item.href} item={item} isCollapsed={true} />
       ))}
@@ -382,7 +382,7 @@ export const Sidebar = () => {
       >
         <Link
           to="/"
-          className="flex items-center gap-2.5"
+          className="flex items-center gap-sm"
           aria-label="MindLedger — página inicial"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/50">
@@ -502,7 +502,7 @@ export const Sidebar = () => {
           'flex h-screen flex-col border-r border-border/50 bg-card',
           // desktop width transition
           'transition-[width,padding] duration-300 ease-in-out',
-          isCollapsed && !isMobile ? 'w-[3.75rem] p-2' : 'w-72 p-4',
+          isCollapsed && !isMobile ? 'w-[3.75rem] p-sm' : 'w-72 p-md',
           // mobile slide
           'transform md:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

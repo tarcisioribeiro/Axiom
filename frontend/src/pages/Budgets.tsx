@@ -284,9 +284,9 @@ export default function Budgets() {
             const okCount = filteredBudgets.length - exceededCount - warningCount;
             return (
               <>
-                <div className="rounded-lg border bg-card p-4">
-                  <p className="mb-2 text-sm font-medium">
-                    Saúde dos orçamentos este mês
+                <div className="rounded-lg border bg-card p-md">
+                  <p className="mb-sm text-sm font-medium">
+                    {t('pages.budgets.health.title')}
                   </p>
                   <div className="flex h-3 overflow-hidden rounded-full bg-muted">
                     {exceededCount > 0 && (
@@ -314,25 +314,25 @@ export default function Budgets() {
                       />
                     )}
                   </div>
-                  <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                  <div className="mt-sm flex gap-md text-xs text-muted-foreground">
                     <span>
                       <span className="font-semibold text-success">{okCount}</span>{' '}
-                      dentro do limite
+                      {t('pages.budgets.health.withinLimit')}
                     </span>
                     <span>
                       <span className="font-semibold text-warning">{warningCount}</span>{' '}
-                      em alerta
+                      {t('pages.budgets.health.warning')}
                     </span>
                     <span>
                       <span className="font-semibold text-destructive">
                         {exceededCount}
                       </span>{' '}
-                      excedidos
+                      {t('pages.budgets.health.exceeded')}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
                   {enriched.map(({ budget, status }) => (
                     <BudgetCard
                       key={budget.id}
@@ -359,8 +359,8 @@ export default function Budgets() {
             </DialogTitle>
             <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+            <div className="space-y-sm">
               <Label htmlFor="category">{t('common.fields.category')}</Label>
               <Select
                 value={formData.category}
@@ -381,7 +381,7 @@ export default function Budgets() {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="limit_amount">
                 {t('pages.budgets.columns.limitAmount')}
               </Label>
@@ -401,8 +401,8 @@ export default function Budgets() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-md">
+              <div className="space-y-sm">
                 <Label htmlFor="month">{t('pages.budgets.month')}</Label>
                 <Select
                   value={String(formData.month)}
@@ -423,7 +423,7 @@ export default function Budgets() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="year">{t('pages.budgets.year')}</Label>
                 <Select
                   value={String(formData.year)}
@@ -468,7 +468,7 @@ export default function Budgets() {
             </div>
 
             {formData.rollover_enabled && (
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 <Label htmlFor="rollover_amount">
                   {t('pages.budgets.rollover.amount')}
                 </Label>
@@ -547,9 +547,9 @@ function BudgetCard({
             : 'border-l-success'
       )}
     >
-      <div className="p-4">
+      <div className="p-md">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             <span className="text-2xl" role="img" aria-hidden="true">
               {categoryIcon}
             </span>
@@ -560,11 +560,11 @@ function BudgetCard({
               </p>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-col items-end gap-xs">
             {status && (
               <span
                 className={cn(
-                  'rounded px-2 py-0.5 text-xs font-bold',
+                  'rounded px-sm py-0.5 text-xs font-bold',
                   pct > 100
                     ? 'bg-destructive/10 text-destructive'
                     : pct >= 70
@@ -582,7 +582,7 @@ function BudgetCard({
         </div>
 
         {status && (
-          <div className="mt-3 space-y-1">
+          <div className="mt-3 space-y-xs">
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className={cn('h-full rounded-full transition-all', barColor)}
@@ -599,7 +599,7 @@ function BudgetCard({
         )}
 
         {!status && (
-          <div className="mt-3 space-y-1 text-sm">
+          <div className="mt-3 space-y-xs text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{t('pages.budgets.limit')}</span>
               <span className="font-medium">{formatCurrency(budget.limit_amount)}</span>
@@ -608,26 +608,26 @@ function BudgetCard({
         )}
 
         {budget.rollover_enabled && parseFloat(budget.rollover_amount) > 0 && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-info">
+          <div className="mt-sm flex items-center gap-xs text-xs text-info">
             <span>↩</span>
             <span>Rollover: {formatCurrency(parseFloat(budget.rollover_amount))}</span>
           </div>
         )}
 
         {budget.member_name && (
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-xs text-xs text-muted-foreground">
             {t('pages.budgets.member')}: {budget.member_name}
           </p>
         )}
 
-        <div className="mt-3 flex gap-2 border-t pt-3">
+        <div className="mt-3 flex gap-sm border-t pt-3">
           <Button
             variant="outline"
             size="sm"
             className="flex-1"
             onClick={() => onEdit(budget)}
           >
-            <Pencil className="mr-1 h-3 w-3" />
+            <Pencil className="mr-xs h-3 w-3" />
             {t('common.actions.edit')}
           </Button>
           <Button
@@ -636,7 +636,7 @@ function BudgetCard({
             className="flex-1 text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => void onDelete(budget)}
           >
-            <Trash2 className="mr-1 h-3 w-3" />
+            <Trash2 className="mr-xs h-3 w-3" />
             {t('common.actions.delete')}
           </Button>
         </div>

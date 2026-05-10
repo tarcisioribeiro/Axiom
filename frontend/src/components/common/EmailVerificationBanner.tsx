@@ -65,7 +65,7 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+    <div className="flex items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 px-md py-3 text-sm">
       <MailWarning className="h-4 w-4 shrink-0 text-warning" />
       <span className="flex-1 text-foreground">
         {t('common.emailVerificationBanner.message')}

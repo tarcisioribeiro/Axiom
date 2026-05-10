@@ -317,7 +317,7 @@ export default function CreditCardBills() {
       key: 'credit_card',
       label: t('pages.creditCardBills.columns.card'),
       render: (bill) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <CreditCardIcon className="h-4 w-4" />
           <span className="font-medium">{getCardName(bill)}</span>
         </div>
@@ -400,7 +400,7 @@ export default function CreditCardBills() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-sm">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger className="w-52">
               <SelectValue placeholder={t('pages.creditCardBills.allCards')} />
@@ -450,7 +450,7 @@ export default function CreditCardBills() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={handleCreate} className="gap-2">
+          <Button onClick={handleCreate} className="gap-sm">
             <Plus className="h-4 w-4" />
             {t('pages.creditCardBills.newBtn')}
           </Button>
@@ -558,7 +558,7 @@ export default function CreditCardBills() {
           return '';
         }}
         actions={(bill) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             {bill.status === 'paid' && (
               <ReceiptButton
                 source={{ type: 'credit_card_bill', data: bill }}

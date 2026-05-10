@@ -1,0 +1,31 @@
+export const ACTION_KEYS: Record<string, string> = {
+  view: 'view',
+  create: 'create',
+  update: 'update',
+  delete: 'delete',
+  reveal: 'reveal',
+  download: 'download',
+  login: 'login',
+  logout: 'logout',
+  failed_login: 'failed_login',
+  failed_vault_unlock: 'failed_vault_unlock',
+  other: 'other',
+  purge: 'purge',
+  shared_reveal: 'shared_reveal',
+};
+
+export const ACTION_COLORS: Record<string, string> = {
+  login: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  logout: 'bg-secondary text-muted-foreground',
+  create: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  update: 'bg-purple-500/10 text-purple-700 dark:text-purple-400',
+  delete: 'bg-destructive/10 text-destructive',
+  reveal: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  download: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  failed_login: 'bg-destructive/10 text-destructive',
+  failed_vault_unlock: 'bg-destructive/10 text-destructive',
+  purge: 'bg-red-900/20 text-red-600 dark:text-red-400',
+  shared_reveal: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  view: 'bg-secondary text-muted-foreground',
+  other: 'bg-secondary text-muted-foreground',
+};

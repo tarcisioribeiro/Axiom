@@ -84,15 +84,15 @@ export default function ShareCredential() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-md">
+      <div className="w-full max-w-md space-y-md">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+          <div className="mx-auto mb-md flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <KeyRound className="h-7 w-7 text-primary" />
           </div>
           <h1 className="text-2xl font-bold">{t('pages.shareCredential.title')}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-xs text-sm text-muted-foreground">
             {t('pages.shareCredential.subtitle')}
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function ShareCredential() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{credential.title}</CardTitle>
                 <Badge variant="default" className="bg-green-600">
-                  <CheckCircle className="mr-1 h-3 w-3" />
+                  <CheckCircle className="mr-xs h-3 w-3" />
                   {t('pages.shareCredential.valid')}
                 </Badge>
               </div>
@@ -121,20 +121,20 @@ export default function ShareCredential() {
                 {t('pages.shareCredential.expiresAt')}{' '}
                 {formatDate(credential.expires_at, 'dd/MM/yyyy HH:mm')}
                 {credential.uses_remaining > 0 && (
-                  <span className="ml-2">
+                  <span className="ml-sm">
                     · {credential.uses_remaining}{' '}
                     {t('pages.shareCredential.usesRemaining')}
                   </span>
                 )}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
+            <CardContent className="space-y-md">
+              <div className="space-y-xs">
                 <p className="text-xs font-medium uppercase text-muted-foreground">
                   {t('pages.shareCredential.username')}
                 </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
+                <div className="flex items-center gap-sm">
+                  <code className="flex-1 rounded bg-muted px-3 py-sm text-sm">
                     {credential.username}
                   </code>
                   <Button
@@ -147,12 +147,12 @@ export default function ShareCredential() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-xs">
                 <p className="text-xs font-medium uppercase text-muted-foreground">
                   {t('pages.shareCredential.password')}
                 </p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
+                <div className="flex items-center gap-sm">
+                  <code className="flex-1 rounded bg-muted px-3 py-sm text-sm">
                     {showPassword ? credential.password : '••••••••••••'}
                   </code>
                   <Button
@@ -175,7 +175,7 @@ export default function ShareCredential() {
               </div>
 
               {credential.site && (
-                <div className="space-y-1">
+                <div className="space-y-xs">
                   <p className="text-xs font-medium uppercase text-muted-foreground">
                     {t('pages.shareCredential.site')}
                   </p>
@@ -183,7 +183,7 @@ export default function ShareCredential() {
                     href={credential.site}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-primary hover:underline"
+                    className="flex items-center gap-xs text-sm text-primary hover:underline"
                   >
                     <ExternalLink className="h-3 w-3" />
                     {credential.site}

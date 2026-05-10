@@ -60,9 +60,9 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       {/* Informações da parcela (somente leitura) */}
-      <div className="space-y-2 rounded-lg bg-muted/50 p-4">
+      <div className="space-y-sm rounded-lg bg-muted/50 p-md">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">
             {t('pages.creditCardExpenses.installmentForm.purchaseLabel')}
@@ -112,8 +112,8 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
       </div>
 
       {/* Campos editáveis */}
-      <div className="space-y-4">
-        <div className="space-y-2">
+      <div className="space-y-md">
+        <div className="space-y-sm">
           <Label htmlFor="value">
             {t('pages.creditCardExpenses.installmentForm.installmentValueLabel')}
           </Label>
@@ -132,7 +132,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>
             {t('pages.creditCardExpenses.installmentForm.paymentStatusLabel')}
           </Label>
@@ -155,7 +155,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label>{t('pages.creditCardExpenses.installmentForm.billLabel')}</Label>
           <Select
             value={watch('bill')?.toString() || 'none'}
@@ -184,7 +184,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

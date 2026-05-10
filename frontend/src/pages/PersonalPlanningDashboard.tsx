@@ -99,8 +99,8 @@ export default function PersonalPlanningDashboard() {
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card className="flex items-center gap-4 p-5">
+      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
+        <Card className="flex items-center gap-md p-5">
           <CircularProgress
             value={todayRate}
             size={80}
@@ -139,42 +139,42 @@ export default function PersonalPlanningDashboard() {
       </div>
 
       {/* Linha 2: Objetivos ativos | Melhor Sequência | Sequência atual | Objetivos Completados */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
         <StatCard
           title={t('pages.planningDashboard.activeGoals')}
           value={stats.active_goals}
           icon={<Target className="h-4 w-4" />}
         />
 
-        <Card className="flex items-center gap-4 p-5">
+        <Card className="flex items-center gap-md p-5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500/15">
             <Flame className="h-5 w-5 text-orange-500" />
           </div>
           <div>
             <p className="text-2xl font-bold leading-none">
               {stats.best_streak}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">
+              <span className="ml-xs text-sm font-normal text-muted-foreground">
                 {t('pages.planningDashboard.days')}
               </span>
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-xs text-sm text-muted-foreground">
               {t('pages.planningDashboard.bestStreak')}
             </p>
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 p-5">
+        <Card className="flex items-center gap-md p-5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
             <Award className="h-5 w-5 text-primary" />
           </div>
           <div>
             <p className="text-2xl font-bold leading-none">
               {stats.current_streak}
-              <span className="ml-1 text-sm font-normal text-muted-foreground">
+              <span className="ml-xs text-sm font-normal text-muted-foreground">
                 {t('pages.planningDashboard.days')}
               </span>
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-xs text-sm text-muted-foreground">
               {t('pages.planningDashboard.currentStreak')}
             </p>
           </div>
@@ -188,11 +188,11 @@ export default function PersonalPlanningDashboard() {
       </div>
 
       {/* Linha 3: Progresso Semanal | Tarefas por categoria | Progresso de objetivos | Consistência */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-4">
         {weeklyProgressData.length > 0 && (
           <Card className="lg:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
+            <CardHeader className="pb-sm">
+              <CardTitle className="flex items-center gap-sm text-sm">
                 <TrendingUp className="h-4 w-4" />
                 {t('pages.planningDashboard.weeklyProgress')}
               </CardTitle>
@@ -247,8 +247,8 @@ export default function PersonalPlanningDashboard() {
 
         {tasksByCategoryData.length > 0 && (
           <Card className="lg:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
+            <CardHeader className="pb-sm">
+              <CardTitle className="flex items-center gap-sm text-sm">
                 <ListTodo className="h-4 w-4" />
                 {t('pages.planningDashboard.tasksByCategory')}
               </CardTitle>
@@ -278,8 +278,8 @@ export default function PersonalPlanningDashboard() {
 
         {stats.active_goals_progress && stats.active_goals_progress.length > 0 && (
           <Card className="lg:col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
+            <CardHeader className="pb-sm">
+              <CardTitle className="flex items-center gap-sm text-sm">
                 <Flag className="h-4 w-4" />
                 {t('pages.planningDashboard.activeGoalsProgress')}
               </CardTitle>
@@ -319,8 +319,8 @@ export default function PersonalPlanningDashboard() {
         )}
 
         <Card className="lg:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
               <Activity className="h-4 w-4" />
               {t('pages.planningDashboard.habitConsistency')}
             </CardTitle>
@@ -333,22 +333,22 @@ export default function PersonalPlanningDashboard() {
 
       {/* Linha 4: Desempenho Dia Por Semana | Insight de Hábitos */}
       {analytics && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-sm">
                 <BarChart3 className="h-5 w-5" />
                 {t('pages.planningDashboard.weekdayAnalytics')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-sm">
                 {analytics.completion_by_weekday.map((day) => (
                   <div key={day.weekday} className="flex items-center gap-3">
                     <span className="w-28 shrink-0 text-sm text-muted-foreground">
                       {day.weekday_display.slice(0, 3)}
                     </span>
-                    <div className="flex flex-1 items-center gap-2">
+                    <div className="flex flex-1 items-center gap-sm">
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-primary transition-all"
@@ -373,7 +373,7 @@ export default function PersonalPlanningDashboard() {
           {analytics.insights.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-sm">
                   <Lightbulb className="h-5 w-5" />
                   {t('pages.planningDashboard.insights')}
                 </CardTitle>
@@ -381,7 +381,7 @@ export default function PersonalPlanningDashboard() {
               <CardContent>
                 <ul className="space-y-3">
                   {analytics.insights.map((insight, i) => (
-                    <li key={i} className="flex gap-2 text-sm leading-relaxed">
+                    <li key={i} className="flex gap-sm text-sm leading-relaxed">
                       <span className="mt-0.5 shrink-0 text-primary">•</span>
                       <span>{insight}</span>
                     </li>

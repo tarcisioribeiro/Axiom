@@ -384,8 +384,8 @@ export default function DailyChecklist() {
     <PageContainer>
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
 
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-end gap-2">
+      <div className="flex flex-wrap items-center gap-md">
+        <div className="flex items-end gap-sm">
           <div>
             <Label htmlFor="date">{t('common.fields.date')}</Label>
             <DatePicker
@@ -428,7 +428,7 @@ export default function DailyChecklist() {
                   {t('pages.dailyChecklist.reflectionPlaceholder')}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-md py-md">
                 <div>
                   <Label htmlFor="mood">{t('pages.dailyChecklist.moodQuestion')}</Label>
                   <Select value={mood} onValueChange={setMood}>
@@ -458,7 +458,7 @@ export default function DailyChecklist() {
                     rows={6}
                   />
                   {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-1 text-sm text-destructive">
+                    <p className="mt-xs text-sm text-destructive">
                       {t('pages.dailyChecklist.reflectionMinLength')}
                     </p>
                   )}
@@ -477,7 +477,7 @@ export default function DailyChecklist() {
           {completedTasks}{' '}
           {t('pages.dailyChecklist.itemsCompleted', { total: cards.length })}
           {summary.completion_rate > 0 && (
-            <span className="ml-2 text-sm">
+            <span className="ml-sm text-sm">
               ({summary.completion_rate.toFixed(0)}%)
             </span>
           )}
@@ -499,7 +499,7 @@ export default function DailyChecklist() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+          <div className="grid grid-cols-1 gap-md md:grid-cols-3 md:gap-lg">
             <KanbanColumn
               status="todo"
               title={t('pages.dailyChecklist.todo')}
@@ -527,12 +527,12 @@ export default function DailyChecklist() {
         <Button onClick={handleSave} disabled={isSaving} size="lg">
           {isSaving ? (
             <>
-              <Save className="mr-2 h-4 w-4 animate-pulse" />
+              <Save className="mr-sm h-4 w-4 animate-pulse" />
               {t('common.actions.saving')}
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-sm h-4 w-4" />
               {t('common.actions.save')}
             </>
           )}
