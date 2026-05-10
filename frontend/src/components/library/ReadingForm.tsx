@@ -94,10 +94,10 @@ export function ReadingForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid gap-md">
         {books.length > 1 && (
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="book">{t('pages.readings.form.bookLabel')}</Label>
             <Select
               value={watch('book').toString()}
@@ -116,12 +116,12 @@ export function ReadingForm({
               </SelectContent>
             </Select>
             {errors.book && (
-              <p className="mt-1 text-sm text-destructive">{errors.book.message}</p>
+              <p className="mt-xs text-sm text-destructive">{errors.book.message}</p>
             )}
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="pages_read">{t('pages.readings.form.pagesReadLabel')}</Label>
           <Input
             id="pages_read"
@@ -133,7 +133,9 @@ export function ReadingForm({
             })}
           />
           {errors.pages_read && (
-            <p className="mt-1 text-sm text-destructive">{errors.pages_read.message}</p>
+            <p className="mt-xs text-sm text-destructive">
+              {errors.pages_read.message}
+            </p>
           )}
           {selectedBook > 0 && (
             <p className="text-xs">
@@ -144,7 +146,7 @@ export function ReadingForm({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="reading_date">
             {t('pages.readings.form.readingDateLabel')}
           </Label>
@@ -156,13 +158,13 @@ export function ReadingForm({
             placeholder={t('pages.readings.form.readingDatePlaceholder')}
           />
           {errors.reading_date && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.reading_date.message}
             </p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="reading_time">
             {t('pages.readings.form.readingTimeLabel')}
           </Label>
@@ -175,14 +177,14 @@ export function ReadingForm({
             })}
           />
           {errors.reading_time && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.reading_time.message}
             </p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-md">
+          <div className="space-y-sm">
             <Label htmlFor="current_page">
               {t('pages.readings.form.currentPageLabel')}
             </Label>
@@ -196,13 +198,13 @@ export function ReadingForm({
               })}
             />
             {errors.current_page && (
-              <p className="mt-1 text-sm text-destructive">
+              <p className="mt-xs text-sm text-destructive">
                 {errors.current_page.message}
               </p>
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Label htmlFor="time_of_day">
               {t('pages.readings.form.timeOfDayLabel')}
             </Label>
@@ -230,7 +232,7 @@ export function ReadingForm({
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="notes">{t('pages.readings.form.notesLabel')}</Label>
           <Textarea
             id="notes"
@@ -239,19 +241,19 @@ export function ReadingForm({
             rows={4}
           />
           {errors.notes && (
-            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

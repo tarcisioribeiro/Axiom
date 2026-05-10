@@ -37,7 +37,7 @@ export const LanguageSelector = () => {
             onClick={() => void i18n.changeLanguage(lang.code)}
             className={i18n.language === lang.code ? 'bg-accent font-medium' : ''}
           >
-            <span className="mr-2">{lang.flag}</span>
+            <span className="mr-sm">{lang.flag}</span>
             {lang.label}
           </DropdownMenuItem>
         ))}

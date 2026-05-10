@@ -300,7 +300,7 @@ export default function CategorizationRules() {
     <PageContainer>
       <PageHeader title={t('pages.categorizationRules.title')} icon={<Tag />}>
         <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="mr-sm h-4 w-4" />
           {t('pages.categorizationRules.newBtn')}
         </Button>
       </PageHeader>
@@ -317,14 +317,14 @@ export default function CategorizationRules() {
             <div
               key={rule.id}
               className={cn(
-                'flex items-center gap-3 rounded-lg border bg-card p-4',
+                'flex items-center gap-3 rounded-lg border bg-card p-md',
                 !rule.is_active && 'opacity-50'
               )}
             >
               {/* Left: merchant pattern → category flow */}
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
                 {/* Merchant pattern chip */}
-                <div className="flex flex-shrink-0 items-center gap-2 rounded-md bg-muted px-3 py-2">
+                <div className="flex flex-shrink-0 items-center gap-sm rounded-md bg-muted px-3 py-sm">
                   <Tag className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-xs text-muted-foreground">
@@ -337,7 +337,7 @@ export default function CategorizationRules() {
                 </div>
 
                 {/* Arrow */}
-                <div className="flex flex-shrink-0 items-center gap-1 text-muted-foreground">
+                <div className="flex flex-shrink-0 items-center gap-xs text-muted-foreground">
                   <div className="h-px w-6 bg-border" />
                   <svg
                     width="8"
@@ -358,7 +358,7 @@ export default function CategorizationRules() {
                 {/* Target category chip */}
                 <div
                   className={cn(
-                    'flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2',
+                    'flex flex-shrink-0 items-center gap-sm rounded-md px-3 py-sm',
                     getCategoryBg(rule.category)
                   )}
                 >
@@ -377,7 +377,7 @@ export default function CategorizationRules() {
               </div>
 
               {/* Right: priority + status badges + actions */}
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-sm">
                 <Badge variant="outline" className="text-xs">
                   #{rule.priority}
                 </Badge>

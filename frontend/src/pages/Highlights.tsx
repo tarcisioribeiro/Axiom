@@ -116,32 +116,32 @@ function HighlightCard({
   const isQuote = highlight.highlight_type === 'quote';
 
   return (
-    <div className={`rounded-lg border-l-4 p-4 ${colorDef.card}`}>
+    <div className={`rounded-lg border-l-4 p-md ${colorDef.card}`}>
       {/* Header row */}
-      <div className="mb-3 flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex items-start justify-between gap-sm">
+        <div className="flex flex-wrap items-center gap-sm">
           {/* Type badge with icon */}
           <Badge
             variant={TYPE_VARIANT[highlight.highlight_type] ?? 'default'}
-            className="flex items-center gap-1"
+            className="flex items-center gap-xs"
           >
             {TYPE_ICON[highlight.highlight_type]}
             {highlight.highlight_type_display}
           </Badge>
 
           {highlight.page_number && (
-            <span className="rounded bg-background/60 px-1.5 py-0.5 text-xs text-muted-foreground">
+            <span className="rounded bg-background/60 px-sm py-0.5 text-xs text-muted-foreground">
               p. {highlight.page_number}
             </span>
           )}
           {highlight.chapter && (
-            <span className="rounded bg-background/60 px-1.5 py-0.5 text-xs text-muted-foreground">
+            <span className="rounded bg-background/60 px-sm py-0.5 text-xs text-muted-foreground">
               {highlight.chapter}
             </span>
           )}
         </div>
 
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 gap-xs">
           <Button
             variant="ghost"
             size="sm"
@@ -163,7 +163,7 @@ function HighlightCard({
 
       {/* Text — special typography for quotes */}
       {isQuote ? (
-        <blockquote className="relative pl-4">
+        <blockquote className="relative pl-md">
           <span
             className="absolute left-0 top-0 select-none font-serif text-3xl leading-none text-muted-foreground/40"
             aria-hidden="true"
@@ -177,7 +177,7 @@ function HighlightCard({
       )}
 
       {/* Footer: book info + optional cover */}
-      <div className="mt-3 flex items-center gap-2 border-t border-black/5 pt-2 dark:border-white/5">
+      <div className="mt-3 flex items-center gap-sm border-t border-black/5 pt-sm dark:border-white/5">
         {bookCover ? (
           <img
             src={bookCover}
@@ -245,8 +245,8 @@ function HighlightForm({
   };
 
   return (
-    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-      <div className="space-y-2">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
+      <div className="space-y-sm">
         <Label htmlFor="hl-book">{t('pages.highlights.form.bookLabel')}</Label>
         <Select value={bookId} onValueChange={setBookId}>
           <SelectTrigger id="hl-book">
@@ -262,7 +262,7 @@ function HighlightForm({
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <Label htmlFor="hl-text">{t('pages.highlights.form.textLabel')}</Label>
         <Textarea
           id="hl-text"
@@ -274,8 +274,8 @@ function HighlightForm({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label htmlFor="hl-type">{t('pages.highlights.form.typeLabel')}</Label>
           <Select
             value={highlightType}
@@ -286,19 +286,19 @@ function HighlightForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="quote">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <Quote className="h-3.5 w-3.5" />{' '}
                   {t('pages.highlights.form.typeQuote')}
                 </div>
               </SelectItem>
               <SelectItem value="note">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <StickyNote className="h-3.5 w-3.5" />{' '}
                   {t('pages.highlights.form.typeNote')}
                 </div>
               </SelectItem>
               <SelectItem value="idea">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <Lightbulb className="h-3.5 w-3.5" />{' '}
                   {t('pages.highlights.form.typeIdea')}
                 </div>
@@ -306,7 +306,7 @@ function HighlightForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="hl-color">{t('pages.highlights.form.colorLabel')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger id="hl-color">
@@ -315,7 +315,7 @@ function HighlightForm({
             <SelectContent>
               {COLOR_OPTION_KEYS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-sm">
                     <span
                       className="inline-block h-3 w-3 rounded-full border border-black/10"
                       style={{ backgroundColor: opt.bg }}
@@ -331,8 +331,8 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-md">
+        <div className="space-y-sm">
           <Label htmlFor="hl-page">{t('pages.highlights.form.pageLabel')}</Label>
           <Input
             id="hl-page"
@@ -343,7 +343,7 @@ function HighlightForm({
             placeholder={t('pages.highlights.form.pagePlaceholder')}
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="hl-chapter">{t('pages.highlights.form.chapterLabel')}</Label>
           <Input
             id="hl-chapter"
@@ -354,7 +354,7 @@ function HighlightForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
@@ -562,18 +562,18 @@ export default function Highlights() {
           <SelectContent>
             <SelectItem value="all">{t('pages.highlights.form.allTypes')}</SelectItem>
             <SelectItem value="quote">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <Quote className="h-3.5 w-3.5" /> {t('pages.highlights.form.typeQuote')}
               </div>
             </SelectItem>
             <SelectItem value="note">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <StickyNote className="h-3.5 w-3.5" />{' '}
                 {t('pages.highlights.form.typeNote')}
               </div>
             </SelectItem>
             <SelectItem value="idea">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-sm">
                 <Lightbulb className="h-3.5 w-3.5" />{' '}
                 {t('pages.highlights.form.typeIdea')}
               </div>
@@ -596,7 +596,7 @@ export default function Highlights() {
             <SelectItem value="all">{t('pages.highlights.form.allColors')}</SelectItem>
             {COLOR_OPTION_KEYS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-sm">
                   <span
                     className="inline-block h-3 w-3 rounded-full border border-black/10"
                     style={{ backgroundColor: opt.bg }}
@@ -614,7 +614,7 @@ export default function Highlights() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" disabled={isExporting}>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="mr-sm h-4 w-4" />
                 {isExporting ? t('common.actions.loading') : t('common.actions.export')}
               </Button>
             </DropdownMenuTrigger>
@@ -644,7 +644,7 @@ export default function Highlights() {
         />
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-md">
             {pagedHighlights.map((h) => (
               <HighlightCard
                 key={h.id}
@@ -661,7 +661,7 @@ export default function Highlights() {
                 {filtered.length} destaque{filtered.length !== 1 ? 's' : ''} — página{' '}
                 {safePage} de {totalPages}
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-xs">
                 <Button
                   variant="outline"
                   size="icon"

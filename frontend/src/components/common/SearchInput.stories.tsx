@@ -34,7 +34,7 @@ export const Interactive: Story = {
   render: () => {
     const [value, setValue] = useState('');
     return (
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <SearchInput value={value} onValueChange={setValue} />
         {value && (
           <p className="text-sm text-muted-foreground">

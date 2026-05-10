@@ -535,7 +535,9 @@ export default function CreditCards() {
               {formatCurrency(totalAvailable)}
             </div>
             <p className="mt-xs text-xs text-muted-foreground">
-              de {formatCurrency(totalLimit)} no total
+              {t('pages.creditCards.stats.ofTotalLimit', {
+                value: formatCurrency(totalLimit),
+              })}
             </p>
           </CardContent>
         </Card>
@@ -572,7 +574,7 @@ export default function CreditCards() {
           message={t('pages.creditCards.emptyState')}
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {creditCards.map((card) => {
             const cardNumber = getCardNumber(card);
             const limit = parseFloat(card.credit_limit);
@@ -626,7 +628,7 @@ export default function CreditCards() {
                         })}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-xs">
                       <UsageArc pct={usagePct} size={48} />
                       <div className="flex flex-col">
                         <Button
@@ -753,7 +755,7 @@ export default function CreditCards() {
       <Dialog open={isBillsOpen} onOpenChange={setIsBillsOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-sm">
               <Receipt className="h-5 w-5" />
               {t('pages.creditCardBills.title')} — {billsCard?.name}
             </DialogTitle>
@@ -801,7 +803,7 @@ export default function CreditCards() {
                 setIsBillFormOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-sm h-4 w-4" />
               {t('pages.creditCardBills.newBtn')}
             </Button>
           </div>
@@ -816,7 +818,7 @@ export default function CreditCards() {
               message: t('pages.creditCardBills.emptyState'),
             }}
             actions={(bill) => (
-              <div className="flex items-center justify-end gap-1">
+              <div className="flex items-center justify-end gap-xs">
                 {bill.status === 'paid' && (
                   <ReceiptButton
                     source={{ type: 'credit_card_bill', data: bill }}

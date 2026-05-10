@@ -65,21 +65,23 @@ export function PayableForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
-          <Label htmlFor="description">Descrição *</Label>
+          <Label htmlFor="description">
+            {t('pages.payables.form.descriptionLabel')}
+          </Label>
           <Input
             id="description"
             value={formData.description}
             onChange={(e) => set({ description: e.target.value })}
             required
-            placeholder="Ex: Tratamento dentário, Conserto do carro"
+            placeholder={t('pages.payables.form.descriptionPlaceholder')}
           />
         </div>
 
         <div>
-          <Label htmlFor="value">Valor Total *</Label>
+          <Label htmlFor="value">{t('pages.payables.form.valueTotalLabel')}</Label>
           <Input
             id="value"
             type="number"
@@ -91,7 +93,7 @@ export function PayableForm({
         </div>
 
         <div>
-          <Label htmlFor="paid_value">Valor Já Pago</Label>
+          <Label htmlFor="paid_value">{t('pages.payables.form.paidValueLabel')}</Label>
           <Input
             id="paid_value"
             type="number"
@@ -102,27 +104,27 @@ export function PayableForm({
         </div>
 
         <div>
-          <Label htmlFor="date">Data de Registro *</Label>
+          <Label htmlFor="date">{t('pages.payables.form.dateLabel')}</Label>
           <DatePicker
             value={formData.date ?? undefined}
             onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-            placeholder="Selecione a data"
+            placeholder={t('common.actions.select')}
           />
         </div>
 
         <div>
-          <Label htmlFor="due_date">Data de Vencimento</Label>
+          <Label htmlFor="due_date">{t('pages.payables.form.dueDateLabel')}</Label>
           <DatePicker
             value={formData.due_date ?? undefined}
             onChange={(date) =>
               set({ due_date: date ? formatLocalDate(date) : undefined })
             }
-            placeholder="Selecione a data de vencimento"
+            placeholder={t('pages.payables.form.dueDatePlaceholder')}
           />
         </div>
 
         <div>
-          <Label htmlFor="category">Categoria *</Label>
+          <Label htmlFor="category">{t('pages.payables.form.categoryLabel')}</Label>
           <Select
             value={formData.category}
             onValueChange={(value) => set({ category: value })}
@@ -141,7 +143,7 @@ export function PayableForm({
         </div>
 
         <div>
-          <Label htmlFor="status">Status</Label>
+          <Label htmlFor="status">{t('pages.payables.form.statusLabel')}</Label>
           <Select
             value={formData.status}
             onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') =>
@@ -162,25 +164,25 @@ export function PayableForm({
         </div>
 
         <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+          <Label htmlFor="notes">{t('pages.payables.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             value={formData.notes ?? ''}
             onChange={(e) => set({ notes: e.target.value })}
             rows={3}
-            placeholder="Informações adicionais sobre este valor a pagar"
+            placeholder={t('pages.payables.form.notesPlaceholder')}
           />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

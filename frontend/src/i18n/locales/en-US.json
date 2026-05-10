@@ -433,7 +433,9 @@
         "totalBalance": "Consolidated Balance",
         "availableBalance": "Total Available",
         "count": "Active Accounts",
-        "institutionsSubtitle": "institutions"
+        "institutionsSubtitle": "institutions",
+        "accountsCount": "{{count}} accounts",
+        "overdraftIncluded": "including overdraft"
       },
       "columns": {
         "name": "Account",
@@ -454,7 +456,16 @@
         "accountNumberPlaceholder": "Ex: 12345-6",
         "balance": "Initial Balance",
         "balanceMin": "Minimum allowed balance: {{value}}",
-        "overdraftLimit": "Overdraft Limit"
+        "overdraftLimit": "Overdraft Limit",
+        "typeLabel": "Account Type *",
+        "typePlaceholder": "Select type",
+        "nameLabel": "Account Name *",
+        "namePlaceholder": "Ex: Main Checking Account",
+        "numberLabel": "Account Number",
+        "numberPlaceholder": "Ex: 12345-6",
+        "balanceLabel": "Initial Balance",
+        "balanceMinHint": "Minimum allowed balance:",
+        "overdraftLabel": "Overdraft Limit"
       },
       "imports": {
         "file": "File",
@@ -512,7 +523,8 @@
       "stats": {
         "totalAmount": "Total Expenses",
         "paid": "Paid",
-        "pending": "Pending"
+        "pending": "Pending",
+        "entriesCount": "{{count}} entries"
       },
       "form": {
         "descriptionLabel": "Description *",
@@ -730,7 +742,49 @@
       },
       "payoff": "Payoff",
       "paidAmount": "{{value}} paid",
-      "remainingAmount": "{{value}} remaining"
+      "remainingAmount": "{{value}} remaining",
+      "form": {
+        "descriptionLabel": "Description *",
+        "totalValueLabel": "Total Amount *",
+        "paidValueLabel": "Paid Amount",
+        "paidValueCalculated": "(Calculated)",
+        "paidValueNote": "Automatically calculated from linked revenues/expenses",
+        "dateLabel": "Date *",
+        "datePlaceholder": "Select date",
+        "timeLabel": "Time *",
+        "categoryLabel": "Category *",
+        "accountLabel": "Account *",
+        "benefitedLabel": "Beneficiary *",
+        "creditorLabel": "Creditor *",
+        "installmentsLabel": "Installments",
+        "interestRateLabel": "Interest Rate (%)",
+        "dueDateLabel": "Due Date",
+        "dueDatePlaceholder": "Select due date",
+        "paymentFrequencyLabel": "Payment Frequency",
+        "lateFeeLabel": "Late Fee",
+        "statusLabel": "Status",
+        "guarantorLabel": "Guarantor",
+        "guarantorNone": "None",
+        "notesLabel": "Notes",
+        "contractDocumentLabel": "Contract Document",
+        "loanPaidLabel": "Loan Paid"
+      },
+      "frequencies": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "biweekly": "Biweekly",
+        "monthly": "Monthly",
+        "bimonthly": "Bimonthly",
+        "quarterly": "Quarterly",
+        "semiannual": "Semiannual",
+        "annual": "Annual"
+      },
+      "statuses": {
+        "active": "Active",
+        "paid": "Paid",
+        "defaulted": "Defaulted",
+        "cancelled": "Cancelled"
+      }
     },
     "members": {
       "title": "Members",
@@ -782,7 +836,9 @@
         "beneficiaries": "Beneficiaries",
         "beneficiariesSubtitle": "can receive",
         "income": "Income:"
-      }
+      },
+      "noRole": "No role defined",
+      "emptySearch": "No members found."
     },
     "fixedExpenses": {
       "title": "Fixed Monthly Expenses",
@@ -914,12 +970,25 @@
         "interestRate": "Annual Interest Rate (%)",
         "annualFee": "Annual Fee",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Additional notes"
+        "notesPlaceholder": "Additional notes",
+        "onCardNameLabel": "Name on Card *",
+        "flagLabel": "Brand *",
+        "cardNumberLabel": "Card Number *",
+        "cvvLabel": "CVV *",
+        "validationDateLabel": "Expiry Date *",
+        "creditLimitLabel": "Current Limit *",
+        "maxLimitLabel": "Max Limit *",
+        "associatedAccountLabel": "Associated Account *",
+        "dueDayLabel": "Due Day *",
+        "closingDayLabel": "Closing Day *",
+        "interestRateLabel": "Annual Interest Rate (%)",
+        "annualFeeLabel": "Annual Fee"
       },
       "stats": {
         "registeredSubtitle": "registered cards",
         "availableCredit": "Available credit",
-        "usedCredit": "Used credit"
+        "usedCredit": "Used credit",
+        "ofTotalLimit": "of {{value}} total"
       },
       "ofLimit": "of {{value}} available",
       "usedPercent": "{{percent}}% of limit",
@@ -1107,7 +1176,9 @@
         "limitInsufficientDesc": "The amount of {{value}} exceeds the available limit of {{limit}} on the selected card.",
         "requiredField": "Required field",
         "createBtn": "Create Purchase",
-        "none": "None"
+        "none": "None",
+        "noCardNumber": "Number not registered",
+        "cashPayment": "One-time payment"
       },
       "installmentForm": {
         "purchaseLabel": "Purchase",
@@ -1130,7 +1201,8 @@
         "closed": "Closed",
         "open": "Open"
       },
-      "billPaidProgress": "Paid"
+      "billPaidProgress": "Paid",
+      "byCategory": "By category"
     },
     "payables": {
       "title": "Payables",
@@ -1187,7 +1259,20 @@
         "overdueSubtitle": "overdue",
         "paidSubtitle": "paid off"
       },
-      "paidAmount": "{{value}} paid"
+      "paidAmount": "{{value}} paid",
+      "form": {
+        "descriptionLabel": "Description *",
+        "descriptionPlaceholder": "Ex: Dental treatment, Car repair",
+        "valueTotalLabel": "Total Amount *",
+        "paidValueLabel": "Amount Already Paid",
+        "dateLabel": "Registration Date *",
+        "dueDateLabel": "Due Date",
+        "dueDatePlaceholder": "Select due date",
+        "categoryLabel": "Category *",
+        "statusLabel": "Status",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Additional information about this payable"
+      }
     },
     "budgets": {
       "title": "Budgets",
@@ -1237,7 +1322,18 @@
         "limit": "Limit",
         "monthsOption": "{{count}} months"
       },
-      "badgeLabel": "Budget"
+      "badgeLabel": "Budget",
+      "rollover": {
+        "enabled": "Enable balance rollover",
+        "description": "Unused balance from the previous month is added to the current month's limit.",
+        "amount": "Rolled over balance"
+      },
+      "health": {
+        "title": "Budget health this month",
+        "withinLimit": "within limit",
+        "warning": "warning",
+        "exceeded": "exceeded"
+      }
     },
     "fixedRevenues": {
       "title": "Fixed Monthly Revenues",
@@ -1460,7 +1556,36 @@
       "associatedVaults": "Associated Vaults",
       "noVaults": "No vaults available",
       "activeGoal": "Active goal",
-      "yields": "yields"
+      "yields": "yields",
+      "form": {
+        "descriptionLabel": "Description *",
+        "descriptionPlaceholder": "Ex: Trip to Europe",
+        "categoryLabel": "Category *",
+        "linkedExpenseCategoryLabel": "Linked Expense Category",
+        "linkedExpenseCategoryPlaceholder": "All categories",
+        "linkedAccountLabel": "Linked Account (optional)",
+        "linkedAccountPlaceholder": "All accounts",
+        "targetValueLabel": "Target Value *",
+        "targetDateLabel": "Target Date",
+        "vaultsLabel": "Associated Vaults",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Notes about the goal...",
+        "activeGoalLabel": "Active goal"
+      },
+      "categories": {
+        "savings": "Savings",
+        "investment": "Investment",
+        "emergency": "Emergency Fund",
+        "travel": "Travel",
+        "education": "Education",
+        "property": "Property",
+        "vehicle": "Vehicle",
+        "retirement": "Retirement",
+        "health": "Health",
+        "reduce_expenses": "Reduce Expenses",
+        "increase_revenue": "Increase Revenue",
+        "other": "Other"
+      }
     },
     "dashboard": {
       "title": "Financial Control Dashboard",
@@ -1539,13 +1664,42 @@
           "low_balance": "Balance",
           "payable_due": "Payable",
           "loan_due": "Loan"
+        },
+        "viewDetails": "View details",
+        "severity": {
+          "danger": "Urgent",
+          "warning": "Warning",
+          "info": "Info"
         }
       },
       "greetingMorning": "Good morning",
       "greetingAfternoon": "Good afternoon",
       "greetingEvening": "Good evening",
       "surplusThisMonth": "Surplus of {{amount}} this month",
-      "deficitThisMonth": "Deficit of {{amount}} this month"
+      "deficitThisMonth": "Deficit of {{amount}} this month",
+      "exportStatement": "Export Statement",
+      "subtitle": "Here is your financial summary for today.",
+      "lgpdExport": {
+        "title": "Export Data (LGPD)",
+        "description": "Download all your financial data in JSON format.",
+        "btn": "Export My Data",
+        "rateLimitMsg": "Export is limited to 1 per day. Try again tomorrow.",
+        "success": "Export started successfully.",
+        "successTitle": "LGPD export requested",
+        "successDesc": "You will receive the file shortly.",
+        "errorTitle": "Error",
+        "errorDesc": "Could not request the export."
+      },
+      "irReport": {
+        "title": "IR Report",
+        "description": "Structured report for Income Tax declaration.",
+        "year": "Year",
+        "btn": "Generate Report",
+        "revenues": "Revenues by Category",
+        "deductible": "Deductible Expenses",
+        "loans": "Loans",
+        "errorDesc": "Could not generate the IR report."
+      }
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -1618,7 +1772,19 @@
       "emptyState": "No passwords registered. Click \"New Password\" to get started.",
       "searchPlaceholder": "Search passwords...",
       "generatePassword": "Generate Password",
-      "hideGenerator": "Hide Generator"
+      "hideGenerator": "Hide Generator",
+      "categories": {
+        "social": "Social Networks",
+        "email": "E-mail",
+        "banking": "Banking",
+        "work": "Work",
+        "entertainment": "Entertainment",
+        "shopping": "Shopping",
+        "streaming": "Streaming",
+        "gaming": "Gaming",
+        "other": "Other"
+      },
+      "keepCurrentPassword": "Leave blank to keep current"
     },
     "sharePassword": {
       "title": "Share Credential",
@@ -1745,8 +1911,16 @@
         "expiryPlaceholder": "MM/YYYY",
         "brandLabel": "Brand",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Additional notes about the card..."
-      }
+        "notesPlaceholder": "Additional notes about the card...",
+        "numberHint": "The card number is encrypted and stored securely.",
+        "expiryMonthLabel": "Expiry Month *",
+        "expiryYearLabel": "Expiry Year *",
+        "financeCardLabel": "Finance Card",
+        "financeCardHint": "Link to a card in the financial module for integration.",
+        "keepCurrentNumber": "Leave blank to keep the current number",
+        "keepCurrentCvv": "Leave blank to keep the current CVV"
+      },
+      "otherBrand": "Other"
     },
     "storedAccounts": {
       "title": "Bank Accounts",
@@ -1805,7 +1979,12 @@
         "password2Label": "Password 2",
         "password2Placeholder": "Secondary password",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Additional notes..."
+        "notesPlaceholder": "Additional notes...",
+        "financeAccountLabel": "Finance Account",
+        "financeAccountHint": "Link to an account in the financial module for integration.",
+        "password1EditPlaceholder": "Leave blank to keep current",
+        "password2EditPlaceholder": "Leave blank to keep current",
+        "keepCurrentPassword": "Leave blank to keep the current password"
       }
     },
     "archives": {
@@ -1868,7 +2047,16 @@
         "contentPlaceholder": "Enter confidential content here...",
         "fileLabel": "File",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Additional notes..."
+        "notesPlaceholder": "Additional notes...",
+        "tagsLabel": "Tags",
+        "tagsPlaceholder": "tag1, tag2, tag3",
+        "tagsHint": "Separate tags with commas",
+        "fileHintNew": "The file will be encrypted before storage. Supported types: PDF, Word, Excel, PowerPoint, JSON, XML, CSV, images, archives, etc.",
+        "fileHintEdit": "Leave empty to keep the current file. Uploading a new file will replace the existing one.",
+        "textContentHint": "The text will be encrypted before storage",
+        "alertSelectFile": "Please select a file.",
+        "alertEnterText": "Please enter the text content.",
+        "alertTextNotEmpty": "Text files cannot have empty content. If you want to remove the content, delete the file."
       }
     },
     "passwordGenerator": {
@@ -1973,8 +2161,49 @@
         "booksRead_one": "{{count}} book read",
         "booksRead_other": "{{count}} books read",
         "pagesAbbrev": "{{pages}} pgs.",
-        "deleteConfirm": "the goal \"{{name}}\""
-      }
+        "deleteConfirm": "the goal \"{{name}}\"",
+        "formYear": "Year *",
+        "formName": "Goal Name",
+        "formNamePlaceholder": "Ex: Holiday Goal, Classics...",
+        "formNameHint": "Optional — useful when there are multiple goals in the same year",
+        "formBooksGoal": "Books Goal *",
+        "formBooksGoalHint": "How many books do you want to read in {{year}}?",
+        "formPagesGoal": "Pages Goal",
+        "formPagesGoalPlaceholder": "0 = no page goal",
+        "formPagesGoalHint": "How many pages do you want to read? (optional)",
+        "formLiteraryTypesLabel": "Goals by Literary Type",
+        "formLiteraryTypesHint": "Set goals for other types (magazines, articles, essays…). Books are counted by the main goal. Pages from all works add to the total.",
+        "formAddType": "Add",
+        "literaryTypes": {
+          "collection": "Collection",
+          "magazine": "Magazine",
+          "article": "Article",
+          "essay": "Essay"
+        }
+      },
+      "exportCSV": "Export CSV",
+      "exportCSVTitle": "Export statistics as CSV",
+      "completedCount_one": "{{count}} completed",
+      "completedCount_other": "{{count}} completed",
+      "sessionsAndPace": "Sessions & Pace",
+      "streakUnit_one": "day",
+      "streakUnit_other": "days",
+      "speedUnit": "pgs/h",
+      "pagesUnit": "pgs",
+      "completionDaysLabel_one": "~{{count}} day",
+      "completionDaysLabel_other": "~{{count}} days",
+      "completionForecast": "forecast: {{date}}",
+      "sessionDistribution": "Session distribution by time of day",
+      "noSessionPeriods": "Record the period in your reading sessions",
+      "sessionCount_one": "{{count}} session",
+      "sessionCount_other": "{{count}} sessions",
+      "pageAbbrev": "pg.",
+      "booksCount_one": "{{count}} book",
+      "booksCount_other": "{{count}} books",
+      "booksReadCount_one": "{{count}} book read",
+      "booksReadCount_other": "{{count}} books read",
+      "pagesReadCount_one": "{{count}} page",
+      "pagesReadCount_other": "{{count}} pages"
     },
     "books": {
       "title": "Reading List",
@@ -2122,7 +2351,40 @@
         "hlColorLbl": "Color",
         "hlPagePlaceholder": "Page",
         "hlChapterPlaceholder": "Chapter"
-      }
+      },
+      "genres": {
+        "Philosophy": "Philosophy",
+        "History": "History",
+        "Psychology": "Psychology",
+        "Fiction": "Fiction",
+        "Policy": "Politics",
+        "Technology": "Technology",
+        "Theology": "Theology"
+      },
+      "literaryTypes": {
+        "book": "Book",
+        "collection": "Collection",
+        "magazine": "Magazine",
+        "article": "Article",
+        "essay": "Essay"
+      },
+      "mediaTypes": {
+        "Dig": "Digital",
+        "Phi": "Physical"
+      },
+      "languages": {
+        "Por": "Portuguese",
+        "Ing": "English",
+        "Esp": "Spanish"
+      },
+      "readStatuses": {
+        "to_read": "To Read",
+        "reading": "Reading",
+        "read": "Read",
+        "paused": "Paused"
+      },
+      "booksCount_one": "{{count}} book",
+      "booksCount_other": "{{count}} books"
     },
     "authors": {
       "title": "Authors",
@@ -2160,7 +2422,55 @@
         "nationalityLabel": "Nationality *",
         "biographyLabel": "Biography",
         "biographyPlaceholder": "Information about the author..."
-      }
+      },
+      "eras": {
+        "DC": "After Christ (DC)",
+        "AC": "Before Christ (BC)"
+      },
+      "nationalities": {
+        "ALE": "German",
+        "USA": "American",
+        "ARG": "Argentinian",
+        "AUL": "Australian",
+        "AUS": "Austrian",
+        "BEL": "Belgian",
+        "BRA": "Brazilian",
+        "CAN": "Canadian",
+        "CZE": "Czech",
+        "CHL": "Chilean",
+        "CHN": "Chinese",
+        "COL": "Colombian",
+        "CUB": "Cuban",
+        "DEN": "Danish",
+        "EGI": "Egyptian",
+        "SCO": "Scottish",
+        "ESP": "Spanish",
+        "FIN": "Finnish",
+        "FRA": "French",
+        "GRE": "Greek",
+        "NLD": "Dutch",
+        "HUN": "Hungarian",
+        "IND": "Indian",
+        "ING": "English",
+        "IRL": "Irish",
+        "ISR": "Israeli",
+        "ITA": "Italian",
+        "JPN": "Japanese",
+        "MEX": "Mexican",
+        "NGA": "Nigerian",
+        "NOR": "Norwegian",
+        "PER": "Peruvian",
+        "POL": "Polish",
+        "POR": "Portuguese",
+        "ROM": "Roman",
+        "RUS": "Russian",
+        "SUE": "Swedish",
+        "SUI": "Swiss",
+        "TUR": "Turkish",
+        "UKR": "Ukrainian"
+      },
+      "booksCount_one": "{{count}} book",
+      "booksCount_other": "{{count}} books"
     },
     "publishers": {
       "title": "Publishers",
@@ -2188,7 +2498,15 @@
         "websiteLabel": "Website",
         "websitePlaceholder": "https://example.com",
         "foundedYearLabel": "Founded Year"
-      }
+      },
+      "countries": {
+        "BRA": "Brazil",
+        "USA": "United States of America",
+        "UK": "United Kingdom",
+        "POR": "Portugal"
+      },
+      "booksCount_one": "{{count}} book",
+      "booksCount_other": "{{count}} books"
     },
     "summaries": {
       "title": "Summaries",
@@ -2442,7 +2760,47 @@
         "linkedFinancialGoalHint": "Link this routine to a financial goal it feeds into",
         "linkedBookLabel": "Linked Book",
         "linkedBookPlaceholder": "Select a book you are reading (optional)",
-        "linkedBookHint": "Link this routine to a book you are currently reading"
+        "linkedBookHint": "Link this routine to a book you are currently reading",
+        "periodicityOptions": {
+          "daily": "Daily",
+          "weekdays": "Weekdays",
+          "weekly": "Weekly",
+          "monthly": "Monthly",
+          "custom": "Custom"
+        },
+        "priorityOptions": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "critical": "Critical"
+        },
+        "unitOptions": {
+          "vez": "time",
+          "minuto": "minute",
+          "hora": "hour",
+          "ml": "ml",
+          "copo": "cup",
+          "litro": "liter",
+          "página": "page",
+          "km": "km",
+          "metro": "meter",
+          "passo": "step",
+          "repetição": "repetition",
+          "série": "set",
+          "capítulo": "chapter",
+          "exercício": "exercise",
+          "dose": "dose",
+          "comprimido": "pill"
+        },
+        "weekdayOptions": {
+          "0": "Monday",
+          "1": "Tuesday",
+          "2": "Wednesday",
+          "3": "Thursday",
+          "4": "Friday",
+          "5": "Saturday",
+          "6": "Sunday"
+        }
       }
     },
     "goals": {
@@ -2509,7 +2867,25 @@
         "deadlinePlaceholder": "Select deadline (optional)",
         "endDateLabel": "End Date",
         "endDatePlaceholder": "Select end date",
-        "statusLabel": "Status *"
+        "statusLabel": "Status *",
+        "goalTypeOptions": {
+          "consecutive_days": "Consecutive Days",
+          "total_days": "Total Days",
+          "avoid_habit": "Avoid Habit",
+          "custom": "Custom"
+        },
+        "statusOptions": {
+          "active": "Active",
+          "completed": "Completed",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        }
+      },
+      "goalTypes": {
+        "consecutive_days": "Consecutive Days",
+        "total_days": "Total Days",
+        "avoid_habit": "Avoid Habit",
+        "custom": "Custom"
       }
     },
     "dailyChecklist": {

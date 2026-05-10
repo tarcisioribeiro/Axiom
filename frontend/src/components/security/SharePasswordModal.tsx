@@ -160,7 +160,7 @@ export function SharePasswordModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[540px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-sm">
             <Share2 className="h-5 w-5" />
             {t('pages.sharePassword.title')}
           </DialogTitle>
@@ -170,11 +170,11 @@ export function SharePasswordModal({
         </DialogHeader>
 
         {/* Create new token section */}
-        <div className="space-y-4 rounded-lg border p-4">
+        <div className="space-y-md rounded-lg border p-md">
           <p className="text-sm font-medium">{t('pages.sharePassword.newLink')}</p>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-md">
+            <div className="space-y-sm">
               <Label htmlFor="ttl">{t('pages.sharePassword.ttlLabel')}</Label>
               <Select value={ttlHours} onValueChange={setTtlHours}>
                 <SelectTrigger id="ttl">
@@ -190,7 +190,7 @@ export function SharePasswordModal({
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               <Label htmlFor="max-uses">{t('pages.sharePassword.maxUsesLabel')}</Label>
               <Select value={maxUses} onValueChange={setMaxUses}>
                 <SelectTrigger id="max-uses">
@@ -210,12 +210,12 @@ export function SharePasswordModal({
           <Button onClick={handleCreate} disabled={isCreating} className="w-full">
             {isCreating ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-sm h-4 w-4 animate-spin" />
                 {t('common.actions.saving')}
               </>
             ) : (
               <>
-                <Share2 className="mr-2 h-4 w-4" />
+                <Share2 className="mr-sm h-4 w-4" />
                 {t('pages.sharePassword.generateBtn')}
               </>
             )}
@@ -223,11 +223,11 @@ export function SharePasswordModal({
 
           {newShareUrl && (
             <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
-              <p className="mb-2 font-medium text-yellow-600 dark:text-yellow-400">
+              <p className="mb-sm font-medium text-yellow-600 dark:text-yellow-400">
                 {t('pages.sharePassword.copyNowWarning')}
               </p>
-              <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 break-all rounded bg-muted px-2 py-1 text-xs">
+              <div className="flex items-center gap-sm">
+                <code className="min-w-0 flex-1 break-all rounded bg-muted px-sm py-xs text-xs">
                   {newShareUrl}
                 </code>
                 <Button size="sm" variant="outline" onClick={handleCopyNewLink}>
@@ -239,28 +239,28 @@ export function SharePasswordModal({
         </div>
 
         {/* Existing tokens */}
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <p className="text-sm font-medium">
             {t('pages.sharePassword.existingLinks')}
           </p>
 
           {isLoadingTokens ? (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-md">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : tokens.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
+            <p className="py-md text-center text-sm text-muted-foreground">
               {t('pages.sharePassword.noLinks')}
             </p>
           ) : (
-            <div className="max-h-64 space-y-2 overflow-y-auto">
+            <div className="max-h-64 space-y-sm overflow-y-auto">
               {tokens.map((token) => (
                 <div
                   key={token.id}
                   className="flex items-center justify-between rounded-lg border p-3 text-sm"
                 >
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1 space-y-xs">
+                    <div className="flex items-center gap-sm">
                       {getTokenBadge(token)}
                       <span className="text-xs text-muted-foreground">
                         {token.use_count}/{token.max_uses}{' '}
@@ -272,7 +272,7 @@ export function SharePasswordModal({
                       {formatDate(token.expires_at, 'dd/MM/yyyy HH:mm')}
                     </p>
                   </div>
-                  <div className="ml-2 flex shrink-0 gap-1">
+                  <div className="ml-sm flex shrink-0 gap-xs">
                     {!token.is_revoked && (
                       <Button
                         size="sm"

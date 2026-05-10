@@ -121,16 +121,16 @@ export default function Revenues() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-sm">
           <Button
             variant="outline"
             onClick={() => setIsExportModalOpen(true)}
-            className="gap-2"
+            className="gap-sm"
           >
             <Download className="h-4 w-4" />
             {t('common.actions.export')}
           </Button>
-          <Button onClick={handleCreate} className="gap-2">
+          <Button onClick={handleCreate} className="gap-sm">
             <Plus className="h-4 w-4" />
             {t('pages.revenues.newBtn')}
           </Button>
@@ -169,7 +169,7 @@ export default function Revenues() {
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-xs">
           <span className="whitespace-nowrap text-xs text-muted-foreground">
             {t('pages.revenues.dateFrom')}
           </span>
@@ -282,7 +282,7 @@ export default function Revenues() {
           message: t('pages.revenues.emptyState'),
         }}
         actions={(revenue) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             {revenue.received && (
               <ReceiptButton
                 source={{ type: 'revenue', data: revenue }}

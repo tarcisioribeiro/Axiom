@@ -18,13 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { storedAccountSchema, type StoredBankAccountFormData } from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
 
-const ACCOUNT_TYPES = [
-  { value: 'CC', label: 'Conta Corrente' },
-  { value: 'CS', label: 'Conta Salário' },
-  { value: 'CP', label: 'Conta Poupança' },
-  { value: 'CI', label: 'Conta Investimento' },
-  { value: 'OTHER', label: 'Outro' },
-];
+const ACCOUNT_TYPE_VALUES = ['CC', 'CS', 'CP', 'CI', 'OTHER'] as const;
 
 // Mapeamento de instituições do módulo financeiro (backend)
 const INSTITUTIONS = [
@@ -93,8 +87,8 @@ export function StoredAccountForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-2 gap-md">
         <div className="col-span-2">
           <Label htmlFor="name">{t('pages.storedAccounts.form.nameLabel')}</Label>
           <Input
@@ -103,7 +97,7 @@ export function StoredAccountForm({
             placeholder={t('pages.storedAccounts.form.namePlaceholder')}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -129,7 +123,7 @@ export function StoredAccountForm({
             </SelectContent>
           </Select>
           {errors.institution_name && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.institution_name.message}
             </p>
           )}
@@ -152,15 +146,15 @@ export function StoredAccountForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ACCOUNT_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+              {ACCOUNT_TYPE_VALUES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {t(`pages.storedAccounts.accountTypes.${value}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.account_type && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.account_type.message}
             </p>
           )}
@@ -176,7 +170,7 @@ export function StoredAccountForm({
             placeholder={t('pages.storedAccounts.form.numberPlaceholder')}
           />
           {errors.account_number && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.account_number.message}
             </p>
           )}
@@ -190,7 +184,7 @@ export function StoredAccountForm({
             placeholder={t('pages.storedAccounts.form.agencyPlaceholder')}
           />
           {errors.agency && (
-            <p className="mt-1 text-sm text-destructive">{errors.agency.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.agency.message}</p>
           )}
         </div>
 
@@ -204,7 +198,9 @@ export function StoredAccountForm({
               type={showPassword ? 'text' : 'password'}
               {...register('password')}
               placeholder={
-                account ? 'Deixe vazio para manter a atual' : 'Senha do app/site'
+                account
+                  ? t('pages.storedAccounts.form.password1EditPlaceholder')
+                  : t('pages.storedAccounts.form.password1Placeholder')
               }
             />
             <Button
@@ -222,11 +218,11 @@ export function StoredAccountForm({
             </Button>
           </div>
           {errors.password && (
-            <p className="mt-1 text-sm text-destructive">{errors.password.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.password.message}</p>
           )}
           {account && (
-            <p className="mt-1 text-xs text-warning">
-              Deixe vazio para manter a senha atual (criptografada)
+            <p className="mt-xs text-xs text-warning">
+              {t('pages.storedAccounts.form.keepCurrentPassword')}
             </p>
           )}
         </div>
@@ -241,7 +237,9 @@ export function StoredAccountForm({
               type={showSecondPassword ? 'text' : 'password'}
               {...register('digital_password')}
               placeholder={
-                account ? 'Deixe vazio para manter a atual' : 'Senha do cartão'
+                account
+                  ? t('pages.storedAccounts.form.password2EditPlaceholder')
+                  : t('pages.storedAccounts.form.password2Placeholder')
               }
             />
             <Button
@@ -259,7 +257,7 @@ export function StoredAccountForm({
             </Button>
           </div>
           {errors.digital_password && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-xs text-sm text-destructive">
               {errors.digital_password.message}
             </p>
           )}
@@ -291,7 +289,7 @@ export function StoredAccountForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="mt-1 text-xs">
+            <p className="mt-xs text-xs">
               {t('pages.storedAccounts.form.financeAccountHint')}
             </p>
           </div>
@@ -306,19 +304,19 @@ export function StoredAccountForm({
             rows={3}
           />
           {errors.notes && (
-            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
+            <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t pt-4">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
             </>
           ) : (

@@ -219,25 +219,25 @@ export default function FixedExpenses() {
         return (
           <div
             className={cn(
-              'grid gap-4',
+              'grid gap-md',
               activeExpenses.length > 0 ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1'
             )}
           >
             {/* Card 1: Lançamento */}
-            <div className="flex flex-col justify-between rounded-lg border bg-card p-4">
+            <div className="flex flex-col justify-between rounded-lg border bg-card p-md">
               <div>
                 <h3 className="text-base font-semibold">
                   {t('pages.fixedExpenses.launchSection')}
                 </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-xs text-sm text-muted-foreground">
                   {t('pages.fixedExpenses.launchDesc')}
                 </p>
               </div>
               <Button
                 onClick={() => setIsLaunchDialogOpen(true)}
-                className="mt-4 w-full"
+                className="mt-md w-full"
               >
-                <TrendingDown className="mr-2 h-4 w-4" />
+                <TrendingDown className="mr-sm h-4 w-4" />
                 {t('pages.fixedExpenses.launchBtn')}
               </Button>
             </div>
@@ -245,14 +245,14 @@ export default function FixedExpenses() {
             {activeExpenses.length > 0 && (
               <>
                 {/* Card 2: Comprometimento */}
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border bg-card p-md">
                   <p className="text-sm font-medium">
                     {t('pages.fixedExpenses.stats.monthlyCommitment')}
                   </p>
-                  <p className="mt-1 text-2xl font-bold text-destructive">
+                  <p className="mt-xs text-2xl font-bold text-destructive">
                     {formatCurrency(totalMonthlyFixed)}
                   </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="mt-sm text-xs text-muted-foreground">
                     {t('pages.fixedExpenses.stats.activeCountDesc', {
                       count: activeExpenses.length,
                     })}
@@ -260,11 +260,11 @@ export default function FixedExpenses() {
                 </div>
 
                 {/* Card 3: Calendário */}
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border bg-card p-md">
                   <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     {t('pages.fixedExpenses.scheduleTitle')}
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-sm">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
                       const expensesOnDay = activeExpenses.filter(
                         (e) => e.due_day === day
@@ -313,7 +313,7 @@ export default function FixedExpenses() {
             : 'border-l-4 border-l-muted opacity-60'
         }
         actions={(item) => (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-sm">
             <Button
               variant="ghost"
               size="icon"

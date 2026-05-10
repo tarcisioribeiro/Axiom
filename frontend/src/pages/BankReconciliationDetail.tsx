@@ -101,7 +101,7 @@ function EntryStatusBadge({ status }: { status: BankStatementEntry['status'] }) 
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${variants[status]}`}
+      className={`inline-flex items-center rounded-full border px-sm py-0.5 text-xs font-medium ${variants[status]}`}
     >
       {labels[status] ?? status}
     </span>
@@ -289,7 +289,7 @@ export default function BankReconciliationDetail() {
       render: (entry) => {
         const isDebit = entry.transaction_type === 'debit';
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-xs">
             <span
               className={cn('text-xs', isDebit ? 'text-destructive' : 'text-success')}
             >
@@ -350,7 +350,7 @@ export default function BankReconciliationDetail() {
         const isDebit = entry.transaction_type === 'debit';
 
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-xs">
             {/* Auto-match confirmation buttons (pending entries with a suggestion) */}
             {entry.status === 'pending' && hasMatch && (
               <Button
@@ -396,7 +396,7 @@ export default function BankReconciliationDetail() {
             <Button
               size="sm"
               variant="outline"
-              className="gap-1"
+              className="gap-xs"
               disabled={isUpdating}
               title={t('pages.bankReconciliation.detail.linkManually')}
               onClick={() => void openManualMatch(entry)}
@@ -409,7 +409,7 @@ export default function BankReconciliationDetail() {
             <Button
               size="sm"
               variant="outline"
-              className="gap-1"
+              className="gap-xs"
               disabled={isUpdating}
               title={
                 isDebit
@@ -454,7 +454,7 @@ export default function BankReconciliationDetail() {
           size="sm"
           onClick={() => navigate('/bank-reconciliation')}
         >
-          <ArrowLeft className="mr-1 h-4 w-4" />
+          <ArrowLeft className="mr-xs h-4 w-4" />
           {t('common.actions.back')}
         </Button>
       </div>
@@ -476,8 +476,8 @@ export default function BankReconciliationDetail() {
       />
 
       {/* Progress bar */}
-      <div className="mb-4 rounded-lg border bg-card p-4">
-        <div className="mb-2 flex items-center justify-between">
+      <div className="mb-md rounded-lg border bg-card p-md">
+        <div className="mb-sm flex items-center justify-between">
           <span className="text-sm font-medium">
             {t('pages.bankReconciliation.detail.progress')}
           </span>
@@ -494,7 +494,7 @@ export default function BankReconciliationDetail() {
             style={{ width: `${reconciliationPct}%` }}
           />
         </div>
-        <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+        <div className="mt-sm flex gap-md text-xs text-muted-foreground">
           <span className="text-success">
             {t('pages.bankReconciliation.detail.matchedCount', {
               count: importData.matched_count,
@@ -576,7 +576,7 @@ export default function BankReconciliationDetail() {
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-sm">
               <Link2 className="h-4 w-4" />
               {t('pages.bankReconciliation.detail.dialogTitle')}
             </DialogTitle>
@@ -590,7 +590,7 @@ export default function BankReconciliationDetail() {
           {matchingEntry && (
             <div className="rounded-md border bg-muted/30 p-3 text-sm">
               <p className="font-medium">{matchingEntry.description}</p>
-              <p className="mt-1 text-muted-foreground">
+              <p className="mt-xs text-muted-foreground">
                 {formatDate(matchingEntry.date)} ·{' '}
                 <span
                   className={
@@ -609,7 +609,7 @@ export default function BankReconciliationDetail() {
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              className="pl-8"
+              className="pl-xl"
               placeholder={
                 candidateLabel === 'despesas'
                   ? t('pages.bankReconciliation.detail.searchExpenses')
@@ -620,13 +620,13 @@ export default function BankReconciliationDetail() {
             />
           </div>
 
-          <div className="max-h-72 space-y-2 overflow-y-auto">
+          <div className="max-h-72 space-y-sm overflow-y-auto">
             {candidateLoading ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
+              <p className="py-md text-center text-sm text-muted-foreground">
                 {t('common.actions.loading')}
               </p>
             ) : candidates.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
+              <p className="py-md text-center text-sm text-muted-foreground">
                 {candidateLabel === 'despesas'
                   ? t('pages.bankReconciliation.detail.noExpensesFound')
                   : t('pages.bankReconciliation.detail.noRevenuesFound')}
@@ -635,7 +635,7 @@ export default function BankReconciliationDetail() {
               candidates.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
+                  className="flex items-center justify-between gap-sm rounded-md border p-sm text-sm"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{c.description}</p>

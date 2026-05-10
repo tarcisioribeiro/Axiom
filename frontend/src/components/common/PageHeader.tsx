@@ -32,7 +32,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
         {icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 md:h-11 md:w-11 [&>*]:h-5 [&>*]:w-5 md:[&>*]:h-5 md:[&>*]:w-5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 md:h-11 md:w-11 [&>*]:h-5 [&>*]:w-5 md:[&>*]:h-5 md:[&>*]:w-5">
             {icon}
           </div>
         )}

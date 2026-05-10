@@ -146,8 +146,8 @@ function HighlightInlineForm({
         rows={3}
         required
       />
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
+      <div className="grid grid-cols-2 gap-sm">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.books.detail.hlTypeLbl')}</Label>
           <Select
             value={highlightType}
@@ -169,7 +169,7 @@ function HighlightInlineForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           <Label className="text-xs">{t('pages.books.detail.hlColorLbl')}</Label>
           <Select value={color} onValueChange={(v) => setColor(v as typeof color)}>
             <SelectTrigger className="h-8 text-xs">
@@ -195,7 +195,7 @@ function HighlightInlineForm({
           </Select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-sm">
         <Input
           type="number"
           min={1}
@@ -211,7 +211,7 @@ function HighlightInlineForm({
           className="h-8 text-xs"
         />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-sm">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -269,7 +269,7 @@ function MetaRow({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-2 text-sm">
+    <div className="flex items-start gap-sm text-sm">
       <span className="mt-0.5 text-muted-foreground">{icon}</span>
       <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
       <span className="font-medium">{value}</span>
@@ -567,7 +567,7 @@ export function BookDetailModal({
         </DialogHeader>
 
         {/* Tab navigation */}
-        <div className="flex shrink-0 gap-1 rounded-md border p-1">
+        <div className="flex shrink-0 gap-xs rounded-md border p-xs">
           {(
             [
               { id: 'info', label: t('pages.books.detail.tabInfo'), icon: null },
@@ -592,7 +592,7 @@ export function BookDetailModal({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex flex-1 items-center justify-center gap-sm rounded px-sm py-sm text-xs font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -609,7 +609,7 @@ export function BookDetailModal({
           {activeTab === 'info' && (
             <>
               {/* Top section: cover + main info */}
-              <div className="flex gap-6">
+              <div className="flex gap-lg">
                 {/* Cover */}
                 <div className="shrink-0">
                   {book.cover ? (
@@ -631,12 +631,12 @@ export function BookDetailModal({
                     <h2 className="text-xl font-semibold leading-tight">
                       {book.title}
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-xs text-sm text-muted-foreground">
                       {book.authors_names.join(', ')}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-sm">
                     <Badge variant={statusVariant(book.read_status)}>
                       {book.read_status_display}
                     </Badge>
@@ -655,7 +655,7 @@ export function BookDetailModal({
                     <StarRow rating={book.rating} />
                   )}
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-sm">
                     <MetaRow
                       icon={<User className="h-4 w-4" />}
                       label={t('pages.books.detail.metaPublisher')}
@@ -703,9 +703,9 @@ export function BookDetailModal({
               {book.reading_progress > 0 && (
                 <>
                   <div className="border-t" />
-                  <div className="space-y-2">
+                  <div className="space-y-sm">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1 font-medium">
+                      <span className="flex items-center gap-xs font-medium">
                         <TrendingUp className="h-4 w-4" />
                         {t('pages.books.detail.readingProgress')}
                       </span>
@@ -728,18 +728,18 @@ export function BookDetailModal({
                   book.estimated_completion_book) && (
                   <>
                     <div className="border-t" />
-                    <div className="space-y-2">
-                      <span className="flex items-center gap-1 text-sm font-medium">
+                    <div className="space-y-sm">
+                      <span className="flex items-center gap-xs text-sm font-medium">
                         <Calendar className="h-4 w-4" />
                         {t('pages.books.detail.completionForecast')}
                       </span>
-                      <div className="grid grid-cols-1 gap-2 text-xs">
+                      <div className="grid grid-cols-1 gap-sm text-xs">
                         {book.estimated_completion_book && (
-                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
+                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-sm">
                             <span className="text-muted-foreground">
                               {t('pages.books.detail.bookAvg')}
                               {book.book_avg_pages_per_day > 0 && (
-                                <span className="ml-1">
+                                <span className="ml-xs">
                                   {t('pages.books.detail.pagesPerDay', {
                                     count: book.book_avg_pages_per_day,
                                   })}
@@ -754,11 +754,11 @@ export function BookDetailModal({
                           </div>
                         )}
                         {book.estimated_completion_general && (
-                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
+                          <div className="flex items-center justify-between rounded-md bg-muted px-3 py-sm">
                             <span className="text-muted-foreground">
                               {t('pages.books.detail.generalAvg')}
                               {book.general_avg_pages_per_day > 0 && (
-                                <span className="ml-1">
+                                <span className="ml-xs">
                                   {t('pages.books.detail.pagesPerDay', {
                                     count: book.general_avg_pages_per_day,
                                   })}
@@ -781,7 +781,7 @@ export function BookDetailModal({
               {book.synopsis && book.synopsis !== 'Sem sinopse disponível.' && (
                 <>
                   <div className="border-t" />
-                  <div className="space-y-1">
+                  <div className="space-y-xs">
                     <p className="text-sm font-medium">
                       {t('pages.books.detail.synopsis')}
                     </p>
@@ -794,7 +794,7 @@ export function BookDetailModal({
 
               {/* Actions */}
               <div className="border-t" />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-sm">
                 <Button
                   variant="outline"
                   size="sm"
@@ -804,7 +804,7 @@ export function BookDetailModal({
                   }}
                   className="text-destructive hover:text-destructive"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="mr-sm h-4 w-4" />
                   {t('common.actions.delete')}
                 </Button>
                 <Button
@@ -814,7 +814,7 @@ export function BookDetailModal({
                     onEdit(book);
                   }}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
+                  <Edit className="mr-sm h-4 w-4" />
                   {t('common.actions.edit')}
                 </Button>
               </div>
@@ -830,7 +830,7 @@ export function BookDetailModal({
                     count: highlights.length,
                   })}
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-sm">
                   {highlights.length > 0 && (
                     <Button
                       variant="outline"
@@ -838,7 +838,7 @@ export function BookDetailModal({
                       onClick={() => void handleExport()}
                       disabled={isExporting}
                     >
-                      <Download className="mr-1.5 h-3.5 w-3.5" />
+                      <Download className="mr-sm h-3.5 w-3.5" />
                       {isExporting
                         ? t('pages.books.detail.exportingBtn')
                         : t('pages.books.detail.exportBtn')}
@@ -851,7 +851,7 @@ export function BookDetailModal({
                       setShowAddForm(true);
                     }}
                   >
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    <Plus className="mr-sm h-3.5 w-3.5" />
                     {t('pages.books.detail.addBtn')}
                   </Button>
                 </div>
@@ -870,15 +870,15 @@ export function BookDetailModal({
               )}
 
               {isLoadingHighlights ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
+                <p className="py-md text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.loadingHighlights')}
                 </p>
               ) : highlights.length === 0 && !showAddForm ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">
+                <p className="py-lg text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.noHighlights')}
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-sm">
                   {highlights.map((h) =>
                     editingHighlight?.id === h.id ? (
                       <HighlightInlineForm
@@ -897,8 +897,8 @@ export function BookDetailModal({
                         key={h.id}
                         className={`rounded-lg border-l-4 p-3 ${COLOR_CLASSES[h.color] ?? COLOR_CLASSES.yellow}`}
                       >
-                        <div className="mb-1.5 flex items-start justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="mb-sm flex items-start justify-between gap-sm">
+                          <div className="flex flex-wrap items-center gap-sm">
                             <Badge
                               variant={TYPE_VARIANT[h.highlight_type] ?? 'default'}
                               className="text-xs"
@@ -958,27 +958,27 @@ export function BookDetailModal({
                     setIsReadingFormOpen(true);
                   }}
                 >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  <Plus className="mr-sm h-3.5 w-3.5" />
                   {t('pages.books.detail.addBtn')}
                 </Button>
               </div>
 
               {isLoadingReadings ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
+                <p className="py-md text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.loadingReadings')}
                 </p>
               ) : readings.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">
+                <p className="py-lg text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.noReadings')}
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-sm">
                   {readings.map((r) => (
                     <Card key={r.id}>
-                      <CardHeader className="pb-2 pt-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
+                      <CardHeader className="pb-sm pt-3">
+                        <div className="flex items-start justify-between gap-sm">
+                          <div className="space-y-xs">
+                            <div className="flex items-center gap-sm text-sm">
                               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                               <span className="font-medium">
                                 {formatDate(r.reading_date, 'dd/MM/yyyy')}
@@ -1055,13 +1055,13 @@ export function BookDetailModal({
                       : undefined
                   }
                 >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  <Plus className="mr-sm h-3.5 w-3.5" />
                   {t('pages.books.detail.addBtn')}
                 </Button>
               </div>
               {book.read_status !== 'read' && (
                 <p
-                  className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground"
+                  className="rounded-md bg-muted px-3 py-sm text-xs text-muted-foreground"
                   dangerouslySetInnerHTML={{
                     __html: t('pages.books.detail.summariesReadOnlyNote'),
                   }}
@@ -1069,29 +1069,29 @@ export function BookDetailModal({
               )}
 
               {isLoadingSummaries ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
+                <p className="py-md text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.loadingSummaries')}
                 </p>
               ) : summaries.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">
+                <p className="py-lg text-center text-sm text-muted-foreground">
                   {t('pages.books.detail.noSummaries')}
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-sm">
                   {summaries.map((s) => (
                     <Card key={s.id}>
-                      <CardHeader className="pb-2 pt-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="space-y-1">
+                      <CardHeader className="pb-sm pt-3">
+                        <div className="flex items-start justify-between gap-sm">
+                          <div className="space-y-xs">
                             <CardTitle className="text-sm">{s.title}</CardTitle>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-sm">
                               {s.is_vectorized ? (
-                                <Badge variant="default" className="gap-1 text-xs">
+                                <Badge variant="default" className="gap-xs text-xs">
                                   <CheckCircle2 className="h-3 w-3" />
                                   {t('pages.summaries.vectorized')}
                                 </Badge>
                               ) : (
-                                <Badge variant="secondary" className="gap-1 text-xs">
+                                <Badge variant="secondary" className="gap-xs text-xs">
                                   <XCircle className="h-3 w-3" />
                                   {t('pages.summaries.notVectorized')}
                                 </Badge>
@@ -1173,8 +1173,8 @@ export function BookDetailModal({
                       : t('pages.summaries.createDesc')}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
+                <div className="grid gap-md py-md">
+                  <div className="space-y-sm">
                     <Label htmlFor="summary-title">
                       {t('pages.summaries.titleField')}
                     </Label>
@@ -1190,7 +1190,7 @@ export function BookDetailModal({
                       required
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-sm">
                     <Label htmlFor="summary-text">
                       {t('pages.summaries.contentField')}
                     </Label>

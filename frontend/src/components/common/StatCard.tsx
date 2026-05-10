@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cardVariants, useCounter } from '@/lib/animations';
@@ -24,11 +25,15 @@ const extractNumber = (val: string | number): number => {
   if (typeof val === 'number') return val;
   const s = String(val);
   if (s.includes('%')) return parseFloat(s.replace('%', '').trim());
-  const cleaned = s
-    .replace(/[^\d.,-]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.');
-  return parseFloat(cleaned);
+  const cleaned = s.replace(/[^\d.,-]/g, '');
+  const lastDot = cleaned.lastIndexOf('.');
+  const lastComma = cleaned.lastIndexOf(',');
+  if (lastComma > lastDot) {
+    // pt-BR style: dot is thousands separator, comma is decimal separator
+    return parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+  }
+  // en-US style: comma is thousands separator, dot is decimal separator
+  return parseFloat(cleaned.replace(/,/g, ''));
 };
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -38,6 +43,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   trend,
   variant = 'default',
 }) => {
+  const { i18n } = useTranslation();
   const variantClasses = {
     default: '',
     success: 'border-success/40 bg-success/[0.04]',
@@ -77,7 +83,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       : isCurrency
         ? formatCurrency(animatedCount)
         : isNumeric
-          ? Math.round(animatedCount).toLocaleString('pt-BR')
+          ? Math.round(animatedCount).toLocaleString(i18n.language)
           : value;
 
   return (

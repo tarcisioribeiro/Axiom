@@ -47,15 +47,15 @@ function getStrengthScore(password: string): number {
 function getStrengthLabel(score: number, t: (key: string) => string): string {
   switch (score) {
     case 1:
-      return t('security.vaultGuard.setup.strength.veryWeak');
+      return t('pages.vaultGuard.setup.strength.veryWeak');
     case 2:
-      return t('security.vaultGuard.setup.strength.weak');
+      return t('pages.vaultGuard.setup.strength.weak');
     case 3:
-      return t('security.vaultGuard.setup.strength.fair');
+      return t('pages.vaultGuard.setup.strength.fair');
     case 4:
-      return t('security.vaultGuard.setup.strength.good');
+      return t('pages.vaultGuard.setup.strength.good');
     case 5:
-      return t('security.vaultGuard.setup.strength.strong');
+      return t('pages.vaultGuard.setup.strength.strong');
     default:
       return '';
   }
@@ -89,8 +89,8 @@ function PasswordStrengthIndicator({ password }: PasswordStrengthProps) {
   if (!password) return null;
 
   return (
-    <div className="space-y-1">
-      <div className="flex gap-1">
+    <div className="space-y-xs">
+      <div className="flex gap-xs">
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
@@ -162,15 +162,15 @@ function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
 
   const label =
     hours > 0
-      ? t('security.vaultGuard.expiry.hours', { hours, minutes: minutes % 60 })
+      ? t('pages.vaultGuard.expiry.hours', { hours, minutes: minutes % 60 })
       : minutes > 0
-        ? t('security.vaultGuard.expiry.minutes', { minutes })
-        : t('security.vaultGuard.expiry.soon');
+        ? t('pages.vaultGuard.expiry.minutes', { minutes })
+        : t('pages.vaultGuard.expiry.soon');
 
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 rounded-md px-2 py-1 text-xs',
+        'flex items-center gap-sm rounded-md px-sm py-xs text-xs',
         isWarning
           ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
           : 'bg-muted text-muted-foreground'
@@ -210,7 +210,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
     if (masterPassword !== confirmPassword) {
       toast({
         title: t('common.messages.invalidData'),
-        description: t('security.vaultGuard.setup.passwordsMismatch'),
+        description: t('pages.vaultGuard.setup.passwordsMismatch'),
         variant: 'destructive',
       });
       return;
@@ -222,13 +222,13 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         confirm_master_password: confirmPassword,
       });
       toast({
-        title: t('security.vaultGuard.setup.successTitle'),
-        description: t('security.vaultGuard.setup.successDesc'),
+        title: t('pages.vaultGuard.setup.successTitle'),
+        description: t('pages.vaultGuard.setup.successDesc'),
       });
       await onSuccess();
     } catch (err) {
       toast({
-        title: t('security.vaultGuard.setup.errorTitle'),
+        title: t('pages.vaultGuard.setup.errorTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -245,15 +245,15 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
             <Shield className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl">
-            {t('security.vaultGuard.setup.title')}
+            {t('pages.vaultGuard.setup.title')}
           </CardTitle>
-          <CardDescription>{t('security.vaultGuard.setup.desc')}</CardDescription>
+          <CardDescription>{t('pages.vaultGuard.setup.desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
             <div className="space-y-xs">
               <Label htmlFor="master-password">
-                {t('security.vaultGuard.setup.passwordLabel')}
+                {t('pages.vaultGuard.setup.passwordLabel')}
               </Label>
               <div className="relative">
                 <Input
@@ -261,7 +261,7 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
                   type={showPassword ? 'text' : 'password'}
                   value={masterPassword}
                   onChange={(e) => setMasterPassword(e.target.value)}
-                  placeholder={t('security.vaultGuard.setup.passwordPlaceholder')}
+                  placeholder={t('pages.vaultGuard.setup.passwordPlaceholder')}
                   required
                   minLength={8}
                   className="pr-10"
@@ -283,35 +283,35 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
               )}
               {isWeakPassword && (
                 <p className="text-xs text-muted-foreground">
-                  {t('security.vaultGuard.setup.passwordHint')}
+                  {t('pages.vaultGuard.setup.passwordHint')}
                 </p>
               )}
             </div>
 
             <div className="space-y-xs">
               <Label htmlFor="confirm-password">
-                {t('security.vaultGuard.setup.confirmLabel')}
+                {t('pages.vaultGuard.setup.confirmLabel')}
               </Label>
               <Input
                 id="confirm-password"
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={t('security.vaultGuard.setup.confirmPlaceholder')}
+                placeholder={t('pages.vaultGuard.setup.confirmPlaceholder')}
                 required
                 minLength={8}
               />
               {confirmPassword && masterPassword !== confirmPassword && (
                 <p className="text-xs text-destructive">
-                  {t('security.vaultGuard.setup.passwordsMismatchShort')}
+                  {t('pages.vaultGuard.setup.passwordsMismatchShort')}
                 </p>
               )}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting
-                ? t('security.vaultGuard.setup.configuring')
-                : t('security.vaultGuard.setup.setupBtn')}
+                ? t('pages.vaultGuard.setup.configuring')
+                : t('pages.vaultGuard.setup.setupBtn')}
             </Button>
           </form>
         </CardContent>
@@ -343,7 +343,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
       await onSuccess();
     } catch (err) {
       toast({
-        title: t('security.vaultGuard.locked.failTitle'),
+        title: t('pages.vaultGuard.locked.failTitle'),
         description: getErrorMessage(err),
         variant: 'destructive',
       });
@@ -360,15 +360,15 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
             <Lock className="h-8 w-8 text-muted-foreground" />
           </div>
           <CardTitle className="text-2xl">
-            {t('security.vaultGuard.locked.title')}
+            {t('pages.vaultGuard.locked.title')}
           </CardTitle>
-          <CardDescription>{t('security.vaultGuard.locked.desc')}</CardDescription>
+          <CardDescription>{t('pages.vaultGuard.locked.desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUnlock} className="space-y-md">
             <div className="space-y-xs">
               <Label htmlFor="unlock-password">
-                {t('security.vaultGuard.locked.passwordLabel')}
+                {t('pages.vaultGuard.locked.passwordLabel')}
               </Label>
               <div className="relative">
                 <Input
@@ -376,7 +376,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                   type={showPassword ? 'text' : 'password'}
                   value={masterPassword}
                   onChange={(e) => setMasterPassword(e.target.value)}
-                  placeholder={t('security.vaultGuard.locked.passwordPlaceholder')}
+                  placeholder={t('pages.vaultGuard.locked.passwordPlaceholder')}
                   required
                   className="pr-10"
                 />
@@ -396,8 +396,8 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting
-                ? t('security.vaultGuard.locked.unlocking')
-                : t('security.vaultGuard.locked.unlockBtn')}
+                ? t('pages.vaultGuard.locked.unlocking')
+                : t('pages.vaultGuard.locked.unlockBtn')}
             </Button>
           </form>
         </CardContent>
@@ -426,7 +426,7 @@ export function VaultGuard({ children }: VaultGuardProps) {
   const { status, isLoading, refresh } = useVaultStatus();
 
   if (isLoading) {
-    return <LoadingState message={t('security.vaultGuard.verifying')} />;
+    return <LoadingState message={t('pages.vaultGuard.verifying')} />;
   }
 
   if (!status?.is_configured) {

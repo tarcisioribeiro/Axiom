@@ -149,16 +149,20 @@ function GoalCard({
         goal.is_completed ? 'border-success/50 bg-success/[0.03]' : ''
       }`}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-md">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             {config.icon}
             <div>
               <p className="font-semibold leading-tight">{goal.description}</p>
-              <p className="text-xs text-muted-foreground">{goal.category_display}</p>
+              <p className="text-xs text-muted-foreground">
+                {t(`pages.financialGoals.categories.${goal.category}`, {
+                  defaultValue: goal.category_display,
+                })}
+              </p>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-xs">
             <Button
               variant="ghost"
               size="icon"
@@ -200,7 +204,7 @@ function GoalCard({
         </div>
 
         {/* Anel de progresso centralizado */}
-        <div className="relative my-4 flex justify-center">
+        <div className="relative my-md flex justify-center">
           <ProgressRing pct={pct} size={80} color={config.ringColor} />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className={`text-sm font-bold ${config.color}`}>
@@ -210,7 +214,7 @@ function GoalCard({
         </div>
 
         {/* Valores */}
-        <div className="space-y-1 text-sm">
+        <div className="space-y-xs text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {t('pages.financialGoals.columns.current')}
@@ -240,7 +244,7 @@ function GoalCard({
         {/* Prazo */}
         {daysLeft !== null && (
           <div
-            className={`mt-2 text-center text-xs font-medium ${
+            className={`mt-sm text-center text-xs font-medium ${
               daysLeft <= 0
                 ? 'text-destructive'
                 : daysLeft <= 30
@@ -256,7 +260,7 @@ function GoalCard({
 
         {/* Conquista */}
         {goal.is_completed && (
-          <div className="mt-2 flex items-center justify-center gap-1 text-success">
+          <div className="mt-sm flex items-center justify-center gap-xs text-success">
             <CheckCircle2 className="h-4 w-4" />
             <span className="text-xs font-semibold">
               {t('pages.financialGoals.goalCompletedLabel')}
@@ -542,10 +546,10 @@ export default function FinancialGoals() {
       />
 
       {/* Summary Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="mb-lg grid grid-cols-1 gap-md md:grid-cols-4">
         <Card className="border-t-2 border-t-primary">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <Target className="h-4 w-4 text-primary" />
               {t('pages.financialGoals.activeGoals')}
             </CardTitle>
@@ -555,8 +559,8 @@ export default function FinancialGoals() {
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-success">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <CheckCircle2 className="h-4 w-4 text-success" />
               {t('pages.financialGoals.completedGoals')}
             </CardTitle>
@@ -568,8 +572,8 @@ export default function FinancialGoals() {
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-success">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <PiggyBank className="h-4 w-4 text-success" />
               {t('pages.financialGoals.accumulatedAmount')}
             </CardTitle>
@@ -581,8 +585,8 @@ export default function FinancialGoals() {
           </CardContent>
         </Card>
         <Card className="border-t-2 border-t-muted-foreground">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
               {t('pages.financialGoals.totalAmount')}
             </CardTitle>
@@ -598,11 +602,11 @@ export default function FinancialGoals() {
         <LoadingState />
       ) : goals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Target className="mb-4 h-12 w-12" />
+          <Target className="mb-md h-12 w-12" />
           <p>{t('pages.financialGoals.emptyState')}</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {goals.map((goal) => (
             <GoalCard
               key={goal.id}
@@ -633,7 +637,7 @@ export default function FinancialGoals() {
                 : t('pages.financialGoals.newDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div>
               <Label htmlFor="description">{t('common.fields.description')} *</Label>
               <Input
@@ -642,7 +646,7 @@ export default function FinancialGoals() {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Ex: Viagem para Europa"
+                placeholder={t('pages.financialGoals.form.descriptionPlaceholder')}
               />
             </div>
             <div>
@@ -657,7 +661,7 @@ export default function FinancialGoals() {
                 <SelectContent>
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
+                      {t(`pages.financialGoals.categories.${cat.value}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -666,7 +670,7 @@ export default function FinancialGoals() {
             {formData.category === 'reduce_expenses' && (
               <div>
                 <Label htmlFor="linked_expense_category">
-                  Categoria de Despesa Vinculada
+                  {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
                 </Label>
                 <Select
                   value={formData.linked_expense_category || ''}
@@ -675,7 +679,11 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Todas as categorias" />
+                    <SelectValue
+                      placeholder={t(
+                        'pages.financialGoals.form.linkedExpenseCategoryPlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
@@ -689,7 +697,9 @@ export default function FinancialGoals() {
             )}
             {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
               <div>
-                <Label htmlFor="linked_account">Conta Vinculada (opcional)</Label>
+                <Label htmlFor="linked_account">
+                  {t('pages.financialGoals.form.linkedAccountLabel')}
+                </Label>
                 <Select
                   value={formData.linked_account?.toString() ?? ''}
                   onValueChange={(value) =>
@@ -700,7 +710,11 @@ export default function FinancialGoals() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Todas as contas" />
+                    <SelectValue
+                      placeholder={t(
+                        'pages.financialGoals.form.linkedAccountPlaceholder'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((acc) => (
@@ -746,14 +760,14 @@ export default function FinancialGoals() {
             </div>
             <div>
               <Label>{t('pages.financialGoals.associatedVaults')}</Label>
-              <div className="mt-1 max-h-[150px] space-y-2 overflow-y-auto rounded-md border p-3">
+              <div className="mt-xs max-h-[150px] space-y-sm overflow-y-auto rounded-md border p-3">
                 {vaults.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     {t('pages.financialGoals.noVaults')}
                   </p>
                 ) : (
                   vaults.map((vault) => (
-                    <div key={vault.id} className="flex items-center gap-2">
+                    <div key={vault.id} className="flex items-center gap-sm">
                       <Checkbox
                         id={`vault-${vault.id}`}
                         checked={formData.vaults.includes(vault.id)}
@@ -776,7 +790,7 @@ export default function FinancialGoals() {
                         className="flex-1 cursor-pointer"
                       >
                         <span>{vault.description}</span>
-                        <span className="ml-2 text-muted-foreground">
+                        <span className="ml-sm text-muted-foreground">
                           ({formatCurrency(parseFloat(vault.current_balance))})
                         </span>
                       </Label>
@@ -791,10 +805,10 @@ export default function FinancialGoals() {
                 id="notes"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Anotações sobre a meta..."
+                placeholder={t('pages.financialGoals.form.notesPlaceholder')}
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-sm">
               <Checkbox
                 id="is_active"
                 checked={formData.is_active}
@@ -837,7 +851,7 @@ export default function FinancialGoals() {
                 })}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[300px] space-y-2 overflow-y-auto rounded-md border p-3">
+          <div className="max-h-[300px] space-y-sm overflow-y-auto rounded-md border p-3">
             {vaults.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {t('pages.financialGoals.noVaults')}
@@ -846,7 +860,7 @@ export default function FinancialGoals() {
               vaults.map((vault) => (
                 <div
                   key={vault.id}
-                  className="flex items-center gap-2 rounded p-2 hover:bg-muted/50"
+                  className="flex items-center gap-sm rounded p-sm hover:bg-muted/50"
                 >
                   <Checkbox
                     id={`manage-vault-${vault.id}`}

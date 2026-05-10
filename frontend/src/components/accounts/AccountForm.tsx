@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS } from '@/config/constants';
+import { TRANSLATIONS, translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -83,9 +83,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   const institution = watch('institution') || 'NUB';
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm">
           <Label htmlFor="account_type">{t('pages.accounts.form.typeLabel')}</Label>
           <Select
             value={accountType}
@@ -97,9 +97,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               <SelectValue placeholder={t('pages.accounts.form.typePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(TRANSLATIONS.accountTypes).map(([key, value]) => (
+              {Object.entries(TRANSLATIONS.accountTypes).map(([key]) => (
                 <SelectItem key={key} value={key}>
-                  {value}
+                  {translate('accountTypes', key)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -109,7 +109,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="institution">
             {t('pages.accounts.form.institutionLabel')}
           </Label>
@@ -137,7 +137,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="account_name">{t('pages.accounts.form.nameLabel')}</Label>
           <Input
             id="account_name"
@@ -150,7 +150,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="account_number">{t('pages.accounts.form.numberLabel')}</Label>
           <Input
             id="account_number"
@@ -163,7 +163,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="balance">{t('pages.accounts.form.balanceLabel')}</Label>
           <Input
             id="balance"
@@ -187,7 +187,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-sm">
           <Label htmlFor="overdraft_limit">
             {t('pages.accounts.form.overdraftLabel')}
           </Label>
@@ -205,7 +205,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
