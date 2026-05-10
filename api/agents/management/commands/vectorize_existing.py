@@ -269,7 +269,7 @@ class Command(BaseCommand):
         from personal_planning.models import Goal
 
         qs = Goal.objects.filter(owner__user=user, is_deleted=False).values(
-            "uuid", "title", "description", "current_value", "target_value", "deadline"
+            "uuid", "title", "description", "current_value", "target_value", "end_date"
         )
         total = qs.count()
         generated, errors = 0, 0
@@ -280,8 +280,8 @@ class Command(BaseCommand):
             target = goal["target_value"] or 1
             progress = int(goal["current_value"] / target * 100)
             deadline = (
-                goal["deadline"].strftime("%d/%m/%Y")
-                if goal["deadline"]
+                goal["end_date"].strftime("%d/%m/%Y")
+                if goal["end_date"]
                 else "sem prazo"
             )
             text = (

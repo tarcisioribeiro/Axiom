@@ -30,6 +30,8 @@ import {
 
 type GoalFormData = z.infer<typeof goalSchema>;
 
+const AUTO_GOAL_TYPES = new Set(['consecutive_days', 'total_days', 'avoid_habit']);
+
 interface GoalFormProps {
   goal?: Goal;
   routineTasks: RoutineTask[];
@@ -63,7 +65,6 @@ export function GoalForm({
           target_value: goal.target_value,
           current_value: goal.current_value,
           start_date: goal.start_date,
-          deadline: goal.deadline || '',
           end_date: goal.end_date || '',
           status: goal.status,
           owner: goal.owner,
@@ -76,14 +77,12 @@ export function GoalForm({
           target_value: 30,
           current_value: 0,
           start_date: formatLocalDate(new Date()),
-          deadline: '',
           end_date: '',
           status: 'active',
           owner: 0,
         },
   });
 
-  // Load current user member when creating new goal
   useEffect(() => {
     const loadCurrentUserMember = async () => {
       if (!goal) {
@@ -197,24 +196,26 @@ export function GoalForm({
           )}
         </div>
 
-        <div>
-          <Label htmlFor="current_value">
-            {t('pages.goals.form.currentValueLabel')}
-          </Label>
-          <Input
-            id="current_value"
-            type="number"
-            min="0"
-            {...register('current_value', {
-              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-            })}
-          />
-          {errors.current_value && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.current_value.message}
-            </p>
-          )}
-        </div>
+        {!AUTO_GOAL_TYPES.has(watch('goal_type')) && (
+          <div>
+            <Label htmlFor="current_value">
+              {t('pages.goals.form.currentValueLabel')}
+            </Label>
+            <Input
+              id="current_value"
+              type="number"
+              min="0"
+              {...register('current_value', {
+                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+              })}
+            />
+            {errors.current_value && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.current_value.message}
+              </p>
+            )}
+          </div>
+        )}
 
         <div>
           <Label htmlFor="start_date">{t('pages.goals.form.startDateLabel')}</Label>
@@ -232,33 +233,25 @@ export function GoalForm({
           )}
         </div>
 
-        <div>
-          <Label htmlFor="deadline">{t('pages.goals.form.deadlineLabel')}</Label>
-          <DatePicker
-            value={watch('deadline') ?? ''}
-            onChange={(date) =>
-              setValue('deadline', date ? formatLocalDate(date) : null)
-            }
-            placeholder={t('pages.goals.form.deadlinePlaceholder')}
-          />
-          {errors.deadline && (
-            <p className="mt-xs text-sm text-destructive">{errors.deadline.message}</p>
-          )}
-        </div>
+        {!AUTO_GOAL_TYPES.has(watch('goal_type')) && (
+          <div>
+            <Label htmlFor="end_date">{t('pages.goals.form.endDateLabel')}</Label>
+            <DatePicker
+              value={watch('end_date') ?? ''}
+              onChange={(date) =>
+                setValue('end_date', date ? formatLocalDate(date) : null)
+              }
+              placeholder={t('pages.goals.form.endDatePlaceholder')}
+            />
+            {errors.end_date && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.end_date.message}
+              </p>
+            )}
+          </div>
+        )}
 
-        <div>
-          <Label htmlFor="end_date">{t('pages.goals.form.endDateLabel')}</Label>
-          <DatePicker
-            value={watch('end_date')}
-            onChange={(date) => setValue('end_date', date ? formatLocalDate(date) : '')}
-            placeholder={t('pages.goals.form.endDatePlaceholder')}
-          />
-          {errors.end_date && (
-            <p className="mt-xs text-sm text-destructive">{errors.end_date.message}</p>
-          )}
-        </div>
-
-        <div className="col-span-2">
+        <div className={AUTO_GOAL_TYPES.has(watch('goal_type')) ? 'col-span-2' : ''}>
           <Label htmlFor="status">{t('pages.goals.form.statusLabel')}</Label>
           <Select
             value={watch('status')}

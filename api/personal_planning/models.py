@@ -491,12 +491,6 @@ class Goal(BaseModel):
     start_date = models.DateField(
         null=False, blank=False, default=timezone.now, verbose_name="Data de Inicio"
     )
-    deadline = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Prazo",
-        help_text="Data limite para concluir o objetivo",
-    )
     end_date = models.DateField(null=True, blank=True, verbose_name="Data de Conclusao")
     status = models.CharField(
         max_length=20,
@@ -610,13 +604,6 @@ class Goal(BaseModel):
         return self.current_value
 
     @property
-    def days_until_deadline(self):
-        """Dias restantes até o prazo. Negativo se já passou."""
-        if not self.deadline:
-            return None
-        return (self.deadline - timezone.now().date()).days
-
-    @property
     def progress_percentage(self):
         """Calcula percentual de progresso do objetivo."""
         if self.target_value == 0:
@@ -629,8 +616,8 @@ class Goal(BaseModel):
     def days_active(self):
         """Calcula quantos dias o objetivo esta ativo."""
         if self.end_date:
-            return (self.end_date - self.start_date).days
-        return (timezone.now().date() - self.start_date).days
+            return max(0, (self.end_date - self.start_date).days)
+        return max(0, (timezone.now().date() - self.start_date).days)
 
     def __str__(self):
         return f"{self.title} ({self.current_value}/{self.target_value})"
