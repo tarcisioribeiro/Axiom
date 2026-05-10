@@ -1,10 +1,10 @@
 """
 Tests for personal_planning improvements:
 - avoid_habit goal type calculation
-- Goal deadline field
 - RoutineTask priority and allowed_skips_per_month
 - Analytics endpoint
 - Corrected signal behavior
+- GoalRestartView and GoalRegisterFailureView
 """
 
 from datetime import timedelta
@@ -37,57 +37,6 @@ class BasePlanningImprovementsTestCase(APITestCase):
         )
 
 
-class GoalDeadlineTest(BasePlanningImprovementsTestCase):
-    def setUp(self):
-        super().setUp()
-        self.goal = Goal.objects.create(
-            title="Deadline Goal",
-            goal_type="total_days",
-            target_value=30,
-            start_date=now().date(),
-            owner=self.member,
-        )
-
-    def test_goal_can_be_created_with_deadline(self):
-        deadline = now().date() + timedelta(days=30)
-        url = "/api/v1/personal-planning/goals/"
-        data = {
-            "title": "Goal with Deadline",
-            "goal_type": "total_days",
-            "target_value": 30,
-            "start_date": now().date().isoformat(),
-            "deadline": deadline.isoformat(),
-            "status": "active",
-            "owner": self.member.id,
-        }
-        response = self.client.post(url, data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_goal_list_includes_deadline_and_days_until_deadline(self):
-        deadline = now().date() + timedelta(days=10)
-        self.goal.deadline = deadline
-        self.goal.save()
-
-        response = self.client.get("/api/v1/personal-planning/goals/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        goal_data = response.data["results"][0]
-        self.assertEqual(goal_data["deadline"], deadline.isoformat())
-        self.assertEqual(goal_data["days_until_deadline"], 10)
-
-    def test_days_until_deadline_none_when_no_deadline(self):
-        response = self.client.get("/api/v1/personal-planning/goals/")
-        goal_data = response.data["results"][0]
-        self.assertIsNone(goal_data["days_until_deadline"])
-
-    def test_days_until_deadline_negative_when_overdue(self):
-        self.goal.deadline = now().date() - timedelta(days=5)
-        self.goal.save()
-
-        response = self.client.get("/api/v1/personal-planning/goals/")
-        goal_data = response.data["results"][0]
-        self.assertEqual(goal_data["days_until_deadline"], -5)
-
-
 class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
     def setUp(self):
         super().setUp()
@@ -107,13 +56,10 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
         )
 
     def test_avoid_habit_counts_days_without_completion(self):
-        # No completions at all → all scheduled days count as clean
         value = self.goal.calculated_current_value
-        # Since 5 days have passed (all daily, no completions), value should be 5
         self.assertGreaterEqual(value, 5)
 
     def test_avoid_habit_resets_when_task_completed(self):
-        # Complete the task today — streak should break
         TaskInstance.objects.create(
             template=self.task,
             task_name=self.task.name,
@@ -124,11 +70,9 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
             owner=self.member,
         )
         value = self.goal.calculated_current_value
-        # Today the habit was done — streak = 0
         self.assertEqual(value, 0)
 
     def test_avoid_habit_not_completed_by_signal(self):
-        # Completing the related task should NOT mark avoid_habit goal as completed
         instance = TaskInstance.objects.create(
             template=self.task,
             task_name=self.task.name,
@@ -143,6 +87,37 @@ class GoalAvoidHabitTest(BasePlanningImprovementsTestCase):
 
         self.goal.refresh_from_db()
         self.assertEqual(self.goal.status, "active")
+
+
+class GoalNoDeadlineFieldTest(BasePlanningImprovementsTestCase):
+    def test_goal_created_without_deadline_field(self):
+        url = "/api/v1/personal-planning/goals/"
+        data = {
+            "title": "Goal Without Deadline",
+            "goal_type": "total_days",
+            "target_value": 30,
+            "start_date": now().date().isoformat(),
+            "status": "active",
+            "owner": self.member.id,
+        }
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertNotIn("deadline", response.data)
+        self.assertNotIn("days_until_deadline", response.data)
+
+    def test_goal_list_does_not_include_deadline_fields(self):
+        Goal.objects.create(
+            title="Test Goal",
+            goal_type="total_days",
+            target_value=10,
+            start_date=now().date(),
+            owner=self.member,
+        )
+        response = self.client.get("/api/v1/personal-planning/goals/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        goal_data = response.data["results"][0]
+        self.assertNotIn("deadline", goal_data)
+        self.assertNotIn("days_until_deadline", goal_data)
 
 
 class RoutineTaskPriorityTest(BasePlanningImprovementsTestCase):
@@ -236,7 +211,6 @@ class AnalyticsEndpointTest(BasePlanningImprovementsTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_analytics_insights_list_when_no_data(self):
-        # No instances → insights should be an empty list
         response = self.client.get("/api/v1/personal-planning/analytics/")
         self.assertIsInstance(response.data["insights"], list)
 
@@ -291,3 +265,161 @@ class GoalRecalculateImprovedTest(BasePlanningImprovementsTestCase):
             f"/api/v1/personal-planning/goals/{goal.id}/recalculate/"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class GoalRestartViewTest(BasePlanningImprovementsTestCase):
+    def setUp(self):
+        super().setUp()
+        self.goal = Goal.objects.create(
+            title="Restart Test Goal",
+            goal_type="consecutive_days",
+            target_value=30,
+            start_date=now().date() - timedelta(days=10),
+            owner=self.member,
+        )
+
+    def test_restart_returns_200(self):
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_restart_sets_progress_to_zero(self):
+        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.current_value, 0)
+        self.assertEqual(self.goal.days_active, 0)
+
+    def test_restart_sets_status_active(self):
+        self.goal.status = "failed"
+        self.goal.save()
+        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.status, "active")
+
+    def test_restart_clears_end_date(self):
+        self.goal.end_date = now().date()
+        self.goal.save()
+        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.goal.refresh_from_db()
+        self.assertIsNone(self.goal.end_date)
+
+    def test_restart_calculated_current_value_is_zero(self):
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
+        self.assertEqual(response.data["calculated_current_value"], 0)
+        self.assertEqual(response.data["progress_percentage"], 0.0)
+
+    def test_restart_requires_authentication(self):
+        self.client.credentials()
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_restart_returns_404_for_other_user_goal(self):
+        other_user = User.objects.create_superuser(
+            username="other2", email="other2@test.com", password="pass"
+        )
+        other_member = Member.objects.create(
+            name="Other",
+            document_hash="z" * 64,
+            phone="11888888882",
+            sex="M",
+            user=other_user,
+        )
+        other_goal = Goal.objects.create(
+            title="Other Goal",
+            goal_type="consecutive_days",
+            target_value=10,
+            start_date=now().date(),
+            owner=other_member,
+        )
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{other_goal.id}/restart/"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
+    def setUp(self):
+        super().setUp()
+        self.goal = Goal.objects.create(
+            title="Failure Test Goal",
+            goal_type="consecutive_days",
+            target_value=30,
+            start_date=now().date() - timedelta(days=15),
+            owner=self.member,
+        )
+
+    def test_register_failure_returns_200(self):
+        failure_date = (now().date() - timedelta(days=5)).isoformat()
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": failure_date},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_register_failure_sets_start_date(self):
+        failure_date = now().date() - timedelta(days=5)
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": failure_date.isoformat()},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.start_date, failure_date)
+
+    def test_register_failure_resets_current_value(self):
+        self.goal.current_value = 100
+        self.goal.save()
+        failure_date = (now().date() - timedelta(days=3)).isoformat()
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": failure_date},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.current_value, 0)
+
+    def test_register_failure_rejects_future_date(self):
+        future_date = (now().date() + timedelta(days=1)).isoformat()
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": future_date},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_failure_requires_failure_date(self):
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_failure_rejects_invalid_date_format(self):
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": "31/12/2025"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_failure_reactivates_completed_goal(self):
+        self.goal.status = "completed"
+        self.goal.end_date = now().date()
+        self.goal.save()
+        failure_date = (now().date() - timedelta(days=2)).isoformat()
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": failure_date},
+        )
+        self.goal.refresh_from_db()
+        self.assertEqual(self.goal.status, "active")
+        self.assertIsNone(self.goal.end_date)
+
+    def test_register_failure_requires_authentication(self):
+        self.client.credentials()
+        response = self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            {"failure_date": now().date().isoformat()},
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
