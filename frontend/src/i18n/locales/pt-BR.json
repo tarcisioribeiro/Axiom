@@ -1763,41 +1763,6 @@
         "deductible": "Despesas Dedutíveis",
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
-      },
-      "reconciliation": {
-        "title": "Reconciliação de Saldo",
-        "systemBalance": "Saldo no Sistema",
-        "statementBalance": "Saldo no Extrato",
-        "difference": "Diferença",
-        "unmatchedEntries": "Entradas Não Conciliadas"
-      },
-      "greetingMorning": "Bom dia",
-      "greetingAfternoon": "Boa tarde",
-      "greetingEvening": "Boa noite",
-      "surplusThisMonth": "Superávit de {{amount}} este mês",
-      "deficitThisMonth": "Déficit de {{amount}} este mês",
-      "exportStatement": "Exportar Extrato",
-      "subtitle": "Aqui está seu resumo financeiro de hoje.",
-      "lgpdExport": {
-        "title": "Exportar Dados (LGPD)",
-        "description": "Baixe todos os seus dados financeiros em formato JSON.",
-        "btn": "Exportar Meus Dados",
-        "rateLimitMsg": "Exportação limitada a 1 por dia. Tente novamente amanhã.",
-        "success": "Exportação iniciada com sucesso.",
-        "successTitle": "Exportação LGPD solicitada",
-        "successDesc": "Você receberá o arquivo em breve.",
-        "errorTitle": "Erro",
-        "errorDesc": "Não foi possível solicitar a exportação."
-      },
-      "irReport": {
-        "title": "Relatório IR",
-        "description": "Relatório estruturado para declaração de Imposto de Renda.",
-        "year": "Ano",
-        "btn": "Gerar Relatório",
-        "revenues": "Receitas por Categoria",
-        "deductible": "Despesas Dedutíveis",
-        "loans": "Empréstimos",
-        "errorDesc": "Não foi possível gerar o relatório IR."
       }
     },
     "vaultSimulator": {
