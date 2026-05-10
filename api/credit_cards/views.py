@@ -343,6 +343,8 @@ class PayCreditCardBillView(APIView):
             )
 
         # 3. Criar despesa na conta associada
+        from accounts.services import recalculate_account_balance
+
         expense_description = f"Pagamento fatura {card.name} - {bill.month}/{bill.year}"
         if notes:
             expense_description += f" ({notes})"
@@ -359,7 +361,11 @@ class PayCreditCardBillView(APIView):
             payment_method="transfer",
             notes=notes or f"Pagamento de fatura do cartão {card.name}",
             related_bill_payment=bill,
+            created_by=request.user,
+            updated_by=request.user,
         )
+
+        recalculate_account_balance(account.id)
 
         # 4. Atualizar paid_amount da fatura
         bill.paid_amount = Decimal(str(bill.paid_amount)) + amount
