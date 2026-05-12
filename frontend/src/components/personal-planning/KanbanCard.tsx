@@ -77,12 +77,9 @@ export function KanbanCard({ card }: KanbanCardProps) {
                   {card.total_instances > 1 && (
                     <span className="ml-sm text-xs font-normal">
                       ({card.index + 1}º{' '}
-                      {t(
-                        `pages.routineTasks.form.unitOptions.${card.unit}`,
-                        {
-                          defaultValue: card.unit,
-                        }
-                      )}
+                      {t(`pages.routineTasks.form.unitOptions.${card.unit}`, {
+                        defaultValue: card.unit,
+                      })}
                       )
                     </span>
                   )}

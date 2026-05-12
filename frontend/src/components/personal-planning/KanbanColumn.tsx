@@ -62,9 +62,7 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
           <div className="space-y-3">
             {cards.length === 0 ? (
               <div className="py-xl text-center">
-                <p className="text-sm">
-                  {t('pages.todayTasks.emptyColumn')}
-                </p>
+                <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
               </div>
             ) : (
               cards.map((card) => <KanbanCard key={card.id} card={card} />)
