@@ -2742,7 +2742,51 @@
       "analyticsPeriod": "Baseado nos últimos {{days}} dias",
       "insights": "Insights de Hábitos",
       "taskCount_one": "{{count}} tarefa",
-      "taskCount_other": "{{count}} tarefas"
+      "taskCount_other": "{{count}} tarefas",
+      "weekdayShort": {
+        "0": "Seg",
+        "1": "Ter",
+        "2": "Qua",
+        "3": "Qui",
+        "4": "Sex",
+        "5": "Sáb",
+        "6": "Dom"
+      },
+      "weekdayLong": {
+        "0": "Segunda-feira",
+        "1": "Terça-feira",
+        "2": "Quarta-feira",
+        "3": "Quinta-feira",
+        "4": "Sexta-feira",
+        "5": "Sábado",
+        "6": "Domingo"
+      },
+      "monthShort": {
+        "0": "Jan",
+        "1": "Fev",
+        "2": "Mar",
+        "3": "Abr",
+        "4": "Mai",
+        "5": "Jun",
+        "6": "Jul",
+        "7": "Ago",
+        "8": "Set",
+        "9": "Out",
+        "10": "Nov",
+        "11": "Dez"
+      },
+      "heatmapTotalCompletions": "{{count}} conclusões",
+      "heatmapCompletedDays": "{{completed}}/{{scheduled}} dias completos",
+      "heatmapLess": "Menos",
+      "heatmapMore": "Mais",
+      "heatmapTooltipNotScheduled": "{{date}} — não programado",
+      "heatmapTooltipScheduled": "{{date}} — {{completed}} de {{expected}} concluídas",
+      "insightBestDay": "Você é muito consistente às {{weekday}} ({{rate}}% de cumprimento). Continue assim!",
+      "insightWorstDay": "{{weekday}} é seu dia mais difícil ({{rate}}% de cumprimento). Considere reduzir tarefas neste dia.",
+      "insightWeekendDrop": "Sua consistência cai {{diff}}% nos fins de semana ({{weekendRate}}% vs {{weekdayRate}}% nos dias úteis).",
+      "insightWeekendBetter": "Você é mais consistente nos fins de semana ({{weekendRate}}% vs {{weekdayRate}}% nos dias úteis).",
+      "insightOverallExcellent": "Excelente! Sua taxa média de cumprimento nos últimos 90 dias é {{rate}}%.",
+      "insightOverallLow": "Sua taxa média de cumprimento é {{rate}}%. Tente reduzir o número de tarefas para focar no essencial."
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
