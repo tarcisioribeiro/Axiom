@@ -1,12 +1,14 @@
 import { pdf } from '@react-pdf/renderer';
 import type { DocumentProps } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { enUS, ptBR } from 'date-fns/locale';
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { StatementDocument } from '@/components/pdf/StatementDocument';
 import type {
   StatementData,
+  StatementLabels,
   StatementTransaction,
 } from '@/components/pdf/StatementDocument';
 import { translate } from '@/config/constants';
@@ -26,33 +28,44 @@ interface UseStatementPdfReturn {
   generateStatement: (params: StatementParams) => Promise<void>;
 }
 
-function formatStatementDate(isoDate: string): string {
-  try {
-    const [year, month, day] = isoDate.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return format(date, 'dd/MM/yyyy', { locale: ptBR });
-  } catch {
-    return isoDate;
-  }
-}
-
-function formatPeriodLabel(isoDate: string): string {
-  try {
-    const [year, month, day] = isoDate.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  } catch {
-    return isoDate;
-  }
-}
-
 export function useStatementPdf(): UseStatementPdfReturn {
   const [isGenerating, setIsGenerating] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const { t, i18n } = useTranslation();
 
   const generateStatement = useCallback(
     async ({ dateFrom, dateTo }: StatementParams): Promise<void> => {
       setIsGenerating(true);
+
+      const locale = i18n.language === 'en-US' ? enUS : ptBR;
+
+      const formatStatementDate = (isoDate: string): string => {
+        try {
+          const [year, month, day] = isoDate.split('-').map(Number);
+          return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale });
+        } catch {
+          return isoDate;
+        }
+      };
+
+      const formatPeriodLabel = (isoDate: string): string => {
+        try {
+          const [year, month, day] = isoDate.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          return i18n.language === 'en-US'
+            ? format(date, 'MMMM d, yyyy', { locale })
+            : format(date, "dd 'de' MMMM 'de' yyyy", { locale });
+        } catch {
+          return isoDate;
+        }
+      };
+
+      const formatGeneratedAt = (): string => {
+        const now = new Date();
+        return i18n.language === 'en-US'
+          ? format(now, "MM/dd/yyyy 'at' HH:mm", { locale })
+          : format(now, "dd/MM/yyyy 'às' HH:mm", { locale });
+      };
 
       try {
         // Fetch all data in parallel — up to 500 items per resource in the date range
@@ -116,14 +129,47 @@ export function useStatementPdf(): UseStatementPdfReturn {
         // ── User display name ─────────────────────────────────────────────────
         const userName = user
           ? [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username
-          : 'Usuário';
+          : '';
+
+        // ── Build labels from i18n ────────────────────────────────────────────
+        const labels: StatementLabels = {
+          docTitle: t('pages.dashboard.statementPdf.title'),
+          tagline: t('pages.dashboard.statementPdf.tagline'),
+          pdfTitle: t('pages.dashboard.statementPdf.title'),
+          period: t('pages.dashboard.statementPdf.period'),
+          holder: t('pages.dashboard.statementPdf.holder'),
+          generatedAt: t('pages.dashboard.statementPdf.generatedAt'),
+          totalRevenues: t('pages.dashboard.statementPdf.totalRevenues'),
+          totalExpenses: t('pages.dashboard.statementPdf.totalExpenses'),
+          netBalance: t('pages.dashboard.statementPdf.netBalance'),
+          surplus: t('pages.dashboard.statementPdf.surplus'),
+          deficit: t('pages.dashboard.statementPdf.deficit'),
+          releaseCount: (count: number) =>
+            `${count} ${
+              count === 1
+                ? t('pages.dashboard.statementPdf.release_one')
+                : t('pages.dashboard.statementPdf.release_other')
+            }`,
+          accountBalances: t('pages.dashboard.statementPdf.accountBalances'),
+          transactions: t('pages.dashboard.statementPdf.transactions'),
+          colDate: t('pages.dashboard.statementPdf.colDate'),
+          colDescription: t('pages.dashboard.statementPdf.colDescription'),
+          colCategory: t('pages.dashboard.statementPdf.colCategory'),
+          colAccount: t('pages.dashboard.statementPdf.colAccount'),
+          colValue: t('pages.dashboard.statementPdf.colValue'),
+          noTransactions: t('pages.dashboard.statementPdf.noTransactions'),
+          periodBalance: t('pages.dashboard.statementPdf.periodBalance'),
+          footer: t('pages.dashboard.statementPdf.footer'),
+          page: t('pages.dashboard.statementPdf.page'),
+          of: t('pages.dashboard.statementPdf.of'),
+        };
 
         const data: StatementData = {
           period: {
             from: formatPeriodLabel(dateFrom),
             to: formatPeriodLabel(dateTo),
           },
-          generatedAt: format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
+          generatedAt: formatGeneratedAt(),
           userName,
           totalRevenues,
           totalExpenses,
@@ -135,6 +181,7 @@ export function useStatementPdf(): UseStatementPdfReturn {
             balance: String(a.current_balance ?? 0),
           })),
           transactions,
+          labels,
         };
 
         // ── Generate PDF blob and trigger download ────────────────────────────
@@ -160,7 +207,7 @@ export function useStatementPdf(): UseStatementPdfReturn {
         setIsGenerating(false);
       }
     },
-    [user]
+    [user, t, i18n.language]
   );
 
   return { isGenerating, generateStatement };
