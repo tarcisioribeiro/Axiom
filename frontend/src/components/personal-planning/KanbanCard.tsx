@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
@@ -17,6 +18,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ card }: KanbanCardProps) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: card.id });
 
@@ -74,7 +76,14 @@ export function KanbanCard({ card }: KanbanCardProps) {
                   {card.task_name}
                   {card.total_instances > 1 && (
                     <span className="ml-sm text-xs font-normal">
-                      ({card.index + 1}º {card.unit})
+                      ({card.index + 1}º{' '}
+                      {t(
+                        `pages.routineTasks.form.unitOptions.${card.unit}`,
+                        {
+                          defaultValue: card.unit,
+                        }
+                      )}
+                      )
                     </span>
                   )}
                 </span>
@@ -91,7 +100,9 @@ export function KanbanCard({ card }: KanbanCardProps) {
               )}
             </div>
             <Badge className={`${getCategoryColor(card.category)} shrink-0 text-xs`}>
-              {card.category_display}
+              {t(`pages.todayTasks.categories.${card.category}`, {
+                defaultValue: card.category_display,
+              })}
             </Badge>
           </div>
 
@@ -105,7 +116,9 @@ export function KanbanCard({ card }: KanbanCardProps) {
           {/* Daily Notes */}
           {card.notes && (
             <div className="rounded-md border border-warning bg-warning/20 p-sm">
-              <p className="mb-xs text-xs font-medium">Notas:</p>
+              <p className="mb-xs text-xs font-medium">
+                {t('pages.todayTasks.notesLabel')}
+              </p>
               <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground">
                 {card.notes}
               </p>

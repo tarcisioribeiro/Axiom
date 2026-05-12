@@ -3209,7 +3209,24 @@
       "greetingMorning": "Bom dia!",
       "greetingAfternoon": "Boa tarde!",
       "greetingEvening": "Boa noite!",
-      "tasksLabel": "tarefas concluídas"
+      "tasksLabel": "tarefas concluídas",
+      "taskCount_one": "{{count}} tarefa",
+      "taskCount_other": "{{count}} tarefas",
+      "emptyColumn": "Nenhuma tarefa",
+      "notesLabel": "Notas:",
+      "categories": {
+        "health": "Saúde",
+        "intellect": "Intelecto",
+        "spiritual": "Espiritual",
+        "exercise": "Exercício Físico",
+        "nutrition": "Nutrição",
+        "work": "Trabalho",
+        "social": "Social",
+        "finance": "Finanças",
+        "household": "Casa",
+        "personal_care": "Cuidado Pessoal",
+        "other": "Outros"
+      }
     },
     "categorizationRules": {
       "title": "Regras de Categorização",
