@@ -1,28 +1,12 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { habitHeatmapService } from '@/services/habit-heatmap-service';
 import type { HeatmapDay } from '@/types';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
-
-const MONTHS_PT = [
-  'Jan',
-  'Fev',
-  'Mar',
-  'Abr',
-  'Mai',
-  'Jun',
-  'Jul',
-  'Ago',
-  'Set',
-  'Out',
-  'Nov',
-  'Dez',
-];
-
-const WEEKDAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 /** Returns hex colour for a single cell. */
 function cellColor(day: HeatmapDay): string {
@@ -36,17 +20,6 @@ function cellColor(day: HeatmapDay): string {
   if (rate <= 0.5) return 'var(--heatmap-medium-low)';
   if (rate <= 0.75) return 'var(--heatmap-medium)';
   return 'var(--heatmap-high)';
-}
-
-/** Tooltip label for a cell. */
-function cellLabel(day: HeatmapDay): string {
-  const [year, month, d] = day.date.split('-');
-  const dateStr = `${d}/${month}/${year}`;
-
-  if (!day.is_scheduled) return `${dateStr} — não programado`;
-  if (day.expected === 0) return `${dateStr} — não programado`;
-
-  return `${dateStr} — ${day.completed} de ${day.expected} ${day.expected === 1 ? 'ocorrência' : 'ocorrências'} concluída${day.completed !== 1 ? 's' : ''}`;
 }
 
 /** Build a week-major 2-D grid (array of columns, each with 7 slots). */
@@ -76,7 +49,7 @@ function buildGrid(data: HeatmapDay[], year: number) {
 }
 
 /** Find which column each month label should start at. */
-function monthLabels(data: HeatmapDay[], jan1Weekday: number) {
+function monthLabels(data: HeatmapDay[], jan1Weekday: number, monthNames: string[]) {
   const labels: { month: string; col: number }[] = [];
   let lastMonth = -1;
   data.forEach((day, i) => {
@@ -84,7 +57,7 @@ function monthLabels(data: HeatmapDay[], jan1Weekday: number) {
     if (m !== lastMonth) {
       lastMonth = m;
       const col = Math.floor((jan1Weekday + i) / 7);
-      labels.push({ month: MONTHS_PT[m], col });
+      labels.push({ month: monthNames[m], col });
     }
   });
   return labels;
@@ -104,6 +77,7 @@ interface TooltipState {
 }
 
 export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [data, setData] = useState<HeatmapDay[]>([]);
@@ -127,8 +101,36 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
     void loadData();
   }, [loadData]);
 
+  const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
+    t(`pages.planningDashboard.weekdayShort.${i}`)
+  );
+
+  const monthNames = Array.from({ length: 12 }, (_, i) =>
+    t(`pages.planningDashboard.monthShort.${i}`)
+  );
+
+  const getCellLabel = useCallback(
+    (day: HeatmapDay): string => {
+      const [year, month, d] = day.date.split('-');
+      const dateStr = `${d}/${month}/${year}`;
+
+      if (!day.is_scheduled || day.expected === 0) {
+        return t('pages.planningDashboard.heatmapTooltipNotScheduled', {
+          date: dateStr,
+        });
+      }
+
+      return t('pages.planningDashboard.heatmapTooltipScheduled', {
+        date: dateStr,
+        completed: day.completed,
+        expected: day.expected,
+      });
+    },
+    [t]
+  );
+
   const { grid, jan1Weekday, numCols } = buildGrid(data, year);
-  const mLabels = monthLabels(data, jan1Weekday);
+  const mLabels = monthLabels(data, jan1Weekday, monthNames);
 
   // Summary stats
   const scheduledDays = data.filter((d) => d.is_scheduled).length;
@@ -168,10 +170,17 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
         {taskName && <span className="text-xs text-muted-foreground">{taskName}</span>}
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>{totalCompleted} conclusões</span>
+          <span>
+            {t('pages.planningDashboard.heatmapTotalCompletions', {
+              count: totalCompleted,
+            })}
+          </span>
           {scheduledDays > 0 && (
             <span>
-              {completedDays}/{scheduledDays} dias completos
+              {t('pages.planningDashboard.heatmapCompletedDays', {
+                completed: completedDays,
+                scheduled: scheduledDays,
+              })}
             </span>
           )}
         </div>
@@ -209,7 +218,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
               className="flex shrink-0 flex-col"
               style={{ gap: GAP, paddingTop: CELL + GAP /* skip month label row */ }}
             >
-              {WEEKDAY_LABELS.map((label, i) => (
+              {weekdayLabels.map((label, i) => (
                 <div
                   key={label}
                   className="flex items-center justify-end text-xs text-muted-foreground"
@@ -263,7 +272,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
                             e.target as HTMLElement
                           ).getBoundingClientRect();
                           setTooltip({
-                            text: cellLabel(day),
+                            text: getCellLabel(day),
                             x: rect.left + rect.width / 2,
                             y: rect.top,
                           });
@@ -298,7 +307,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
 
       {/* Legend */}
       <div className="flex items-center gap-xs text-xs text-muted-foreground">
-        <span>Menos</span>
+        <span>{t('pages.planningDashboard.heatmapLess')}</span>
         {[
           'var(--heatmap-empty)',
           'var(--heatmap-low)',
@@ -316,7 +325,7 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
             }}
           />
         ))}
-        <span>Mais</span>
+        <span>{t('pages.planningDashboard.heatmapMore')}</span>
       </div>
     </div>
   );
