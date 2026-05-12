@@ -184,6 +184,8 @@ export type {
   TaskInstanceBulkUpdate,
   TaskInstanceBulkUpdateResponse,
   WeekdayAnalytics,
+  HabitInsight,
+  HabitInsightType,
   PersonalPlanningAnalytics,
   PersonalPlanningDashboardStats,
 } from './planning-instances';
