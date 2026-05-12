@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useTranslation } from 'react-i18next';
 
 import type { TaskCard, KanbanStatus } from '@/types';
 
@@ -12,6 +13,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -42,7 +44,7 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm opacity-90">
-          {cards.length} {cards.length === 1 ? 'tarefa' : 'tarefas'}
+          {t('pages.todayTasks.taskCount', { count: cards.length })}
         </p>
       </div>
 
@@ -60,7 +62,9 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
           <div className="space-y-3">
             {cards.length === 0 ? (
               <div className="py-xl text-center">
-                <p className="text-sm">Nenhuma tarefa</p>
+                <p className="text-sm">
+                  {t('pages.todayTasks.emptyColumn')}
+                </p>
               </div>
             ) : (
               cards.map((card) => <KanbanCard key={card.id} card={card} />)
