@@ -23,15 +23,24 @@ export function getCategoryColor(category: string): string {
   );
 }
 
-export function getStatusBadge(status: string) {
+export function getStatusBadge(status: string, t: (key: string) => string) {
   switch (status) {
     case 'completed':
-      return { variant: 'success' as const, label: 'Concluída' };
+      return {
+        variant: 'success' as const,
+        label: t('pages.todayTasks.status.completed'),
+      };
     case 'in_progress':
-      return { variant: 'warning' as const, label: 'Em andamento' };
+      return {
+        variant: 'warning' as const,
+        label: t('pages.todayTasks.status.in_progress'),
+      };
     case 'skipped':
-      return { variant: 'secondary' as const, label: 'Pulada' };
+      return {
+        variant: 'secondary' as const,
+        label: t('pages.todayTasks.status.skipped'),
+      };
     default:
-      return { variant: 'info' as const, label: 'Pendente' };
+      return { variant: 'info' as const, label: t('pages.todayTasks.status.pending') };
   }
 }

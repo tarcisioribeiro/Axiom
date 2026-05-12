@@ -3214,6 +3214,14 @@
       "taskCount_other": "{{count}} tarefas",
       "emptyColumn": "Nenhuma tarefa",
       "notesLabel": "Notas:",
+      "markCompleted": "Marcar como concluída",
+      "markPending": "Marcar como pendente",
+      "status": {
+        "completed": "Concluída",
+        "in_progress": "Em andamento",
+        "skipped": "Pulada",
+        "pending": "Pendente"
+      },
       "categories": {
         "health": "Saúde",
         "intellect": "Intelecto",
