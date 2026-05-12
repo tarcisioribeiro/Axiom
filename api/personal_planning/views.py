@@ -1292,15 +1292,20 @@ class PersonalPlanningAnalyticsView(APIView):
 
         if best["rate"] >= 75:
             insights.append(
-                f"Você é muito consistente às {best['weekday_display'].lower()} "
-                f"({best['rate']:.0f}% de cumprimento). Continue assim!"
+                {
+                    "type": "best_day",
+                    "weekday": best["weekday"],
+                    "rate": round(best["rate"], 1),
+                }
             )
 
         if worst["rate"] is not None and worst["rate"] < 50:
             insights.append(
-                f"{worst['weekday_display']} é seu dia mais difícil "
-                f"({worst['rate']:.0f}% de cumprimento). "
-                f"Considere reduzir tarefas neste dia."
+                {
+                    "type": "worst_day",
+                    "weekday": worst["weekday"],
+                    "rate": round(worst["rate"], 1),
+                }
             )
 
         weekends = [
@@ -1315,13 +1320,20 @@ class PersonalPlanningAnalyticsView(APIView):
 
             if diff > 20:
                 insights.append(
-                    f"Sua consistência cai {diff:.0f}% nos fins de semana "
-                    f"({avg_weekend:.0f}% vs {avg_weekday:.0f}% nos dias úteis)."
+                    {
+                        "type": "weekend_drop",
+                        "weekend_rate": round(avg_weekend, 1),
+                        "weekday_rate": round(avg_weekday, 1),
+                        "diff": round(diff, 1),
+                    }
                 )
             elif diff < -15:
                 insights.append(
-                    f"Você é mais consistente nos fins de semana "
-                    f"({avg_weekend:.0f}% vs {avg_weekday:.0f}% nos dias úteis)."
+                    {
+                        "type": "weekend_better",
+                        "weekend_rate": round(avg_weekend, 1),
+                        "weekday_rate": round(avg_weekday, 1),
+                    }
                 )
 
         all_rates = [d["rate"] for d in days_with_data]
@@ -1329,13 +1341,17 @@ class PersonalPlanningAnalyticsView(APIView):
             overall = sum(all_rates) / len(all_rates)
             if overall >= 80:
                 insights.append(
-                    f"Excelente! Sua taxa média de cumprimento nos últimos 90 dias é "
-                    f"{overall:.0f}%."
+                    {
+                        "type": "overall_excellent",
+                        "rate": round(overall, 1),
+                    }
                 )
             elif overall < 40:
                 insights.append(
-                    f"Sua taxa média de cumprimento é {overall:.0f}%. "
-                    f"Tente reduzir o número de tarefas para focar no essencial."
+                    {
+                        "type": "overall_low",
+                        "rate": round(overall, 1),
+                    }
                 )
 
         return insights
