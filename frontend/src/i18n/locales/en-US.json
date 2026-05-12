@@ -3127,6 +3127,14 @@
       "taskCount_other": "{{count}} tasks",
       "emptyColumn": "No tasks",
       "notesLabel": "Notes:",
+      "markCompleted": "Mark as completed",
+      "markPending": "Mark as pending",
+      "status": {
+        "completed": "Completed",
+        "in_progress": "In progress",
+        "skipped": "Skipped",
+        "pending": "Pending"
+      },
       "categories": {
         "health": "Health",
         "intellect": "Intellect",
