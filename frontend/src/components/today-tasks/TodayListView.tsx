@@ -65,7 +65,7 @@ export function TodayListView({
       ) : (
         <div className="space-y-sm">
           {tasks.map((task) => {
-            const badge = getStatusBadge(task.status);
+            const badge = getStatusBadge(task.status, t);
             const isCompleted = task.status === 'completed';
             const isUpdating = updatingTaskId === task.id;
             return (
@@ -80,7 +80,11 @@ export function TodayListView({
                   type="button"
                   disabled={isUpdating}
                   onClick={() => onToggleComplete(task)}
-                  title={isCompleted ? 'Marcar como pendente' : 'Marcar como concluída'}
+                  title={
+                    isCompleted
+                      ? t('pages.todayTasks.markPending')
+                      : t('pages.todayTasks.markCompleted')
+                  }
                   className="shrink-0 text-muted-foreground hover:text-primary disabled:opacity-50"
                 >
                   {isCompleted ? (

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiClient } from '@/services/api-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import type {
+  HabitInsight,
   PersonalPlanningAnalytics,
   PersonalPlanningDashboardStats,
 } from '@/types';
@@ -40,7 +41,7 @@ const mockAnalytics: PersonalPlanningAnalytics = {
     { weekday: 5, weekday_display: 'Sábado', total: 4, completed: 1, rate: 25 },
     { weekday: 6, weekday_display: 'Domingo', total: 4, completed: 1, rate: 25 },
   ],
-  insights: ['Você é consistente às segundas-feiras (80%).'],
+  insights: [{ type: 'best_day' as HabitInsight['type'], weekday: 0, rate: 80 }],
 };
 
 describe('PersonalPlanningDashboardService', () => {

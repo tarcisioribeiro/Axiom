@@ -140,10 +140,27 @@ export interface WeekdayAnalytics {
   rate: number | null;
 }
 
+export type HabitInsightType =
+  | 'best_day'
+  | 'worst_day'
+  | 'weekend_drop'
+  | 'weekend_better'
+  | 'overall_excellent'
+  | 'overall_low';
+
+export interface HabitInsight {
+  type: HabitInsightType;
+  weekday?: number;
+  rate?: number;
+  weekend_rate?: number;
+  weekday_rate?: number;
+  diff?: number;
+}
+
 export interface PersonalPlanningAnalytics {
   period_days: number;
   completion_by_weekday: WeekdayAnalytics[];
-  insights: string[];
+  insights: HabitInsight[];
 }
 
 export interface PersonalPlanningDashboardStats {
