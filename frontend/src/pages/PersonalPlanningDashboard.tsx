@@ -26,6 +26,51 @@ import { translate } from '@/config/constants';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
+import type { HabitInsight } from '@/types';
+
+function renderInsight(
+  insight: HabitInsight,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
+  const weekdayLong =
+    insight.weekday !== undefined
+      ? t(`pages.planningDashboard.weekdayLong.${insight.weekday}`)
+      : '';
+
+  switch (insight.type) {
+    case 'best_day':
+      return t('pages.planningDashboard.insightBestDay', {
+        weekday: weekdayLong.toLowerCase(),
+        rate: Math.round(insight.rate ?? 0),
+      });
+    case 'worst_day':
+      return t('pages.planningDashboard.insightWorstDay', {
+        weekday: weekdayLong,
+        rate: Math.round(insight.rate ?? 0),
+      });
+    case 'weekend_drop':
+      return t('pages.planningDashboard.insightWeekendDrop', {
+        diff: Math.round(insight.diff ?? 0),
+        weekendRate: Math.round(insight.weekend_rate ?? 0),
+        weekdayRate: Math.round(insight.weekday_rate ?? 0),
+      });
+    case 'weekend_better':
+      return t('pages.planningDashboard.insightWeekendBetter', {
+        weekendRate: Math.round(insight.weekend_rate ?? 0),
+        weekdayRate: Math.round(insight.weekday_rate ?? 0),
+      });
+    case 'overall_excellent':
+      return t('pages.planningDashboard.insightOverallExcellent', {
+        rate: Math.round(insight.rate ?? 0),
+      });
+    case 'overall_low':
+      return t('pages.planningDashboard.insightOverallLow', {
+        rate: Math.round(insight.rate ?? 0),
+      });
+    default:
+      return '';
+  }
+}
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
@@ -346,7 +391,7 @@ export default function PersonalPlanningDashboard() {
                 {analytics.completion_by_weekday.map((day) => (
                   <div key={day.weekday} className="flex items-center gap-3">
                     <span className="w-28 shrink-0 text-sm text-muted-foreground">
-                      {day.weekday_display.slice(0, 3)}
+                      {t(`pages.planningDashboard.weekdayShort.${day.weekday}`)}
                     </span>
                     <div className="flex flex-1 items-center gap-sm">
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -383,7 +428,7 @@ export default function PersonalPlanningDashboard() {
                   {analytics.insights.map((insight, i) => (
                     <li key={i} className="flex gap-sm text-sm leading-relaxed">
                       <span className="mt-0.5 shrink-0 text-primary">•</span>
-                      <span>{insight}</span>
+                      <span>{renderInsight(insight, t)}</span>
                     </li>
                   ))}
                 </ul>

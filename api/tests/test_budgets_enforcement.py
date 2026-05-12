@@ -155,7 +155,7 @@ class HardModeTest(BaseBudgetEnforcementTest):
 
     def test_hard_overage_returns_400(self):
         """Hard mode: expense that would exceed budget is rejected with 400."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"):
+        with mock.patch("budgets.services.cfg", return_value="hard"):
             Expense.objects.create(
                 description="Prior expense",
                 value=Decimal("150.00"),
@@ -256,7 +256,7 @@ class UpdateEnforcementTest(BaseBudgetEnforcementTest):
             payed=True,
             created_by=self.user,
         )
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"):
+        with mock.patch("budgets.services.cfg", return_value="hard"):
             response = self.client.patch(self.detail_url, {"value": "50.00"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -279,7 +279,7 @@ class OffModeTest(BaseBudgetEnforcementTest):
 
     def test_off_mode_ignores_budget(self):
         """Off mode: expense that far exceeds budget is created without any warning."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "off"):
+        with mock.patch("budgets.services.cfg", return_value="off"):
             response = self.client.post(
                 self.expense_url, self._expense_payload(value="9999.00")
             )

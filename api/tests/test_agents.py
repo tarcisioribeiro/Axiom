@@ -1,5 +1,4 @@
 import json
-import os
 import uuid
 from unittest.mock import MagicMock, patch
 
@@ -16,14 +15,14 @@ class TestFinanceAgentGetModel(TestCase):
         from agents.agents.finance_agent import FinanceAgent
 
         agent = FinanceAgent()
-        with patch.dict(os.environ, {"LLM_PROVIDER": "ollama"}):
+        with patch("agents.core.base_agent.cfg", return_value="ollama"):
             self.assertEqual(agent.get_model(), "qwen2.5:7b")
 
     def test_get_model_anthropic_returns_haiku(self) -> None:
         from agents.agents.finance_agent import FinanceAgent
 
         agent = FinanceAgent()
-        with patch.dict(os.environ, {"LLM_PROVIDER": "anthropic"}):
+        with patch("agents.core.base_agent.cfg", return_value="anthropic"):
             self.assertEqual(agent.get_model(), "claude-haiku-4-5-20251001")
 
 
