@@ -297,6 +297,33 @@ export interface StatementAccount {
   balance: string;
 }
 
+export interface StatementLabels {
+  docTitle: string;
+  tagline: string;
+  pdfTitle: string;
+  period: string;
+  holder: string;
+  generatedAt: string;
+  totalRevenues: string;
+  totalExpenses: string;
+  netBalance: string;
+  surplus: string;
+  deficit: string;
+  releaseCount: (count: number) => string;
+  accountBalances: string;
+  transactions: string;
+  colDate: string;
+  colDescription: string;
+  colCategory: string;
+  colAccount: string;
+  colValue: string;
+  noTransactions: string;
+  periodBalance: string;
+  footer: string;
+  page: string;
+  of: string;
+}
+
 export interface StatementData {
   period: { from: string; to: string };
   generatedAt: string;
@@ -306,6 +333,7 @@ export interface StatementData {
   netBalance: number;
   accounts: StatementAccount[];
   transactions: StatementTransaction[];
+  labels: StatementLabels;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -331,11 +359,15 @@ export function StatementDocument({ data }: { data: StatementData }) {
     netBalance,
     accounts,
     transactions,
+    labels,
   } = data;
+
+  const revenueCount = transactions.filter((t) => t.type === 'revenue').length;
+  const expenseCount = transactions.filter((t) => t.type === 'expense').length;
 
   return (
     <Document
-      title={`Extrato Financeiro – ${period.from} a ${period.to}`}
+      title={`${labels.docTitle} – ${period.from} a ${period.to}`}
       author="MindLedger"
       creator="MindLedger"
     >
@@ -344,45 +376,49 @@ export function StatementDocument({ data }: { data: StatementData }) {
         <View style={styles.header}>
           <View style={styles.brandBlock}>
             <Text style={styles.brandName}>MindLedger</Text>
-            <Text style={styles.brandTagline}>Gestão Financeira Pessoal</Text>
+            <Text style={styles.brandTagline}>{labels.tagline}</Text>
           </View>
           <View style={styles.headerMeta}>
-            <Text style={styles.headerMetaTitle}>Extrato Financeiro</Text>
+            <Text style={styles.headerMetaTitle}>{labels.pdfTitle}</Text>
             <Text style={styles.headerMetaText}>
-              Período: {period.from} – {period.to}
+              {labels.period}: {period.from} – {period.to}
             </Text>
-            <Text style={styles.headerMetaText}>Titular: {userName}</Text>
-            <Text style={styles.headerMetaText}>Gerado em: {generatedAt}</Text>
+            <Text style={styles.headerMetaText}>
+              {labels.holder}: {userName}
+            </Text>
+            <Text style={styles.headerMetaText}>
+              {labels.generatedAt}: {generatedAt}
+            </Text>
           </View>
         </View>
 
         {/* ── Summary cards ──────────────────────────────────────── */}
         <View style={styles.summaryRow}>
           <View style={[styles.summaryCard, styles.summaryCardRevenue]}>
-            <Text style={styles.summaryLabel}>Total de Receitas</Text>
+            <Text style={styles.summaryLabel}>{labels.totalRevenues}</Text>
             <Text style={[styles.summaryValue, styles.summaryValueRevenue]}>
               {fmtCurrency(totalRevenues)}
             </Text>
             <Text style={styles.summarySubtext}>
-              {transactions.filter((t) => t.type === 'revenue').length} lançamento(s)
+              {labels.releaseCount(revenueCount)}
             </Text>
           </View>
           <View style={[styles.summaryCard, styles.summaryCardExpense]}>
-            <Text style={styles.summaryLabel}>Total de Despesas</Text>
+            <Text style={styles.summaryLabel}>{labels.totalExpenses}</Text>
             <Text style={[styles.summaryValue, styles.summaryValueExpense]}>
               {fmtCurrency(totalExpenses)}
             </Text>
             <Text style={styles.summarySubtext}>
-              {transactions.filter((t) => t.type === 'expense').length} lançamento(s)
+              {labels.releaseCount(expenseCount)}
             </Text>
           </View>
           <View style={[styles.summaryCard, styles.summaryCardBalance]}>
-            <Text style={styles.summaryLabel}>Saldo Líquido</Text>
+            <Text style={styles.summaryLabel}>{labels.netBalance}</Text>
             <Text style={[styles.summaryValue, styles.summaryValueBalance]}>
               {fmtCurrency(netBalance)}
             </Text>
             <Text style={styles.summarySubtext}>
-              {netBalance >= 0 ? 'Superávit no período' : 'Déficit no período'}
+              {netBalance >= 0 ? labels.surplus : labels.deficit}
             </Text>
           </View>
         </View>
@@ -390,7 +426,7 @@ export function StatementDocument({ data }: { data: StatementData }) {
         {/* ── Account balances ───────────────────────────────────── */}
         {accounts.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Saldos de Contas</Text>
+            <Text style={styles.sectionTitle}>{labels.accountBalances}</Text>
             <View style={styles.accountsRow}>
               {accounts.map((acc) => {
                 const bal = parseFloat(acc.balance);
@@ -422,25 +458,31 @@ export function StatementDocument({ data }: { data: StatementData }) {
         )}
 
         {/* ── Transactions table ─────────────────────────────────── */}
-        <Text style={styles.sectionTitle}>Lançamentos</Text>
+        <Text style={styles.sectionTitle}>{labels.transactions}</Text>
         <View style={styles.table}>
           {/* Header */}
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, styles.colDate]}>Data</Text>
-            <Text style={[styles.tableHeaderCell, styles.colDescription]}>
-              Descrição
+            <Text style={[styles.tableHeaderCell, styles.colDate]}>
+              {labels.colDate}
             </Text>
-            <Text style={[styles.tableHeaderCell, styles.colCategory]}>Categoria</Text>
-            <Text style={[styles.tableHeaderCell, styles.colAccount]}>Conta</Text>
-            <Text style={[styles.tableHeaderCell, styles.colValue]}>Valor</Text>
+            <Text style={[styles.tableHeaderCell, styles.colDescription]}>
+              {labels.colDescription}
+            </Text>
+            <Text style={[styles.tableHeaderCell, styles.colCategory]}>
+              {labels.colCategory}
+            </Text>
+            <Text style={[styles.tableHeaderCell, styles.colAccount]}>
+              {labels.colAccount}
+            </Text>
+            <Text style={[styles.tableHeaderCell, styles.colValue]}>
+              {labels.colValue}
+            </Text>
           </View>
 
           {/* Rows */}
           {transactions.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                Nenhum lançamento encontrado no período.
-              </Text>
+              <Text style={styles.emptyStateText}>{labels.noTransactions}</Text>
             </View>
           ) : (
             transactions.map((tx, index) => {
@@ -482,7 +524,7 @@ export function StatementDocument({ data }: { data: StatementData }) {
           {/* Balance summary row */}
           {transactions.length > 0 && (
             <View style={styles.balanceSummaryRow}>
-              <Text style={styles.balanceSummaryLabel}>Saldo do período:</Text>
+              <Text style={styles.balanceSummaryLabel}>{labels.periodBalance}:</Text>
               <Text
                 style={[
                   styles.balanceSummaryValue,
@@ -499,14 +541,14 @@ export function StatementDocument({ data }: { data: StatementData }) {
 
         {/* ── Footer ─────────────────────────────────────────────── */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>
-            Documento gerado automaticamente pelo sistema MindLedger
-          </Text>
+          <Text style={styles.footerText}>{labels.footer}</Text>
           <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-            <Text style={styles.footerText}>Página</Text>
+            <Text style={styles.footerText}>{labels.page}</Text>
             <Text
               style={styles.footerText}
-              render={({ pageNumber, totalPages }) => `${pageNumber} de ${totalPages}`}
+              render={({ pageNumber, totalPages }) =>
+                `${pageNumber} ${labels.of} ${totalPages}`
+              }
             />
             <Text style={styles.footerText}> · </Text>
             <Text style={styles.footerBrand}>MindLedger</Text>
