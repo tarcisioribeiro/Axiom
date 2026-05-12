@@ -204,7 +204,9 @@ export default function RoutineTasks() {
 
   function WeekdayDots({ task }: { task: RoutineTask }): ReactNode {
     const activeDays = getActiveWeekdays(task);
-    const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+    const labels = [0, 1, 2, 3, 4, 5, 6].map((i) =>
+      t(`pages.planningDashboard.weekdayShort.${i}`)
+    );
     return (
       <div className="flex gap-0.5">
         {labels.map((label, idx) => (
@@ -218,7 +220,7 @@ export default function RoutineTasks() {
                 : 'bg-muted text-muted-foreground'
             )}
           >
-            {label}
+            {label.charAt(0)}
           </div>
         ))}
       </div>
@@ -291,7 +293,11 @@ export default function RoutineTasks() {
       label: t('pages.routineTasks.columns.frequency'),
       render: (task) => (
         <div className="space-y-sm">
-          <div className="text-sm">{task.periodicity_display}</div>
+          <div className="text-sm">
+            {t(`pages.routineTasks.form.periodicityOptions.${task.periodicity}`, {
+              defaultValue: task.periodicity_display,
+            })}
+          </div>
           <WeekdayDots task={task} />
         </div>
       ),
@@ -301,7 +307,10 @@ export default function RoutineTasks() {
       label: t('pages.routineTasks.columns.goal'),
       render: (task) => (
         <span className="text-sm">
-          {task.target_quantity} {task.unit}
+          {task.target_quantity}{' '}
+          {t(`pages.routineTasks.form.unitOptions.${task.unit}`, {
+            defaultValue: task.unit,
+          })}
         </span>
       ),
     },
