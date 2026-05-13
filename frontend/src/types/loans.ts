@@ -51,6 +51,9 @@ export interface LoanFormData {
   guarantor?: number | null;
   notes?: string;
   status?: string;
+  loan_type?: 'borrowed' | 'lent';
+  generate_revenue?: boolean;
+  generate_expense?: boolean;
 }
 
 export interface LoanInstallment {

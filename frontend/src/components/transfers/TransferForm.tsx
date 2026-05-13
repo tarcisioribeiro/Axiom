@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TRANSLATIONS } from '@/config/constants';
+import { formatCurrency } from '@/lib/formatters';
+import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
 import type { Transfer, TransferFormData, Account } from '@/types';
 
@@ -56,6 +59,14 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   });
 
   const watchedOriginAccount = watch('origin_account');
+  const watchedValue = watch('value');
+
+  const balanceInfo = useMemo(() => {
+    if (!watchedOriginAccount || !watchedValue || watchedValue <= 0) return null;
+    const account = accounts.find((a) => a.id === watchedOriginAccount);
+    if (!account) return null;
+    return getAccountBalanceInfo(account, watchedValue);
+  }, [watchedOriginAccount, watchedValue, accounts]);
 
   // Auto-selecionar contas ao abrir o formulário (modo criação)
   useEffect(() => {
@@ -205,11 +216,37 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </Label>
         </div>
       </div>
+      {balanceInfo && watchedValue > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            !balanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : 'border-warning/30 bg-warning/10 text-warning'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {!balanceInfo.canPay
+              ? t('common.balance.insufficientEvenWithOverdraft', {
+                  available: formatCurrency(balanceInfo.available.toFixed(2)),
+                })
+              : t('common.balance.overdraftWarningDesc', {
+                  balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+                  overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+                  total: formatCurrency(balanceInfo.available.toFixed(2)),
+                })}
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          disabled={isLoading || (!!balanceInfo && !balanceInfo.canPay)}
+        >
           {isLoading
             ? t('common.actions.saving')
             : transfer
