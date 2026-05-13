@@ -186,7 +186,9 @@ function BookGridCard({
         )}
         <div className="absolute right-2 top-2">
           <Badge variant={statusVariant(book.read_status)} className="text-xs shadow">
-            {book.read_status_display}
+            {t('pages.books.readStatuses.' + book.read_status, {
+              defaultValue: book.read_status_display,
+            })}
           </Badge>
         </div>
         {pb && (
@@ -205,7 +207,7 @@ function BookGridCard({
           {book.authors_names.join(', ')}
         </p>
         <Badge variant="secondary" className="mt-xs w-fit text-xs">
-          {book.genre_display}
+          {t('pages.books.genres.' + book.genre, { defaultValue: book.genre_display })}
         </Badge>
 
         {book.reading_progress > 0 && (
@@ -689,7 +691,9 @@ export default function Books() {
                     {/* Genre */}
                     <TableCell className="hidden sm:table-cell">
                       <Badge variant="secondary" className="text-xs">
-                        {book.genre_display}
+                        {t('pages.books.genres.' + book.genre, {
+                          defaultValue: book.genre_display,
+                        })}
                       </Badge>
                     </TableCell>
 
@@ -699,7 +703,9 @@ export default function Books() {
                         variant={statusVariant(book.read_status)}
                         className="text-xs"
                       >
-                        {book.read_status_display}
+                        {t('pages.books.readStatuses.' + book.read_status, {
+                          defaultValue: book.read_status_display,
+                        })}
                       </Badge>
                     </TableCell>
 

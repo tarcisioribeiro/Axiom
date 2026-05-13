@@ -1,5 +1,6 @@
 import { Download, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -49,6 +50,7 @@ export function ExportModal({
   initialDateFrom,
   initialDateTo,
 }: ExportModalProps) {
+  const { t } = useTranslation();
   const [dateFrom, setDateFrom] = useState<Date | undefined>(initialDateFrom);
   const [dateTo, setDateTo] = useState<Date | undefined>(initialDateTo);
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
@@ -89,27 +91,27 @@ export function ExportModal({
         <div className="space-y-md">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-xs">
-              <Label className="text-sm">Data inicial</Label>
+              <Label className="text-sm">{t('common.export.dateFrom')}</Label>
               <DatePicker
                 value={dateFrom}
                 onChange={setDateFrom}
-                placeholder="De..."
+                placeholder={t('common.export.from')}
                 clearable
               />
             </div>
             <div className="space-y-xs">
-              <Label className="text-sm">Data final</Label>
+              <Label className="text-sm">{t('common.export.dateTo')}</Label>
               <DatePicker
                 value={dateTo}
                 onChange={setDateTo}
-                placeholder="Até..."
+                placeholder={t('common.export.to')}
                 clearable
               />
             </div>
           </div>
 
           <div className="space-y-xs">
-            <Label className="text-sm">Formato</Label>
+            <Label className="text-sm">{t('common.export.format')}</Label>
             <Select
               value={exportFormat}
               onValueChange={(v) => setExportFormat(v as 'csv' | 'pdf')}
@@ -125,8 +127,7 @@ export function ExportModal({
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Os filtros ativos da página (categoria, status, busca e contas) serão
-            aplicados automaticamente.
+            {t('common.export.activeFiltersNote')}
           </p>
         </div>
 
@@ -136,7 +137,7 @@ export function ExportModal({
             onClick={() => onOpenChange(false)}
             disabled={isExporting}
           >
-            Cancelar
+            {t('common.actions.cancel')}
           </Button>
           <Button onClick={handleExport} disabled={isExporting} className="gap-sm">
             {isExporting ? (
@@ -144,7 +145,7 @@ export function ExportModal({
             ) : (
               <Download className="h-4 w-4" />
             )}
-            Exportar
+            {t('common.actions.export')}
           </Button>
         </div>
       </DialogContent>

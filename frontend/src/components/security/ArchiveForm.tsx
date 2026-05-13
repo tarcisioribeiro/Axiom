@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { FileInput } from '@/components/ui/file-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -231,7 +232,7 @@ export function ArchiveForm({
               {t('pages.archives.form.fileLabel')}
               {!archive && ' *'}
             </Label>
-            <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
+            <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
             {archive ? (
               <p className="mt-xs text-xs text-warning">
                 {t('pages.archives.form.fileHintEdit')}

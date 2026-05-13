@@ -1,5 +1,6 @@
 import { FileText, Image, Receipt, Eye, Loader2 } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -66,6 +67,7 @@ export function ReceiptButton({
   variant = 'ghost',
   size = 'icon',
 }: ReceiptButtonProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
@@ -163,7 +165,7 @@ export function ReceiptButton({
             variant={variant}
             size={size}
             disabled={isGenerating}
-            title="Gerar comprovante"
+            title={t('receipt.button.tooltip')}
           >
             {isGenerating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -176,7 +178,9 @@ export function ReceiptButton({
           {isLoadingItems ? (
             <div className="flex items-center justify-center py-md">
               <Loader2 className="mr-sm h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Carregando...</span>
+              <span className="text-sm text-muted-foreground">
+                {t('receipt.button.loading')}
+              </span>
             </div>
           ) : (
             <div className="flex flex-col gap-xs">
@@ -187,7 +191,7 @@ export function ReceiptButton({
                 onClick={handlePreview}
               >
                 <Eye className="mr-sm h-4 w-4" />
-                Visualizar
+                {t('receipt.button.preview')}
               </Button>
               <Button
                 variant="ghost"
@@ -196,7 +200,7 @@ export function ReceiptButton({
                 onClick={() => handleExport('pdf')}
               >
                 <FileText className="mr-sm h-4 w-4" />
-                Exportar PDF
+                {t('receipt.button.exportPdf')}
               </Button>
               <Button
                 variant="ghost"
@@ -205,7 +209,7 @@ export function ReceiptButton({
                 onClick={() => handleExport('png')}
               >
                 <Image className="mr-sm h-4 w-4" />
-                Exportar PNG
+                {t('receipt.button.exportPng')}
               </Button>
             </div>
           )}

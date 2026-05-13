@@ -315,7 +315,7 @@ export default function StoredAccounts() {
                         variant="outline"
                         className={cn('shrink-0 text-xs', typeCfg.badge)}
                       >
-                        {acc.account_type_display}
+                        {translate('accountTypes', acc.account_type)}
                       </Badge>
                     </div>
                   </CardHeader>

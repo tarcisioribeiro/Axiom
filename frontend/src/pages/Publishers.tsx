@@ -205,7 +205,11 @@ export default function Publishers() {
                         {publisher.name}
                       </CardTitle>
                       <CardDescription className="mt-0.5">
-                        {publisher.country_display}
+                        {publisher.country
+                          ? t('pages.publishers.countries.' + publisher.country, {
+                              defaultValue: publisher.country_display,
+                            })
+                          : publisher.country_display}
                       </CardDescription>
                     </div>
                   </div>

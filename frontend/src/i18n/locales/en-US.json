@@ -127,6 +127,18 @@
       "sentTitle": "Email sent",
       "sentDesc": "Check your inbox.",
       "errorTitle": "Error sending email"
+    },
+    "export": {
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "format": "Format",
+      "from": "From...",
+      "to": "To...",
+      "activeFiltersNote": "Note: active page filters will be applied to the export."
+    },
+    "fileInput": {
+      "selectFile": "Choose file",
+      "noFileSelected": "No file selected"
     }
   },
   "nav": {
@@ -1006,7 +1018,7 @@
       "deleteTitle": "Delete bill",
       "deleteDesc": "Are you sure you want to delete this bill? This action cannot be undone.",
       "reopenTitle": "Reopen bill",
-      "reopenDesc": "Do you want to reopen this bill? This will allow adding or removing entries.",
+      "reopenDesc": "Do you want to reopen the {{period}} bill? This will allow adding or removing entries.",
       "reopenBtn": "Reopen",
       "created": "Bill created",
       "createdDesc": "The bill was created successfully.",
@@ -1015,6 +1027,7 @@
       "deleted": "Bill deleted",
       "deletedDesc": "The bill was deleted successfully.",
       "paySuccess": "Payment processed",
+      "paySuccessDesc": "Payment of {{amount}} completed. Available limit: {{limit}}.",
       "payError": "Error processing payment",
       "reopened": "Bill reopened",
       "reopenedDesc": "The bill was reopened successfully.",
@@ -1034,7 +1047,8 @@
         "minPayment": "Min. Payment",
         "paid": "Paid",
         "status": "Status",
-        "dueDate": "Due Date"
+        "dueDate": "Due Date",
+        "duePrefix": "Due"
       },
       "form": {
         "creditCardLabel": "Credit Card *",
@@ -1087,7 +1101,12 @@
       "stats": {
         "open": "Open",
         "paid": "Paid",
-        "minPending": "Minimum Pending"
+        "minPending": "Minimum Pending",
+        "openCount_one": "{{count}} open bill",
+        "openCount_other": "{{count}} open bills",
+        "paidCount_one": "{{count}} paid bill",
+        "paidCount_other": "{{count}} paid bills",
+        "minPaymentNote": "minimum payment for open bills"
       }
     },
     "creditCardExpenses": {
@@ -1792,7 +1811,24 @@
       "passwordsByCategoryDesc": "Password distribution by category",
       "noPasswords": "No passwords registered",
       "securityAnalysis": "Password Security Analysis",
-      "securityAnalysisDesc": "Distribution by security level"
+      "securityAnalysisDesc": "Distribution by security level",
+      "passwordsCount_one": "registered password",
+      "passwordsCount_other": "registered passwords",
+      "storedCardsCount_one": "stored card",
+      "storedCardsCount_other": "stored cards",
+      "storedAccountsCount_one": "stored account",
+      "storedAccountsCount_other": "stored accounts",
+      "archivesCount_one": "stored file",
+      "archivesCount_other": "stored files",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "passwordCount_one": "{{count}} password",
+      "passwordCount_other": "{{count}} passwords",
+      "exportVault": "Export vault",
+      "exportVaultDesc": "Download passwords, cards and accounts as a ZIP file",
+      "exportVaultSuccess": "Export started",
+      "exportVaultSuccessDesc": "The ZIP file download has started.",
+      "exportVaultError": "Error exporting vault"
     },
     "passwords": {
       "title": "Passwords",
@@ -2147,6 +2183,8 @@
       "ratingDistribution": "Rating Distribution",
       "ratingDistributionDesc": "Books by star rating",
       "noRatings": "No books rated",
+      "ratingRange_one": "{{count}} star",
+      "ratingRange_other": "{{count}} stars",
       "distributions": "Distributions",
       "distributionsDesc": "By language and media type",
       "byLanguage": "By Language",
@@ -3965,6 +4003,79 @@
     },
     "record": {
       "purge": "Record {{label}} id={{id}} permanently removed by LGPD/GDPR retention policy"
+    }
+  },
+  "receipt": {
+    "title": "{{typeLabel}} Receipt",
+    "description": "Description",
+    "date": "Date",
+    "time": "Time",
+    "category": "Category",
+    "status": "Status",
+    "account": "Account",
+    "card": "Card",
+    "originAccount": "Origin Account",
+    "destinyAccount": "Destination Account",
+    "benefited": "Beneficiary",
+    "creditor": "Creditor",
+    "installments": "Installments",
+    "vault": "Vault",
+    "balanceAfter": "Balance After",
+    "notes": "Notes",
+    "generatedAt": "Generated at",
+    "statementTitle": "Statement",
+    "itemSingular": "{{count}} item",
+    "itemPlural": "{{count}} items",
+    "paidItemsSummary": "{{paid}} of {{total}} items paid",
+    "user": "User",
+    "types": {
+      "expense": "Expense",
+      "revenue": "Revenue",
+      "credit_card_bill": "Card Bill",
+      "credit_card_purchase": "Card Purchase",
+      "loan": "Loan",
+      "payable": "Payable",
+      "transfer": "Transfer",
+      "vault_deposit": "Vault Deposit",
+      "vault_withdrawal": "Vault Withdrawal"
+    },
+    "statuses": {
+      "payed": "Paid",
+      "pending": "Pending",
+      "received": "Received",
+      "not_received": "Not Received",
+      "open": "Open",
+      "closed": "Closed",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "active": "Active",
+      "completed": "Settled",
+      "cancelled": "Cancelled",
+      "transfered": "Completed",
+      "not_transfered": "Pending",
+      "processing": "Processing",
+      "scheduled": "Scheduled"
+    },
+    "documentTitles": {
+      "loan": "Loan Declaration",
+      "payable": "Payable Declaration",
+      "credit_card_purchase": "Purchase Declaration"
+    },
+    "descriptions": {
+      "billPrefix": "Bill",
+      "cardFallback": "Card",
+      "depositPrefix": "Deposit to",
+      "withdrawalPrefix": "Withdrawal from",
+      "completedStatus": "Completed",
+      "purchaseFallback": "Card purchase",
+      "expenseFallback": "Card expense"
+    },
+    "button": {
+      "tooltip": "Generate receipt",
+      "loading": "Loading...",
+      "preview": "Preview",
+      "exportPdf": "Export PDF",
+      "exportPng": "Export PNG"
     }
   }
 }
