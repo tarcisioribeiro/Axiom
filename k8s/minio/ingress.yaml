@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: mindledger
     app.kubernetes.io/component: minio
   annotations:
-    # NPM faz SSL termination — sem redirecionamento HTTPS no ingress.
+    # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
     # MinIO usa TLS internamente com cert auto-assinado — nginx faz proxy HTTPS para o backend.
@@ -40,6 +40,7 @@ metadata:
     app.kubernetes.io/name: mindledger
     app.kubernetes.io/component: minio
   annotations:
+    # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
