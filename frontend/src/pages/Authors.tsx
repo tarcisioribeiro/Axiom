@@ -74,7 +74,11 @@ function AuthorCard({
             <div className="min-w-0">
               <CardTitle className="text-base leading-tight">{author.name}</CardTitle>
               <CardDescription className="mt-0.5">
-                {author.nationality_display}
+                {author.nationality
+                  ? t('pages.authors.nationalities.' + author.nationality, {
+                      defaultValue: author.nationality_display,
+                    })
+                  : author.nationality_display}
               </CardDescription>
             </div>
           </div>
@@ -108,7 +112,10 @@ function AuthorCard({
             <Badge variant="outline" className="text-xs font-normal">
               {author.birth_year && (
                 <>
-                  {author.birth_year} {author.birth_era_display || ''}
+                  {author.birth_year}{' '}
+                  {author.birth_era
+                    ? t('pages.authors.eras.' + author.birth_era)
+                    : author.birth_era_display || ''}
                 </>
               )}
               {author.birth_year && author.death_year && (
@@ -116,7 +123,10 @@ function AuthorCard({
               )}
               {author.death_year && (
                 <>
-                  {author.death_year} {author.death_era_display || ''}
+                  {author.death_year}{' '}
+                  {author.death_era
+                    ? t('pages.authors.eras.' + author.death_era)
+                    : author.death_era_display || ''}
                 </>
               )}
             </Badge>

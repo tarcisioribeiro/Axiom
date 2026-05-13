@@ -1,5 +1,6 @@
 import { FileText, Image, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function ReceiptPreviewDialog({
   data,
 }: ReceiptPreviewDialogProps) {
   // Ref for the hidden full-size receipt (used for export)
+  const { t } = useTranslation();
   const captureRef = useRef<HTMLDivElement>(null);
   const { isGenerating, error, generateReceipt, clearError } = useReceiptGenerator();
 
@@ -60,7 +62,7 @@ export function ReceiptPreviewDialog({
         className="custom-scrollbar max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>Comprovante de {data.typeLabel}</DialogTitle>
+          <DialogTitle>{t('receipt.title', { typeLabel: data.typeLabel })}</DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
@@ -103,7 +105,7 @@ export function ReceiptPreviewDialog({
             ) : (
               <Image className="mr-sm h-4 w-4" />
             )}
-            Exportar PNG
+            {t('receipt.button.exportPng')}
           </Button>
           <Button
             onClick={() => handleExport('pdf')}
@@ -115,7 +117,7 @@ export function ReceiptPreviewDialog({
             ) : (
               <FileText className="mr-sm h-4 w-4" />
             )}
-            Exportar PDF
+            {t('receipt.button.exportPdf')}
           </Button>
         </DialogFooter>
       </DialogContent>

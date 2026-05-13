@@ -4,6 +4,8 @@
  * Functions to map financial data to receipt format and generate filenames.
  */
 
+import i18next from 'i18next';
+
 import { autoTranslate, translate } from '@/config/constants';
 import type {
   Expense,
@@ -74,7 +76,7 @@ export function mapCreditCardBillToReceipt(
     type: 'credit_card_bill',
     typeLabel: RECEIPT_TYPE_LABELS.credit_card_bill,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: `Fatura\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || 'Cartão'}`,
+    description: `${i18next.t('receipt.descriptions.billPrefix')}\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || i18next.t('receipt.descriptions.cardFallback')}`,
     value: parseFloat(bill.total_amount),
     date: bill.due_date || bill.invoice_ending_date,
     category: 'fatura_cartao',
@@ -97,7 +99,7 @@ export function mapCreditCardBillWithItemsToReceipt(
   memberName: string
 ): ReceiptData {
   const statementItems: ReceiptStatementItem[] = installments.map((inst) => ({
-    description: inst.description || 'Compra',
+    description: inst.description || i18next.t('receipt.descriptions.purchaseFallback'),
     category: inst.category || 'others',
     categoryLabel: autoTranslate(inst.category || 'others'),
     value: typeof inst.value === 'string' ? parseFloat(inst.value) : inst.value,
@@ -114,7 +116,7 @@ export function mapCreditCardBillWithItemsToReceipt(
     type: 'credit_card_bill',
     typeLabel: RECEIPT_TYPE_LABELS.credit_card_bill,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: `Fatura\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || 'Cartão'}`,
+    description: `${i18next.t('receipt.descriptions.billPrefix')}\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || i18next.t('receipt.descriptions.cardFallback')}`,
     value: parseFloat(bill.total_amount),
     date: bill.due_date || bill.invoice_ending_date,
     category: 'fatura_cartao',
@@ -142,7 +144,7 @@ export function mapCreditCardBillWithBillItemsToReceipt(
   memberName: string
 ): ReceiptData {
   const statementItems: ReceiptStatementItem[] = items.map((item) => ({
-    description: item.description || 'Despesa',
+    description: item.description || i18next.t('receipt.descriptions.expenseFallback'),
     category: item.category || 'others',
     categoryLabel: autoTranslate(item.category || 'others'),
     value: item.value,
@@ -159,7 +161,7 @@ export function mapCreditCardBillWithBillItemsToReceipt(
     type: 'credit_card_bill',
     typeLabel: RECEIPT_TYPE_LABELS.credit_card_bill,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: `Fatura\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || 'Cartão'}`,
+    description: `${i18next.t('receipt.descriptions.billPrefix')}\u00A0${translate('months', bill.month)}/${bill.year}\u00A0-\u00A0${bill.credit_card_name || i18next.t('receipt.descriptions.cardFallback')}`,
     value: parseFloat(bill.total_amount),
     date: bill.due_date || bill.invoice_ending_date,
     category: 'fatura_cartao',
@@ -190,7 +192,7 @@ export function mapCreditCardPurchaseToReceipt(
   return {
     type: 'credit_card_purchase',
     typeLabel: RECEIPT_TYPE_LABELS.credit_card_purchase,
-    documentTitle: 'Declaração de Compra',
+    documentTitle: i18next.t('receipt.documentTitles.credit_card_purchase'),
     description: purchase.description,
     value: purchase.total_value,
     date: purchase.purchase_date,
@@ -215,7 +217,7 @@ export function mapLoanToReceipt(loan: Loan, memberName: string): ReceiptData {
   return {
     type: 'loan',
     typeLabel: RECEIPT_TYPE_LABELS.loan,
-    documentTitle: 'Declaração de Empréstimo',
+    documentTitle: i18next.t('receipt.documentTitles.loan'),
     description: loan.description,
     value: parseFloat(loan.value),
     date: loan.date,
@@ -239,7 +241,7 @@ export function mapPayableToReceipt(payable: Payable, memberName: string): Recei
   return {
     type: 'payable',
     typeLabel: RECEIPT_TYPE_LABELS.payable,
-    documentTitle: 'Declaração de Conta a Pagar',
+    documentTitle: i18next.t('receipt.documentTitles.payable'),
     description: payable.description,
     value: parseFloat(payable.value),
     date: payable.date,
@@ -292,12 +294,13 @@ export function mapVaultDepositToReceipt(
     typeLabel: RECEIPT_TYPE_LABELS.vault_deposit,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
     description:
-      transaction.description || `Deposito\u00A0em\u00A0${vault.description}`,
+      transaction.description ||
+      `${i18next.t('receipt.descriptions.depositPrefix')}\u00A0${vault.description}`,
     value: parseFloat(transaction.amount),
     date: transaction.transaction_date,
     category: 'deposito',
     status: 'completed',
-    statusLabel: 'Concluido',
+    statusLabel: i18next.t('receipt.descriptions.completedStatus'),
     vaultName: vault.description,
     accountName: vault.account_name,
     balanceAfter: parseFloat(transaction.balance_after),
@@ -318,12 +321,14 @@ export function mapVaultWithdrawalToReceipt(
     type: 'vault_withdrawal',
     typeLabel: RECEIPT_TYPE_LABELS.vault_withdrawal,
     // Use \u00A0 (non-breaking space) for consistent rendering in html2canvas
-    description: transaction.description || `Saque\u00A0de\u00A0${vault.description}`,
+    description:
+      transaction.description ||
+      `${i18next.t('receipt.descriptions.withdrawalPrefix')}\u00A0${vault.description}`,
     value: parseFloat(transaction.amount),
     date: transaction.transaction_date,
     category: 'saque',
     status: 'completed',
-    statusLabel: 'Concluido',
+    statusLabel: i18next.t('receipt.descriptions.completedStatus'),
     vaultName: vault.description,
     accountName: vault.account_name,
     balanceAfter: parseFloat(transaction.balance_after),
@@ -473,5 +478,5 @@ export function getMemberDisplayName(
     }
   }
 
-  return 'Usuário';
+  return i18next.t('receipt.user');
 }
