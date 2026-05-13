@@ -127,6 +127,18 @@
       "sentTitle": "Email enviado",
       "sentDesc": "Verifique sua caixa de entrada.",
       "errorTitle": "Erro ao enviar email"
+    },
+    "export": {
+      "dateFrom": "Data inicial",
+      "dateTo": "Data final",
+      "format": "Formato",
+      "from": "De...",
+      "to": "Até...",
+      "activeFiltersNote": "Nota: os filtros ativos da página serão aplicados na exportação."
+    },
+    "fileInput": {
+      "selectFile": "Escolher arquivo",
+      "noFileSelected": "Nenhum arquivo selecionado"
     }
   },
   "nav": {
@@ -1006,7 +1018,7 @@
       "deleteTitle": "Excluir fatura",
       "deleteDesc": "Tem certeza que deseja excluir esta fatura? Esta ação não pode ser desfeita.",
       "reopenTitle": "Reabrir fatura",
-      "reopenDesc": "Deseja reabrir a fatura? Isso permitirá adicionar ou remover lançamentos.",
+      "reopenDesc": "Deseja reabrir a fatura {{period}}? Isso permitirá adicionar ou remover lançamentos.",
       "reopenBtn": "Reabrir",
       "created": "Fatura criada",
       "createdDesc": "A fatura foi criada com sucesso.",
@@ -1015,6 +1027,7 @@
       "deleted": "Fatura excluída",
       "deletedDesc": "A fatura foi excluída com sucesso.",
       "paySuccess": "Pagamento realizado",
+      "paySuccessDesc": "Pagamento de {{amount}} realizado. Limite disponível: {{limit}}.",
       "payError": "Erro ao processar pagamento",
       "reopened": "Fatura reaberta",
       "reopenedDesc": "A fatura foi reaberta com sucesso.",
@@ -1034,7 +1047,8 @@
         "minPayment": "Pag. Mínimo",
         "paid": "Pago",
         "status": "Status",
-        "dueDate": "Vencimento"
+        "dueDate": "Vencimento",
+        "duePrefix": "Vence"
       },
       "form": {
         "creditCardLabel": "Cartão de Crédito *",
@@ -1087,7 +1101,12 @@
       "stats": {
         "open": "Em Aberto",
         "paid": "Pagas",
-        "minPending": "Mínimo Pendente"
+        "minPending": "Mínimo Pendente",
+        "openCount_one": "{{count}} fatura em aberto",
+        "openCount_other": "{{count}} faturas em aberto",
+        "paidCount_one": "{{count}} fatura paga",
+        "paidCount_other": "{{count}} faturas pagas",
+        "minPaymentNote": "pagamento mínimo das abertas"
       }
     },
     "creditCardExpenses": {
@@ -2234,6 +2253,8 @@
       "ratingDistribution": "Distribuição de Avaliações",
       "ratingDistributionDesc": "Livros por avaliação em estrelas",
       "noRatings": "Nenhum livro avaliado",
+      "ratingRange_one": "{{count}} estrela",
+      "ratingRange_other": "{{count}} estrelas",
       "distributions": "Distribuições",
       "distributionsDesc": "Por idioma e tipo de mídia",
       "byLanguage": "Por Idioma",
@@ -4052,6 +4073,79 @@
     },
     "record": {
       "purge": "Registro {{label}} id={{id}} removido permanentemente por política de retenção LGPD/GDPR"
+    }
+  },
+  "receipt": {
+    "title": "Comprovante de {{typeLabel}}",
+    "description": "Descrição",
+    "date": "Data",
+    "time": "Horário",
+    "category": "Categoria",
+    "status": "Status",
+    "account": "Conta",
+    "card": "Cartão",
+    "originAccount": "Conta de Origem",
+    "destinyAccount": "Conta de Destino",
+    "benefited": "Beneficiário",
+    "creditor": "Credor",
+    "installments": "Parcelas",
+    "vault": "Cofre",
+    "balanceAfter": "Saldo Após",
+    "notes": "Observações",
+    "generatedAt": "Gerado em",
+    "statementTitle": "Extrato",
+    "itemSingular": "{{count}} item",
+    "itemPlural": "{{count}} itens",
+    "paidItemsSummary": "{{paid}} de {{total}} itens pagos",
+    "user": "Usuário",
+    "types": {
+      "expense": "Despesa",
+      "revenue": "Receita",
+      "credit_card_bill": "Fatura de Cartão",
+      "credit_card_purchase": "Compra no Cartão",
+      "loan": "Empréstimo",
+      "payable": "Conta a Pagar",
+      "transfer": "Transferência",
+      "vault_deposit": "Depósito em Cofre",
+      "vault_withdrawal": "Saque de Cofre"
+    },
+    "statuses": {
+      "payed": "Pago",
+      "pending": "Pendente",
+      "received": "Recebido",
+      "not_received": "Não Recebido",
+      "open": "Aberta",
+      "closed": "Fechada",
+      "paid": "Paga",
+      "overdue": "Vencida",
+      "active": "Ativo",
+      "completed": "Quitado",
+      "cancelled": "Cancelado",
+      "transfered": "Realizada",
+      "not_transfered": "Pendente",
+      "processing": "Processando",
+      "scheduled": "Agendado"
+    },
+    "documentTitles": {
+      "loan": "Declaração de Empréstimo",
+      "payable": "Declaração de Conta a Pagar",
+      "credit_card_purchase": "Declaração de Compra"
+    },
+    "descriptions": {
+      "billPrefix": "Fatura",
+      "cardFallback": "Cartão",
+      "depositPrefix": "Depósito em",
+      "withdrawalPrefix": "Saque de",
+      "completedStatus": "Concluído",
+      "purchaseFallback": "Compra no cartão",
+      "expenseFallback": "Despesa no cartão"
+    },
+    "button": {
+      "tooltip": "Gerar comprovante",
+      "loading": "Carregando...",
+      "preview": "Visualizar",
+      "exportPdf": "Exportar PDF",
+      "exportPng": "Exportar PNG"
     }
   }
 }

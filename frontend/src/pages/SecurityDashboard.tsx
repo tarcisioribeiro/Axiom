@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Shield, Key, CreditCard, Wallet, Archive, Download } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -11,6 +11,7 @@ import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -33,6 +34,40 @@ export default function SecurityDashboard() {
 
   const COLORS = useChartColors();
   const strengthColors = usePasswordStrengthColors();
+
+  const ITEM_TYPE_LABELS: Record<string, string> = {
+    passwords: t('pages.securityDashboard.passwords'),
+    cards: t('pages.securityDashboard.storedCards'),
+    accounts: t('pages.securityDashboard.storedAccounts'),
+    archives: t('pages.securityDashboard.archives'),
+  };
+
+  const translatedItemsDistribution = useMemo(
+    () =>
+      (stats?.items_distribution || []).map((item) => ({
+        ...item,
+        type_display: ITEM_TYPE_LABELS[item.type] ?? item.type_display,
+      })),
+    [stats?.items_distribution, t]
+  );
+
+  const translatedPasswordsByCategory = useMemo(
+    () =>
+      (stats?.passwords_by_category || []).map((item) => ({
+        ...item,
+        category_display: translate('passwordCategories', item.category),
+      })),
+    [stats?.passwords_by_category, t]
+  );
+
+  const translatedStrengthDistribution = useMemo(
+    () =>
+      (stats?.password_strength_distribution || []).map((item) => ({
+        ...item,
+        strength_display: translate('passwordStrength', item.strength),
+      })),
+    [stats?.password_strength_distribution, t]
+  );
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -163,7 +198,7 @@ export default function SecurityDashboard() {
             <CardContent>
               <ChartContainer
                 chartId="security-items-distribution"
-                data={stats?.items_distribution || []}
+                data={translatedItemsDistribution}
                 dataKey="count"
                 nameKey="type_display"
                 formatter={(value) =>
@@ -188,7 +223,7 @@ export default function SecurityDashboard() {
             <CardContent>
               <ChartContainer
                 chartId="security-passwords-category"
-                data={stats?.passwords_by_category || []}
+                data={translatedPasswordsByCategory}
                 dataKey="count"
                 nameKey="category_display"
                 formatter={(value) =>
@@ -213,7 +248,7 @@ export default function SecurityDashboard() {
             <CardContent>
               <ChartContainer
                 chartId="security-password-strength"
-                data={stats?.password_strength_distribution || []}
+                data={translatedStrengthDistribution}
                 dataKey="count"
                 nameKey="strength_display"
                 formatter={(value) =>
