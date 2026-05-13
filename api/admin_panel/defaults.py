@@ -18,7 +18,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "key": "OLLAMA_BASE_URL",
         "category": "llm",
         "label": "URL do Ollama",
-        "description": "Endereço do serviço Ollama (padrão: http://ollama:11434).",
+        "description": "Endereço do serviço Ollama (Kubernetes: "
+        + ("http://ollama-service:11434 | Docker: http://ollama:11434)."),
         "is_secret": False,
         "requires_restart": False,
         "is_editable": True,
