@@ -1,5 +1,5 @@
 import { CreditCard, Calendar, Wallet, Building2, AlertCircle } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -10,11 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
-import type { CreditCardBill, BillPaymentFormData } from '@/types';
+import type { Account, CreditCardBill, BillPaymentFormData } from '@/types';
 
 interface BillPaymentFormProps {
   bill: CreditCardBill;
+  associatedAccount?: Account;
   onSubmit: (data: BillPaymentFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -22,6 +24,7 @@ interface BillPaymentFormProps {
 
 export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   bill,
+  associatedAccount,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -53,13 +56,15 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   const watchedAmount = watch('amount');
   const isAmountValid = watchedAmount > 0 && watchedAmount <= remaining;
 
+  const balanceInfo = useMemo(() => {
+    if (!associatedAccount || !watchedAmount || watchedAmount <= 0) return null;
+    return getAccountBalanceInfo(associatedAccount, watchedAmount);
+  }, [associatedAccount, watchedAmount]);
+
   const handleFormSubmit = (data: BillPaymentFormData) => {
-    if (data.amount <= 0) {
-      return;
-    }
-    if (data.amount > remaining) {
-      return;
-    }
+    if (data.amount <= 0) return;
+    if (data.amount > remaining) return;
+    if (balanceInfo && !balanceInfo.canPay) return;
     onSubmit(data);
   };
 
@@ -239,6 +244,29 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
+      {balanceInfo && watchedAmount > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            !balanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : 'border-warning/30 bg-warning/10 text-warning'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {!balanceInfo.canPay
+              ? t('common.balance.insufficientEvenWithOverdraft', {
+                  available: formatCurrency(balanceInfo.available.toFixed(2)),
+                })
+              : t('common.balance.overdraftWarningDesc', {
+                  balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+                  overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+                  total: formatCurrency(balanceInfo.available.toFixed(2)),
+                })}
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
@@ -246,7 +274,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         {remaining > 0 && (
           <Button
             type="submit"
-            disabled={isLoading || !isAmountValid}
+            disabled={
+              isLoading || !isAmountValid || (!!balanceInfo && !balanceInfo.canPay)
+            }
             className="gap-sm"
           >
             <Wallet className="h-4 w-4" />

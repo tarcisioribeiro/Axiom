@@ -5,6 +5,31 @@
  */
 
 import { translate } from '@/config/constants';
+import type { Account } from '@/types';
+
+export interface AccountBalanceInfo {
+  balance: number;
+  overdraft: number;
+  available: number;
+  canPay: boolean;
+  isUsingOverdraft: boolean;
+}
+
+export const getAccountBalanceInfo = (
+  account: Account,
+  amount: number
+): AccountBalanceInfo => {
+  const balance = parseFloat(account.balance);
+  const overdraft = parseFloat(account.overdraft_limit ?? '0');
+  const available = balance + overdraft;
+  return {
+    balance,
+    overdraft,
+    available,
+    canPay: available >= amount,
+    isUsingOverdraft: balance < amount && available >= amount,
+  };
+};
 
 /**
  * Traduz categoria de despesa ou receita de forma conveniente

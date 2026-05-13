@@ -7,8 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
+import { expensesService } from '@/services/expenses-service';
 import { loansService } from '@/services/loans-service';
 import { membersService } from '@/services/members-service';
+import { revenuesService } from '@/services/revenues-service';
 import type { Loan, LoanFormData, Account, Member } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -80,12 +82,62 @@ export function useLoansPage(): UseLoansPageReturn {
   const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
 
   const createMutation = useMutation({
-    mutationFn: (data: LoanFormData) => loansService.create(data),
-    onSuccess: () => {
+    mutationFn: async (data: LoanFormData) => {
+      const { loan_type, generate_revenue, generate_expense } = data;
+      const loan = await loansService.create(data);
+
+      if (!loan_type || loan.id === undefined) return loan;
+
+      const now = new Date();
+      const horary = now.toTimeString().slice(0, 5);
+
+      if (loan_type === 'borrowed' && generate_revenue) {
+        await revenuesService.create({
+          description: loan.description,
+          value: parseFloat(loan.value),
+          date: loan.date,
+          horary,
+          category: loan.category,
+          account: loan.account,
+          received: true,
+          related_loan: loan.id,
+        });
+      }
+
+      if (loan_type === 'lent' && generate_expense) {
+        await expensesService.create({
+          description: loan.description,
+          value: parseFloat(loan.value),
+          date: loan.date,
+          horary,
+          category: loan.category,
+          account: loan.account,
+          payed: true,
+          related_loan: loan.id,
+        });
+      }
+
+      return loan;
+    },
+    onSuccess: (_, variables) => {
       void invalidateLoans();
+      const { loan_type, generate_revenue, generate_expense } = variables;
+      const hasExtra =
+        (loan_type === 'borrowed' && generate_revenue) ||
+        (loan_type === 'lent' && generate_expense);
       toast({
-        title: t('pages.loans.created'),
-        description: 'O empréstimo foi criado com sucesso.',
+        title: hasExtra
+          ? loan_type === 'borrowed'
+            ? t('pages.loans.loanCreatedWithRevenue')
+            : t('pages.loans.loanCreatedWithExpense')
+          : t('pages.loans.created'),
+        description: hasExtra
+          ? loan_type === 'borrowed'
+            ? t('pages.loans.loanCreatedWithRevenueDesc')
+            : t('pages.loans.loanCreatedWithExpenseDesc')
+          : t('pages.loans.createdDesc', {
+              defaultValue: 'O empréstimo foi criado com sucesso.',
+            }),
       });
       setIsDialogOpen(false);
     },
