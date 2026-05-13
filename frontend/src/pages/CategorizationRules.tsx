@@ -136,7 +136,7 @@ function RuleForm({
           <SelectContent>
             {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
               <SelectItem key={cat.key} value={cat.key}>
-                {cat.label}
+                {translate('expenseCategories', cat.key)}
               </SelectItem>
             ))}
           </SelectContent>

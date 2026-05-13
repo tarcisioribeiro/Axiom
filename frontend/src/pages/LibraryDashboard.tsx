@@ -22,6 +22,7 @@ import {
   Sun,
   Sunset,
 } from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   BarChart,
@@ -55,6 +56,103 @@ export default function LibraryDashboard() {
   });
 
   const COLORS = useChartColors();
+
+  const translatedBooksByGenre = useMemo(
+    () =>
+      (stats?.books_by_genre || []).map((item) => ({
+        ...item,
+        genre_display: t('pages.books.genres.' + item.genre, {
+          defaultValue: item.genre_display,
+        }),
+      })),
+    [stats?.books_by_genre, t]
+  );
+
+  const translatedReadingStatus = useMemo(
+    () =>
+      (stats?.reading_status_distribution || []).map((item) => ({
+        ...item,
+        status_display: t('pages.books.readStatuses.' + item.status, {
+          defaultValue: item.status_display,
+        }),
+      })),
+    [stats?.reading_status_distribution, t]
+  );
+
+  const translatedBooksByLanguage = useMemo(
+    () =>
+      (stats?.books_by_language || []).map((item) => ({
+        ...item,
+        language_display: t('pages.books.languages.' + item.language, {
+          defaultValue: item.language_display,
+        }),
+      })),
+    [stats?.books_by_language, t]
+  );
+
+  const translatedBooksByMediaType = useMemo(
+    () =>
+      (stats?.books_by_media_type || []).map((item) => ({
+        ...item,
+        media_type_display: t('pages.books.mediaTypes.' + item.media_type, {
+          defaultValue: item.media_type_display,
+        }),
+      })),
+    [stats?.books_by_media_type, t]
+  );
+
+  const translatedBooksByLiteraryType = useMemo(
+    () =>
+      (stats?.books_by_literary_type || []).map((item) => ({
+        ...item,
+        literary_type_display: t('pages.books.literaryTypes.' + item.literarytype, {
+          defaultValue: item.literary_type_display,
+        }),
+      })),
+    [stats?.books_by_literary_type, t]
+  );
+
+  const translatedTopGenresByTime = useMemo(
+    () =>
+      (stats?.top_genres_by_time || []).map((item) => ({
+        ...item,
+        genre_display: t('pages.books.genres.' + item.genre, {
+          defaultValue: item.genre_display,
+        }),
+      })),
+    [stats?.top_genres_by_time, t]
+  );
+
+  const translatedRatingDistribution = useMemo(
+    () =>
+      (stats?.rating_distribution || []).map((item) => {
+        const match = item.rating_range.match(/^(\d+)/);
+        const count = match ? parseInt(match[1], 10) : 0;
+        return {
+          ...item,
+          rating_range:
+            count > 0
+              ? t('pages.libraryDashboard.ratingRange', { count })
+              : item.rating_range,
+        };
+      }),
+    [stats?.rating_distribution, t]
+  );
+
+  const translatedReadingByTimeOfDay = useMemo(
+    () =>
+      (stats?.reading_by_time_of_day || []).map((item) => {
+        const key =
+          'pages.readings.form.timeOfDay' +
+          item.time_of_day.charAt(0).toUpperCase() +
+          item.time_of_day.slice(1);
+        return {
+          ...item,
+          time_of_day_display: t(key, { defaultValue: item.time_of_day_display }),
+        };
+      }),
+    [stats?.reading_by_time_of_day, t]
+  );
 
   const exportCSV = () => {
     if (!stats) return;
@@ -617,14 +715,14 @@ export default function LibraryDashboard() {
             <p className="text-sm">{t('pages.libraryDashboard.topGenresByTimeDesc')}</p>
           </CardHeader>
           <CardContent>
-            {!stats?.top_genres_by_time || stats.top_genres_by_time.length === 0 ? (
+            {!translatedTopGenresByTime || translatedTopGenresByTime.length === 0 ? (
               <div className="flex h-32 items-center justify-center text-sm">
                 {t('pages.libraryDashboard.noReadings')}
               </div>
             ) : (
               <div className="space-y-3">
-                {stats.top_genres_by_time.map((item, index) => {
-                  const maxHours = stats.top_genres_by_time[0].total_time_hours;
+                {translatedTopGenresByTime.map((item, index) => {
+                  const maxHours = translatedTopGenresByTime[0].total_time_hours;
                   const pct =
                     maxHours > 0
                       ? Math.round((item.total_time_hours / maxHours) * 100)
@@ -670,7 +768,7 @@ export default function LibraryDashboard() {
           <CardContent>
             <ChartContainer
               chartId="library-books-genre"
-              data={stats?.books_by_genre || []}
+              data={translatedBooksByGenre}
               dataKey="count"
               nameKey="genre_display"
               formatter={(value) =>
@@ -693,7 +791,7 @@ export default function LibraryDashboard() {
           <CardContent>
             <ChartContainer
               chartId="library-reading-status"
-              data={stats?.reading_status_distribution || []}
+              data={translatedReadingStatus}
               dataKey="count"
               nameKey="status_display"
               formatter={(value) =>
@@ -809,7 +907,7 @@ export default function LibraryDashboard() {
           <CardContent>
             <ChartContainer
               chartId="library-rating-distribution"
-              data={stats?.rating_distribution || []}
+              data={translatedRatingDistribution}
               dataKey="count"
               nameKey="rating_range"
               formatter={(value) =>
@@ -839,7 +937,7 @@ export default function LibraryDashboard() {
                 </h4>
                 <ChartContainer
                   chartId="library-language-distribution"
-                  data={stats?.books_by_language || []}
+                  data={translatedBooksByLanguage}
                   dataKey="count"
                   nameKey="language_display"
                   formatter={(value) =>
@@ -857,7 +955,7 @@ export default function LibraryDashboard() {
                 </h4>
                 <ChartContainer
                   chartId="library-media-type-distribution"
-                  data={stats?.books_by_media_type || []}
+                  data={translatedBooksByMediaType}
                   dataKey="count"
                   nameKey="media_type_display"
                   formatter={(value) =>
@@ -875,7 +973,7 @@ export default function LibraryDashboard() {
                 </h4>
                 <ChartContainer
                   chartId="library-literary-type-distribution"
-                  data={stats?.books_by_literary_type || []}
+                  data={translatedBooksByLiteraryType}
                   dataKey="count"
                   nameKey="literary_type_display"
                   formatter={(value) =>
@@ -903,14 +1001,14 @@ export default function LibraryDashboard() {
             </p>
           </CardHeader>
           <CardContent>
-            {!stats || (stats.reading_by_time_of_day || []).length === 0 ? (
+            {translatedReadingByTimeOfDay.length === 0 ? (
               <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
                 {t('pages.libraryDashboard.noSessionPeriods')}
               </div>
             ) : (
               <div className="space-y-3">
-                {stats.reading_by_time_of_day.map((item) => {
-                  const total = stats.reading_by_time_of_day.reduce(
+                {translatedReadingByTimeOfDay.map((item) => {
+                  const total = translatedReadingByTimeOfDay.reduce(
                     (s, i) => s + i.session_count,
                     0
                   );
