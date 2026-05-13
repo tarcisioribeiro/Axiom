@@ -29,7 +29,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
     },
     onError: (error: unknown) => {
       toast({
-        title: t('pages.twoFactor.invalidCode'),
+        title: t('pages.twoFactor.wrongPassword'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -43,7 +43,7 @@ export function DisableTwoFactor({ onDisabled }: { onDisabled: () => void }) {
           <ShieldOff className="h-5 w-5" />
           {t('pages.twoFactor.disableBtn')}
         </CardTitle>
-        <CardDescription>{t('pages.twoFactor.step2Desc')}</CardDescription>
+        <CardDescription>{t('pages.twoFactor.disableDesc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form

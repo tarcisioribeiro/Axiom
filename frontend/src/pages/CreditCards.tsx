@@ -10,7 +10,7 @@ import {
   RotateCcw,
   TrendingDown,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -168,6 +168,13 @@ export default function CreditCards() {
   const [isBillSubmitting, setIsBillSubmitting] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
+
+  const billAssociatedAccount = useMemo(() => {
+    if (!selectedBill) return undefined;
+    const card = creditCards.find((c) => c.id === selectedBill.credit_card);
+    if (!card) return undefined;
+    return accounts.find((a) => a.id === card.associated_account);
+  }, [selectedBill, creditCards, accounts]);
 
   useEffect(() => {
     void loadData();
@@ -910,6 +917,7 @@ export default function CreditCards() {
           {selectedBill && (
             <BillPaymentForm
               bill={selectedBill}
+              associatedAccount={billAssociatedAccount}
               onSubmit={handleBillPayment}
               onCancel={() => setIsPaymentOpen(false)}
               isLoading={isPaymentSubmitting}
