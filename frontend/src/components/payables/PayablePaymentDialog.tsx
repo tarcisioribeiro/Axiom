@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { getAccountBalanceInfo } from '@/lib/helpers';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type { Account, Payable } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -52,12 +54,30 @@ export function PayablePaymentDialog({
     ? parseFloat(payable.value) - parseFloat(payable.paid_value)
     : 0;
 
+  const balanceInfo = useMemo(() => {
+    const amount = parseFloat(form.value) || 0;
+    if (!form.account || amount <= 0) return null;
+    const account = accounts.find((a) => String(a.id) === form.account);
+    if (!account) return null;
+    return getAccountBalanceInfo(account, amount);
+  }, [form.account, form.value, accounts]);
+
   const handleSubmit = async () => {
     if (!payable) return;
     if (!form.value || !form.account || !form.date) {
       toast({
         title: t('pages.payables.payment.title'),
         description: t('common.messages.fillRequired'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (balanceInfo && !balanceInfo.canPay) {
+      toast({
+        title: t('common.balance.insufficient'),
+        description: t('common.balance.insufficientEvenWithOverdraft', {
+          available: formatCurrency(balanceInfo.available.toFixed(2)),
+        }),
         variant: 'destructive',
       });
       return;
@@ -142,11 +162,36 @@ export function PayablePaymentDialog({
               placeholder={t('common.fields.notes')}
             />
           </div>
+          {balanceInfo && parseFloat(form.value) > 0 && (
+            <div
+              className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+                !balanceInfo.canPay
+                  ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                  : 'border-warning/30 bg-warning/10 text-warning'
+              }`}
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <p>
+                {!balanceInfo.canPay
+                  ? t('common.balance.insufficientEvenWithOverdraft', {
+                      available: formatCurrency(balanceInfo.available.toFixed(2)),
+                    })
+                  : t('common.balance.overdraftWarningDesc', {
+                      balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+                      overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+                      total: formatCurrency(balanceInfo.available.toFixed(2)),
+                    })}
+              </p>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={onClose}>
               {t('common.actions.cancel')}
             </Button>
-            <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
+            <Button
+              onClick={() => void handleSubmit()}
+              disabled={isSubmitting || (!!balanceInfo && !balanceInfo.canPay)}
+            >
               {isSubmitting
                 ? t('common.actions.saving')
                 : t('pages.payables.payment.submit')}
