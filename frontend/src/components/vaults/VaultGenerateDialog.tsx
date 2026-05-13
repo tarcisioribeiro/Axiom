@@ -10,8 +10,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { vaultsService } from '@/services/vaults-service';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -22,17 +29,38 @@ interface VaultGenerateDialogProps {
   onSuccess: () => void;
 }
 
+const MONTH_KEYS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
 export function VaultGenerateDialog({
   open,
   onOpenChange,
   onSuccess,
 }: VaultGenerateDialogProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { toast } = useToast();
-  const [generateMonth, setGenerateMonth] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const generateMonth = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+
+  const currentYear = now.getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   const handleGenerate = async () => {
     try {
@@ -70,16 +98,39 @@ export function VaultGenerateDialog({
         </DialogHeader>
         <div className="space-y-md">
           <div>
-            <Label htmlFor="generate_month">
-              {t('pages.vaults.recurringContributions.generateMonth')}
-            </Label>
-            <Input
-              id="generate_month"
-              type="month"
-              lang={i18n.language}
-              value={generateMonth}
-              onChange={(e) => setGenerateMonth(e.target.value)}
-            />
+            <Label>{t('pages.vaults.recurringContributions.generateMonth')}</Label>
+            <div className="mt-xs flex gap-sm">
+              <Select
+                value={String(selectedMonth)}
+                onValueChange={(v) => setSelectedMonth(Number(v))}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONTH_KEYS.map((key, idx) => (
+                    <SelectItem key={key} value={String(idx + 1)}>
+                      {translate('months', key)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={String(selectedYear)}
+                onValueChange={(v) => setSelectedYear(Number(v))}
+              >
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((y) => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <DialogFooter>

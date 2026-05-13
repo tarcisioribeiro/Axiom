@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FileInput } from '@/components/ui/file-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -365,10 +366,9 @@ export function LoanForm({
           <Label htmlFor="contract_document">
             {t('pages.loans.form.contractDocumentLabel')}
           </Label>
-          <Input
+          <FileInput
             id="contract_document"
-            type="file"
-            onChange={(e) => set({ contract_document: e.target.files?.[0] ?? null })}
+            onChange={(file) => set({ contract_document: file ?? null })}
           />
         </div>
 
