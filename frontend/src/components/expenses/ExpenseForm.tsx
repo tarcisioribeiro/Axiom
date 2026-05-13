@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState, useRef } from 'react';
+import { AlertCircle } from 'lucide-react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { formatCurrency } from '@/lib/formatters';
+import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
@@ -191,7 +194,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   }, [expense, prefillData, setValue]);
 
+  const watchedPayed = watch('payed');
+  const watchedAccount = watch('account');
+  const watchedValue = watch('value');
+
+  const balanceInfo = useMemo(() => {
+    if (!watchedPayed || !watchedAccount || watchedValue <= 0) return null;
+    const account = accounts.find((a) => a.id === watchedAccount);
+    if (!account) return null;
+    return getAccountBalanceInfo(account, watchedValue);
+  }, [watchedPayed, watchedAccount, watchedValue, accounts]);
+
   const handleFormSubmit = (data: ExpenseFormData) => {
+    if (data.payed && balanceInfo && !balanceInfo.canPay) return;
     onSubmit(data);
   };
 
@@ -362,11 +377,38 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <p className="text-xs">{t('pages.expenses.form.relatedPayableHint')}</p>
         </div>
       </div>
+
+      {balanceInfo && watchedValue > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            !balanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : 'border-warning/30 bg-warning/10 text-warning'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {!balanceInfo.canPay
+              ? t('common.balance.insufficientEvenWithOverdraft', {
+                  available: formatCurrency(balanceInfo.available.toFixed(2)),
+                })
+              : t('common.balance.overdraftWarningDesc', {
+                  balance: formatCurrency(balanceInfo.balance.toFixed(2)),
+                  overdraft: formatCurrency(balanceInfo.overdraft.toFixed(2)),
+                  total: formatCurrency(balanceInfo.available.toFixed(2)),
+                })}
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          disabled={isLoading || (watchedPayed && !!balanceInfo && !balanceInfo.canPay)}
+        >
           {isLoading
             ? t('common.actions.saving')
             : expense

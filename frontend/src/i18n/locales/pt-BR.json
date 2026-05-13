@@ -139,6 +139,13 @@
     "fileInput": {
       "selectFile": "Escolher arquivo",
       "noFileSelected": "Nenhum arquivo selecionado"
+    },
+    "balance": {
+      "insufficient": "Saldo insuficiente",
+      "insufficientDesc": "Saldo disponível: {{available}}. Valor necessário: {{required}}.",
+      "overdraftWarning": "Cheque especial será utilizado",
+      "overdraftWarningDesc": "Saldo em conta: {{balance}} | Limite do cheque especial: {{overdraft}} | Total disponível: {{total}}",
+      "insufficientEvenWithOverdraft": "Saldo insuficiente mesmo com cheque especial. Total disponível: {{available}}."
     }
   },
   "nav": {
@@ -779,7 +786,14 @@
         "guarantorNone": "Nenhum",
         "notesLabel": "Observações",
         "contractDocumentLabel": "Documento do Contrato",
-        "loanPaidLabel": "Empréstimo Pago"
+        "loanPaidLabel": "Empréstimo Pago",
+        "loanTypeLabel": "Tipo de Operação",
+        "borrowed": "Tomar empréstimo",
+        "lent": "Realizar empréstimo",
+        "generateRevenueLabel": "Gerar receita ao registrar",
+        "generateRevenueHint": "Uma receita vinculada a este empréstimo será criada na conta selecionada.",
+        "generateExpenseLabel": "Gerar despesa ao registrar",
+        "generateExpenseHint": "Uma despesa vinculada a este empréstimo será criada na conta selecionada. O saldo da conta será validado."
       },
       "frequencies": {
         "daily": "Diário",
@@ -796,7 +810,11 @@
         "paid": "Pago",
         "defaulted": "Inadimplente",
         "cancelled": "Cancelado"
-      }
+      },
+      "loanCreatedWithRevenue": "Empréstimo e receita registrados",
+      "loanCreatedWithRevenueDesc": "O empréstimo foi criado e a receita foi registrada na conta.",
+      "loanCreatedWithExpense": "Empréstimo e despesa registrados",
+      "loanCreatedWithExpenseDesc": "O empréstimo foi criado e a despesa foi registrada na conta."
     },
     "members": {
       "title": "Membros",
@@ -1197,7 +1215,8 @@
         "createBtn": "Criar Compra",
         "none": "Nenhum",
         "noCardNumber": "Número não cadastrado",
-        "cashPayment": "À vista"
+        "cashPayment": "À vista",
+        "exceedsLimitBy": "Valor excede o limite em {{value}}"
       },
       "installmentForm": {
         "purchaseLabel": "Compra",
@@ -3421,9 +3440,11 @@
       "step2Desc": "Digite o código de 6 dígitos gerado pelo aplicativo.",
       "enableBtn": "Ativar 2FA",
       "disableBtn": "Desativar 2FA",
+      "disableDesc": "Digite sua senha atual para confirmar a desativação do 2FA.",
       "enableSuccess": "2FA ativado com sucesso",
       "disableSuccess": "2FA desativado com sucesso",
       "invalidCode": "Código inválido",
+      "wrongPassword": "Senha incorreta",
       "backupCodes": "Códigos de backup",
       "backupDesc": "Guarde estes códigos em local seguro. Cada código pode ser usado uma vez.",
       "copyBackup": "Copiar códigos",

@@ -443,6 +443,7 @@ export default function Loans() {
             loan={selectedLoan}
             accounts={accounts}
             members={members}
+            currentUserMemberId={currentMemberId}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}

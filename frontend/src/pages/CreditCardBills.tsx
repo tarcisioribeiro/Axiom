@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -40,10 +40,12 @@ import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { accountsService } from '@/services/accounts-service';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { useAuthStore } from '@/stores/auth-store';
 import type {
+  Account,
   CreditCardBill,
   CreditCardBillFormData,
   CreditCard,
@@ -56,6 +58,7 @@ export default function CreditCardBills() {
   const [bills, setBills] = useState<CreditCardBill[]>([]);
   const [filteredBills, setFilteredBills] = useState<CreditCardBill[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -80,13 +83,15 @@ export default function CreditCardBills() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [billsData, cardsData] = await Promise.all([
+      const [billsData, cardsData, accountsData] = await Promise.all([
         creditCardBillsService.getAll(),
         creditCardsService.getAll(),
+        accountsService.getAll(),
       ]);
       setBills(billsData);
       setFilteredBills(billsData);
       setCreditCards(cardsData);
+      setAccounts(accountsData);
     } catch (error: unknown) {
       toast({
         title: t('common.messages.loadError'),
@@ -230,6 +235,13 @@ export default function CreditCardBills() {
       });
     }
   };
+
+  const billAssociatedAccount = useMemo(() => {
+    if (!selectedBill) return undefined;
+    const card = creditCards.find((c) => c.id === selectedBill.credit_card);
+    if (!card) return undefined;
+    return accounts.find((a) => a.id === card.associated_account);
+  }, [selectedBill, creditCards, accounts]);
 
   const handleOpenPayment = (bill: CreditCardBill) => {
     setSelectedBill(bill);
@@ -644,6 +656,7 @@ export default function CreditCardBills() {
           {selectedBill && (
             <BillPaymentForm
               bill={selectedBill}
+              associatedAccount={billAssociatedAccount}
               onSubmit={handlePayment}
               onCancel={() => setIsPaymentDialogOpen(false)}
               isLoading={isPaymentSubmitting}
