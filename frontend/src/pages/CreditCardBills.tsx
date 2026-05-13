@@ -243,7 +243,10 @@ export default function CreditCardBills() {
       const response = await creditCardBillsService.payBill(selectedBill.id, data);
       toast({
         title: t('pages.creditCardBills.paySuccess'),
-        description: `Pagamento de ${formatCurrency(response.payment.amount)} processado com sucesso. Novo limite: ${formatCurrency(response.card.credit_limit)}`,
+        description: t('pages.creditCardBills.paySuccessDesc', {
+          amount: formatCurrency(response.payment.amount),
+          limit: formatCurrency(response.card.credit_limit),
+        }),
       });
       setIsPaymentDialogOpen(false);
       void loadData();
@@ -261,7 +264,9 @@ export default function CreditCardBills() {
   const handleReopenBill = async (bill: CreditCardBill) => {
     const confirmed = await showConfirm({
       title: t('pages.creditCardBills.reopenTitle'),
-      description: `Deseja reabrir a fatura de ${translate('months', bill.month)}/${bill.year}? Isso permitirá adicionar ou remover lançamentos.`,
+      description: t('pages.creditCardBills.reopenDesc', {
+        period: `${translate('months', bill.month)}/${bill.year}`,
+      }),
       confirmText: t('pages.creditCardBills.reopenBtn'),
       cancelText: t('common.actions.cancel'),
     });
@@ -333,7 +338,8 @@ export default function CreditCardBills() {
           </span>
           {bill.due_date && (
             <span className="text-xs text-muted-foreground">
-              Vence: {formatDate(bill.due_date)}
+              {t('pages.creditCardBills.columns.duePrefix')}:{' '}
+              {formatDate(bill.due_date)}
             </span>
           )}
         </div>
@@ -430,9 +436,9 @@ export default function CreditCardBills() {
               <SelectItem value="all">
                 {t('pages.creditCardBills.allStatus')}
               </SelectItem>
-              {Object.entries(TRANSLATIONS.billStatus).map(([k, v]) => (
+              {Object.keys(TRANSLATIONS.billStatus).map((k) => (
                 <SelectItem key={k} value={k}>
-                  {v}
+                  {translate('billStatus', k)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -490,8 +496,9 @@ export default function CreditCardBills() {
                     {formatCurrency(totalOpen)}
                   </div>
                   <p className="mt-xs text-xs text-muted-foreground">
-                    {openBills.length} fatura{openBills.length !== 1 ? 's' : ''} em
-                    aberto
+                    {t('pages.creditCardBills.stats.openCount', {
+                      count: openBills.length,
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -510,11 +517,9 @@ export default function CreditCardBills() {
                     {formatCurrency(totalPaid)}
                   </div>
                   <p className="mt-xs text-xs text-muted-foreground">
-                    {filteredBills.filter((b) => b.status === 'paid').length} fatura
-                    {filteredBills.filter((b) => b.status === 'paid').length !== 1
-                      ? 's'
-                      : ''}{' '}
-                    pagas
+                    {t('pages.creditCardBills.stats.paidCount', {
+                      count: filteredBills.filter((b) => b.status === 'paid').length,
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -533,7 +538,7 @@ export default function CreditCardBills() {
                     {formatCurrency(totalMinimum)}
                   </div>
                   <p className="mt-xs text-xs text-muted-foreground">
-                    pagamento mínimo das abertas
+                    {t('pages.creditCardBills.stats.minPaymentNote')}
                   </p>
                 </CardContent>
               </Card>

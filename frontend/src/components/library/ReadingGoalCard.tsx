@@ -210,7 +210,7 @@ function GoalPanel({ goal, onEdit, onDelete, showCelebration }: GoalPanelProps) 
               {ltgs.map((ltg) => (
                 <div key={ltg.id} className="space-y-0.5">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>{ltg.literary_type_display}</span>
+                    <span>{t('pages.books.literaryTypes.' + ltg.literary_type)}</span>
                     <span>
                       {ltg.books_read_this_year}/{ltg.goal_count}
                     </span>

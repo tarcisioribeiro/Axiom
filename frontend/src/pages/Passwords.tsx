@@ -397,7 +397,9 @@ export default function Passwords() {
                       variant="outline"
                       className={cn('shrink-0 text-xs', catConfig.badge)}
                     >
-                      {password.category_display}
+                      {t(`pages.passwords.categories.${password.category}`, {
+                        defaultValue: password.category_display,
+                      })}
                     </Badge>
                   </div>
                 </CardHeader>
