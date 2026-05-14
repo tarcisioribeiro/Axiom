@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "budgets",
     "bank_reconciliation",
     "agents",
+    "receivables",
 ]
 
 DATABASES = {

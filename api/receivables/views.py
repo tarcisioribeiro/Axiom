@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
@@ -7,16 +9,19 @@ from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
-from payables.models import Payable, PayableInstallment
-from payables.serializers import PayableInstallmentSerializer, PayableSerializer
+from receivables.models import Receivable, ReceivableInstallment
+from receivables.serializers import (
+    ReceivableInstallmentSerializer,
+    ReceivableSerializer,
+)
 
 
-class PayableCreateListView(BaseListCreateView):
-    queryset = Payable.objects.all()  # GlobalDefaultPermission
-    serializer_class = PayableSerializer
+class ReceivableCreateListView(BaseListCreateView):
+    queryset = Receivable.objects.all()
+    serializer_class = ReceivableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(created_by=self.request.user).select_related(
+        return Receivable.objects.filter(created_by=self.request.user).select_related(
             "member"
         )
 
@@ -24,12 +29,12 @@ class PayableCreateListView(BaseListCreateView):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)
 
 
-class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
-    queryset = Payable.objects.all()  # GlobalDefaultPermission
-    serializer_class = PayableSerializer
+class ReceivableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    queryset = Receivable.objects.all()
+    serializer_class = ReceivableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(created_by=self.request.user).select_related(
+        return Receivable.objects.filter(created_by=self.request.user).select_related(
             "member"
         )
 
@@ -37,27 +42,27 @@ class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         serializer.save(updated_by=self.request.user)
 
 
-class PayableInstallmentListView(APIView):
+class ReceivableInstallmentListView(APIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
-    queryset = PayableInstallment.objects.none()
+    queryset = ReceivableInstallment.objects.none()
 
     def get(self, request, pk):
-        payable = Payable.objects.filter(
+        receivable = Receivable.objects.filter(
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
-        if not payable:
+        if not receivable:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        installments = PayableInstallment.objects.filter(payable=payable).order_by(
-            "installment_number"
-        )
-        serializer = PayableInstallmentSerializer(installments, many=True)
+        installments = ReceivableInstallment.objects.filter(
+            receivable=receivable
+        ).order_by("installment_number")
+        serializer = ReceivableInstallmentSerializer(installments, many=True)
         return Response(serializer.data)
 
     def patch(self, request, pk):
-        payable = Payable.objects.filter(
+        receivable = Receivable.objects.filter(
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
-        if not payable:
+        if not receivable:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         installment_number = request.data.get("installment_number")
         if not installment_number:
@@ -66,14 +71,14 @@ class PayableInstallmentListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            installment = PayableInstallment.objects.get(
-                payable=payable, installment_number=installment_number
+            installment = ReceivableInstallment.objects.get(
+                receivable=receivable, installment_number=installment_number
             )
-        except PayableInstallment.DoesNotExist:
+        except ReceivableInstallment.DoesNotExist:
             return Response(
                 {"detail": "Installment not found."}, status=status.HTTP_404_NOT_FOUND
             )
-        serializer = PayableInstallmentSerializer(
+        serializer = ReceivableInstallmentSerializer(
             installment, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
@@ -81,21 +86,21 @@ class PayableInstallmentListView(APIView):
         return Response(serializer.data)
 
 
-class PayablePaymentView(APIView):
+class ReceivableReceiptView(APIView):
+    """Registra o recebimento de um valor a receber."""
+
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
-    queryset = Payable.objects.none()
+    queryset = Receivable.objects.none()
 
     def post(self, request, pk):
-        from decimal import Decimal
-
         from accounts.models import Account
         from accounts.services import recalculate_account_balance
-        from expenses.models import Expense
+        from revenues.models import Revenue
 
-        payable = Payable.objects.filter(
+        receivable = Receivable.objects.filter(
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
-        if not payable:
+        if not receivable:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
         value = request.data.get("value")
@@ -117,35 +122,35 @@ class PayablePaymentView(APIView):
                 {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
             )
 
-        payed = not scheduled
+        received = not scheduled
 
         with transaction.atomic():
-            expense = Expense.objects.create(
-                description=f"Pagamento: {payable.description}",
+            revenue = Revenue.objects.create(
+                description=f"Recebimento: {receivable.description}",
                 value=value,
                 date=date,
                 horary=timezone.now().time(),
-                category=payable.category,
+                category=receivable.category,
                 account=account,
-                payed=payed,
+                received=received,
                 notes=notes,
-                related_payable=payable,
+                related_receivable=receivable,
                 created_by=request.user,
                 updated_by=request.user,
             )
 
-            if payed:
-                new_paid = payable.paid_value + Decimal(str(value))
-                payable.paid_value = min(new_paid, payable.value)
-                payable.save()
+            if received:
+                new_received = receivable.received_value + Decimal(str(value))
+                receivable.received_value = min(new_received, receivable.value)
+                receivable.save()
                 recalculate_account_balance(account.id)
 
-        from expenses.serializers import ExpenseSerializer
+        from revenues.serializers import RevenueSerializer
 
         return Response(
             {
-                "expense": ExpenseSerializer(expense).data,
-                "payable": PayableSerializer(payable).data,
+                "revenue": RevenueSerializer(revenue).data,
+                "receivable": ReceivableSerializer(receivable).data,
                 "scheduled": scheduled,
             },
             status=status.HTTP_201_CREATED,

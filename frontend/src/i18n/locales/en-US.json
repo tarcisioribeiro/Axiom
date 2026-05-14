@@ -145,7 +145,10 @@
       "insufficientDesc": "Available balance: {{available}}. Required amount: {{required}}.",
       "overdraftWarning": "Overdraft limit will be used",
       "overdraftWarningDesc": "Account balance: {{balance}} | Overdraft limit: {{overdraft}} | Total available: {{total}}",
-      "insufficientEvenWithOverdraft": "Insufficient balance even with overdraft. Total available: {{available}}."
+      "insufficientEvenWithOverdraft": "Insufficient balance even with overdraft. Total available: {{available}}.",
+      "loadingProjected": "Calculating projected balance...",
+      "projectedOn": "Projected balance on {{date}}: {{balance}}",
+      "projectedUnavailable": "Projected balance not available."
     }
   },
   "nav": {
@@ -197,7 +200,8 @@
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
       "goals": "Goals",
-      "bankReconciliation": "Bank Reconciliation"
+      "bankReconciliation": "Bank Reconciliation",
+      "receivables": "Receivables"
     },
     "agents": "AI Agents"
   },
@@ -814,7 +818,31 @@
       "loanCreatedWithRevenue": "Loan and revenue registered",
       "loanCreatedWithRevenueDesc": "The loan was created and the revenue was registered in the account.",
       "loanCreatedWithExpense": "Loan and expense registered",
-      "loanCreatedWithExpenseDesc": "The loan was created and the expense was registered in the account."
+      "loanCreatedWithExpenseDesc": "The loan was created and the expense was registered in the account.",
+      "receiveBtn": "Receive Amount",
+      "receipt": {
+        "title": "Receive Amount",
+        "receiveNow": "Receive now",
+        "schedule": "Schedule",
+        "scheduledDate": "Scheduled date",
+        "value": "Amount",
+        "account": "Account",
+        "date": "Date",
+        "notes": "Notes",
+        "submit": "Register",
+        "scheduleBtn": "Schedule",
+        "success": "Receipt registered",
+        "successDesc": "The receipt was registered and the balance has been updated.",
+        "scheduledSuccess": "Receipt scheduled",
+        "scheduledSuccessDesc": "The receipt has been scheduled for {{date}}."
+      },
+      "filter": {
+        "all": "All",
+        "benefited": "Beneficiary",
+        "creditor": "Creditor"
+      },
+      "receivedAmount": "{{value}} received",
+      "toReceiveAmount": "{{value}} to receive"
     },
     "members": {
       "title": "Members",
@@ -1285,7 +1313,14 @@
         "notes": "Notes",
         "submit": "Register",
         "success": "Payment registered successfully.",
-        "successDesc": "The payment was registered and the balance has been updated."
+        "successDesc": "The payment was registered and the balance has been updated.",
+        "payNow": "Pay now",
+        "schedule": "Schedule",
+        "scheduledDate": "Scheduled date",
+        "scheduleBtn": "Schedule",
+        "scheduledSuccess": "Payment scheduled",
+        "scheduledSuccessDesc": "The payment has been scheduled for {{date}}.",
+        "exceedsRemaining": "The amount exceeds the remaining balance ({{remaining}})"
       },
       "stats": {
         "total": "Total Payables",
@@ -3874,6 +3909,74 @@
           "warning": "This password must match the one configured in the MinIO service. A mismatch causes authentication failure and makes file storage inaccessible."
         }
       }
+    },
+    "receivables": {
+      "title": "Receivables",
+      "newBtn": "New Receivable",
+      "editTitle": "Edit Receivable",
+      "newTitle": "New Receivable",
+      "editDesc": "Update the receivable information",
+      "newDesc": "Fill in the new receivable information",
+      "deleteTitle": "Confirm deletion",
+      "deleteDesc": "Are you sure you want to delete the receivable \"{{name}}\"?",
+      "created": "Receivable created",
+      "createdDesc": "The receivable was created successfully.",
+      "updated": "Receivable updated",
+      "updatedDesc": "The receivable was updated successfully.",
+      "deleted": "Receivable deleted",
+      "deletedDesc": "The receivable was deleted successfully.",
+      "emptySearch": "No receivables found for the current search.",
+      "emptyState": "No receivables registered. Click \"New Receivable\" to get started.",
+      "searchPlaceholder": "Search receivables...",
+      "totalValue": "Total Value:",
+      "receivedValue": "Received Value:",
+      "remainingBalance": "Remaining Balance:",
+      "registrationDate": "Registration Date:",
+      "responsible": "Responsible:",
+      "receiveBtn": "Receive",
+      "stats": {
+        "total": "Total Receivable",
+        "active": "Active",
+        "overdue": "Overdue",
+        "received": "Received",
+        "totalSubtitle": "total value",
+        "activeSubtitle": "open",
+        "overdueSubtitle": "overdue",
+        "receivedSubtitle": "received"
+      },
+      "status": {
+        "active": "Active",
+        "received": "Received",
+        "overdue": "Overdue",
+        "cancelled": "Cancelled"
+      },
+      "receipt": {
+        "title": "Register Receipt",
+        "receiveNow": "Receive now",
+        "schedule": "Schedule",
+        "scheduledDate": "Scheduled date",
+        "value": "Amount",
+        "account": "Account",
+        "date": "Date",
+        "notes": "Notes",
+        "submit": "Register",
+        "scheduleBtn": "Schedule",
+        "success": "Receipt registered",
+        "successDesc": "The receipt was registered and the balance has been updated.",
+        "scheduledSuccess": "Receipt scheduled",
+        "scheduledSuccessDesc": "The receipt has been scheduled for {{date}}."
+      },
+      "form": {
+        "description": "Description *",
+        "descriptionPlaceholder": "E.g.: Service charge, Product sale",
+        "value": "Total Value *",
+        "category": "Category *",
+        "date": "Registration Date *",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "notes": "Notes"
+      },
+      "paidAmount": "{{value}} received"
     }
   },
   "userProfile": {

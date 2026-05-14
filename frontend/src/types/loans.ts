@@ -76,6 +76,14 @@ export interface LoanPaymentRequest {
   notes?: string;
 }
 
+export interface LoanReceiptRequest {
+  value: number;
+  account: number;
+  date: string;
+  notes?: string;
+  scheduled?: boolean;
+}
+
 export interface AmortizationEntry {
   installment: number;
   due_date: string;
