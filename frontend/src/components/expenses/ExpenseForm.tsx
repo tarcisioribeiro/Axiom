@@ -22,6 +22,7 @@ import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { expenseSchema } from '@/lib/validations';
+import { accountsService } from '@/services/accounts-service';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
 import { membersService } from '@/services/members-service';
 import type {
@@ -197,16 +198,64 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const watchedPayed = watch('payed');
   const watchedAccount = watch('account');
   const watchedValue = watch('value');
+  const watchedDate = watch('date');
+  const today = formatLocalDate(new Date());
+  const isFutureDate = watchedDate > today;
+
+  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
+  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
+
+  useEffect(() => {
+    if (!watchedAccount || !watchedDate || !(watchedValue > 0) || !isFutureDate) {
+      setProjectedBalance(null);
+      return;
+    }
+    setIsLoadingProjected(true);
+    accountsService
+      .getProjectedBalance(watchedAccount, watchedDate)
+      .then((data) => setProjectedBalance(data.projected_balance))
+      .catch(() => setProjectedBalance(null))
+      .finally(() => setIsLoadingProjected(false));
+  }, [watchedAccount, watchedDate, watchedValue, isFutureDate]);
 
   const balanceInfo = useMemo(() => {
+    if (isFutureDate) return null;
     if (!watchedPayed || !watchedAccount || watchedValue <= 0) return null;
     const account = accounts.find((a) => a.id === watchedAccount);
     if (!account) return null;
     return getAccountBalanceInfo(account, watchedValue);
-  }, [watchedPayed, watchedAccount, watchedValue, accounts]);
+  }, [watchedPayed, watchedAccount, watchedValue, accounts, isFutureDate]);
+
+  const futureBalanceInfo = useMemo(() => {
+    if (!isFutureDate || watchedValue <= 0 || !watchedAccount) return null;
+    const account = accounts.find((a) => a.id === watchedAccount);
+    if (!account) return null;
+    const overdraft = parseFloat(account.overdraft_limit ?? '0');
+    if (watchedPayed) {
+      return getAccountBalanceInfo(account, watchedValue);
+    }
+    if (projectedBalance === null) return null;
+    const proj = parseFloat(projectedBalance);
+    const available = proj + overdraft;
+    return {
+      balance: proj,
+      overdraft,
+      available,
+      canPay: available >= watchedValue,
+      isUsingOverdraft: proj < watchedValue && available >= watchedValue,
+    };
+  }, [
+    isFutureDate,
+    watchedValue,
+    watchedAccount,
+    watchedPayed,
+    projectedBalance,
+    accounts,
+  ]);
 
   const handleFormSubmit = (data: ExpenseFormData) => {
     if (data.payed && balanceInfo && !balanceInfo.canPay) return;
+    if (futureBalanceInfo && !futureBalanceInfo.canPay) return;
     onSubmit(data);
   };
 
@@ -378,6 +427,39 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
       </div>
 
+      {isFutureDate && watchedAccount && watchedValue > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            futureBalanceInfo && !futureBalanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : futureBalanceInfo?.isUsingOverdraft
+                ? 'border-warning/30 bg-warning/10 text-warning'
+                : 'border-info/30 bg-info/10 text-info'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {isLoadingProjected
+              ? t('common.balance.loadingProjected')
+              : futureBalanceInfo && !futureBalanceInfo.canPay
+                ? t('common.balance.insufficientEvenWithOverdraft', {
+                    available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                  })
+                : futureBalanceInfo?.isUsingOverdraft
+                  ? t('common.balance.overdraftWarningDesc', {
+                      balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+                      overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+                      total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                    })
+                  : projectedBalance !== null
+                    ? t('common.balance.projectedOn', {
+                        date: watchedDate,
+                        balance: formatCurrency(projectedBalance),
+                      })
+                    : t('common.balance.projectedUnavailable')}
+          </p>
+        </div>
+      )}
       {balanceInfo && watchedValue > 0 && (
         <div
           className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
@@ -407,7 +489,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </Button>
         <Button
           type="submit"
-          disabled={isLoading || (watchedPayed && !!balanceInfo && !balanceInfo.canPay)}
+          disabled={
+            isLoading ||
+            (watchedPayed && !!balanceInfo && !balanceInfo.canPay) ||
+            (!!futureBalanceInfo && !futureBalanceInfo.canPay)
+          }
         >
           {isLoading
             ? t('common.actions.saving')

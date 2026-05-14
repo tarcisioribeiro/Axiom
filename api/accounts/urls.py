@@ -11,4 +11,9 @@ urlpatterns = [
         views.AccountRetrieveUpdateDestroyView.as_view(),
         name="account-detail-view",
     ),
+    path(
+        "accounts/<int:pk>/projected-balance/",
+        views.AccountProjectedBalanceView.as_view(),
+        name="account-projected-balance",
+    ),
 ]

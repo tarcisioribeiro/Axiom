@@ -24,6 +24,7 @@ import { LoanAmortizationDialog } from '@/components/loans/LoanAmortizationDialo
 import { LoanForm } from '@/components/loans/LoanForm';
 import { LoanInstallmentsDialog } from '@/components/loans/LoanInstallmentsDialog';
 import { LoanPaymentDialog } from '@/components/loans/LoanPaymentDialog';
+import { LoanReceiptDialog } from '@/components/loans/LoanReceiptDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ export default function Loans() {
     loans,
     accounts,
     members,
+    currentUserMemberId,
     isLoading,
     isDialogOpen,
     setIsDialogOpen,
@@ -79,6 +81,7 @@ export default function Loans() {
 
   const [roleFilter, setRoleFilter] = useState<LoanRole>('all');
   const [paymentLoan, setPaymentLoan] = useState<Loan | null>(null);
+  const [receiptLoan, setReceiptLoan] = useState<Loan | null>(null);
 
   const [installmentsLoan, setInstallmentsLoan] = useState<Loan | null>(null);
   const [installments, setInstallments] = useState<LoanInstallment[]>([]);
@@ -121,18 +124,13 @@ export default function Loans() {
     }
   };
 
-  const currentMemberId = useMemo(
-    () => members.find((m) => m.user === user?.id)?.id ?? null,
-    [members, user?.id]
-  );
-
   const roleFilteredLoans = useMemo(() => {
-    if (roleFilter === 'benefited' && currentMemberId !== null)
-      return filteredLoans.filter((l) => l.benefited === currentMemberId);
-    if (roleFilter === 'creditor' && currentMemberId !== null)
-      return filteredLoans.filter((l) => l.creditor === currentMemberId);
+    if (roleFilter === 'benefited' && currentUserMemberId !== null)
+      return filteredLoans.filter((l) => l.benefited === currentUserMemberId);
+    if (roleFilter === 'creditor' && currentUserMemberId !== null)
+      return filteredLoans.filter((l) => l.creditor === currentUserMemberId);
     return filteredLoans;
-  }, [filteredLoans, roleFilter, currentMemberId]);
+  }, [filteredLoans, roleFilter, currentUserMemberId]);
 
   const { activeCount, paidCount, totalDebt } = useMemo(() => {
     const active = loans.filter((l) => l.status === 'active');
@@ -229,15 +227,15 @@ export default function Loans() {
       </div>
 
       <div className="flex flex-wrap items-center gap-md">
-        {currentMemberId !== null && (
+        {currentUserMemberId !== null && (
           <div className="flex overflow-hidden rounded-lg border">
             {(
               [
-                { key: 'all', label: 'Todos', icon: '📋' },
-                { key: 'benefited', label: 'Beneficiário', icon: '🤲' },
-                { key: 'creditor', label: 'Credor', icon: '🏦' },
-              ] as { key: LoanRole; label: string; icon: string }[]
-            ).map(({ key, label, icon }) => (
+                { key: 'all', icon: '📋' },
+                { key: 'benefited', icon: '🤲' },
+                { key: 'creditor', icon: '🏦' },
+              ] as { key: LoanRole; icon: string }[]
+            ).map(({ key, icon }) => (
               <button
                 key={key}
                 type="button"
@@ -250,7 +248,7 @@ export default function Loans() {
                 )}
               >
                 <span>{icon}</span>
-                {label}
+                {t(`pages.loans.filter.${key}`)}
               </button>
             ))}
           </div>
@@ -270,6 +268,7 @@ export default function Loans() {
             const total = parseFloat(loan.value);
             const paid = parseFloat(loan.payed_value);
             const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+            const isCreditor = loan.creditor === currentUserMemberId;
             return (
               <div
                 key={loan.id}
@@ -308,14 +307,24 @@ export default function Loans() {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-success">
-                      {t('pages.loans.paidAmount', {
-                        value: formatCurrency(loan.payed_value),
-                      })}
+                      {t(
+                        isCreditor
+                          ? 'pages.loans.receivedAmount'
+                          : 'pages.loans.paidAmount',
+                        {
+                          value: formatCurrency(loan.payed_value),
+                        }
+                      )}
                     </span>
                     <span className="text-destructive">
-                      {t('pages.loans.remainingAmount', {
-                        value: formatCurrency(total - paid),
-                      })}
+                      {t(
+                        isCreditor
+                          ? 'pages.loans.toReceiveAmount'
+                          : 'pages.loans.remainingAmount',
+                        {
+                          value: formatCurrency(total - paid),
+                        }
+                      )}
                     </span>
                   </div>
                 </div>
@@ -358,16 +367,30 @@ export default function Loans() {
                 </div>
 
                 <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPaymentLoan(loan)}
-                    title={t('pages.loans.payment.title')}
-                    className="gap-xs text-xs"
-                  >
-                    <CreditCard className="h-3 w-3" />
-                    {t('pages.loans.payBtn')}
-                  </Button>
+                  {Number(loan.creditor) === currentUserMemberId ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setReceiptLoan(loan)}
+                      title={t('pages.loans.receipt.title')}
+                      className="gap-xs text-xs text-success"
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      {t('pages.loans.receiveBtn')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPaymentLoan(loan)}
+                      disabled={Number(loan.benefited) !== currentUserMemberId}
+                      title={t('pages.loans.payment.title')}
+                      className="gap-xs text-xs"
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      {t('pages.loans.payBtn')}
+                    </Button>
+                  )}
                   {loan.installments > 1 && (
                     <Button
                       variant="outline"
@@ -443,7 +466,7 @@ export default function Loans() {
             loan={selectedLoan}
             accounts={accounts}
             members={members}
-            currentUserMemberId={currentMemberId}
+            currentUserMemberId={currentUserMemberId}
             onSubmit={handleSubmit}
             onCancel={() => setIsDialogOpen(false)}
             isLoading={isSubmitting}
@@ -455,6 +478,12 @@ export default function Loans() {
         loan={paymentLoan}
         accounts={accounts}
         onClose={() => setPaymentLoan(null)}
+      />
+
+      <LoanReceiptDialog
+        loan={receiptLoan}
+        accounts={accounts}
+        onClose={() => setReceiptLoan(null)}
       />
 
       <LoanInstallmentsDialog

@@ -3,6 +3,7 @@ import type {
   AmortizationSchedule,
   LoanInstallment,
   LoanPaymentRequest,
+  LoanReceiptRequest,
 } from '@/types';
 
 import { apiClient } from './api-client';
@@ -31,6 +32,10 @@ class LoanInstallmentsService {
 
   async pay(loanId: number, data: LoanPaymentRequest): Promise<unknown> {
     return apiClient.post(API_CONFIG.ENDPOINTS.LOAN_PAYMENT(loanId), data);
+  }
+
+  async receive(loanId: number, data: LoanReceiptRequest): Promise<unknown> {
+    return apiClient.post(API_CONFIG.ENDPOINTS.LOAN_RECEIPT(loanId), data);
   }
 
   async getAmortization(

@@ -644,6 +644,11 @@ class PayCreditCardBillSerializer(serializers.Serializer):
         allow_blank=True,
         help_text="Observações sobre o pagamento",
     )
+    scheduled = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Se True, cria a despesa como pendente (agendamento futuro)",
+    )
 
     def validate_amount(self, value):
         if value <= 0:

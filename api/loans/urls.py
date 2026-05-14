@@ -20,6 +20,11 @@ urlpatterns = [
         name="loan-payment",
     ),
     path(
+        "loans/<int:pk>/receive/",
+        views.LoanReceiptView.as_view(),
+        name="loan-receipt",
+    ),
+    path(
         "loans/<int:pk>/amortization/",
         views.LoanAmortizationView.as_view(),
         name="loan-amortization",

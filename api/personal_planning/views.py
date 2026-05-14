@@ -704,7 +704,7 @@ class PersonalPlanningDashboardStatsView(APIView):
                 {
                     "title": goal.title,
                     "progress_percentage": round(goal.progress_percentage, 1),
-                    "current_value": goal.current_value,
+                    "current_value": goal.calculated_current_value,
                     "target_value": goal.target_value,
                     "days_active": goal.days_active,
                 }

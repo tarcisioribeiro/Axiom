@@ -89,6 +89,7 @@ export interface BillPaymentFormData {
   amount: number;
   payment_date: string;
   notes?: string;
+  scheduled?: boolean;
 }
 
 export interface BillPaymentResponse {
