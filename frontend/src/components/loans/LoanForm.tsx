@@ -111,6 +111,24 @@ export function LoanForm({
 
   const isEditing = !!loan;
 
+  const eligibleCreditors = useMemo(
+    () =>
+      members.filter(
+        (m) => m.is_creditor && (!currentUserMemberId || m.id !== currentUserMemberId)
+      ),
+    [members, currentUserMemberId]
+  );
+
+  const eligibleBeneficiaries = useMemo(
+    () =>
+      members.filter(
+        (m) =>
+          (m.is_benefited || !m.is_creditor) &&
+          (!currentUserMemberId || m.id !== currentUserMemberId)
+      ),
+    [members, currentUserMemberId]
+  );
+
   const balanceInfo = useMemo(() => {
     if (isEditing) return null;
     if (formData.loan_type !== 'lent' || !formData.generate_expense) return null;
@@ -143,7 +161,6 @@ export function LoanForm({
               value={formData.loan_type ?? 'borrowed'}
               onValueChange={(value) => {
                 const type = value as 'borrowed' | 'lent';
-                const otherMember = members.find((m) => m.id !== currentUserMemberId);
                 set({
                   loan_type: type,
                   generate_revenue: false,
@@ -151,13 +168,13 @@ export function LoanForm({
                   ...(type === 'borrowed' && currentUserMemberId
                     ? {
                         benefited: currentUserMemberId,
-                        creditor: otherMember?.id ?? members[0]?.id ?? 0,
+                        creditor: eligibleCreditors[0]?.id ?? 0,
                       }
                     : {}),
                   ...(type === 'lent' && currentUserMemberId
                     ? {
                         creditor: currentUserMemberId,
-                        benefited: otherMember?.id ?? members[0]?.id ?? 0,
+                        benefited: eligibleBeneficiaries[0]?.id ?? 0,
                       }
                     : {}),
                 });
@@ -289,13 +306,16 @@ export function LoanForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {members
-                  .filter((m) => !currentUserMemberId || m.id !== currentUserMemberId)
-                  .map((m) => (
-                    <SelectItem key={m.id} value={m.id.toString()}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
+                {(isEditing
+                  ? members.filter(
+                      (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                    )
+                  : eligibleBeneficiaries
+                ).map((m) => (
+                  <SelectItem key={m.id} value={m.id.toString()}>
+                    {m.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -312,13 +332,16 @@ export function LoanForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {members
-                  .filter((m) => !currentUserMemberId || m.id !== currentUserMemberId)
-                  .map((m) => (
-                    <SelectItem key={m.id} value={m.id.toString()}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
+                {(isEditing
+                  ? members.filter(
+                      (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                    )
+                  : eligibleCreditors
+                ).map((m) => (
+                  <SelectItem key={m.id} value={m.id.toString()}>
+                    {m.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

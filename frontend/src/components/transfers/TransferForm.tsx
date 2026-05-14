@@ -1,5 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -18,6 +18,7 @@ import { TRANSLATIONS } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
 import type { Transfer, TransferFormData, Account } from '@/types';
 
 interface TransferFormProps {
@@ -59,14 +60,63 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   });
 
   const watchedOriginAccount = watch('origin_account');
+  const watchedTransfered = watch('transfered');
   const watchedValue = watch('value');
+  const watchedDate = watch('date');
+  const today = formatLocalDate(new Date());
+  const isFutureDate = watchedDate > today;
+
+  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
+  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
 
   const balanceInfo = useMemo(() => {
+    if (isFutureDate) return null;
     if (!watchedOriginAccount || !watchedValue || watchedValue <= 0) return null;
     const account = accounts.find((a) => a.id === watchedOriginAccount);
     if (!account) return null;
     return getAccountBalanceInfo(account, watchedValue);
-  }, [watchedOriginAccount, watchedValue, accounts]);
+  }, [watchedOriginAccount, watchedValue, accounts, isFutureDate]);
+
+  const futureBalanceInfo = useMemo(() => {
+    if (!isFutureDate || !watchedValue || watchedValue <= 0 || !watchedOriginAccount)
+      return null;
+    const account = accounts.find((a) => a.id === watchedOriginAccount);
+    if (!account) return null;
+    const overdraft = parseFloat(account.overdraft_limit ?? '0');
+    if (watchedTransfered) {
+      return getAccountBalanceInfo(account, watchedValue);
+    }
+    if (projectedBalance === null) return null;
+    const proj = parseFloat(projectedBalance);
+    const available = proj + overdraft;
+    return {
+      balance: proj,
+      overdraft,
+      available,
+      canPay: available >= watchedValue,
+      isUsingOverdraft: proj < watchedValue && available >= watchedValue,
+    };
+  }, [
+    isFutureDate,
+    watchedValue,
+    watchedOriginAccount,
+    watchedTransfered,
+    projectedBalance,
+    accounts,
+  ]);
+
+  useEffect(() => {
+    if (!watchedOriginAccount || !watchedDate || !watchedValue || !isFutureDate) {
+      setProjectedBalance(null);
+      return;
+    }
+    setIsLoadingProjected(true);
+    accountsService
+      .getProjectedBalance(watchedOriginAccount, watchedDate)
+      .then((data) => setProjectedBalance(data.projected_balance))
+      .catch(() => setProjectedBalance(null))
+      .finally(() => setIsLoadingProjected(false));
+  }, [watchedOriginAccount, watchedDate, watchedValue, isFutureDate]);
 
   // Auto-selecionar contas ao abrir o formulário (modo criação)
   useEffect(() => {
@@ -216,6 +266,39 @@ export const TransferForm: React.FC<TransferFormProps> = ({
           </Label>
         </div>
       </div>
+      {isFutureDate && watchedOriginAccount && watchedValue > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            futureBalanceInfo && !futureBalanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : futureBalanceInfo?.isUsingOverdraft
+                ? 'border-warning/30 bg-warning/10 text-warning'
+                : 'border-info/30 bg-info/10 text-info'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {isLoadingProjected
+              ? t('common.balance.loadingProjected')
+              : futureBalanceInfo && !futureBalanceInfo.canPay
+                ? t('common.balance.insufficientEvenWithOverdraft', {
+                    available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                  })
+                : futureBalanceInfo?.isUsingOverdraft
+                  ? t('common.balance.overdraftWarningDesc', {
+                      balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+                      overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+                      total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                    })
+                  : projectedBalance !== null
+                    ? t('common.balance.projectedOn', {
+                        date: watchedDate,
+                        balance: formatCurrency(projectedBalance),
+                      })
+                    : t('common.balance.projectedUnavailable')}
+          </p>
+        </div>
+      )}
       {balanceInfo && watchedValue > 0 && (
         <div
           className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
@@ -245,7 +328,11 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         </Button>
         <Button
           type="submit"
-          disabled={isLoading || (!!balanceInfo && !balanceInfo.canPay)}
+          disabled={
+            isLoading ||
+            (!!balanceInfo && !balanceInfo.canPay) ||
+            (!!futureBalanceInfo && !futureBalanceInfo.canPay)
+          }
         >
           {isLoading
             ? t('common.actions.saving')
