@@ -18,6 +18,7 @@ export interface UseLoansPageReturn {
   loans: Loan[];
   accounts: Account[];
   members: Member[];
+  currentUserMemberId: number | null;
   isLoading: boolean;
   isDialogOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
@@ -79,6 +80,14 @@ export function useLoansPage(): UseLoansPageReturn {
     select: (data) => (Array.isArray(data) ? data : []),
   });
 
+  const { data: currentUserMember } = useQuery({
+    queryKey: ['members', 'me'],
+    queryFn: () => membersService.getCurrentUserMember(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const currentUserMemberId = currentUserMember?.id ?? null;
+
   const invalidateLoans = () => queryClient.invalidateQueries({ queryKey: ['loans'] });
 
   const createMutation = useMutation({
@@ -97,10 +106,9 @@ export function useLoansPage(): UseLoansPageReturn {
           value: parseFloat(loan.value),
           date: loan.date,
           horary,
-          category: loan.category,
+          category: 'received_loan',
           account: loan.account,
           received: true,
-          related_loan: loan.id,
         });
       }
 
@@ -113,7 +121,6 @@ export function useLoansPage(): UseLoansPageReturn {
           category: loan.category,
           account: loan.account,
           payed: true,
-          related_loan: loan.id,
         });
       }
 
@@ -248,6 +255,7 @@ export function useLoansPage(): UseLoansPageReturn {
     loans,
     accounts,
     members,
+    currentUserMemberId,
     isLoading,
     isDialogOpen,
     setIsDialogOpen,

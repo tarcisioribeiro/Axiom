@@ -89,6 +89,8 @@ INSTALLED_APPS = [
     "personal_planning",
     # Payables Module
     "payables",
+    # Receivables Module
+    "receivables",
     # Vaults Module (Cofres)
     "vaults",
     # Notifications Module

@@ -145,7 +145,10 @@
       "insufficientDesc": "Saldo disponível: {{available}}. Valor necessário: {{required}}.",
       "overdraftWarning": "Cheque especial será utilizado",
       "overdraftWarningDesc": "Saldo em conta: {{balance}} | Limite do cheque especial: {{overdraft}} | Total disponível: {{total}}",
-      "insufficientEvenWithOverdraft": "Saldo insuficiente mesmo com cheque especial. Total disponível: {{available}}."
+      "insufficientEvenWithOverdraft": "Saldo insuficiente mesmo com cheque especial. Total disponível: {{available}}.",
+      "loadingProjected": "Calculando saldo projetado...",
+      "projectedOn": "Saldo projetado em {{date}}: {{balance}}",
+      "projectedUnavailable": "Saldo projetado não disponível."
     }
   },
   "nav": {
@@ -197,7 +200,8 @@
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
       "goals": "Objetivos",
-      "bankReconciliation": "Conciliação Bancária"
+      "bankReconciliation": "Conciliação Bancária",
+      "receivables": "Valores a Receber"
     },
     "agents": "Agentes IA"
   },
@@ -814,7 +818,31 @@
       "loanCreatedWithRevenue": "Empréstimo e receita registrados",
       "loanCreatedWithRevenueDesc": "O empréstimo foi criado e a receita foi registrada na conta.",
       "loanCreatedWithExpense": "Empréstimo e despesa registrados",
-      "loanCreatedWithExpenseDesc": "O empréstimo foi criado e a despesa foi registrada na conta."
+      "loanCreatedWithExpenseDesc": "O empréstimo foi criado e a despesa foi registrada na conta.",
+      "receiveBtn": "Receber Valor",
+      "receipt": {
+        "title": "Receber Valor",
+        "receiveNow": "Receber agora",
+        "schedule": "Agendar",
+        "scheduledDate": "Data agendada",
+        "value": "Valor",
+        "account": "Conta",
+        "date": "Data",
+        "notes": "Observações",
+        "submit": "Registrar",
+        "scheduleBtn": "Agendar",
+        "success": "Recebimento registrado",
+        "successDesc": "O recebimento foi registrado e o saldo foi atualizado.",
+        "scheduledSuccess": "Recebimento agendado",
+        "scheduledSuccessDesc": "O recebimento foi agendado para {{date}}."
+      },
+      "filter": {
+        "all": "Todos",
+        "benefited": "Beneficiário",
+        "creditor": "Credor"
+      },
+      "receivedAmount": "{{value}} recebido",
+      "toReceiveAmount": "{{value}} a receber"
     },
     "members": {
       "title": "Membros",
@@ -1285,7 +1313,14 @@
         "notes": "Observações",
         "submit": "Registrar",
         "success": "Pagamento registrado com sucesso.",
-        "successDesc": "O pagamento foi registrado e o saldo foi atualizado."
+        "successDesc": "O pagamento foi registrado e o saldo foi atualizado.",
+        "payNow": "Pagar agora",
+        "schedule": "Agendar",
+        "scheduledDate": "Data agendada",
+        "scheduleBtn": "Agendar",
+        "scheduledSuccess": "Pagamento agendado",
+        "scheduledSuccessDesc": "O pagamento foi agendado para {{date}}.",
+        "exceedsRemaining": "O valor informado excede o saldo restante ({{remaining}})"
       },
       "stats": {
         "total": "Total a Pagar",
@@ -3944,6 +3979,74 @@
           "warning": "Esta senha deve ser idêntica à configurada no serviço MinIO. Uma divergência causa falha de autenticação e torna o armazenamento de arquivos inacessível."
         }
       }
+    },
+    "receivables": {
+      "title": "Valores a Receber",
+      "newBtn": "Novo Valor a Receber",
+      "editTitle": "Editar Valor a Receber",
+      "newTitle": "Novo Valor a Receber",
+      "editDesc": "Atualize as informações do valor a receber",
+      "newDesc": "Preencha as informações do novo valor a receber",
+      "deleteTitle": "Confirmar exclusão",
+      "deleteDesc": "Tem certeza que deseja excluir o valor a receber \"{{name}}\"?",
+      "created": "Valor a receber criado",
+      "createdDesc": "O valor a receber foi criado com sucesso.",
+      "updated": "Valor a receber atualizado",
+      "updatedDesc": "O valor a receber foi atualizado com sucesso.",
+      "deleted": "Valor a receber excluído",
+      "deletedDesc": "O valor a receber foi excluído com sucesso.",
+      "emptySearch": "Nenhum valor a receber encontrado para a pesquisa atual.",
+      "emptyState": "Nenhum valor a receber cadastrado. Clique em \"Novo Valor a Receber\" para começar.",
+      "searchPlaceholder": "Buscar valores a receber...",
+      "totalValue": "Valor Total:",
+      "receivedValue": "Valor Recebido:",
+      "remainingBalance": "Saldo Restante:",
+      "registrationDate": "Data de Registro:",
+      "responsible": "Responsável:",
+      "receiveBtn": "Receber",
+      "stats": {
+        "total": "Total a Receber",
+        "active": "Ativos",
+        "overdue": "Vencidos",
+        "received": "Recebidos",
+        "totalSubtitle": "valor total",
+        "activeSubtitle": "em aberto",
+        "overdueSubtitle": "vencidos",
+        "receivedSubtitle": "recebidos"
+      },
+      "status": {
+        "active": "Ativo",
+        "received": "Recebido",
+        "overdue": "Vencido",
+        "cancelled": "Cancelado"
+      },
+      "receipt": {
+        "title": "Registrar Recebimento",
+        "receiveNow": "Receber agora",
+        "schedule": "Agendar",
+        "scheduledDate": "Data agendada",
+        "value": "Valor",
+        "account": "Conta",
+        "date": "Data",
+        "notes": "Observações",
+        "submit": "Registrar",
+        "scheduleBtn": "Agendar",
+        "success": "Recebimento registrado",
+        "successDesc": "O recebimento foi registrado e o saldo foi atualizado.",
+        "scheduledSuccess": "Recebimento agendado",
+        "scheduledSuccessDesc": "O recebimento foi agendado para {{date}}."
+      },
+      "form": {
+        "description": "Descrição *",
+        "descriptionPlaceholder": "Ex: Cobrança de serviço, Venda de produto",
+        "value": "Valor Total *",
+        "category": "Categoria *",
+        "date": "Data de Registro *",
+        "dueDate": "Data de Vencimento",
+        "status": "Status",
+        "notes": "Observações"
+      },
+      "paidAmount": "{{value}} recebido"
     }
   },
   "userProfile": {

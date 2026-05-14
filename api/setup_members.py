@@ -35,6 +35,7 @@ apps = [
     "library",
     "personal_planning",
     "payables",
+    "receivables",
     "vaults",
     "notifications",
     "budgets",

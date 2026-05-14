@@ -145,6 +145,73 @@ class LoanPaymentView(APIView):
         )
 
 
+class LoanReceiptView(APIView):
+    """Registra o recebimento de valor em um empréstimo onde o usuário é credor."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Loan.objects.none()
+
+    def post(self, request, pk):
+        from accounts.models import Account
+        from accounts.services import recalculate_account_balance
+        from revenues.models import Revenue
+
+        loan = Loan.objects.filter(
+            pk=pk, created_by=request.user, is_deleted=False
+        ).first()
+        if not loan:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        value = request.data.get("value")
+        account_id = request.data.get("account")
+        date = request.data.get("date")
+        notes = request.data.get("notes", "")
+        scheduled = request.data.get("scheduled", False)
+
+        if not all([value, account_id, date]):
+            return Response(
+                {"detail": "value, account and date are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            account = Account.objects.get(pk=account_id, is_deleted=False)
+        except Account.DoesNotExist:
+            return Response(
+                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        received = not scheduled
+
+        with transaction.atomic():
+            revenue = Revenue.objects.create(
+                description=f"Recebimento: {loan.description}",
+                value=value,
+                date=date,
+                horary=timezone.now().time(),
+                category=loan.category,
+                account=account,
+                received=received,
+                notes=notes,
+                related_loan=loan,
+                created_by=request.user,
+                updated_by=request.user,
+            )
+            if received:
+                recalculate_account_balance(account.id)
+
+        from revenues.serializers import RevenueSerializer
+
+        return Response(
+            {
+                "revenue": RevenueSerializer(revenue).data,
+                "loan": LoanSerializer(loan).data,
+                "scheduled": scheduled,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class LoanAmortizationView(APIView):
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Loan.objects.none()
