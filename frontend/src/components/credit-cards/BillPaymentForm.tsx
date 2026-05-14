@@ -1,5 +1,12 @@
-import { CreditCard, Calendar, Wallet, Building2, AlertCircle } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import {
+  CreditCard,
+  Calendar,
+  Wallet,
+  Building2,
+  AlertCircle,
+  CalendarClock,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +19,7 @@ import { translate } from '@/config/constants';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
 import type { Account, CreditCardBill, BillPaymentFormData } from '@/types';
 
 interface BillPaymentFormProps {
@@ -31,6 +39,11 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const remaining = parseFloat(bill.total_amount) - parseFloat(bill.paid_amount);
+  const today = formatLocalDate(new Date());
+
+  const [scheduled, setScheduled] = useState(false);
+  const [projectedBalance, setProjectedBalance] = useState<string | null>(null);
+  const [isLoadingProjected, setIsLoadingProjected] = useState(false);
 
   const {
     register,
@@ -41,31 +54,81 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
   } = useForm<BillPaymentFormData>({
     defaultValues: {
       amount: remaining > 0 ? remaining : 0,
-      payment_date: formatLocalDate(new Date()),
+      payment_date: today,
       notes: '',
+      scheduled: false,
     },
   });
 
   useEffect(() => {
-    // Definir valor inicial como o saldo restante
     if (remaining > 0) {
       setValue('amount', remaining);
     }
   }, [remaining, setValue]);
 
   const watchedAmount = watch('amount');
+  const watchedDate = watch('payment_date');
+  const isFutureDate = watchedDate > today;
   const isAmountValid = watchedAmount > 0 && watchedAmount <= remaining;
 
   const balanceInfo = useMemo(() => {
+    if (scheduled || isFutureDate) return null;
     if (!associatedAccount || !watchedAmount || watchedAmount <= 0) return null;
     return getAccountBalanceInfo(associatedAccount, watchedAmount);
-  }, [associatedAccount, watchedAmount]);
+  }, [associatedAccount, watchedAmount, scheduled, isFutureDate]);
+
+  const futureBalanceInfo = useMemo(() => {
+    if (!isFutureDate && !scheduled) return null;
+    if (
+      !associatedAccount ||
+      !watchedAmount ||
+      watchedAmount <= 0 ||
+      projectedBalance === null
+    )
+      return null;
+    const overdraft = parseFloat(associatedAccount.overdraft_limit ?? '0');
+    const proj = parseFloat(projectedBalance);
+    const available = proj + overdraft;
+    return {
+      balance: proj,
+      overdraft,
+      available,
+      canPay: available >= watchedAmount,
+      isUsingOverdraft: proj < watchedAmount && available >= watchedAmount,
+    };
+  }, [associatedAccount, watchedAmount, projectedBalance, isFutureDate, scheduled]);
+
+  useEffect(() => {
+    if (!associatedAccount || !watchedDate || !watchedAmount) {
+      setProjectedBalance(null);
+      return;
+    }
+    if (!isFutureDate && !scheduled) {
+      setProjectedBalance(null);
+      return;
+    }
+    setIsLoadingProjected(true);
+    accountsService
+      .getProjectedBalance(associatedAccount.id, watchedDate)
+      .then((data) => setProjectedBalance(data.projected_balance))
+      .catch(() => setProjectedBalance(null))
+      .finally(() => setIsLoadingProjected(false));
+  }, [associatedAccount, watchedDate, watchedAmount, isFutureDate, scheduled]);
+
+  const handleScheduledToggle = (isScheduled: boolean) => {
+    setScheduled(isScheduled);
+    setValue('scheduled', isScheduled);
+    if (!isScheduled) {
+      setValue('payment_date', today);
+    }
+  };
 
   const handleFormSubmit = (data: BillPaymentFormData) => {
     if (data.amount <= 0) return;
     if (data.amount > remaining) return;
     if (balanceInfo && !balanceInfo.canPay) return;
-    onSubmit(data);
+    if (futureBalanceInfo && !futureBalanceInfo.canPay) return;
+    onSubmit({ ...data, scheduled });
   };
 
   // Helpers for card display
@@ -173,6 +236,36 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
         </div>
       )}
 
+      {/* Modo: Pagar agora / Agendar */}
+      {remaining > 0 && (
+        <div className="flex overflow-hidden rounded-lg border">
+          <button
+            type="button"
+            onClick={() => handleScheduledToggle(false)}
+            className={`flex flex-1 items-center justify-center gap-xs py-sm text-sm transition-colors ${
+              !scheduled
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-background text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <Wallet className="h-3.5 w-3.5" />
+            {t('pages.payables.payment.payNow')}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleScheduledToggle(true)}
+            className={`flex flex-1 items-center justify-center gap-xs border-l py-sm text-sm transition-colors ${
+              scheduled
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-background text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <CalendarClock className="h-3.5 w-3.5" />
+            {t('pages.payables.payment.schedule')}
+          </button>
+        </div>
+      )}
+
       {/* Payment Form */}
       {remaining > 0 && (
         <div className="space-y-md">
@@ -217,7 +310,9 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
 
           <div className="space-y-sm">
             <Label htmlFor="payment_date">
-              {t('pages.creditCardBills.payForm.paymentDateLabel')}
+              {scheduled
+                ? t('pages.payables.payment.scheduledDate')
+                : t('pages.creditCardBills.payForm.paymentDateLabel')}
             </Label>
             <DatePicker
               value={watch('payment_date')}
@@ -241,6 +336,41 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
               rows={3}
             />
           </div>
+        </div>
+      )}
+
+      {/* Saldo futuro / agendamento */}
+      {(isFutureDate || scheduled) && associatedAccount && watchedAmount > 0 && (
+        <div
+          className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
+            futureBalanceInfo && !futureBalanceInfo.canPay
+              ? 'border-destructive/30 bg-destructive/10 text-destructive'
+              : futureBalanceInfo?.isUsingOverdraft
+                ? 'border-warning/30 bg-warning/10 text-warning'
+                : 'border-info/30 bg-info/10 text-info'
+          }`}
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>
+            {isLoadingProjected
+              ? t('common.balance.loadingProjected')
+              : futureBalanceInfo && !futureBalanceInfo.canPay
+                ? t('common.balance.insufficientEvenWithOverdraft', {
+                    available: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                  })
+                : futureBalanceInfo?.isUsingOverdraft
+                  ? t('common.balance.overdraftWarningDesc', {
+                      balance: formatCurrency(futureBalanceInfo.balance.toFixed(2)),
+                      overdraft: formatCurrency(futureBalanceInfo.overdraft.toFixed(2)),
+                      total: formatCurrency(futureBalanceInfo.available.toFixed(2)),
+                    })
+                  : projectedBalance !== null
+                    ? t('common.balance.projectedOn', {
+                        date: watchedDate,
+                        balance: formatCurrency(projectedBalance),
+                      })
+                    : t('common.balance.projectedUnavailable')}
+          </p>
         </div>
       )}
 
@@ -275,14 +405,21 @@ export const BillPaymentForm: React.FC<BillPaymentFormProps> = ({
           <Button
             type="submit"
             disabled={
-              isLoading || !isAmountValid || (!!balanceInfo && !balanceInfo.canPay)
+              isLoading ||
+              !isAmountValid ||
+              (!!balanceInfo && !balanceInfo.canPay) ||
+              ((isFutureDate || scheduled) &&
+                !!futureBalanceInfo &&
+                !futureBalanceInfo.canPay)
             }
             className="gap-sm"
           >
             <Wallet className="h-4 w-4" />
             {isLoading
               ? t('pages.creditCardBills.payForm.processing')
-              : t('pages.creditCardBills.payForm.payBtn')}
+              : scheduled
+                ? t('pages.payables.payment.scheduleBtn')
+                : t('pages.creditCardBills.payForm.payBtn')}
           </Button>
         )}
       </div>

@@ -37,6 +37,7 @@ class Command(BaseCommand):
             "transfers": ["transfer"],
             "loans": ["loan"],
             "payables": ["payable"],
+            "receivables": ["receivable", "receivableinstallment"],
             "members": ["member"],
             "library": ["author", "publisher", "book", "summary", "reading"],
             "security": [

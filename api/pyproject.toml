@@ -181,6 +181,8 @@ module = [
     "vaults.*",
     "bank_reconciliation",
     "bank_reconciliation.*",
+    "receivables",
+    "receivables.*",
     "reportlab",
     "reportlab.*"
 ]

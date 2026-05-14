@@ -47,7 +47,7 @@ const mockGoal: Goal = {
   current_value: 5,
   calculated_current_value: 5,
   start_date: '2025-01-01',
-  deadline: '2025-02-01',
+  end_date: '2025-02-01',
   status: 'active',
   status_display: 'Ativo',
   progress_percentage: 16.7,
@@ -95,15 +95,20 @@ describe('GoalForm', () => {
   });
 
   it('renders the deadline field', () => {
+    const customGoal = {
+      ...mockGoal,
+      goal_type: 'custom',
+      goal_type_display: 'Personalizado',
+    };
     render(
       <GoalForm
-        goal={mockGoal}
+        goal={customGoal}
         routineTasks={mockRoutineTasks}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
     );
-    expect(screen.getByText('Prazo')).toBeInTheDocument();
+    expect(screen.getByText('Data de Término')).toBeInTheDocument();
   });
 
   it('shows validation error when title is too short', async () => {

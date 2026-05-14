@@ -29,6 +29,7 @@ import {
   Tag,
   Bell,
   BotMessageSquare,
+  BadgeDollarSign,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -127,6 +128,11 @@ export const navModules: NavModule[] = [
           },
           { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
           { titleKey: 'nav.items.payables', href: '/payables', icon: Receipt },
+          {
+            titleKey: 'nav.items.receivables',
+            href: '/receivables',
+            icon: BadgeDollarSign,
+          },
           {
             titleKey: 'nav.items.financialGoals',
             href: '/financial-goals',

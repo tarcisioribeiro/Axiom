@@ -1,10 +1,19 @@
+import datetime
+
 from django.db.models import QuerySet
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
+from rest_framework.views import APIView
 
 from accounts.models import Account
 from accounts.serializers import AccountSerializer
+from accounts.services import get_projected_balance
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
+from app.permissions import GlobalDefaultPermission
 
 
 class AccountCreateListView(BaseListCreateView):
@@ -74,3 +83,42 @@ class AccountRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
         instance.deleted_at = timezone.now()
         instance.deleted_by = self.request.user  # type: ignore[assignment]
         instance.save()
+
+
+class AccountProjectedBalanceView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Account.objects.none()
+
+    def get(self, request: Request, pk: str) -> Response:
+        date_str = request.query_params.get("date")
+        if not date_str:
+            return Response(
+                {"detail": "Parâmetro 'date' é obrigatório (YYYY-MM-DD)."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target_date = datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return Response(
+                {"detail": "Formato de data inválido. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            account = Account.objects.get(
+                pk=pk, created_by=request.user, is_deleted=False  # type: ignore[misc]
+            )
+        except Account.DoesNotExist:
+            return Response(
+                {"detail": "Conta não encontrada."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        projected = get_projected_balance(account.id, target_date)
+        return Response(
+            {
+                "account_id": str(account.id),
+                "date": date_str,
+                "current_balance": str(account.current_balance),
+                "projected_balance": str(projected),
+            }
+        )

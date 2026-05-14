@@ -1,9 +1,9 @@
-export interface Payable {
+export interface Receivable {
   id: number;
   uuid: string;
   description: string;
   value: string;
-  paid_value: string;
+  received_value: string;
   date: string;
   due_date?: string;
   category: string;
@@ -11,40 +11,39 @@ export interface Payable {
   member?: number | null;
   member_name?: string;
   notes?: string;
-  status: 'active' | 'paid' | 'overdue' | 'cancelled';
+  status: 'active' | 'received' | 'overdue' | 'cancelled';
   status_display?: string;
   remaining_value?: string;
-  installments?: number;
   created_at: string;
   updated_at: string;
 }
 
-export interface PayableFormData {
+export interface ReceivableFormData {
   description: string;
   value: number;
-  paid_value?: number;
+  received_value?: number;
   date: string;
   due_date?: string;
   category: string;
   member?: number | null;
   notes?: string;
-  status?: 'active' | 'paid' | 'overdue' | 'cancelled';
+  status?: 'active' | 'received' | 'overdue' | 'cancelled';
 }
 
-export interface PayableInstallment {
+export interface ReceivableInstallment {
   id: number;
   uuid: string;
-  payable: number;
+  receivable: number;
   installment_number: number;
   value: string;
   due_date: string;
-  payed: boolean;
-  payment_expense?: number | null;
+  received: boolean;
+  receipt_revenue?: number | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface PayablePaymentRequest {
+export interface ReceivableReceiptRequest {
   value: number;
   account: number;
   date: string;
