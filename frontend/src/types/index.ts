@@ -61,6 +61,7 @@ export type {
   LoanFormData,
   LoanInstallment,
   LoanPaymentRequest,
+  LoanReceiptRequest,
   AmortizationEntry,
   AmortizationSchedule,
 } from './loans';
@@ -70,6 +71,12 @@ export type {
   PayableInstallment,
   PayablePaymentRequest,
 } from './payables';
+export type {
+  Receivable,
+  ReceivableFormData,
+  ReceivableInstallment,
+  ReceivableReceiptRequest,
+} from './receivables';
 export type {
   Member,
   MemberFormData,

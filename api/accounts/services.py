@@ -5,12 +5,48 @@ Replaces the post_save/post_delete signal-based approach with an explicit
 function that can be called, tested, and reasoned about independently.
 """
 
+import datetime
 from decimal import Decimal
 from typing import Union
 
 from django.db import models, transaction
 
 from accounts.models import Account
+
+
+def get_projected_balance(
+    account_id: Union[int, str], target_date: datetime.date
+) -> Decimal:
+    """
+    Returns the projected account balance on target_date.
+
+    Starts from current_balance (already confirmed revenues − expenses) and
+    adds pending revenues / subtracts pending expenses whose date falls up to
+    and including target_date.  Transfer-generated records are excluded because
+    the transfer itself is tracked separately.
+    """
+    from expenses.models import Expense
+    from revenues.models import Revenue
+
+    account = Account.objects.get(pk=account_id)
+    base = account.current_balance
+
+    pending_revenues = Revenue.objects.filter(
+        account=account,
+        received=False,
+        is_deleted=False,
+        date__lte=target_date,
+    ).aggregate(total=models.Sum("value"))["total"] or Decimal("0.00")
+
+    pending_expenses = Expense.objects.filter(
+        account=account,
+        payed=False,
+        is_deleted=False,
+        is_initial_balance=False,
+        date__lte=target_date,
+    ).aggregate(total=models.Sum("value"))["total"] or Decimal("0.00")
+
+    return base + pending_revenues - pending_expenses
 
 
 def recalculate_account_balance(account_id: Union[int, str]) -> Decimal:

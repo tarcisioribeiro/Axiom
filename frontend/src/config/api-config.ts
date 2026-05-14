@@ -172,11 +172,21 @@ export const API_CONFIG = {
     // Loan sub-resources (use with id)
     LOAN_INSTALLMENTS: (id: number) => `/api/v1/loans/${id}/installments/`,
     LOAN_PAYMENT: (id: number) => `/api/v1/loans/${id}/pay/`,
+    LOAN_RECEIPT: (id: number) => `/api/v1/loans/${id}/receive/`,
     LOAN_AMORTIZATION: (id: number) => `/api/v1/loans/${id}/amortization/`,
 
     // Payable sub-resources (use with id)
     PAYABLE_INSTALLMENTS: (id: number) => `/api/v1/payables/${id}/installments/`,
     PAYABLE_PAYMENT: (id: number) => `/api/v1/payables/${id}/pay/`,
+
+    // Receivables
+    RECEIVABLES: '/api/v1/receivables/',
+    RECEIVABLE_INSTALLMENTS: (id: number) => `/api/v1/receivables/${id}/installments/`,
+    RECEIVABLE_RECEIPT: (id: number) => `/api/v1/receivables/${id}/receive/`,
+
+    // Account projected balance
+    ACCOUNT_PROJECTED_BALANCE: (id: number) =>
+      `/api/v1/accounts/${id}/projected-balance/`,
 
     // Expense splits (use with id)
     EXPENSE_SPLITS: (id: number) => `/api/v1/expenses/${id}/splits/`,

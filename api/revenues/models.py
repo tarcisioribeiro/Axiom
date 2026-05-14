@@ -102,6 +102,14 @@ class Revenue(BaseModel):
             " (quando você emprestou e está recebendo de volta)"
         ),
     )
+    related_receivable = models.ForeignKey(
+        "receivables.Receivable",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="receipt_revenues",
+        verbose_name="Valor a Receber Relacionado",
+    )
     currency_code = models.CharField(
         max_length=3,
         default="BRL",
@@ -132,6 +140,7 @@ class Revenue(BaseModel):
             models.Index(fields=["account", "category"]),
             models.Index(fields=["related_transfer"]),
             models.Index(fields=["related_loan"]),
+            models.Index(fields=["related_receivable"]),
         ]
 
     def save(self, *args, **kwargs):

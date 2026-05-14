@@ -333,6 +333,7 @@ class PayCreditCardBillView(APIView):
         amount = Decimal(str(serializer.validated_data["amount"]))
         payment_date = serializer.validated_data["payment_date"]
         notes = serializer.validated_data.get("notes", "")
+        scheduled = serializer.validated_data.get("scheduled", False)
 
         # Verificar se a fatura já está paga
         remaining = Decimal(str(bill.total_amount)) - Decimal(str(bill.paid_amount))
@@ -349,6 +350,7 @@ class PayCreditCardBillView(APIView):
         if notes:
             expense_description += f" ({notes})"
 
+        payed = not scheduled
         expense = Expense.objects.create(
             description=expense_description,
             value=amount,
@@ -356,7 +358,7 @@ class PayCreditCardBillView(APIView):
             horary=timezone.now().time(),
             category="bills and services",
             account=account,
-            payed=True,
+            payed=payed,
             merchant=card.name,
             payment_method="transfer",
             notes=notes or f"Pagamento de fatura do cartão {card.name}",
@@ -365,36 +367,40 @@ class PayCreditCardBillView(APIView):
             updated_by=request.user,
         )
 
-        recalculate_account_balance(account.id)
+        if payed:
+            recalculate_account_balance(account.id)
 
-        # 4. Atualizar paid_amount da fatura
-        bill.paid_amount = Decimal(str(bill.paid_amount)) + amount
-        bill.payment_date = payment_date
+            # 4. Atualizar paid_amount da fatura
+            bill.paid_amount = Decimal(str(bill.paid_amount)) + amount
+            bill.payment_date = payment_date
 
-        # 5. Atualizar status da fatura conforme regras de negócio
-        # Regra: Só fecha a fatura automaticamente se o valor total estiver pago
-        # Pagamentos parciais não fecham a fatura
-        new_paid_amount = Decimal(str(bill.paid_amount))
-        total_amount = Decimal(str(bill.total_amount))
+            # 5. Atualizar status da fatura conforme regras de negócio
+            new_paid_amount = Decimal(str(bill.paid_amount))
+            total_amount = Decimal(str(bill.total_amount))
 
-        if new_paid_amount >= total_amount:
-            # Fatura totalmente paga
-            bill.status = "paid"
-            bill.closed = True
-
-            # 5.1 Marcar todas as parcelas desta fatura como pagas
-            # Isso libera o limite do cartão automaticamente no cálculo
-            CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
-                payed=True
-            )
-        # Pagamentos parciais mantêm o status atual (não fecham a fatura)
+            if new_paid_amount >= total_amount:
+                bill.status = "paid"
+                bill.closed = True
+                CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
+                    payed=True
+                )
+        else:
+            new_paid_amount = Decimal(str(bill.paid_amount))
+            total_amount = Decimal(str(bill.total_amount))
 
         bill.save()
+
+        message = (
+            "Pagamento agendado com sucesso"
+            if scheduled
+            else "Pagamento realizado com sucesso"
+        )
 
         # Retornar dados atualizados
         return Response(
             {
-                "message": "Pagamento realizado com sucesso",
+                "message": message,
+                "scheduled": scheduled,
                 "payment": {
                     "amount": str(amount),
                     "payment_date": str(payment_date),
