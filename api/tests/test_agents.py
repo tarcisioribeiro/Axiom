@@ -26,10 +26,24 @@ class TestFinanceAgentGetModel(TestCase):
             self.assertEqual(agent.get_model(), "claude-haiku-4-5-20251001")
 
 
+def _cfg_ollama_only(key: str, default: object = None) -> object:
+    return "ollama" if key == "LLM_PROVIDER" else default
+
+
+def _cfg_ollama_global_model(key: str, default: object = None) -> object:
+    if key == "LLM_PROVIDER":
+        return "ollama"
+    if key == "OLLAMA_MODEL":
+        return "global-default"
+    return default
+
+
 class TestLLMClientChat(TestCase):
-    @patch("agents.core.llm_client._PROVIDER", "ollama")
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_ollama_only)
     @patch("requests.post")
-    def test_chat_sends_custom_model_in_payload(self, mock_post: MagicMock) -> None:
+    def test_chat_sends_custom_model_in_payload(
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
+    ) -> None:
         from agents.core.llm_client import LLMClient
 
         mock_response = MagicMock()
@@ -43,11 +57,10 @@ class TestLLMClientChat(TestCase):
         json_payload = mock_post.call_args.kwargs["json"]
         self.assertEqual(json_payload["model"], "custom-model")
 
-    @patch("agents.core.llm_client._PROVIDER", "ollama")
-    @patch("agents.core.llm_client._OLLAMA_MODEL", "global-default")
+    @patch("agents.core.llm_client._cfg", side_effect=_cfg_ollama_global_model)
     @patch("requests.post")
     def test_chat_uses_global_model_when_none_provided(
-        self, mock_post: MagicMock
+        self, mock_post: MagicMock, _mock_cfg: MagicMock
     ) -> None:
         from agents.core.llm_client import LLMClient
 

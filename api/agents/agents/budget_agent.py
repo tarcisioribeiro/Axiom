@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
-from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
@@ -106,7 +106,7 @@ class BudgetAgent(BaseAgent):
             days_remaining = 0
 
         return {
-            "system_prompt": BASE_SYSTEM_PROMPT,
+            "system_prompt": get_system_prompt(ctx.language),
             "budgets": budgets,
             "critical": critical,
             "overbudget": overbudget,

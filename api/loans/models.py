@@ -84,6 +84,12 @@ class Loan(BaseModel):
         blank=True,
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
+    currency_code = models.CharField(
+        max_length=3,
+        default="BRL",
+        verbose_name="Moeda",
+        help_text="Código ISO 4217 da moeda (ex: BRL, USD, EUR)",
+    )
     status = models.CharField(
         max_length=20,
         choices=LOAN_STATUS_CHOICES,

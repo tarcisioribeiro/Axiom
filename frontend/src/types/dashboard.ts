@@ -29,6 +29,8 @@ export interface AccountBalance {
   current_balance: number;
   pending_revenues: number;
   pending_expenses: number;
+  pending_transfers_in: number;
+  pending_transfers_out: number;
   future_balance: number;
 }
 

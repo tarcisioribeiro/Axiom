@@ -11,6 +11,7 @@ class AgentAskSerializer(serializers.Serializer):
     forecast_days = serializers.IntegerField(
         required=False, min_value=7, max_value=90, default=30
     )
+    language = serializers.CharField(max_length=10, required=False, default="pt-BR")
 
 
 class AgentResponseSerializer(serializers.Serializer):

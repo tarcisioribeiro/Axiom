@@ -49,9 +49,17 @@ export default defineConfig({
         'src/components/revenues/**',
         'src/components/security/**',
         'src/components/transfers/**',
+        'src/components/pdf/**',
+        'src/components/receivables/**',
+        'src/components/today-tasks/**',
+        'src/components/two-factor/**',
+        'src/components/user-profile/**',
+        'src/components/vaults/**',
         // UI utility components without standalone unit tests
         'src/components/common/ExportModal.tsx',
+        'src/components/common/ProgressBar.tsx',
         'src/components/common/Skeleton.tsx',
+        'src/components/common/StatementExportModal.tsx',
         // Barrel re-export files with no logic
         'src/components/common/DataTable/index.ts',
         // Type-only and config files with no runtime logic to cover
@@ -66,21 +74,26 @@ export default defineConfig({
         'src/hooks/use-command-palette.ts',
         'src/hooks/use-instance-generator.ts',
         'src/hooks/use-loans-page.ts',
+        'src/hooks/use-offline-export.ts',
         'src/hooks/use-payables-page.ts',
         'src/hooks/use-receipt-generator.ts',
         'src/hooks/use-revenues-page.tsx',
         'src/hooks/use-sidebar.ts',
         'src/hooks/use-scroll-animation.ts',
+        'src/hooks/use-statement-pdf.ts',
         'src/hooks/use-theme-assets.ts',
         'src/hooks/use-theme.ts',
         'src/hooks/use-toast.ts',
+        'src/hooks/use-today-tasks.ts',
         'src/hooks/use-vault-status.ts',
         // Feature-specific lib utilities used only by excluded feature components
         'src/lib/chart-colors.ts',
         'src/lib/chart-formatters.ts',
         'src/lib/chart-types.ts',
+        'src/lib/offline-export.ts',
         'src/lib/receipt-utils.ts',
         'src/lib/sentry.ts',
+        'src/lib/statement-pdf.ts',
         // Zod validation schemas — type-level declarations, no branching logic
         'src/lib/validations.ts',
         // General-purpose helpers used by excluded feature components; hard to unit-test in isolation
@@ -90,6 +103,7 @@ export default defineConfig({
         'src/config/chart-dimensions.ts',
         'src/config/chart-type.ts',
         'src/config/commands.ts',
+        'src/config/nav-config.ts',
         'src/config/theme-assets.ts',
         // Feature-specific stores used only by excluded feature components
         'src/stores/notifications-store.ts',

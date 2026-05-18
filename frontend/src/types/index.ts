@@ -256,3 +256,9 @@ export type {
   BankStatementImport,
   AnomalyAlert,
 } from './budgets';
+export type {
+  Webhook,
+  WebhookFormData,
+  WebhookDelivery,
+  WebhookEvent,
+} from './webhooks';

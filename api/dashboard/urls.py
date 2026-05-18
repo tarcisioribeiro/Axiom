@@ -11,6 +11,7 @@ from .views import (
     CreditCardExpensesByCategoryView,
     DashboardStatsView,
     FinancialAlertsView,
+    FinancialHealthScoreView,
     IRReportView,
     LGPDExportView,
     MonthlyStatementView,
@@ -50,4 +51,5 @@ urlpatterns = [
     path("ir-report/", IRReportView.as_view(), name="ir-report"),
     path("alerts/stream/", AlertsStreamView.as_view(), name="alerts-stream"),
     path("audit-log/", AuditLogView.as_view(), name="audit-log"),
+    path("health-score/", FinancialHealthScoreView.as_view(), name="health-score"),
 ]

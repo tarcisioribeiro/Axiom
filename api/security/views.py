@@ -1636,6 +1636,7 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
         serializer.is_valid(raise_exception=True)
         ttl_hours = serializer.validated_data["ttl_hours"]
         max_uses = serializer.validated_data["max_uses"]
+        allowed_ips = serializer.validated_data.get("allowed_ips", [])
 
         # Generate a random per-token Fernet key.
         # This key is NEVER stored server-side — it is returned to the caller
@@ -1652,6 +1653,7 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
             _encrypted_password=encrypted_snapshot,
             expires_at=timezone.now() + timedelta(hours=ttl_hours),
             max_uses=max_uses,
+            allowed_ips=allowed_ips,
             created_by=request.user,
         )
 
@@ -1752,6 +1754,20 @@ class RedeemShareTokenView(APIView):
                 {"error": f"Este link de compartilhamento foi {reason}."},
                 status=status.HTTP_410_GONE,
             )
+
+        # IP restriction: if allowed_ips is set, reject any IP not in the list.
+        if token_obj.allowed_ips:
+            client_ip = get_client_ip(request)
+            if client_ip not in token_obj.allowed_ips:
+                logger.warning(
+                    "Share token IP denied (token_id=%s, ip=%s)",
+                    token_obj.id,
+                    client_ip,
+                )
+                return Response(
+                    {"error": "Acesso negado a partir deste endereço IP."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
 
         # Decrypt snapshot using the caller-supplied per-token key.
         # The key is never stored server-side; an incorrect key (or a token
