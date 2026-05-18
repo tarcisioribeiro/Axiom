@@ -1717,6 +1717,8 @@
       "expectedBalance": "Saldo Previsto",
       "inflows": "Entradas Previstas",
       "pendingRevenues": "Receitas Pendentes",
+      "pendingTransfersIn": "Transferências a Receber",
+      "pendingTransfersOut": "Transferências a Enviar",
       "loansReceivable": "Empréstimos a Receber",
       "totalInflows": "Total Entradas",
       "outflows": "Saídas Previstas",
@@ -1788,6 +1790,49 @@
           "danger": "Urgente",
           "warning": "Atenção",
           "info": "Info"
+        },
+        "messages": {
+          "budget_limit": "Orçamento de {{category}} atingiu {{percentage}}% do limite",
+          "credit_card_bill_due_overdue_one": "Fatura do cartão {{name}} está vencida (venceu há 1 dia)",
+          "credit_card_bill_due_overdue_other": "Fatura do cartão {{name}} está vencida (venceu há {{count}} dias)",
+          "credit_card_bill_due_today": "Fatura do cartão {{name}} vence hoje",
+          "credit_card_bill_due_tomorrow": "Fatura do cartão {{name}} vence amanhã",
+          "credit_card_bill_due_days_one": "Fatura do cartão {{name}} vence em 1 dia",
+          "credit_card_bill_due_days_other": "Fatura do cartão {{name}} vence em {{count}} dias",
+          "low_balance": "Saldo da conta {{name}} está abaixo do mínimo ({{current}} / mín {{minimum}})",
+          "payable_due_overdue_one": "{{name}} está vencido (venceu há 1 dia)",
+          "payable_due_overdue_other": "{{name}} está vencido (venceu há {{count}} dias)",
+          "payable_due_today": "{{name}} vence hoje",
+          "payable_due_days_one": "{{name}} vence em 1 dia",
+          "payable_due_days_other": "{{name}} vence em {{count}} dias",
+          "loan_due_overdue_one": "Empréstimo '{{name}}' está vencido (venceu há 1 dia)",
+          "loan_due_overdue_other": "Empréstimo '{{name}}' está vencido (venceu há {{count}} dias)",
+          "loan_due_today": "Empréstimo '{{name}}' vence hoje",
+          "loan_due_days_one": "Empréstimo '{{name}}' vence em 1 dia",
+          "loan_due_days_other": "Empréstimo '{{name}}' vence em {{count}} dias"
+        }
+      },
+      "healthScore": {
+        "title": "Saúde Financeira",
+        "loadError": "Não foi possível carregar o score.",
+        "grades": {
+          "A": "Excelente",
+          "B": "Bom",
+          "C": "Regular",
+          "D": "Atenção",
+          "F": "Crítico"
+        },
+        "dimensions": {
+          "liquidity": "Liquidez",
+          "debt": "Endividamento",
+          "savings": "Poupança",
+          "compliance": "Adimplência",
+          "liquidityDetail": "{{ratio}}× despesas mensais",
+          "debtDetail": "{{ratio}}% da receita anual",
+          "savingsDetail": "{{rate}}% de poupança",
+          "complianceDetail": "{{rate}}% em dia",
+          "overdue_one": "· {{count}} vencido",
+          "overdue_other": "· {{count}} vencidos"
         }
       },
       "selectForecastPeriod": "Selecionar período da projeção",

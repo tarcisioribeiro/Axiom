@@ -28,6 +28,11 @@ requests==2.33.0
 # Redis cache
 django-redis==5.4.0
 
+# Async task queue
+celery==5.5.3
+django-celery-beat==2.8.1
+redis==6.2.0
+
 # S3-compatible storage (MinIO)
 django-storages[s3]==1.14.4
 boto3==1.42.59

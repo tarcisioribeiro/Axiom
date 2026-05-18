@@ -1,4 +1,4 @@
-import { PiggyBank, Plus, Pencil, Trash2 } from 'lucide-react';
+import { PiggyBank, Plus, Pencil, Trash2, Sparkles, Loader2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -28,12 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { API_CONFIG } from '@/config/api-config';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -94,6 +96,72 @@ export default function Budgets() {
   const { showConfirm } = useAlertDialog();
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
+  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<
+    Array<{
+      category: string;
+      avg_monthly_spent: number;
+      suggested_limit: number;
+      reasoning: string | null;
+    }>
+  >([]);
+  const [isSuggestLoading, setIsSuggestLoading] = useState(false);
+
+  const handleSuggest = async () => {
+    setIsSuggestOpen(true);
+    if (suggestions.length > 0) return;
+    try {
+      setIsSuggestLoading(true);
+      type SuggestResp = {
+        suggestions?: {
+          category: string;
+          avg_monthly_spent: number;
+          suggested_limit: number;
+          reasoning: string | null;
+        }[];
+      };
+      const resp = await apiClient.post<SuggestResp>(
+        API_CONFIG.ENDPOINTS.BUDGET_SUGGEST,
+        {
+          include_llm_reasoning: true,
+        }
+      );
+      setSuggestions(resp.suggestions ?? []);
+    } catch {
+      toast({
+        title: 'Sem histórico suficiente para sugerir orçamentos.',
+        variant: 'destructive',
+      });
+      setIsSuggestOpen(false);
+    } finally {
+      setIsSuggestLoading(false);
+    }
+  };
+
+  const handleApplySuggestion = async (s: {
+    category: string;
+    suggested_limit: number;
+  }) => {
+    const now = new Date();
+    try {
+      await budgetsService.create({
+        category: s.category,
+        limit_amount: s.suggested_limit,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        member: null,
+        rollover_enabled: false,
+        rollover_amount: 0,
+      });
+      toast({
+        title: `Orçamento de ${translate('expenseCategories', s.category)} criado.`,
+      });
+      void loadData();
+    } catch {
+      toast({ title: 'Erro ao criar orçamento.', variant: 'destructive' });
+    }
+  };
+
   useEffect(() => {
     void loadData();
   }, []);
@@ -217,11 +285,73 @@ export default function Budgets() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
+        <Button
+          variant="outline"
+          onClick={() => void handleSuggest()}
+          className="gap-sm"
+        >
+          <Sparkles className="h-4 w-4" />
+          Sugerir com IA
+        </Button>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
           {t('pages.budgets.newBtn')}
         </Button>
       </PageHeader>
+
+      {/* Dialog de sugestões LLM */}
+      <Dialog open={isSuggestOpen} onOpenChange={setIsSuggestOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Sugestões de Orçamento com IA
+            </DialogTitle>
+            <DialogDescription>
+              Baseado nos seus últimos 3 meses de despesas. Clique em
+              &quot;Aplicar&quot; para criar o orçamento do mês atual.
+            </DialogDescription>
+          </DialogHeader>
+          {isSuggestLoading ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Analisando histórico...
+            </div>
+          ) : (
+            <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
+              {suggestions.map((s) => (
+                <div
+                  key={s.category}
+                  className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {CATEGORY_ICONS[s.category] ?? '📦'}{' '}
+                      {translate('expenseCategories', s.category)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Média: {formatCurrency(s.avg_monthly_spent)} · Sugestão:{' '}
+                      {formatCurrency(s.suggested_limit)}
+                    </p>
+                    {s.reasoning && (
+                      <p className="mt-0.5 text-xs italic text-muted-foreground">
+                        {s.reasoning}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleApplySuggestion(s)}
+                  >
+                    Aplicar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput

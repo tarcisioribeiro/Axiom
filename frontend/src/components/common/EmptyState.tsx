@@ -4,28 +4,34 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { emptyStateVariants } from '@/lib/animations';
 
+interface EmptyStateActionObject {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: () => void;
+}
+
 interface EmptyStateProps {
   icon?: React.ReactNode;
   title?: string;
-  message: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  message?: string;
+  description?: string;
+  action?: EmptyStateActionObject | React.ReactNode;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon,
   title,
   message,
+  description,
   action,
 }) => {
+  const text = message ?? description ?? '';
   return (
     <motion.div
       variants={emptyStateVariants}
       initial="initial"
       animate="animate"
-      aria-label={title ?? message}
+      aria-label={title ?? text}
       className="flex flex-col items-center justify-center gap-md rounded-lg border border-dashed bg-card/50 px-xl py-16 text-center"
     >
       {icon && (
@@ -38,13 +44,22 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       )}
       <div className="space-y-xs">
         {title && <h3 className="text-base font-semibold">{title}</h3>}
-        <p className="text-sm text-muted-foreground">{message}</p>
+        {text && <p className="text-sm text-muted-foreground">{text}</p>}
       </div>
-      {action && (
-        <Button onClick={action.onClick} variant="outline" size="sm" className="mt-xs">
-          {action.label}
-        </Button>
-      )}
+      {action &&
+        (React.isValidElement(action) ? (
+          action
+        ) : (
+          <Button
+            onClick={(action as EmptyStateActionObject).onClick}
+            variant="outline"
+            size="sm"
+            className="mt-xs"
+          >
+            {(action as EmptyStateActionObject).icon}
+            {(action as EmptyStateActionObject).label}
+          </Button>
+        ))}
     </motion.div>
   );
 };

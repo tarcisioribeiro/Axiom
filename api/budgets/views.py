@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 from typing import Any, cast
 
@@ -240,3 +241,99 @@ class BudgetHistoryView(APIView):
 
         serializer = BudgetHistorySerializer(result, many=True)
         return Response(serializer.data)
+
+
+class BudgetSuggestView(APIView):
+    """
+    POST /api/v1/budgets/suggest/
+
+    Analisa o histórico de despesas dos últimos 3 meses e usa o LLM
+    para sugerir limites de orçamento por categoria.
+
+    Body (opcional): { "include_llm_reasoning": true }
+    Response: lista de sugestões por categoria com valor sugerido e justificativa.
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request: Request) -> Response:
+        user = cast(User, request.user)
+        include_reasoning = request.data.get("include_llm_reasoning", False)
+
+        today = timezone.now().date()
+        three_months_ago = (today.replace(day=1) - timedelta(days=1)).replace(
+            day=1
+        ) - timedelta(days=60)
+        three_months_ago = three_months_ago.replace(day=1)
+
+        # Agregar gastos por categoria nos últimos 3 meses
+        expense_by_category = (
+            Expense.objects.filter(
+                created_by=user,
+                payed=True,
+                date__gte=three_months_ago,
+                related_transfer__isnull=True,
+                is_deleted=False,
+            )
+            .values("category")
+            .annotate(total_3m=Sum("value"))
+            .order_by("-total_3m")
+        )
+
+        if not expense_by_category:
+            return Response(
+                {"detail": "Sem histórico de despesas nos últimos 3 meses."},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+
+        # Calcular média mensal por categoria
+        suggestions_base = []
+        for row in expense_by_category:
+            monthly_avg = float(row["total_3m"]) / 3
+            # Sugerir 10% acima da média para folga; arredondar para 2 casas
+            suggested = round(monthly_avg * 1.10, 2)
+            suggestions_base.append(
+                {
+                    "category": row["category"],
+                    "avg_monthly_spent": round(monthly_avg, 2),
+                    "suggested_limit": suggested,
+                    "reasoning": None,
+                }
+            )
+
+        if not include_reasoning:
+            return Response({"suggestions": suggestions_base})
+
+        # Chamar LLM para enriquecer com justificativas
+        try:
+            from agents.core.llm_client import LLMClient
+
+            lines = "\n".join(
+                f"- {s['category']}: média R$ {s['avg_monthly_spent']:.2f}/mês"
+                f" → sugestão R$ {s['suggested_limit']:.2f}"
+                for s in suggestions_base
+            )
+            prompt = (
+                "Você é um assistente financeiro pessoal. Com base nos dados abaixo,"
+                " forneça em 1 frase curta (máx. 20 palavras) a justificativa para cada"
+                " sugestão de orçamento. Responda em JSON: lista de objetos com"
+                ' {"category": str, "reasoning": str}.\n\n'
+                f"Dados dos últimos 3 meses:\n{lines}"
+            )
+            llm_response = LLMClient.chat([{"role": "user", "content": prompt}])
+
+            import json as _json
+
+            start = llm_response.find("[")
+            end = llm_response.rfind("]") + 1
+            if start != -1 and end > start:
+                reasonings = _json.loads(llm_response[start:end])
+                reasoning_map = {
+                    r["category"]: r.get("reasoning", "") for r in reasonings
+                }
+                for s in suggestions_base:
+                    s["reasoning"] = reasoning_map.get(s["category"])
+        except Exception:
+            pass  # LLM opcional — retorna sem raciocínio em caso de falha
+
+        return Response({"suggestions": suggestions_base})

@@ -13,7 +13,7 @@ Em atualizações:
 """
 
 from django.db import transaction
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 
 from rapidfuzz import fuzz
@@ -86,6 +86,26 @@ def auto_categorize_expense(sender, instance, **kwargs):
     # Category is 'others': re-apply rules only if it changed to 'others'
     if old_category != "others":
         _apply_categorization_rules(user, instance)
+
+
+@receiver(post_save, sender="expenses.Expense")
+@receiver(post_delete, sender="expenses.Expense")
+def invalidate_dashboard_cache_on_expense(sender, instance, **kwargs):
+    from dashboard.views import invalidate_user_dashboard_cache
+
+    if instance.created_by_id:
+        invalidate_user_dashboard_cache(instance.created_by_id)
+
+
+@receiver(post_save, sender="expenses.Expense")
+def record_expense_metric(sender, instance, created, **kwargs):
+    if created:
+        try:
+            from app.metrics import record_expense_created
+
+            record_expense_created(instance.category or "others")
+        except Exception:
+            pass
 
 
 @receiver(post_save, sender="expenses.Expense")

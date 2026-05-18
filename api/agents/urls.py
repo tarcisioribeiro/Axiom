@@ -6,7 +6,6 @@ from agents.views import (
     AgentNewSessionView,
     AgentStatusView,
     AgentStreamView,
-    EmbeddingDocumentListView,
 )
 
 urlpatterns = [
@@ -15,5 +14,4 @@ urlpatterns = [
     path("history/", AgentConversationHistoryView.as_view(), name="agent-history"),
     path("sessions/", AgentNewSessionView.as_view(), name="agent-new-session"),
     path("status/", AgentStatusView.as_view(), name="agent-status"),
-    path("embeddings/", EmbeddingDocumentListView.as_view(), name="agent-embeddings"),
 ]

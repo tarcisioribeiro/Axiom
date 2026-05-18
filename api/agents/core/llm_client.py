@@ -1,8 +1,9 @@
 import json
 import logging
 import os
-from collections.abc import Generator
-from typing import Any
+import time
+from collections.abc import Callable, Generator
+from typing import Any, Optional
 
 import requests
 
@@ -11,12 +12,53 @@ from app.config import cfg as _cfg
 logger = logging.getLogger(__name__)
 
 _GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-_PROVIDER: str = _cfg("LLM_PROVIDER", "ollama")
-_OLLAMA_MODEL: str = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
+
+_FALLBACK_ERROR: dict[str, str] = {
+    "pt": "Desculpe, não foi possível processar sua pergunta no momento.",
+    "en": "Sorry, I'm unable to process your request at this time.",
+}
+
+
+def _error_message(language: str = "pt-BR") -> str:
+    prefix = language.split("-")[0].lower()
+    return _FALLBACK_ERROR.get(prefix, _FALLBACK_ERROR["pt"])
 
 
 class LLMClient:
     """Abstração sobre Ollama (local), Groq (nuvem) ou Anthropic API."""
+
+    @classmethod
+    def _dispatch_chat(
+        cls, provider: str, messages: list[dict[str, str]], model: str | None
+    ) -> str:
+        if provider == "anthropic":
+            return cls._anthropic_chat(messages, model=model)
+        if provider == "groq":
+            return cls._groq_chat(messages, model=model)
+        return cls._ollama_chat(messages, model=model)
+
+    @classmethod
+    def _dispatch_stream(
+        cls, provider: str, messages: list[dict[str, str]], model: str | None
+    ) -> Generator[str, None, None]:
+        if provider == "anthropic":
+            yield from cls._anthropic_stream(messages, model=model)
+        elif provider == "groq":
+            yield from cls._groq_stream(messages, model=model)
+        else:
+            yield from cls._ollama_stream(messages, model=model)
+
+    @classmethod
+    def _get_providers(cls) -> list[str]:
+        """Retorna lista de providers a tentar: primário + fallbacks configurados."""
+        primary = str(_cfg("LLM_PROVIDER", "ollama"))
+        fallback_raw = _cfg("LLM_FALLBACK_PROVIDERS", "") or ""
+        fallbacks = [
+            p.strip()
+            for p in str(fallback_raw).split(",")
+            if p.strip() and p.strip() != primary
+        ]
+        return [primary] + fallbacks
 
     @classmethod
     def chat(
@@ -24,37 +66,100 @@ class LLMClient:
         messages: list[dict[str, str]],
         stream: bool = False,
         model: str | None = None,
+        language: str = "pt-BR",
+        agent_name: str = "unknown",
     ) -> str:
-        """Envia lista de mensagens ao LLM. model sobrescreve o env var global."""
+        """Envia mensagens ao LLM. Tenta fallback providers se o primário falhar."""
+        record_llm_request: Optional[Callable[..., None]] = None
+        record_llm_fallback: Optional[Callable[..., None]] = None
         try:
-            provider = _PROVIDER
-            if provider == "anthropic":
-                return cls._anthropic_chat(messages, model=model)
-            if provider == "groq":
-                return cls._groq_chat(messages, model=model)
-            return cls._ollama_chat(messages, model=model)
-        except Exception as exc:
-            logger.error("LLM chat failed: %s", exc, exc_info=True)
-            return "Desculpe, não foi possível processar sua pergunta no momento."
+            from app.metrics import record_llm_fallback, record_llm_request
+        except ImportError:
+            pass
+
+        providers = cls._get_providers()
+        last_exc: Exception | None = None
+        for i, provider in enumerate(providers):
+            if i > 0 and record_llm_fallback is not None:
+                record_llm_fallback(providers[i - 1], provider)
+            t0 = time.monotonic()
+            try:
+                result = cls._dispatch_chat(provider, messages, model)
+                duration = time.monotonic() - t0
+                tokens_in = sum(len(m.get("content", "").split()) for m in messages)
+                tokens_out = len(result.split())
+                if record_llm_request is not None:
+                    record_llm_request(
+                        provider, agent_name, "success", duration, tokens_in, tokens_out
+                    )
+                return result
+            except Exception as exc:
+                duration = time.monotonic() - t0
+                if record_llm_request is not None:
+                    record_llm_request(provider, agent_name, "error", duration)
+                logger.warning("LLM provider '%s' failed (chat): %s", provider, exc)
+                last_exc = exc
+        logger.error(
+            "All LLM providers failed (chat). Last error: %s", last_exc, exc_info=True
+        )
+        return _error_message(language)
 
     @classmethod
     def stream_chat(
         cls,
         messages: list[dict[str, str]],
         model: str | None = None,
+        language: str = "pt-BR",
+        agent_name: str = "unknown",
     ) -> Generator[str, None, None]:
-        """Yields tokens conforme chegam do LLM."""
+        """Yields tokens do LLM com fallback automático entre providers."""
+        record_llm_request: Optional[Callable[..., None]] = None
+        record_llm_fallback: Optional[Callable[..., None]] = None
+        record_llm_stream_session: Optional[Callable[..., None]] = None
         try:
-            provider = _PROVIDER
-            if provider == "anthropic":
-                yield from cls._anthropic_stream(messages, model=model)
-            elif provider == "groq":
-                yield from cls._groq_stream(messages, model=model)
-            else:
-                yield from cls._ollama_stream(messages, model=model)
-        except Exception as exc:
-            logger.error("LLM stream_chat failed: %s", exc, exc_info=True)
-            yield "Desculpe, não foi possível processar sua pergunta no momento."
+            from app.metrics import (
+                record_llm_fallback,
+                record_llm_request,
+                record_llm_stream_session,
+            )
+        except ImportError:
+            pass
+
+        providers = cls._get_providers()
+        last_exc: Exception | None = None
+        for i, provider in enumerate(providers):
+            if i > 0 and record_llm_fallback is not None:
+                record_llm_fallback(providers[i - 1], provider)
+            t0 = time.monotonic()
+            try:
+                gen = cls._dispatch_stream(provider, messages, model)
+                first = next(gen, None)
+            except Exception as exc:
+                if record_llm_request is not None:
+                    record_llm_request(
+                        provider, agent_name, "error", time.monotonic() - t0
+                    )
+                logger.warning(
+                    "LLM provider '%s' failed to start stream: %s", provider, exc
+                )
+                last_exc = exc
+                continue
+            if first is None:
+                return  # provider retornou stream vazio
+            if record_llm_stream_session is not None:
+                record_llm_stream_session(agent_name)
+            tokens_in = sum(len(m.get("content", "").split()) for m in messages)
+            if record_llm_request is not None:
+                record_llm_request(
+                    provider, agent_name, "success", time.monotonic() - t0, tokens_in, 0
+                )
+            yield first
+            yield from gen
+            return
+        logger.error(
+            "All LLM providers failed (stream). Last error: %s", last_exc, exc_info=True
+        )
+        yield _error_message(language)
 
     @classmethod
     def complete(cls, prompt: str, system: str = "") -> str:
@@ -80,7 +185,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
-        ollama_model = _OLLAMA_MODEL
+        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or ollama_model
         try:
@@ -108,7 +213,7 @@ class LLMClient:
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
         ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")
-        ollama_model = _OLLAMA_MODEL
+        ollama_model = _cfg("OLLAMA_MODEL", "mistral:7b-instruct")
         timeout_chat = int(_cfg("LLM_TIMEOUT_CHAT", "120"))
         effective_model = model or ollama_model
         try:

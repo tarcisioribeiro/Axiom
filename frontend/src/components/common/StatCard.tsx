@@ -12,6 +12,7 @@ interface StatCardProps {
   title: string;
   value: string | number;
   icon?: React.ReactNode;
+  description?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -40,6 +41,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
   icon,
+  description,
   trend,
   variant = 'default',
 }) => {
@@ -114,6 +116,9 @@ export const StatCard: React.FC<StatCardProps> = ({
           <div className="numeric text-2xl font-bold tracking-tight">
             {displayValue}
           </div>
+          {description && (
+            <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+          )}
           {trend && (
             <div className="mt-sm flex items-center gap-xs">
               <motion.div
