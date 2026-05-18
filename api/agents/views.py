@@ -1,4 +1,5 @@
 import json
+import re
 import uuid
 from collections.abc import Generator
 from typing import cast
@@ -16,13 +17,36 @@ from rest_framework.views import APIView
 from agents.core.base_agent import AgentContext
 from agents.core.memory import ConversationMemory
 from agents.core.router import AgentRouter
-from agents.models import AgentConversation, EmbeddingDocument
+from agents.models import AgentConversation
 from agents.serializers import (
     AgentAskSerializer,
     AgentConversationSerializer,
     AgentStatusSerializer,
-    EmbeddingDocumentSerializer,
 )
+from app.throttles import AgentRateThrottle
+
+# Patterns that indicate prompt injection attempts.
+_INJECTION_PATTERNS = [
+    re.compile(r"ignore\s+(?:previous|all|prior)\s+instructions?", re.I),
+    re.compile(r"system\s*prompt", re.I),
+    re.compile(r"you\s+are\s+now\s+(?:a\s+)?(?:dan|jailbreak|evil|unrestricted)", re.I),
+    re.compile(r"disregard\s+(?:your|all|the)\s+(?:previous|system|prior)", re.I),
+    re.compile(r"act\s+as\s+if\s+you\s+(?:have\s+no|are\s+not)", re.I),
+]
+
+_MAX_QUERY_LEN = 2000
+
+
+def _sanitize_query(query: str) -> tuple[bool, str]:
+    """Return (is_safe, cleaned_query). Strips control chars; rejects injection."""
+    # Remove non-printable control characters (except newline/tab)
+    cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", query).strip()
+    if len(cleaned) > _MAX_QUERY_LEN:
+        cleaned = cleaned[:_MAX_QUERY_LEN]
+    for pattern in _INJECTION_PATTERNS:
+        if pattern.search(cleaned):
+            return False, cleaned
+    return True, cleaned
 
 
 class AgentAskView(APIView):
@@ -32,6 +56,7 @@ class AgentAskView(APIView):
     """
 
     permission_classes = (IsAuthenticated,)
+    throttle_classes = [AgentRateThrottle]
 
     def post(self, request: Request) -> Response:
         serializer = AgentAskSerializer(data=request.data)
@@ -41,7 +66,13 @@ class AgentAskView(APIView):
         user = cast(User, request.user)
         data = serializer.validated_data
         session_id = data["session_id"]
-        query = data["query"]
+        raw_query = data["query"]
+        is_safe, query = _sanitize_query(raw_query)
+        if not is_safe:
+            return Response(
+                {"error": "Consulta inválida."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         query_id = uuid.uuid4()
 
         history = ConversationMemory.get(user.pk, session_id)
@@ -50,6 +81,7 @@ class AgentAskView(APIView):
             user_id=user.pk,
             query=query,
             history=history,
+            language=data.get("language", "pt-BR"),
             metadata={
                 "date_from": (
                     data.get("date_from").isoformat() if data.get("date_from") else None
@@ -204,6 +236,7 @@ class AgentStreamView(APIView):
     """
 
     permission_classes = (IsAuthenticated,)
+    throttle_classes = [AgentRateThrottle]
 
     def post(self, request: Request) -> Response | StreamingHttpResponse:
         serializer = AgentAskSerializer(data=request.data)
@@ -213,7 +246,13 @@ class AgentStreamView(APIView):
         user = cast(User, request.user)
         data = serializer.validated_data
         session_id = data["session_id"]
-        query = data["query"]
+        raw_query = data["query"]
+        is_safe, query = _sanitize_query(raw_query)
+        if not is_safe:
+            return Response(
+                {"error": "Consulta inválida."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         query_id = str(uuid.uuid4())
 
         history = ConversationMemory.get(user.pk, session_id)
@@ -221,6 +260,7 @@ class AgentStreamView(APIView):
             user_id=user.pk,
             query=query,
             history=history,
+            language=data.get("language", "pt-BR"),
             metadata={
                 "date_from": (
                     data.get("date_from").isoformat() if data.get("date_from") else None
@@ -277,6 +317,37 @@ class AgentStreamView(APIView):
                     ]
                 )
             except GeneratorExit:
+                # Persiste o que foi acumulado antes da desconexão do cliente
+                if full_content:
+                    try:
+                        ConversationMemory.append(
+                            user.pk, session_id, query, full_content
+                        )
+                        AgentConversation.objects.bulk_create(
+                            [
+                                AgentConversation(
+                                    user=user,
+                                    session_id=session_id,
+                                    role="user",
+                                    content=query,
+                                    query_id=query_id,
+                                    created_by=user,
+                                    updated_by=user,
+                                ),
+                                AgentConversation(
+                                    user=user,
+                                    session_id=session_id,
+                                    role="agent",
+                                    content=full_content,
+                                    agent_name=agent.name,
+                                    query_id=query_id,
+                                    created_by=user,
+                                    updated_by=user,
+                                ),
+                            ]
+                        )
+                    except Exception:
+                        pass
                 return
 
         response = StreamingHttpResponse(
@@ -285,20 +356,3 @@ class AgentStreamView(APIView):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
         return response
-
-
-class EmbeddingDocumentListView(APIView):
-    """
-    GET /api/v1/agents/embeddings/
-    Lista documentos vetorizados do usuário (para diagnóstico).
-    """
-
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request: Request) -> Response:
-        user = cast(User, request.user)
-        docs = EmbeddingDocument.objects.filter(user=user, is_deleted=False).values(
-            "source_type", "source_title", "created_at"
-        )
-        serializer = EmbeddingDocumentSerializer(docs, many=True)
-        return Response({"results": serializer.data, "count": docs.count()})

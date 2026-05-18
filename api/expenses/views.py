@@ -45,8 +45,10 @@ class ExpenseCreateListView(BaseListCreateView):
     ordering = ["-date", "-id"]
 
     def get_queryset(self):
-        return Expense.objects.filter(created_by=self.request.user).select_related(
-            "account"
+        return (
+            Expense.objects.filter(created_by=self.request.user)
+            .select_related("account", "member")
+            .prefetch_related("tags")
         )
 
     def perform_create(self, serializer):
@@ -78,8 +80,10 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = ExpenseSerializer
 
     def get_queryset(self):
-        return Expense.objects.filter(created_by=self.request.user).select_related(
-            "account"
+        return (
+            Expense.objects.filter(created_by=self.request.user)
+            .select_related("account", "member")
+            .prefetch_related("tags")
         )
 
     def perform_update(self, serializer):

@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.auth.models import User
 
 from agents.core.base_agent import AgentContext, BaseAgent
-from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.prompts import get_system_prompt
 
 _TRIGGER_WORDS = [
     "previsão",
@@ -60,7 +60,7 @@ class ForecastAgent(BaseAgent):
         )
 
         return {
-            "system_prompt": BASE_SYSTEM_PROMPT,
+            "system_prompt": get_system_prompt(ctx.language),
             "accounts": accounts,
             "fixed_upcoming": fixed_upcoming,
             "expected_revenues": expected_revenues,

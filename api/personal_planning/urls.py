@@ -3,6 +3,7 @@ from django.urls import path
 from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
+    GamificationProfileView,
     GoalDetailView,
     GoalListCreateView,
     GoalRecalculateView,
@@ -110,5 +111,10 @@ urlpatterns = [
         "instances/bulk-update/",
         TaskInstanceBulkUpdateView.as_view(),
         name="task-instance-bulk-update",
+    ),
+    path(
+        "gamification/",
+        GamificationProfileView.as_view(),
+        name="gamification-profile",
     ),
 ]

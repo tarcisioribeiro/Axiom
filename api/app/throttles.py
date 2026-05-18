@@ -9,3 +9,13 @@ class ExportRateThrottle(UserRateThrottle):
     """
 
     scope = "export"
+
+
+class AgentRateThrottle(UserRateThrottle):
+    """Rate limit for LLM agent endpoints (/ask/, /stream/).
+
+    Each request may trigger an expensive LLM call (latency + token cost),
+    so we apply a conservative per-user limit independently of the global throttle.
+    """
+
+    scope = "agent"

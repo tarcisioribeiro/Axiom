@@ -85,6 +85,7 @@ class VaultSerializer(serializers.ModelSerializer):
             "pending_yield",
             "is_active",
             "notes",
+            "currency_code",
             "total_deposits",
             "total_withdrawals",
             "recent_transactions",

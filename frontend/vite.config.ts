@@ -3,6 +3,7 @@ import path from 'path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import compression from 'vite-plugin-compression'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -19,6 +20,49 @@ export default defineConfig({
       algorithm: 'brotliCompress',
       ext: '.br',
       threshold: 1024,
+    }),
+    // PWA — service worker + manifest
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['icon.png', 'icon-dark.png', 'icon-light.png', 'logo.png'],
+      manifest: {
+        name: 'MindLedger',
+        short_name: 'MindLedger',
+        description: 'Gestão financeira pessoal inteligente',
+        theme_color: '#7c3aed',
+        background_color: '#1a1b2e',
+        display: 'standalone',
+        start_url: '/',
+        lang: 'pt-BR',
+        icons: [
+          { src: '/icon.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/icon-dark.png', sizes: '512x512', type: 'image/png' },
+        ],
+      },
+      workbox: {
+        // Cache-first para listas estáticas; network-first para API
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/api\/v1\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 100, maxAgeSeconds: 300 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: /\.(png|jpg|jpeg|svg|gif|webp|ico)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: { maxEntries: 60, maxAgeSeconds: 86400 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
     }),
   ],
   resolve: {

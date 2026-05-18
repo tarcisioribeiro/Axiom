@@ -104,6 +104,10 @@ vi.mock('@/components/dashboard/AlertsPanel', () => ({
   AlertsPanel: () => <div data-testid="alerts-panel" />,
 }));
 
+vi.mock('@/components/dashboard/HealthScore', () => ({
+  HealthScore: () => <div data-testid="health-score" />,
+}));
+
 vi.mock('@/lib/chart-colors', () => ({
   useChartColors: () => ({
     primary: '#8B5CF6',
