@@ -30,6 +30,7 @@ from loans.models import Loan
 from members.models import Member
 from payables.models import Payable
 from revenues.models import Revenue
+from transfers.models import Transfer
 
 
 def get_cache_key(prefix: str, user_id: Optional[int] = None) -> str:
@@ -39,19 +40,16 @@ def get_cache_key(prefix: str, user_id: Optional[int] = None) -> str:
     return f"dashboard:{prefix}"
 
 
-def invalidate_dashboard_cache():
-    """
-    Invalida todas as chaves de cache do dashboard.
-    Chamar quando dados financeiros sao alterados (accounts, expenses, revenues, etc).
-    """
+def invalidate_user_dashboard_cache(user_id: int) -> None:
+    """Invalida todas as chaves de cache do dashboard para o usuário dado."""
     cache_keys = [
-        get_cache_key("account_balances"),
-        get_cache_key("stats"),
-        get_cache_key("category_breakdown"),
-        get_cache_key("balance_forecast"),
-        get_cache_key("cash_flow_forecast:days:30"),
-        get_cache_key("cash_flow_forecast:days:60"),
-        get_cache_key("cash_flow_forecast:days:90"),
+        get_cache_key("account_balances", user_id),
+        get_cache_key("stats", user_id),
+        get_cache_key("category_breakdown", user_id),
+        get_cache_key("balance_forecast", user_id),
+        get_cache_key("cash_flow_forecast:days:30", user_id),
+        get_cache_key("cash_flow_forecast:days:60", user_id),
+        get_cache_key("cash_flow_forecast:days:90", user_id),
     ]
     cache.delete_many(cache_keys)
 
@@ -112,6 +110,30 @@ class AccountBalancesView(APIView):
             .values("total")
         )
 
+        # Subquery para transferências pendentes saindo da conta (origin)
+        pending_transfers_out_subquery = (
+            Transfer.objects.filter(
+                origin_account=OuterRef("pk"),
+                transfered=False,
+                status__in=["pending", "processing"],
+            )
+            .values("origin_account")
+            .annotate(total=Sum("value"))
+            .values("total")
+        )
+
+        # Subquery para transferências pendentes chegando na conta (destiny)
+        pending_transfers_in_subquery = (
+            Transfer.objects.filter(
+                destiny_account=OuterRef("pk"),
+                transfered=False,
+                status__in=["pending", "processing"],
+            )
+            .values("destiny_account")
+            .annotate(total=Sum("value"))
+            .values("total")
+        )
+
         # Query unica com annotate (evita N+1) — apenas contas do usuário autenticado
         accounts = (
             Account.objects.filter(
@@ -128,6 +150,16 @@ class AccountBalancesView(APIView):
                     Value(Decimal("0.00")),
                     output_field=DecimalField(),
                 ),
+                pending_transfers_out=Coalesce(
+                    Subquery(pending_transfers_out_subquery),
+                    Value(Decimal("0.00")),
+                    output_field=DecimalField(),
+                ),
+                pending_transfers_in=Coalesce(
+                    Subquery(pending_transfers_in_subquery),
+                    Value(Decimal("0.00")),
+                    output_field=DecimalField(),
+                ),
             )
             .order_by("account_name")
         )
@@ -137,7 +169,15 @@ class AccountBalancesView(APIView):
             current_balance = account.current_balance or Decimal("0.00")
             pending_rev = account.pending_revenues or Decimal("0.00")
             pending_exp = account.pending_expenses or Decimal("0.00")
-            future_balance = current_balance + pending_rev - pending_exp
+            transfers_out = account.pending_transfers_out or Decimal("0.00")
+            transfers_in = account.pending_transfers_in or Decimal("0.00")
+            future_balance = (
+                current_balance
+                + pending_rev
+                - pending_exp
+                + transfers_in
+                - transfers_out
+            )
 
             result.append(
                 {
@@ -147,6 +187,8 @@ class AccountBalancesView(APIView):
                     "current_balance": float(current_balance),
                     "pending_revenues": float(pending_rev),
                     "pending_expenses": float(pending_exp),
+                    "pending_transfers_in": float(transfers_in),
+                    "pending_transfers_out": float(transfers_out),
                     "future_balance": float(future_balance),
                 }
             )
@@ -1477,3 +1519,221 @@ class AuditLogView(APIView):
             for entry in qs
         ]
         return Response({"results": data, "count": len(data)})
+
+
+class FinancialHealthScoreView(APIView):
+    """
+    GET /api/v1/dashboard/health-score/
+
+    Retorna score de saúde financeira de 0-100 com breakdown por dimensão.
+
+    Dimensões (25 pontos cada):
+    - Liquidez:      total_saldo / (média_despesas_mensais_últimos_3m × 3) — ideal ≥ 1×
+    - Endividamento: 1 - (empréstimos_ativos / receita_anual) — ideal: dívidas < receita
+    - Poupança:      (receitas_recebidas - despesas_pagas) / receitas_recebidas × 100
+    - Adimplência:   1 - (compromissos_vencidos / total_compromissos)
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        today = timezone.now().date()
+        three_months_ago = today.replace(day=1) - timedelta(days=90)
+        year_start = date(today.year, 1, 1)
+
+        # --- Liquidez ---
+        total_balance = Account.objects.filter(
+            created_by=user, is_deleted=False
+        ).aggregate(
+            total=Coalesce(
+                Sum("current_balance"), Value(Decimal("0")), output_field=DecimalField()
+            )
+        )[
+            "total"
+        ]
+        monthly_expenses_avg = Expense.objects.filter(
+            created_by=user,
+            payed=True,
+            date__gte=three_months_ago,
+            related_transfer__isnull=True,
+            is_deleted=False,
+        ).aggregate(
+            total=Coalesce(
+                Sum("value"), Value(Decimal("0")), output_field=DecimalField()
+            )
+        )[
+            "total"
+        ] / Decimal(
+            "3"
+        )
+        if monthly_expenses_avg > 0:
+            liquidity_ratio = float(total_balance / monthly_expenses_avg)
+            # Score: 0 pts se < 0.5×; 25 pts se ≥ 3×
+            liquidity_score = min(25.0, max(0.0, (liquidity_ratio / 3) * 25))
+        else:
+            liquidity_score = 25.0 if total_balance > 0 else 0.0
+            liquidity_ratio = float("inf") if total_balance > 0 else 0.0
+
+        # --- Endividamento ---
+        annual_revenue = Revenue.objects.filter(
+            created_by=user,
+            received=True,
+            date__gte=year_start,
+            related_transfer__isnull=True,
+            is_deleted=False,
+        ).aggregate(
+            total=Coalesce(
+                Sum("value"), Value(Decimal("0")), output_field=DecimalField()
+            )
+        )[
+            "total"
+        ]
+        active_loans_total = Loan.objects.filter(
+            created_by=user,
+            status__in=["active", "overdue"],
+            is_deleted=False,
+        ).aggregate(
+            total=Coalesce(
+                Sum(
+                    F("value")
+                    - Coalesce(
+                        F("payed_value"),
+                        Value(Decimal("0")),
+                        output_field=DecimalField(),
+                    )
+                ),
+                Value(Decimal("0")),
+                output_field=DecimalField(),
+            )
+        )[
+            "total"
+        ]
+        if annual_revenue > 0:
+            debt_ratio = float(active_loans_total / annual_revenue)
+            # Score: 25 pts se dívida = 0; 0 pts se dívida ≥ 100% da receita anual
+            debt_score = min(25.0, max(0.0, (1 - min(debt_ratio, 1)) * 25))
+        else:
+            debt_score = 25.0 if active_loans_total == 0 else 0.0
+            debt_ratio = 0.0
+
+        # --- Poupança (taxa de poupança no ano corrente) ---
+        annual_expenses = Expense.objects.filter(
+            created_by=user,
+            payed=True,
+            date__gte=year_start,
+            related_transfer__isnull=True,
+            is_deleted=False,
+        ).aggregate(
+            total=Coalesce(
+                Sum("value"), Value(Decimal("0")), output_field=DecimalField()
+            )
+        )[
+            "total"
+        ]
+        if annual_revenue > 0:
+            savings_rate = float((annual_revenue - annual_expenses) / annual_revenue)
+            # Score: 25 pts se taxa ≥ 20%; 0 pts se negativa
+            savings_score = min(25.0, max(0.0, (savings_rate / 0.20) * 25))
+        else:
+            savings_score = 0.0
+            savings_rate = 0.0
+
+        # --- Adimplência ---
+        overdue_payables = Payable.objects.filter(
+            member__user=user,
+            status="overdue",
+            is_deleted=False,
+        ).count()
+        overdue_loans = Loan.objects.filter(
+            created_by=user,
+            status="overdue",
+            is_deleted=False,
+        ).count()
+        overdue_bills = CreditCardBill.objects.filter(
+            credit_card__created_by=user,
+            status="overdue",
+        ).count()
+        total_overdue = overdue_payables + overdue_loans + overdue_bills
+
+        total_payables = Payable.objects.filter(
+            member__user=user,
+            is_deleted=False,
+            status__in=["active", "overdue", "paid"],
+        ).count()
+        total_loans = Loan.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            status__in=["active", "overdue", "paid"],
+        ).count()
+        total_bills = CreditCardBill.objects.filter(
+            credit_card__created_by=user,
+            status__in=["open", "closed", "paid", "overdue"],
+        ).count()
+        total_commitments = total_payables + total_loans + total_bills
+
+        if total_commitments > 0:
+            on_time_rate = 1 - (total_overdue / total_commitments)
+            compliance_score = min(25.0, max(0.0, on_time_rate * 25))
+        else:
+            compliance_score = 25.0
+            on_time_rate = 1.0
+
+        total_score = round(
+            liquidity_score + debt_score + savings_score + compliance_score, 1
+        )
+
+        return Response(
+            {
+                "score": total_score,
+                "grade": self._grade(total_score),
+                "dimensions": {
+                    "liquidity": {
+                        "score": round(liquidity_score, 1),
+                        "max": 25,
+                        "ratio": (
+                            round(liquidity_ratio, 2)
+                            if liquidity_ratio != float("inf")
+                            else None
+                        ),
+                        "label": "Liquidez",
+                        "description": "Saldo disponível vs. despesas mensais médias",
+                    },
+                    "debt": {
+                        "score": round(debt_score, 1),
+                        "max": 25,
+                        "ratio": round(debt_ratio, 2),
+                        "label": "Endividamento",
+                        "description": "Dívidas ativas vs. receita anual",
+                    },
+                    "savings": {
+                        "score": round(savings_score, 1),
+                        "max": 25,
+                        "rate": round(savings_rate * 100, 1),
+                        "label": "Poupança",
+                        "description": "Percentual da receita que sobra após despesas",
+                    },
+                    "compliance": {
+                        "score": round(compliance_score, 1),
+                        "max": 25,
+                        "overdue_count": total_overdue,
+                        "total_commitments": total_commitments,
+                        "on_time_rate": round(on_time_rate * 100, 1),
+                        "label": "Adimplência",
+                        "description": "Compromissos em dia vs. total de compromissos",
+                    },
+                },
+            }
+        )
+
+    @staticmethod
+    def _grade(score: float) -> str:
+        if score >= 90:
+            return "A"
+        if score >= 75:
+            return "B"
+        if score >= 60:
+            return "C"
+        if score >= 40:
+            return "D"
+        return "F"

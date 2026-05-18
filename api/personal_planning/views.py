@@ -11,7 +11,14 @@ from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from members.models import Member
-from personal_planning.models import DailyReflection, Goal, RoutineTask, TaskInstance
+from personal_planning.models import (
+    DailyReflection,
+    GamificationProfile,
+    Goal,
+    RoutineTask,
+    TaskInstance,
+    UserBadge,
+)
 from personal_planning.serializers import (
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
@@ -1406,5 +1413,71 @@ class TaskInstanceBulkUpdateView(APIView):
                 "updated_count": len(updated_instances),
                 "updated": TaskInstanceSerializer(updated_instances, many=True).data,
                 "errors": errors,
+            }
+        )
+
+
+class GamificationProfileView(APIView):
+    """GET /api/v1/personal-planning/gamification/ — perfil de gamificação."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        member = Member.objects.filter(user=request.user, is_deleted=False).first()
+        if not member:
+            return Response(
+                {"detail": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        profile, _ = GamificationProfile.objects.get_or_create(
+            member=member,
+            defaults={"created_by": request.user},
+        )
+
+        badges = (
+            UserBadge.objects.filter(profile=profile)
+            .select_related("badge")
+            .order_by("-earned_at")[:20]
+        )
+        recent_xp = profile.xp_transactions.order_by("-created_at")[:10]
+
+        xp_next_level = GamificationProfile.xp_for_level(profile.current_level + 1)
+        xp_current_level = GamificationProfile.xp_for_level(profile.current_level)
+        xp_in_level = profile.total_xp - xp_current_level
+        xp_needed = xp_next_level - xp_current_level
+        progress_pct = round((xp_in_level / xp_needed * 100) if xp_needed > 0 else 0, 1)
+
+        return Response(
+            {
+                "total_xp": profile.total_xp,
+                "current_level": profile.current_level,
+                "current_streak": profile.current_streak,
+                "longest_streak": profile.longest_streak,
+                "tasks_completed_total": profile.tasks_completed_total,
+                "xp_next_level": xp_next_level,
+                "xp_in_level": xp_in_level,
+                "xp_needed_for_next_level": xp_needed,
+                "level_progress_pct": progress_pct,
+                "badges": [
+                    {
+                        "slug": ub.badge.slug,
+                        "name": ub.badge.name,
+                        "description": ub.badge.description,
+                        "icon": ub.badge.icon,
+                        "category": ub.badge.category,
+                        "earned_at": ub.earned_at.isoformat(),
+                    }
+                    for ub in badges
+                ],
+                "recent_xp": [
+                    {
+                        "amount": tx.amount,
+                        "event": tx.event,
+                        "description": tx.description,
+                        "total_after": tx.total_after,
+                        "created_at": tx.created_at.isoformat(),
+                    }
+                    for tx in recent_xp
+                ],
             }
         )

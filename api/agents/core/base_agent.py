@@ -12,6 +12,7 @@ class AgentContext:
     query: str
     history: list[dict[str, str]] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
+    language: str = "pt-BR"
 
 
 @dataclass
@@ -62,7 +63,7 @@ class BaseAgent(ABC):
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
-        raw = LLMClient.chat(messages, model=self.get_model())
+        raw = LLMClient.chat(messages, model=self.get_model(), language=ctx.language)
         return AgentResponse(
             content=raw,
             agent_name=self.name,
@@ -80,4 +81,6 @@ class BaseAgent(ABC):
         if system:
             messages.append({"role": "system", "content": system})
         messages.append({"role": "user", "content": prompt})
-        yield from LLMClient.stream_chat(messages, model=self.get_model())
+        yield from LLMClient.stream_chat(
+            messages, model=self.get_model(), language=ctx.language
+        )

@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 from agents.core.base_agent import AgentContext, BaseAgent
-from agents.core.prompts import BASE_SYSTEM_PROMPT
+from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
 _TRIGGER_WORDS = [
@@ -94,7 +94,7 @@ class InsightAgent(BaseAgent):
         critical = [b for b in budgets if b["percentage"] >= 80 and not b["overbudget"]]
 
         return {
-            "system_prompt": BASE_SYSTEM_PROMPT,
+            "system_prompt": get_system_prompt(ctx.language),
             "month_totals": month_totals,
             "total_balance": total_balance,
             "budgets": budgets,

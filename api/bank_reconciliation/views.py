@@ -42,16 +42,20 @@ class BankStatementImportCreateView(APIView):
                 {"detail": "Conta não informada."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if file_format not in ("ofx", "csv"):
+        if file_format not in ("ofx", "csv", "cnab240", "cnab400"):
             # Auto-detect from filename
             name = file_obj.name.lower()
             if name.endswith(".ofx"):
                 file_format = "ofx"
             elif name.endswith(".csv"):
                 file_format = "csv"
+            elif name.endswith(".rem") or name.endswith(".ret"):
+                # CNAB files often use .rem (remessa) or .ret (retorno)
+                # Default to CNAB 240; user can override via file_format field
+                file_format = "cnab240"
             else:
                 return Response(
-                    {"detail": "Formato inválido. Use OFX ou CSV."},
+                    {"detail": "Formato inválido. Use OFX, CSV, CNAB 240 ou CNAB 400."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 

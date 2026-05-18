@@ -576,6 +576,12 @@ class CreateShareTokenSerializer(serializers.Serializer):
         default=1,
         help_text="Número máximo de usos (1-5)",
     )
+    allowed_ips = serializers.ListField(
+        child=serializers.IPAddressField(),
+        required=False,
+        default=list,
+        help_text="IPs autorizados a resgatar este token. Vazio = qualquer IP.",
+    )
 
 
 class CredentialShareTokenSerializer(serializers.ModelSerializer):
@@ -597,6 +603,7 @@ class CredentialShareTokenSerializer(serializers.ModelSerializer):
             "used_at",
             "use_count",
             "max_uses",
+            "allowed_ips",
             "is_revoked",
             "is_token_valid",
             "is_expired",
@@ -643,6 +650,7 @@ class CredentialShareTokenCreateResponseSerializer(serializers.ModelSerializer):
             "used_at",
             "use_count",
             "max_uses",
+            "allowed_ips",
             "is_revoked",
             "is_token_valid",
             "is_expired",

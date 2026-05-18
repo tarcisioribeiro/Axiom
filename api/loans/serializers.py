@@ -69,6 +69,7 @@ class LoanSerializer(serializers.ModelSerializer):
             "guarantor",
             "guarantor_name",
             "notes",
+            "currency_code",
             "status",
             "remaining_balance",
             "created_at",

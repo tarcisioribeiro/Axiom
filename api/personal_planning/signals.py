@@ -63,6 +63,100 @@ def _notify_goal_completed(goal):
         pass
 
 
+@receiver(post_save, sender="personal_planning.TaskInstance")
+def award_xp_on_task_completion(sender, instance, created, **kwargs):
+    """Concede XP ao membro quando uma tarefa é concluída."""
+    if instance.status != "completed":
+        return
+
+    # Só processa a primeira vez que o status se torna "completed"
+    prev_status = getattr(instance, "_prev_status", None)
+    if not created and prev_status == "completed":
+        return
+
+    try:
+        from personal_planning.models import GamificationProfile
+
+        profile, _ = GamificationProfile.objects.get_or_create(
+            member=instance.owner,
+            defaults={"created_by": instance.created_by},
+        )
+        profile.tasks_completed_total += 1
+        profile.save(update_fields=["tasks_completed_total", "updated_at"])
+
+        xp = 10 + (5 if instance.priority in ("high", "critical") else 0)
+        profile.add_xp(xp, "task_completed", f"Tarefa: {instance.task_name}")
+        profile.update_streak(instance.scheduled_date)
+
+        # Badge de marcos de tarefas
+        for milestone, slug, name, reward in [
+            (10, "tasks_10", "Iniciante ✅", 20),
+            (50, "tasks_50", "Consistente 💼", 100),
+            (100, "tasks_100", "Dedicado 🌟", 250),
+            (500, "tasks_500", "Mestre das Rotinas 🏆", 1000),
+        ]:
+            if profile.tasks_completed_total == milestone:
+                from personal_planning.models import Badge, UserBadge
+
+                badge, _ = Badge.objects.get_or_create(
+                    slug=slug,
+                    defaults={
+                        "name": name,
+                        "description": f"Concluiu {milestone} tarefas",
+                        "category": "completion",
+                        "icon": "✅",
+                        "xp_reward": reward,
+                        "created_by": instance.created_by,
+                    },
+                )
+                _, earned = UserBadge.objects.get_or_create(
+                    profile=profile,
+                    badge=badge,
+                    defaults={"created_by": instance.created_by},
+                )
+                if earned:
+                    profile.add_xp(reward, "badge_earned", f"Badge: {badge.name}")
+    except Exception:
+        pass
+
+
+@receiver(post_save, sender="personal_planning.Goal")
+def award_xp_on_goal_completed(sender, instance, created, **kwargs):
+    """Concede XP quando um objetivo é concluído."""
+    if instance.status != "completed" or created:
+        return
+
+    try:
+        from personal_planning.models import Badge, GamificationProfile, UserBadge
+
+        profile, _ = GamificationProfile.objects.get_or_create(
+            member=instance.owner,
+            defaults={"created_by": instance.created_by},
+        )
+        xp = 100
+        profile.add_xp(xp, "goal_completed", f"Objetivo: {instance.title}")
+
+        slug = f"goal_{instance.goal_type}_first"
+        badge, _ = Badge.objects.get_or_create(
+            slug=slug,
+            defaults={
+                "name": f"Primeiro Objetivo ({instance.get_goal_type_display()})",
+                "description": "Concluiu o primeiro objetivo deste tipo",
+                "category": "goal",
+                "icon": "🎯",
+                "xp_reward": 0,
+                "created_by": instance.created_by,
+            },
+        )
+        UserBadge.objects.get_or_create(
+            profile=profile,
+            badge=badge,
+            defaults={"created_by": instance.created_by},
+        )
+    except Exception:
+        pass
+
+
 @receiver(post_save, sender="personal_planning.RoutineTask")
 def embed_routine_task(sender, instance, **kwargs):
     from agents.services.embedding_service import generate_embedding_for_instance

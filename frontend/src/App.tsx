@@ -72,6 +72,9 @@ const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
+// Webhooks
+const Webhooks = lazy(() => import('./pages/Webhooks'));
+
 // Notification Preferences
 const NotificationPreferences = lazy(() => import('./pages/NotificationPreferences'));
 
@@ -491,6 +494,16 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <Budgets />
+              </PageWrapper>
+            }
+          />
+
+          {/* Webhooks */}
+          <Route
+            path="/webhooks"
+            element={
+              <PageWrapper>
+                <Webhooks />
               </PageWrapper>
             }
           />
