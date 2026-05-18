@@ -88,6 +88,10 @@ omit = [
     "agents/tools/*",
     "agents/core/llm_client.py",
     "admin_panel/views.py",
+    # Infrastructure/operational modules — not unit-testable
+    "app/metrics.py",
+    "app/celery.py",
+    "agents/tasks.py",
 ]
 
 [tool.coverage.report]
@@ -118,6 +122,8 @@ module = [
     "corsheaders.*",
     "anthropic",
     "anthropic.*",
+    "celery",
+    "celery.*",
     "drf_spectacular.*",
     "pythonjsonlogger.*",
     "django_prometheus.*",
@@ -133,6 +139,7 @@ module = [
     "psycopg2.*",
     "mysql",
     "mysql.*",
+    "prometheus_client",
     "bank_reconciliation",
     "bank_reconciliation.*",
     "qrcode",

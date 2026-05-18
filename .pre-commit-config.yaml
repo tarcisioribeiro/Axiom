@@ -67,6 +67,8 @@ repos:
           - psycopg2-binary==2.9.10
           - pyotp==2.9.0
           - qrcode==8.0
+          - celery==5.5.3
+          - django-celery-beat==2.8.1
 
   # Commit message linting
   - repo: local

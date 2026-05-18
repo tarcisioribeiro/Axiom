@@ -802,3 +802,232 @@ class TaskInstance(BaseModel):
             f"{self.task_name} ({self.scheduled_date}{time_str})"
             f" - {self.get_status_display()}"
         )
+
+
+# ============================================================================
+# GAMIFICATION MODELS
+# ============================================================================
+
+BADGE_CATEGORY_CHOICES = (
+    ("streak", "Sequência"),
+    ("completion", "Conclusão"),
+    ("goal", "Meta"),
+    ("milestone", "Marco"),
+    ("special", "Especial"),
+)
+
+XP_EVENT_CHOICES = (
+    ("task_completed", "Tarefa concluída"),
+    ("goal_completed", "Objetivo concluído"),
+    ("streak_7", "Sequência de 7 dias"),
+    ("streak_30", "Sequência de 30 dias"),
+    ("streak_100", "Sequência de 100 dias"),
+    ("badge_earned", "Badge conquistado"),
+    ("daily_reflection", "Reflexão diária"),
+)
+
+
+class GamificationProfile(BaseModel):
+    """Perfil de gamificação de um membro — XP acumulado, nível e streak atual."""
+
+    member = models.OneToOneField(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="gamification_profile",
+        verbose_name="Membro",
+    )
+    total_xp = models.PositiveIntegerField(default=0, verbose_name="XP Total")
+    current_level = models.PositiveSmallIntegerField(default=1, verbose_name="Nível")
+    current_streak = models.PositiveIntegerField(
+        default=0, verbose_name="Sequência atual (dias)"
+    )
+    longest_streak = models.PositiveIntegerField(
+        default=0, verbose_name="Maior sequência (dias)"
+    )
+    last_activity_date = models.DateField(
+        null=True, blank=True, verbose_name="Última atividade"
+    )
+    tasks_completed_total = models.PositiveIntegerField(
+        default=0, verbose_name="Total de tarefas concluídas"
+    )
+
+    class Meta:
+        verbose_name = "Perfil de Gamificação"
+        verbose_name_plural = "Perfis de Gamificação"
+
+    def __str__(self):
+        return f"{self.member} — Nível {self.current_level} ({self.total_xp} XP)"
+
+    @staticmethod
+    def xp_for_level(level: int) -> int:
+        """XP necessário para atingir o nível informado (curva quadrática)."""
+        return 100 * (level**2)
+
+    def add_xp(self, amount: int, event: str, description: str = "") -> "XPTransaction":
+        self.total_xp += amount
+        new_level = self._calculate_level()
+        leveled_up = new_level > self.current_level
+        self.current_level = new_level
+        self.save(update_fields=["total_xp", "current_level", "updated_at"])
+        tx = XPTransaction.objects.create(
+            profile=self,
+            amount=amount,
+            event=event,
+            description=description,
+            total_after=self.total_xp,
+            created_by=self.created_by,
+        )
+        if leveled_up:
+            self._award_level_badge(new_level)
+        return tx
+
+    def _calculate_level(self) -> int:
+        level = 1
+        while self.total_xp >= self.xp_for_level(level + 1):
+            level += 1
+        return level
+
+    def _award_level_badge(self, level: int):
+        slug = f"level_{level}"
+        badge, _ = Badge.objects.get_or_create(
+            slug=slug,
+            defaults={
+                "name": f"Nível {level}",
+                "description": f"Atingiu o nível {level}",
+                "category": "milestone",
+                "icon": "🏆",
+                "xp_reward": 0,
+                "created_by": self.created_by,
+            },
+        )
+        UserBadge.objects.get_or_create(
+            profile=self,
+            badge=badge,
+            defaults={"created_by": self.created_by},
+        )
+
+    def update_streak(self, activity_date=None):
+        from django.utils import timezone
+
+        today = activity_date or timezone.now().date()
+        if self.last_activity_date is None:
+            self.current_streak = 1
+        elif (today - self.last_activity_date).days == 1:
+            self.current_streak += 1
+        elif (today - self.last_activity_date).days == 0:
+            return  # já registrado hoje
+        else:
+            self.current_streak = 1
+
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+
+        self.last_activity_date = today
+        self.save(
+            update_fields=[
+                "current_streak",
+                "longest_streak",
+                "last_activity_date",
+                "updated_at",
+            ]
+        )
+
+        for days, slug, name, xp in [
+            (7, "streak_7", "Semana Perfeita 🔥", 50),
+            (30, "streak_30", "Mês Consistente 💪", 200),
+            (100, "streak_100", "100 Dias! 🌟", 1000),
+        ]:
+            if self.current_streak == days:
+                self.add_xp(xp, f"streak_{days}", f"Sequência de {days} dias!")
+                badge, _ = Badge.objects.get_or_create(
+                    slug=slug,
+                    defaults={
+                        "name": name,
+                        "description": (
+                            f"Completou {days} dias consecutivos de atividade"
+                        ),
+                        "category": "streak",
+                        "icon": "🔥" if days == 7 else ("💪" if days == 30 else "🌟"),
+                        "xp_reward": xp,
+                        "created_by": self.created_by,
+                    },
+                )
+                UserBadge.objects.get_or_create(
+                    profile=self,
+                    badge=badge,
+                    defaults={"created_by": self.created_by},
+                )
+
+
+class XPTransaction(BaseModel):
+    """Log imutável de cada ganho/perda de XP."""
+
+    profile = models.ForeignKey(
+        GamificationProfile,
+        on_delete=models.CASCADE,
+        related_name="xp_transactions",
+        verbose_name="Perfil",
+    )
+    amount = models.IntegerField(verbose_name="XP ganho/perdido")
+    event = models.CharField(
+        max_length=50, choices=XP_EVENT_CHOICES, verbose_name="Evento"
+    )
+    description = models.CharField(max_length=200, blank=True, verbose_name="Descrição")
+    total_after = models.PositiveIntegerField(verbose_name="XP total após")
+
+    class Meta:
+        verbose_name = "Transação de XP"
+        verbose_name_plural = "Transações de XP"
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["profile", "-created_at"])]
+
+    def __str__(self):
+        return f"+{self.amount} XP — {self.event}"
+
+
+class Badge(BaseModel):
+    """Definição de um badge conquistável."""
+
+    slug = models.CharField(max_length=80, unique=True, verbose_name="Slug")
+    name = models.CharField(max_length=100, verbose_name="Nome")
+    description = models.CharField(max_length=300, verbose_name="Descrição")
+    category = models.CharField(
+        max_length=20, choices=BADGE_CATEGORY_CHOICES, verbose_name="Categoria"
+    )
+    icon = models.CharField(max_length=10, default="🏅", verbose_name="Ícone (emoji)")
+    xp_reward = models.PositiveSmallIntegerField(default=0, verbose_name="XP bônus")
+
+    class Meta:
+        verbose_name = "Badge"
+        verbose_name_plural = "Badges"
+        ordering = ["category", "name"]
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class UserBadge(BaseModel):
+    """Associação entre perfil e badge conquistado."""
+
+    profile = models.ForeignKey(
+        GamificationProfile,
+        on_delete=models.CASCADE,
+        related_name="user_badges",
+        verbose_name="Perfil",
+    )
+    badge = models.ForeignKey(
+        Badge,
+        on_delete=models.CASCADE,
+        related_name="user_badges",
+        verbose_name="Badge",
+    )
+    earned_at = models.DateTimeField(auto_now_add=True, verbose_name="Conquistado em")
+
+    class Meta:
+        verbose_name = "Badge do Usuário"
+        verbose_name_plural = "Badges dos Usuários"
+        unique_together = [["profile", "badge"]]
+        ordering = ["-earned_at"]
+
+    def __str__(self):
+        return f"{self.profile.member} — {self.badge.name}"

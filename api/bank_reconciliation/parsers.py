@@ -171,13 +171,141 @@ def parse_csv(content: str) -> list:
     return transactions
 
 
+def parse_cnab240(content: str) -> list:
+    """Parse CNAB 240 — padrão Febraban de 240 caracteres por linha.
+
+    Cada linha de detalhe (segmento E/A/B) tem posições fixas.
+    Trata apenas o segmento E (lançamentos) que é o mais comum entre bancos BR.
+    """
+    transactions = []
+    lines = content.splitlines()
+
+    for line in lines:
+        line = line.rstrip("\r\n")
+        if len(line) < 240:
+            continue
+
+        # Tipo de registro: 3=detalhe, 0=hdr arquivo, 1=hdr lote,
+        # 5=trailer lote, 9=trailer arquivo
+        record_type = line[7:8]  # col 8 (1-indexed)
+        if record_type != "3":
+            continue
+
+        segment = line[13:14]  # col 14 — segmento (E = lançamentos, J = outros)
+        if segment not in ("E", "A"):
+            continue
+
+        try:
+            # Data: cols 73-80 (formato DDMMAAAA)
+            raw_date = line[73:81].strip()
+            if not raw_date or raw_date == "00000000":
+                continue
+            date = datetime.strptime(raw_date, "%d%m%Y").date()
+
+            # Valor: cols 119-132 (13 dígitos + 2 decimais, sem separador)
+            raw_value = line[119:132].strip()
+            if not raw_value or raw_value == "0" * len(raw_value):
+                continue
+            amount = Decimal(raw_value) / Decimal("100")
+            if amount == 0:
+                continue
+
+            # Tipo crédito/débito: col 15 (C = crédito, D = débito)
+            credit_debit = line[15:16].strip().upper()
+
+            # Descrição: cols 133-172 (40 chars, descrição/histórico)
+            description = line[133:173].strip()
+
+            # ID transação: cols 73-85 (NOSSO NÚMERO)
+            transaction_id = line[73:88].strip()
+
+            transaction_type = "debit" if credit_debit == "D" else "credit"
+
+            transactions.append(
+                {
+                    "date": date,
+                    "amount": amount,
+                    "description": description,
+                    "transaction_id": transaction_id,
+                    "type": transaction_type,
+                }
+            )
+        except (ValueError, InvalidOperation):
+            continue
+
+    return transactions
+
+
+def parse_cnab400(content: str) -> list:
+    """Parse CNAB 400 — padrão de 400 caracteres por linha.
+
+    Compatível com Bradesco, Banco do Brasil, Itaú e Santander (remessa/retorno).
+    Trata apenas registros de detalhe (tipo 1).
+    """
+    transactions = []
+    lines = content.splitlines()
+
+    for line in lines:
+        line = line.rstrip("\r\n")
+        if len(line) < 400:
+            continue
+
+        record_type = line[0:1]
+        if record_type != "1":  # 0 = header, 9 = trailer, 1 = detalhe
+            continue
+
+        try:
+            # Data: cols 111-116 (DDMMAA) ou 146-151 dependendo do layout
+            raw_date = line[110:116].strip()
+            if not raw_date or raw_date == "000000":
+                continue
+            # Tenta DDMMAA; se falhar, tenta DDMMAAAA
+            try:
+                date = datetime.strptime(raw_date, "%d%m%y").date()
+            except ValueError:
+                date = datetime.strptime(raw_date[:8], "%d%m%Y").date()
+
+            # Valor: cols 153-165 (13 chars com 2 decimais implícitos)
+            raw_value = line[152:165].strip()
+            if not raw_value or raw_value == "0" * len(raw_value):
+                continue
+            amount = Decimal(raw_value) / Decimal("100")
+            if amount == 0:
+                continue
+
+            # Débito (D) ou crédito (C): col 142
+            credit_debit = line[141:142].strip().upper()
+
+            # Descrição: cols 63-72 (nosso número/descrição) + 173-212 (histórico)
+            description = (line[62:72].strip() + " " + line[172:212].strip()).strip()
+            if not description:
+                description = "Lançamento CNAB 400"
+
+            transaction_id = line[62:72].strip()
+            transaction_type = "debit" if credit_debit == "D" else "credit"
+
+            transactions.append(
+                {
+                    "date": date,
+                    "amount": amount,
+                    "description": description,
+                    "transaction_id": transaction_id,
+                    "type": transaction_type,
+                }
+            )
+        except (ValueError, InvalidOperation):
+            continue
+
+    return transactions
+
+
 def parse_statement(file_content: bytes, file_format: str) -> list:
     """
     Dispatch to the appropriate parser based on file_format.
     Raises ValueError on parse failure.
     """
     try:
-        content = file_content.decode("utf-8", errors="replace")
+        content = file_content.decode("latin-1", errors="replace")
     except Exception as exc:
         raise ValueError(f"Não foi possível decodificar o arquivo: {exc}") from exc
 
@@ -185,6 +313,10 @@ def parse_statement(file_content: bytes, file_format: str) -> list:
         transactions = parse_ofx(content)
     elif file_format == "csv":
         transactions = parse_csv(content)
+    elif file_format == "cnab240":
+        transactions = parse_cnab240(content)
+    elif file_format == "cnab400":
+        transactions = parse_cnab400(content)
     else:
         raise ValueError(f"Formato não suportado: {file_format}")
 

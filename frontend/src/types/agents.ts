@@ -20,6 +20,7 @@ export interface AgentAskRequest {
   date_from?: string;
   date_to?: string;
   forecast_days?: number;
+  language?: string;
 }
 
 export interface AgentAskResponse {

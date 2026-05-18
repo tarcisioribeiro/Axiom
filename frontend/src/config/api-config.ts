@@ -139,6 +139,7 @@ export const API_CONFIG = {
     BUDGETS: '/api/v1/budgets/',
     BUDGETS_STATUS: '/api/v1/budgets/status/',
     BUDGET_HISTORY: '/api/v1/budgets/history/',
+    BUDGET_SUGGEST: '/api/v1/budgets/suggest/',
 
     // Categorization Rules
     CATEGORIZATION_RULES: '/api/v1/categorization-rules/',
@@ -156,6 +157,7 @@ export const API_CONFIG = {
     DASHBOARD_IR_REPORT: '/api/v1/dashboard/ir-report/',
     DASHBOARD_ALERTS_STREAM: '/api/v1/dashboard/alerts/stream/',
     DASHBOARD_AUDIT_LOG: '/api/v1/dashboard/audit-log/',
+    DASHBOARD_HEALTH_SCORE: '/api/v1/dashboard/health-score/',
 
     // Fixed Revenues
     FIXED_REVENUES: '/api/v1/fixed-revenues/',
@@ -219,6 +221,13 @@ export const API_CONFIG = {
     ADMIN_EMAIL_TEST: '/api/v1/admin/email/test/',
     ADMIN_AGENTS_STATUS: '/api/v1/admin/agents/status/',
     ADMIN_RESTART_ALL: '/api/v1/admin/restart/',
+
+    // Webhooks
+    WEBHOOKS: '/api/v1/webhooks/',
+    WEBHOOK_DETAIL: (id: number) => `/api/v1/webhooks/${id}/`,
+    WEBHOOK_DELIVERIES: (id: number) => `/api/v1/webhooks/${id}/deliveries/`,
+    WEBHOOK_TEST: (id: number) => `/api/v1/webhooks/${id}/test/`,
+    WEBHOOK_EVENTS: '/api/v1/webhooks/events/',
   },
 };
 

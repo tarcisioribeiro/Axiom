@@ -103,6 +103,12 @@ INSTALLED_APPS = [
     "agents",
     # Admin Panel Module
     "admin_panel",
+    # Async task queue
+    "django_celery_beat",
+    # Webhooks outbound
+    "webhooks",
+    # Exchange Rates (multi-currency)
+    "exchange_rates",
 ]
 
 MIDDLEWARE = [
@@ -253,6 +259,7 @@ REST_FRAMEWORK = {
         "share_token": "10/minute",
         "export": "20/minute",
         "vault_unlock": "10/minute",
+        "agent": "30/minute",  # LLM calls are expensive — conservative per-user cap
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -472,3 +479,22 @@ OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 LLM_TIMEOUT_CHAT = int(os.getenv("LLM_TIMEOUT_CHAT", "120"))
 LLM_TIMEOUT_EMBED = int(os.getenv("LLM_TIMEOUT_EMBED", "30"))
 # ANTHROPIC_MODEL and ANTHROPIC_API_KEY must be set when LLM_PROVIDER=anthropic
+
+# ============================================================================
+# Celery / Async Tasks
+# ============================================================================
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "America/Sao_Paulo"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# Tasks retry policy
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_TASK_MAX_RETRIES = 3
+# Use in-memory broker in tests to avoid requiring Redis in CI
+if _TESTING:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
