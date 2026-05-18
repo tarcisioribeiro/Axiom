@@ -101,6 +101,12 @@ class Vault(BaseModel):
         help_text="Se o cofre está ativo e aceitando operações",
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
+    currency_code = models.CharField(
+        max_length=3,
+        default="BRL",
+        verbose_name="Moeda",
+        help_text="Código ISO 4217 da moeda (ex: BRL, USD, EUR)",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -312,7 +318,8 @@ class Vault(BaseModel):
         Parameters
         ----------
         new_rate : Decimal, optional
-            Nova taxa de rendimento. Se não fornecida, usa a taxa atual.
+            Nova taxa anual de rendimento (ex: 0.1200 = 12% a.a.).
+            Se não fornecida, usa a taxa atual.
         from_date : date, optional
             Data a partir da qual recalcular. Se não fornecida, recalcula tudo.
         user : User, optional
@@ -324,7 +331,7 @@ class Vault(BaseModel):
             Informações sobre o recálculo
         """
         if new_rate is not None:
-            self.yield_rate = new_rate
+            self.annual_yield_rate = new_rate
 
         # Obter todas as transações de rendimento para recalcular
         yield_transactions = self.transactions.filter(

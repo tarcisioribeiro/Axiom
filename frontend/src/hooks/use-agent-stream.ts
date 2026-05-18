@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { agentService } from '@/services/agent-service';
 import type { AgentAskRequest } from '@/types';
@@ -22,6 +23,7 @@ const INITIAL_STATE: AgentStreamState = {
 };
 
 export function useAgentStream() {
+  const { i18n } = useTranslation();
   const [state, setState] = useState<AgentStreamState>(INITIAL_STATE);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -61,7 +63,7 @@ export function useAgentStream() {
 
       try {
         const generator = agentService.stream(
-          { query, session_id: sessionId, ...extra },
+          { query, session_id: sessionId, language: i18n.language, ...extra },
           controller.signal
         );
 
@@ -92,7 +94,7 @@ export function useAgentStream() {
         }));
       }
     },
-    [cancel]
+    [cancel, i18n.language]
   );
 
   return { ...state, send, cancel, reset };

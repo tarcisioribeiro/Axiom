@@ -9,6 +9,8 @@ from revenues.models import Revenue
 FILE_FORMAT_CHOICES = (
     ("ofx", "OFX"),
     ("csv", "CSV"),
+    ("cnab240", "CNAB 240"),
+    ("cnab400", "CNAB 400"),
 )
 
 IMPORT_STATUS_CHOICES = (
@@ -59,7 +61,7 @@ class BankStatementImport(BaseModel):
         verbose_name="Nome Original do Arquivo",
     )
     file_format = models.CharField(
-        max_length=3,
+        max_length=20,
         choices=FILE_FORMAT_CHOICES,
         verbose_name="Formato",
     )

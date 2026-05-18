@@ -1672,6 +1672,8 @@
       "expectedBalance": "Expected Balance",
       "inflows": "Expected Inflows",
       "pendingRevenues": "Pending Revenues",
+      "pendingTransfersIn": "Incoming Transfers",
+      "pendingTransfersOut": "Outgoing Transfers",
       "loansReceivable": "Loans Receivable",
       "totalInflows": "Total Inflows",
       "outflows": "Expected Outflows",
@@ -1743,6 +1745,49 @@
           "danger": "Urgent",
           "warning": "Warning",
           "info": "Info"
+        },
+        "messages": {
+          "budget_limit": "{{category}} budget reached {{percentage}}% of the limit",
+          "credit_card_bill_due_overdue_one": "{{name}} card bill is overdue (1 day ago)",
+          "credit_card_bill_due_overdue_other": "{{name}} card bill is overdue ({{count}} days ago)",
+          "credit_card_bill_due_today": "{{name}} card bill is due today",
+          "credit_card_bill_due_tomorrow": "{{name}} card bill is due tomorrow",
+          "credit_card_bill_due_days_one": "{{name}} card bill is due in 1 day",
+          "credit_card_bill_due_days_other": "{{name}} card bill is due in {{count}} days",
+          "low_balance": "Account {{name}} balance is below minimum ({{current}} / min {{minimum}})",
+          "payable_due_overdue_one": "{{name}} is overdue (1 day ago)",
+          "payable_due_overdue_other": "{{name}} is overdue ({{count}} days ago)",
+          "payable_due_today": "{{name}} is due today",
+          "payable_due_days_one": "{{name}} is due in 1 day",
+          "payable_due_days_other": "{{name}} is due in {{count}} days",
+          "loan_due_overdue_one": "Loan '{{name}}' is overdue (1 day ago)",
+          "loan_due_overdue_other": "Loan '{{name}}' is overdue ({{count}} days ago)",
+          "loan_due_today": "Loan '{{name}}' is due today",
+          "loan_due_days_one": "Loan '{{name}}' is due in 1 day",
+          "loan_due_days_other": "Loan '{{name}}' is due in {{count}} days"
+        }
+      },
+      "healthScore": {
+        "title": "Financial Health",
+        "loadError": "Could not load health score.",
+        "grades": {
+          "A": "Excellent",
+          "B": "Good",
+          "C": "Fair",
+          "D": "Warning",
+          "F": "Critical"
+        },
+        "dimensions": {
+          "liquidity": "Liquidity",
+          "debt": "Debt",
+          "savings": "Savings",
+          "compliance": "Compliance",
+          "liquidityDetail": "{{ratio}}× monthly expenses",
+          "debtDetail": "{{ratio}}% of annual income",
+          "savingsDetail": "{{rate}}% savings rate",
+          "complianceDetail": "{{rate}}% on time",
+          "overdue_one": "· {{count}} overdue",
+          "overdue_other": "· {{count}} overdue"
         }
       },
       "greetingMorning": "Good morning",

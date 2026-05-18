@@ -14,11 +14,78 @@ import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import type { FinancialAlert } from '@/types';
 
 interface AlertsPanelProps {
   alerts: FinancialAlert[];
+}
+
+type TranslateFn = (key: string, opts?: Record<string, unknown>) => string;
+
+const metaStr = (val: unknown, fallback = ''): string => {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  return fallback;
+};
+
+const metaNum = (val: unknown, fallback = 0): number => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') return Number(val) || fallback;
+  return fallback;
+};
+
+function buildAlertMessage(alert: FinancialAlert, t: TranslateFn): string {
+  const base = 'pages.dashboard.financialAlerts.messages';
+  const m = alert.metadata;
+
+  switch (alert.type) {
+    case 'budget_limit': {
+      return t(`${base}.budget_limit`, {
+        category: metaStr(m.category),
+        percentage: metaNum(m.percentage),
+      });
+    }
+    case 'credit_card_bill_due': {
+      const name = metaStr(m.card_name);
+      const days = metaNum(m.days_left);
+      if (days < 0)
+        return t(`${base}.credit_card_bill_due_overdue`, {
+          name,
+          count: Math.abs(days),
+        });
+      if (days === 0) return t(`${base}.credit_card_bill_due_today`, { name });
+      if (days === 1) return t(`${base}.credit_card_bill_due_tomorrow`, { name });
+      return t(`${base}.credit_card_bill_due_days`, { name, count: days });
+    }
+    case 'low_balance': {
+      return t(`${base}.low_balance`, {
+        name: metaStr(m.account_name),
+        current: formatCurrency(metaNum(m.current_balance)),
+        minimum: formatCurrency(metaNum(m.minimum_balance)),
+      });
+    }
+    case 'payable_due': {
+      const name = metaStr(m.description);
+      const days = metaNum(m.days_left);
+      if (days < 0)
+        return t(`${base}.payable_due_overdue`, { name, count: Math.abs(days) });
+      if (days === 0) return t(`${base}.payable_due_today`, { name });
+      return t(`${base}.payable_due_days`, { name, count: days });
+    }
+    case 'loan_due': {
+      const name = metaStr(m.description);
+      const days = metaNum(m.days_left);
+      if (days < 0)
+        return t(`${base}.loan_due_overdue`, { name, count: Math.abs(days) });
+      if (days === 0) return t(`${base}.loan_due_today`, { name });
+      return t(`${base}.loan_due_days`, { name, count: days });
+    }
+    default:
+      return alert.message;
+  }
 }
 
 const typeIconMap: Record<string, React.ElementType> = {
@@ -108,7 +175,7 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
                       {typeLabel}
                     </span>
                   </div>
-                  <p className="text-sm leading-snug">{alert.message}</p>
+                  <p className="text-sm leading-snug">{buildAlertMessage(alert, t)}</p>
                   {alert.link && (
                     <Link
                       to={alert.link}

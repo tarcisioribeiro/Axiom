@@ -358,6 +358,12 @@ class CredentialShareToken(models.Model):
     use_count = models.IntegerField(default=0, verbose_name="Usos realizados")
     max_uses = models.IntegerField(default=1, verbose_name="Máximo de usos")
     is_revoked = models.BooleanField(default=False, verbose_name="Revogado")
+    allowed_ips = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="IPs Permitidos",
+        help_text="Lista de IPs autorizados a usar este token. Vazia = qualquer IP.",
+    )
     created_by = models.ForeignKey(
         "auth.User",
         on_delete=models.SET_NULL,

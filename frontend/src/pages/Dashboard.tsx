@@ -46,6 +46,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { StatementExportModal } from '@/components/common/StatementExportModal';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
+import { HealthScore } from '@/components/dashboard/HealthScore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -567,7 +568,7 @@ export default function Dashboard() {
               className="gap-xs"
             >
               <AlertTriangle className="h-4 w-4" />
-              Alertas Financeiros
+              {t('pages.dashboard.financialAlerts.title')}
               <Badge variant="destructive" className="ml-xs h-5 min-w-5 px-xs text-xs">
                 {financialAlerts.length}
               </Badge>
@@ -695,7 +696,12 @@ export default function Dashboard() {
           </motion.div>
         </motion.div>
 
-        {/* 7. Anomalias de Gastos */}
+        {/* 7. Score de Saúde Financeira */}
+        <motion.div variants={itemVariants} initial="hidden" animate="visible">
+          <HealthScore />
+        </motion.div>
+
+        {/* 8. Anomalias de Gastos */}
         {anomalies.length > 0 && (
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
             <Card>
@@ -753,7 +759,7 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* 8. Balanço de Contas | Previsão de Saldo (2 cols) */}
+        {/* 9. Balanço de Contas | Previsão de Saldo (2 cols) */}
         <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
           {/* Balanço de Contas */}
           <motion.div variants={itemVariants} initial="hidden" animate="visible">
@@ -829,19 +835,41 @@ export default function Dashboard() {
                                   {formatCurrency(account.future_balance)}
                                 </span>
                                 {(account.pending_revenues > 0 ||
-                                  account.pending_expenses > 0) && (
-                                  <div className="mt-xs text-xs">
+                                  account.pending_expenses > 0 ||
+                                  account.pending_transfers_in > 0 ||
+                                  account.pending_transfers_out > 0) && (
+                                  <div className="mt-xs flex flex-wrap gap-x-1 text-xs">
                                     {account.pending_revenues > 0 && (
-                                      <span className="text-success">
+                                      <span
+                                        className="text-success"
+                                        title={t('pages.dashboard.pendingRevenues')}
+                                      >
                                         +{formatCurrency(account.pending_revenues)}
                                       </span>
                                     )}
-                                    {account.pending_revenues > 0 &&
-                                      account.pending_expenses > 0 &&
-                                      ' / '}
+                                    {account.pending_transfers_in > 0 && (
+                                      <span
+                                        className="text-success"
+                                        title={t('pages.dashboard.pendingTransfersIn')}
+                                      >
+                                        ↓+{formatCurrency(account.pending_transfers_in)}
+                                      </span>
+                                    )}
                                     {account.pending_expenses > 0 && (
-                                      <span className="text-destructive">
+                                      <span
+                                        className="text-destructive"
+                                        title={t('pages.dashboard.pendingExpenses')}
+                                      >
                                         -{formatCurrency(account.pending_expenses)}
+                                      </span>
+                                    )}
+                                    {account.pending_transfers_out > 0 && (
+                                      <span
+                                        className="text-destructive"
+                                        title={t('pages.dashboard.pendingTransfersOut')}
+                                      >
+                                        ↑-
+                                        {formatCurrency(account.pending_transfers_out)}
                                       </span>
                                     )}
                                   </div>

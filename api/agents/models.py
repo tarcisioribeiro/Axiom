@@ -76,6 +76,35 @@ class AgentEmbedding(models.Model):
     is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_agent_embeddings",
+        verbose_name="Criado por",
+    )
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="updated_agent_embeddings",
+        verbose_name="Atualizado por",
+    )
+    deleted_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="deleted_agent_embeddings",
+        verbose_name="Excluído por",
+    )
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Excluído em",
+    )
 
     class Meta:
         verbose_name = "Embedding de Agente"
