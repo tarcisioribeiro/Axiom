@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
@@ -57,7 +57,6 @@ class PlanningAgent(BaseAgent):
         user = User.objects.get(pk=ctx.user_id)
         now = timezone.now().date()
 
-        # Detect temporal intent; explicit metadata date_from takes precedence.
         temporal = (
             parse_temporal_intent(ctx.query, now)
             if not ctx.metadata.get("date_from")
@@ -68,7 +67,6 @@ class PlanningAgent(BaseAgent):
             t_start, t_end = temporal
             summary = get_routine_summary(user, start=t_start, end=t_end)
             missed = get_top_missed_routines(user, start=t_start, end=t_end)
-            # Pending tasks are always "today" — not meaningful for past periods.
             pending_today: list[dict[str, Any]] = []
             sources_label = (
                 f"Rotinas {t_start.strftime('%d/%m')}–{t_end.strftime('%d/%m/%Y')}"
@@ -101,7 +99,9 @@ class PlanningAgent(BaseAgent):
 
         missed_block = (
             "\n".join(
-                f"  - {m['name']} ({m['category']}): faltou {m['missed']}x"
+                "  - {} ({}): faltou {}x".format(
+                    safe_str(m["name"]), safe_str(m["category"]), m["missed"]
+                )
                 for m in data["missed_routines"]
             )
             or "  Nenhuma rotina com falhas neste período."
@@ -109,7 +109,7 @@ class PlanningAgent(BaseAgent):
 
         goals_block = (
             "\n".join(
-                f"  - {g['title']}: {g['progress_pct']:.0f}% "
+                f"  - {safe_str(g['title'])}: {g['progress_pct']:.0f}% "
                 f"({g['current']:.0f}/{g['target']:.0f})"
                 + (f" — prazo {g['target_date']}" if g["target_date"] else "")
                 for g in data["goals"]
@@ -121,19 +121,12 @@ class PlanningAgent(BaseAgent):
         if not data["is_historical"]:
             pending_block = (
                 "\n".join(
-                    f"  - {t['name']} ({t['category']})" for t in data["pending_today"]
+                    f"  - {safe_str(t['name'])} ({safe_str(t['category'])})"
+                    for t in data["pending_today"]
                 )
                 or "  Todas as tarefas de hoje já foram tratadas."
             )
             pending_section = f"\nPendente hoje:\n{pending_block}\n"
-
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
 
         return (
             f"Resumo de rotinas — {s['start']} a {s['end']}:\n"
@@ -142,8 +135,7 @@ class PlanningAgent(BaseAgent):
             f"{missed_block}\n\n"
             f"Metas ativas:\n"
             f"{goals_block}\n"
-            f"{pending_section}"
-            f"{history_block}\n"
+            f"{pending_section}\n"
             f"Pergunta: {ctx.query}\n\n"
             "Seja encorajador mas realista. "
             "Sugira ajustes de horário ou frequência "

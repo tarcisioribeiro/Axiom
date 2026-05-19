@@ -3,7 +3,7 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
@@ -53,21 +53,18 @@ class InsightAgent(BaseAgent):
         now = timezone.now()
         today = now.date()
 
-        # Detect temporal intent; explicit metadata date_from takes precedence.
         temporal = (
             parse_temporal_intent(ctx.query, today)
             if not ctx.metadata.get("date_from")
             else None
         )
 
-        # Always show current account balances (point-in-time, not date-filtered).
         balances = get_total_balances(user)
         total_balance = sum(float(b["current_balance"]) for b in balances)
 
         if temporal:
             fin_start, fin_end = temporal
             month_totals = get_current_month_totals(user, start=fin_start, end=fin_end)
-            # Use the month of the temporal start for budget definitions.
             budgets = get_budget_status(
                 user,
                 year=fin_start.year,
@@ -76,7 +73,6 @@ class InsightAgent(BaseAgent):
                 expense_end=fin_end,
             )
             planning = get_routine_summary(user, start=fin_start, end=fin_end)
-            # Upcoming bills are future-facing — skip for past periods.
             upcoming_bills: list[dict[str, Any]] = []
             days_remaining = 0
             period_label = (
@@ -122,13 +118,13 @@ class InsightAgent(BaseAgent):
         budget_block = ""
         if data["overbudget"]:
             items = ", ".join(
-                f"{b['category']} (+R$ {b['spent'] - b['limit']:.0f})"
+                f"{safe_str(b['category'])} (+R$ {b['spent'] - b['limit']:.0f})"
                 for b in data["overbudget"]
             )
             budget_block += f"\n🔴 **Orçamentos estourados:** {items}"
         if data["critical_budgets"]:
             items = ", ".join(
-                f"{b['category']} ({b['percentage']:.0f}%)"
+                f"{safe_str(b['category'])} ({b['percentage']:.0f}%)"
                 for b in data["critical_budgets"]
             )
             budget_block += f"\n🟡 **Orçamentos críticos (>80%):** {items}"
@@ -156,19 +152,11 @@ class InsightAgent(BaseAgent):
             else ""
         )
 
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
-
         return f"""Dados do usuário — {data['period_label']}:
 
 {fin_block}
 {budget_block}{bills_block}{planning_block}{days_block}
-{history_block}
+
 Pergunta: {ctx.query}
 
 Gere um briefing claro e acionável. Destaque os 2-3 pontos mais importantes.
