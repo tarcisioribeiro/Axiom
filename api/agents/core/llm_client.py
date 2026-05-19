@@ -1,6 +1,20 @@
+"""
+Cliente LLM com suporte a Ollama (local), Groq (cloud) e Anthropic.
+
+Melhorias implementadas:
+- Anthropic client reutilizado via singleton thread-safe (evita TCP+TLS por request)
+- Circuit breaker para Ollama: após THRESHOLD falhas, fast-fail para fallback cloud
+- Cache de embeddings no Redis (TTL 5min) para evitar embed duplicado da mesma query
+- Estimativa de tokens via contagem de chars (1 token ≈ 4 chars para português)
+- max_tokens configurável via env LLM_MAX_TOKENS (padrão: 2048)
+- embed() retorna [] em caso de falha silenciosa (não propaga para o pipeline)
+"""
+
+import hashlib
 import json
 import logging
 import os
+import threading
 import time
 from collections.abc import Callable, Generator
 from typing import Any, Optional
@@ -18,10 +32,41 @@ _FALLBACK_ERROR: dict[str, str] = {
     "en": "Sorry, I'm unable to process your request at this time.",
 }
 
+# ── Anthropic singleton ────────────────────────────────────────────────────────
+_anthropic_client: Any = None
+_anthropic_lock = threading.Lock()
+
+
+def _get_anthropic_client() -> Any:
+    """Retorna (e cria se necessário) o cliente Anthropic reutilizável."""
+    global _anthropic_client
+    if _anthropic_client is None:
+        with _anthropic_lock:
+            if _anthropic_client is None:
+                import anthropic
+
+                _anthropic_client = anthropic.Anthropic()
+    return _anthropic_client
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def _error_message(language: str = "pt-BR") -> str:
     prefix = language.split("-")[0].lower()
     return _FALLBACK_ERROR.get(prefix, _FALLBACK_ERROR["pt"])
+
+
+def _estimate_tokens(text: str) -> int:
+    """Aproximação de tokens: ~4 chars por token para português."""
+    return max(1, len(text) // 4)
+
+
+def _count_tokens_in(messages: list[dict[str, str]]) -> int:
+    return sum(_estimate_tokens(m.get("content", "")) for m in messages)
+
+
+# ── LLMClient ─────────────────────────────────────────────────────────────────
 
 
 class LLMClient:
@@ -50,7 +95,6 @@ class LLMClient:
 
     @classmethod
     def _get_providers(cls) -> list[str]:
-        """Retorna lista de providers a tentar: primário + fallbacks configurados."""
         primary = str(_cfg("LLM_PROVIDER", "ollama"))
         fallback_raw = _cfg("LLM_FALLBACK_PROVIDERS", "") or ""
         fallbacks = [
@@ -61,6 +105,12 @@ class LLMClient:
         return [primary] + fallbacks
 
     @classmethod
+    def _should_skip_ollama(cls) -> bool:
+        from agents.core.circuit_breaker import ollama_circuit
+
+        return ollama_circuit.is_open
+
+    @classmethod
     def chat(
         cls,
         messages: list[dict[str, str]],
@@ -69,7 +119,6 @@ class LLMClient:
         language: str = "pt-BR",
         agent_name: str = "unknown",
     ) -> str:
-        """Envia mensagens ao LLM. Tenta fallback providers se o primário falhar."""
         record_llm_request: Optional[Callable[..., None]] = None
         record_llm_fallback: Optional[Callable[..., None]] = None
         try:
@@ -79,28 +128,48 @@ class LLMClient:
 
         providers = cls._get_providers()
         last_exc: Exception | None = None
+
         for i, provider in enumerate(providers):
+            # Fast-fail Ollama quando circuit breaker está aberto
+            if provider == "ollama" and cls._should_skip_ollama():
+                logger.info(
+                    "Ollama circuit breaker aberto — pulando para próximo provider"
+                )
+                continue
+
             if i > 0 and record_llm_fallback is not None:
                 record_llm_fallback(providers[i - 1], provider)
+
             t0 = time.monotonic()
             try:
                 result = cls._dispatch_chat(provider, messages, model)
                 duration = time.monotonic() - t0
-                tokens_in = sum(len(m.get("content", "").split()) for m in messages)
-                tokens_out = len(result.split())
+                tokens_in = _count_tokens_in(messages)
+                tokens_out = _estimate_tokens(result)
                 if record_llm_request is not None:
                     record_llm_request(
                         provider, agent_name, "success", duration, tokens_in, tokens_out
                     )
+                if provider == "ollama":
+                    from agents.core.circuit_breaker import ollama_circuit
+
+                    ollama_circuit.record_success()
                 return result
             except Exception as exc:
                 duration = time.monotonic() - t0
                 if record_llm_request is not None:
                     record_llm_request(provider, agent_name, "error", duration)
-                logger.warning("LLM provider '%s' failed (chat): %s", provider, exc)
+                logger.warning("LLM provider '%s' falhou (chat): %s", provider, exc)
+                if provider == "ollama":
+                    from agents.core.circuit_breaker import ollama_circuit
+
+                    ollama_circuit.record_failure()
                 last_exc = exc
+
         logger.error(
-            "All LLM providers failed (chat). Last error: %s", last_exc, exc_info=True
+            "Todos os LLM providers falharam (chat). Último erro: %s",
+            last_exc,
+            exc_info=True,
         )
         return _error_message(language)
 
@@ -112,7 +181,6 @@ class LLMClient:
         language: str = "pt-BR",
         agent_name: str = "unknown",
     ) -> Generator[str, None, None]:
-        """Yields tokens do LLM com fallback automático entre providers."""
         record_llm_request: Optional[Callable[..., None]] = None
         record_llm_fallback: Optional[Callable[..., None]] = None
         record_llm_stream_session: Optional[Callable[..., None]] = None
@@ -127,9 +195,15 @@ class LLMClient:
 
         providers = cls._get_providers()
         last_exc: Exception | None = None
+
         for i, provider in enumerate(providers):
+            if provider == "ollama" and cls._should_skip_ollama():
+                logger.info("Ollama circuit breaker aberto — próximo provider (stream)")
+                continue
+
             if i > 0 and record_llm_fallback is not None:
                 record_llm_fallback(providers[i - 1], provider)
+
             t0 = time.monotonic()
             try:
                 gen = cls._dispatch_stream(provider, messages, model)
@@ -140,24 +214,39 @@ class LLMClient:
                         provider, agent_name, "error", time.monotonic() - t0
                     )
                 logger.warning(
-                    "LLM provider '%s' failed to start stream: %s", provider, exc
+                    "LLM provider '%s' falhou ao iniciar stream: %s", provider, exc
                 )
+                if provider == "ollama":
+                    from agents.core.circuit_breaker import ollama_circuit
+
+                    ollama_circuit.record_failure()
                 last_exc = exc
                 continue
+
             if first is None:
-                return  # provider retornou stream vazio
+                return
+
             if record_llm_stream_session is not None:
                 record_llm_stream_session(agent_name)
-            tokens_in = sum(len(m.get("content", "").split()) for m in messages)
+
+            tokens_in = _count_tokens_in(messages)
             if record_llm_request is not None:
                 record_llm_request(
                     provider, agent_name, "success", time.monotonic() - t0, tokens_in, 0
                 )
+            if provider == "ollama":
+                from agents.core.circuit_breaker import ollama_circuit
+
+                ollama_circuit.record_success()
+
             yield first
             yield from gen
             return
+
         logger.error(
-            "All LLM providers failed (stream). Last error: %s", last_exc, exc_info=True
+            "Todos os LLM providers falharam (stream). Último erro: %s",
+            last_exc,
+            exc_info=True,
         )
         yield _error_message(language)
 
@@ -171,11 +260,39 @@ class LLMClient:
 
     @classmethod
     def embed(cls, text: str) -> list[float]:
-        # Embeddings sempre via Ollama (nomic-embed-text), independente do provider
+        """
+        Gera embedding via Ollama (nomic-embed-text).
+
+        Usa cache Redis com TTL de 5 minutos para evitar re-embedding da mesma
+        query dentro de uma janela de tempo (routing + RAG na mesma request).
+        """
+        cache_key = f"embed:{hashlib.md5(text.encode()).hexdigest()}"
         try:
-            return cls._ollama_embed(text)
+            from django.core.cache import cache as django_cache
+
+            cached = django_cache.get(cache_key)
+            if cached is not None:
+                try:
+                    from app.metrics import record_embedding_cache_hit
+
+                    record_embedding_cache_hit()
+                except Exception:
+                    pass
+                return cached
+        except Exception:
+            pass
+
+        try:
+            result = cls._ollama_embed(text)
+            try:
+                from django.core.cache import cache as django_cache
+
+                django_cache.set(cache_key, result, timeout=300)
+            except Exception:
+                pass
+            return result
         except Exception as exc:
-            logger.error("LLM embedding failed: %s", exc)
+            logger.error("LLM embedding falhou: %s", exc)
             return []
 
     # ── Ollama ────────────────────────────────────────────────────────────────
@@ -308,9 +425,8 @@ class LLMClient:
     def _anthropic_chat(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> str:
-        import anthropic
-
-        client = anthropic.Anthropic()
+        client = _get_anthropic_client()
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         system_text = "Você é um assistente financeiro pessoal."
         chat_messages: list[dict[str, str]] = []
         for msg in messages:
@@ -324,12 +440,11 @@ class LLMClient:
             or _cfg("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
             or "claude-haiku-4-5-20251001"
         )
-        sdk_messages: list[Any] = chat_messages
         result = client.messages.create(
             model=effective_model,
-            max_tokens=1024,
+            max_tokens=max_tokens,
             system=system_text,
-            messages=sdk_messages,
+            messages=chat_messages,
         )
         return str(result.content[0].text)  # type: ignore[union-attr]
 
@@ -337,9 +452,8 @@ class LLMClient:
     def _anthropic_stream(
         cls, messages: list[dict[str, str]], model: str | None = None
     ) -> Generator[str, None, None]:
-        import anthropic
-
-        client = anthropic.Anthropic()
+        client = _get_anthropic_client()
+        max_tokens = int(_cfg("LLM_MAX_TOKENS", "2048"))
         system_text = "Você é um assistente financeiro pessoal."
         chat_messages: list[dict[str, str]] = []
         for msg in messages:
@@ -353,12 +467,11 @@ class LLMClient:
             or _cfg("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
             or "claude-haiku-4-5-20251001"
         )
-        sdk_messages: list[Any] = chat_messages
         with client.messages.stream(
             model=effective_model,
-            max_tokens=1024,
+            max_tokens=max_tokens,
             system=system_text,
-            messages=sdk_messages,
+            messages=chat_messages,
         ) as stream:
             for event in stream:
                 if hasattr(event, "delta") and hasattr(event.delta, "text"):
@@ -384,7 +497,6 @@ class LLMClient:
 
     @classmethod
     def is_available(cls) -> bool:
-        """Verifica se o LLM está acessível."""
         try:
             provider = _cfg("LLM_PROVIDER", "ollama")
             if provider == "anthropic":
@@ -399,7 +511,6 @@ class LLMClient:
 
     @classmethod
     def list_models(cls) -> list[str]:
-        """Retorna modelos disponíveis."""
         provider = _cfg("LLM_PROVIDER", "ollama")
         if provider == "groq":
             return [_cfg("GROQ_MODEL", "llama-3.1-8b-instant")]

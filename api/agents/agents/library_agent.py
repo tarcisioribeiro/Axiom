@@ -4,7 +4,7 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
@@ -51,14 +51,12 @@ class LibraryAgent(BaseAgent):
         user = User.objects.get(pk=ctx.user_id)
         now = timezone.now().date()
 
-        # Detect temporal intent; explicit metadata date_from takes precedence.
         temporal = (
             parse_temporal_intent(ctx.query, now)
             if not ctx.metadata.get("date_from")
             else None
         )
 
-        # RAG search is always semantic (query-based), not date-filtered.
         chunks = search_library_chunks(ctx.query, user, top_k=5)
 
         t_start = temporal[0] if temporal else None
@@ -100,7 +98,11 @@ class LibraryAgent(BaseAgent):
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
         if data["chunks"]:
             chunk_block = "\n\n".join(
-                f"[Fonte: {c['source_title']} — {c['source_type']}]\n{c['content']}"
+                "[Fonte: {} — {}]\n{}".format(
+                    safe_str(c["source_title"]),
+                    safe_str(c["source_type"]),
+                    c["content"],
+                )
                 for c in data["chunks"]
             )
             rag_section = f"Trechos relevantes encontrados:\n\n{chunk_block}"
@@ -117,17 +119,12 @@ class LibraryAgent(BaseAgent):
         )
 
         recent_block = (
-            "\n".join(f"  - {b['title']} ({b['genre']})" for b in data["recent_books"])
+            "\n".join(
+                f"  - {safe_str(b['title'])} ({safe_str(b['genre'])})"
+                for b in data["recent_books"]
+            )
             or "  (sem livros cadastrados neste período)"
         )
-
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
 
         return f"""Você é um assistente especializado na biblioteca pessoal do usuário.
 Use os trechos indexados abaixo para responder. Cite o livro de origem quando possível.
@@ -137,5 +134,5 @@ Se não encontrar resposta nos trechos, informe e sugira uma leitura relacionada
 
 Livros recentes do usuário:{period_note}
 {recent_block}
-{history_block}
+
 Pergunta: {ctx.query}"""
