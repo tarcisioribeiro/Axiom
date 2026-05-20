@@ -368,14 +368,14 @@ export function StatementDocument({ data }: { data: StatementData }) {
   return (
     <Document
       title={`${labels.docTitle} – ${period.from} a ${period.to}`}
-      author="MindLedger"
-      creator="MindLedger"
+      author="Axiom"
+      creator="Axiom"
     >
       <Page size="A4" style={styles.page}>
         {/* ── Header ─────────────────────────────────────────────── */}
         <View style={styles.header}>
           <View style={styles.brandBlock}>
-            <Text style={styles.brandName}>MindLedger</Text>
+            <Text style={styles.brandName}>Axiom</Text>
             <Text style={styles.brandTagline}>{labels.tagline}</Text>
           </View>
           <View style={styles.headerMeta}>
@@ -551,7 +551,7 @@ export function StatementDocument({ data }: { data: StatementData }) {
               }
             />
             <Text style={styles.footerText}> · </Text>
-            <Text style={styles.footerBrand}>MindLedger</Text>
+            <Text style={styles.footerBrand}>Axiom</Text>
           </View>
         </View>
       </Page>

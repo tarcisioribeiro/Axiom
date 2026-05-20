@@ -4,10 +4,10 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: mindledger-quota
-  namespace: mindledger
+  name: axiom-quota
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
 spec:
   hard:
@@ -29,10 +29,10 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: mindledger-limit-range
-  namespace: mindledger
+  name: axiom-limit-range
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
 spec:
   limits:

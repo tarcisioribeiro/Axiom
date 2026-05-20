@@ -34,7 +34,7 @@ def check_storage() -> dict[str, str]:
         protocol = "https" if use_ssl else "http"
         endpoint_url = f"{protocol}://{minio_endpoint}"
         bucket_name = cfg("MINIO_BUCKET_NAME") or getattr(
-            settings, "AWS_STORAGE_BUCKET_NAME", "mindledger"
+            settings, "AWS_STORAGE_BUCKET_NAME", "axiom"
         )
         verify = getattr(settings, "AWS_S3_VERIFY", os.getenv("MINIO_CA_BUNDLE", True))
         client = boto3.client(

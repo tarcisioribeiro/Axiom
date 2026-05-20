@@ -16,6 +16,7 @@ interface DatePickerProps {
   disabled?: boolean;
   className?: string;
   clearable?: boolean;
+  minDate?: Date | string;
 }
 
 // Parser customizado para formato DD/MM/YYYY
@@ -55,6 +56,7 @@ export function DatePicker({
   disabled = false,
   className,
   clearable = true,
+  minDate,
 }: DatePickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +83,8 @@ export function DatePicker({
       allowInput: true,
       clickOpens: !disabled,
       disableMobile: true,
+      static: true,
+      minDate: minDate ?? undefined,
       // Usa a ref para chamar o onChange atual
       // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
       // valor do formulário durante a inicialização ou transições internas.

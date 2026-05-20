@@ -1,8 +1,8 @@
-# Grafana Dashboard Stack for MindLedger
+# Grafana Dashboard Stack for Axiom
 # ----------------------------------------
 # Pre-provisioned with:
 #   - Prometheus datasource pointing to prometheus:9090
-#   - MindLedger Django dashboard (request rate, error rate, DB queries, cache hit ratio)
+#   - Axiom Django dashboard (request rate, error rate, DB queries, cache hit ratio)
 #
 # Apply with:
 #   export GRAFANA_ADMIN_USER=admin
@@ -61,10 +61,10 @@ data:
   providers.yaml: |
     apiVersion: 1
     providers:
-      - name: MindLedger
+      - name: Axiom
         orgId: 1
-        folder: MindLedger
-        folderUid: mindledger
+        folder: Axiom
+        folderUid: axiom
         type: file
         disableDeletion: true
         updateIntervalSeconds: 60
@@ -80,11 +80,11 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/component: monitoring
 data:
-  mindledger-django.json: |
+  axiom-django.json: |
     {
-      "title": "MindLedger Django API",
-      "uid": "mindledger-django",
-      "tags": ["mindledger", "django"],
+      "title": "Axiom Django API",
+      "uid": "axiom-django",
+      "tags": ["axiom", "django"],
       "schemaVersion": 38,
       "version": 1,
       "refresh": "30s",

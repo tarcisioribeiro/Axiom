@@ -1,13 +1,13 @@
-# Documentação Oficial do MindLedger
+# Documentação Oficial do Axiom
 
-Bem-vindo à documentação oficial do MindLedger! Esta documentação completa cobre todos os aspectos do sistema, desde a visão geral até detalhes técnicos de implementação.
+Bem-vindo à documentação oficial do Axiom! Esta documentação completa cobre todos os aspectos do sistema, desde a visão geral até detalhes técnicos de implementação.
 
 ## 📚 Índice Geral
 
 ### [1. Visão Geral](overview/README.md)
 Introdução ao sistema e seus recursos principais.
 
-- **[Introdução](overview/introduction.md)** - O que é o MindLedger, módulos, tecnologias e arquitetura de alto nível
+- **[Introdução](overview/introduction.md)** - O que é o Axiom, módulos, tecnologias e arquitetura de alto nível
 - **[Recursos e Funcionalidades](overview/resources.md)** - Detalhamento completo de todas as funcionalidades por módulo
 
 ### [2. Arquitetura](architecture/README.md)
@@ -28,6 +28,7 @@ Documentação do Django REST Framework.
 - **[Middleware e Signals](backend/middleware_signals.md)** - Processamento de requisições e automação
 - **[Criptografia](backend/criptography.md)** - Sistema de criptografia Fernet
 - **[Comandos de Management](backend/management_commands.md)** - Comandos personalizados Django
+- **[Sistema de Agentes (IA)](backend/agents.md)** - 6 agentes especializados, providers LLM, RAG, endpoints e configuração
 
 ### [4. Frontend](frontend/README.md)
 Documentação do React + TypeScript.
@@ -86,7 +87,7 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
 ## 🚀 Início Rápido
 
 ### Para Novos Usuários
-1. Leia a [Introdução](overview/introduction.md) para entender o que é o MindLedger
+1. Leia a [Introdução](overview/introduction.md) para entender o que é o Axiom
 2. Consulte [Recursos e Funcionalidades](overview/resources.md) para ver tudo que pode fazer
 3. Siga o [Guia de Instalação](development/installation.md) para começar a usar
 
@@ -137,13 +138,13 @@ Configuração do sistema via painel admin (sem editar `.env` nem reconstruir co
    - [Sistema de Permissões](authentication-security/permissions_system.md) - Controle de acesso
 
 3. **Validação**
-   - [Tratamento de Erros](api/tratamento-erros.md) - Mensagens seguras
+   - [Tratamento de Erros](api/error_treatments.md) - Mensagens seguras
    - [Troubleshooting](development/troubleshooting.md) - Testes de segurança
 
 ### Otimizar Performance
 
 1. **Diagnóstico**
-   - [Índices e Otimização](database/indices-otimizacao.md) - Queries lentas
+   - [Índices e Otimização](database/index_otimization.md) - Queries lentas
    - [Fluxo de Dados](architecture/data_flow.md) - Gargalos
 
 2. **Backend**
@@ -244,6 +245,8 @@ Encontrou algo confuso ou desatualizado? PRs são bem-vindos!
 
 | Versão | Data | Mudanças |
 |--------|------|----------|
+| 1.2.0 | 2026-05-20 | Módulos Budgets, Personal Planning, Bank Reconciliation e Agents documentados; contagem de categorias corrigida (22 despesas / 10 receitas); novos componentes UI (`currency-input`, `form-section`, `status-toggle`) e comuns documentados; Vault Health Report marcado como implementado; tecnologia LLM atualizada (Ollama/Groq/Anthropic, nomic-embed-text 768d) |
+| 1.1.0 | 2026-04-01 | Funcionalidades pendentes documentadas com guias de implementação |
 | 1.0.0 | 2026-01-12 | Documentação inicial completa |
 
 ## 📜 Licença
@@ -252,7 +255,7 @@ Este projeto está sob a licença MIT. Consulte o arquivo LICENSE na raiz do rep
 
 ---
 
-**Última atualização**: Janeiro de 2026
-**Mantido por**: Equipe MindLedger
+**Última atualização**: Maio de 2026
+**Mantido por**: Equipe Axiom
 
 💜 Feito com atenção aos detalhes e amor pelo código limpo.

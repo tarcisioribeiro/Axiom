@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: mindledger-config
-  namespace: mindledger-staging
+  name: axiom-config
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: config
     environment: staging
 data:
@@ -16,13 +16,13 @@ data:
   API_PORT: "39100"
   DEBUG: "True"
 
-  ALLOWED_HOSTS: "localhost,127.0.0.1,api-service,mindledger-staging.tjtux.duckdns.org"
-  CORS_ALLOWED_ORIGINS: "http://localhost:39101,https://mindledger-staging.tjtux.duckdns.org"
+  ALLOWED_HOSTS: "localhost,127.0.0.1,api-service,axiom-staging.tjtux.duckdns.org"
+  CORS_ALLOWED_ORIGINS: "http://localhost:39101,https://axiom-staging.tjtux.duckdns.org"
 
   # MinIO object storage (own staging instance)
   MINIO_ENDPOINT: "minio-service:9000"
-  MINIO_EXTERNAL_ENDPOINT: "mindledger-staging.tjtux.duckdns.org:9000"
-  MINIO_BUCKET_NAME: "mindledger-staging"
+  MINIO_EXTERNAL_ENDPOINT: "axiom-staging.tjtux.duckdns.org:9000"
+  MINIO_BUCKET_NAME: "axiom-staging"
   MINIO_USE_SSL: "false"
 
   # Ollama — implantado no namespace de staging (deployment: ollama).

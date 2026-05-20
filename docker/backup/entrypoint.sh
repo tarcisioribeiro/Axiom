@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger Backup — Container Entrypoint
+# Axiom Backup — Container Entrypoint
 # =============================================================================
 # Persists all relevant environment variables to /etc/backup-env.sh so that
 # dcron (which runs in a stripped environment) can source them before each
@@ -38,9 +38,9 @@ printf '%s . /etc/backup-env.sh && /scripts/backup.sh >> %s 2>&1\n' \
   "$BACKUP_CRON" "$BACKUP_LOG" \
   | crontab -
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] MindLedger backup scheduler started"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Axiom backup scheduler started"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Schedule  : ${BACKUP_CRON}"
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Database  : ${PGHOST:-db}:${PGPORT:-5432}/${DB_NAME:-mindledger_db}"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Database  : ${PGHOST:-db}:${PGPORT:-5432}/${DB_NAME:-axiom_db}"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Output dir: ${BACKUP_DIR:-/backups}"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Retention : ${KEEP_DAILY:-7}d / ${KEEP_WEEKLY:-4}w / ${KEEP_MONTHLY:-3}m"
 

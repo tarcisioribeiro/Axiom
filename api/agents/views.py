@@ -128,7 +128,7 @@ def _persist_conversation_async(
                     AgentConversation(
                         user=user,
                         session_id=session_id,
-                        role="assistant",
+                        role="agent",
                         content=answer,
                         agent_name=agent_name,
                         query_id=query_id,

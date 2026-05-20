@@ -2,9 +2,9 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: api-hpa
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: api
 spec:
   scaleTargetRef:
@@ -45,9 +45,9 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-hpa
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: frontend
 spec:
   scaleTargetRef:

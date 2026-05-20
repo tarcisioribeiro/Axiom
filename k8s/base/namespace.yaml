@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: mindledger
+  name: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: namespace

@@ -38,7 +38,7 @@ class Webhook(BaseModel):
     secret = models.CharField(
         max_length=128,
         verbose_name="Secret",
-        help_text="Assina o payload via HMAC-SHA256 (header X-MindLedger-Signature)",
+        help_text="Assina o payload via HMAC-SHA256 (header X-Axiom-Signature)",
     )
     events = models.JSONField(
         default=list,

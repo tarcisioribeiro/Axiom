@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 
 from cryptography.fernet import Fernet, InvalidToken
 
-logger = logging.getLogger("mindledger")
+logger = logging.getLogger("axiom")
 
 # Thread-local storage para cache de decriptacao
 _decryption_cache = threading.local()

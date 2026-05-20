@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: minio
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: minio
 spec:
   replicas: 1
@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         app: minio
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: minio
     spec:
       serviceAccountName: sa-minio
@@ -43,12 +43,12 @@ spec:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: MINIO_ROOT_USER
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: MINIO_ROOT_PASSWORD
             # MinIO auto-enables TLS when public.crt / private.key are present
             # in MINIO_CERTS_DIR. The cert-manager Certificate mounts them via subPath.
@@ -103,24 +103,24 @@ spec:
               - key: tls.key
                 path: tls.key
 ---
-# Job de inicialização — cria o bucket mindledger na primeira execução.
+# Job de inicialização — cria o bucket axiom na primeira execução.
 # Re-executar é seguro (--ignore-existing).
 # Rodar manualmente após aplicar o deployment:
-#   kubectl apply -f k8s/minio/init-job.yaml -n mindledger
+#   kubectl apply -f k8s/minio/init-job.yaml -n axiom
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: minio-init
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: minio
 spec:
   template:
     metadata:
       labels:
         app: minio-init
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: minio
     spec:
       restartPolicy: OnFailure
@@ -145,12 +145,12 @@ spec:
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: MINIO_ROOT_USER
             - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: MINIO_ROOT_PASSWORD
           command:
             - sh
@@ -158,7 +158,7 @@ spec:
             - |
               mc --insecure alias set myminio https://minio-service:9000 \
                 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
-              mc --insecure mb --ignore-existing myminio/mindledger
+              mc --insecure mb --ignore-existing myminio/axiom
               echo "Bucket created (or already exists)"
           resources:
             requests:

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Plus, Tag, Trash2 } from 'lucide-react';
+import { Filter, Hash, Pencil, Plus, Tag, Trash2, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,7 +9,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -94,6 +94,8 @@ function RuleForm({
   const [isActive, setIsActive] = useState(rule?.is_active ?? true);
   const [priority, setPriority] = useState(rule?.priority ?? 100);
 
+  const selectedCategory = EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === category);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!merchantContains.trim() || !category) return;
@@ -106,68 +108,121 @@ function RuleForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md">
-      <div className="space-y-sm">
-        <Label htmlFor="merchant_contains">
-          {t('pages.categorizationRules.form.merchantContains')} *
-        </Label>
-        <Input
-          id="merchant_contains"
-          placeholder={t('pages.categorizationRules.form.merchantContainsPlaceholder')}
-          value={merchantContains}
-          onChange={(e) => setMerchantContains(e.target.value)}
-          required
-        />
-        <p className="text-xs text-muted-foreground">
-          {t('pages.categorizationRules.form.merchantContainsHint')}
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="space-y-lg">
+      {/* Preview ao vivo */}
+      {merchantContains && category && (
+        <div className="flex items-center gap-xs overflow-hidden rounded-lg border border-border/60 bg-muted/30 px-sm py-sm text-sm">
+          <div className="rounded-md bg-background px-sm py-xs font-mono text-xs font-semibold shadow-sm">
+            &ldquo;{merchantContains}&rdquo;
+          </div>
+          <div className="flex items-center gap-xs text-muted-foreground">
+            <div className="h-px w-4 bg-border" />
+            <Zap className="h-3 w-3 text-primary" />
+          </div>
+          <div className="flex items-center gap-xs rounded-md bg-primary/10 px-sm py-xs text-xs font-semibold text-primary">
+            <span>{selectedCategory?.emoji ?? '📦'}</span>
+            <span>{translate('expenseCategories', category)}</span>
+          </div>
+        </div>
+      )}
 
-      <div className="space-y-sm">
-        <Label htmlFor="category">
-          {t('pages.categorizationRules.form.category')} *
-        </Label>
-        <Select value={category} onValueChange={setCategory} required>
-          <SelectTrigger id="category">
-            <SelectValue
-              placeholder={t('pages.categorizationRules.form.categoryPlaceholder')}
+      {/* Seção: Padrão da Regra */}
+      <FormSection title={t('common.form.sections.basicInfo')} icon={Filter}>
+        <div className="space-y-md">
+          <div className="space-y-sm">
+            <Label htmlFor="merchant_contains" className="flex items-center gap-xs">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.categorizationRules.form.merchantContains')} *
+            </Label>
+            <Input
+              id="merchant_contains"
+              placeholder={t(
+                'pages.categorizationRules.form.merchantContainsPlaceholder'
+              )}
+              value={merchantContains}
+              onChange={(e) => setMerchantContains(e.target.value)}
+              required
             />
-          </SelectTrigger>
-          <SelectContent>
-            {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-              <SelectItem key={cat.key} value={cat.key}>
-                {translate('expenseCategories', cat.key)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            <p className="text-xs text-muted-foreground">
+              {t('pages.categorizationRules.form.merchantContainsHint')}
+            </p>
+          </div>
 
-      <div className="space-y-sm">
-        <Label htmlFor="priority">{t('pages.categorizationRules.form.priority')}</Label>
-        <Input
-          id="priority"
-          type="number"
-          min={1}
-          step={1}
-          value={priority}
-          onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
-        />
-        <p className="text-xs text-muted-foreground">
-          {t('pages.categorizationRules.form.priorityHint')}
-        </p>
-      </div>
+          <div className="space-y-sm">
+            <Label htmlFor="category" className="flex items-center gap-xs">
+              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.categorizationRules.form.category')} *
+            </Label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger id="category">
+                <SelectValue
+                  placeholder={t('pages.categorizationRules.form.categoryPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
+                  <SelectItem key={cat.key} value={cat.key}>
+                    {cat.emoji} {translate('expenseCategories', cat.key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </FormSection>
 
-      <div className="flex items-center gap-sm">
-        <Checkbox
-          id="is_active"
-          checked={isActive}
-          onCheckedChange={(checked) => setIsActive(checked === true)}
-        />
-        <Label htmlFor="is_active" className="cursor-pointer">
-          {t('pages.categorizationRules.form.isActive')}
-        </Label>
-      </div>
+      {/* Seção: Configuração */}
+      <FormSection title={t('common.form.sections.configuration')} icon={Hash}>
+        <div className="space-y-md">
+          <div className="space-y-sm">
+            <Label htmlFor="priority" className="flex items-center gap-xs">
+              <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.categorizationRules.form.priority')}
+            </Label>
+            <Input
+              id="priority"
+              type="number"
+              min={1}
+              step={1}
+              value={priority}
+              onChange={(e) => setPriority(Math.max(1, Number(e.target.value)))}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('pages.categorizationRules.form.priorityHint')}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsActive(!isActive)}
+            className={`flex w-full items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+              isActive
+                ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                : 'border-border/60 bg-muted/20 opacity-70'
+            }`}
+          >
+            <div
+              className={`mt-0.5 rounded-full p-1 ${
+                isActive
+                  ? 'bg-success/10 text-success'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              <Zap className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">
+                {t('pages.categorizationRules.form.isActive')}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {isActive
+                  ? t('pages.categorizationRules.form.statusActive')
+                  : t('pages.categorizationRules.form.statusInactive')}
+              </p>
+            </div>
+          </button>
+        </div>
+      </FormSection>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>

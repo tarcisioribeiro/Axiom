@@ -97,7 +97,7 @@ export default function Register() {
         <div className="rounded-2xl border bg-card p-xl shadow-2xl">
           <div className="mb-xl text-center">
             <h1 className="gradient-primary bg-clip-text text-3xl font-bold text-transparent">
-              MindLedger
+              Axiom
             </h1>
             <p className="mt-sm">{t('auth.register.subtitle')}</p>
           </div>

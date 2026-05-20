@@ -37,13 +37,13 @@
 #     --timeout=120s
 #
 # Then update the `email` field in both ClusterIssuers below and replace
-# every occurrence of "${MINDLEDGER_DOMAIN}" with your real domain.
+# every occurrence of "${AXIOM_DOMAIN}" with your real domain.
 #
 # Workflow:
 #   1. Apply with letsencrypt-staging to verify HTTP-01 challenges work.
 #   2. Switch cert-manager.io/cluster-issuer annotation to letsencrypt-prod.
 #   3. Delete the staging secret so cert-manager re-issues a real cert:
-#        kubectl delete secret mindledger-tls -n mindledger
+#        kubectl delete secret axiom-tls -n axiom
 #
 # Local development (no TLS)
 # ---------------------------
@@ -57,7 +57,7 @@ kind: ClusterIssuer
 metadata:
   name: letsencrypt-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: tls
 spec:
   acme:
@@ -76,7 +76,7 @@ kind: ClusterIssuer
 metadata:
   name: letsencrypt-prod
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: tls
 spec:
   acme:
@@ -104,10 +104,10 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mindledger-ingress
-  namespace: mindledger
+  name: axiom-ingress
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: ingress
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
@@ -121,10 +121,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - mindledger.tjtux.duckdns.org
-      secretName: mindledger-tls
+        - axiom.tjtux.duckdns.org
+      secretName: axiom-tls
   rules:
-    - host: mindledger.tjtux.duckdns.org
+    - host: axiom.tjtux.duckdns.org
       http:
         paths:
           - path: /api

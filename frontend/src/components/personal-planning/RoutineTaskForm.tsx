@@ -1,7 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import {
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Link2,
+  Loader2,
+  Repeat,
+  Settings2,
+  Tag,
+  Target,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
@@ -9,6 +20,7 @@ import { type z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { IconPicker } from '@/components/ui/icon-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
 import { logger } from '@/lib/logger';
@@ -38,6 +51,35 @@ import {
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
+const TASK_CATEGORY_EMOJIS: Record<string, string> = {
+  health: '❤️',
+  intellect: '🧠',
+  spiritual: '🙏',
+  exercise: '💪',
+  nutrition: '🥗',
+  work: '💼',
+  social: '👥',
+  finance: '💰',
+  household: '🏠',
+  personal_care: '🧴',
+  other: '📦',
+};
+
+const PRIORITY_EMOJIS: Record<string, string> = {
+  low: '🟢',
+  medium: '🟡',
+  high: '🟠',
+  critical: '🔴',
+};
+
+const PERIODICITY_EMOJIS: Record<string, string> = {
+  daily: '📅',
+  weekdays: '📋',
+  weekly: '📆',
+  monthly: '🗓️',
+  custom: '⚙️',
+};
+
 interface RoutineTaskFormProps {
   task?: RoutineTask;
   onSubmit: (data: RoutineTaskFormData) => void;
@@ -52,6 +94,8 @@ export function RoutineTaskForm({
   isLoading = false,
 }: RoutineTaskFormProps) {
   const { t } = useTranslation();
+  const [linksOpen, setLinksOpen] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -112,7 +156,6 @@ export function RoutineTaskForm({
   const isActive = watch('is_active');
   const dailyOccurrences = watch('daily_occurrences');
 
-  // Sync form values when task prop changes (handles Dialog keeping form mounted)
   useEffect(() => {
     if (task) {
       reset({
@@ -140,7 +183,6 @@ export function RoutineTaskForm({
     }
   }, [task, reset]);
 
-  // Load current user member when creating new task
   useEffect(() => {
     const loadCurrentUserMember = async () => {
       if (!task) {
@@ -168,7 +210,6 @@ export function RoutineTaskForm({
     staleTime: 60_000,
   });
 
-  // Reset conditional fields when periodicity changes
   useEffect(() => {
     if (periodicity === 'daily') {
       setValue('weekday', undefined);
@@ -176,360 +217,399 @@ export function RoutineTaskForm({
     } else if (periodicity === 'weekly') {
       setValue('day_of_month', undefined);
       if (watch('weekday') === undefined) {
-        setValue('weekday', 0); // Default to Monday
+        setValue('weekday', 0);
       }
     } else if (periodicity === 'monthly') {
       setValue('weekday', undefined);
       if (watch('day_of_month') === undefined) {
-        setValue('day_of_month', 1); // Default to day 1
+        setValue('day_of_month', 1);
       }
     }
   }, [periodicity, setValue, watch]);
 
+  const hasLinks = financialGoals.length > 0 || readingBooksList.length > 0;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-      <div className="grid grid-cols-2 gap-md">
-        <div className="col-span-2">
-          <Label htmlFor="name">{t('pages.routineTasks.form.nameLabel')}</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder={t('pages.routineTasks.form.namePlaceholder')}
-          />
-          {errors.name && (
-            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
-          )}
-        </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      <FormSection title={t('pages.routineTasks.form.sectionIdentification')} icon={CheckSquare}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm md:col-span-2">
+            <Label htmlFor="name" className="flex items-center gap-xs">
+              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.nameLabel')}
+            </Label>
+            <Input
+              id="name"
+              {...register('name')}
+              placeholder={t('pages.routineTasks.form.namePlaceholder')}
+              disabled={isLoading}
+            />
+            {errors.name && (
+              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
 
-        <div className="col-span-2">
-          <Label htmlFor="description">
-            {t('pages.routineTasks.form.descriptionLabel')}
-          </Label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            placeholder={t('pages.routineTasks.form.descriptionPlaceholder')}
-            rows={3}
-          />
-          {errors.description && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
+          <div className="space-y-sm md:col-span-2">
+            <Label htmlFor="description" className="flex items-center gap-xs">
+              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.descriptionLabel')}
+            </Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              placeholder={t('pages.routineTasks.form.descriptionPlaceholder')}
+              rows={3}
+              disabled={isLoading}
+            />
+            {errors.description && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
 
-        <div>
-          <Label htmlFor="category">{t('pages.routineTasks.form.categoryLabel')}</Label>
-          <Select
-            value={watch('category')}
-            onValueChange={(value) => setValue('category', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TASK_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {translate('taskCategories', cat.value)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && (
-            <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="icon">{t('pages.routineTasks.form.iconLabel')}</Label>
-          <IconPicker
-            value={watch('icon')}
-            onChange={(value) => setValue('icon', value)}
-          />
-          {errors.icon && (
-            <p className="mt-xs text-sm text-destructive">{errors.icon.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="periodicity">
-            {t('pages.routineTasks.form.periodicityLabel')}
-          </Label>
-          <Select
-            value={watch('periodicity')}
-            onValueChange={(value) => setValue('periodicity', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIODICITY_CHOICES.map((period) => (
-                <SelectItem key={period.value} value={period.value}>
-                  {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.periodicity && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.periodicity.message}
-            </p>
-          )}
-        </div>
-
-        {/* Conditional: Weekday (only for weekly tasks) */}
-        {periodicity === 'weekly' && (
-          <div className="col-span-2">
-            <Label htmlFor="weekday">{t('pages.routineTasks.form.weekdayLabel')}</Label>
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.categoryLabel')}
+            </Label>
             <Select
-              value={watch('weekday')?.toString()}
-              onValueChange={(value) => setValue('weekday', parseInt(value))}
+              value={watch('category')}
+              onValueChange={(value) => setValue('category', value)}
+              disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
-                />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {WEEKDAY_CHOICES.map((day) => (
-                  <SelectItem key={day.value} value={day.value.toString()}>
-                    {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                {TASK_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {TASK_CATEGORY_EMOJIS[cat.value] ?? '📦'}{' '}
+                    {translate('taskCategories', cat.value)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {errors.weekday && (
-              <p className="mt-xs text-sm text-destructive">{errors.weekday.message}</p>
+            {errors.category && (
+              <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
             )}
           </div>
-        )}
 
-        {/* Conditional: Day of Month (only for monthly tasks) */}
-        {periodicity === 'monthly' && (
-          <div className="col-span-2">
-            <Label htmlFor="day_of_month">
-              {t('pages.routineTasks.form.dayOfMonthLabel')}
+          <div className="space-y-sm">
+            <Label htmlFor="icon" className="flex items-center gap-xs">
+              <CheckSquare className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.iconLabel')}
             </Label>
-            <Input
-              id="day_of_month"
-              type="number"
-              min="1"
-              max="31"
-              {...register('day_of_month', {
-                setValueAs: (value: string) =>
-                  value === '' ? undefined : parseInt(value),
-              })}
-              placeholder="1-31"
+            <IconPicker
+              value={watch('icon')}
+              onChange={(value) => setValue('icon', value)}
             />
-            {errors.day_of_month && (
+            {errors.icon && (
+              <p className="mt-xs text-sm text-destructive">{errors.icon.message}</p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.routineTasks.form.sectionPeriodicity')} icon={Repeat}>
+        <div className="space-y-md">
+          {/* Toggle visual de periodicidade */}
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.periodicityLabel')}
+            </Label>
+            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+              {PERIODICITY_CHOICES.map((period) => (
+                <button
+                  key={period.value}
+                  type="button"
+                  onClick={() => setValue('periodicity', period.value)}
+                  disabled={isLoading}
+                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                    periodicity === period.value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <span>{PERIODICITY_EMOJIS[period.value]}</span>
+                  <span className="hidden sm:inline">
+                    {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {errors.periodicity && (
               <p className="mt-xs text-sm text-destructive">
-                {errors.day_of_month.message}
+                {errors.periodicity.message}
               </p>
             )}
           </div>
-        )}
 
-        {/* Conditional: Weekdays (only for weekdays tasks) */}
-        {periodicity === 'weekdays' && (
-          <div className="col-span-2">
-            <p className="text-sm">{t('pages.routineTasks.form.weekdaysNote')}</p>
-          </div>
-        )}
-
-        {/* Conditional: Custom periodicity */}
-        {periodicity === 'custom' && (
-          <div className="col-span-2 space-y-md rounded-lg border bg-muted/50 p-md">
-            <h4 className="text-sm font-medium">
-              {t('pages.routineTasks.form.customSection')}
-            </h4>
-
-            {/* Custom Weekdays */}
-            <div>
-              <Label className="text-sm">
-                {t('pages.routineTasks.form.customWeekdaysLabel')}
+          {periodicity === 'weekly' && (
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.weekdayLabel')}
               </Label>
-              <div className="mt-sm grid grid-cols-7 gap-sm">
-                {WEEKDAY_CHOICES.map((day) => (
-                  <div key={day.value} className="flex flex-col items-center gap-xs">
-                    <Checkbox
-                      id={`custom-weekday-${day.value}`}
-                      checked={watch('custom_weekdays')?.includes(day.value) || false}
-                      onCheckedChange={(checked) => {
-                        const current = watch('custom_weekdays') || [];
-                        setValue(
-                          'custom_weekdays',
-                          checked
-                            ? [...current, day.value]
-                            : current.filter((d) => d !== day.value)
-                        );
-                      }}
-                    />
-                    <Label
-                      htmlFor={`custom-weekday-${day.value}`}
-                      className="cursor-pointer text-xs"
-                    >
-                      {t(
-                        `pages.routineTasks.form.weekdayOptions.${day.value}`
-                      ).substring(0, 3)}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+              <Select
+                value={watch('weekday')?.toString()}
+                onValueChange={(value) => setValue('weekday', parseInt(value))}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('pages.routineTasks.form.weekdayPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {WEEKDAY_CHOICES.map((day) => (
+                    <SelectItem key={day.value} value={day.value.toString()}>
+                      {t(`pages.routineTasks.form.weekdayOptions.${day.value}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.weekday && (
+                <p className="mt-xs text-sm text-destructive">{errors.weekday.message}</p>
+              )}
             </div>
+          )}
 
-            {/* Custom Month Days */}
-            <div>
-              <Label htmlFor="custom_month_days" className="text-sm">
-                {t('pages.routineTasks.form.customMonthDaysLabel')}
+          {periodicity === 'monthly' && (
+            <div className="space-y-sm">
+              <Label htmlFor="day_of_month" className="flex items-center gap-xs">
+                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.dayOfMonthLabel')}
               </Label>
               <Input
-                id="custom_month_days"
-                type="text"
-                placeholder="Ex: 1,15,30"
-                value={watch('custom_month_days')?.join(',') || ''}
-                onChange={(e) => {
-                  const values = e.target.value
-                    .split(',')
-                    .map((v) => parseInt(v.trim()))
-                    .filter((v) => !isNaN(v) && v >= 1 && v <= 31);
-                  setValue('custom_month_days', values.length > 0 ? values : null);
-                }}
+                id="day_of_month"
+                type="number"
+                min="1"
+                max="31"
+                {...register('day_of_month', {
+                  setValueAs: (value: string) =>
+                    value === '' ? undefined : parseInt(value),
+                })}
+                placeholder="1-31"
+                disabled={isLoading}
               />
+              {errors.day_of_month && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.day_of_month.message}
+                </p>
+              )}
             </div>
+          )}
 
-            {/* Frequency Options */}
-            <div className="grid grid-cols-2 gap-md">
+          {periodicity === 'weekdays' && (
+            <p className="text-sm text-muted-foreground">
+              {t('pages.routineTasks.form.weekdaysNote')}
+            </p>
+          )}
+
+          {periodicity === 'custom' && (
+            <div className="space-y-md rounded-lg border bg-muted/50 p-md">
+              <h4 className="flex items-center gap-xs text-sm font-medium">
+                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.customSection')}
+              </h4>
+
               <div>
-                <Label htmlFor="times_per_week" className="text-sm">
-                  {t('pages.routineTasks.form.timesPerWeekLabel')}
+                <Label className="text-sm">
+                  {t('pages.routineTasks.form.customWeekdaysLabel')}
+                </Label>
+                <div className="mt-sm grid grid-cols-7 gap-sm">
+                  {WEEKDAY_CHOICES.map((day) => (
+                    <div key={day.value} className="flex flex-col items-center gap-xs">
+                      <Checkbox
+                        id={`custom-weekday-${day.value}`}
+                        checked={watch('custom_weekdays')?.includes(day.value) || false}
+                        onCheckedChange={(checked) => {
+                          const current = watch('custom_weekdays') || [];
+                          setValue(
+                            'custom_weekdays',
+                            checked
+                              ? [...current, day.value]
+                              : current.filter((d) => d !== day.value)
+                          );
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Label
+                        htmlFor={`custom-weekday-${day.value}`}
+                        className="cursor-pointer text-xs"
+                      >
+                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`).substring(0, 3)}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="custom_month_days" className="text-sm">
+                  {t('pages.routineTasks.form.customMonthDaysLabel')}
                 </Label>
                 <Input
-                  id="times_per_week"
-                  type="number"
-                  min="1"
-                  max="7"
-                  {...register('times_per_week', {
-                    setValueAs: (value: string) =>
-                      value === '' ? null : parseInt(value),
-                  })}
-                  placeholder="1-7"
+                  id="custom_month_days"
+                  type="text"
+                  placeholder="Ex: 1,15,30"
+                  value={watch('custom_month_days')?.join(',') || ''}
+                  onChange={(e) => {
+                    const values = e.target.value
+                      .split(',')
+                      .map((v) => parseInt(v.trim()))
+                      .filter((v) => !isNaN(v) && v >= 1 && v <= 31);
+                    setValue('custom_month_days', values.length > 0 ? values : null);
+                  }}
+                  disabled={isLoading}
                 />
               </div>
-              <div>
-                <Label htmlFor="times_per_month" className="text-sm">
-                  {t('pages.routineTasks.form.timesPerMonthLabel')}
-                </Label>
-                <Input
-                  id="times_per_month"
-                  type="number"
-                  min="1"
-                  max="31"
-                  {...register('times_per_month', {
-                    setValueAs: (value: string) =>
-                      value === '' ? null : parseInt(value),
-                  })}
-                  placeholder="1-31"
-                />
-              </div>
-            </div>
 
-            {/* Interval Options */}
-            <div className="grid grid-cols-2 gap-md">
-              <div>
-                <Label htmlFor="interval_days" className="text-sm">
-                  {t('pages.routineTasks.form.intervalDaysLabel')}
-                </Label>
-                <Input
-                  id="interval_days"
-                  type="number"
-                  min="1"
-                  {...register('interval_days', {
-                    setValueAs: (value: string) =>
-                      value === '' ? null : parseInt(value),
-                  })}
-                  placeholder="Ex: 3"
-                />
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="times_per_week" className="text-sm">
+                    {t('pages.routineTasks.form.timesPerWeekLabel')}
+                  </Label>
+                  <Input
+                    id="times_per_week"
+                    type="number"
+                    min="1"
+                    max="7"
+                    {...register('times_per_week', {
+                      setValueAs: (value: string) =>
+                        value === '' ? null : parseInt(value),
+                    })}
+                    placeholder="1-7"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="times_per_month" className="text-sm">
+                    {t('pages.routineTasks.form.timesPerMonthLabel')}
+                  </Label>
+                  <Input
+                    id="times_per_month"
+                    type="number"
+                    min="1"
+                    max="31"
+                    {...register('times_per_month', {
+                      setValueAs: (value: string) =>
+                        value === '' ? null : parseInt(value),
+                    })}
+                    placeholder="1-31"
+                    disabled={isLoading}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="interval_start_date" className="text-sm">
-                  {t('pages.routineTasks.form.intervalStartDateLabel')}
-                </Label>
-                <DatePicker
-                  value={watch('interval_start_date') ?? undefined}
-                  onChange={(date) =>
-                    setValue(
-                      'interval_start_date',
-                      date ? formatLocalDate(date) : undefined
-                    )
-                  }
-                  placeholder={t(
-                    'pages.routineTasks.form.intervalStartDatePlaceholder'
-                  )}
-                />
-              </div>
-            </div>
 
-            {errors.interval_start_date && (
-              <p className="text-sm text-destructive">
-                {errors.interval_start_date.message}
+              <div className="grid grid-cols-2 gap-md">
+                <div>
+                  <Label htmlFor="interval_days" className="text-sm">
+                    {t('pages.routineTasks.form.intervalDaysLabel')}
+                  </Label>
+                  <Input
+                    id="interval_days"
+                    type="number"
+                    min="1"
+                    {...register('interval_days', {
+                      setValueAs: (value: string) =>
+                        value === '' ? null : parseInt(value),
+                    })}
+                    placeholder="Ex: 3"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="interval_start_date" className="text-sm">
+                    {t('pages.routineTasks.form.intervalStartDateLabel')}
+                  </Label>
+                  <DatePicker
+                    value={watch('interval_start_date') ?? undefined}
+                    onChange={(date) =>
+                      setValue(
+                        'interval_start_date',
+                        date ? formatLocalDate(date) : undefined
+                      )
+                    }
+                    placeholder={t('pages.routineTasks.form.intervalStartDatePlaceholder')}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
+              {errors.interval_start_date && (
+                <p className="text-sm text-destructive">
+                  {errors.interval_start_date.message}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.routineTasks.form.sectionGoalUnit')} icon={Target}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label htmlFor="target_quantity" className="flex items-center gap-xs">
+              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.targetQuantityLabel')}
+            </Label>
+            <Input
+              id="target_quantity"
+              type="number"
+              min="1"
+              {...register('target_quantity', {
+                setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
+              })}
+              disabled={isLoading}
+            />
+            {errors.target_quantity && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.target_quantity.message}
               </p>
             )}
           </div>
-        )}
 
-        <div>
-          <Label htmlFor="target_quantity">
-            {t('pages.routineTasks.form.targetQuantityLabel')}
-          </Label>
-          <Input
-            id="target_quantity"
-            type="number"
-            min="1"
-            {...register('target_quantity', {
-              setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-            })}
-          />
-          {errors.target_quantity && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.target_quantity.message}
-            </p>
-          )}
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.unitLabel')}
+            </Label>
+            <Select
+              value={watch('unit') ?? 'vez'}
+              onValueChange={(value) =>
+                setValue('unit', value as (typeof UNIT_CHOICES)[number]['value'])
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {UNIT_CHOICES.map((u) => (
+                  <SelectItem key={u.value} value={u.value}>
+                    {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.unit && (
+              <p className="mt-xs text-sm text-destructive">{errors.unit.message}</p>
+            )}
+          </div>
         </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="unit">{t('pages.routineTasks.form.unitLabel')}</Label>
-          <Select
-            value={watch('unit') ?? 'vez'}
-            onValueChange={(value) =>
-              setValue('unit', value as (typeof UNIT_CHOICES)[number]['value'])
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {UNIT_CHOICES.map((u) => (
-                <SelectItem key={u.value} value={u.value}>
-                  {t(`pages.routineTasks.form.unitOptions.${u.value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.unit && (
-            <p className="mt-xs text-sm text-destructive">{errors.unit.message}</p>
-          )}
-        </div>
+      <FormSection title={t('pages.routineTasks.form.scheduleSection')} icon={Clock}>
+        <div className="space-y-md">
+          <p className="text-xs text-muted-foreground">
+            {t('pages.routineTasks.form.scheduleSectionNote')}
+          </p>
 
-        {/* Seção de Agendamento de Horários */}
-        <div className="col-span-2 space-y-md rounded-lg border bg-muted/50 p-md">
-          <h4 className="text-sm font-medium">
-            {t('pages.routineTasks.form.scheduleSection')}
-          </h4>
-          <p className="text-xs">{t('pages.routineTasks.form.scheduleSectionNote')}</p>
-
-          <div className="grid grid-cols-2 gap-md">
-            <div>
-              <Label htmlFor="default_time">
+          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="space-y-sm">
+              <Label htmlFor="default_time" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 {t('pages.routineTasks.form.defaultTimeLabel')}
               </Label>
               <Input
@@ -537,8 +617,9 @@ export function RoutineTaskForm({
                 type="time"
                 value={watch('default_time') || ''}
                 onChange={(e) => setValue('default_time', e.target.value || null)}
+                disabled={isLoading}
               />
-              <p className="mt-xs text-xs">
+              <p className="text-xs text-muted-foreground">
                 {t('pages.routineTasks.form.defaultTimeHint')}
               </p>
               {errors.default_time && (
@@ -548,8 +629,9 @@ export function RoutineTaskForm({
               )}
             </div>
 
-            <div>
-              <Label htmlFor="daily_occurrences">
+            <div className="space-y-sm">
+              <Label htmlFor="daily_occurrences" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 {t('pages.routineTasks.form.dailyOccurrencesLabel')}
               </Label>
               <Input
@@ -560,225 +642,284 @@ export function RoutineTaskForm({
                 {...register('daily_occurrences', {
                   setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
                 })}
+                disabled={isLoading}
               />
-              <p className="mt-xs text-xs">
+              <p className="text-xs text-muted-foreground">
                 {t('pages.routineTasks.form.dailyOccurrencesHint')}
               </p>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="interval_hours">
-              {t('pages.routineTasks.form.intervalHoursLabel')}
-            </Label>
-            <Input
-              id="interval_hours"
-              type="number"
-              min="1"
-              max="23"
-              value={watch('interval_hours') || ''}
-              onChange={(e) =>
-                setValue(
-                  'interval_hours',
-                  e.target.value ? parseInt(e.target.value) : null
-                )
-              }
-              placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
-            />
-            <p className="mt-xs text-xs">
-              {t('pages.routineTasks.form.intervalHoursHint')}
-            </p>
-            {errors.interval_hours && (
-              <p className="mt-xs text-sm text-destructive">
-                {errors.interval_hours.message}
-              </p>
-            )}
-          </div>
-
-          {(dailyOccurrences ?? 1) === 1 && (
-            <div>
-              <Label htmlFor="closing_time">
-                {t('pages.routineTasks.form.closingTimeLabel')}
+            <div className="space-y-sm">
+              <Label htmlFor="interval_hours" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.intervalHoursLabel')}
               </Label>
               <Input
-                id="closing_time"
-                type="time"
-                value={watch('closing_time') || ''}
-                onChange={(e) => setValue('closing_time', e.target.value || null)}
+                id="interval_hours"
+                type="number"
+                min="1"
+                max="23"
+                value={watch('interval_hours') || ''}
+                onChange={(e) =>
+                  setValue(
+                    'interval_hours',
+                    e.target.value ? parseInt(e.target.value) : null
+                  )
+                }
+                placeholder={t('pages.routineTasks.form.intervalHoursPlaceholder')}
+                disabled={isLoading}
               />
-              <p className="mt-xs text-xs">
-                {t('pages.routineTasks.form.closingTimeHint')}
+              <p className="text-xs text-muted-foreground">
+                {t('pages.routineTasks.form.intervalHoursHint')}
               </p>
-              {errors.closing_time && (
+              {errors.interval_hours && (
                 <p className="mt-xs text-sm text-destructive">
-                  {errors.closing_time.message}
+                  {errors.interval_hours.message}
                 </p>
               )}
             </div>
-          )}
 
-          <div>
-            <Label htmlFor="scheduled_times">
-              {t('pages.routineTasks.form.scheduledTimesLabel')}
+            {(dailyOccurrences ?? 1) === 1 && (
+              <div className="space-y-sm">
+                <Label htmlFor="closing_time" className="flex items-center gap-xs">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.routineTasks.form.closingTimeLabel')}
+                </Label>
+                <Input
+                  id="closing_time"
+                  type="time"
+                  value={watch('closing_time') || ''}
+                  onChange={(e) => setValue('closing_time', e.target.value || null)}
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.routineTasks.form.closingTimeHint')}
+                </p>
+                {errors.closing_time && (
+                  <p className="mt-xs text-sm text-destructive">
+                    {errors.closing_time.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-sm md:col-span-2">
+              <Label htmlFor="scheduled_times" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.routineTasks.form.scheduledTimesLabel')}
+              </Label>
+              <Input
+                id="scheduled_times"
+                type="text"
+                placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
+                value={watch('scheduled_times')?.join(', ') || ''}
+                onChange={(e) => {
+                  const times = e.target.value
+                    .split(',')
+                    .map((t) => t.trim())
+                    .filter((t) => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t));
+                  setValue('scheduled_times', times.length > 0 ? times : null);
+                }}
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('pages.routineTasks.form.scheduledTimesHint')}
+              </p>
+              {errors.scheduled_times && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.scheduled_times.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.routineTasks.form.sectionBehavior')} icon={Settings2}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.priorityLabel')}
+            </Label>
+            <Select
+              value={watch('priority') ?? 'medium'}
+              onValueChange={(value) =>
+                setValue('priority', value as 'low' | 'medium' | 'high' | 'critical')
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITY_CHOICES.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {PRIORITY_EMOJIS[p.value] ?? ''}{' '}
+                    {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.priority && (
+              <p className="mt-xs text-sm text-destructive">{errors.priority.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="allowed_skips_per_month" className="flex items-center gap-xs">
+              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.allowedSkipsLabel')}
             </Label>
             <Input
-              id="scheduled_times"
-              type="text"
-              placeholder={t('pages.routineTasks.form.scheduledTimesPlaceholder')}
-              value={watch('scheduled_times')?.join(', ') || ''}
-              onChange={(e) => {
-                const times = e.target.value
-                  .split(',')
-                  .map((t) => t.trim())
-                  .filter((t) => /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(t));
-                setValue('scheduled_times', times.length > 0 ? times : null);
-              }}
+              id="allowed_skips_per_month"
+              type="number"
+              min="0"
+              max="31"
+              {...register('allowed_skips_per_month', {
+                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+              })}
+              disabled={isLoading}
             />
-            <p className="mt-xs text-xs">
-              {t('pages.routineTasks.form.scheduledTimesHint')}
+            <p className="text-xs text-muted-foreground">
+              {t('pages.routineTasks.form.allowedSkipsHint')}
             </p>
-            {errors.scheduled_times && (
+            {errors.allowed_skips_per_month && (
               <p className="mt-xs text-sm text-destructive">
-                {errors.scheduled_times.message}
+                {errors.allowed_skips_per_month.message}
               </p>
             )}
           </div>
-        </div>
 
-        <div>
-          <Label htmlFor="priority">{t('pages.routineTasks.form.priorityLabel')}</Label>
-          <Select
-            value={watch('priority') ?? 'medium'}
-            onValueChange={(value) =>
-              setValue('priority', value as 'low' | 'medium' | 'high' | 'critical')
-            }
+          <div className="space-y-sm md:col-span-2">
+            <Label className="flex items-center gap-xs">
+              <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.routineTasks.form.isActiveLabel')}
+            </Label>
+            <StatusToggle
+              value={isActive ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'false',
+                  label: t('common.status.inactive'),
+                  activeClass: 'bg-background text-foreground shadow-sm',
+                },
+                {
+                  value: 'true',
+                  label: t('common.status.active'),
+                  activeClass: 'bg-success/15 text-success shadow-sm',
+                },
+              ]}
+              onChange={(v) => setValue('is_active', v === 'true')}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      {hasLinks && (
+        <div className="space-y-md">
+          <button
+            type="button"
+            onClick={() => setLinksOpen((o) => !o)}
+            className="flex w-full items-center gap-xs text-left"
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_CHOICES.map((p) => (
-                <SelectItem key={p.value} value={p.value}>
-                  {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.priority && (
-            <p className="mt-xs text-sm text-destructive">{errors.priority.message}</p>
+            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('common.form.sections.links')}
+            </span>
+            <div className="h-px flex-1 bg-border/50" />
+            {linksOpen ? (
+              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+
+          {linksOpen && (
+            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+              {financialGoals.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
+                  </Label>
+                  <Select
+                    value={watch('linked_financial_goal')?.toString() ?? ''}
+                    onValueChange={(value) =>
+                      setValue(
+                        'linked_financial_goal',
+                        value && value !== 'none' ? parseInt(value) : null
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        {t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+                      </SelectItem>
+                      {financialGoals.map((goal) => (
+                        <SelectItem key={goal.id} value={goal.id.toString()}>
+                          {goal.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.routineTasks.form.linkedFinancialGoalHint')}
+                  </p>
+                </div>
+              )}
+
+              {readingBooksList.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.routineTasks.form.linkedBookLabel')}
+                  </Label>
+                  <Select
+                    value={watch('linked_book')?.toString() ?? ''}
+                    onValueChange={(value) =>
+                      setValue(
+                        'linked_book',
+                        value && value !== 'none' ? parseInt(value) : null
+                      )
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={t('pages.routineTasks.form.linkedBookPlaceholder')}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        {t('pages.routineTasks.form.linkedBookPlaceholder')}
+                      </SelectItem>
+                      {readingBooksList.map((book) => (
+                        <SelectItem key={book.id} value={book.id.toString()}>
+                          {book.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.routineTasks.form.linkedBookHint')}
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </div>
-
-        <div>
-          <Label htmlFor="allowed_skips_per_month">
-            {t('pages.routineTasks.form.allowedSkipsLabel')}
-          </Label>
-          <Input
-            id="allowed_skips_per_month"
-            type="number"
-            min="0"
-            max="31"
-            {...register('allowed_skips_per_month', {
-              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-            })}
-          />
-          <p className="mt-xs text-xs text-muted-foreground">
-            {t('pages.routineTasks.form.allowedSkipsHint')}
-          </p>
-          {errors.allowed_skips_per_month && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.allowed_skips_per_month.message}
-            </p>
-          )}
-        </div>
-
-        <div className="col-span-2">
-          <Label htmlFor="linked_financial_goal">
-            {t('pages.routineTasks.form.linkedFinancialGoalLabel')}
-          </Label>
-          <Select
-            value={watch('linked_financial_goal')?.toString() ?? ''}
-            onValueChange={(value) =>
-              setValue(
-                'linked_financial_goal',
-                value && value !== 'none' ? parseInt(value) : null
-              )
-            }
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t(
-                  'pages.routineTasks.form.linkedFinancialGoalPlaceholder'
-                )}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
-              </SelectItem>
-              {financialGoals.map((goal) => (
-                <SelectItem key={goal.id} value={goal.id.toString()}>
-                  {goal.description}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="mt-xs text-xs text-muted-foreground">
-            {t('pages.routineTasks.form.linkedFinancialGoalHint')}
-          </p>
-        </div>
-
-        <div className="col-span-2">
-          <Label htmlFor="linked_book">
-            {t('pages.routineTasks.form.linkedBookLabel')}
-          </Label>
-          <Select
-            value={watch('linked_book')?.toString() ?? ''}
-            onValueChange={(value) =>
-              setValue(
-                'linked_book',
-                value && value !== 'none' ? parseInt(value) : null
-              )
-            }
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.routineTasks.form.linkedBookPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {t('pages.routineTasks.form.linkedBookPlaceholder')}
-              </SelectItem>
-              {readingBooksList.map((book) => (
-                <SelectItem key={book.id} value={book.id.toString()}>
-                  {book.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="mt-xs text-xs text-muted-foreground">
-            {t('pages.routineTasks.form.linkedBookHint')}
-          </p>
-        </div>
-
-        <div className="col-span-2 flex items-center space-x-sm">
-          <Checkbox
-            id="is_active"
-            checked={isActive}
-            onCheckedChange={(checked) => setValue('is_active', checked as boolean)}
-          />
-          <Label
-            htmlFor="is_active"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            {t('pages.routineTasks.form.isActiveLabel')}
-          </Label>
-        </div>
-      </div>
+      )}
 
       <div className="flex justify-end gap-sm border-t pt-md">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>

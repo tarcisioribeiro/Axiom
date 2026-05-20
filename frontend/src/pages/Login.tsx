@@ -49,7 +49,7 @@ export default function Login() {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-md text-center">
             <div className="mx-auto flex items-center justify-center">
-              <img src={logo} alt="MindLedger" className="h-auto w-64" />
+              <img src={logo} alt="Axiom" className="h-auto w-64" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">
@@ -133,7 +133,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
           <div className="mx-auto flex items-center justify-center">
-            <img src={logo} alt="MindLedger" className="h-auto w-64" />
+            <img src={logo} alt="Axiom" className="h-auto w-64" />
           </div>
         </CardHeader>
         <CardContent>

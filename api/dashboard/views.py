@@ -1379,7 +1379,7 @@ class LGPDExportView(APIView):
         buf.seek(0)
         cache.set(rate_key, True, 60 * 60 * 24)
 
-        filename = f"mindledger_export_{datetime.now().strftime('%Y%m%d')}.zip"
+        filename = f"axiom_export_{datetime.now().strftime('%Y%m%d')}.zip"
         response = HttpResponse(buf.read(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response

@@ -4,10 +4,10 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: mindledger-staging-quota
-  namespace: mindledger-staging
+  name: axiom-staging-quota
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
     environment: staging
 spec:
@@ -25,10 +25,10 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: mindledger-staging-limit-range
-  namespace: mindledger-staging
+  name: axiom-staging-limit-range
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
     environment: staging
 spec:

@@ -1,17 +1,17 @@
 # =============================================================================
-# MindLedger — Kustomize staging overlay
+# Axiom — Kustomize staging overlay
 # =============================================================================
 #
 # CI deploy command for staging:
 #
 #   cd k8s/overlays/staging
 #   kustomize edit set image \
-#     registry.gitlab.com/tarcisioribeiro/mindledger/api:$CI_COMMIT_SHORT_SHA \
-#     registry.gitlab.com/tarcisioribeiro/mindledger/frontend:$CI_COMMIT_SHORT_SHA
+#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
+#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
 #   kustomize build . | kubectl apply -f -
 #
 # Required env vars (applied separately via envsubst):
-#   MINDLEDGER_STAGING_DOMAIN   e.g. staging.mindledger.example.com
+#   AXIOM_STAGING_DOMAIN   e.g. staging.axiom.example.com
 #   LETSENCRYPT_EMAIL
 #   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD, ...
 #   (see k8s/staging/secrets.yaml for the full list)
@@ -19,7 +19,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: mindledger-staging
+namespace: axiom-staging
 
 resources:
   - ../../staging/namespace.yaml
@@ -47,7 +47,7 @@ resources:
   - ../../staging/resource-quota.yaml
 
 images:
-  - name: registry.gitlab.com/tarcisioribeiro/mindledger/api
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/api
     newTag: latest
-  - name: registry.gitlab.com/tarcisioribeiro/mindledger/frontend
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/frontend
     newTag: latest

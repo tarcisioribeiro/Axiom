@@ -266,7 +266,9 @@ class LLMClient:
         Usa cache Redis com TTL de 5 minutos para evitar re-embedding da mesma
         query dentro de uma janela de tempo (routing + RAG na mesma request).
         """
-        cache_key = f"embed:{hashlib.md5(text.encode()).hexdigest()}"
+        cache_key = (
+            f"embed:{hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()}"
+        )
         try:
             from django.core.cache import cache as django_cache
 

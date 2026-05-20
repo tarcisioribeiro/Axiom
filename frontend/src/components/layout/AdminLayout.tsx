@@ -56,7 +56,7 @@ export const AdminLayout = () => {
           </div>
           <div>
             <p className="text-sm font-semibold leading-none text-foreground">
-              MindLedger
+              Axiom
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {t('layout.adminPanel')}

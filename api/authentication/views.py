@@ -323,16 +323,16 @@ def create_user_with_member(request: Request) -> Response:
                         {
                             "user": user,
                             "verification_url": _verification_url,
-                            "app_name": "MindLedger",
+                            "app_name": "Axiom",
                         },
                     )
                     send_mail(
-                        subject="Confirme seu email — MindLedger",
+                        subject="Confirme seu email — Axiom",
                         message=f"Confirme em: {_verification_url}",
                         from_email=getattr(
                             settings,
                             "DEFAULT_FROM_EMAIL",
-                            "noreply@mindledger.app",
+                            "noreply@axiom.app",
                         ),
                         recipient_list=[email],
                         html_message=_html_message,
@@ -421,14 +421,12 @@ class PasswordResetRequestView(APIView):
         try:
             html_message = render_to_string(
                 "email/password_reset.html",
-                {"user": user, "reset_url": reset_url, "app_name": "MindLedger"},
+                {"user": user, "reset_url": reset_url, "app_name": "Axiom"},
             )
             send_mail(
-                subject="Redefinição de senha — MindLedger",
+                subject="Redefinição de senha — Axiom",
                 message=f"Acesse o link para redefinir sua senha: {reset_url}",
-                from_email=getattr(
-                    settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app"
-                ),
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"),
                 recipient_list=[user.email],
                 html_message=html_message,
                 fail_silently=True,
@@ -578,15 +576,13 @@ class EmailVerificationSendView(APIView):
                 {
                     "user": request.user,
                     "verification_url": verification_url,
-                    "app_name": "MindLedger",
+                    "app_name": "Axiom",
                 },
             )
             send_mail(
-                subject="Confirme seu e-mail — MindLedger",
+                subject="Confirme seu e-mail — Axiom",
                 message=f"Confirme seu e-mail em: {verification_url}",
-                from_email=getattr(
-                    settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app"
-                ),
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"),
                 recipient_list=[email],
                 html_message=html_message,
                 fail_silently=True,
