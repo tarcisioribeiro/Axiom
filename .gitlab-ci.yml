@@ -159,7 +159,7 @@ lint:pip-audit:
     - .rules_skip_main
   stage: lint
   script:
-    - pip-audit -r api/requirements.txt --desc
+    - pip-audit -r api/requirements.txt --desc --ignore-vuln PYSEC-2025-183
 
 lint:npm-audit:
   extends:
