@@ -1,5 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarDays, CreditCard as CreditCardIcon, FileText, Link2, Loader2, Shield, Tag } from 'lucide-react';
+import {
+  CalendarDays,
+  CreditCard as CreditCardIcon,
+  FileText,
+  Link2,
+  Loader2,
+  Shield,
+  Tag,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -98,7 +106,10 @@ export function StoredCardForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
-      <FormSection title={t('pages.storedCards.form.sectionIdentification')} icon={CreditCardIcon}>
+      <FormSection
+        title={t('pages.storedCards.form.sectionIdentification')}
+        icon={CreditCardIcon}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label htmlFor="name" className="flex items-center gap-xs">
@@ -232,7 +243,10 @@ export function StoredCardForm({
         </div>
       </FormSection>
 
-      <FormSection title={t('pages.storedCards.form.sectionExpiry')} icon={CalendarDays}>
+      <FormSection
+        title={t('pages.storedCards.form.sectionExpiry')}
+        icon={CalendarDays}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm">
             <Label className="flex items-center gap-xs">

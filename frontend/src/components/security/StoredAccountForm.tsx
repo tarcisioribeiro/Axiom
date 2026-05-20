@@ -1,5 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Building2, Eye, EyeOff, FileText, Hash, Link2, Loader2, Lock } from 'lucide-react';
+import {
+  Building2,
+  Eye,
+  EyeOff,
+  FileText,
+  Hash,
+  Link2,
+  Loader2,
+  Lock,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -96,7 +105,10 @@ export function StoredAccountForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
-      <FormSection title={t('pages.storedAccounts.form.sectionIdentification')} icon={Building2}>
+      <FormSection
+        title={t('pages.storedAccounts.form.sectionIdentification')}
+        icon={Building2}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label htmlFor="name" className="flex items-center gap-xs">
@@ -180,7 +192,10 @@ export function StoredAccountForm({
         </div>
       </FormSection>
 
-      <FormSection title={t('pages.storedAccounts.form.sectionAccountData')} icon={Hash}>
+      <FormSection
+        title={t('pages.storedAccounts.form.sectionAccountData')}
+        icon={Hash}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm">
             <Label htmlFor="account_number" className="flex items-center gap-xs">
@@ -252,7 +267,9 @@ export function StoredAccountForm({
               </Button>
             </div>
             {errors.password && (
-              <p className="mt-xs text-sm text-destructive">{errors.password.message}</p>
+              <p className="mt-xs text-sm text-destructive">
+                {errors.password.message}
+              </p>
             )}
             {account && (
               <p className="mt-xs text-xs text-warning">
