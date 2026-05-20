@@ -244,7 +244,9 @@ export function ReadingForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('pages.readings.form.timeOfDayPlaceholder')} />
+                <SelectValue
+                  placeholder={t('pages.readings.form.timeOfDayPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {TIME_OF_DAY_KEYS.map((key) => (

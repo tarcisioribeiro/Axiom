@@ -1,5 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarDays, FileText, Globe, Loader2, User, UserCircle, X } from 'lucide-react';
+import {
+  CalendarDays,
+  FileText,
+  Globe,
+  Loader2,
+  User,
+  UserCircle,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -280,7 +288,9 @@ export function AuthorForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('pages.authors.form.birthEraPlaceholder')} />
+                <SelectValue
+                  placeholder={t('pages.authors.form.birthEraPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (
@@ -329,7 +339,9 @@ export function AuthorForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('pages.authors.form.deathEraPlaceholder')} />
+                <SelectValue
+                  placeholder={t('pages.authors.form.deathEraPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (

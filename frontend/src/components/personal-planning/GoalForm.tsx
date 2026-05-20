@@ -182,7 +182,9 @@ export function GoalForm({
               </SelectContent>
             </Select>
             {errors.goal_type && (
-              <p className="mt-xs text-sm text-destructive">{errors.goal_type.message}</p>
+              <p className="mt-xs text-sm text-destructive">
+                {errors.goal_type.message}
+              </p>
             )}
           </div>
 
@@ -199,7 +201,9 @@ export function GoalForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('pages.goals.form.relatedTaskPlaceholder')} />
+                <SelectValue
+                  placeholder={t('pages.goals.form.relatedTaskPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">

@@ -152,7 +152,10 @@ export function ReadingGoalModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
-          <FormSection title={t('pages.libraryDashboard.readingGoals.sectionGoal')} icon={Target}>
+          <FormSection
+            title={t('pages.libraryDashboard.readingGoals.sectionGoal')}
+            icon={Target}
+          >
             <div className="grid grid-cols-1 gap-md md:grid-cols-2">
               <div className="space-y-sm">
                 <Label htmlFor="year" className="flex items-center gap-xs">
@@ -182,7 +185,9 @@ export function ReadingGoalModal({
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder={t('pages.libraryDashboard.readingGoals.formNamePlaceholder')}
+                  placeholder={t(
+                    'pages.libraryDashboard.readingGoals.formNamePlaceholder'
+                  )}
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -195,7 +200,10 @@ export function ReadingGoalModal({
             </div>
           </FormSection>
 
-          <FormSection title={t('pages.libraryDashboard.readingGoals.sectionQuantities')} icon={BookOpen}>
+          <FormSection
+            title={t('pages.libraryDashboard.readingGoals.sectionQuantities')}
+            icon={BookOpen}
+          >
             <div className="grid grid-cols-1 gap-md md:grid-cols-2">
               <div className="space-y-sm">
                 <Label htmlFor="books_goal" className="flex items-center gap-xs">
@@ -218,7 +226,9 @@ export function ReadingGoalModal({
                   })}
                 </p>
                 {errors.books_goal && (
-                  <p className="text-sm text-destructive">{errors.books_goal.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.books_goal.message}
+                  </p>
                 )}
               </div>
 
@@ -235,20 +245,27 @@ export function ReadingGoalModal({
                   {...register('pages_goal', {
                     setValueAs: (v: string) => (v === '' ? 0 : parseInt(v)),
                   })}
-                  placeholder={t('pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder')}
+                  placeholder={t(
+                    'pages.libraryDashboard.readingGoals.formPagesGoalPlaceholder'
+                  )}
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
                   {t('pages.libraryDashboard.readingGoals.formPagesGoalHint')}
                 </p>
                 {errors.pages_goal && (
-                  <p className="text-sm text-destructive">{errors.pages_goal.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.pages_goal.message}
+                  </p>
                 )}
               </div>
             </div>
           </FormSection>
 
-          <FormSection title={t('pages.libraryDashboard.readingGoals.formLiteraryTypesLabel')} icon={Tag}>
+          <FormSection
+            title={t('pages.libraryDashboard.readingGoals.formLiteraryTypesLabel')}
+            icon={Tag}
+          >
             <div className="space-y-sm">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
@@ -276,7 +293,9 @@ export function ReadingGoalModal({
                       <select
                         className="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-xs text-sm shadow-sm"
                         value={draft.literary_type}
-                        onChange={(e) => updateLtg(index, 'literary_type', e.target.value)}
+                        onChange={(e) =>
+                          updateLtg(index, 'literary_type', e.target.value)
+                        }
                       >
                         {LITERARY_TYPE_GOAL_VALUES.filter(
                           (v) =>
@@ -288,7 +307,9 @@ export function ReadingGoalModal({
                         ).map((v) => (
                           <option key={v} value={v}>
                             {LITERARY_TYPE_EMOJIS[v] ?? ''}{' '}
-                            {t(`pages.libraryDashboard.readingGoals.literaryTypes.${v}`)}
+                            {t(
+                              `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
+                            )}
                           </option>
                         ))}
                       </select>
@@ -323,7 +344,12 @@ export function ReadingGoalModal({
           </FormSection>
 
           <div className="flex justify-end gap-sm border-t pt-md">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
               {t('common.actions.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>

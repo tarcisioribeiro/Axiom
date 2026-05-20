@@ -166,7 +166,10 @@ export function ArchiveForm({
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-lg">
-      <FormSection title={t('pages.archives.form.sectionIdentification')} icon={FileText}>
+      <FormSection
+        title={t('pages.archives.form.sectionIdentification')}
+        icon={FileText}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label htmlFor="title" className="flex items-center gap-xs">
@@ -209,7 +212,9 @@ export function ArchiveForm({
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
+              <p className="mt-xs text-sm text-destructive">
+                {errors.category.message}
+              </p>
             )}
           </div>
         </div>
@@ -224,26 +229,27 @@ export function ArchiveForm({
               {t('pages.archives.form.typeLabel')}
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
-              {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, label, translationKey }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setValue('archive_type', value)}
-
-                  disabled={isLoading}
-                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
-                    watchedArchiveType === value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  <span>{label}</span>
-                  <span className="hidden sm:inline">
-                    {t(`pages.archives.types.${translationKey}`)}
-                  </span>
-                </button>
-              ))}
+              {ARCHIVE_TYPE_OPTIONS.map(
+                ({ value, icon: Icon, label, translationKey }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setValue('archive_type', value)}
+                    disabled={isLoading}
+                    className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                      watchedArchiveType === value
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{label}</span>
+                    <span className="hidden sm:inline">
+                      {t(`pages.archives.types.${translationKey}`)}
+                    </span>
+                  </button>
+                )
+              )}
             </div>
             {errors.archive_type && (
               <p className="mt-xs text-sm text-destructive">

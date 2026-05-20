@@ -231,7 +231,10 @@ export function RoutineTaskForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
-      <FormSection title={t('pages.routineTasks.form.sectionIdentification')} icon={CheckSquare}>
+      <FormSection
+        title={t('pages.routineTasks.form.sectionIdentification')}
+        icon={CheckSquare}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm md:col-span-2">
             <Label htmlFor="name" className="flex items-center gap-xs">
@@ -291,7 +294,9 @@ export function RoutineTaskForm({
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="mt-xs text-sm text-destructive">{errors.category.message}</p>
+              <p className="mt-xs text-sm text-destructive">
+                {errors.category.message}
+              </p>
             )}
           </div>
 
@@ -311,7 +316,10 @@ export function RoutineTaskForm({
         </div>
       </FormSection>
 
-      <FormSection title={t('pages.routineTasks.form.sectionPeriodicity')} icon={Repeat}>
+      <FormSection
+        title={t('pages.routineTasks.form.sectionPeriodicity')}
+        icon={Repeat}
+      >
         <div className="space-y-md">
           {/* Toggle visual de periodicidade */}
           <div className="space-y-sm">
@@ -358,7 +366,9 @@ export function RoutineTaskForm({
                 disabled={isLoading}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder={t('pages.routineTasks.form.weekdayPlaceholder')} />
+                  <SelectValue
+                    placeholder={t('pages.routineTasks.form.weekdayPlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {WEEKDAY_CHOICES.map((day) => (
@@ -369,7 +379,9 @@ export function RoutineTaskForm({
                 </SelectContent>
               </Select>
               {errors.weekday && (
-                <p className="mt-xs text-sm text-destructive">{errors.weekday.message}</p>
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.weekday.message}
+                </p>
               )}
             </div>
           )}
@@ -438,7 +450,9 @@ export function RoutineTaskForm({
                         htmlFor={`custom-weekday-${day.value}`}
                         className="cursor-pointer text-xs"
                       >
-                        {t(`pages.routineTasks.form.weekdayOptions.${day.value}`).substring(0, 3)}
+                        {t(
+                          `pages.routineTasks.form.weekdayOptions.${day.value}`
+                        ).substring(0, 3)}
                       </Label>
                     </div>
                   ))}
@@ -531,7 +545,9 @@ export function RoutineTaskForm({
                         date ? formatLocalDate(date) : undefined
                       )
                     }
-                    placeholder={t('pages.routineTasks.form.intervalStartDatePlaceholder')}
+                    placeholder={t(
+                      'pages.routineTasks.form.intervalStartDatePlaceholder'
+                    )}
                     disabled={isLoading}
                   />
                 </div>
@@ -735,7 +751,10 @@ export function RoutineTaskForm({
         </div>
       </FormSection>
 
-      <FormSection title={t('pages.routineTasks.form.sectionBehavior')} icon={Settings2}>
+      <FormSection
+        title={t('pages.routineTasks.form.sectionBehavior')}
+        icon={Settings2}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm">
             <Label className="flex items-center gap-xs">
@@ -762,12 +781,17 @@ export function RoutineTaskForm({
               </SelectContent>
             </Select>
             {errors.priority && (
-              <p className="mt-xs text-sm text-destructive">{errors.priority.message}</p>
+              <p className="mt-xs text-sm text-destructive">
+                {errors.priority.message}
+              </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="allowed_skips_per_month" className="flex items-center gap-xs">
+            <Label
+              htmlFor="allowed_skips_per_month"
+              className="flex items-center gap-xs"
+            >
               <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.routineTasks.form.allowedSkipsLabel')}
             </Label>
@@ -856,7 +880,9 @@ export function RoutineTaskForm({
                   >
                     <SelectTrigger>
                       <SelectValue
-                        placeholder={t('pages.routineTasks.form.linkedFinancialGoalPlaceholder')}
+                        placeholder={t(
+                          'pages.routineTasks.form.linkedFinancialGoalPlaceholder'
+                        )}
                       />
                     </SelectTrigger>
                     <SelectContent>

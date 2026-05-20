@@ -86,7 +86,10 @@ export function PublisherForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
-      <FormSection title={t('pages.publishers.form.sectionIdentification')} icon={Building2}>
+      <FormSection
+        title={t('pages.publishers.form.sectionIdentification')}
+        icon={Building2}
+      >
         <div className="grid gap-md">
           <div className="space-y-sm">
             <Label htmlFor="name" className="flex items-center gap-xs">

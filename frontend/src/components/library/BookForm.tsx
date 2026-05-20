@@ -379,22 +379,24 @@ export function BookForm({
               {t('pages.books.form.mediaTypeLabel')}
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
-              {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, label, translationKey }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setValue('media_type', value)}
-                  disabled={isLoading}
-                  className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
-                    mediaType === value
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label} {t(`pages.books.mediaTypes.${translationKey}`)}
-                </button>
-              ))}
+              {MEDIA_TYPE_OPTIONS.map(
+                ({ value, icon: Icon, label, translationKey }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setValue('media_type', value)}
+                    disabled={isLoading}
+                    className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                      mediaType === value
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label} {t(`pages.books.mediaTypes.${translationKey}`)}
+                  </button>
+                )
+              )}
             </div>
             {errors.media_type && (
               <p className="mt-xs text-sm text-destructive">
@@ -497,7 +499,10 @@ export function BookForm({
               <User2 className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.books.form.authorsLabel')}
             </Label>
-            <Select onValueChange={(value) => handleAuthorToggle(parseInt(value))} disabled={isLoading}>
+            <Select
+              onValueChange={(value) => handleAuthorToggle(parseInt(value))}
+              disabled={isLoading}
+            >
               <SelectTrigger>
                 <SelectValue placeholder={t('pages.books.form.authorsPlaceholder')} />
               </SelectTrigger>
@@ -595,9 +600,7 @@ export function BookForm({
               disabled={isLoading}
             />
             {errors.edition && (
-              <p className="mt-xs text-sm text-destructive">
-                {errors.edition.message}
-              </p>
+              <p className="mt-xs text-sm text-destructive">{errors.edition.message}</p>
             )}
           </div>
 
@@ -753,7 +756,9 @@ export function BookForm({
                     </Label>
                     <DatePicker
                       value={startDate}
-                      onChange={(date) => setStartDate(date ? formatLocalDate(date) : '')}
+                      onChange={(date) =>
+                        setStartDate(date ? formatLocalDate(date) : '')
+                      }
                       placeholder={t('pages.books.form.startDatePlaceholder')}
                       disabled={isLoading}
                     />
@@ -793,7 +798,9 @@ export function BookForm({
                 className="mt-sm"
               />
               {errors.rating && (
-                <p className="mt-xs text-sm text-destructive">{errors.rating.message}</p>
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.rating.message}
+                </p>
               )}
             </div>
           )}

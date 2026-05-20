@@ -86,7 +86,10 @@ export function DailyReflectionForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
-      <FormSection title={t('pages.dailyReflections.form.sectionReflection')} icon={MessageSquare}>
+      <FormSection
+        title={t('pages.dailyReflections.form.sectionReflection')}
+        icon={MessageSquare}
+      >
         <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm">
             <Label className="flex items-center gap-xs">
@@ -115,7 +118,9 @@ export function DailyReflectionForm({
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('pages.dailyReflections.form.moodPlaceholder')} />
+                <SelectValue
+                  placeholder={t('pages.dailyReflections.form.moodPlaceholder')}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
