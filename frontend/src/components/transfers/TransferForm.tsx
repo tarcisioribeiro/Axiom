@@ -1,10 +1,20 @@
-import { AlertCircle } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  FileText,
+  Wallet,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,12 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { TRANSLATIONS } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
-import type { Transfer, TransferFormData, Account } from '@/types';
+import type { Account, Transfer, TransferFormData } from '@/types';
 
 interface TransferFormProps {
   transfer?: Transfer;
@@ -28,6 +39,13 @@ interface TransferFormProps {
   onCancel: () => void;
   isLoading?: boolean;
 }
+
+const TRANSFER_TYPE_ICONS: Record<string, string> = {
+  pix: '⚡',
+  ted: '🏦',
+  doc: '📄',
+  internal: '🔄',
+};
 
 export const TransferForm: React.FC<TransferFormProps> = ({
   transfer,
@@ -60,9 +78,11 @@ export const TransferForm: React.FC<TransferFormProps> = ({
   });
 
   const watchedOriginAccount = watch('origin_account');
+  const watchedDestinyAccount = watch('destiny_account');
   const watchedTransfered = watch('transfered');
   const watchedValue = watch('value');
   const watchedDate = watch('date');
+  const watchedCategory = watch('category') || 'pix';
   const today = formatLocalDate(new Date());
   const isFutureDate = watchedDate > today;
 
@@ -83,9 +103,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
     const account = accounts.find((a) => a.id === watchedOriginAccount);
     if (!account) return null;
     const overdraft = parseFloat(account.overdraft_limit ?? '0');
-    if (watchedTransfered) {
-      return getAccountBalanceInfo(account, watchedValue);
-    }
+    if (watchedTransfered) return getAccountBalanceInfo(account, watchedValue);
     if (projectedBalance === null) return null;
     const proj = parseFloat(projectedBalance);
     const available = proj + overdraft;
@@ -118,154 +136,248 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       .finally(() => setIsLoadingProjected(false));
   }, [watchedOriginAccount, watchedDate, watchedValue, isFutureDate]);
 
-  // Auto-selecionar contas ao abrir o formulário (modo criação)
   useEffect(() => {
     if (!transfer && accounts.length > 0) {
       const currentOrigin = watch('origin_account');
       const currentDestiny = watch('destiny_account');
-
-      // Auto-selecionar conta de origem (primeira conta)
-      if (!currentOrigin && accounts.length > 0) {
+      if (!currentOrigin && accounts.length > 0)
         setValue('origin_account', accounts[0].id);
-      }
-
-      // Auto-selecionar conta de destino (segunda conta diferente da origem)
       if (!currentDestiny && accounts.length > 1) {
         const originId = currentOrigin || accounts[0].id;
         const destinyAccount = accounts.find((a) => a.id !== originId);
-        if (destinyAccount) {
-          setValue('destiny_account', destinyAccount.id);
-        }
+        if (destinyAccount) setValue('destiny_account', destinyAccount.id);
       }
     }
   }, [transfer, accounts.length]);
 
-  // Atualizar conta de destino quando conta de origem muda
   useEffect(() => {
     if (!transfer && watchedOriginAccount && accounts.length > 1) {
       const currentDestiny = watch('destiny_account');
-
-      // Se a conta de destino atual é igual à nova origem, trocar
       if (currentDestiny === watchedOriginAccount) {
         const newDestiny = accounts.find((a) => a.id !== watchedOriginAccount);
-        if (newDestiny) {
-          setValue('destiny_account', newDestiny.id);
-        }
+        if (newDestiny) setValue('destiny_account', newDestiny.id);
       }
     }
   }, [watchedOriginAccount]);
 
+  const handleSwapAccounts = () => {
+    const origin = watch('origin_account');
+    const destiny = watch('destiny_account');
+    setValue('origin_account', destiny);
+    setValue('destiny_account', origin);
+  };
+
+  const originAccount = accounts.find((a) => a.id === watchedOriginAccount);
+  const destinyAccount = accounts.find((a) => a.id === watchedDestinyAccount);
+  const formattedValue =
+    (watchedValue ?? 0) > 0
+      ? (watchedValue ?? 0).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        })
+      : null;
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
-        <div className="space-y-sm md:col-span-2">
-          <Label>{t('pages.transfers.form.descriptionLabel')}</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      {/* Seção: Informações */}
+      <FormSection title={t('common.form.sections.basicInfo')} icon={FileText}>
+        <div className="space-y-sm">
+          <Label className="flex items-center gap-xs">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            {t('pages.transfers.form.descriptionLabel')}
+          </Label>
           <Input
             {...register('description', { required: true })}
             placeholder={t('pages.transfers.form.descriptionPlaceholder')}
             disabled={isLoading}
           />
         </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.valueLabel')}</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register('value', { required: true, valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
+      </FormSection>
+
+      {/* Seção: Tipo de Transferência */}
+      <FormSection title={t('pages.transfers.form.typeLabel')} icon={ArrowRight}>
+        <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
+          {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setValue('category', k)}
+              className={`flex flex-col items-center gap-1 rounded-lg border p-sm text-sm font-medium transition-all ${
+                watchedCategory === k
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+              }`}
+            >
+              <span className="text-lg">{TRANSFER_TYPE_ICONS[k] ?? '💸'}</span>
+              <span>{v}</span>
+            </button>
+          ))}
         </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.typeLabel')}</Label>
-          <Select
-            value={watch('category')}
-            onValueChange={(v) => setValue('category', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('pages.transfers.form.typePlaceholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.dateLabel')}</Label>
-          <DatePicker
-            value={watch('date')}
-            onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-            placeholder={t('pages.transfers.form.datePlaceholder')}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.timeLabel')}</Label>
-          <Input
-            type="time"
-            {...register('horary', { required: true })}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.originAccountLabel')}</Label>
-          <Select
-            value={watch('origin_account')?.toString() || ''}
-            onValueChange={(v) => setValue('origin_account', parseInt(v))}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.transfers.form.originAccountPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id.toString()}>
-                  {a.account_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.transfers.form.destinyAccountLabel')}</Label>
-          <Select
-            value={watch('destiny_account')?.toString() || ''}
-            onValueChange={(v) => setValue('destiny_account', parseInt(v))}
-          >
-            <SelectTrigger>
-              <SelectValue
-                placeholder={t('pages.transfers.form.destinyAccountPlaceholder')}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts
-                .filter((a) => a.id !== watch('origin_account'))
-                .map((a) => (
+      </FormSection>
+
+      {/* Widget de Fluxo */}
+      <div className="rounded-lg border border-border/50 bg-muted/20 p-md">
+        <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {t('pages.transfers.form.flowLabel')}
+        </p>
+        <div className="flex items-center gap-sm">
+          <div className="flex-1 space-y-xs">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.transfers.form.flowFrom')}
+            </p>
+            <Select
+              value={watchedOriginAccount?.toString() || ''}
+              onValueChange={(v) => setValue('origin_account', parseInt(v))}
+            >
+              <SelectTrigger className="h-auto py-sm">
+                <SelectValue
+                  placeholder={t('pages.transfers.form.originAccountPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
                   <SelectItem key={a.id} value={a.id.toString()}>
-                    {a.account_name}
+                    <span>{a.account_name}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {parseFloat(a.balance).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
                   </SelectItem>
                 ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-sm space-y-sm">
-          <input
-            type="checkbox"
-            {...register('transfered')}
-            id="transfered"
-            disabled={isLoading}
-            className="h-4 w-4"
-          />
-          <Label htmlFor="transfered" className="cursor-pointer">
-            {t('pages.transfers.form.transferedLabel')}
-          </Label>
+              </SelectContent>
+            </Select>
+            {originAccount && (
+              <p
+                className={`text-xs ${parseFloat(originAccount.balance) >= (watchedValue ?? 0) ? 'text-success' : 'text-destructive'}`}
+              >
+                {parseFloat(originAccount.balance).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-xs">
+            <button
+              type="button"
+              title={t('pages.transfers.form.swapAccounts')}
+              onClick={handleSwapAccounts}
+              className="rounded-full border border-border/70 bg-background p-1.5 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+            </button>
+            {formattedValue && (
+              <span className="text-xs font-semibold text-primary">
+                {formattedValue}
+              </span>
+            )}
+          </div>
+
+          <div className="flex-1 space-y-xs">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.transfers.form.flowTo')}
+            </p>
+            <Select
+              value={watchedDestinyAccount?.toString() || ''}
+              onValueChange={(v) => setValue('destiny_account', parseInt(v))}
+            >
+              <SelectTrigger className="h-auto py-sm">
+                <SelectValue
+                  placeholder={t('pages.transfers.form.destinyAccountPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts
+                  .filter((a) => a.id !== watchedOriginAccount)
+                  .map((a) => (
+                    <SelectItem key={a.id} value={a.id.toString()}>
+                      {a.account_name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {destinyAccount && (
+              <p className="text-xs text-muted-foreground">
+                {parseFloat(destinyAccount.balance).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })}
+              </p>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Seção: Valor & Data */}
+      <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.transfers.form.valueLabel')}
+            </Label>
+            <CurrencyInput
+              value={watchedValue}
+              onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.transfers.form.transferedLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedTransfered ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'false',
+                  label: t('common.status.pending'),
+                  activeClass: 'bg-background text-foreground shadow-sm',
+                },
+                {
+                  value: 'true',
+                  label: t('common.status.completed'),
+                  activeClass: 'bg-success/15 text-success shadow-sm',
+                },
+              ]}
+              onChange={(v) => setValue('transfered', v === 'true')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.transfers.form.dateLabel')}
+            </Label>
+            <DatePicker
+              value={watch('date')}
+              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              placeholder={t('pages.transfers.form.datePlaceholder')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.transfers.form.timeLabel')}
+            </Label>
+            <Input
+              type="time"
+              {...register('horary', { required: true })}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Alertas de saldo */}
       {isFutureDate && watchedOriginAccount && watchedValue > 0 && (
         <div
           className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
@@ -322,7 +434,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

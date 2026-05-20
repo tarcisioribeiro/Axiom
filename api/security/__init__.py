@@ -1,2 +1,2 @@
-# Security module for MindLedger
+# Security module for Axiom
 # Armazenamento seguro de senhas, cartões, contas e arquivos confidenciais

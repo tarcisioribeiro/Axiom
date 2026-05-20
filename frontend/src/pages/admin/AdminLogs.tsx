@@ -3,8 +3,9 @@ import { ChevronLeft, ChevronRight, Filter, RefreshCw, Search, X } from 'lucide-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import i18n from '@/i18n';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import { adminService } from '@/services/admin-service';
 
 import { LogRow } from './AdminLogsComponents';
@@ -121,17 +122,15 @@ export default function AdminLogs() {
               </option>
             ))}
           </select>
-          <input
-            type="date"
+          <DatePicker
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(date) => setDateFrom(date ? formatLocalDate(date) : '')}
+            clearable
           />
-          <input
-            type="date"
+          <DatePicker
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-border bg-background px-3 py-sm text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(date) => setDateTo(date ? formatLocalDate(date) : '')}
+            clearable
           />
         </div>
         <button

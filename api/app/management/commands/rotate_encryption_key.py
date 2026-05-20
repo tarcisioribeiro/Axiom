@@ -2,7 +2,7 @@
 Management command to rotate the ENCRYPTION_KEY (Fernet) without data loss.
 
 IMPORTANT: Take a full database backup before running this command:
-    docker compose exec db pg_dump -U $DB_USER mindledger_db \\
+    docker compose exec db pg_dump -U $DB_USER axiom_db \\
         > backups/pre_rotation_$(date +%%Y%%m%%d_%%H%%M%%S).sql
 
 Usage:

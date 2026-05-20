@@ -33,9 +33,9 @@ class AdminBaseView(APIView):
 
 # ─── .env helpers ──────────────────────────────────────────────────────────────
 
-_ENV_FILE_PATH = "/app/mindledger.env"
+_ENV_FILE_PATH = "/app/axiom.env"
 _DOCKER_SOCKET = "/var/run/docker.sock"
-_DOCKER_CONTAINER = "mindledger-api"
+_DOCKER_CONTAINER = "axiom-api"
 
 
 def _update_dotenv(key: str, value: str) -> None:
@@ -458,7 +458,7 @@ class AdminEmailTestView(AdminBaseView):
             settings, "EMAIL_HOST_PASSWORD", ""
         )
         from_email = _get_config_value("DEFAULT_FROM_EMAIL") or getattr(
-            settings, "DEFAULT_FROM_EMAIL", "noreply@mindledger.app"
+            settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"
         )
 
         if not host:
@@ -478,10 +478,10 @@ class AdminEmailTestView(AdminBaseView):
                 fail_silently=False,
             )
             send_mail(
-                subject="MindLedger — Email de teste",
+                subject="Axiom — Email de teste",
                 message=(
                     "Este é um email de teste enviado pelo "
-                    "painel de administração do MindLedger.\n\n"
+                    "painel de administração do Axiom.\n\n"
                     f"Enviado em: {now().strftime('%d/%m/%Y %H:%M:%S')}"
                 ),
                 from_email=from_email,

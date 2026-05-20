@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='webhook',
             name='secret',
-            field=models.CharField(help_text='Assina o payload via HMAC-SHA256 (header X-MindLedger-Signature)', max_length=128, verbose_name='Secret'),
+            field=models.CharField(help_text='Assina o payload via HMAC-SHA256 (header X-Axiom-Signature)', max_length=128, verbose_name='Secret'),
         ),
         migrations.AlterField(
             model_name='webhook',

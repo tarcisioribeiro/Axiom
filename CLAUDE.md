@@ -10,7 +10,7 @@ Full-stack monorepo: Django REST Framework backend (port 39100) + React/TypeScri
 
 ### Monorepo Structure
 ```
-MindLedger/
+Axiom/
 ├── api/              # Django backend (port 39100)
 ├── frontend/         # React frontend (port 39101)
 ├── docker-compose.yml
@@ -19,7 +19,7 @@ MindLedger/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, agents
 
 **Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances.
 
@@ -51,7 +51,9 @@ MindLedger/
 
 **Database**: PostgreSQL 16. Tests use SQLite in-memory automatically (`'test' in sys.argv`).
 
-**Caching**: Redis (django-redis) with key prefix `mindledger`. Specific TTLs defined in settings: `CACHE_TTL_DASHBOARD_STATS` (60s), `CACHE_TTL_ACCOUNT_BALANCES` (30s), `CACHE_TTL_CATEGORY_BREAKDOWN` (300s), `CACHE_TTL_BALANCE_FORECAST` (120s).
+**Caching**: Redis (django-redis) with key prefix `axiom`. Specific TTLs defined in settings: `CACHE_TTL_DASHBOARD_STATS` (60s), `CACHE_TTL_ACCOUNT_BALANCES` (30s), `CACHE_TTL_CATEGORY_BREAKDOWN` (300s), `CACHE_TTL_BALANCE_FORECAST` (120s).
+
+**Agents / LLM Module** (`api/agents/`): Django app providing AI-powered financial assistants. Six domain agents (`finance`, `budget`, `forecast`, `insight`, `library`, `planning`) are selected automatically by `core/router.py`. Endpoints are under `/api/v1/agents/` — `ask/` (sync), `stream/` (SSE), `history/`, `sessions/`, `status/`. Core infrastructure in `core/`: `llm_client.py` (Ollama/Groq/Anthropic providers with thread-safe singleton, circuit breaker for Ollama, Redis embedding cache), `memory.py` (conversation persistence in Redis + PostgreSQL), `context_compressor.py`, `summarizer.py`. RAG via pgvector in `tools/rag_tools.py`. Background thread writes persistence after response to reduce latency. `AgentRateThrottle` enforced on all views. Prompt injection patterns (EN + PT-BR) validated server-side.
 
 ### Frontend (React + TypeScript)
 
@@ -64,8 +66,8 @@ MindLedger/
 **State**: Zustand stores: `auth-store.ts` (user, permissions, `hasPermission()`, `hasSystemAccess()`), `notifications-store.ts` (notification list/unread count), `command-palette-store.ts` (palette open state). Toast state lives in `hooks/use-toast.ts`. React Hook Form + Zod for forms. Local state for component data.
 
 **Translation System**: Two separate layers:
-- `config/translations.ts` — API data translation: `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for domain enum values (expense categories, status labels, etc.). `autoTranslate()` searches all sections. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before. `lib/helpers.ts` provides `translateCategory(category, 'expense'|'revenue')` as a convenience wrapper, plus `groupByProperty<T>(array, property)` for grouping arrays.
-- `i18n/` — UI text localization via react-i18next. Locale files at `i18n/locales/pt-BR.json` (default) and `i18n/locales/en-US.json`. Language persisted in localStorage key `mindledger-lang`. Use the `LanguageSelector` component (`components/common/LanguageSelector.tsx`) to switch languages.
+- `config/translations.ts` — API data translation: `TRANSLATIONS` (EN→PT-BR) and `REVERSE_TRANSLATIONS` for domain enum values (expense categories, status labels, etc.). `autoTranslate()` searches all sections. `translate(section, key)` looks up a key within a specific section. `config/constants.ts` re-exports from `api-config.ts`, `translations.ts`, `categories.ts`, and `commands.ts` — import from `@/config/constants` as before. `lib/helpers.ts` provides `translateCategory(category, 'expense'|'revenue')` as a convenience wrapper around `translate()`, `getAccountBalanceInfo(account)` for balance/limit display data, plus `groupByProperty<T>(array, property)` for grouping arrays. `config/categories.ts` exports `EXPENSE_CATEGORIES_CANONICAL` and `REVENUE_CATEGORIES_CANONICAL` — typed arrays of `{ key, label, emoji }` that mirror backend choices exactly; use these for category dropdowns.
+- `i18n/` — UI text localization via react-i18next. Locale files at `i18n/locales/pt-BR.json` (default) and `i18n/locales/en-US.json`. Language persisted in localStorage key `axiom-lang`. Use the `LanguageSelector` component (`components/common/LanguageSelector.tsx`) to switch languages.
 
 **CRUD Hook**: `hooks/use-crud-page.ts` encapsulates load/create/update/delete with loading states and toast notifications.
 
@@ -77,7 +79,7 @@ MindLedger/
 
 **Common Components** (`components/common/`): Always use these before creating new ones — `PageContainer` (root page wrapper), `EmptyState` (empty/no-results UI), `LoadingState` (skeleton loader), `DataTable` (paginated table with `emptyState` prop), `PageHeader`, `SearchInput`, `StatCard`, `ExportModal` (date-range export dialog), `StatementExportModal` (statement-specific export), `AnimatedPage` (page-level Framer Motion wrapper), `IconButton` (icon + tooltip button), `ErrorBoundary` (React error boundary), `LanguageSelector`, `ThemeToggle`.
 
-**UI Primitives** (`components/ui/`): Radix UI-based low-level components wrapped with project styling — `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`. Use these for building feature components.
+**UI Primitives** (`components/ui/`): Radix UI-based low-level components wrapped with project styling — `button`, `input`, `select`, `checkbox`, `dialog`, `alert-dialog`, `form-field`, `date-picker`, `dropdown-menu`, `popover`, `badge`, `card`, `progress`, `radio-group`, `star-rating`, `textarea`, `toast`, `toaster`, `tooltip`, `skeleton`, `skeleton-variants`, `scroll-area`, `table`, `label`, `visually-hidden`, `file-input`, `icon-picker`, `circular-progress`, `success-animation`. Form-specific: `currency-input` (BRL R$ prefix, `accentColor` variants: default/destructive/success), `form-section` (visual section divider with title + icon for grouping form fields), `status-toggle` (two-option pill toggle for binary status, `activeClass` per option). Use these for building feature components.
 
 **Import alias**: `@/` → `frontend/src/`
 
@@ -93,12 +95,12 @@ docker compose exec api python manage.py <command>      # Run management command
 docker compose up -d --build                            # Rebuild after dependency changes
 ```
 
-> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> mindledger-api:/app/<path>`) for a quick test, or rebuild with `docker compose up -d --build` to make changes permanent.
+> **IMPORTANT**: The API container does NOT mount source code as a volume — code is baked in at build time. After editing host files, either copy them into the container (`docker cp <file> axiom-api:/app/<path>`) for a quick test, or rebuild with `docker compose up -d --build` to make changes permanent.
 
 ### Backend
 ```bash
 # Testing (tests live in api/tests/) — pytest is a dev dep; install in container first if missing:
-# docker exec mindledger-api pip install --user pytest pytest-django pytest-cov
+# docker exec axiom-api pip install --user pytest pytest-django pytest-cov
 docker compose exec api python -m pytest tests/                               # All tests (SQLite in-memory)
 docker compose exec api python -m pytest tests/test_views.py                  # Single file
 docker compose exec api python -m pytest tests/test_views.py -k test_name     # Single test
@@ -190,9 +192,9 @@ cd frontend && npm install && npm run dev
 
 ### Database
 ```bash
-docker compose exec db pg_dump -U $DB_USER mindledger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
-docker compose exec -T db psql -U $DB_USER mindledger_db < backups/your_backup.sql
-docker compose exec db psql -U $DB_USER -d mindledger_db    # PostgreSQL shell
+docker compose exec db pg_dump -U $DB_USER axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+docker compose exec -T db psql -U $DB_USER axiom_db < backups/your_backup.sql
+docker compose exec db psql -U $DB_USER -d axiom_db    # PostgreSQL shell
 ```
 
 ### Git Hooks (one-time setup, run from repo root)
@@ -314,6 +316,12 @@ Key testing conventions:
 - `VITE_API_BASE_URL`: Backend URL (default: `http://localhost:39100`)
 - `VITE_SENTRY_DSN`: Sentry DSN for frontend error tracking (optional — Sentry is silently disabled when unset)
 - `DB_HOST`: `db` for Docker, `localhost` for local
+- `LLM_PROVIDER`: `ollama` (default), `groq`, or `anthropic`
+- `OLLAMA_BASE_URL`: Ollama server URL (default: `http://ollama:11434`)
+- `OLLAMA_MODEL`: chat model (default: `mistral:7b-instruct`)
+- `OLLAMA_EMBED_MODEL`: embedding model (default: `nomic-embed-text`)
+- `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL`: required when `LLM_PROVIDER=anthropic`
+- `LLM_TIMEOUT_CHAT` / `LLM_TIMEOUT_EMBED`: timeouts in seconds (defaults: 120 / 30)
 
 ## Key Rotation
 

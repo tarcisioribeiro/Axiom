@@ -21,11 +21,12 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import type {
   MemberFinancialReport,
@@ -252,24 +253,20 @@ export default function MemberFinancialReportPage() {
             <Label htmlFor="start-date" className="text-xs">
               Data Inicial
             </Label>
-            <Input
-              id="start-date"
-              type="date"
+            <DatePicker
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="h-8 w-40 text-sm"
+              onChange={(date) => setStartDate(date ? formatLocalDate(date) : '')}
+              className="w-40"
             />
           </div>
           <div className="flex flex-col gap-xs">
             <Label htmlFor="end-date" className="text-xs">
               Data Final
             </Label>
-            <Input
-              id="end-date"
-              type="date"
+            <DatePicker
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="h-8 w-40 text-sm"
+              onChange={(date) => setEndDate(date ? formatLocalDate(date) : '')}
+              className="w-40"
             />
           </div>
           <Button

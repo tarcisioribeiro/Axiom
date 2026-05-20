@@ -86,12 +86,12 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
   },
   DEFAULT_FROM_EMAIL: {
     hint: 'Endereço exibido no campo "De" dos emails enviados. O endereço deve estar autorizado pelo provedor SMTP para evitar que os emails sejam marcados como spam.',
-    default_value: 'MindLedger <noreply@mindledger.app>',
-    example: 'MindLedger <noreply@seudominio.com>',
+    default_value: 'Axiom <noreply@axiom.app>',
+    example: 'Axiom <noreply@seudominio.com>',
   },
   SITE_URL: {
     hint: 'URL pública do frontend, usada para gerar links clicáveis dentro dos emails (ex: link de redefinição de senha). Deve incluir o protocolo (https://).',
-    example: 'https://mindledger.seudominio.com',
+    example: 'https://axiom.seudominio.com',
   },
   BACKUP_CRON: {
     hint: 'Expressão cron para o agendamento do backup automático do banco. Requer reinicialização do serviço de backup para entrar em vigor após a mudança.',
@@ -134,11 +134,11 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
   },
   ALLOWED_HOSTS: {
     hint: 'Domínios aceitos pelo Django, separados por vírgula. Requisições com Host header não listado são rejeitadas com HTTP 400. Em desenvolvimento: localhost,127.0.0.1.',
-    example: 'mindledger.com,www.mindledger.com',
+    example: 'axiom.com,www.axiom.com',
   },
   CORS_ALLOWED_ORIGINS: {
     hint: 'Origens permitidas para requisições CORS, separadas por vírgula. Deve incluir a URL do frontend. Em desenvolvimento: http://localhost:39101.',
-    example: 'https://mindledger.com,http://localhost:39101',
+    example: 'https://axiom.com,http://localhost:39101',
   },
   GUNICORN_WORKERS: {
     hint: 'Número de processos worker do Gunicorn. Regra geral: 2 × número_de_núcleos_CPU + 1. Mais workers aumentam throughput mas também o uso de memória RAM.',
@@ -162,7 +162,7 @@ const VARIABLE_HELPERS: Record<string, VariableHelper> = {
   },
   MINIO_BUCKET_NAME: {
     hint: 'Nome do bucket principal para armazenamento de mídia. O bucket é criado automaticamente na primeira inicialização se não existir. Use apenas letras minúsculas, números e hífens.',
-    example: 'mindledger-media',
+    example: 'axiom-media',
   },
   MINIO_ROOT_USER: {
     hint: 'Usuário root do MinIO, equivalente à variável MINIO_ROOT_USER definida no docker-compose. Deve coincidir com o valor configurado no serviço MinIO.',

@@ -1,6 +1,6 @@
 # API
 
-Documentação dos endpoints RESTful do MindLedger.
+Documentação dos endpoints RESTful do Axiom.
 
 Todos os endpoints seguem o prefixo `/api/v1/`. A documentação interativa está disponível em `/api/docs/` (Swagger) e `/api/redoc/`.
 

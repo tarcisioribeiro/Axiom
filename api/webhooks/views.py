@@ -87,7 +87,7 @@ class WebhookTestView(APIView):
             event="test",
             payload={
                 "event": "test",
-                "data": {"message": "Webhook de teste do MindLedger"},
+                "data": {"message": "Webhook de teste do Axiom"},
                 "webhook_id": str(webhook.uuid),
             },
             status="pending",

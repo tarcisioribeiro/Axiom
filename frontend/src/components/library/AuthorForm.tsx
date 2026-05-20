@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, UserCircle, X } from 'lucide-react';
+import { CalendarDays, FileText, Globe, Loader2, User, UserCircle, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -20,6 +21,54 @@ import { authorSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { NATIONALITIES, ERAS } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
+
+const NATIONALITY_EMOJIS: Record<string, string> = {
+  ALE: '🇩🇪',
+  USA: '🇺🇸',
+  ARG: '🇦🇷',
+  AUL: '🇦🇺',
+  AUS: '🇦🇹',
+  BEL: '🇧🇪',
+  BRA: '🇧🇷',
+  CAN: '🇨🇦',
+  CZE: '🇨🇿',
+  CHL: '🇨🇱',
+  CHN: '🇨🇳',
+  COL: '🇨🇴',
+  CUB: '🇨🇺',
+  DEN: '🇩🇰',
+  EGI: '🇪🇬',
+  SCO: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  ESP: '🇪🇸',
+  FIN: '🇫🇮',
+  FRA: '🇫🇷',
+  GRE: '🇬🇷',
+  NLD: '🇳🇱',
+  HUN: '🇭🇺',
+  IND: '🇮🇳',
+  ING: '🇬🇧',
+  IRL: '🇮🇪',
+  ISR: '🇮🇱',
+  ITA: '🇮🇹',
+  JPN: '🇯🇵',
+  MEX: '🇲🇽',
+  NGA: '🇳🇬',
+  NOR: '🇳🇴',
+  PER: '🇵🇪',
+  POL: '🇵🇱',
+  POR: '🇵🇹',
+  ROM: '🇷🇴',
+  RUS: '🇷🇺',
+  SUE: '🇸🇪',
+  SUI: '🇨🇭',
+  TUR: '🇹🇷',
+  UKR: '🇺🇦',
+};
+
+const ERA_EMOJIS: Record<string, string> = {
+  DC: '📅',
+  AC: '🏛️',
+};
 
 interface AuthorFormProps {
   author?: Author;
@@ -74,7 +123,6 @@ export function AuthorForm({
         },
   });
 
-  // Load current user member when creating new author
   useEffect(() => {
     const loadCurrentUserMember = async () => {
       if (!author) {
@@ -105,72 +153,114 @@ export function AuthorForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-      <div className="grid gap-md">
-        <div className="flex flex-col items-center gap-sm">
-          <div className="relative">
-            {photoPreview ? (
-              <img
-                src={photoPreview}
-                alt={t('pages.authors.form.photoAlt')}
-                className="h-24 w-24 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-                <UserCircle className="h-12 w-12 text-muted-foreground" />
-              </div>
-            )}
-            {photoPreview && (
-              <button
-                type="button"
-                onClick={handleRemovePhoto}
-                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
-                aria-label={t('pages.authors.form.removePhoto')}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              className="hidden"
-              id="author-photo"
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      {/* Foto do autor */}
+      <div className="flex flex-col items-center gap-sm">
+        <div className="relative">
+          {photoPreview ? (
+            <img
+              src={photoPreview}
+              alt={t('pages.authors.form.photoAlt')}
+              className="h-24 w-24 rounded-full object-cover"
             />
-            <label
-              htmlFor="author-photo"
-              className="cursor-pointer text-sm text-primary underline-offset-4 hover:underline"
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted">
+              <UserCircle className="h-12 w-12 text-muted-foreground" />
+            </div>
+          )}
+          {photoPreview && (
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground"
+              aria-label={t('pages.authors.form.removePhoto')}
             >
-              {photoPreview
-                ? t('pages.authors.form.changePhoto')
-                : t('pages.authors.form.addPhoto')}
-            </label>
-          </div>
-        </div>
-
-        <div className="space-y-sm">
-          <Label htmlFor="name">{t('pages.authors.form.nameLabel')}</Label>
-          <Input
-            id="name"
-            {...register('name')}
-            placeholder={t('pages.authors.form.namePlaceholder')}
-          />
-          {errors.name && (
-            <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+              <X className="h-3 w-3" />
+            </button>
           )}
         </div>
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            className="hidden"
+            id="author-photo"
+          />
+          <label
+            htmlFor="author-photo"
+            className="cursor-pointer text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {photoPreview
+              ? t('pages.authors.form.changePhoto')
+              : t('pages.authors.form.addPhoto')}
+          </label>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-md">
+      <FormSection title={t('pages.authors.form.sectionPersonal')} icon={User}>
+        <div className="grid gap-md">
           <div className="space-y-sm">
-            <Label htmlFor="birth_year">{t('pages.authors.form.birthYearLabel')}</Label>
+            <Label htmlFor="name" className="flex items-center gap-xs">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.nameLabel')}
+            </Label>
+            <Input
+              id="name"
+              {...register('name')}
+              placeholder={t('pages.authors.form.namePlaceholder')}
+              disabled={isLoading}
+            />
+            {errors.name && (
+              <p className="mt-xs text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.nationalityLabel')}
+            </Label>
+            <Select
+              value={watch('nationality')}
+              onValueChange={(value) => setValue('nationality', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {NATIONALITIES.map((nat) => (
+                  <SelectItem key={nat.value} value={nat.value}>
+                    {NATIONALITY_EMOJIS[nat.value] ?? '🌐'}{' '}
+                    {t(`pages.authors.nationalities.${nat.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.nationality && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.nationality.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.authors.form.sectionLifeDates')} icon={CalendarDays}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label htmlFor="birth_year" className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.birthYearLabel')}
+            </Label>
             <Input
               id="birth_year"
               type="number"
               {...register('birth_year', { valueAsNumber: true })}
               placeholder={t('pages.authors.form.birthYearPlaceholder')}
+              disabled={isLoading}
             />
             {errors.birth_year && (
               <p className="mt-xs text-sm text-destructive">
@@ -180,20 +270,22 @@ export function AuthorForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="birth_era">{t('pages.authors.form.birthEraLabel')}</Label>
+            <Label className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.birthEraLabel')}
+            </Label>
             <Select
               value={watch('birth_era')}
               onValueChange={(value) => setValue('birth_era', value as 'AC' | 'DC')}
+              disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.authors.form.birthEraPlaceholder')}
-                />
+                <SelectValue placeholder={t('pages.authors.form.birthEraPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {t(`pages.authors.eras.${era.value}`)}
+                    {ERA_EMOJIS[era.value] ?? ''} {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -204,16 +296,18 @@ export function AuthorForm({
               </p>
             )}
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-md">
           <div className="space-y-sm">
-            <Label htmlFor="death_year">{t('pages.authors.form.deathYearLabel')}</Label>
+            <Label htmlFor="death_year" className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.deathYearLabel')}
+            </Label>
             <Input
               id="death_year"
               type="number"
               {...register('death_year', { valueAsNumber: true })}
               placeholder={t('pages.authors.form.deathYearPlaceholder')}
+              disabled={isLoading}
             />
             {errors.death_year && (
               <p className="mt-xs text-sm text-destructive">
@@ -223,22 +317,24 @@ export function AuthorForm({
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="death_era">{t('pages.authors.form.deathEraLabel')}</Label>
+            <Label className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.authors.form.deathEraLabel')}
+            </Label>
             <Select
               value={watch('death_era') || ''}
               onValueChange={(value) =>
                 setValue('death_era', (value as 'AC' | 'DC' | undefined) || undefined)
               }
+              disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={t('pages.authors.form.deathEraPlaceholder')}
-                />
+                <SelectValue placeholder={t('pages.authors.form.deathEraPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {t(`pages.authors.eras.${era.value}`)}
+                    {ERA_EMOJIS[era.value] ?? ''} {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -250,49 +346,29 @@ export function AuthorForm({
             )}
           </div>
         </div>
+      </FormSection>
 
+      <FormSection title={t('pages.authors.form.sectionAbout')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="nationality">
-            {t('pages.authors.form.nationalityLabel')}
+          <Label htmlFor="biography" className="flex items-center gap-xs">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            {t('pages.authors.form.biographyLabel')}
           </Label>
-          <Select
-            value={watch('nationality')}
-            onValueChange={(value) => setValue('nationality', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {NATIONALITIES.map((nat) => (
-                <SelectItem key={nat.value} value={nat.value}>
-                  {t(`pages.authors.nationalities.${nat.value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.nationality && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.nationality.message}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-sm">
-          <Label htmlFor="biography">{t('pages.authors.form.biographyLabel')}</Label>
           <Textarea
             id="biography"
             {...register('biography')}
             placeholder={t('pages.authors.form.biographyPlaceholder')}
             rows={4}
+            disabled={isLoading}
           />
           {errors.biography && (
             <p className="mt-xs text-sm text-destructive">{errors.biography.message}</p>
           )}
         </div>
-      </div>
+      </FormSection>
 
       <div className="flex justify-end gap-sm border-t pt-md">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>

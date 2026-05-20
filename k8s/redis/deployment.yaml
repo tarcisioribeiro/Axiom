@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: redis
 spec:
   replicas: 1
@@ -18,7 +18,7 @@ spec:
     metadata:
       labels:
         app: redis
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: redis
     spec:
       serviceAccountName: sa-redis
@@ -45,12 +45,12 @@ spec:
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: REDIS_PASSWORD
             - name: REDISCLI_AUTH
               valueFrom:
                 secretKeyRef:
-                  name: mindledger-secrets
+                  name: axiom-secrets
                   key: REDIS_PASSWORD
           volumeMounts:
             - name: redis-data

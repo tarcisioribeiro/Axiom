@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger — Apply Staging Manifests (k3s single-node VPS)
+# Axiom — Apply Staging Manifests (k3s single-node VPS)
 # =============================================================================
 # Usage: bash k8s/scripts/apply-staging.sh
 #
@@ -24,12 +24,12 @@
 #          --docker-server=registry.gitlab.com \
 #          --docker-username=YOUR_GITLAB_USERNAME \
 #          --docker-password=YOUR_PERSONAL_ACCESS_TOKEN \
-#          --namespace mindledger-staging
+#          --namespace axiom-staging
 #
 #   5. Required environment variables — set ALL before running:
-#        export MINDLEDGER_STAGING_DOMAIN=staging.mindledger.example.com
-#        export STAGING_DB_NAME=mindledger_staging
-#        export STAGING_DB_USER=mindledger_staging
+#        export AXIOM_STAGING_DOMAIN=staging.axiom.example.com
+#        export STAGING_DB_NAME=axiom_staging
+#        export STAGING_DB_USER=axiom_staging
 #        export STAGING_DB_PASSWORD=$(openssl rand -base64 24)
 #        export STAGING_SECRET_KEY=$(openssl rand -base64 48)
 #        export STAGING_ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
@@ -44,7 +44,7 @@
 
 set -euo pipefail
 
-NAMESPACE="mindledger-staging"
+NAMESPACE="axiom-staging"
 
 echo "==> [1/8] Namespace"
 kubectl apply -f k8s/staging/namespace.yaml
@@ -91,7 +91,7 @@ echo "    Waiting for Frontend to be ready..."
 kubectl rollout status deployment/frontend -n "$NAMESPACE" --timeout=60s
 
 echo "==> [8/8] Ingress"
-echo "    Applying ingress (MINDLEDGER_STAGING_DOMAIN=${MINDLEDGER_STAGING_DOMAIN})..."
+echo "    Applying ingress (AXIOM_STAGING_DOMAIN=${AXIOM_STAGING_DOMAIN})..."
 envsubst < k8s/staging/ingress.yaml | kubectl apply -f -
 
 echo ""

@@ -6,6 +6,10 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
+  Store,
+  Tag,
+  Wallet,
+  CalendarDays,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +21,7 @@ import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -35,7 +41,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATIONS, translate } from '@/config/constants';
+import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -49,8 +55,6 @@ import type {
   FixedRevenueStats,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-const REVENUE_CATEGORY_KEYS = Object.keys(TRANSLATIONS.revenueCategories);
 
 const MONTHS = [
   { value: '01' },
@@ -477,135 +481,164 @@ export default function FixedRevenues() {
                 : t('pages.fixedRevenues.newDesc')}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
-            <div className="space-y-sm">
-              <Label htmlFor="description">
-                {t('pages.fixedRevenues.form.descriptionLabel')}
-              </Label>
-              <Input
-                id="description"
-                required
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, description: e.target.value }))
-                }
-                placeholder={t('pages.fixedRevenues.form.descriptionPlaceholder')}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-md">
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-lg">
+            {/* Seção: Informações Básicas */}
+            <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
               <div className="space-y-sm">
-                <Label htmlFor="default_value">
-                  {t('pages.fixedRevenues.form.defaultAmountLabel')}
+                <Label htmlFor="description" className="flex items-center gap-xs">
+                  <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.fixedRevenues.form.descriptionLabel')}
                 </Label>
                 <Input
-                  id="default_value"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  id="description"
                   required
-                  value={formData.default_value || ''}
+                  value={formData.description}
                   onChange={(e) =>
-                    setFormData((p) => ({
-                      ...p,
-                      default_value: parseFloat(e.target.value) || 0,
-                    }))
+                    setFormData((p) => ({ ...p, description: e.target.value }))
                   }
-                  placeholder="0.00"
+                  placeholder={t('pages.fixedRevenues.form.descriptionPlaceholder')}
                 />
               </div>
               <div className="space-y-sm">
-                <Label htmlFor="due_day">
-                  {t('pages.fixedRevenues.form.dueDayLabel')}
+                <Label className="flex items-center gap-xs">
+                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.fixedRevenues.form.categoryLabel')}
                 </Label>
-                <Input
-                  id="due_day"
-                  type="number"
-                  min={1}
-                  max={31}
-                  required
-                  value={formData.due_day}
-                  onChange={(e) =>
-                    setFormData((p) => ({
-                      ...p,
-                      due_day: parseInt(e.target.value) || 1,
-                    }))
-                  }
-                />
+                <Select
+                  value={formData.category}
+                  onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('common.actions.select')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REVENUE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
+                      <SelectItem key={key} value={key}>
+                        {emoji} {translate('revenueCategories', key)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-            <div className="space-y-sm">
-              <Label>{t('pages.fixedRevenues.form.categoryLabel')}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(v) => setFormData((p) => ({ ...p, category: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.actions.select')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {REVENUE_CATEGORY_KEYS.map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {translate('revenueCategories', key)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-sm">
-              <Label>{t('pages.fixedRevenues.form.accountLabel')}</Label>
-              <Select
-                value={formData.account ? String(formData.account) : ''}
-                onValueChange={(v) =>
-                  setFormData((p) => ({ ...p, account: parseInt(v) }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={t('pages.fixedRevenues.form.accountPlaceholder')}
+            </FormSection>
+
+            {/* Seção: Valores & Vencimento */}
+            <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+              <div className="grid grid-cols-2 gap-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="default_value" className="flex items-center gap-xs">
+                    <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.fixedRevenues.form.defaultAmountLabel')}
+                  </Label>
+                  <CurrencyInput
+                    id="default_value"
+                    accentColor="success"
+                    value={formData.default_value}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        default_value: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                   />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={String(a.id)}>
-                      {a.account_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-sm">
-              <Label htmlFor="notes">{t('pages.fixedRevenues.form.notesLabel')}</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes ?? ''}
-                onChange={(e) => setFormData((p) => ({ ...p, notes: e.target.value }))}
-                placeholder={t('pages.fixedRevenues.form.notesPlaceholder')}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData((p) => ({ ...p, is_active: !!checked }))
-                }
-              />
-              <Label htmlFor="is_active" className="cursor-pointer">
-                {t('pages.fixedRevenues.form.isActiveLabel')}
-              </Label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="allow_value_edit"
-                checked={formData.allow_value_edit}
-                onCheckedChange={(checked) =>
-                  setFormData((p) => ({ ...p, allow_value_edit: !!checked }))
-                }
-              />
-              <Label htmlFor="allow_value_edit" className="cursor-pointer">
-                {t('pages.fixedRevenues.form.allowValueEditLabel')}
-              </Label>
-            </div>
+                </div>
+                <div className="space-y-sm">
+                  <Label htmlFor="due_day" className="flex items-center gap-xs">
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.fixedRevenues.form.dueDayLabel')}
+                  </Label>
+                  <Input
+                    id="due_day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    required
+                    value={formData.due_day}
+                    onChange={(e) =>
+                      setFormData((p) => ({
+                        ...p,
+                        due_day: parseInt(e.target.value) || 1,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Seção: Conta */}
+            <FormSection title={t('common.form.sections.paymentType')} icon={Wallet}>
+              <div className="space-y-sm">
+                <Label className="flex items-center gap-xs">
+                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.fixedRevenues.form.accountLabel')}
+                </Label>
+                <Select
+                  value={formData.account ? String(formData.account) : ''}
+                  onValueChange={(v) =>
+                    setFormData((p) => ({ ...p, account: parseInt(v) }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('pages.fixedRevenues.form.accountPlaceholder')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.account_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </FormSection>
+
+            {/* Seção: Configuração */}
+            <FormSection title={t('common.form.sections.paymentConfig')} icon={Tag}>
+              <div className="space-y-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="notes" className="flex items-center gap-xs">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.fixedRevenues.form.notesLabel')}
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes ?? ''}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, notes: e.target.value }))
+                    }
+                    placeholder={t('pages.fixedRevenues.form.notesPlaceholder')}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex items-center gap-sm">
+                  <Checkbox
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) =>
+                      setFormData((p) => ({ ...p, is_active: !!checked }))
+                    }
+                  />
+                  <Label htmlFor="is_active" className="cursor-pointer">
+                    {t('pages.fixedRevenues.form.isActiveLabel')}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-sm">
+                  <Checkbox
+                    id="allow_value_edit"
+                    checked={formData.allow_value_edit}
+                    onCheckedChange={(checked) =>
+                      setFormData((p) => ({ ...p, allow_value_edit: !!checked }))
+                    }
+                  />
+                  <Label htmlFor="allow_value_edit" className="cursor-pointer">
+                    {t('pages.fixedRevenues.form.allowValueEditLabel')}
+                  </Label>
+                </div>
+              </div>
+            </FormSection>
+
             <DialogFooter>
               <Button
                 type="button"

@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ollama
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: ollama
     environment: staging
 spec:
@@ -19,7 +19,7 @@ spec:
     metadata:
       labels:
         app: ollama
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: ollama
         environment: staging
     spec:
