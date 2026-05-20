@@ -657,6 +657,7 @@ deploy:staging:
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
         --dry-run=client -o yaml | kubectl apply -f -
+    - kubectl apply -f k8s/staging/resource-quota.yaml
     - kubectl apply -f k8s/staging/ingress.yaml
     - kubectl apply -f k8s/staging/api/service.yaml
     - kubectl apply -f k8s/staging/configmap.yaml
