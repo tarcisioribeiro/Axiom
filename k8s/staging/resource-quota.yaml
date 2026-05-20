@@ -14,8 +14,8 @@ spec:
   hard:
     requests.cpu: "2"
     limits.cpu: "4"
-    requests.memory: 2Gi
-    limits.memory: 4Gi
+    requests.memory: 4Gi
+    limits.memory: 6Gi
     pods: "15"
     persistentvolumeclaims: "8"
     services: "10"
@@ -41,8 +41,8 @@ spec:
         cpu: "50m"
         memory: "64Mi"
       max:
-        cpu: "1"
-        memory: "1Gi"
+        cpu: "2"
+        memory: "4Gi"
       min:
         cpu: "25m"
         memory: "32Mi"
