@@ -668,6 +668,10 @@ deploy:staging:
     - kubectl apply -f k8s/staging/ollama/pvc.yaml
     - kubectl apply -f k8s/staging/ollama/service.yaml
     - kubectl apply -f k8s/staging/ollama/deployment.yaml
+    # Força rollout para limpar condição ProgressDeadlineExceeded residual de
+    # deploys anteriores — o pod template do Ollama não muda entre ciclos, então
+    # kubectl apply não incrementa a generation nem reseta a condição por conta própria.
+    - kubectl -n axiom-staging rollout restart deployment/ollama
     # Aguarda o servidor Ollama subir (modelos são puxados em background).
     - kubectl -n axiom-staging rollout status deployment/ollama --timeout=600s
     # Apply deployment specs with the real image tag substituted in-place so
