@@ -8,7 +8,7 @@
 #   lint:backend       black · isort · flake8
 #   lint:migrations    makemigrations --check --dry-run
 #   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
-#   lint:pip-audit     pip-audit -r api/requirements.txt --desc
+#   lint:pip-audit     pip-audit -r api/requirements.txt --desc --ignore-vuln PYSEC-2025-183
 #   lint:frontend      eslint · prettier
 #   lint:npm-audit     npm audit --audit-level=high
 #   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
