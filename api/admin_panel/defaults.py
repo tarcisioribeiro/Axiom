@@ -169,7 +169,7 @@ DEFAULT_CONFIGS: list[dict] = [
         "category": "email",
         "label": "Email Remetente",
         "description": (
-            "Endereço padrão do remetente " "(ex: MindLedger <noreply@mindledger.app>)."
+            "Endereço padrão do remetente " "(ex: Axiom <noreply@axiom.app>)."
         ),
         "is_secret": False,
         "requires_restart": False,

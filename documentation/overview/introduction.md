@@ -1,12 +1,12 @@
-# Introdução ao MindLedger
+# Introdução ao Axiom
 
-## O que é o MindLedger?
+## O que é o Axiom?
 
-MindLedger é um sistema completo de gerenciamento pessoal que integra três módulos principais: **Finanças**, **Segurança** e **Biblioteca**. O sistema foi projetado para oferecer controle total sobre diferentes aspectos da vida pessoal através de uma plataforma unificada, segura e intuitiva.
+Axiom é um sistema completo de gerenciamento pessoal que integra três módulos principais: **Finanças**, **Segurança** e **Biblioteca**. O sistema foi projetado para oferecer controle total sobre diferentes aspectos da vida pessoal através de uma plataforma unificada, segura e intuitiva.
 
 ## Visão Geral
 
-O MindLedger é construído como uma aplicação full-stack moderna, combinando:
+O Axiom é construído como uma aplicação full-stack moderna, combinando:
 
 - **Backend robusto** em Django REST Framework
 - **Frontend responsivo** em React com TypeScript
@@ -20,13 +20,38 @@ O MindLedger é construído como uma aplicação full-stack moderna, combinando:
 Sistema completo de gestão financeira pessoal que permite:
 
 - Gerenciamento de contas bancárias e cartões de crédito
-- Controle detalhado de despesas e receitas
+- Controle detalhado de despesas (22 categorias) e receitas (10 categorias)
 - Sistema de empréstimos e transferências
 - Dashboard com visualizações e métricas financeiras
 - Categorização automática de transações
 - Criptografia de dados sensíveis (CVV, números de conta)
 
-### 2. Módulo Security (StreamFort)
+### 2. Módulo Budgets
+
+Controle orçamentário mensal integrado às despesas:
+
+- Criação de orçamentos por categoria e período
+- Monitoramento de consumo em tempo real
+- Sugestão automática de orçamentos baseada no histórico
+- Alertas visuais ao se aproximar do limite
+
+### 3. Módulo Personal Planning
+
+Planejamento pessoal e produtividade:
+
+- Rotinas recorrentes com geração automática de instâncias
+- Metas pessoais com acompanhamento de progresso
+- Reflexões diárias e anotações
+
+### 4. Módulo Bank Reconciliation
+
+Conciliação bancária via importação de extratos:
+
+- Parser de arquivos OFX 1.x SGML e CSV
+- Detecção automática de duplicatas por hash SHA-256
+- Auto-matching com despesas/receitas existentes
+
+### 5. Módulo Security (StreamFort)
 
 Gerenciador seguro de credenciais e informações confidenciais:
 
@@ -37,16 +62,26 @@ Gerenciador seguro de credenciais e informações confidenciais:
 - Sistema de auditoria e logs de atividade
 - Organização por categorias e tags
 
-### 3. Módulo Library (CodexDB)
+### 6. Módulo Library (CodexDB)
 
 Biblioteca pessoal digital com recursos avançados:
 
 - Catálogo completo de livros
 - Gestão de autores e editoras
-- Resumos de leitura com busca semântica
+- Resumos de leitura com busca semântica (pgvector RAG)
 - Controle de progresso de leitura
 - Metadados completos (ISBN, ano, páginas)
 - Sistema de avaliações e notas
+
+### 7. Módulo Agents (IA Conversacional)
+
+Assistente de IA especializado em domínios financeiros e pessoais:
+
+- 6 agentes especializados: finanças, orçamento, projeção, planejamento, biblioteca, insights
+- Suporte a 3 providers de LLM: Ollama (local), Groq e Anthropic Claude
+- Respostas em streaming (SSE) ou modo síncrono
+- Memória de sessão via Redis + histórico permanente no PostgreSQL
+- RAG via pgvector para o `LibraryAgent`
 
 ## Tecnologias Core
 
@@ -63,8 +98,8 @@ Biblioteca pessoal digital com recursos avançados:
 - **Django 5.2.12** - Framework web principal
 - **Django REST Framework 3.16.1** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
-- **Sentence Transformers** - Embeddings semânticos
-- **Groq API** - Geração de respostas via LLM
+- **Ollama** - LLM local (padrão: `mistral:7b-instruct`, embeddings: `nomic-embed-text` 768 dims)
+- **Groq / Anthropic** - Providers cloud alternativos via `LLM_PROVIDER`
 - **Cryptography (Fernet)** - Criptografia de dados
 
 ### Frontend
@@ -121,14 +156,21 @@ graph TB
     subgraph "Backend - Django"
         Gateway[API Gateway]
         Auth[Autenticação JWT]
-        Finance[Módulo Finance]
+        Finance[Finance + Budgets]
         Security[Módulo Security]
         Library[Módulo Library]
+        Planning[Personal Planning]
+        Agents[Agents / IA]
     end
 
     subgraph "Dados"
-        DB[(PostgreSQL)]
+        DB[(PostgreSQL + pgvector)]
         Cache[Redis Cache]
+    end
+
+    subgraph "LLM"
+        Ollama[Ollama local]
+        Cloud[Groq / Anthropic]
     end
 
     UI --> Store
@@ -138,14 +180,19 @@ graph TB
     Auth --> Finance
     Auth --> Security
     Auth --> Library
+    Auth --> Planning
+    Auth --> Agents
 
     Finance --> DB
     Security --> DB
     Library --> DB
+    Planning --> DB
+    Agents --> DB
+    Agents --> Cache
 
     Finance -.-> Cache
-    Security -.-> Cache
-    Library -.-> Cache
+    Agents --> Ollama
+    Agents -.-> Cloud
 ```
 
 ## Principais Características
@@ -181,11 +228,11 @@ graph TB
 - **Tipagem forte** em TypeScript
 - **Arquitetura modular** com separação de responsabilidades
 - **Documentação completa** em português
-- **Testes automatizados** (em desenvolvimento)
+- **Testes automatizados** backend (pytest) e frontend (Vitest)
 
 ## Público-Alvo
 
-O MindLedger é ideal para:
+O Axiom é ideal para:
 
 - Indivíduos que buscam controle financeiro detalhado
 - Profissionais que necessitam gerenciar múltiplas credenciais
@@ -195,7 +242,7 @@ O MindLedger é ideal para:
 
 ## Próximos Passos
 
-Para começar a usar o MindLedger, consulte:
+Para começar a usar o Axiom, consulte:
 
 - [Guia de Instalação](../development/installation.md)
 - [Configuração Inicial](../development/configuration.md)

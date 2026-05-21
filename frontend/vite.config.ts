@@ -26,8 +26,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.png', 'icon-dark.png', 'icon-light.png', 'logo.png'],
       manifest: {
-        name: 'MindLedger',
-        short_name: 'MindLedger',
+        name: 'Axiom',
+        short_name: 'Axiom',
         description: 'Gestão financeira pessoal inteligente',
         theme_color: '#7c3aed',
         background_color: '#1a1b2e',

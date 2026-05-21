@@ -149,6 +149,23 @@
       "loadingProjected": "Calculating projected balance...",
       "projectedOn": "Projected balance on {{date}}: {{balance}}",
       "projectedUnavailable": "Projected balance not available."
+    },
+    "form": {
+      "sections": {
+        "basicInfo": "Basic Info",
+        "values": "Values",
+        "schedule": "Date & Time",
+        "classification": "Classification",
+        "links": "Links (Optional)",
+        "cardData": "Card Details",
+        "cardSettings": "Card Settings",
+        "parties": "Parties Involved",
+        "conditions": "Conditions",
+        "extras": "Extras",
+        "paymentType": "Payment Type",
+        "paymentConfig": "Configuration",
+        "configuration": "Configuration"
+      }
     }
   },
   "nav": {
@@ -488,7 +505,9 @@
         "numberPlaceholder": "Ex: 12345-6",
         "balanceLabel": "Initial Balance",
         "balanceMinHint": "Minimum allowed balance:",
-        "overdraftLabel": "Overdraft Limit"
+        "overdraftLabel": "Overdraft Limit",
+        "numberHiddenPlaceholder": "•••• •••• (hidden for security)",
+        "previewTitle": "Account Preview"
       },
       "imports": {
         "file": "File",
@@ -687,7 +706,17 @@
         "originAccountPlaceholder": "Select",
         "destinyAccountLabel": "Destination Account *",
         "destinyAccountPlaceholder": "Select",
-        "transferedLabel": "Transfer completed?"
+        "transferedLabel": "Transfer completed?",
+        "swapAccounts": "Swap accounts",
+        "flowLabel": "Transfer Flow",
+        "flowFrom": "From",
+        "flowTo": "To",
+        "transferTypes": {
+          "pix": "PIX",
+          "ted": "TED",
+          "doc": "DOC",
+          "internal": "Internal"
+        }
       }
     },
     "loans": {
@@ -798,6 +827,13 @@
         "generateRevenueHint": "A revenue linked to this loan will be created in the selected account.",
         "generateExpenseLabel": "Generate expense when registering",
         "generateExpenseHint": "An expense linked to this loan will be created in the selected account. The account balance will be validated."
+      },
+      "wizard": {
+        "step1": "Type & Amount",
+        "step2": "Parties & Account",
+        "step3": "Conditions & Extras",
+        "next": "Next",
+        "stepOf": "Step {{current}} of {{total}}"
       },
       "frequencies": {
         "daily": "Daily",
@@ -1040,7 +1076,11 @@
         "dueDayLabel": "Due Day *",
         "closingDayLabel": "Closing Day *",
         "interestRateLabel": "Annual Interest Rate (%)",
-        "annualFeeLabel": "Annual Fee"
+        "annualFeeLabel": "Annual Fee",
+        "tabCardData": "Card Details",
+        "tabSettings": "Settings",
+        "cardPreviewTitle": "Card Preview",
+        "cardNumberHiddenHint": "Number hidden — fill in to change"
       },
       "stats": {
         "registeredSubtitle": "registered cards",
@@ -1230,7 +1270,7 @@
         "installmentsLabel": "Number of Installments *",
         "installmentsWarning": "Installments cannot be changed after creation",
         "paymentSight": "One-time payment",
-        "installmentsSummary": "{{total}} in {{count}}x of {{value}}",
+        "installmentsSummary": "{{total}} in {{count}}x of {{installmentValue}}",
         "merchantLabel": "Merchant",
         "merchantPlaceholder": "Ex: Supermarket XYZ",
         "notesLabel": "Notes",
@@ -1244,7 +1284,8 @@
         "none": "None",
         "noCardNumber": "Number not registered",
         "cashPayment": "One-time payment",
-        "exceedsLimitBy": "Amount exceeds limit by {{value}}"
+        "exceedsLimitBy": "Amount exceeds limit by {{value}}",
+        "billAssociatedLabel": "Associated Bill"
       },
       "installmentForm": {
         "purchaseLabel": "Purchase",
@@ -1344,7 +1385,12 @@
         "categoryLabel": "Category *",
         "statusLabel": "Status",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Additional information about this payable"
+        "notesPlaceholder": "Additional information about this payable",
+        "dueDaysLabel": "Due in {{days}} days",
+        "dueTodayLabel": "Due today",
+        "overdueLabel": "Overdue by {{days}} day(s)",
+        "progressLabel": "{{paid}} of {{total}} paid",
+        "paymentProgress": "Payment progress"
       }
     },
     "budgets": {
@@ -1519,6 +1565,15 @@
       "yieldRateLabel": "Yield Rate (% per year)",
       "yieldRateHint": "Leave 0 for vaults without yield. Ex: 12 = 12% per year",
       "activeVault": "Active vault",
+      "activeVaultDesc": "This vault is active and appears in reports",
+      "inactiveVaultDesc": "This vault is inactive and does not appear in reports",
+      "estimatedYield": "Estimated Yield",
+      "monthlyYield": "Monthly",
+      "annualYield": "Annual",
+      "form": {
+        "descriptionPlaceholder": "Ex: Emergency Fund",
+        "notesPlaceholder": "Notes about this vault..."
+      },
       "depositVaultDesc": "Deposit into vault \"{{name}}\".",
       "availableAccountBalance": "Available account balance:",
       "depositAmountLabel": "Deposit Amount *",
@@ -1629,6 +1684,8 @@
       "associatedVaults": "Associated Vaults",
       "noVaults": "No vaults available",
       "activeGoal": "Active goal",
+      "activeGoalDesc": "This goal is active and being tracked",
+      "inactiveGoalDesc": "This goal is paused and does not appear on the dashboard",
       "yields": "yields",
       "form": {
         "descriptionLabel": "Description *",
@@ -1840,7 +1897,7 @@
         "colValue": "Value",
         "noTransactions": "No transactions found for the period.",
         "periodBalance": "Period balance",
-        "footer": "Document automatically generated by MindLedger",
+        "footer": "Document automatically generated by Axiom",
         "page": "Page",
         "of": "of"
       },
@@ -2101,7 +2158,12 @@
         "financeCardLabel": "Finance Card",
         "financeCardHint": "Link to a card in the financial module for integration.",
         "keepCurrentNumber": "Leave blank to keep the current number",
-        "keepCurrentCvv": "Leave blank to keep the current CVV"
+        "keepCurrentCvv": "Leave blank to keep the current CVV",
+        "sectionIdentification": "Identification",
+        "sectionSensitive": "Sensitive Data",
+        "sectionExpiry": "Expiry",
+        "sectionLink": "Financial Link",
+        "sectionNotes": "Notes"
       },
       "otherBrand": "Other"
     },
@@ -2167,7 +2229,12 @@
         "financeAccountHint": "Link to an account in the financial module for integration.",
         "password1EditPlaceholder": "Leave blank to keep current",
         "password2EditPlaceholder": "Leave blank to keep current",
-        "keepCurrentPassword": "Leave blank to keep the current password"
+        "keepCurrentPassword": "Leave blank to keep the current password",
+        "sectionIdentification": "Identification",
+        "sectionAccountData": "Account Data",
+        "sectionPasswords": "Passwords",
+        "sectionLink": "Financial Link",
+        "sectionNotes": "Notes"
       }
     },
     "archives": {
@@ -2239,7 +2306,10 @@
         "textContentHint": "The text will be encrypted before storage",
         "alertSelectFile": "Please select a file.",
         "alertEnterText": "Please enter the text content.",
-        "alertTextNotEmpty": "Text files cannot have empty content. If you want to remove the content, delete the file."
+        "alertTextNotEmpty": "Text files cannot have empty content. If you want to remove the content, delete the file.",
+        "sectionIdentification": "Identification",
+        "sectionTypeContent": "Type & Content",
+        "sectionOrganization": "Organization"
       }
     },
     "passwordGenerator": {
@@ -2364,7 +2434,9 @@
           "magazine": "Magazine",
           "article": "Article",
           "essay": "Essay"
-        }
+        },
+        "sectionGoal": "Annual Goal",
+        "sectionQuantities": "Quantities"
       },
       "exportCSV": "Export CSV",
       "exportCSVTitle": "Export statistics as CSV",
@@ -2483,7 +2555,13 @@
         "pauseReasonPlaceholder": "Why did you pause reading? (optional)",
         "ratingLabel": "Rating",
         "synopsisLabel": "Synopsis *",
-        "synopsisPlaceholder": "Book description..."
+        "synopsisPlaceholder": "Book description...",
+        "sectionIdentification": "Identification",
+        "sectionClassification": "Classification",
+        "sectionAuthorPublisher": "Authorship & Publishing",
+        "sectionReading": "Reading",
+        "sectionSynopsis": "Synopsis",
+        "readStatusLabel": "Reading Status"
       },
       "detail": {
         "tabInfo": "Information",
@@ -2569,7 +2647,13 @@
         "paused": "Paused"
       },
       "booksCount_one": "{{count}} book",
-      "booksCount_other": "{{count}} books"
+      "booksCount_other": "{{count}} books",
+      "readStatus": {
+        "to_read": "To Read",
+        "reading": "Reading",
+        "read": "Read",
+        "paused": "Paused"
+      }
     },
     "authors": {
       "title": "Authors",
@@ -2606,7 +2690,10 @@
         "deathEraPlaceholder": "Select era (optional)",
         "nationalityLabel": "Nationality *",
         "biographyLabel": "Biography",
-        "biographyPlaceholder": "Information about the author..."
+        "biographyPlaceholder": "Information about the author...",
+        "sectionPersonal": "Personal Details",
+        "sectionLifeDates": "Life Dates",
+        "sectionAbout": "About the Author"
       },
       "eras": {
         "DC": "After Christ (DC)",
@@ -2682,7 +2769,9 @@
         "countryLabel": "Country *",
         "websiteLabel": "Website",
         "websitePlaceholder": "https://example.com",
-        "foundedYearLabel": "Founded Year"
+        "foundedYearLabel": "Founded Year",
+        "sectionIdentification": "Identification",
+        "sectionInfo": "Information"
       },
       "countries": {
         "BRA": "Brazil",
@@ -2760,7 +2849,10 @@
         "timeOfDayEvening": "Evening",
         "timeOfDayDawn": "Dawn",
         "notesLabel": "Notes",
-        "notesPlaceholder": "Notes about this reading session..."
+        "notesPlaceholder": "Notes about this reading session...",
+        "sectionProgress": "Progress",
+        "sectionRecord": "Session Record",
+        "sectionNotes": "Notes"
       }
     },
     "readingQueue": {
@@ -3029,7 +3121,11 @@
           "4": "Friday",
           "5": "Saturday",
           "6": "Sunday"
-        }
+        },
+        "sectionIdentification": "Identification",
+        "sectionPeriodicity": "Periodicity",
+        "sectionGoalUnit": "Goal & Unit",
+        "sectionBehavior": "Behavior"
       }
     },
     "goals": {
@@ -3093,7 +3189,11 @@
           "completed": "Completed",
           "failed": "Failed",
           "cancelled": "Cancelled"
-        }
+        },
+        "sectionIdentification": "Identification",
+        "sectionConfig": "Configuration",
+        "sectionPeriod": "Period",
+        "sectionStatus": "Status"
       },
       "goalTypes": {
         "consecutive_days": "Consecutive Days",
@@ -3165,7 +3265,7 @@
     },
     "permissions": {
       "title": "Permission Management",
-      "subtitle": "Control member access to the different MindLedger modules",
+      "subtitle": "Control member access to the different Axiom modules",
       "membersTitle": "Members",
       "membersDesc": "Select a member to manage their permissions",
       "noMembers": "No members registered",
@@ -3245,7 +3345,9 @@
         "moodPlaceholder": "Select mood",
         "cancel": "Cancel",
         "save": "Save",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "sectionReflection": "Reflection & Date",
+        "reflectionPlaceholder": "Write your daily reflection, thoughts, learnings..."
       }
     },
     "todayTasks": {
@@ -3411,7 +3513,7 @@
     },
     "agents": {
       "title": "AI Agents",
-      "subtitle": "Chat with MindLedger intelligent agents",
+      "subtitle": "Chat with Axiom intelligent agents",
       "newSession": "New session",
       "clearHistory": "Clear history",
       "clearConfirm": "Delete all messages in this session?",
@@ -4019,7 +4121,8 @@
         "date": "Registration Date *",
         "dueDate": "Due Date",
         "status": "Status",
-        "notes": "Notes"
+        "notes": "Notes",
+        "receivedValue": "Received Value"
       },
       "paidAmount": "{{value}} received"
     }

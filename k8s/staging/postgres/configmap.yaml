@@ -2,9 +2,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: postgres-init-config
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: postgres
     environment: staging
 data:

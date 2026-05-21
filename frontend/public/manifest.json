@@ -1,6 +1,6 @@
 {
-  "name": "MindLedger",
-  "short_name": "MindLedger",
+  "name": "Axiom",
+  "short_name": "Axiom",
   "description": "Gestão financeira pessoal inteligente",
   "start_url": "/",
   "display": "standalone",

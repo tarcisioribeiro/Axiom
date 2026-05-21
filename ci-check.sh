@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# ci-check.sh — MindLedger: Simulação do pipeline GitLab CI/CD
+# ci-check.sh — Axiom: Simulação do pipeline GitLab CI/CD
 # ==============================================================================
 #
 # Etapas cobertas (mesma ordem do .gitlab-ci.yml):
@@ -8,7 +8,7 @@
 #   lint:backend       black · isort · flake8
 #   lint:migrations    makemigrations --check --dry-run
 #   lint:bandit        bandit -r api/ -x api/tests,api/migrations -ll
-#   lint:pip-audit     pip-audit -r api/requirements.txt --desc
+#   lint:pip-audit     pip-audit -r api/requirements.txt --desc --ignore-vuln PYSEC-2025-183
 #   lint:frontend      eslint · prettier
 #   lint:npm-audit     npm audit --audit-level=high
 #   lint:secrets       gitleaks (opcional local — obrigatório no GitLab CI)
@@ -263,7 +263,7 @@ check_python_venv() {
 # ── Cabeçalho / inicialização do log ──────────────────────────────────────────
 {
 	echo "=================================================================="
-	echo "  MindLedger — CI/CD Check Local"
+	echo "  Axiom — CI/CD Check Local"
 	echo "  Iniciado em  : $(date)"
 	echo "  BACKEND_ONLY : $BACKEND_ONLY"
 	echo "  FRONTEND_ONLY: $FRONTEND_ONLY"
@@ -273,7 +273,7 @@ check_python_venv() {
 
 log ""
 log "${BOLD}╔══════════════════════════════════════════════════════════════════╗${NC}"
-log "${BOLD}║       MindLedger — Simulação do Pipeline GitLab CI/CD           ║${NC}"
+log "${BOLD}║       Axiom — Simulação do Pipeline GitLab CI/CD           ║${NC}"
 log "${BOLD}╚══════════════════════════════════════════════════════════════════╝${NC}"
 log "  Log completo: ${BOLD}$LOG_FILE${NC}"
 log ""
@@ -324,8 +324,9 @@ if ! $FRONTEND_ONLY; then
 	run_step_safe "lint:bandit" "bandit -r api/ -x api/tests,api/migrations -ll" \
 		sh -c "cd '$SCRIPT_DIR' && '$VENV_BIN/bandit' -r api/ -x api/tests,api/migrations -ll"
 
+	# PYSEC-2025-183 (PyJWT): disputed by supplier — key length is application's responsibility
 	run_step_safe "lint:pip-audit" "pip-audit -r api/requirements.txt --desc" \
-		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/api/requirements.txt' --desc"
+		sh -c "'$VENV_BIN/pip-audit' -r '$SCRIPT_DIR/api/requirements.txt' --desc --ignore-vuln PYSEC-2025-183"
 fi
 
 if ! $BACKEND_ONLY; then

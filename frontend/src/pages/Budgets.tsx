@@ -1,4 +1,15 @@
-import { PiggyBank, Plus, Pencil, Trash2, Sparkles, Loader2 } from 'lucide-react';
+import {
+  PiggyBank,
+  Plus,
+  Pencil,
+  Trash2,
+  Sparkles,
+  Loader2,
+  Tag,
+  Wallet,
+  CalendarDays,
+  RotateCcw,
+} from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +22,7 @@ import { SearchInput } from '@/components/common/SearchInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { FormSection } from '@/components/ui/form-section';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -489,134 +501,157 @@ export default function Budgets() {
             </DialogTitle>
             <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-md">
-            <div className="space-y-sm">
-              <Label htmlFor="category">{t('common.fields.category')}</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, category: value }))
-                }
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder={t('common.fields.selectCategory')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                    <SelectItem key={cat.key} value={cat.key}>
-                      {translate('expenseCategories', cat.key)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-sm">
-              <Label htmlFor="limit_amount">
-                {t('pages.budgets.columns.limitAmount')}
-              </Label>
-              <Input
-                id="limit_amount"
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                value={formData.limit_amount || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    limit_amount: parseFloat(e.target.value) || 0,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-md">
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-lg">
+            {/* Seção: Classificação */}
+            <FormSection title={t('common.form.sections.classification')} icon={Tag}>
               <div className="space-y-sm">
-                <Label htmlFor="month">{t('pages.budgets.month')}</Label>
+                <Label htmlFor="category" className="flex items-center gap-xs">
+                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('common.fields.category')}
+                </Label>
                 <Select
-                  value={String(formData.month)}
+                  value={formData.category}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, month: parseInt(value) }))
+                    setFormData((prev) => ({ ...prev, category: value }))
                   }
                 >
-                  <SelectTrigger id="month">
-                    <SelectValue />
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder={t('common.fields.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {MONTHS.map((m) => (
-                      <SelectItem key={m.value} value={String(m.value)}>
-                        {m.label}
+                    {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
+                      <SelectItem key={cat.key} value={cat.key}>
+                        {(cat as { key: string; emoji?: string }).emoji ?? ''}{' '}
+                        {translate('expenseCategories', cat.key)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </FormSection>
 
+            {/* Seção: Valores */}
+            <FormSection title={t('common.form.sections.values')} icon={Wallet}>
               <div className="space-y-sm">
-                <Label htmlFor="year">{t('pages.budgets.year')}</Label>
-                <Select
-                  value={String(formData.year)}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, year: parseInt(value) }))
-                  }
-                >
-                  <SelectTrigger id="year">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {YEARS.map((y) => (
-                      <SelectItem key={y} value={String(y)}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-lg border p-3">
-              <Checkbox
-                id="rollover_enabled"
-                checked={formData.rollover_enabled ?? false}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, rollover_enabled: !!checked }))
-                }
-                className="mt-0.5"
-              />
-              <div>
-                <Label
-                  htmlFor="rollover_enabled"
-                  className="cursor-pointer text-sm font-medium"
-                >
-                  {t('pages.budgets.rollover.enabled')}
+                <Label htmlFor="limit_amount" className="flex items-center gap-xs">
+                  <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.budgets.columns.limitAmount')}
                 </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t('pages.budgets.rollover.description')}
-                </p>
-              </div>
-            </div>
-
-            {formData.rollover_enabled && (
-              <div className="space-y-sm">
-                <Label htmlFor="rollover_amount">
-                  {t('pages.budgets.rollover.amount')}
-                </Label>
-                <Input
-                  id="rollover_amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.rollover_amount ?? 0}
+                <CurrencyInput
+                  id="limit_amount"
+                  accentColor="destructive"
+                  value={formData.limit_amount}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      rollover_amount: parseFloat(e.target.value) || 0,
+                      limit_amount: parseFloat(e.target.value) || 0,
                     }))
                   }
                 />
               </div>
-            )}
+            </FormSection>
+
+            {/* Seção: Período */}
+            <FormSection title={t('common.form.sections.schedule')} icon={CalendarDays}>
+              <div className="grid grid-cols-2 gap-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="month" className="flex items-center gap-xs">
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.budgets.month')}
+                  </Label>
+                  <Select
+                    value={String(formData.month)}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, month: parseInt(value) }))
+                    }
+                  >
+                    <SelectTrigger id="month">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTHS.map((m) => (
+                        <SelectItem key={m.value} value={String(m.value)}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-sm">
+                  <Label htmlFor="year" className="flex items-center gap-xs">
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.budgets.year')}
+                  </Label>
+                  <Select
+                    value={String(formData.year)}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, year: parseInt(value) }))
+                    }
+                  >
+                    <SelectTrigger id="year">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {YEARS.map((y) => (
+                        <SelectItem key={y} value={String(y)}>
+                          {y}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Seção: Rollover */}
+            <FormSection title={t('pages.budgets.rollover.enabled')} icon={RotateCcw}>
+              <div className="space-y-md">
+                <div className="flex items-start gap-sm rounded-lg border border-border/60 bg-muted/20 p-sm">
+                  <Checkbox
+                    id="rollover_enabled"
+                    checked={formData.rollover_enabled ?? false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, rollover_enabled: !!checked }))
+                    }
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <Label
+                      htmlFor="rollover_enabled"
+                      className="cursor-pointer text-sm font-medium"
+                    >
+                      {t('pages.budgets.rollover.enabled')}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.budgets.rollover.description')}
+                    </p>
+                  </div>
+                </div>
+
+                {formData.rollover_enabled && (
+                  <div className="space-y-sm">
+                    <Label
+                      htmlFor="rollover_amount"
+                      className="flex items-center gap-xs"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t('pages.budgets.rollover.amount')}
+                    </Label>
+                    <CurrencyInput
+                      id="rollover_amount"
+                      value={formData.rollover_amount ?? 0}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          rollover_amount: parseFloat(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            </FormSection>
 
             <DialogFooter>
               <Button

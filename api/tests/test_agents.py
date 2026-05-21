@@ -75,6 +75,17 @@ class TestLLMClientChat(TestCase):
         self.assertEqual(json_payload["model"], "global-default")
 
 
+class _SyncThread:
+    """Replaces threading.Thread in tests — runs target synchronously on start()."""
+
+    def __init__(self, target=None, daemon=False, **kwargs):
+        self._target = target
+
+    def start(self) -> None:
+        if self._target:
+            self._target()
+
+
 def _make_mock_agent(tokens: list[str], sources: list[str] | None = None) -> MagicMock:
     """Build a mock agent whose stream() yields the given tokens."""
     mock_agent = MagicMock()
@@ -90,6 +101,8 @@ def _make_mock_agent(tokens: list[str], sources: list[str] | None = None) -> Mag
 
 
 class TestAgentStreamView(APITestCase):
+    _SESSION_ID = "550e8400-e29b-41d4-a716-446655440000"
+
     def setUp(self) -> None:
         self.user = User.objects.create_user(
             username="stream_test_user",
@@ -104,7 +117,7 @@ class TestAgentStreamView(APITestCase):
     def _post_stream(self, query: str = "test question") -> StreamingHttpResponse:
         return self.client.post(
             "/api/v1/agents/stream/",
-            {"query": query, "session_id": "test-session"},
+            {"query": query, "session_id": self._SESSION_ID},
             content_type="application/json",
         )
 
@@ -177,6 +190,7 @@ class TestAgentStreamView(APITestCase):
         ]
         self.assertEqual(collected, tokens)
 
+    @patch("agents.views.threading.Thread", _SyncThread)
     @patch("agents.views.AgentConversation")
     @patch("agents.views.ConversationMemory")
     @patch("agents.views.AgentRouter.select")
@@ -193,7 +207,7 @@ class TestAgentStreamView(APITestCase):
         b"".join(response.streaming_content)
 
         mock_memory.append.assert_called_once_with(
-            self.user.pk, "test-session", "my question", "answer"
+            self.user.pk, self._SESSION_ID, "my question", "answer"
         )
         mock_conv.objects.bulk_create.assert_called_once()
 
@@ -276,9 +290,10 @@ class TestAgentAskViewQueryId(APITestCase):
         mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
         mock_memory.get.return_value = []
 
+        session = "550e8400-e29b-41d4-a716-446655440001"
         response = self.client.post(
             "/api/v1/agents/ask/",
-            {"query": "test question", "session_id": "qid-session"},
+            {"query": "test question", "session_id": session},
             content_type="application/json",
         )
 
@@ -288,6 +303,7 @@ class TestAgentAskViewQueryId(APITestCase):
         parsed = uuid.UUID(response.data["query_id"])
         self.assertIsInstance(parsed, uuid.UUID)
 
+    @patch("agents.views.threading.Thread", _SyncThread)
     @patch("agents.views.AgentRouter.route")
     @patch("agents.views.ConversationMemory")
     def test_ask_saves_query_id_to_conversation(
@@ -299,9 +315,10 @@ class TestAgentAskViewQueryId(APITestCase):
         mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
         mock_memory.get.return_value = []
 
+        session = "550e8400-e29b-41d4-a716-446655440002"
         response = self.client.post(
             "/api/v1/agents/ask/",
-            {"query": "save test", "session_id": "qid-save-session"},
+            {"query": "save test", "session_id": session},
             content_type="application/json",
         )
 

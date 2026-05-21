@@ -2,9 +2,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minio-ingress
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: minio
   annotations:
     # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.
@@ -35,9 +35,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: minio-console-ingress
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: minio
   annotations:
     # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.

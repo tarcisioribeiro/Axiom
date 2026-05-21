@@ -1,5 +1,5 @@
 /**
- * MindLedger — Load Test (k6)
+ * Axiom — Load Test (k6)
  *
  * Stages:
  *   1. Ramp-up   : 0 → 10 VUs over 30 s

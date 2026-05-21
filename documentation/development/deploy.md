@@ -1,4 +1,4 @@
-# Guia de Deploy — MindLedger
+# Guia de Deploy — Axiom
 
 Este guia descreve todos os passos necessários para configurar a infraestrutura
 e as variáveis do GitLab CI/CD, de forma que o pipeline execute sem erros do
@@ -90,7 +90,7 @@ pelos jobs `deploy:staging` e `deploy:production`.
 
 ```bash
 # 1. Crie a ServiceAccount e o token de staging (passo único — veja seção k8s abaixo)
-TOKEN=$(kubectl create token gitlab-ci -n mindledger-staging --duration=8760h)
+TOKEN=$(kubectl create token gitlab-ci -n axiom-staging --duration=8760h)
 SERVER=$(curl -s ifconfig.me)
 CA=$(kubectl config view --minify --flatten \
   -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
@@ -107,7 +107,7 @@ clusters:
 contexts:
 - context:
     cluster: k3s
-    namespace: mindledger-staging
+    namespace: axiom-staging
     user: gitlab-ci
   name: gitlab-ci@k3s
 current-context: gitlab-ci@k3s
@@ -118,7 +118,7 @@ users:
 EOF
 
 # 3. Valide antes de encodar
-kubectl --kubeconfig /tmp/kubeconfig-ci.yaml get deployments -n mindledger-staging
+kubectl --kubeconfig /tmp/kubeconfig-ci.yaml get deployments -n axiom-staging
 
 # 4. Gere o valor em base64 — cole este output no GitLab
 cat /tmp/kubeconfig-ci.yaml | base64 -w 0
@@ -126,7 +126,7 @@ echo ""
 ```
 
 > **Nota:** O mesmo kubeconfig é usado para staging e produção. A namespace correta
-> (`mindledger-staging` ou `mindledger`) é determinada por cada job de deploy via
+> (`axiom-staging` ou `axiom`) é determinada por cada job de deploy via
 > flags do `kubectl`.
 
 | Configuração | Valor |
@@ -141,12 +141,12 @@ echo ""
 URL pública do ambiente de staging. Usada pelo smoke test, load test, E2E e pelo
 GitLab Environments.
 
-**Valor:** `https://mindledger-staging.tjtux.duckdns.org`
+**Valor:** `https://axiom-staging.tjtux.duckdns.org`
 
 Como confirmar que o DNS está resolvendo:
 
 ```bash
-curl -I https://mindledger-staging.tjtux.duckdns.org/health/
+curl -I https://axiom-staging.tjtux.duckdns.org/health/
 # Esperado: HTTP/2 200
 ```
 
@@ -162,7 +162,7 @@ curl -I https://mindledger-staging.tjtux.duckdns.org/health/
 URL pública do ambiente de produção. Usada pelo smoke test de produção e pelo
 GitLab Environments.
 
-**Valor:** URL pública da sua instância de produção (ex.: `https://mindledger.tjtux.duckdns.org`)
+**Valor:** URL pública da sua instância de produção (ex.: `https://axiom.tjtux.duckdns.org`)
 
 | Configuração | Valor |
 |---|---|
@@ -178,7 +178,7 @@ Credenciais do superusuário Django no banco de staging. O smoke test
 credenciais para obter um JWT em cookie HttpOnly e validar o endpoint autenticado
 `GET /api/v1/me/`.
 
-> O endpoint de autenticação do MindLedger devolve o token como cookie HttpOnly
+> O endpoint de autenticação do Axiom devolve o token como cookie HttpOnly
 > (não no body da resposta). O smoke test salva o cookie com `curl -c` e extrai
 > o `access_token` diretamente do arquivo de cookie.
 
@@ -188,9 +188,9 @@ credenciais para obter um JWT em cookie HttpOnly e validar o endpoint autenticad
 **Como confirmar os valores vigentes no cluster:**
 
 ```bash
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 ```
 
@@ -200,7 +200,7 @@ kubectl get secret mindledger-secrets -n mindledger-staging \
 > o smoke test passará a retornar 401. Para realinhar, redefina a senha no banco:
 >
 > ```bash
-> kubectl exec -n mindledger-staging deployment/api -- \
+> kubectl exec -n axiom-staging deployment/api -- \
 >   python manage.py shell -c "
 > from django.contrib.auth import get_user_model
 > U = get_user_model()
@@ -225,9 +225,9 @@ pelo job `smoke:production`.
 **Como confirmar os valores vigentes no cluster:**
 
 ```bash
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 ```
 
@@ -251,7 +251,7 @@ com k6. Este usuário deve ter dados suficientes para exercitar as rotas do
 **Como criar o usuário:**
 
 ```bash
-kubectl -n mindledger-staging exec -it deployment/api -- \
+kubectl -n axiom-staging exec -it deployment/api -- \
   python manage.py createsuperuser \
   --username k6-load \
   --email k6-load@staging.local
@@ -272,7 +272,7 @@ Playwright. Pode ser o mesmo usuário do k6 ou um separado.
 **Como criar o usuário:**
 
 ```bash
-kubectl -n mindledger-staging exec -it deployment/api -- \
+kubectl -n axiom-staging exec -it deployment/api -- \
   python manage.py createsuperuser \
   --username e2e-test \
   --email e2e-test@staging.local
@@ -295,15 +295,15 @@ Usadas pelos jobs `backup:staging` (dispara o backup no cluster) e
 #### `STAGING_MINIO_ROOT_USER` e `STAGING_MINIO_ROOT_PASSWORD`
 
 Credenciais root do MinIO de staging. O job `backup:staging` as usa para criar
-(ou atualizar) o secret `mindledger-backup-secrets` no Kubernetes antes de
+(ou atualizar) o secret `axiom-backup-secrets` no Kubernetes antes de
 disparar o job de backup.
 
 **Como obter os valores vigentes no cluster:**
 
 ```bash
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
 ```
 
@@ -327,7 +327,7 @@ do VPS na porta NodePort exposta pelo serviço MinIO.
 curl -s ifconfig.me
 
 # NodePort do serviço MinIO
-kubectl get svc minio-service -n mindledger-staging \
+kubectl get svc minio-service -n axiom-staging \
   -o jsonpath='{.spec.ports[?(@.port==9000)].nodePort}'
 ```
 
@@ -357,9 +357,9 @@ adicionais configurados além do root, **devem ter o mesmo valor** que
 
 ```bash
 # São os mesmos valores do root user — confirme com:
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
 ```
 
@@ -377,7 +377,7 @@ kubectl get secret mindledger-secrets -n mindledger-staging \
 
 Nome do bucket MinIO onde os backups de staging são armazenados.
 
-**Valor padrão:** `mindledger-backups` (omita a variável para usar o padrão)
+**Valor padrão:** `axiom-backups` (omita a variável para usar o padrão)
 
 | Configuração | Valor |
 |---|---|
@@ -542,24 +542,24 @@ kubectl get nodes
 ### 3. Limpeza completa (reset de configuração existente)
 
 ```bash
-kubectl delete secret gitlab-registry-secret -n mindledger-staging --ignore-not-found
-kubectl delete secret gitlab-registry-secret -n mindledger --ignore-not-found
-kubectl delete deployment api frontend -n mindledger-staging --ignore-not-found
-kubectl delete deployment api-blue api-green frontend -n mindledger --ignore-not-found
-kubectl delete rolebinding gitlab-ci-deploy -n mindledger-staging --ignore-not-found
-kubectl delete rolebinding gitlab-ci-deploy -n mindledger --ignore-not-found
-kubectl delete serviceaccount gitlab-ci -n mindledger-staging --ignore-not-found
-kubectl delete serviceaccount gitlab-ci -n mindledger --ignore-not-found
-kubectl delete namespace mindledger-staging --ignore-not-found
-kubectl delete namespace mindledger --ignore-not-found
+kubectl delete secret gitlab-registry-secret -n axiom-staging --ignore-not-found
+kubectl delete secret gitlab-registry-secret -n axiom --ignore-not-found
+kubectl delete deployment api frontend -n axiom-staging --ignore-not-found
+kubectl delete deployment api-blue api-green frontend -n axiom --ignore-not-found
+kubectl delete rolebinding gitlab-ci-deploy -n axiom-staging --ignore-not-found
+kubectl delete rolebinding gitlab-ci-deploy -n axiom --ignore-not-found
+kubectl delete serviceaccount gitlab-ci -n axiom-staging --ignore-not-found
+kubectl delete serviceaccount gitlab-ci -n axiom --ignore-not-found
+kubectl delete namespace axiom-staging --ignore-not-found
+kubectl delete namespace axiom --ignore-not-found
 ```
 
 > Para forçar remoção de namespace preso em `Terminating`:
 >
 > ```bash
-> kubectl get namespace mindledger-staging -o json \
+> kubectl get namespace axiom-staging -o json \
 >   | python3 -c "import sys, json; d=json.load(sys.stdin); d['spec']['finalizers']=[]; print(json.dumps(d))" \
->   | kubectl replace --raw "/api/v1/namespaces/mindledger-staging/finalize" -f -
+>   | kubectl replace --raw "/api/v1/namespaces/axiom-staging/finalize" -f -
 > ```
 
 ### 4. Criar os namespaces
@@ -573,24 +573,24 @@ kubectl apply -f k8s/namespace.yaml   # produção
 
 ```bash
 # Staging
-kubectl create serviceaccount gitlab-ci -n mindledger-staging
+kubectl create serviceaccount gitlab-ci -n axiom-staging
 kubectl create rolebinding gitlab-ci-deploy \
   --clusterrole=edit \
-  --serviceaccount=mindledger-staging:gitlab-ci \
-  -n mindledger-staging
+  --serviceaccount=axiom-staging:gitlab-ci \
+  -n axiom-staging
 
 # Produção
-kubectl create serviceaccount gitlab-ci -n mindledger
+kubectl create serviceaccount gitlab-ci -n axiom
 kubectl create rolebinding gitlab-ci-deploy \
   --clusterrole=edit \
-  --serviceaccount=mindledger:gitlab-ci \
-  -n mindledger
+  --serviceaccount=axiom:gitlab-ci \
+  -n axiom
 ```
 
 ### 6. Gerar `KUBECONFIG_CONTENT`
 
 ```bash
-TOKEN=$(kubectl create token gitlab-ci -n mindledger-staging --duration=8760h)
+TOKEN=$(kubectl create token gitlab-ci -n axiom-staging --duration=8760h)
 IP_PUBLICO=$(curl -s ifconfig.me)
 CA=$(kubectl config view --minify --flatten \
   -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
@@ -606,7 +606,7 @@ clusters:
 contexts:
 - context:
     cluster: k3s
-    namespace: mindledger-staging
+    namespace: axiom-staging
     user: gitlab-ci
   name: gitlab-ci@k3s
 current-context: gitlab-ci@k3s
@@ -617,7 +617,7 @@ users:
 EOF
 
 # Valide
-kubectl --kubeconfig /tmp/kubeconfig-ci.yaml get deployments -n mindledger-staging
+kubectl --kubeconfig /tmp/kubeconfig-ci.yaml get deployments -n axiom-staging
 
 # Gere o base64 — cole este output no GitLab como KUBECONFIG_CONTENT
 cat /tmp/kubeconfig-ci.yaml | base64 -w 0
@@ -639,21 +639,21 @@ kubectl create secret docker-registry gitlab-registry-secret \
   --docker-server="${REGISTRY_SERVER}" \
   --docker-username="${GITLAB_USER}" \
   --docker-password="${GITLAB_TOKEN}" \
-  -n mindledger-staging
+  -n axiom-staging
 
 # Produção
 kubectl create secret docker-registry gitlab-registry-secret \
   --docker-server="${REGISTRY_SERVER}" \
   --docker-username="${GITLAB_USER}" \
   --docker-password="${GITLAB_TOKEN}" \
-  -n mindledger
+  -n axiom
 ```
 
 > Para recriar após rotacionar o token:
 >
 > ```bash
-> kubectl delete secret gitlab-registry-secret -n mindledger-staging --ignore-not-found
-> kubectl delete secret gitlab-registry-secret -n mindledger --ignore-not-found
+> kubectl delete secret gitlab-registry-secret -n axiom-staging --ignore-not-found
+> kubectl delete secret gitlab-registry-secret -n axiom --ignore-not-found
 > # Execute o kubectl create secret acima novamente
 > ```
 
@@ -667,8 +667,8 @@ Gere e exporte cada variável no terminal:
 
 ```bash
 # Credenciais do banco de dados
-export STAGING_DB_NAME="mindledger_staging"
-export STAGING_DB_USER="mindledger_staging"
+export STAGING_DB_NAME="axiom_staging"
+export STAGING_DB_USER="axiom_staging"
 export STAGING_DB_PASSWORD="$(openssl rand -base64 32 | tr -d '=+/' | cut -c1-32)"
 
 # Chaves Django
@@ -705,7 +705,7 @@ envsubst < k8s/staging/secrets.yaml | kubectl apply -f -
 Verifique:
 
 ```bash
-kubectl get secret mindledger-secrets -n mindledger-staging
+kubectl get secret axiom-secrets -n axiom-staging
 ```
 
 ### 9. Aplicar os demais recursos de infraestrutura (staging)
@@ -741,7 +741,7 @@ kubectl apply -f k8s/staging/ingress.yaml
 [ ] Container Registry habilitado no projeto GitLab
 [ ] Branches main e develop marcadas como Protected
 [ ] k3s instalado e acessível via IP público na porta 6443
-[ ] Namespaces mindledger-staging e mindledger criados
+[ ] Namespaces axiom-staging e axiom criados
 [ ] ServiceAccounts gitlab-ci criadas em ambos os namespaces
 [ ] Pull secret gitlab-registry-secret criado em ambos os namespaces
 [ ] Secrets do k8s de staging aplicados via envsubst

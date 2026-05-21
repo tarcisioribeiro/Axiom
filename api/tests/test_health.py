@@ -86,14 +86,14 @@ class CheckStorageTest(TestCase):
             MINIO_ENDPOINT="minio:9000",
             AWS_ACCESS_KEY_ID="key",
             AWS_SECRET_ACCESS_KEY="secret",
-            AWS_STORAGE_BUCKET_NAME="mindledger",
+            AWS_STORAGE_BUCKET_NAME="axiom",
             AWS_S3_REGION_NAME="us-east-1",
         ):
             with patch("boto3.client", return_value=mock_client):
                 result = check_storage()
 
         self.assertEqual(result["status"], "healthy")
-        mock_client.head_bucket.assert_called_once_with(Bucket="mindledger")
+        mock_client.head_bucket.assert_called_once_with(Bucket="axiom")
 
     def test_unhealthy_on_endpoint_connection_error(self):
         from botocore.exceptions import EndpointConnectionError
@@ -109,7 +109,7 @@ class CheckStorageTest(TestCase):
             MINIO_ENDPOINT="minio:9000",
             AWS_ACCESS_KEY_ID="key",
             AWS_SECRET_ACCESS_KEY="secret",
-            AWS_STORAGE_BUCKET_NAME="mindledger",
+            AWS_STORAGE_BUCKET_NAME="axiom",
             AWS_S3_REGION_NAME="us-east-1",
         ):
             with patch("boto3.client", return_value=mock_client):
@@ -128,7 +128,7 @@ class CheckStorageTest(TestCase):
             MINIO_ENDPOINT="minio:9000",
             AWS_ACCESS_KEY_ID="key",
             AWS_SECRET_ACCESS_KEY="secret",
-            AWS_STORAGE_BUCKET_NAME="mindledger",
+            AWS_STORAGE_BUCKET_NAME="axiom",
             AWS_S3_REGION_NAME="us-east-1",
         ):
             with patch("boto3.client", return_value=mock_client):
@@ -149,7 +149,7 @@ class CheckStorageTest(TestCase):
             MINIO_ENDPOINT="minio:9000",
             AWS_ACCESS_KEY_ID="key",
             AWS_SECRET_ACCESS_KEY="secret",
-            AWS_STORAGE_BUCKET_NAME="mindledger",
+            AWS_STORAGE_BUCKET_NAME="axiom",
             AWS_S3_REGION_NAME="us-east-1",
         ):
             with patch("boto3.client", return_value=mock_client) as mock_boto3:
@@ -213,7 +213,7 @@ class BackupHealthCheckTest(TestCase):
 
         def fake_open(path, *args, **kwargs):
             if "status" in path:
-                return mock_open(read_data="success:mindledger_20240101.sql.enc")()
+                return mock_open(read_data="success:axiom_20240101.sql.enc")()
             return mock_open(read_data=stale_ts)()
 
         with patch("os.path.exists", return_value=True):
@@ -229,7 +229,7 @@ class BackupHealthCheckTest(TestCase):
 
         def fake_open(path, *args, **kwargs):
             if "status" in path:
-                return mock_open(read_data="success:mindledger_20240101.sql.enc")()
+                return mock_open(read_data="success:axiom_20240101.sql.enc")()
             return mock_open(read_data=recent_ts)()
 
         with patch("os.path.exists", return_value=True):

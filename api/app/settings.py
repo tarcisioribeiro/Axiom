@@ -48,7 +48,7 @@ if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
 
 # ALLOWED_HOSTS configurado via variavel de ambiente
 # Em producao, definir explicitamente os dominios permitidos
-# Exemplo: ALLOWED_HOSTS=mindledger.com,api.mindledger.com
+# Exemplo: ALLOWED_HOSTS=axiom.com,api.axiom.com
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Number of trusted reverse proxies in front of the application.
@@ -219,7 +219,7 @@ if MINIO_ENDPOINT:
         raise ImproperlyConfigured(
             "MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set."
         )
-    AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "mindledger")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "axiom")
     _minio_use_ssl = os.getenv("MINIO_USE_SSL", "false").lower() == "true"
     _minio_scheme = "https" if _minio_use_ssl else "http"
     AWS_S3_ENDPOINT_URL = f"{_minio_scheme}://{MINIO_ENDPOINT}"
@@ -266,7 +266,7 @@ REST_FRAMEWORK = {
 
 # OpenAPI/Swagger Documentation (drf-spectacular)
 SPECTACULAR_SETTINGS = {
-    "TITLE": "MindLedger API",
+    "TITLE": "Axiom API",
     "DESCRIPTION": "API para gerenciamento financeiro pessoal",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
@@ -301,7 +301,7 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,  # Fallback gracioso se Redis falhar
         },
-        "KEY_PREFIX": "mindledger",
+        "KEY_PREFIX": "axiom",
         "TIMEOUT": 300,  # 5 minutos default
     },
     "locmem": {
@@ -376,12 +376,12 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
-        "mindledger": {
+        "axiom": {
             "handlers": ["console"],
             "level": "INFO",
             "propagate": False,
         },
-        "mindledger.audit": {
+        "axiom.audit": {
             "handlers": ["console", "audit_file"],
             "level": "INFO",
             "propagate": False,
@@ -459,10 +459,8 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv(
-    "DEFAULT_FROM_EMAIL", "MindLedger <noreply@mindledger.app>"
-)
-# Public URL used in email links (e.g. https://mindledger.yourdomain.com)
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Axiom <noreply@axiom.app>")
+# Public URL used in email links (e.g. https://axiom.yourdomain.com)
 SITE_URL = os.getenv("SITE_URL", "")
 
 # Use console backend in tests to avoid hitting a real SMTP server

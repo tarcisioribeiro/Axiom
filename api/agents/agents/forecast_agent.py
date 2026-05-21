@@ -2,7 +2,7 @@ from typing import Any
 
 from django.contrib.auth.models import User
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 
 _TRIGGER_WORDS = [
@@ -72,7 +72,8 @@ class ForecastAgent(BaseAgent):
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
         account_lines = (
             "\n".join(
-                f"  - {a['name']} ({a['institution']}): R$ {a['balance']:.2f}"
+                f"  - {safe_str(a['name'])} ({safe_str(a['institution'])}):"
+                f" R$ {a['balance']:.2f}"
                 for a in data["accounts"]
             )
             or "  (sem contas cadastradas)"
@@ -80,7 +81,7 @@ class ForecastAgent(BaseAgent):
 
         fixed_lines = (
             "\n".join(
-                f"  - {fe['description']}: R$ {fe['value']:.2f}"
+                f"  - {safe_str(fe['description'])}: R$ {fe['value']:.2f}"
                 f" em {fe['due_date']} ({fe['days_until']}d)"
                 for fe in data["fixed_upcoming"][:8]
             )
@@ -89,7 +90,7 @@ class ForecastAgent(BaseAgent):
 
         revenue_lines = (
             "\n".join(
-                f"  - {r['description']}: ~R$ {r['avg_value']:.2f}/mês"
+                f"  - {safe_str(r['description'])}: ~R$ {r['avg_value']:.2f}/mês"
                 for r in data["expected_revenues"][:5]
             )
             or "  (sem receitas recorrentes identificadas)"
@@ -101,14 +102,6 @@ class ForecastAgent(BaseAgent):
             if proj["alert"]
             else "✅ Saldo positivo projetado"
         )
-
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
 
         return f"""Previsão para os próximos {data['days']} dias
 
@@ -128,7 +121,7 @@ Receitas recorrentes esperadas:
 - Saídas confirmadas: R$ {proj['projected_outflows']:.2f}
 - **Saldo projetado: R$ {proj['projected_balance']:.2f}**
 - {alert}
-{history_block}
+
 Pergunta: {ctx.query}
 
 Seja preciso com datas e valores. Alerte sobre riscos de saldo negativo."""

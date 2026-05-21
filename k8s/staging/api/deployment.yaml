@@ -2,14 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: api
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 900
+  progressDeadlineSeconds: 1200
   revisionHistoryLimit: 3
   minReadySeconds: 30
   strategy:
@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         app: api
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: api
         environment: staging
     spec:
@@ -57,15 +57,15 @@ spec:
         - name: api
           # Image tag is pinned to the build digest on every deploy by CI/CD.
           # See deploy:staging job in .gitlab-ci.yml.
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/api:0.0.0
+          image: registry.gitlab.com/tarcisioribeiro/axiom/api:0.0.0
           ports:
             - containerPort: 39100
               name: http
           envFrom:
             - configMapRef:
-                name: mindledger-config
+                name: axiom-config
             - secretRef:
-                name: mindledger-secrets
+                name: axiom-secrets
           volumeMounts:
             - name: media
               mountPath: /app/media
@@ -87,12 +87,12 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            # Allow up to 40 × 15s = 600s for the entrypoint to finish
-            # (migrations, collectstatic, createsuperuser, setup_members).
+            # Allow up to 60 × 15s = 900s (+ 30s initial) for the entrypoint to finish
+            # (151 migrations + collectstatic + createsuperuser + setup_members).
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
-            failureThreshold: 40
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /ready/

@@ -1,12 +1,14 @@
 # Fluxo de Dados
 
+> **⚠️ NOTA (Maio/2026)**: As seções sobre embeddings neste documento referenciam a implementação anterior (`sentence-transformers/all-MiniLM-L6-v2`, 384 dims). O sistema atual usa `nomic-embed-text` via Ollama (768 dims), com geração em `LLMClient.embed()` (`api/agents/core/llm_client.py`). O LLM de chat agora suporta múltiplos providers (Ollama/Groq/Anthropic) configurável via `LLM_PROVIDER`. Consulte [`backend/agents.md`](../backend/agents.md) para o fluxo atual.
+
 ## Introdução
 
-Este documento detalha como os dados fluem através do MindLedger, desde a interação do usuário na interface até a persistência no banco de dados e vice-versa. Compreender esses fluxos é essencial para entender o comportamento do sistema, fazer debugging e implementar novas funcionalidades.
+Este documento detalha como os dados fluem através do Axiom, desde a interação do usuário na interface até a persistência no banco de dados e vice-versa. Compreender esses fluxos é essencial para entender o comportamento do sistema, fazer debugging e implementar novas funcionalidades.
 
 ## Visão Geral dos Fluxos
 
-O MindLedger possui cinco fluxos principais de dados:
+O Axiom possui cinco fluxos principais de dados:
 
 1. **Fluxo de Autenticação**: Login, refresh de tokens, logout
 2. **Fluxo CRUD Padrão**: Operações de criação, leitura, atualização e exclusão
@@ -580,7 +582,7 @@ LIMIT 10;
 
 **Operadores pgvector**:
 - `<->`: Distância L2 (Euclidiana)
-- `<=>`: Distância de cosseno (usado no MindLedger)
+- `<=>`: Distância de cosseno (usado no Axiom)
 - `<#>`: Produto interno negativo
 
 **Estrutura da Resposta**:

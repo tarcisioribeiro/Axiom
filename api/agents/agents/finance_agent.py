@@ -4,7 +4,7 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
@@ -60,7 +60,6 @@ class FinanceAgent(BaseAgent):
         now = timezone.now().date()
         month_start = now.replace(day=1)
 
-        # Explicit date range from the request takes precedence.
         if ctx.metadata.get("date_from"):
             try:
                 start = date.fromisoformat(ctx.metadata["date_from"])
@@ -68,7 +67,6 @@ class FinanceAgent(BaseAgent):
             except ValueError:
                 start, end = month_start, now
         else:
-            # Fall back to temporal intent parsed from the query itself.
             temporal = parse_temporal_intent(ctx.query, now)
             start, end = temporal if temporal else (month_start, now)
 
@@ -96,9 +94,10 @@ class FinanceAgent(BaseAgent):
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
+        # safe_str sanitiza merchant names e categorias contra indirect injection
         expense_lines = (
             "\n".join(
-                f"  - {r['category']}: R$ {float(r['total'] or 0):.2f}"
+                f"  - {safe_str(r['category'])}: R$ {float(r['total'] or 0):.2f}"
                 f" ({r['count']} lançamentos)"
                 for r in data["expenses"][:8]
             )
@@ -107,7 +106,7 @@ class FinanceAgent(BaseAgent):
 
         revenue_lines = (
             "\n".join(
-                f"  - {r['category']}: R$ {float(r['total'] or 0):.2f}"
+                f"  - {safe_str(r['category'])}: R$ {float(r['total'] or 0):.2f}"
                 for r in data["revenues"][:5]
             )
             or "  (sem receitas no período)"
@@ -115,7 +114,8 @@ class FinanceAgent(BaseAgent):
 
         merchant_lines = (
             "\n".join(
-                f"  - {r['merchant']}: R$ {float(r['total'] or 0):.2f} ({r['count']}x)"
+                f"  - {safe_str(r['merchant'])}: R$ {float(r['total'] or 0):.2f}"
+                f" ({r['count']}x)"
                 for r in data["merchants"]
             )
             or "  (sem dados de estabelecimento)"
@@ -124,7 +124,7 @@ class FinanceAgent(BaseAgent):
         trend_lines = (
             "\n".join(
                 "  - {}: R$ {:.2f}".format(
-                    (
+                    safe_str(
                         r["month"].strftime("%b/%Y")
                         if hasattr(r["month"], "strftime")
                         else r["month"]
@@ -135,15 +135,6 @@ class FinanceAgent(BaseAgent):
             )
             or "  (sem histórico)"
         )
-
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                "\nHistórico recente:\n"
-                f"{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
 
         return f"""Período analisado: {data['period_start']} a {data['period_end']}
 
@@ -162,7 +153,7 @@ Top estabelecimentos:
 
 Tendência mensal (últimos 3 meses):
 {trend_lines}
-{history_block}
+
 Pergunta: {ctx.query}
 
 Responda de forma direta e estruturada. Use **negrito** para valores importantes."""

@@ -1,5 +1,7 @@
 # pgvector - Busca Vetorial Semântica
 
+> **⚠️ NOTA DE MIGRAÇÃO (Maio/2026)**: O sistema de embeddings foi migrado de `sentence-transformers/all-MiniLM-L6-v2` (384 dims, Python) para **`nomic-embed-text` via Ollama** (768 dims). O gerador de embeddings agora é `LLMClient.embed()` em `api/agents/core/llm_client.py`. O modelo de dados é `AgentEmbedding` em `api/agents/models.py` (schema `vectors.agent_embeddings`), não mais `ContentEmbedding`. O cache de embeddings é feito no Redis (TTL 5min). Os exemplos de código nesta página usam a API antiga — consulte [`backend/agents.md`](../backend/agents.md) para a implementação atual.
+
 > Documentação completa da extensão pgvector para busca semântica com embeddings locais
 
 ## Índice
@@ -25,9 +27,9 @@ pgvector é uma extensão open-source do PostgreSQL que adiciona suporte nativo 
 - Operações de similaridade (cosine, L2, inner product)
 - Índices otimizados para busca aproximada (IVFFlat, HNSW)
 
-### Por que pgvector no MindLedger?
+### Por que pgvector no Axiom?
 
-O MindLedger usa pgvector para implementar RAG (Retrieval Augmented Generation) que permite:
+O Axiom usa pgvector para implementar RAG (Retrieval Augmented Generation) que permite:
 
 1. **Busca semântica**: Encontrar despesas/livros/tarefas por significado, não apenas palavras-chave
 2. **Contexto para LLM**: Enviar informações relevantes para Groq gerar respostas precisas
@@ -103,8 +105,8 @@ brew install pgvector
 ### 2. Habilitar Extensão no Banco
 
 ```sql
--- Conectar ao banco MindLedger
-\c mindledger_db
+-- Conectar ao banco Axiom
+\c axiom_db
 
 -- Habilitar extensão
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -147,7 +149,7 @@ INSTALLED_APPS = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mindledger_db',
+        'NAME': 'axiom_db',
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'db'),
@@ -358,7 +360,7 @@ CONTENT_SENSITIVITY_MAP = {
 
 ### 1. Modelo all-MiniLM-L6-v2
 
-O MindLedger usa o modelo **all-MiniLM-L6-v2** da biblioteca sentence-transformers:
+O Axiom usa o modelo **all-MiniLM-L6-v2** da biblioteca sentence-transformers:
 
 **Características**:
 - **384 dimensões** (menor que BERT-768, mais rápido)
@@ -812,13 +814,13 @@ results = ContentEmbedding.objects.filter(
 
 ---
 
-### 2. IVFFlat (Recomendado para MindLedger)
+### 2. IVFFlat (Recomendado para Axiom)
 
 Índice baseado em clustering (k-means):
 
 ```sql
 -- Conectar ao banco
-docker-compose exec db psql -U $DB_USER mindledger_db
+docker-compose exec db psql -U $DB_USER axiom_db
 
 -- Criar índice IVFFlat para cosine similarity
 CREATE INDEX idx_contentembedding_cosine ON ai_assistant_contentembedding
@@ -900,7 +902,7 @@ SET hnsw.ef_search = 100;
 - ❌ Consome mais memória (~10x IVFFlat)
 - ❌ Construção mais lenta
 
-**Recomendação MindLedger**: Usar IVFFlat (datasets pequenos por usuário).
+**Recomendação Axiom**: Usar IVFFlat (datasets pequenos por usuário).
 
 ---
 

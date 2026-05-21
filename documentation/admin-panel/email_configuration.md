@@ -1,6 +1,6 @@
 # Configuração de Email
 
-O MindLedger usa o backend de email do Django para envio de notificações, links de redefinição de senha e emails transacionais. Todas as configurações ficam na categoria `email` do painel admin e podem ser alteradas **sem reiniciar o container**.
+O Axiom usa o backend de email do Django para envio de notificações, links de redefinição de senha e emails transacionais. Todas as configurações ficam na categoria `email` do painel admin e podem ser alteradas **sem reiniciar o container**.
 
 ## Índice
 
@@ -27,7 +27,7 @@ O MindLedger usa o backend de email do Django para envio de notificações, link
 | `EMAIL_USE_TLS` | Usar TLS | Sim | `True` | Não |
 | `EMAIL_HOST_USER` | Usuário SMTP | Sim | — | Não |
 | `EMAIL_HOST_PASSWORD` | Senha SMTP 🔒 | Sim | — | Não |
-| `DEFAULT_FROM_EMAIL` | Email Remetente | Sim | `MindLedger <noreply@mindledger.app>` | Não |
+| `DEFAULT_FROM_EMAIL` | Email Remetente | Sim | `Axiom <noreply@axiom.app>` | Não |
 | `SITE_URL` | URL do Site | Recomendado | — | Não |
 
 > 🔒 Campos marcados com este ícone são armazenados **criptografados** no banco de dados e exibidos como `••••••••` no painel.
@@ -61,7 +61,7 @@ Senha para autenticação SMTP. Armazenada criptografada. Para Gmail, use uma **
 Endereço exibido no campo "De" dos emails. Formato recomendado: `Nome <email@dominio.com>`. O endereço deve estar autorizado pelo provedor SMTP para evitar rejeição como spam.
 
 **`SITE_URL`**
-URL pública do frontend, usada para gerar links clicáveis dentro dos emails (ex: link de redefinição de senha). Exemplo: `https://mindledger.seudominio.com`.
+URL pública do frontend, usada para gerar links clicáveis dentro dos emails (ex: link de redefinição de senha). Exemplo: `https://axiom.seudominio.com`.
 
 ---
 
@@ -76,7 +76,7 @@ O Gmail bloqueia login via senha de conta quando a verificação em duas etapas 
 1. Acesse [myaccount.google.com](https://myaccount.google.com).
 2. Vá em **Segurança** → **Verificação em duas etapas** (ative se ainda não estiver ativa).
 3. Ainda em **Segurança**, procure por **Senhas de app** (ou acesse diretamente: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)).
-4. Em "Selecionar app", escolha **Outro (nome personalizado)** e escreva `MindLedger`.
+4. Em "Selecionar app", escolha **Outro (nome personalizado)** e escreva `Axiom`.
 5. Clique em **Gerar**.
 6. Copie a senha de 16 caracteres exibida (ela só aparece uma vez).
 
@@ -89,7 +89,7 @@ O Gmail bloqueia login via senha de conta quando a verificação em duas etapas 
 | `EMAIL_USE_TLS` | `True` |
 | `EMAIL_HOST_USER` | `seu@gmail.com` |
 | `EMAIL_HOST_PASSWORD` | senha de 16 caracteres gerada acima |
-| `DEFAULT_FROM_EMAIL` | `MindLedger <seu@gmail.com>` |
+| `DEFAULT_FROM_EMAIL` | `Axiom <seu@gmail.com>` |
 
 > **⚠️ Atenção**: contas Gmail gratuitas têm limite de 500 emails/dia. Para volumes maiores, use o **Google Workspace** ou um provedor transacional (SES, SendGrid).
 
@@ -117,7 +117,7 @@ O Microsoft 365 requer que o **SMTP AUTH** esteja habilitado para a caixa de cor
 | `EMAIL_USE_TLS` | `True` |
 | `EMAIL_HOST_USER` | `seu@seudominio.com` |
 | `EMAIL_HOST_PASSWORD` | senha da conta Microsoft |
-| `DEFAULT_FROM_EMAIL` | `MindLedger <seu@seudominio.com>` |
+| `DEFAULT_FROM_EMAIL` | `Axiom <seu@seudominio.com>` |
 
 ---
 
@@ -130,7 +130,7 @@ O Amazon SES é um serviço de email transacional escalável. Novos ambientes fi
 1. Acesse o [Console AWS SES](https://console.aws.amazon.com/ses/).
 2. No menu lateral, clique em **SMTP Settings**.
 3. Clique em **Create SMTP credentials**.
-4. Dê um nome ao usuário IAM (ex: `mindledger-smtp`) e clique em **Create**.
+4. Dê um nome ao usuário IAM (ex: `axiom-smtp`) e clique em **Create**.
 5. Faça download ou copie o **SMTP Username** e a **SMTP Password** gerados — eles só aparecem uma vez.
 
 > As credenciais SMTP do SES **são diferentes** das chaves de API da AWS. Não use sua `AWS_ACCESS_KEY_ID` diretamente.
@@ -153,7 +153,7 @@ Confira no console SES em **SMTP Settings** → **SMTP endpoint**.
 | `EMAIL_USE_TLS` | `True` |
 | `EMAIL_HOST_USER` | SMTP Username gerado no Console SES |
 | `EMAIL_HOST_PASSWORD` | SMTP Password gerado no Console SES |
-| `DEFAULT_FROM_EMAIL` | `MindLedger <noreply@seudominio.com>` (domínio verificado no SES) |
+| `DEFAULT_FROM_EMAIL` | `Axiom <noreply@seudominio.com>` (domínio verificado no SES) |
 
 ---
 
@@ -177,7 +177,7 @@ O SendGrid usa a própria chave de API como senha SMTP, com o usuário fixo `api
 | `EMAIL_USE_TLS` | `True` |
 | `EMAIL_HOST_USER` | `apikey` (literal, não muda) |
 | `EMAIL_HOST_PASSWORD` | chave API gerada (começa com `SG.`) |
-| `DEFAULT_FROM_EMAIL` | `MindLedger <noreply@seudominio.com>` (domínio autenticado no SendGrid) |
+| `DEFAULT_FROM_EMAIL` | `Axiom <noreply@seudominio.com>` (domínio autenticado no SendGrid) |
 
 ---
 
@@ -192,7 +192,7 @@ Se você opera um servidor de email próprio (Postfix, Exim, etc.):
 | `EMAIL_USE_TLS` | `True` para porta 587; `False` para porta 465 |
 | `EMAIL_HOST_USER` | Usuário de autenticação SMTP |
 | `EMAIL_HOST_PASSWORD` | Senha SMTP |
-| `DEFAULT_FROM_EMAIL` | `MindLedger <noreply@seudominio.com>` |
+| `DEFAULT_FROM_EMAIL` | `Axiom <noreply@seudominio.com>` |
 
 ---
 

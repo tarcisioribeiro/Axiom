@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { Activity, CalendarDays, Loader2, Tag, Target, Trophy } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { type z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -31,6 +32,20 @@ import {
 type GoalFormData = z.infer<typeof goalSchema>;
 
 const AUTO_GOAL_TYPES = new Set(['consecutive_days', 'total_days', 'avoid_habit']);
+
+const GOAL_TYPE_EMOJIS: Record<string, string> = {
+  consecutive_days: '🔥',
+  total_days: '📅',
+  avoid_habit: '🚫',
+  custom: '⚙️',
+};
+
+const GOAL_STATUS_EMOJIS: Record<string, string> = {
+  active: '✅',
+  completed: '🏆',
+  failed: '❌',
+  cancelled: '🚫',
+};
 
 interface GoalFormProps {
   goal?: Goal;
@@ -98,164 +113,218 @@ export function GoalForm({
     void loadCurrentUserMember();
   }, [goal, setValue]);
 
+  const watchedGoalType = watch('goal_type');
+  const isAutoType = AUTO_GOAL_TYPES.has(watchedGoalType);
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-      <div className="grid grid-cols-2 gap-md">
-        <div className="col-span-2">
-          <Label htmlFor="title">{t('pages.goals.form.titleLabel')}</Label>
-          <Input
-            id="title"
-            {...register('title')}
-            placeholder={t('pages.goals.form.titlePlaceholder')}
-          />
-          {errors.title && (
-            <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
-          )}
-        </div>
-
-        <div className="col-span-2">
-          <Label htmlFor="description">{t('pages.goals.form.descriptionLabel')}</Label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            placeholder={t('pages.goals.form.descriptionPlaceholder')}
-            rows={3}
-          />
-          {errors.description && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="goal_type">{t('pages.goals.form.goalTypeLabel')}</Label>
-          <Select
-            value={watch('goal_type')}
-            onValueChange={(value) => setValue('goal_type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {GOAL_TYPE_CHOICES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.goal_type && (
-            <p className="mt-xs text-sm text-destructive">{errors.goal_type.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="related_task">{t('pages.goals.form.relatedTaskLabel')}</Label>
-          <Select
-            value={watch('related_task')?.toString()}
-            onValueChange={(value) =>
-              setValue('related_task', value === 'none' ? undefined : parseInt(value))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('pages.goals.form.relatedTaskPlaceholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {t('pages.goals.form.relatedTaskNone')}
-              </SelectItem>
-              {routineTasks.map((task) => (
-                <SelectItem key={task.id} value={task.id.toString()}>
-                  {task.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.related_task && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.related_task.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="target_value">{t('pages.goals.form.targetValueLabel')}</Label>
-          <Input
-            id="target_value"
-            type="number"
-            min="1"
-            {...register('target_value', {
-              setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
-            })}
-          />
-          {errors.target_value && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.target_value.message}
-            </p>
-          )}
-        </div>
-
-        {!AUTO_GOAL_TYPES.has(watch('goal_type')) && (
-          <div>
-            <Label htmlFor="current_value">
-              {t('pages.goals.form.currentValueLabel')}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      <FormSection title={t('pages.goals.form.sectionIdentification')} icon={Trophy}>
+        <div className="grid grid-cols-1 gap-md">
+          <div className="space-y-sm">
+            <Label htmlFor="title" className="flex items-center gap-xs">
+              <Trophy className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.titleLabel')}
             </Label>
             <Input
-              id="current_value"
-              type="number"
-              min="0"
-              {...register('current_value', {
-                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-              })}
+              id="title"
+              {...register('title')}
+              placeholder={t('pages.goals.form.titlePlaceholder')}
+              disabled={isLoading}
             />
-            {errors.current_value && (
+            {errors.title && (
+              <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="description" className="flex items-center gap-xs">
+              <Trophy className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.descriptionLabel')}
+            </Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              placeholder={t('pages.goals.form.descriptionPlaceholder')}
+              rows={3}
+              disabled={isLoading}
+            />
+            {errors.description && (
               <p className="mt-xs text-sm text-destructive">
-                {errors.current_value.message}
+                {errors.description.message}
               </p>
             )}
           </div>
-        )}
+        </div>
+      </FormSection>
 
-        <div>
-          <Label htmlFor="start_date">{t('pages.goals.form.startDateLabel')}</Label>
-          <DatePicker
-            value={watch('start_date')}
-            onChange={(date) =>
-              setValue('start_date', date ? formatLocalDate(date) : '')
-            }
-            placeholder={t('pages.goals.form.startDatePlaceholder')}
-          />
-          {errors.start_date && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.start_date.message}
-            </p>
+      <FormSection title={t('pages.goals.form.sectionConfig')} icon={Target}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm md:col-span-2">
+            <Label className="flex items-center gap-xs">
+              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.goalTypeLabel')}
+            </Label>
+            <Select
+              value={watch('goal_type')}
+              onValueChange={(value) => setValue('goal_type', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {GOAL_TYPE_CHOICES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {GOAL_TYPE_EMOJIS[type.value] ?? ''}{' '}
+                    {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.goal_type && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.goal_type.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-sm md:col-span-2">
+            <Label className="flex items-center gap-xs">
+              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.relatedTaskLabel')}
+            </Label>
+            <Select
+              value={watch('related_task')?.toString()}
+              onValueChange={(value) =>
+                setValue('related_task', value === 'none' ? undefined : parseInt(value))
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={t('pages.goals.form.relatedTaskPlaceholder')}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  {t('pages.goals.form.relatedTaskNone')}
+                </SelectItem>
+                {routineTasks.map((task) => (
+                  <SelectItem key={task.id} value={task.id.toString()}>
+                    {task.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.related_task && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.related_task.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="target_value" className="flex items-center gap-xs">
+              <Target className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.targetValueLabel')}
+            </Label>
+            <Input
+              id="target_value"
+              type="number"
+              min="1"
+              {...register('target_value', {
+                setValueAs: (value: string) => (value === '' ? 1 : parseInt(value)),
+              })}
+              disabled={isLoading}
+            />
+            {errors.target_value && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.target_value.message}
+              </p>
+            )}
+          </div>
+
+          {!isAutoType && (
+            <div className="space-y-sm">
+              <Label htmlFor="current_value" className="flex items-center gap-xs">
+                <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.goals.form.currentValueLabel')}
+              </Label>
+              <Input
+                id="current_value"
+                type="number"
+                min="0"
+                {...register('current_value', {
+                  setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+                })}
+                disabled={isLoading}
+              />
+              {errors.current_value && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.current_value.message}
+                </p>
+              )}
+            </div>
           )}
         </div>
+      </FormSection>
 
-        {!AUTO_GOAL_TYPES.has(watch('goal_type')) && (
-          <div>
-            <Label htmlFor="end_date">{t('pages.goals.form.endDateLabel')}</Label>
+      <FormSection title={t('pages.goals.form.sectionPeriod')} icon={CalendarDays}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.goals.form.startDateLabel')}
+            </Label>
             <DatePicker
-              value={watch('end_date') ?? ''}
+              value={watch('start_date')}
               onChange={(date) =>
-                setValue('end_date', date ? formatLocalDate(date) : null)
+                setValue('start_date', date ? formatLocalDate(date) : '')
               }
-              placeholder={t('pages.goals.form.endDatePlaceholder')}
+              placeholder={t('pages.goals.form.startDatePlaceholder')}
+              disabled={isLoading}
             />
-            {errors.end_date && (
+            {errors.start_date && (
               <p className="mt-xs text-sm text-destructive">
-                {errors.end_date.message}
+                {errors.start_date.message}
               </p>
             )}
           </div>
-        )}
 
-        <div className={AUTO_GOAL_TYPES.has(watch('goal_type')) ? 'col-span-2' : ''}>
-          <Label htmlFor="status">{t('pages.goals.form.statusLabel')}</Label>
+          {!isAutoType && (
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.goals.form.endDateLabel')}
+              </Label>
+              <DatePicker
+                value={watch('end_date') ?? ''}
+                onChange={(date) =>
+                  setValue('end_date', date ? formatLocalDate(date) : null)
+                }
+                placeholder={t('pages.goals.form.endDatePlaceholder')}
+                disabled={isLoading}
+              />
+              {errors.end_date && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.end_date.message}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.goals.form.sectionStatus')} icon={Activity}>
+        <div className="space-y-sm">
+          <Label className="flex items-center gap-xs">
+            <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+            {t('pages.goals.form.statusLabel')}
+          </Label>
           <Select
             value={watch('status')}
             onValueChange={(value) => setValue('status', value)}
+            disabled={isLoading}
           >
             <SelectTrigger>
               <SelectValue />
@@ -263,6 +332,7 @@ export function GoalForm({
             <SelectContent>
               {GOAL_STATUS_CHOICES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
+                  {GOAL_STATUS_EMOJIS[status.value] ?? ''}{' '}
                   {t(`pages.goals.form.statusOptions.${status.value}`)}
                 </SelectItem>
               ))}
@@ -272,10 +342,10 @@ export function GoalForm({
             <p className="mt-xs text-sm text-destructive">{errors.status.message}</p>
           )}
         </div>
-      </div>
+      </FormSection>
 
       <div className="flex justify-end gap-sm border-t pt-md">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>

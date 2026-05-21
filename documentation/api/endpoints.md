@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-A API do MindLedger segue o padrão REST, com versionamento (`/api/v1/`) e autenticação JWT via cookies httpOnly.
+A API do Axiom segue o padrão REST, com versionamento (`/api/v1/`) e autenticação JWT via cookies httpOnly.
 
 **Base URL:** `http://localhost:39100/api/v1/`
 
