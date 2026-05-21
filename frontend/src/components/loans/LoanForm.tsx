@@ -1,10 +1,25 @@
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import {
+  AlertCircle,
+  ArrowRight,
+  BadgePercent,
+  CalendarDays,
+  Check,
+  Clock,
+  FileText,
+  Loader2,
+  Shield,
+  Tag,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FileInput } from '@/components/ui/file-input';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,7 +34,7 @@ import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
-import type { Loan, LoanFormData, Account, Member } from '@/types';
+import type { Account, Loan, LoanFormData, Member } from '@/types';
 
 const PAYMENT_FREQUENCIES = [
   'daily',
@@ -31,7 +46,6 @@ const PAYMENT_FREQUENCIES = [
   'semiannual',
   'annual',
 ];
-
 const LOAN_STATUSES = ['active', 'paid', 'defaulted', 'cancelled'];
 
 interface LoanFormProps {
@@ -54,6 +68,9 @@ export function LoanForm({
   isLoading,
 }: LoanFormProps) {
   const { t } = useTranslation();
+  const [step, setStep] = useState(1);
+  const totalSteps = 3;
+
   const [formData, setFormData] = useState<LoanFormData>(() =>
     loan
       ? {
@@ -89,7 +106,6 @@ export function LoanForm({
           horary: new Date().toTimeString().slice(0, 5),
           category: 'loans',
           account: accounts[0]?.id ?? 0,
-          // When borrowing: current user is the benefited; default creditor to first other member
           benefited: currentUserMemberId ?? members[0]?.id ?? 0,
           creditor:
             members.find((m) => m.id !== currentUserMemberId)?.id ??
@@ -118,7 +134,6 @@ export function LoanForm({
       ),
     [members, currentUserMemberId]
   );
-
   const eligibleBeneficiaries = useMemo(
     () =>
       members.filter(
@@ -147,392 +162,535 @@ export function LoanForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < totalSteps && !isEditing) {
+      setStep((s) => s + 1);
+      return;
+    }
     if (balanceInfo && !balanceInfo.canPay) return;
     onSubmit(formData);
   };
 
+  const stepLabels = [
+    t('pages.loans.wizard.step1'),
+    t('pages.loans.wizard.step2'),
+    t('pages.loans.wizard.step3'),
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-md">
-      <div className="grid grid-cols-2 gap-md">
-        {!isEditing && (
-          <div className="col-span-2">
-            <Label htmlFor="loan_type">{t('pages.loans.form.loanTypeLabel')}</Label>
-            <Select
-              value={formData.loan_type ?? 'borrowed'}
-              onValueChange={(value) => {
-                const type = value as 'borrowed' | 'lent';
-                set({
-                  loan_type: type,
-                  generate_revenue: false,
-                  generate_expense: false,
-                  ...(type === 'borrowed' && currentUserMemberId
-                    ? {
-                        benefited: currentUserMemberId,
-                        creditor: eligibleCreditors[0]?.id ?? 0,
-                      }
-                    : {}),
-                  ...(type === 'lent' && currentUserMemberId
-                    ? {
-                        creditor: currentUserMemberId,
-                        benefited: eligibleBeneficiaries[0]?.id ?? 0,
-                      }
-                    : {}),
-                });
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="borrowed">
-                  {t('pages.loans.form.borrowed')}
-                </SelectItem>
-                <SelectItem value="lent">{t('pages.loans.form.lent')}</SelectItem>
-              </SelectContent>
-            </Select>
+    <form onSubmit={handleSubmit} className="space-y-lg">
+      {/* Barra de progresso do wizard (apenas na criação) */}
+      {!isEditing && (
+        <div className="space-y-sm">
+          <div className="flex items-center justify-between">
+            {stepLabels.map((label, i) => {
+              const stepNum = i + 1;
+              const isActive = stepNum === step;
+              const isDone = stepNum < step;
+              return (
+                <div key={stepNum} className="flex flex-1 items-center">
+                  <div className="flex flex-col items-center gap-xs">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors ${
+                        isDone
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : isActive
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border/50 bg-muted/30 text-muted-foreground'
+                      }`}
+                    >
+                      {isDone ? <Check className="h-3.5 w-3.5" /> : stepNum}
+                    </div>
+                    <span
+                      className={`text-center text-xs ${isActive ? 'font-semibold text-primary' : 'text-muted-foreground'}`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  {i < totalSteps - 1 && (
+                    <div
+                      className={`mx-xs h-0.5 flex-1 transition-colors ${isDone ? 'bg-primary' : 'bg-border/50'}`}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
-
-        <div className="col-span-2">
-          <Label htmlFor="description">{t('pages.loans.form.descriptionLabel')}</Label>
-          <Input
-            id="description"
-            value={formData.description}
-            onChange={(e) => set({ description: e.target.value })}
-            required
-          />
         </div>
+      )}
 
-        <div>
-          <Label htmlFor="value">{t('pages.loans.form.totalValueLabel')}</Label>
-          <Input
-            id="value"
-            type="number"
-            step="0.01"
-            value={formData.value}
-            onChange={(e) => set({ value: parseFloat(e.target.value) })}
-            required
-          />
-        </div>
+      {/* Etapa 1 (ou modo edição completo): Tipo & Valor */}
+      {(step === 1 || isEditing) && (
+        <FormSection
+          title={
+            isEditing
+              ? t('common.form.sections.basicInfo')
+              : t('pages.loans.wizard.step1')
+          }
+          icon={FileText}
+        >
+          <div className="grid grid-cols-2 gap-md">
+            {!isEditing && (
+              <div className="col-span-2">
+                <Label className="flex items-center gap-xs">
+                  <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.loans.form.loanTypeLabel')}
+                </Label>
+                <div className="mt-sm grid grid-cols-2 gap-sm">
+                  {(['borrowed', 'lent'] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        set({
+                          loan_type: type,
+                          generate_revenue: false,
+                          generate_expense: false,
+                          ...(type === 'borrowed' && currentUserMemberId
+                            ? {
+                                benefited: currentUserMemberId,
+                                creditor: eligibleCreditors[0]?.id ?? 0,
+                              }
+                            : {}),
+                          ...(type === 'lent' && currentUserMemberId
+                            ? {
+                                creditor: currentUserMemberId,
+                                benefited: eligibleBeneficiaries[0]?.id ?? 0,
+                              }
+                            : {}),
+                        });
+                      }}
+                      className={`flex flex-col items-center gap-sm rounded-lg border-2 p-md transition-all ${
+                        formData.loan_type === type
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border/50 bg-muted/10 text-muted-foreground hover:border-primary/40'
+                      }`}
+                    >
+                      <span className="text-2xl">
+                        {type === 'borrowed' ? '📥' : '📤'}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {t(`pages.loans.form.${type}`)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-        <div>
-          <Label htmlFor="payed_value">
-            {t('pages.loans.form.paidValueLabel')}
-            {loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}
-          </Label>
-          <Input
-            id="payed_value"
-            type="number"
-            step="0.01"
-            value={formData.payed_value}
-            onChange={(e) => set({ payed_value: parseFloat(e.target.value) })}
-            required={!loan}
-            disabled={!!loan}
-            className={loan ? 'cursor-not-allowed bg-muted' : ''}
-          />
-          {loan && (
-            <p className="mt-xs text-xs text-muted-foreground">
-              {t('pages.loans.form.paidValueNote')}
-            </p>
-          )}
-        </div>
+            <div className="col-span-2">
+              <Label htmlFor="description" className="flex items-center gap-xs">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.descriptionLabel')}
+              </Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => set({ description: e.target.value })}
+                required
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="date">{t('pages.loans.form.dateLabel')}</Label>
-          <DatePicker
-            value={formData.date ?? undefined}
-            onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
-            placeholder={t('pages.loans.form.datePlaceholder')}
-          />
-        </div>
+            <div>
+              <Label htmlFor="value" className="flex items-center gap-xs">
+                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.totalValueLabel')}
+              </Label>
+              <CurrencyInput
+                id="value"
+                value={formData.value}
+                onChange={(e) => set({ value: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="horary">{t('pages.loans.form.timeLabel')}</Label>
-          <Input
-            id="horary"
-            type="time"
-            value={formData.horary}
-            onChange={(e) => set({ horary: e.target.value })}
-            required
-          />
-        </div>
+            <div>
+              <Label htmlFor="payed_value" className="flex items-center gap-xs">
+                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.paidValueLabel')}
+                {loan ? ` ${t('pages.loans.form.paidValueCalculated')}` : ' *'}
+              </Label>
+              <CurrencyInput
+                id="payed_value"
+                value={formData.payed_value}
+                onChange={(e) => set({ payed_value: parseFloat(e.target.value) || 0 })}
+                disabled={!!loan}
+                className={loan ? 'cursor-not-allowed bg-muted' : ''}
+              />
+              {loan && (
+                <p className="mt-xs text-xs text-muted-foreground">
+                  {t('pages.loans.form.paidValueNote')}
+                </p>
+              )}
+            </div>
 
-        <div>
-          <Label htmlFor="category">{t('pages.loans.form.categoryLabel')}</Label>
-          <Select
-            value={formData.category}
-            onValueChange={(value) => set({ category: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
-                <SelectItem key={key} value={key}>
-                  {translate('expenseCategories', key)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div>
+              <Label htmlFor="date" className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.dateLabel')}
+              </Label>
+              <DatePicker
+                value={formData.date ?? undefined}
+                onChange={(date) => set({ date: date ? formatLocalDate(date) : '' })}
+                placeholder={t('pages.loans.form.datePlaceholder')}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="account">{t('pages.loans.form.accountLabel')}</Label>
-          <Select
-            value={formData.account.toString()}
-            onValueChange={(value) => set({ account: parseInt(value) })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((acc) => (
-                <SelectItem key={acc.id} value={acc.id.toString()}>
-                  {acc.account_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div>
+              <Label htmlFor="horary" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.timeLabel')}
+              </Label>
+              <Input
+                id="horary"
+                type="time"
+                value={formData.horary}
+                onChange={(e) => set({ horary: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+        </FormSection>
+      )}
 
-        {(!isEditing && formData.loan_type === 'lent') || isEditing ? (
-          <div>
-            <Label htmlFor="benefited">{t('pages.loans.form.benefitedLabel')}</Label>
-            <Select
-              value={formData.benefited.toString()}
-              onValueChange={(value) => set({ benefited: parseInt(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(isEditing
-                  ? members.filter(
-                      (m) => !currentUserMemberId || m.id !== currentUserMemberId
-                    )
-                  : eligibleBeneficiaries
-                ).map((m) => (
-                  <SelectItem key={m.id} value={m.id.toString()}>
-                    {m.name}
+      {/* Etapa 2: Partes & Conta */}
+      {(step === 2 || isEditing) && (
+        <FormSection
+          title={
+            isEditing
+              ? t('common.form.sections.parties')
+              : t('pages.loans.wizard.step2')
+          }
+          icon={Users}
+        >
+          <div className="grid grid-cols-2 gap-md">
+            <div>
+              <Label htmlFor="category" className="flex items-center gap-xs">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.categoryLabel')}
+              </Label>
+              <Select
+                value={formData.category}
+                onValueChange={(value) => set({ category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXPENSE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
+                    <SelectItem key={key} value={key}>
+                      {emoji} {translate('expenseCategories', key)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="account" className="flex items-center gap-xs">
+                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.accountLabel')}
+              </Label>
+              <Select
+                value={formData.account.toString()}
+                onValueChange={(value) => set({ account: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((acc) => (
+                    <SelectItem key={acc.id} value={acc.id.toString()}>
+                      {acc.account_name}
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {parseFloat(acc.balance).toLocaleString('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        })}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {((!isEditing && formData.loan_type === 'lent') || isEditing) && (
+              <div>
+                <Label htmlFor="benefited" className="flex items-center gap-xs">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.loans.form.benefitedLabel')}
+                </Label>
+                <Select
+                  value={formData.benefited.toString()}
+                  onValueChange={(value) => set({ benefited: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(isEditing
+                      ? members.filter(
+                          (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                        )
+                      : eligibleBeneficiaries
+                    ).map((m) => (
+                      <SelectItem key={m.id} value={m.id.toString()}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {((!isEditing && formData.loan_type === 'borrowed') || isEditing) && (
+              <div>
+                <Label htmlFor="creditor" className="flex items-center gap-xs">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  {t('pages.loans.form.creditorLabel')}
+                </Label>
+                <Select
+                  value={formData.creditor.toString()}
+                  onValueChange={(value) => set({ creditor: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(isEditing
+                      ? members.filter(
+                          (m) => !currentUserMemberId || m.id !== currentUserMemberId
+                        )
+                      : eligibleCreditors
+                    ).map((m) => (
+                      <SelectItem key={m.id} value={m.id.toString()}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="status" className="flex items-center gap-xs">
+                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.statusLabel')}
+              </Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => set({ status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOAN_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {t(`pages.loans.statuses.${status}`, { defaultValue: status })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </FormSection>
+      )}
+
+      {/* Etapa 3: Condições & Extras */}
+      {(step === 3 || isEditing) && (
+        <FormSection
+          title={
+            isEditing
+              ? t('common.form.sections.conditions')
+              : t('pages.loans.wizard.step3')
+          }
+          icon={BadgePercent}
+        >
+          <div className="grid grid-cols-2 gap-md">
+            <div>
+              <Label htmlFor="installments" className="flex items-center gap-xs">
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.installmentsLabel')}
+              </Label>
+              <Input
+                id="installments"
+                type="number"
+                value={formData.installments}
+                onChange={(e) => set({ installments: parseInt(e.target.value) })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="interest_rate" className="flex items-center gap-xs">
+                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.interestRateLabel')}
+              </Label>
+              <Input
+                id="interest_rate"
+                type="number"
+                step="0.01"
+                value={formData.interest_rate ?? ''}
+                onChange={(e) => set({ interest_rate: parseFloat(e.target.value) })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="due_date" className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.dueDateLabel')}
+              </Label>
+              <DatePicker
+                value={formData.due_date ?? undefined}
+                onChange={(date) =>
+                  set({ due_date: date ? formatLocalDate(date) : '' })
+                }
+                placeholder={t('pages.loans.form.dueDatePlaceholder')}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="payment_frequency" className="flex items-center gap-xs">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.paymentFrequencyLabel')}
+              </Label>
+              <Select
+                value={formData.payment_frequency}
+                onValueChange={(value) => set({ payment_frequency: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_FREQUENCIES.map((freq) => (
+                    <SelectItem key={freq} value={freq}>
+                      {t(`pages.loans.frequencies.${freq}`, { defaultValue: freq })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="late_fee" className="flex items-center gap-xs">
+                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.lateFeeLabel')}
+              </Label>
+              <CurrencyInput
+                id="late_fee"
+                value={formData.late_fee}
+                onChange={(e) => set({ late_fee: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="guarantor" className="flex items-center gap-xs">
+                <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.guarantorLabel')}
+              </Label>
+              <Select
+                value={formData.guarantor?.toString() ?? 'none'}
+                onValueChange={(value) =>
+                  set({ guarantor: value === 'none' ? null : parseInt(value) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.actions.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    {t('pages.loans.form.guarantorNone')}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
+                  {members.map((m) => (
+                    <SelectItem key={m.id} value={m.id.toString()}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        {(!isEditing && formData.loan_type === 'borrowed') || isEditing ? (
-          <div>
-            <Label htmlFor="creditor">{t('pages.loans.form.creditorLabel')}</Label>
-            <Select
-              value={formData.creditor.toString()}
-              onValueChange={(value) => set({ creditor: parseInt(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(isEditing
-                  ? members.filter(
-                      (m) => !currentUserMemberId || m.id !== currentUserMemberId
-                    )
-                  : eligibleCreditors
-                ).map((m) => (
-                  <SelectItem key={m.id} value={m.id.toString()}>
-                    {m.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : null}
+            <div className="col-span-2">
+              <Label htmlFor="notes" className="flex items-center gap-xs">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.notesLabel')}
+              </Label>
+              <Textarea
+                id="notes"
+                value={formData.notes ?? ''}
+                onChange={(e) => set({ notes: e.target.value })}
+                rows={3}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="installments">
-            {t('pages.loans.form.installmentsLabel')}
-          </Label>
-          <Input
-            id="installments"
-            type="number"
-            value={formData.installments}
-            onChange={(e) => set({ installments: parseInt(e.target.value) })}
-          />
-        </div>
+            <div className="col-span-2">
+              <Label htmlFor="contract_document" className="flex items-center gap-xs">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.loans.form.contractDocumentLabel')}
+              </Label>
+              <FileInput
+                id="contract_document"
+                onChange={(file) => set({ contract_document: file ?? null })}
+              />
+            </div>
 
-        <div>
-          <Label htmlFor="interest_rate">
-            {t('pages.loans.form.interestRateLabel')}
-          </Label>
-          <Input
-            id="interest_rate"
-            type="number"
-            step="0.01"
-            value={formData.interest_rate ?? ''}
-            onChange={(e) => set({ interest_rate: parseFloat(e.target.value) })}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="due_date">{t('pages.loans.form.dueDateLabel')}</Label>
-          <DatePicker
-            value={formData.due_date ?? undefined}
-            onChange={(date) => set({ due_date: date ? formatLocalDate(date) : '' })}
-            placeholder={t('pages.loans.form.dueDatePlaceholder')}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="payment_frequency">
-            {t('pages.loans.form.paymentFrequencyLabel')}
-          </Label>
-          <Select
-            value={formData.payment_frequency}
-            onValueChange={(value) => set({ payment_frequency: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAYMENT_FREQUENCIES.map((freq) => (
-                <SelectItem key={freq} value={freq}>
-                  {t(`pages.loans.frequencies.${freq}`, { defaultValue: freq })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="late_fee">{t('pages.loans.form.lateFeeLabel')}</Label>
-          <Input
-            id="late_fee"
-            type="number"
-            step="0.01"
-            value={formData.late_fee}
-            onChange={(e) => set({ late_fee: parseFloat(e.target.value) })}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="status">{t('pages.loans.form.statusLabel')}</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value) => set({ status: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {LOAN_STATUSES.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {t(`pages.loans.statuses.${status}`, { defaultValue: status })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="guarantor">{t('pages.loans.form.guarantorLabel')}</Label>
-          <Select
-            value={formData.guarantor?.toString() ?? 'none'}
-            onValueChange={(value) =>
-              set({ guarantor: value === 'none' ? null : parseInt(value) })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">
-                {t('pages.loans.form.guarantorNone')}
-              </SelectItem>
-              {members.map((m) => (
-                <SelectItem key={m.id} value={m.id.toString()}>
-                  {m.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="col-span-2">
-          <Label htmlFor="notes">{t('pages.loans.form.notesLabel')}</Label>
-          <Textarea
-            id="notes"
-            value={formData.notes ?? ''}
-            onChange={(e) => set({ notes: e.target.value })}
-            rows={3}
-          />
-        </div>
-
-        <div className="col-span-2">
-          <Label htmlFor="contract_document">
-            {t('pages.loans.form.contractDocumentLabel')}
-          </Label>
-          <FileInput
-            id="contract_document"
-            onChange={(file) => set({ contract_document: file ?? null })}
-          />
-        </div>
-
-        <div className="col-span-2 flex items-center gap-sm">
-          <input
-            type="checkbox"
-            id="payed"
-            checked={formData.payed}
-            onChange={(e) => set({ payed: e.target.checked })}
-            className="rounded"
-          />
-          <Label htmlFor="payed" className="cursor-pointer">
-            {t('pages.loans.form.loanPaidLabel')}
-          </Label>
-        </div>
-
-        {!isEditing && formData.loan_type === 'borrowed' && (
-          <div className="col-span-2 space-y-xs rounded-md border p-sm">
-            <div className="flex items-center gap-sm">
+            <div className="col-span-2 flex items-center gap-sm">
               <input
                 type="checkbox"
-                id="generate_revenue"
-                checked={formData.generate_revenue ?? false}
-                onChange={(e) => set({ generate_revenue: e.target.checked })}
+                id="payed"
+                checked={formData.payed}
+                onChange={(e) => set({ payed: e.target.checked })}
                 className="rounded"
               />
-              <Label htmlFor="generate_revenue" className="cursor-pointer">
-                {t('pages.loans.form.generateRevenueLabel')}
+              <Label htmlFor="payed" className="cursor-pointer">
+                {t('pages.loans.form.loanPaidLabel')}
               </Label>
             </div>
-            {formData.generate_revenue && (
-              <p className="text-xs text-muted-foreground">
-                {t('pages.loans.form.generateRevenueHint')}
-              </p>
-            )}
-          </div>
-        )}
 
-        {!isEditing && formData.loan_type === 'lent' && (
-          <div className="col-span-2 space-y-xs rounded-md border p-sm">
-            <div className="flex items-center gap-sm">
-              <input
-                type="checkbox"
-                id="generate_expense"
-                checked={formData.generate_expense ?? false}
-                onChange={(e) => set({ generate_expense: e.target.checked })}
-                className="rounded"
-              />
-              <Label htmlFor="generate_expense" className="cursor-pointer">
-                {t('pages.loans.form.generateExpenseLabel')}
-              </Label>
-            </div>
-            {formData.generate_expense && (
-              <p className="text-xs text-muted-foreground">
-                {t('pages.loans.form.generateExpenseHint')}
-              </p>
+            {!isEditing && formData.loan_type === 'borrowed' && (
+              <div className="col-span-2 space-y-xs rounded-md border p-sm">
+                <div className="flex items-center gap-sm">
+                  <input
+                    type="checkbox"
+                    id="generate_revenue"
+                    checked={formData.generate_revenue ?? false}
+                    onChange={(e) => set({ generate_revenue: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="generate_revenue" className="cursor-pointer">
+                    {t('pages.loans.form.generateRevenueLabel')}
+                  </Label>
+                </div>
+                {formData.generate_revenue && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.loans.form.generateRevenueHint')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!isEditing && formData.loan_type === 'lent' && (
+              <div className="col-span-2 space-y-xs rounded-md border p-sm">
+                <div className="flex items-center gap-sm">
+                  <input
+                    type="checkbox"
+                    id="generate_expense"
+                    checked={formData.generate_expense ?? false}
+                    onChange={(e) => set({ generate_expense: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="generate_expense" className="cursor-pointer">
+                    {t('pages.loans.form.generateExpenseLabel')}
+                  </Label>
+                </div>
+                {formData.generate_expense && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.loans.form.generateExpenseHint')}
+                  </p>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </FormSection>
+      )}
 
       {balanceInfo && formData.value > 0 && (
         <div
@@ -558,6 +716,11 @@ export function LoanForm({
       )}
 
       <div className="flex justify-end gap-sm border-t pt-md">
+        {step > 1 && !isEditing && (
+          <Button type="button" variant="outline" onClick={() => setStep((s) => s - 1)}>
+            {t('common.actions.back')}
+          </Button>
+        )}
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('common.actions.cancel')}
         </Button>
@@ -569,6 +732,11 @@ export function LoanForm({
             <>
               <Loader2 className="mr-sm h-4 w-4 animate-spin" />
               {t('common.actions.saving')}
+            </>
+          ) : !isEditing && step < totalSteps ? (
+            <>
+              {t('pages.loans.wizard.next')}
+              <ArrowRight className="ml-sm h-4 w-4" />
             </>
           ) : (
             t('common.actions.save')

@@ -122,11 +122,11 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
   });
 
   return (
-    <Document title="Rotina Semanal — MindLedger" author="MindLedger">
+    <Document title="Rotina Semanal — Axiom" author="Axiom">
       <Page size="A4" style={s.page}>
         {/* Header */}
         <View style={s.header}>
-          <Text style={s.brand}>MindLedger</Text>
+          <Text style={s.brand}>Axiom</Text>
           <View style={s.headerRight}>
             <Text style={s.headerTitle}>Rotina Semanal</Text>
             {ownerName && <Text style={s.headerSub}>{ownerName}</Text>}

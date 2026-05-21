@@ -1,4 +1,4 @@
-# Runbook de Rollback — MindLedger
+# Runbook de Rollback — Axiom
 
 Este documento descreve os procedimentos de rollback disponíveis para os
 ambientes de **staging** e **produção**, tanto os acionados automaticamente
@@ -28,10 +28,10 @@ para a revisão anterior via `kubectl rollout undo`.
 ### O que o job faz
 
 ```bash
-kubectl -n mindledger-staging rollout undo deployment/api
-kubectl -n mindledger-staging rollout undo deployment/frontend
-kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-kubectl -n mindledger-staging rollout status deployment/frontend --timeout=60s
+kubectl -n axiom-staging rollout undo deployment/api
+kubectl -n axiom-staging rollout undo deployment/frontend
+kubectl -n axiom-staging rollout status deployment/api --timeout=120s
+kubectl -n axiom-staging rollout status deployment/frontend --timeout=60s
 ```
 
 ---
@@ -52,18 +52,18 @@ testes de carga ou nos testes E2E.
 ### O que o job faz
 
 Idêntico ao rollback automático — reverte `deployment/api` e
-`deployment/frontend` no namespace `mindledger-staging` para a revisão
+`deployment/frontend` no namespace `axiom-staging` para a revisão
 Kubernetes anterior.
 
 ### Verificação pós-rollback
 
 ```bash
 # Confirmar que os pods estão Running
-kubectl -n mindledger-staging get pods
+kubectl -n axiom-staging get pods
 
 # Confirmar a revisão ativa
-kubectl -n mindledger-staging rollout history deployment/api
-kubectl -n mindledger-staging rollout history deployment/frontend
+kubectl -n axiom-staging rollout history deployment/api
+kubectl -n axiom-staging rollout history deployment/frontend
 
 # Re-executar os smoke tests manualmente
 curl -s -o /dev/null -w "%{http_code}" https://staging.example.com/health/
@@ -114,29 +114,29 @@ Usa a mesma lógica do rollback automático:
 
 ```bash
 # Determina o slot ativo
-CURRENT_SLOT=$(kubectl -n mindledger get svc api-service \
+CURRENT_SLOT=$(kubectl -n axiom get svc api-service \
   -o jsonpath='{.spec.selector.slot}')
 
 # Escala o slot anterior, redireciona o tráfego, escala o atual para 0
-kubectl -n mindledger scale deployment/api-$ROLLBACK_SLOT --replicas=1
-kubectl -n mindledger patch svc api-service \
+kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+kubectl -n axiom patch svc api-service \
   --type=merge \
   -p '{"spec":{"selector":{"app":"api","slot":"$ROLLBACK_SLOT"}}}'
-kubectl -n mindledger scale deployment/api-$CURRENT_SLOT --replicas=0
+kubectl -n axiom scale deployment/api-$CURRENT_SLOT --replicas=0
 
 # Reverte o frontend
-kubectl -n mindledger rollout undo deployment/frontend
+kubectl -n axiom rollout undo deployment/frontend
 ```
 
 ### Verificação pós-rollback
 
 ```bash
 # Confirmar que o slot correto está recebendo tráfego
-kubectl -n mindledger get svc api-service \
+kubectl -n axiom get svc api-service \
   -o jsonpath='{.spec.selector.slot}'
 
 # Confirmar que os pods do slot ativo estão Running
-kubectl -n mindledger get pods -l app=api
+kubectl -n axiom get pods -l app=api
 
 # Re-executar smoke checks manualmente
 curl -s -o /dev/null -w "%{http_code}" https://example.com/health/
@@ -153,17 +153,17 @@ via `kubectl` direto:
 ### Staging
 
 ```bash
-kubectl -n mindledger-staging rollout undo deployment/api
-kubectl -n mindledger-staging rollout undo deployment/frontend
-kubectl -n mindledger-staging rollout status deployment/api --timeout=120s
-kubectl -n mindledger-staging rollout status deployment/frontend --timeout=60s
+kubectl -n axiom-staging rollout undo deployment/api
+kubectl -n axiom-staging rollout undo deployment/frontend
+kubectl -n axiom-staging rollout status deployment/api --timeout=120s
+kubectl -n axiom-staging rollout status deployment/frontend --timeout=60s
 ```
 
 ### Produção (blue-green)
 
 ```bash
 # 1. Identificar o slot ativo
-CURRENT_SLOT=$(kubectl -n mindledger get svc api-service \
+CURRENT_SLOT=$(kubectl -n axiom get svc api-service \
   -o jsonpath='{.spec.selector.slot}')
 echo "Slot ativo: $CURRENT_SLOT"
 
@@ -171,20 +171,20 @@ echo "Slot ativo: $CURRENT_SLOT"
 if [ "$CURRENT_SLOT" = "blue" ]; then ROLLBACK_SLOT="green"; else ROLLBACK_SLOT="blue"; fi
 
 # 3. Escalar o slot de rollback
-kubectl -n mindledger scale deployment/api-$ROLLBACK_SLOT --replicas=1
-kubectl -n mindledger rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
+kubectl -n axiom scale deployment/api-$ROLLBACK_SLOT --replicas=1
+kubectl -n axiom rollout status deployment/api-$ROLLBACK_SLOT --timeout=120s
 
 # 4. Redirecionar o tráfego
-kubectl -n mindledger patch svc api-service \
+kubectl -n axiom patch svc api-service \
   --type=merge \
   -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
 
 # 5. Escalar o slot problemático para 0
-kubectl -n mindledger scale deployment/api-$CURRENT_SLOT --replicas=0
+kubectl -n axiom scale deployment/api-$CURRENT_SLOT --replicas=0
 
 # 6. Reverter o frontend
-kubectl -n mindledger rollout undo deployment/frontend
-kubectl -n mindledger rollout status deployment/frontend --timeout=60s
+kubectl -n axiom rollout undo deployment/frontend
+kubectl -n axiom rollout status deployment/frontend --timeout=60s
 ```
 
 ---
@@ -193,17 +193,17 @@ kubectl -n mindledger rollout status deployment/frontend --timeout=60s
 
 ```bash
 # Ver histórico de revisões
-kubectl -n mindledger rollout history deployment/api
-kubectl -n mindledger rollout history deployment/frontend
+kubectl -n axiom rollout history deployment/api
+kubectl -n axiom rollout history deployment/frontend
 
 # Ver qual imagem está rodando em cada slot (produção)
-kubectl -n mindledger get deployment api-blue \
+kubectl -n axiom get deployment api-blue \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
-kubectl -n mindledger get deployment api-green \
+kubectl -n axiom get deployment api-green \
   -o jsonpath='{.spec.template.spec.containers[0].image}'
 
 # Ver eventos recentes do namespace
-kubectl -n mindledger get events --sort-by='.lastTimestamp' | tail -20
+kubectl -n axiom get events --sort-by='.lastTimestamp' | tail -20
 ```
 
 ---

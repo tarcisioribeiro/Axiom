@@ -1,6 +1,6 @@
 # Backend Django
 
-Documentação técnica do backend Django REST Framework do MindLedger.
+Documentação técnica do backend Django REST Framework do Axiom.
 
 **Stack**: Django 5.x + DRF · PostgreSQL 16 · Redis · MinIO · JWT HttpOnly cookies · Fernet encryption
 

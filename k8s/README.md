@@ -1,4 +1,4 @@
-# Kubernetes Deployment — MindLedger
+# Kubernetes Deployment — Axiom
 
 ## Prerequisites
 
@@ -49,7 +49,7 @@ kubectl apply -f k8s/minio/tls.yaml          # creates internal-ca-issuer + mini
 kubectl wait --namespace cert-manager \
   --for=condition=Ready certificate/minio-internal-ca \
   --timeout=60s
-kubectl wait --namespace mindledger \
+kubectl wait --namespace axiom \
   --for=condition=Ready certificate/minio-tls \
   --timeout=60s
 
@@ -119,7 +119,7 @@ Required environment variables for secrets:
 ### Step 4 — Create the GitLab registry pull secret
 
 ```bash
-kubectl -n mindledger-staging create secret docker-registry gitlab-registry-secret \
+kubectl -n axiom-staging create secret docker-registry gitlab-registry-secret \
   --docker-server=registry.tjtux.duckdns.org \
   --docker-username=<gitlab-user> \
   --docker-password=<gitlab-deploy-token>
@@ -131,12 +131,12 @@ kubectl -n mindledger-staging create secret docker-registry gitlab-registry-secr
 
 ```bash
 kubectl apply -f k8s/staging/minio/tls.yaml
-kubectl wait --namespace mindledger-staging \
+kubectl wait --namespace axiom-staging \
   --for=condition=Ready certificate/minio-tls \
   --timeout=60s
 
 # Confirm the secret exists before proceeding
-kubectl -n mindledger-staging get secret minio-tls
+kubectl -n axiom-staging get secret minio-tls
 ```
 
 ### Step 6 — Apply stateful services
@@ -151,19 +151,19 @@ kubectl apply -f k8s/staging/minio/
 
 ```bash
 # All pods should be Running
-kubectl -n mindledger-staging get pods
+kubectl -n axiom-staging get pods
 
 # minio-tls secret must exist
-kubectl -n mindledger-staging get secret minio-tls
+kubectl -n axiom-staging get secret minio-tls
 
 # gitlab-registry-secret must exist
-kubectl -n mindledger-staging get secret gitlab-registry-secret
+kubectl -n axiom-staging get secret gitlab-registry-secret
 
-# mindledger-secrets must exist
-kubectl -n mindledger-staging get secret mindledger-secrets
+# axiom-secrets must exist
+kubectl -n axiom-staging get secret axiom-secrets
 
-# mindledger-config ConfigMap must exist
-kubectl -n mindledger-staging get configmap mindledger-config
+# axiom-config ConfigMap must exist
+kubectl -n axiom-staging get configmap axiom-config
 ```
 
 Once all checks pass, the `deploy:staging` CI/CD job (triggered on every push to `develop`) will manage the Application deployments automatically.
@@ -180,8 +180,8 @@ minio-selfsigned-issuer  (ClusterIssuer, self-signed bootstrap)
   └── minio-internal-ca  (Certificate, isCA=true, in cert-manager namespace)
         └── internal-ca-issuer  (ClusterIssuer, CA-backed)
               └── minio-tls  (Certificate, per-namespace)
-                    staging:    mindledger-staging/minio-tls
-                    production: mindledger/minio-tls
+                    staging:    axiom-staging/minio-tls
+                    production: axiom/minio-tls
 ```
 
 The `minio-tls` Secret contains three keys:
@@ -217,8 +217,8 @@ error: deployment "api" exceeded its progress deadline
 
 **Diagnosis**:
 ```bash
-kubectl -n mindledger-staging describe pod -l app=api
-kubectl -n mindledger-staging get events --sort-by='.lastTimestamp'
+kubectl -n axiom-staging describe pod -l app=api
+kubectl -n axiom-staging get events --sort-by='.lastTimestamp'
 ```
 
 **Common causes and fixes**:
@@ -229,10 +229,10 @@ With `strategy: Recreate`, Kubernetes terminates the old pod before creating a n
 
 ```bash
 # Identify stuck pod
-kubectl -n mindledger-staging get pods
+kubectl -n axiom-staging get pods
 
 # Force-delete it
-kubectl -n mindledger-staging delete pod <pod-name> --force --grace-period=0
+kubectl -n axiom-staging delete pod <pod-name> --force --grace-period=0
 ```
 
 After force-deleting, re-trigger the pipeline.
@@ -242,7 +242,7 @@ After force-deleting, re-trigger the pipeline.
 The API deployment mounts `ca.crt` from the `minio-tls` secret. If cert-manager never issued the certificate, the pod cannot be scheduled.
 
 ```bash
-kubectl -n mindledger-staging get secret minio-tls
+kubectl -n axiom-staging get secret minio-tls
 ```
 
 If not found, follow **Staging — One-time Setup, Step 5** above.
@@ -252,7 +252,7 @@ If not found, follow **Staging — One-time Setup, Step 5** above.
 The pod cannot pull its image from the private registry.
 
 ```bash
-kubectl -n mindledger-staging get secret gitlab-registry-secret
+kubectl -n axiom-staging get secret gitlab-registry-secret
 ```
 
 If missing or expired, recreate it (see **Step 4** above).
@@ -260,7 +260,7 @@ If missing or expired, recreate it (see **Step 4** above).
 #### 4. Resource quota exceeded
 
 ```bash
-kubectl -n mindledger-staging describe resourcequota
+kubectl -n axiom-staging describe resourcequota
 ```
 
 If the namespace quota is exhausted, clean up unused resources or adjust the quota in `k8s/staging/resource-quota.yaml`.
@@ -269,11 +269,11 @@ If the namespace quota is exhausted, clean up unused resources or adjust the quo
 
 ```bash
 # Events and conditions
-kubectl -n mindledger-staging describe pod -l app=api
+kubectl -n axiom-staging describe pod -l app=api
 
 # Current logs
-kubectl -n mindledger-staging logs -l app=api
+kubectl -n axiom-staging logs -l app=api
 
 # Logs from a crashed previous instance
-kubectl -n mindledger-staging logs -l app=api --previous
+kubectl -n axiom-staging logs -l app=api --previous
 ```

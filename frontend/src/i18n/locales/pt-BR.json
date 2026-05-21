@@ -149,6 +149,23 @@
       "loadingProjected": "Calculando saldo projetado...",
       "projectedOn": "Saldo projetado em {{date}}: {{balance}}",
       "projectedUnavailable": "Saldo projetado não disponível."
+    },
+    "form": {
+      "sections": {
+        "basicInfo": "Informações Básicas",
+        "values": "Valores",
+        "schedule": "Data e Horário",
+        "classification": "Classificação",
+        "links": "Vínculos (Opcional)",
+        "cardData": "Dados do Cartão",
+        "cardSettings": "Configurações do Cartão",
+        "parties": "Partes Envolvidas",
+        "conditions": "Condições",
+        "extras": "Extras",
+        "paymentType": "Tipo de Pagamento",
+        "paymentConfig": "Configuração",
+        "configuration": "Configuração"
+      }
     }
   },
   "nav": {
@@ -488,7 +505,9 @@
         "numberPlaceholder": "Ex: 12345-6",
         "balanceLabel": "Saldo Inicial",
         "balanceMinHint": "Saldo mínimo permitido:",
-        "overdraftLabel": "Limite de Cheque Especial"
+        "overdraftLabel": "Limite de Cheque Especial",
+        "numberHiddenPlaceholder": "•••• •••• (oculto por segurança)",
+        "previewTitle": "Prévia da Conta"
       },
       "imports": {
         "file": "Arquivo",
@@ -687,7 +706,17 @@
         "originAccountPlaceholder": "Selecione",
         "destinyAccountLabel": "Conta de Destino *",
         "destinyAccountPlaceholder": "Selecione",
-        "transferedLabel": "Transferência realizada?"
+        "transferedLabel": "Transferência realizada?",
+        "swapAccounts": "Trocar contas",
+        "flowLabel": "Fluxo da Transferência",
+        "flowFrom": "De",
+        "flowTo": "Para",
+        "transferTypes": {
+          "pix": "PIX",
+          "ted": "TED",
+          "doc": "DOC",
+          "internal": "Interna"
+        }
       }
     },
     "loans": {
@@ -798,6 +827,13 @@
         "generateRevenueHint": "Uma receita vinculada a este empréstimo será criada na conta selecionada.",
         "generateExpenseLabel": "Gerar despesa ao registrar",
         "generateExpenseHint": "Uma despesa vinculada a este empréstimo será criada na conta selecionada. O saldo da conta será validado."
+      },
+      "wizard": {
+        "step1": "Tipo & Valor",
+        "step2": "Partes & Conta",
+        "step3": "Condições & Extras",
+        "next": "Próximo",
+        "stepOf": "Etapa {{current}} de {{total}}"
       },
       "frequencies": {
         "daily": "Diário",
@@ -1040,7 +1076,11 @@
         "dueDayLabel": "Dia de Vencimento *",
         "closingDayLabel": "Dia de Fechamento *",
         "interestRateLabel": "Taxa de Juros (%) Anual",
-        "annualFeeLabel": "Anuidade"
+        "annualFeeLabel": "Anuidade",
+        "tabCardData": "Dados do Cartão",
+        "tabSettings": "Configurações",
+        "cardPreviewTitle": "Prévia do Cartão",
+        "cardNumberHiddenHint": "Número oculto — preencha para alterar"
       },
       "stats": {
         "registeredSubtitle": "cartões cadastrados",
@@ -1230,7 +1270,7 @@
         "installmentsLabel": "Número de Parcelas *",
         "installmentsWarning": "Parcelas não podem ser alteradas após criação",
         "paymentSight": "Pagamento à vista",
-        "installmentsSummary": "{{total}} em {{count}}x de {{value}}",
+        "installmentsSummary": "{{total}} em {{count}}x de {{installmentValue}}",
         "merchantLabel": "Estabelecimento",
         "merchantPlaceholder": "Ex: Supermercado XYZ",
         "notesLabel": "Observações",
@@ -1244,7 +1284,8 @@
         "none": "Nenhum",
         "noCardNumber": "Número não cadastrado",
         "cashPayment": "À vista",
-        "exceedsLimitBy": "Valor excede o limite em {{value}}"
+        "exceedsLimitBy": "Valor excede o limite em {{value}}",
+        "billAssociatedLabel": "Fatura Associada"
       },
       "installmentForm": {
         "purchaseLabel": "Compra",
@@ -1344,7 +1385,12 @@
         "categoryLabel": "Categoria *",
         "statusLabel": "Status",
         "notesLabel": "Observações",
-        "notesPlaceholder": "Informações adicionais sobre este valor a pagar"
+        "notesPlaceholder": "Informações adicionais sobre este valor a pagar",
+        "dueDaysLabel": "Vence em {{days}} dias",
+        "dueTodayLabel": "Vence hoje",
+        "overdueLabel": "Vencido há {{days}} dia(s)",
+        "progressLabel": "{{paid}} de {{total}} pagos",
+        "paymentProgress": "Progresso do pagamento"
       }
     },
     "budgets": {
@@ -1564,6 +1610,15 @@
       "yieldRateLabel": "Taxa de Rendimento (% ao ano)",
       "yieldRateHint": "Deixe 0 para cofres sem rendimento. Ex: 12 = 12% ao ano",
       "activeVault": "Cofre ativo",
+      "activeVaultDesc": "Este cofre está ativo e aparece nos relatórios",
+      "inactiveVaultDesc": "Este cofre está inativo e não aparece nos relatórios",
+      "estimatedYield": "Rendimento Estimado",
+      "monthlyYield": "Mensal",
+      "annualYield": "Anual",
+      "form": {
+        "descriptionPlaceholder": "Ex: Reserva de Emergência",
+        "notesPlaceholder": "Anotações sobre o cofre..."
+      },
       "depositVaultDesc": "Depositar no cofre \"{{name}}\".",
       "availableAccountBalance": "Saldo disponível na conta:",
       "depositAmountLabel": "Valor do Depósito *",
@@ -1662,6 +1717,8 @@
       "associatedVaults": "Cofres Associados",
       "noVaults": "Nenhum cofre disponível",
       "activeGoal": "Meta ativa",
+      "activeGoalDesc": "Esta meta está ativa e sendo monitorada",
+      "inactiveGoalDesc": "Esta meta está pausada e não aparece no painel",
       "yields": "rendimentos",
       "columns": {
         "description": "Descrição",
@@ -1904,7 +1961,7 @@
         "colValue": "Valor",
         "noTransactions": "Nenhum lançamento encontrado no período.",
         "periodBalance": "Saldo do período",
-        "footer": "Documento gerado automaticamente pelo sistema MindLedger",
+        "footer": "Documento gerado automaticamente pelo sistema Axiom",
         "page": "Página",
         "of": "de"
       },
@@ -2171,7 +2228,12 @@
         "financeCardLabel": "Cartão Financeiro",
         "financeCardHint": "Associe a um cartão do módulo financeiro para integração.",
         "keepCurrentNumber": "Deixe vazio para manter o número atual",
-        "keepCurrentCvv": "Deixe vazio para manter o CVV atual"
+        "keepCurrentCvv": "Deixe vazio para manter o CVV atual",
+        "sectionIdentification": "Identificação",
+        "sectionSensitive": "Dados Sensíveis",
+        "sectionExpiry": "Validade",
+        "sectionLink": "Vínculo Financeiro",
+        "sectionNotes": "Notas"
       },
       "otherBrand": "Outro"
     },
@@ -2237,7 +2299,12 @@
         "financeAccountHint": "Associe a uma conta do módulo financeiro para integração.",
         "password1EditPlaceholder": "Deixe vazio para manter a atual",
         "password2EditPlaceholder": "Deixe vazio para manter a atual",
-        "keepCurrentPassword": "Deixe vazio para manter a senha atual"
+        "keepCurrentPassword": "Deixe vazio para manter a senha atual",
+        "sectionIdentification": "Identificação",
+        "sectionAccountData": "Dados da Conta",
+        "sectionPasswords": "Senhas",
+        "sectionLink": "Vínculo Financeiro",
+        "sectionNotes": "Notas"
       }
     },
     "archives": {
@@ -2309,7 +2376,10 @@
         "textContentHint": "O texto será criptografado antes de ser armazenado",
         "alertSelectFile": "Por favor, selecione um arquivo.",
         "alertEnterText": "Por favor, insira o conteúdo do texto.",
-        "alertTextNotEmpty": "Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo."
+        "alertTextNotEmpty": "Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.",
+        "sectionIdentification": "Identificação",
+        "sectionTypeContent": "Tipo & Conteúdo",
+        "sectionOrganization": "Organização"
       }
     },
     "passwordGenerator": {
@@ -2434,7 +2504,9 @@
           "magazine": "Revista",
           "article": "Artigo",
           "essay": "Ensaio"
-        }
+        },
+        "sectionGoal": "Meta Anual",
+        "sectionQuantities": "Quantidades"
       },
       "exportCSV": "Exportar CSV",
       "exportCSVTitle": "Exportar estatísticas em CSV",
@@ -2553,7 +2625,13 @@
         "pauseReasonPlaceholder": "Por que pausou a leitura? (opcional)",
         "ratingLabel": "Avaliação",
         "synopsisLabel": "Sinopse *",
-        "synopsisPlaceholder": "Descrição do livro..."
+        "synopsisPlaceholder": "Descrição do livro...",
+        "sectionIdentification": "Identificação",
+        "sectionClassification": "Classificação",
+        "sectionAuthorPublisher": "Autoria & Publicação",
+        "sectionReading": "Leitura",
+        "sectionSynopsis": "Sinopse",
+        "readStatusLabel": "Status de Leitura"
       },
       "detail": {
         "tabInfo": "Informações",
@@ -2639,7 +2717,13 @@
         "paused": "Pausado"
       },
       "booksCount_one": "{{count}} livro",
-      "booksCount_other": "{{count}} livros"
+      "booksCount_other": "{{count}} livros",
+      "readStatus": {
+        "to_read": "A Ler",
+        "reading": "Lendo",
+        "read": "Lido",
+        "paused": "Pausado"
+      }
     },
     "authors": {
       "title": "Autores",
@@ -2676,7 +2760,10 @@
         "deathEraPlaceholder": "Selecione a era (opcional)",
         "nationalityLabel": "Nacionalidade *",
         "biographyLabel": "Biografia",
-        "biographyPlaceholder": "Informações sobre o autor..."
+        "biographyPlaceholder": "Informações sobre o autor...",
+        "sectionPersonal": "Dados Pessoais",
+        "sectionLifeDates": "Datas de Vida",
+        "sectionAbout": "Sobre o Autor"
       },
       "eras": {
         "DC": "Depois de Cristo (DC)",
@@ -2752,7 +2839,9 @@
         "countryLabel": "País *",
         "websiteLabel": "Website",
         "websitePlaceholder": "https://exemplo.com.br",
-        "foundedYearLabel": "Ano de Fundação"
+        "foundedYearLabel": "Ano de Fundação",
+        "sectionIdentification": "Identificação",
+        "sectionInfo": "Informações"
       },
       "countries": {
         "BRA": "Brasil",
@@ -2830,7 +2919,10 @@
         "timeOfDayEvening": "Noite",
         "timeOfDayDawn": "Madrugada",
         "notesLabel": "Anotações",
-        "notesPlaceholder": "Anotações sobre esta sessão de leitura..."
+        "notesPlaceholder": "Anotações sobre esta sessão de leitura...",
+        "sectionProgress": "Progresso",
+        "sectionRecord": "Registro da Sessão",
+        "sectionNotes": "Notas"
       }
     },
     "readingQueue": {
@@ -3099,7 +3191,11 @@
           "4": "Sexta-feira",
           "5": "Sábado",
           "6": "Domingo"
-        }
+        },
+        "sectionIdentification": "Identificação",
+        "sectionPeriodicity": "Periodicidade",
+        "sectionGoalUnit": "Meta & Unidade",
+        "sectionBehavior": "Comportamento"
       }
     },
     "goals": {
@@ -3163,7 +3259,11 @@
           "completed": "Concluído",
           "failed": "Falhou",
           "cancelled": "Cancelado"
-        }
+        },
+        "sectionIdentification": "Identificação",
+        "sectionConfig": "Configuração",
+        "sectionPeriod": "Período",
+        "sectionStatus": "Status"
       },
       "goalTypes": {
         "consecutive_days": "Dias Consecutivos",
@@ -3235,7 +3335,7 @@
     },
     "permissions": {
       "title": "Gerenciamento de Permissões",
-      "subtitle": "Controle o acesso dos membros aos diferentes módulos do MindLedger",
+      "subtitle": "Controle o acesso dos membros aos diferentes módulos do Axiom",
       "membersTitle": "Membros",
       "membersDesc": "Selecione um membro para gerenciar suas permissões",
       "noMembers": "Nenhum membro cadastrado",
@@ -3315,7 +3415,9 @@
         "moodPlaceholder": "Selecione o humor",
         "cancel": "Cancelar",
         "save": "Salvar",
-        "saving": "Salvando..."
+        "saving": "Salvando...",
+        "sectionReflection": "Reflexão & Data",
+        "reflectionPlaceholder": "Escreva sua reflexão do dia, pensamentos, aprendizados..."
       }
     },
     "todayTasks": {
@@ -3481,7 +3583,7 @@
     },
     "agents": {
       "title": "Agentes IA",
-      "subtitle": "Converse com os agentes inteligentes do MindLedger",
+      "subtitle": "Converse com os agentes inteligentes do Axiom",
       "newSession": "Nova sessão",
       "clearHistory": "Limpar histórico",
       "clearConfirm": "Deseja apagar todas as mensagens desta sessão?",
@@ -4089,7 +4191,8 @@
         "date": "Data de Registro *",
         "dueDate": "Data de Vencimento",
         "status": "Status",
-        "notes": "Observações"
+        "notes": "Observações",
+        "receivedValue": "Valor Recebido"
       },
       "paidAmount": "{{value}} recebido"
     }

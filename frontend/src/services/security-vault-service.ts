@@ -56,7 +56,7 @@ class VaultConfigService {
     const link = document.createElement('a');
     link.href = url;
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    link.setAttribute('download', `mindledger_vault_${timestamp}.zip`);
+    link.setAttribute('download', `axiom_vault_${timestamp}.zip`);
     document.body.appendChild(link);
     link.click();
     link.remove();

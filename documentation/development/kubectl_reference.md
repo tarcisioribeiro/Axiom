@@ -1,6 +1,6 @@
-# Referência de Comandos kubectl — MindLedger
+# Referência de Comandos kubectl — Axiom
 
-Guia completo de comandos `kubectl` para operar o cluster k3s do MindLedger.
+Guia completo de comandos `kubectl` para operar o cluster k3s do Axiom.
 Todos os comandos assumem acesso ao cluster configurado via `KUBECONFIG`.
 
 ---
@@ -34,8 +34,8 @@ Todos os comandos assumem acesso ao cluster configurado via `KUBECONFIG`.
 
 | Namespace           | Uso                                  |
 |---------------------|--------------------------------------|
-| `mindledger`        | Produção                             |
-| `mindledger-staging`| Staging                              |
+| `axiom`        | Produção                             |
+| `axiom-staging`| Staging                              |
 | `monitoring`        | Prometheus e Grafana                 |
 
 ```bash
@@ -43,36 +43,36 @@ Todos os comandos assumem acesso ao cluster configurado via `KUBECONFIG`.
 kubectl get namespaces
 
 # Ver resumo de todos os recursos de produção
-kubectl get all -n mindledger
+kubectl get all -n axiom
 
 # Ver resumo de todos os recursos de staging
-kubectl get all -n mindledger-staging
+kubectl get all -n axiom-staging
 
 # Ver recursos de um namespace com mais detalhes
-kubectl get all -n mindledger -o wide
+kubectl get all -n axiom -o wide
 ```
 
 ### Deployments do projeto
 
 | Deployment   | Namespace    | Porta      | Notas                          |
 |--------------|--------------|------------|--------------------------------|
-| `postgres`   | mindledger   | 5432       | PostgreSQL 16 + pgvector       |
-| `redis`      | mindledger   | 6379       | Redis 7, autenticado           |
-| `minio`      | mindledger   | 9000/9001  | Object storage, TLS interno    |
-| `api-blue`   | mindledger   | 39100      | Slot blue (blue-green)         |
-| `api-green`  | mindledger   | 39100      | Slot green (blue-green)        |
-| `frontend`   | mindledger   | 80         | Nginx servindo React           |
+| `postgres`   | axiom   | 5432       | PostgreSQL 16 + pgvector       |
+| `redis`      | axiom   | 6379       | Redis 7, autenticado           |
+| `minio`      | axiom   | 9000/9001  | Object storage, TLS interno    |
+| `api-blue`   | axiom   | 39100      | Slot blue (blue-green)         |
+| `api-green`  | axiom   | 39100      | Slot green (blue-green)        |
+| `frontend`   | axiom   | 80         | Nginx servindo React           |
 | `api`        | staging      | 39100      | Deploy simples (sem blue-green)|
 
 ### Services do projeto
 
 | Service             | Namespace  | Porta(s)    |
 |---------------------|------------|-------------|
-| `postgres-service`  | mindledger | 5432        |
-| `redis-service`     | mindledger | 6379        |
-| `minio-service`     | mindledger | 9000, 9001  |
-| `api-service`       | mindledger | 39100       |
-| `frontend-service`  | mindledger | 80          |
+| `postgres-service`  | axiom | 5432        |
+| `redis-service`     | axiom | 6379        |
+| `minio-service`     | axiom | 9000, 9001  |
+| `api-service`       | axiom | 39100       |
+| `frontend-service`  | axiom | 80          |
 
 ---
 
@@ -98,14 +98,14 @@ kubectl get pods -A
 kubectl get pods -A -o wide
 
 # Listar todos os recursos de um namespace
-kubectl get all -n mindledger
+kubectl get all -n axiom
 
 # Listar eventos recentes de um namespace (útil para debug)
-kubectl get events -n mindledger --sort-by='.lastTimestamp'
-kubectl get events -n mindledger --sort-by='.lastTimestamp' | tail -30
+kubectl get events -n axiom --sort-by='.lastTimestamp'
+kubectl get events -n axiom --sort-by='.lastTimestamp' | tail -30
 
 # Listar apenas eventos de Warning
-kubectl get events -n mindledger --field-selector type=Warning
+kubectl get events -n axiom --field-selector type=Warning
 ```
 
 ### Contextos e configuração
@@ -124,7 +124,7 @@ kubectl config use-context <nome-do-contexto>
 kubectl config view
 
 # Definir namespace padrão para o contexto atual (evita repetir -n)
-kubectl config set-context --current --namespace=mindledger
+kubectl config set-context --current --namespace=axiom
 ```
 
 ### Nodes e recursos do cluster
@@ -134,21 +134,21 @@ kubectl config set-context --current --namespace=mindledger
 kubectl top nodes
 
 # Ver uso de recursos dos pods de produção
-kubectl top pods -n mindledger
+kubectl top pods -n axiom
 
 # Ver uso de recursos dos pods de staging
-kubectl top pods -n mindledger-staging
+kubectl top pods -n axiom-staging
 
 # Descrever um nó (eventos, condições, pods alocados)
 kubectl describe node <nome-do-node>
 
 # Ver ResourceQuota do namespace de produção
-kubectl get resourcequota -n mindledger
-kubectl describe resourcequota mindledger-quota -n mindledger
+kubectl get resourcequota -n axiom
+kubectl describe resourcequota axiom-quota -n axiom
 
 # Ver LimitRange (valores default de requests/limits)
-kubectl get limitrange -n mindledger
-kubectl describe limitrange mindledger-limit-range -n mindledger
+kubectl get limitrange -n axiom
+kubectl describe limitrange axiom-limit-range -n axiom
 ```
 
 ---
@@ -159,41 +159,41 @@ kubectl describe limitrange mindledger-limit-range -n mindledger
 
 ```bash
 # Ver o pod do Postgres (produção)
-kubectl get pod -l app=postgres -n mindledger
+kubectl get pod -l app=postgres -n axiom
 
 # Ver detalhes do pod (recursos, volumes, probes, eventos)
-kubectl describe pod -l app=postgres -n mindledger
+kubectl describe pod -l app=postgres -n axiom
 
 # Ver o deployment
-kubectl get deployment postgres -n mindledger
-kubectl describe deployment postgres -n mindledger
+kubectl get deployment postgres -n axiom
+kubectl describe deployment postgres -n axiom
 
 # Ver o service
-kubectl get svc postgres-service -n mindledger
-kubectl describe svc postgres-service -n mindledger
+kubectl get svc postgres-service -n axiom
+kubectl describe svc postgres-service -n axiom
 ```
 
 ### Logs
 
 ```bash
 # Logs em tempo real
-kubectl logs -f -l app=postgres -n mindledger
+kubectl logs -f -l app=postgres -n axiom
 
 # Últimas 100 linhas
-kubectl logs -l app=postgres -n mindledger --tail=100
+kubectl logs -l app=postgres -n axiom --tail=100
 
 # Logs do container anterior (após crash/restart)
-kubectl logs -l app=postgres -n mindledger --previous
+kubectl logs -l app=postgres -n axiom --previous
 ```
 
 ### Port-forward
 
 ```bash
 # Expor PostgreSQL localmente na porta 5432
-kubectl port-forward svc/postgres-service 5432:5432 -n mindledger
+kubectl port-forward svc/postgres-service 5432:5432 -n axiom
 
 # Ou usando a porta local 15432 (evita conflito com Postgres local)
-kubectl port-forward svc/postgres-service 15432:5432 -n mindledger
+kubectl port-forward svc/postgres-service 15432:5432 -n axiom
 
 # Conectar via psql após o port-forward (em outro terminal)
 # Obtendo usuário e senha — ver seção 9 (Secrets e senhas)
@@ -204,29 +204,29 @@ psql -h localhost -p 15432 -U <DB_USER> -d <DB_NAME>
 
 ```bash
 # Abrir psql diretamente no pod
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB
 
 # Executar query rápida sem abrir shell interativo
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt"
 
 # Listar tabelas
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB -c "\dt+"
 
 # Ver tamanho do banco
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB \
   -c "SELECT pg_size_pretty(pg_database_size(current_database()));"
 
 # Ver conexões ativas
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB \
   -c "SELECT count(*), state FROM pg_stat_activity GROUP BY state;"
 ```
@@ -235,14 +235,14 @@ kubectl exec -n mindledger \
 
 ```bash
 # Dump do banco para arquivo local (produção)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom \
   > backup_manual_$(date +%Y%m%d_%H%M%S).dump
 
 # Dump em formato SQL puro
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- pg_dump -U $POSTGRES_USER -d $POSTGRES_DB \
   > backup_manual_$(date +%Y%m%d_%H%M%S).sql
 ```
@@ -251,14 +251,14 @@ kubectl exec -n mindledger \
 
 ```bash
 # Restaurar dump (formato custom) — via port-forward
-kubectl port-forward svc/postgres-service 15432:5432 -n mindledger &
+kubectl port-forward svc/postgres-service 15432:5432 -n axiom &
 pg_restore -h localhost -p 15432 -U <DB_USER> -d <DB_NAME> \
   --clean --if-exists --no-owner --no-privileges \
   --verbose backup_manual.dump
 
 # Restaurar SQL puro via stdin
-kubectl exec -i -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -i -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- psql -U $POSTGRES_USER -d $POSTGRES_DB < backup_manual.sql
 ```
 
@@ -266,18 +266,18 @@ kubectl exec -i -n mindledger \
 
 ```bash
 # Forçar rollout restart (recria o pod sem alterar imagem)
-kubectl rollout restart deployment/postgres -n mindledger
+kubectl rollout restart deployment/postgres -n axiom
 
 # Aguardar o pod ficar pronto
-kubectl rollout status deployment/postgres -n mindledger --timeout=120s
+kubectl rollout status deployment/postgres -n axiom --timeout=120s
 ```
 
 ### PVC do Postgres
 
 ```bash
 # Ver o PVC
-kubectl get pvc postgres-pvc -n mindledger
-kubectl describe pvc postgres-pvc -n mindledger
+kubectl get pvc postgres-pvc -n axiom
+kubectl describe pvc postgres-pvc -n axiom
 ```
 
 ---
@@ -288,40 +288,40 @@ kubectl describe pvc postgres-pvc -n mindledger
 
 ```bash
 # Ver o pod do Redis (produção)
-kubectl get pod -l app=redis -n mindledger
+kubectl get pod -l app=redis -n axiom
 
 # Ver detalhes do pod
-kubectl describe pod -l app=redis -n mindledger
+kubectl describe pod -l app=redis -n axiom
 
 # Ver o deployment
-kubectl get deployment redis -n mindledger
-kubectl describe deployment redis -n mindledger
+kubectl get deployment redis -n axiom
+kubectl describe deployment redis -n axiom
 
 # Ver o service
-kubectl get svc redis-service -n mindledger
+kubectl get svc redis-service -n axiom
 ```
 
 ### Logs
 
 ```bash
 # Logs em tempo real
-kubectl logs -f -l app=redis -n mindledger
+kubectl logs -f -l app=redis -n axiom
 
 # Últimas 100 linhas
-kubectl logs -l app=redis -n mindledger --tail=100
+kubectl logs -l app=redis -n axiom --tail=100
 
 # Logs do container anterior (após crash/restart)
-kubectl logs -l app=redis -n mindledger --previous
+kubectl logs -l app=redis -n axiom --previous
 ```
 
 ### Port-forward
 
 ```bash
 # Expor Redis localmente na porta 6379
-kubectl port-forward svc/redis-service 6379:6379 -n mindledger
+kubectl port-forward svc/redis-service 6379:6379 -n axiom
 
 # Ou na porta local 16379 (evita conflito com Redis local)
-kubectl port-forward svc/redis-service 16379:6379 -n mindledger
+kubectl port-forward svc/redis-service 16379:6379 -n axiom
 
 # Conectar com redis-cli após o port-forward
 redis-cli -h localhost -p 16379 -a <REDIS_PASSWORD>
@@ -331,51 +331,51 @@ redis-cli -h localhost -p 16379 -a <REDIS_PASSWORD>
 
 ```bash
 # Abrir redis-cli diretamente no pod (a variável REDISCLI_AUTH já está setada)
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli
 
 # Checar se o Redis está respondendo
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli ping
 
 # Ver informações gerais (memória, conexões, versão)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli info
 
 # Ver uso de memória
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli info memory
 
 # Listar todas as chaves (use com cuidado em produção — bloqueia o servidor)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli keys "*"
 
-# Contar chaves pelo padrão do projeto (prefixo mindledger)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
-  -- redis-cli keys "mindledger*" | wc -l
+# Contar chaves pelo padrão do projeto (prefixo axiom)
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
+  -- redis-cli keys "axiom*" | wc -l
 
 # Limpar todo o cache (CUIDADO — apaga todas as chaves)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli flushall
 
 # Ver estatísticas de acerto/miss do cache
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=redis -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=redis -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- redis-cli info stats | grep -E "keyspace|hit|miss"
 ```
 
 ### Reiniciar o Redis
 
 ```bash
-kubectl rollout restart deployment/redis -n mindledger
-kubectl rollout status deployment/redis -n mindledger --timeout=60s
+kubectl rollout restart deployment/redis -n axiom
+kubectl rollout status deployment/redis -n axiom --timeout=60s
 ```
 
 ---
@@ -386,50 +386,50 @@ kubectl rollout status deployment/redis -n mindledger --timeout=60s
 
 ```bash
 # Ver pods da API (produção — identifica o slot ativo blue/green)
-kubectl get pod -l app=api -n mindledger -o wide
+kubectl get pod -l app=api -n axiom -o wide
 
 # Ver pod do slot blue especificamente
-kubectl get pod -l app=api,slot=blue -n mindledger
+kubectl get pod -l app=api,slot=blue -n axiom
 
 # Ver pod do slot green especificamente
-kubectl get pod -l app=api,slot=green -n mindledger
+kubectl get pod -l app=api,slot=green -n axiom
 
 # Ver qual slot está ativo no service
-kubectl get svc api-service -n mindledger \
+kubectl get svc api-service -n axiom \
   -o jsonpath='{.spec.selector.slot}'
 
 # Ver os dois deployments blue e green
-kubectl get deployment api-blue api-green -n mindledger
+kubectl get deployment api-blue api-green -n axiom
 
 # Ver detalhes do deployment ativo
-kubectl describe deployment api-blue -n mindledger
+kubectl describe deployment api-blue -n axiom
 
 # Ver o service da API
-kubectl get svc api-service -n mindledger
-kubectl describe svc api-service -n mindledger
+kubectl get svc api-service -n axiom
+kubectl describe svc api-service -n axiom
 ```
 
 ### Logs
 
 ```bash
 # Logs da API em tempo real (todos os pods com label app=api)
-kubectl logs -f -l app=api -n mindledger
+kubectl logs -f -l app=api -n axiom
 
 # Logs apenas do slot blue
-kubectl logs -f -l app=api,slot=blue -n mindledger
+kubectl logs -f -l app=api,slot=blue -n axiom
 
 # Logs apenas do slot green
-kubectl logs -f -l app=api,slot=green -n mindledger
+kubectl logs -f -l app=api,slot=green -n axiom
 
 # Últimas 200 linhas
-kubectl logs -l app=api -n mindledger --tail=200
+kubectl logs -l app=api -n axiom --tail=200
 
 # Logs do container anterior (após crash)
-kubectl logs -l app=api -n mindledger --previous
+kubectl logs -l app=api -n axiom --previous
 
 # Logs de todos os containers do pod (inclui initContainers)
-kubectl logs -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl logs -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   --all-containers
 ```
 
@@ -437,7 +437,7 @@ kubectl logs -n mindledger \
 
 ```bash
 # Expor a API localmente na porta 39100
-kubectl port-forward svc/api-service 39100:39100 -n mindledger
+kubectl port-forward svc/api-service 39100:39100 -n axiom
 
 # Testar após o port-forward
 curl http://localhost:39100/health/
@@ -449,48 +449,48 @@ curl http://localhost:39100/api/docs/
 
 ```bash
 # Abrir shell no pod da API
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- bash
 
 # Django shell interativo
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py shell
 
 # Rodar manage.py sem abrir shell interativo
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py check
 
 # Ver migrações pendentes
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py showmigrations
 
 # Aplicar migrações manualmente
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py migrate
 
 # Configurar permissões (cria grupo Members com CRUD completo)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py setup_permissions
 
 # Recalcular saldos das contas
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py update_balances
 
 # Criar superusuário manualmente
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py createsuperuser
 
 # Redefinir senha de um usuário existente
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py shell -c "
 from django.contrib.auth import get_user_model
 U = get_user_model()
@@ -501,23 +501,23 @@ print('Senha alterada com sucesso')
 "
 
 # Coletar arquivos estáticos
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py collectstatic --noinput
 
 # Purgar registros soft-deleted com mais de 90 dias (LGPD)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py purge_deleted_records
 
 # Fechar faturas vencidas de cartão de crédito
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py close_overdue_bills
 
 # Diagnóstico de vault
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py vault_recovery --username admin
 ```
 
@@ -525,26 +525,26 @@ kubectl exec -n mindledger \
 
 ```bash
 # Escalar o slot blue para 2 réplicas
-kubectl scale deployment/api-blue --replicas=2 -n mindledger
+kubectl scale deployment/api-blue --replicas=2 -n axiom
 
 # Escalar o slot green para 0 (slot inativo)
-kubectl scale deployment/api-green --replicas=0 -n mindledger
+kubectl scale deployment/api-green --replicas=0 -n axiom
 
 # Ver status das réplicas
-kubectl get deployment api-blue api-green -n mindledger
+kubectl get deployment api-blue api-green -n axiom
 ```
 
 ### Reiniciar a API
 
 ```bash
 # Forçar rollout restart do slot ativo (substitua blue/green conforme necessário)
-kubectl rollout restart deployment/api-blue -n mindledger
+kubectl rollout restart deployment/api-blue -n axiom
 
 # Aguardar o pod ficar pronto
-kubectl rollout status deployment/api-blue -n mindledger --timeout=120s
+kubectl rollout status deployment/api-blue -n axiom --timeout=120s
 
 # Ver histórico de revisões do deployment
-kubectl rollout history deployment/api-blue -n mindledger
+kubectl rollout history deployment/api-blue -n axiom
 ```
 
 ### Atualizar imagem da API
@@ -552,11 +552,11 @@ kubectl rollout history deployment/api-blue -n mindledger
 ```bash
 # Atualizar para uma nova imagem (normalmente feito pelo CI)
 kubectl set image deployment/api-blue \
-  api=registry.gitlab.com/tarcisioribeiro/mindledger/api:<TAG> \
-  -n mindledger
+  api=registry.gitlab.com/tarcisioribeiro/axiom/api:<TAG> \
+  -n axiom
 
 # Acompanhar o rollout
-kubectl rollout status deployment/api-blue -n mindledger --timeout=120s
+kubectl rollout status deployment/api-blue -n axiom --timeout=120s
 ```
 
 ---
@@ -567,37 +567,37 @@ kubectl rollout status deployment/api-blue -n mindledger --timeout=120s
 
 ```bash
 # Ver pod do frontend
-kubectl get pod -l app=frontend -n mindledger
+kubectl get pod -l app=frontend -n axiom
 
 # Ver detalhes do pod
-kubectl describe pod -l app=frontend -n mindledger
+kubectl describe pod -l app=frontend -n axiom
 
 # Ver o deployment
-kubectl get deployment frontend -n mindledger
-kubectl describe deployment frontend -n mindledger
+kubectl get deployment frontend -n axiom
+kubectl describe deployment frontend -n axiom
 
 # Ver o service
-kubectl get svc frontend-service -n mindledger
+kubectl get svc frontend-service -n axiom
 ```
 
 ### Logs
 
 ```bash
 # Logs do Nginx em tempo real
-kubectl logs -f -l app=frontend -n mindledger
+kubectl logs -f -l app=frontend -n axiom
 
 # Últimas 100 linhas
-kubectl logs -l app=frontend -n mindledger --tail=100
+kubectl logs -l app=frontend -n axiom --tail=100
 
 # Logs do container anterior (após crash)
-kubectl logs -l app=frontend -n mindledger --previous
+kubectl logs -l app=frontend -n axiom --previous
 ```
 
 ### Port-forward
 
 ```bash
 # Expor o frontend localmente na porta 8080
-kubectl port-forward svc/frontend-service 8080:80 -n mindledger
+kubectl port-forward svc/frontend-service 8080:80 -n axiom
 
 # Acessar no browser: http://localhost:8080
 ```
@@ -606,43 +606,43 @@ kubectl port-forward svc/frontend-service 8080:80 -n mindledger
 
 ```bash
 # Abrir shell no container Nginx
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=frontend -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=frontend -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- sh
 
 # Ver configuração do Nginx
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=frontend -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=frontend -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- cat /etc/nginx/conf.d/default.conf
 
 # Testar configuração do Nginx
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=frontend -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=frontend -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- nginx -t
 
 # Ver ConfigMap com a config do Nginx
-kubectl get configmap -l app.kubernetes.io/component=frontend -n mindledger
-kubectl describe configmap frontend-nginx-config -n mindledger
+kubectl get configmap -l app.kubernetes.io/component=frontend -n axiom
+kubectl describe configmap frontend-nginx-config -n axiom
 ```
 
 ### Reiniciar o Frontend
 
 ```bash
-kubectl rollout restart deployment/frontend -n mindledger
-kubectl rollout status deployment/frontend -n mindledger --timeout=60s
+kubectl rollout restart deployment/frontend -n axiom
+kubectl rollout status deployment/frontend -n axiom --timeout=60s
 
 # Ver histórico de revisões
-kubectl rollout history deployment/frontend -n mindledger
+kubectl rollout history deployment/frontend -n axiom
 ```
 
 ### Atualizar imagem do Frontend
 
 ```bash
 kubectl set image deployment/frontend \
-  frontend=registry.gitlab.com/tarcisioribeiro/mindledger/frontend:<TAG> \
-  -n mindledger
+  frontend=registry.gitlab.com/tarcisioribeiro/axiom/frontend:<TAG> \
+  -n axiom
 
-kubectl rollout status deployment/frontend -n mindledger --timeout=60s
+kubectl rollout status deployment/frontend -n axiom --timeout=60s
 ```
 
 ---
@@ -653,88 +653,88 @@ kubectl rollout status deployment/frontend -n mindledger --timeout=60s
 
 ```bash
 # Ver pod do MinIO
-kubectl get pod -l app=minio -n mindledger
+kubectl get pod -l app=minio -n axiom
 
 # Ver detalhes do pod
-kubectl describe pod -l app=minio -n mindledger
+kubectl describe pod -l app=minio -n axiom
 
 # Ver o deployment
-kubectl get deployment minio -n mindledger
-kubectl describe deployment minio -n mindledger
+kubectl get deployment minio -n axiom
+kubectl describe deployment minio -n axiom
 
 # Ver o service (portas 9000 API e 9001 console)
-kubectl get svc minio-service -n mindledger
-kubectl describe svc minio-service -n mindledger
+kubectl get svc minio-service -n axiom
+kubectl describe svc minio-service -n axiom
 ```
 
 ### Logs
 
 ```bash
 # Logs do MinIO em tempo real
-kubectl logs -f -l app=minio -n mindledger
+kubectl logs -f -l app=minio -n axiom
 
 # Últimas 100 linhas
-kubectl logs -l app=minio -n mindledger --tail=100
+kubectl logs -l app=minio -n axiom --tail=100
 
 # Logs do container anterior (após crash)
-kubectl logs -l app=minio -n mindledger --previous
+kubectl logs -l app=minio -n axiom --previous
 ```
 
 ### Port-forward
 
 ```bash
 # Expor a API do MinIO (porta 9000) e o console (porta 9001)
-kubectl port-forward svc/minio-service 9000:9000 9001:9001 -n mindledger
+kubectl port-forward svc/minio-service 9000:9000 9001:9001 -n axiom
 
 # Acessar o console no browser: https://localhost:9001
 # (certificado auto-assinado — aceite o aviso de segurança)
 
 # Acessar via mc (MinIO client) após o port-forward
 mc alias set local https://localhost:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD> --insecure
-mc ls local/mindledger --insecure
+mc ls local/axiom --insecure
 ```
 
 ### Acesso ao shell do MinIO (mc client)
 
 ```bash
 # Abrir shell no pod do MinIO
-kubectl exec -it -n mindledger \
-  $(kubectl get pod -l app=minio -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom \
+  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- sh
 
 # Listar buckets via mc (dentro do pod)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=minio -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- sh -c 'mc --insecure alias set local https://localhost:9000 \
     "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure ls local/'
 
-# Listar objetos no bucket mindledger
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=minio -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+# Listar objetos no bucket axiom
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- sh -c 'mc --insecure alias set local https://localhost:9000 \
-    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure ls local/mindledger/'
+    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure ls local/axiom/'
 
 # Ver tamanho do bucket
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=minio -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=minio -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- sh -c 'mc --insecure alias set local https://localhost:9000 \
-    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure du local/mindledger'
+    "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" && mc --insecure du local/axiom'
 ```
 
 ### TLS do MinIO
 
 ```bash
 # Ver o secret com o certificado TLS do MinIO
-kubectl get secret minio-tls -n mindledger
-kubectl describe secret minio-tls -n mindledger
+kubectl get secret minio-tls -n axiom
+kubectl describe secret minio-tls -n axiom
 
 # Ver datas de validade do certificado
-kubectl get secret minio-tls -n mindledger \
+kubectl get secret minio-tls -n axiom \
   -o jsonpath='{.data.tls\.crt}' | base64 -d | \
   openssl x509 -noout -dates
 
 # Verificar health do MinIO via port-forward
-kubectl port-forward svc/minio-service 9000:9000 -n mindledger &
+kubectl port-forward svc/minio-service 9000:9000 -n axiom &
 curl -k https://localhost:9000/minio/health/ready
 curl -k https://localhost:9000/minio/health/live
 ```
@@ -742,21 +742,21 @@ curl -k https://localhost:9000/minio/health/live
 ### Reiniciar o MinIO
 
 ```bash
-kubectl rollout restart deployment/minio -n mindledger
-kubectl rollout status deployment/minio -n mindledger --timeout=60s
+kubectl rollout restart deployment/minio -n axiom
+kubectl rollout status deployment/minio -n axiom --timeout=60s
 ```
 
 ### Job de inicialização do MinIO (criar bucket)
 
 ```bash
-# Executar o job de init para criar o bucket mindledger (se ainda não existir)
-kubectl apply -f k8s/minio/deployment.yaml -n mindledger
+# Executar o job de init para criar o bucket axiom (se ainda não existir)
+kubectl apply -f k8s/minio/deployment.yaml -n axiom
 
 # Ver status do job
-kubectl get job minio-init -n mindledger
+kubectl get job minio-init -n axiom
 
 # Ver logs do job
-kubectl logs -l app=minio-init -n mindledger
+kubectl logs -l app=minio-init -n axiom
 ```
 
 ---
@@ -767,58 +767,58 @@ kubectl logs -l app=minio-init -n mindledger
 
 ```bash
 # Ver o CronJob
-kubectl get cronjob mindledger-db-backup -n mindledger
-kubectl describe cronjob mindledger-db-backup -n mindledger
+kubectl get cronjob axiom-db-backup -n axiom
+kubectl describe cronjob axiom-db-backup -n axiom
 
 # Ver histórico de jobs executados
-kubectl get jobs -l app.kubernetes.io/component=backup -n mindledger
+kubectl get jobs -l app.kubernetes.io/component=backup -n axiom
 
 # Ver o último job e seu status
-kubectl get jobs -n mindledger --sort-by='.status.startTime' | tail -5
+kubectl get jobs -n axiom --sort-by='.status.startTime' | tail -5
 ```
 
 ### Disparar backup manual imediatamente
 
 ```bash
 # Criar um job a partir do CronJob (execução imediata)
-kubectl create job --from=cronjob/mindledger-db-backup \
-  mindledger-backup-manual-$(date +%Y%m%d%H%M%S) \
-  -n mindledger
+kubectl create job --from=cronjob/axiom-db-backup \
+  axiom-backup-manual-$(date +%Y%m%d%H%M%S) \
+  -n axiom
 
 # Acompanhar os logs do backup em tempo real
-kubectl logs -f -l app=mindledger-backup -n mindledger
+kubectl logs -f -l app=axiom-backup -n axiom
 
 # Ver status do job manual
-kubectl get jobs -n mindledger | grep mindledger-backup-manual
+kubectl get jobs -n axiom | grep axiom-backup-manual
 ```
 
 ### Ver logs de backups anteriores
 
 ```bash
 # Listar todos os jobs de backup (bem-sucedidos e falhos)
-kubectl get jobs -n mindledger -l app.kubernetes.io/component=backup
+kubectl get jobs -n axiom -l app.kubernetes.io/component=backup
 
 # Ver logs de um job específico
-kubectl logs -n mindledger job/<nome-do-job>
+kubectl logs -n axiom job/<nome-do-job>
 
 # Ver pods de backup (incluindo os concluídos)
-kubectl get pods -n mindledger -l app=mindledger-backup --show-terminated
+kubectl get pods -n axiom -l app=axiom-backup --show-terminated
 ```
 
 ### Verificar status do último backup
 
 ```bash
 # Verificar o sentinel file dentro do PVC de backup
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=mindledger-backup -n mindledger \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=axiom-backup -n axiom \
     -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || \
-    echo "$(kubectl get pods -n mindledger | grep backup | head -1 | awk '{print $1}')") \
+    echo "$(kubectl get pods -n axiom | grep backup | head -1 | awk '{print $1}')") \
   -- cat /backups/.last_backup_status 2>/dev/null || \
   echo "Nenhum pod de backup rodando no momento. Verifique os jobs concluídos."
 
 # Listar arquivos de backup no PVC
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=mindledger-backup -n mindledger \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=axiom-backup -n axiom \
     -o jsonpath='{.items[0].metadata.name}') \
   -- ls -lh /backups/
 ```
@@ -827,9 +827,9 @@ kubectl exec -n mindledger \
 
 ```bash
 # 1. Baixar o backup do MinIO via port-forward
-kubectl port-forward svc/minio-service 9000:9000 -n mindledger &
+kubectl port-forward svc/minio-service 9000:9000 -n axiom &
 mc alias set prod https://localhost:9000 <MINIO_ROOT_USER> <MINIO_ROOT_PASSWORD> --insecure
-mc --insecure cp prod/mindledger-backups/db/db_backup_<TIMESTAMP>.dump.enc .
+mc --insecure cp prod/axiom-backups/db/db_backup_<TIMESTAMP>.dump.enc .
 
 # 2. Descriptografar
 export BACKUP_ENCRYPTION_KEY="<chave>"
@@ -839,7 +839,7 @@ openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
   -out db_backup_<TIMESTAMP>.dump
 
 # 3. Restaurar via port-forward do Postgres
-kubectl port-forward svc/postgres-service 15432:5432 -n mindledger &
+kubectl port-forward svc/postgres-service 15432:5432 -n axiom &
 pg_restore \
   -h localhost -p 15432 -U <DB_USER> -d <DB_NAME> \
   --clean --if-exists --no-owner --no-privileges \
@@ -850,8 +850,8 @@ pg_restore \
 
 ```bash
 # Remover jobs bem-sucedidos mais antigos (o CronJob mantém apenas os 3 últimos)
-kubectl delete jobs -n mindledger \
-  $(kubectl get jobs -n mindledger -l app.kubernetes.io/component=backup \
+kubectl delete jobs -n axiom \
+  $(kubectl get jobs -n axiom -l app.kubernetes.io/component=backup \
     --field-selector status.successful=1 \
     -o jsonpath='{.items[*].metadata.name}')
 ```
@@ -860,89 +860,89 @@ kubectl delete jobs -n mindledger \
 
 ## 9. Secrets e senhas
 
-> **Importante:** todas as senhas e chaves ficam no secret `mindledger-secrets`
-> (e `mindledger-backup-secrets` para o backup). Use os comandos abaixo para
+> **Importante:** todas as senhas e chaves ficam no secret `axiom-secrets`
+> (e `axiom-backup-secrets` para o backup). Use os comandos abaixo para
 > extrair os valores sem precisar editar arquivos.
 
 ### Ver todos os secrets do namespace
 
 ```bash
 # Listar secrets de produção
-kubectl get secrets -n mindledger
+kubectl get secrets -n axiom
 
 # Listar secrets de staging
-kubectl get secrets -n mindledger-staging
+kubectl get secrets -n axiom-staging
 ```
 
-### Extrair senhas do secret principal (`mindledger-secrets`)
+### Extrair senhas do secret principal (`axiom-secrets`)
 
 ```bash
 # Senha do banco de dados
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DB_PASSWORD}' | base64 -d && echo
 
 # Usuário do banco de dados
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DB_USER}' | base64 -d && echo
 
 # Nome do banco de dados
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DB_NAME}' | base64 -d && echo
 
 # Django SECRET_KEY
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.SECRET_KEY}' | base64 -d && echo
 
 # Chave de criptografia Fernet (ENCRYPTION_KEY)
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.ENCRYPTION_KEY}' | base64 -d && echo
 
 # Usuário superadmin Django
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
 
 # Senha superadmin Django
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 
 # Senha do Redis
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.REDIS_PASSWORD}' | base64 -d && echo
 
 # URL completa do Redis (inclui senha)
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.REDIS_URL}' | base64 -d && echo
 
 # Usuário root do MinIO
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
 
 # Senha root do MinIO
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
 
 # Sentry DSN (se configurado)
-kubectl get secret mindledger-secrets -n mindledger \
+kubectl get secret axiom-secrets -n axiom \
   -o jsonpath='{.data.SENTRY_DSN}' | base64 -d && echo
 ```
 
-### Extrair senhas do secret de backup (`mindledger-backup-secrets`)
+### Extrair senhas do secret de backup (`axiom-backup-secrets`)
 
 ```bash
 # Chave de criptografia dos backups
-kubectl get secret mindledger-backup-secrets -n mindledger \
+kubectl get secret axiom-backup-secrets -n axiom \
   -o jsonpath='{.data.BACKUP_ENCRYPTION_KEY}' | base64 -d && echo
 
 # Endpoint do MinIO para backup
-kubectl get secret mindledger-backup-secrets -n mindledger \
+kubectl get secret axiom-backup-secrets -n axiom \
   -o jsonpath='{.data.MINIO_ENDPOINT}' | base64 -d && echo
 
 # Access Key do MinIO (backup)
-kubectl get secret mindledger-backup-secrets -n mindledger \
+kubectl get secret axiom-backup-secrets -n axiom \
   -o jsonpath='{.data.MINIO_ACCESS_KEY}' | base64 -d && echo
 
 # Secret Key do MinIO (backup)
-kubectl get secret mindledger-backup-secrets -n mindledger \
+kubectl get secret axiom-backup-secrets -n axiom \
   -o jsonpath='{.data.MINIO_SECRET_KEY}' | base64 -d && echo
 ```
 
@@ -950,14 +950,14 @@ kubectl get secret mindledger-backup-secrets -n mindledger \
 
 ```bash
 # Ver todos os campos do secret principal (valores em base64)
-kubectl get secret mindledger-secrets -n mindledger -o yaml
+kubectl get secret axiom-secrets -n axiom -o yaml
 
 # Ver todos os campos decodificados de uma vez (requer jq)
-kubectl get secret mindledger-secrets -n mindledger -o json | \
+kubectl get secret axiom-secrets -n axiom -o json | \
   jq -r '.data | to_entries[] | "\(.key): \(.value | @base64d)"'
 
 # Mesmo comando para staging
-kubectl get secret mindledger-secrets -n mindledger-staging -o json | \
+kubectl get secret axiom-secrets -n axiom-staging -o json | \
   jq -r '.data | to_entries[] | "\(.key): \(.value | @base64d)"'
 ```
 
@@ -965,7 +965,7 @@ kubectl get secret mindledger-secrets -n mindledger-staging -o json | \
 
 ```bash
 # Atualizar o valor de uma chave específica
-kubectl patch secret mindledger-secrets -n mindledger \
+kubectl patch secret axiom-secrets -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/data/DB_PASSWORD","value":"'$(echo -n "NOVA_SENHA" | base64 -w0)'"}]'
 
@@ -977,16 +977,16 @@ envsubst < k8s/base/secrets.yaml | kubectl apply -f -
 
 ```bash
 # Ver o pull secret do GitLab Registry
-kubectl get secret gitlab-registry-secret -n mindledger
-kubectl describe secret gitlab-registry-secret -n mindledger
+kubectl get secret gitlab-registry-secret -n axiom
+kubectl describe secret gitlab-registry-secret -n axiom
 
 # Recriar o pull secret (após rotacionar o Deploy Token)
-kubectl delete secret gitlab-registry-secret -n mindledger --ignore-not-found
+kubectl delete secret gitlab-registry-secret -n axiom --ignore-not-found
 kubectl create secret docker-registry gitlab-registry-secret \
   --docker-server="registry.gitlab.com" \
   --docker-username="<DEPLOY_TOKEN_USER>" \
   --docker-password="<DEPLOY_TOKEN_VALUE>" \
-  -n mindledger
+  -n axiom
 ```
 
 ---
@@ -997,49 +997,49 @@ kubectl create secret docker-registry gitlab-registry-secret \
 
 ```bash
 # Ver os ingresses de produção
-kubectl get ingress -n mindledger
+kubectl get ingress -n axiom
 
 # Ver detalhes do ingress de produção
-kubectl describe ingress -n mindledger
+kubectl describe ingress -n axiom
 
 # Ver ingress do MinIO
-kubectl get ingress -n mindledger -l app.kubernetes.io/component=minio
-kubectl describe ingress minio-ingress -n mindledger
+kubectl get ingress -n axiom -l app.kubernetes.io/component=minio
+kubectl describe ingress minio-ingress -n axiom
 
 # Ver ingress de staging
-kubectl get ingress -n mindledger-staging
-kubectl describe ingress -n mindledger-staging
+kubectl get ingress -n axiom-staging
+kubectl describe ingress -n axiom-staging
 ```
 
 ### Certificados TLS (cert-manager)
 
 ```bash
 # Ver certificados de produção
-kubectl get certificate -n mindledger
+kubectl get certificate -n axiom
 
 # Ver detalhes do certificado (datas, status de renovação)
-kubectl describe certificate mindledger-tls -n mindledger
+kubectl describe certificate axiom-tls -n axiom
 
 # Ver certificados de staging
-kubectl get certificate -n mindledger-staging
-kubectl describe certificate mindledger-staging-tls -n mindledger-staging
+kubectl get certificate -n axiom-staging
+kubectl describe certificate axiom-staging-tls -n axiom-staging
 
 # Ver CertificateRequests (log do processo de emissão)
-kubectl get certificaterequest -n mindledger
-kubectl describe certificaterequest -n mindledger
+kubectl get certificaterequest -n axiom
+kubectl describe certificaterequest -n axiom
 
 # Ver Challenges (processo ACME HTTP-01)
-kubectl get challenge -n mindledger
+kubectl get challenge -n axiom
 
 # Ver Orders (solicitações de certificado ao Let's Encrypt)
-kubectl get order -n mindledger
+kubectl get order -n axiom
 
 # Ver ClusterIssuers disponíveis
 kubectl get clusterissuers
 
 # Forçar renovação do certificado (deletar o secret faz o cert-manager emitir novo)
-kubectl delete secret mindledger-tls -n mindledger
-kubectl delete secret mindledger-staging-tls -n mindledger-staging
+kubectl delete secret axiom-tls -n axiom
+kubectl delete secret axiom-staging-tls -n axiom-staging
 
 # Ver status do cert-manager
 kubectl get pods -n cert-manager
@@ -1050,17 +1050,17 @@ kubectl logs -f -l app=cert-manager -n cert-manager
 
 ```bash
 # Verificar certificado de produção
-echo | openssl s_client -connect mindledger.tjtux.duckdns.org:443 2>/dev/null \
+echo | openssl s_client -connect axiom.tjtux.duckdns.org:443 2>/dev/null \
   | openssl x509 -noout -dates -subject -issuer
 
 # Verificar certificado de staging
-echo | openssl s_client -connect mindledger-staging.tjtux.duckdns.org:443 2>/dev/null \
+echo | openssl s_client -connect axiom-staging.tjtux.duckdns.org:443 2>/dev/null \
   | openssl x509 -noout -dates -subject
 
 # Verificar se as rotas respondem
-curl -I https://mindledger.tjtux.duckdns.org/health/
-curl -I https://mindledger.tjtux.duckdns.org/ready/
-curl -I https://mindledger-staging.tjtux.duckdns.org/health/
+curl -I https://axiom.tjtux.duckdns.org/health/
+curl -I https://axiom.tjtux.duckdns.org/ready/
+curl -I https://axiom-staging.tjtux.duckdns.org/health/
 ```
 
 ### Nginx Ingress Controller
@@ -1082,24 +1082,24 @@ kubectl get configmap -n ingress-nginx
 
 ```bash
 # Ver todos os HPAs de produção
-kubectl get hpa -n mindledger
+kubectl get hpa -n axiom
 
 # Ver detalhes do HPA da API (min 1 / max 10 réplicas)
-kubectl describe hpa api-hpa -n mindledger
+kubectl describe hpa api-hpa -n axiom
 
 # Ver detalhes do HPA do frontend (min 1 / max 5 réplicas)
-kubectl describe hpa frontend-hpa -n mindledger
+kubectl describe hpa frontend-hpa -n axiom
 
 # Ver métricas atuais dos HPAs (requer metrics-server)
-kubectl get hpa -n mindledger -o wide
+kubectl get hpa -n axiom -o wide
 
 # Ajustar temporariamente os limites do HPA da API
-kubectl patch hpa api-hpa -n mindledger \
+kubectl patch hpa api-hpa -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/maxReplicas","value":5}]'
 
 # Desabilitar o HPA temporariamente (definir min e max iguais)
-kubectl patch hpa api-hpa -n mindledger \
+kubectl patch hpa api-hpa -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/minReplicas","value":2},
        {"op":"replace","path":"/spec/maxReplicas","value":2}]'
@@ -1111,13 +1111,13 @@ kubectl patch hpa api-hpa -n mindledger \
 
 ```bash
 # Ver todos os PDBs de produção
-kubectl get pdb -n mindledger
+kubectl get pdb -n axiom
 
 # Ver detalhes do PDB da API
-kubectl describe pdb api-pdb -n mindledger
+kubectl describe pdb api-pdb -n axiom
 
 # Ver detalhes do PDB do frontend
-kubectl describe pdb frontend-pdb -n mindledger
+kubectl describe pdb frontend-pdb -n axiom
 ```
 
 ---
@@ -1128,26 +1128,26 @@ kubectl describe pdb frontend-pdb -n mindledger
 
 ```bash
 # Ver todos os PVCs de produção
-kubectl get pvc -n mindledger
+kubectl get pvc -n axiom
 
 # Ver todos os PVCs de staging
-kubectl get pvc -n mindledger-staging
+kubectl get pvc -n axiom-staging
 
 # Ver detalhes de um PVC específico
-kubectl describe pvc postgres-pvc -n mindledger
-kubectl describe pvc redis-pvc -n mindledger
-kubectl describe pvc minio-pvc -n mindledger
-kubectl describe pvc backup-pvc -n mindledger
-kubectl describe pvc api-media-pvc -n mindledger
-kubectl describe pvc api-logs-pvc -n mindledger
-kubectl describe pvc api-static-pvc -n mindledger
+kubectl describe pvc postgres-pvc -n axiom
+kubectl describe pvc redis-pvc -n axiom
+kubectl describe pvc minio-pvc -n axiom
+kubectl describe pvc backup-pvc -n axiom
+kubectl describe pvc api-media-pvc -n axiom
+kubectl describe pvc api-logs-pvc -n axiom
+kubectl describe pvc api-static-pvc -n axiom
 
 # Ver os PersistentVolumes provisionados
 kubectl get pv
 
 # Ver uso de disco dentro de um pod (a partir do pod)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=postgres -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=postgres -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- df -h
 ```
 
@@ -1155,12 +1155,12 @@ kubectl exec -n mindledger \
 
 ```bash
 # Exemplo: expandir o PVC do Postgres de 10Gi para 20Gi
-kubectl patch pvc postgres-pvc -n mindledger \
+kubectl patch pvc postgres-pvc -n axiom \
   --type='json' \
   -p='[{"op":"replace","path":"/spec/resources/requests/storage","value":"20Gi"}]'
 
 # Acompanhar a expansão
-kubectl describe pvc postgres-pvc -n mindledger | grep -A5 Conditions
+kubectl describe pvc postgres-pvc -n axiom | grep -A5 Conditions
 ```
 
 ---
@@ -1192,7 +1192,7 @@ kubectl describe configmap prometheus-config -n monitoring
 
 # Verificar se o endpoint de métricas da API está acessível
 # (após port-forward da API na porta 39100)
-kubectl port-forward svc/api-service 39100:39100 -n mindledger &
+kubectl port-forward svc/api-service 39100:39100 -n axiom &
 curl http://localhost:39100/metrics
 ```
 
@@ -1207,28 +1207,28 @@ aponta para um dos slots (`blue` ou `green`) via selector `slot: <valor>`.
 
 ```bash
 # Ver qual slot está recebendo tráfego
-kubectl get svc api-service -n mindledger \
+kubectl get svc api-service -n axiom \
   -o jsonpath='{.spec.selector.slot}' && echo
 
 # Ver o estado dos dois slots
-kubectl get deployment api-blue api-green -n mindledger
+kubectl get deployment api-blue api-green -n axiom
 
 # Ver as imagens rodando em cada slot
-kubectl get deployment api-blue -n mindledger \
+kubectl get deployment api-blue -n axiom \
   -o jsonpath='{.spec.template.spec.containers[0].image}' && echo
 
-kubectl get deployment api-green -n mindledger \
+kubectl get deployment api-green -n axiom \
   -o jsonpath='{.spec.template.spec.containers[0].image}' && echo
 
 # Ver os pods dos dois slots
-kubectl get pods -l app=api -n mindledger -o wide
+kubectl get pods -l app=api -n axiom -o wide
 ```
 
 ### Fazer o switch manual de slot
 
 ```bash
 # Determinar slot atual e calcular o de rollback
-CURRENT_SLOT=$(kubectl get svc api-service -n mindledger \
+CURRENT_SLOT=$(kubectl get svc api-service -n axiom \
   -o jsonpath='{.spec.selector.slot}')
 echo "Slot ativo agora: $CURRENT_SLOT"
 
@@ -1236,28 +1236,28 @@ if [ "$CURRENT_SLOT" = "blue" ]; then TARGET_SLOT="green"; else TARGET_SLOT="blu
 echo "Slot alvo: $TARGET_SLOT"
 
 # Escalar o slot alvo para 1 réplica
-kubectl scale deployment/api-$TARGET_SLOT --replicas=1 -n mindledger
-kubectl rollout status deployment/api-$TARGET_SLOT -n mindledger --timeout=120s
+kubectl scale deployment/api-$TARGET_SLOT --replicas=1 -n axiom
+kubectl rollout status deployment/api-$TARGET_SLOT -n axiom --timeout=120s
 
 # Redirecionar o tráfego para o slot alvo
-kubectl patch svc api-service -n mindledger \
+kubectl patch svc api-service -n axiom \
   --type=merge \
   -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$TARGET_SLOT\"}}}"
 
 # Escalar o slot anterior para 0
-kubectl scale deployment/api-$CURRENT_SLOT --replicas=0 -n mindledger
+kubectl scale deployment/api-$CURRENT_SLOT --replicas=0 -n axiom
 
 # Confirmar o switch
-kubectl get svc api-service -n mindledger \
+kubectl get svc api-service -n axiom \
   -o jsonpath='{.spec.selector.slot}' && echo
 ```
 
 ### Ver histórico de revisões de cada slot
 
 ```bash
-kubectl rollout history deployment/api-blue -n mindledger
-kubectl rollout history deployment/api-green -n mindledger
-kubectl rollout history deployment/frontend -n mindledger
+kubectl rollout history deployment/api-blue -n axiom
+kubectl rollout history deployment/api-green -n axiom
+kubectl rollout history deployment/frontend -n axiom
 ```
 
 ---
@@ -1268,47 +1268,47 @@ kubectl rollout history deployment/frontend -n mindledger
 
 ```bash
 # Reverter API para a revisão anterior
-kubectl rollout undo deployment/api -n mindledger-staging
+kubectl rollout undo deployment/api -n axiom-staging
 
 # Reverter frontend para a revisão anterior
-kubectl rollout undo deployment/frontend -n mindledger-staging
+kubectl rollout undo deployment/frontend -n axiom-staging
 
 # Aguardar estabilização
-kubectl rollout status deployment/api -n mindledger-staging --timeout=120s
-kubectl rollout status deployment/frontend -n mindledger-staging --timeout=60s
+kubectl rollout status deployment/api -n axiom-staging --timeout=120s
+kubectl rollout status deployment/frontend -n axiom-staging --timeout=60s
 
 # Reverter para uma revisão específica
-kubectl rollout undo deployment/api -n mindledger-staging --to-revision=<N>
+kubectl rollout undo deployment/api -n axiom-staging --to-revision=<N>
 ```
 
 ### Rollback de produção (blue-green)
 
 ```bash
 # 1. Identificar o slot ativo e o de rollback
-CURRENT_SLOT=$(kubectl get svc api-service -n mindledger \
+CURRENT_SLOT=$(kubectl get svc api-service -n axiom \
   -o jsonpath='{.spec.selector.slot}')
 if [ "$CURRENT_SLOT" = "blue" ]; then ROLLBACK_SLOT="green"; else ROLLBACK_SLOT="blue"; fi
 echo "Revertendo de $CURRENT_SLOT para $ROLLBACK_SLOT"
 
 # 2. Escalar o slot de rollback
-kubectl scale deployment/api-$ROLLBACK_SLOT --replicas=1 -n mindledger
-kubectl rollout status deployment/api-$ROLLBACK_SLOT -n mindledger --timeout=120s
+kubectl scale deployment/api-$ROLLBACK_SLOT --replicas=1 -n axiom
+kubectl rollout status deployment/api-$ROLLBACK_SLOT -n axiom --timeout=120s
 
 # 3. Redirecionar o tráfego
-kubectl patch svc api-service -n mindledger \
+kubectl patch svc api-service -n axiom \
   --type=merge \
   -p "{\"spec\":{\"selector\":{\"app\":\"api\",\"slot\":\"$ROLLBACK_SLOT\"}}}"
 
 # 4. Escalar o slot problemático para 0
-kubectl scale deployment/api-$CURRENT_SLOT --replicas=0 -n mindledger
+kubectl scale deployment/api-$CURRENT_SLOT --replicas=0 -n axiom
 
 # 5. Reverter o frontend
-kubectl rollout undo deployment/frontend -n mindledger
-kubectl rollout status deployment/frontend -n mindledger --timeout=60s
+kubectl rollout undo deployment/frontend -n axiom
+kubectl rollout status deployment/frontend -n axiom --timeout=60s
 
 # 6. Verificar
-kubectl get svc api-service -n mindledger -o jsonpath='{.spec.selector.slot}' && echo
-kubectl get pods -l app=api -n mindledger
+kubectl get svc api-service -n axiom -o jsonpath='{.spec.selector.slot}' && echo
+kubectl get pods -l app=api -n axiom
 ```
 
 ---
@@ -1316,122 +1316,122 @@ kubectl get pods -l app=api -n mindledger
 ## 17. Staging — comandos específicos
 
 Os comandos de staging são idênticos aos de produção, trocando apenas o namespace
-de `mindledger` para `mindledger-staging`. Nos casos onde há diferença
+de `axiom` para `axiom-staging`. Nos casos onde há diferença
 (ex.: deployment `api` em vez de `api-blue`/`api-green`), estão listados abaixo.
 
 ### Inspecionar recursos de staging
 
 ```bash
 # Ver todos os recursos de staging
-kubectl get all -n mindledger-staging
+kubectl get all -n axiom-staging
 
 # Ver pods de staging
-kubectl get pods -n mindledger-staging
+kubectl get pods -n axiom-staging
 
 # Ver pods com mais detalhes (nó, IP, status)
-kubectl get pods -n mindledger-staging -o wide
+kubectl get pods -n axiom-staging -o wide
 
 # Ver eventos recentes de staging
-kubectl get events -n mindledger-staging --sort-by='.lastTimestamp' | tail -20
+kubectl get events -n axiom-staging --sort-by='.lastTimestamp' | tail -20
 ```
 
 ### Port-forwards de staging
 
 ```bash
 # API de staging
-kubectl port-forward svc/api-service 39200:39100 -n mindledger-staging
+kubectl port-forward svc/api-service 39200:39100 -n axiom-staging
 
 # Frontend de staging
-kubectl port-forward svc/frontend-service 8081:80 -n mindledger-staging
+kubectl port-forward svc/frontend-service 8081:80 -n axiom-staging
 
 # PostgreSQL de staging
-kubectl port-forward svc/postgres-service 25432:5432 -n mindledger-staging
+kubectl port-forward svc/postgres-service 25432:5432 -n axiom-staging
 
 # Redis de staging
-kubectl port-forward svc/redis-service 26379:6379 -n mindledger-staging
+kubectl port-forward svc/redis-service 26379:6379 -n axiom-staging
 
 # MinIO de staging (API + console)
-kubectl port-forward svc/minio-service 29000:9000 29001:9001 -n mindledger-staging
+kubectl port-forward svc/minio-service 29000:9000 29001:9001 -n axiom-staging
 ```
 
 ### Extrair senhas de staging
 
 ```bash
 # Senha do banco de staging
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DB_PASSWORD}' | base64 -d && echo
 
 # Usuário superadmin Django (staging)
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DJANGO_SUPERUSER_USERNAME}' | base64 -d && echo
 
 # Senha superadmin Django (staging)
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.DJANGO_SUPERUSER_PASSWORD}' | base64 -d && echo
 
 # Senha do Redis (staging)
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.REDIS_PASSWORD}' | base64 -d && echo
 
 # MinIO root user (staging)
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_USER}' | base64 -d && echo
 
 # MinIO root password (staging)
-kubectl get secret mindledger-secrets -n mindledger-staging \
+kubectl get secret axiom-secrets -n axiom-staging \
   -o jsonpath='{.data.MINIO_ROOT_PASSWORD}' | base64 -d && echo
 
 # Todos os secrets de staging decodificados (requer jq)
-kubectl get secret mindledger-secrets -n mindledger-staging -o json | \
+kubectl get secret axiom-secrets -n axiom-staging -o json | \
   jq -r '.data | to_entries[] | "\(.key): \(.value | @base64d)"'
 ```
 
 ### Logs de staging por componente
 
 ```bash
-kubectl logs -f -l app=api -n mindledger-staging
-kubectl logs -f -l app=frontend -n mindledger-staging
-kubectl logs -f -l app=postgres -n mindledger-staging
-kubectl logs -f -l app=redis -n mindledger-staging
-kubectl logs -f -l app=minio -n mindledger-staging
+kubectl logs -f -l app=api -n axiom-staging
+kubectl logs -f -l app=frontend -n axiom-staging
+kubectl logs -f -l app=postgres -n axiom-staging
+kubectl logs -f -l app=redis -n axiom-staging
+kubectl logs -f -l app=minio -n axiom-staging
 ```
 
 ### Backup manual de staging
 
 ```bash
-kubectl create job --from=cronjob/mindledger-db-backup \
-  mindledger-backup-staging-manual-$(date +%Y%m%d%H%M%S) \
-  -n mindledger-staging
+kubectl create job --from=cronjob/axiom-db-backup \
+  axiom-backup-staging-manual-$(date +%Y%m%d%H%M%S) \
+  -n axiom-staging
 
-kubectl logs -f -l app=mindledger-backup -n mindledger-staging
+kubectl logs -f -l app=axiom-backup -n axiom-staging
 ```
 
 ### Reiniciar deployments de staging
 
 ```bash
-kubectl rollout restart deployment/api -n mindledger-staging
-kubectl rollout restart deployment/frontend -n mindledger-staging
-kubectl rollout restart deployment/postgres -n mindledger-staging
-kubectl rollout restart deployment/redis -n mindledger-staging
-kubectl rollout restart deployment/minio -n mindledger-staging
+kubectl rollout restart deployment/api -n axiom-staging
+kubectl rollout restart deployment/frontend -n axiom-staging
+kubectl rollout restart deployment/postgres -n axiom-staging
+kubectl rollout restart deployment/redis -n axiom-staging
+kubectl rollout restart deployment/minio -n axiom-staging
 ```
 
 ### Django manage.py em staging
 
 ```bash
 # Acessar shell Django em staging
-kubectl exec -it -n mindledger-staging \
-  $(kubectl get pod -l app=api -n mindledger-staging -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom-staging \
+  $(kubectl get pod -l app=api -n axiom-staging -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py shell
 
 # Ver migrações pendentes em staging
-kubectl exec -n mindledger-staging \
-  $(kubectl get pod -l app=api -n mindledger-staging -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom-staging \
+  $(kubectl get pod -l app=api -n axiom-staging -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py showmigrations
 
 # Criar usuário de teste em staging
-kubectl exec -it -n mindledger-staging \
-  $(kubectl get pod -l app=api -n mindledger-staging -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -it -n axiom-staging \
+  $(kubectl get pod -l app=api -n axiom-staging -o jsonpath='{.items[0].metadata.name}') \
   -- python manage.py createsuperuser
 ```
 
@@ -1443,47 +1443,47 @@ kubectl exec -it -n mindledger-staging \
 
 ```bash
 # Ver o motivo do erro
-kubectl describe pod <nome-do-pod> -n mindledger
+kubectl describe pod <nome-do-pod> -n axiom
 
 # Ver logs do container que está falhando
-kubectl logs <nome-do-pod> -n mindledger --previous
+kubectl logs <nome-do-pod> -n axiom --previous
 
 # Ver logs do initContainer (ex.: wait-for-postgres)
-kubectl logs <nome-do-pod> -n mindledger -c wait-for-postgres
+kubectl logs <nome-do-pod> -n axiom -c wait-for-postgres
 
 # Verificar eventos do namespace
-kubectl get events -n mindledger --sort-by='.lastTimestamp' | grep Warning
+kubectl get events -n axiom --sort-by='.lastTimestamp' | grep Warning
 
 # Verificar se o pull secret está válido
-kubectl describe secret gitlab-registry-secret -n mindledger
+kubectl describe secret gitlab-registry-secret -n axiom
 ```
 
 ### Namespace preso em Terminating
 
 ```bash
 # Forçar remoção de namespace preso
-kubectl get namespace mindledger -o json \
+kubectl get namespace axiom -o json \
   | python3 -c "import sys,json; d=json.load(sys.stdin); \
     d['spec']['finalizers']=[]; print(json.dumps(d))" \
-  | kubectl replace --raw "/api/v1/namespaces/mindledger/finalize" -f -
+  | kubectl replace --raw "/api/v1/namespaces/axiom/finalize" -f -
 ```
 
 ### Verificar conectividade entre pods
 
 ```bash
 # Testar se a API consegue chegar ao Postgres (dentro do pod da API)
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- nc -zv postgres-service 5432
 
 # Testar se a API consegue chegar ao Redis
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- nc -zv redis-service 6379
 
 # Testar se a API consegue chegar ao MinIO
-kubectl exec -n mindledger \
-  $(kubectl get pod -l app=api -n mindledger -o jsonpath='{.items[0].metadata.name}') \
+kubectl exec -n axiom \
+  $(kubectl get pod -l app=api -n axiom -o jsonpath='{.items[0].metadata.name}') \
   -- nc -zv minio-service 9000
 ```
 
@@ -1491,94 +1491,94 @@ kubectl exec -n mindledger \
 
 ```bash
 # Ver pods com mais detalhes (restarts, idade, status)
-kubectl get pods -n mindledger -o wide
+kubectl get pods -n axiom -o wide
 
 # Ver consumo atual de CPU e memória (requer metrics-server)
-kubectl top pods -n mindledger
-kubectl top pods -n mindledger-staging
+kubectl top pods -n axiom
+kubectl top pods -n axiom-staging
 
 # Ver se algum pod foi OOMKilled
-kubectl get pods -n mindledger -o json | \
+kubectl get pods -n axiom -o json | \
   jq -r '.items[] | select(.status.containerStatuses[]?.lastState.terminated.reason == "OOMKilled") | .metadata.name'
 
 # Ver descrição de todos os pods de um deployment de uma vez
-kubectl describe pods -l app=api -n mindledger
+kubectl describe pods -l app=api -n axiom
 ```
 
 ### Listar todos os recursos por label
 
 ```bash
 # Todos os recursos com o label do projeto
-kubectl get all -l app.kubernetes.io/name=mindledger -n mindledger
+kubectl get all -l app.kubernetes.io/name=axiom -n axiom
 
 # Recursos de um componente específico
-kubectl get all -l app.kubernetes.io/component=postgres -n mindledger
-kubectl get all -l app.kubernetes.io/component=redis -n mindledger
-kubectl get all -l app.kubernetes.io/component=api -n mindledger
-kubectl get all -l app.kubernetes.io/component=frontend -n mindledger
-kubectl get all -l app.kubernetes.io/component=minio -n mindledger
-kubectl get all -l app.kubernetes.io/component=backup -n mindledger
+kubectl get all -l app.kubernetes.io/component=postgres -n axiom
+kubectl get all -l app.kubernetes.io/component=redis -n axiom
+kubectl get all -l app.kubernetes.io/component=api -n axiom
+kubectl get all -l app.kubernetes.io/component=frontend -n axiom
+kubectl get all -l app.kubernetes.io/component=minio -n axiom
+kubectl get all -l app.kubernetes.io/component=backup -n axiom
 ```
 
 ### Verificar ConfigMaps
 
 ```bash
 # Listar ConfigMaps de produção
-kubectl get configmap -n mindledger
+kubectl get configmap -n axiom
 
 # Ver o ConfigMap principal da aplicação
-kubectl describe configmap mindledger-config -n mindledger
+kubectl describe configmap axiom-config -n axiom
 
 # Ver o ConfigMap de init do Postgres
-kubectl describe configmap postgres-init-config -n mindledger
+kubectl describe configmap postgres-init-config -n axiom
 
 # Ver o ConfigMap do script de backup
-kubectl describe configmap backup-script -n mindledger
+kubectl describe configmap backup-script -n axiom
 ```
 
 ### Copiar arquivos para/de pods
 
 ```bash
 # Copiar arquivo do pod para o host (ex.: coletar um dump local)
-kubectl cp mindledger/<nome-do-pod>:/backups/db_backup.dump ./db_backup.dump
+kubectl cp axiom/<nome-do-pod>:/backups/db_backup.dump ./db_backup.dump
 
 # Copiar arquivo do host para o pod
-kubectl cp ./meu-script.sh mindledger/<nome-do-pod>:/tmp/meu-script.sh
+kubectl cp ./meu-script.sh axiom/<nome-do-pod>:/tmp/meu-script.sh
 ```
 
 ### Forçar deleção de pod preso
 
 ```bash
 # Deletar e recriar um pod preso (o Deployment recria automaticamente)
-kubectl delete pod <nome-do-pod> -n mindledger
+kubectl delete pod <nome-do-pod> -n axiom
 
 # Forçar deleção sem esperar graceful shutdown (CUIDADO)
-kubectl delete pod <nome-do-pod> -n mindledger --force --grace-period=0
+kubectl delete pod <nome-do-pod> -n axiom --force --grace-period=0
 ```
 
 ### Verificar ServiceAccounts
 
 ```bash
 # Listar ServiceAccounts de produção
-kubectl get serviceaccount -n mindledger
+kubectl get serviceaccount -n axiom
 
 # Ver detalhes de uma ServiceAccount
-kubectl describe serviceaccount sa-api -n mindledger
-kubectl describe serviceaccount sa-postgres -n mindledger
-kubectl describe serviceaccount sa-redis -n mindledger
-kubectl describe serviceaccount sa-minio -n mindledger
-kubectl describe serviceaccount sa-backup -n mindledger
+kubectl describe serviceaccount sa-api -n axiom
+kubectl describe serviceaccount sa-postgres -n axiom
+kubectl describe serviceaccount sa-redis -n axiom
+kubectl describe serviceaccount sa-minio -n axiom
+kubectl describe serviceaccount sa-backup -n axiom
 ```
 
 ### Verificar NetworkPolicy
 
 ```bash
 # Ver NetworkPolicies de produção
-kubectl get networkpolicy -n mindledger
-kubectl describe networkpolicy -n mindledger
+kubectl get networkpolicy -n axiom
+kubectl describe networkpolicy -n axiom
 
 # Ver NetworkPolicies de staging
-kubectl get networkpolicy -n mindledger-staging
+kubectl get networkpolicy -n axiom-staging
 ```
 
 ### Aplicar manifestos manualmente

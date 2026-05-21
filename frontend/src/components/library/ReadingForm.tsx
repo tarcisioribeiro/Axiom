@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import { BookOpen, CalendarDays, Clock, FileText, Hash, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -23,6 +24,13 @@ import { membersService } from '@/services/members-service';
 import type { Reading, Book } from '@/types';
 
 const TIME_OF_DAY_KEYS = ['morning', 'afternoon', 'evening', 'dawn'] as const;
+
+const TIME_OF_DAY_EMOJIS: Record<string, string> = {
+  morning: '🌅',
+  afternoon: '☀️',
+  evening: '🌙',
+  dawn: '🌄',
+};
 
 interface ReadingFormProps {
   reading?: Reading;
@@ -71,7 +79,6 @@ export function ReadingForm({
         },
   });
 
-  // Load current user member when creating new reading
   useEffect(() => {
     const loadCurrentUserMember = async () => {
       if (!reading) {
@@ -94,118 +101,139 @@ export function ReadingForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-md">
-      <div className="grid gap-md">
-        {books.length > 1 && (
-          <div className="space-y-sm">
-            <Label htmlFor="book">{t('pages.readings.form.bookLabel')}</Label>
-            <Select
-              value={watch('book').toString()}
-              onValueChange={(value) => setValue('book', parseInt(value))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('pages.readings.form.bookPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {books.map((book) => (
-                  <SelectItem key={book.id} value={book.id.toString()}>
-                    {book.title} (
-                    {t('pages.readings.form.bookPages', { count: book.pages })})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.book && (
-              <p className="mt-xs text-sm text-destructive">{errors.book.message}</p>
-            )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      <FormSection title={t('pages.readings.form.sectionProgress')} icon={BookOpen}>
+        <div className="grid gap-md">
+          {books.length > 1 && (
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <BookOpen className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.readings.form.bookLabel')}
+              </Label>
+              <Select
+                value={watch('book').toString()}
+                onValueChange={(value) => setValue('book', parseInt(value))}
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('pages.readings.form.bookPlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {books.map((book) => (
+                    <SelectItem key={book.id} value={book.id.toString()}>
+                      {book.title} (
+                      {t('pages.readings.form.bookPages', { count: book.pages })})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.book && (
+                <p className="mt-xs text-sm text-destructive">{errors.book.message}</p>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="space-y-sm">
+              <Label htmlFor="pages_read" className="flex items-center gap-xs">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.readings.form.pagesReadLabel')}
+              </Label>
+              <Input
+                id="pages_read"
+                type="number"
+                min="1"
+                max={selectedBook ? getBookMaxPages(selectedBook) : undefined}
+                {...register('pages_read', {
+                  setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+                })}
+                disabled={isLoading}
+              />
+              {errors.pages_read && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.pages_read.message}
+                </p>
+              )}
+              {selectedBook > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.readings.form.pagesReadMax', {
+                    count: getBookMaxPages(selectedBook),
+                  })}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-sm">
+              <Label htmlFor="current_page" className="flex items-center gap-xs">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.readings.form.currentPageLabel')}
+              </Label>
+              <Input
+                id="current_page"
+                type="number"
+                min="1"
+                placeholder={t('pages.readings.form.currentPagePlaceholder')}
+                {...register('current_page', {
+                  setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
+                })}
+                disabled={isLoading}
+              />
+              {errors.current_page && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.current_page.message}
+                </p>
+              )}
+            </div>
           </div>
-        )}
-
-        <div className="space-y-sm">
-          <Label htmlFor="pages_read">{t('pages.readings.form.pagesReadLabel')}</Label>
-          <Input
-            id="pages_read"
-            type="number"
-            min="1"
-            max={selectedBook ? getBookMaxPages(selectedBook) : undefined}
-            {...register('pages_read', {
-              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-            })}
-          />
-          {errors.pages_read && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.pages_read.message}
-            </p>
-          )}
-          {selectedBook > 0 && (
-            <p className="text-xs">
-              {t('pages.readings.form.pagesReadMax', {
-                count: getBookMaxPages(selectedBook),
-              })}
-            </p>
-          )}
         </div>
+      </FormSection>
 
-        <div className="space-y-sm">
-          <Label htmlFor="reading_date">
-            {t('pages.readings.form.readingDateLabel')}
-          </Label>
-          <DatePicker
-            value={watch('reading_date')}
-            onChange={(date) =>
-              setValue('reading_date', date ? formatLocalDate(date) : '')
-            }
-            placeholder={t('pages.readings.form.readingDatePlaceholder')}
-          />
-          {errors.reading_date && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.reading_date.message}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-sm">
-          <Label htmlFor="reading_time">
-            {t('pages.readings.form.readingTimeLabel')}
-          </Label>
-          <Input
-            id="reading_time"
-            type="number"
-            min="0"
-            {...register('reading_time', {
-              setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
-            })}
-          />
-          {errors.reading_time && (
-            <p className="mt-xs text-sm text-destructive">
-              {errors.reading_time.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-md">
+      <FormSection title={t('pages.readings.form.sectionRecord')} icon={CalendarDays}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
           <div className="space-y-sm">
-            <Label htmlFor="current_page">
-              {t('pages.readings.form.currentPageLabel')}
+            <Label className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.readings.form.readingDateLabel')}
             </Label>
-            <Input
-              id="current_page"
-              type="number"
-              min="1"
-              placeholder={t('pages.readings.form.currentPagePlaceholder')}
-              {...register('current_page', {
-                setValueAs: (v: string) => (v === '' ? null : parseInt(v)),
-              })}
+            <DatePicker
+              value={watch('reading_date')}
+              onChange={(date) =>
+                setValue('reading_date', date ? formatLocalDate(date) : '')
+              }
+              placeholder={t('pages.readings.form.readingDatePlaceholder')}
+              disabled={isLoading}
             />
-            {errors.current_page && (
+            {errors.reading_date && (
               <p className="mt-xs text-sm text-destructive">
-                {errors.current_page.message}
+                {errors.reading_date.message}
               </p>
             )}
           </div>
 
           <div className="space-y-sm">
-            <Label htmlFor="time_of_day">
+            <Label htmlFor="reading_time" className="flex items-center gap-xs">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.readings.form.readingTimeLabel')}
+            </Label>
+            <Input
+              id="reading_time"
+              type="number"
+              min="0"
+              {...register('reading_time', {
+                setValueAs: (value: string) => (value === '' ? 0 : parseInt(value)),
+              })}
+              disabled={isLoading}
+            />
+            {errors.reading_time && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.reading_time.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-sm md:col-span-2">
+            <Label className="flex items-center gap-xs">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.readings.form.timeOfDayLabel')}
             </Label>
             <Select
@@ -213,6 +241,7 @@ export function ReadingForm({
               onValueChange={(value) =>
                 setValue('time_of_day', value === '' ? null : value)
               }
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue
@@ -222,6 +251,7 @@ export function ReadingForm({
               <SelectContent>
                 {TIME_OF_DAY_KEYS.map((key) => (
                   <SelectItem key={key} value={key}>
+                    {TIME_OF_DAY_EMOJIS[key]}{' '}
                     {t(
                       `pages.readings.form.timeOfDay${key.charAt(0).toUpperCase() + key.slice(1)}`
                     )}
@@ -231,23 +261,29 @@ export function ReadingForm({
             </Select>
           </div>
         </div>
+      </FormSection>
 
+      <FormSection title={t('pages.readings.form.sectionNotes')} icon={FileText}>
         <div className="space-y-sm">
-          <Label htmlFor="notes">{t('pages.readings.form.notesLabel')}</Label>
+          <Label htmlFor="notes" className="flex items-center gap-xs">
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            {t('pages.readings.form.notesLabel')}
+          </Label>
           <Textarea
             id="notes"
             {...register('notes')}
             placeholder={t('pages.readings.form.notesPlaceholder')}
             rows={4}
+            disabled={isLoading}
           />
           {errors.notes && (
             <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
           )}
         </div>
-      </div>
+      </FormSection>
 
       <div className="flex justify-end gap-sm border-t pt-md">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>

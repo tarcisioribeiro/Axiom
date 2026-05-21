@@ -1,6 +1,6 @@
 # Documentação de Desenvolvimento
 
-Bem-vindo à documentação de desenvolvimento do MindLedger! Esta seção contém guias completos para configurar, desenvolver e contribuir para o projeto.
+Bem-vindo à documentação de desenvolvimento do Axiom! Esta seção contém guias completos para configurar, desenvolver e contribuir para o projeto.
 
 ## Conteúdo
 
@@ -98,7 +98,7 @@ Se você está começando agora, siga esta sequência:
 ## Arquitetura do Projeto
 
 ```
-MindLedger/
+Axiom/
 ├── api/                    # Backend Django REST Framework
 │   ├── accounts/          # Contas bancárias
 │   ├── authentication/    # Autenticação JWT
@@ -190,4 +190,4 @@ Esta documentação também é código! Se você encontrar erros, informações 
 [Voltar ao índice da documentação](../README.md)
 
 **Última atualização**: Janeiro 2026
-**Mantenedor**: Equipe MindLedger
+**Mantenedor**: Equipe Axiom

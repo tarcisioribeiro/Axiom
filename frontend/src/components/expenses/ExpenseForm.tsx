@@ -1,12 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle } from 'lucide-react';
-import { useEffect, useState, useRef, useMemo } from 'react';
+import {
+  AlertCircle,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Link2,
+  Store,
+  Tag,
+  Wallet,
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusToggle } from '@/components/ui/status-toggle';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
@@ -26,14 +39,15 @@ import { accountsService } from '@/services/accounts-service';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
 import { membersService } from '@/services/members-service';
 import type {
+  Account,
+  CategorizationRule,
   Expense,
   ExpenseFormData,
-  Account,
-  Member,
   Loan,
+  Member,
   Payable,
-  CategorizationRule,
 } from '@/types';
+
 export interface ExpensePrefillData {
   description?: string;
   value?: number;
@@ -68,7 +82,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [categorizationRules, setCategorizationRules] = useState<CategorizationRule[]>(
     []
   );
+  const [linksOpen, setLinksOpen] = useState(false);
   const merchantDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -97,14 +113,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       try {
         const member = await membersService.getCurrentUserMember();
         setCurrentUserMember(member);
-        if (!expense) {
-          setValue('member', member.id);
-        }
+        if (!expense) setValue('member', member.id);
       } catch (error) {
         logger.error('Erro ao carregar membro do usuário:', error);
       }
     };
-
     const loadRules = async () => {
       try {
         const data = await categorizationRulesService.getAll();
@@ -113,17 +126,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           : ((data as { results: CategorizationRule[] }).results ?? []);
         setCategorizationRules(rules.filter((r) => r.is_active));
       } catch {
-        // rules are optional — fail silently
+        // rules are optional
       }
     };
-
     void loadCurrentUserMember();
     void loadRules();
   }, [expense, setValue]);
 
   useEffect(() => {
     if (loans && currentUserMember) {
-      // Filtrar empréstimos onde o usuário atual é o benefited (pegou emprestado, está pagando)
       const filtered = loans.filter(
         (loan) =>
           loan.benefited === currentUserMember.id &&
@@ -136,9 +147,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
   useEffect(() => {
     if (payables) {
-      // Filtrar payables ativos ou em atraso (que ainda podem receber pagamentos)
       const filtered = payables.filter(
-        (payable) => payable.status === 'active' || payable.status === 'overdue'
+        (p) => p.status === 'active' || p.status === 'overdue'
       );
       setEligiblePayables(filtered);
     }
@@ -221,19 +231,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const balanceInfo = useMemo(() => {
     if (isFutureDate) return null;
     if (!watchedPayed || !watchedAccount || watchedValue <= 0) return null;
-    const account = accounts.find((a) => a.id === watchedAccount);
-    if (!account) return null;
-    return getAccountBalanceInfo(account, watchedValue);
+    const acc = accounts.find((a) => a.id === watchedAccount);
+    if (!acc) return null;
+    return getAccountBalanceInfo(acc, watchedValue);
   }, [watchedPayed, watchedAccount, watchedValue, accounts, isFutureDate]);
 
   const futureBalanceInfo = useMemo(() => {
     if (!isFutureDate || watchedValue <= 0 || !watchedAccount) return null;
-    const account = accounts.find((a) => a.id === watchedAccount);
-    if (!account) return null;
-    const overdraft = parseFloat(account.overdraft_limit ?? '0');
-    if (watchedPayed) {
-      return getAccountBalanceInfo(account, watchedValue);
-    }
+    const acc = accounts.find((a) => a.id === watchedAccount);
+    if (!acc) return null;
+    const overdraft = parseFloat(acc.overdraft_limit ?? '0');
+    if (watchedPayed) return getAccountBalanceInfo(acc, watchedValue);
     if (projectedBalance === null) return null;
     const proj = parseFloat(projectedBalance);
     const available = proj + overdraft;
@@ -259,174 +267,290 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     onSubmit(data);
   };
 
-  return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
-        <div className="space-y-sm md:col-span-2">
-          <Label htmlFor="description">
-            {t('pages.expenses.form.descriptionLabel')}
-          </Label>
-          <Input
-            id="description"
-            {...register('description')}
-            placeholder={t('pages.expenses.form.descriptionPlaceholder')}
-            disabled={isLoading}
-          />
-          {errors.description && (
-            <p className="text-sm text-destructive">{errors.description.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="value">{t('pages.expenses.form.valueLabel')}</Label>
-          <Input
-            id="value"
-            type="number"
-            step="0.01"
-            {...register('value', { valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
-          {errors.value && (
-            <p className="text-sm text-destructive">{errors.value.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="date">{t('pages.expenses.form.dateLabel')}</Label>
-          <DatePicker
-            value={watch('date')}
-            onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
-            placeholder={t('common.fields.selectDate')}
-            disabled={isLoading}
-          />
-          {errors.date && (
-            <p className="text-sm text-destructive">{errors.date.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="horary">{t('pages.expenses.form.horaryLabel')}</Label>
-          <Input id="horary" type="time" {...register('horary')} disabled={isLoading} />
-          {errors.horary && (
-            <p className="text-sm text-destructive">{errors.horary.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label htmlFor="merchant">{t('pages.expenses.form.merchantLabel')}</Label>
-          <Input
-            id="merchant"
-            value={watch('merchant') ?? ''}
-            onChange={(e) => handleMerchantChange(e.target.value)}
-            placeholder={t('pages.expenses.form.merchantPlaceholder')}
-            disabled={isLoading}
-          />
-          <p className="text-xs text-muted-foreground">
-            {t('pages.expenses.form.merchantHint')}
-          </p>
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.expenses.form.categoryLabel')}</Label>
-          <Select
-            value={watch('category') || ''}
-            onValueChange={(v) => setValue('category', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
-            </SelectTrigger>
-            <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
-                <SelectItem key={key} value={key}>
-                  {translate('expenseCategories', key)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && (
-            <p className="text-sm text-destructive">{errors.category.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.expenses.form.paymentStatusLabel')}</Label>
-          <Select
-            value={watch('payed') ? 'true' : 'false'}
-            onValueChange={(v) => setValue('payed', v === 'true')}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="false">{t('pages.expenses.form.pending')}</SelectItem>
-              <SelectItem value="true">{t('pages.expenses.form.paid')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.expenses.form.accountLabel')}</Label>
-          <Select
-            value={watch('account')?.toString() || ''}
-            onValueChange={(v) => setValue('account', parseInt(v))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.actions.select')} />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id.toString()}>
-                  {a.account_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.account && (
-            <p className="text-sm text-destructive">{errors.account.message}</p>
-          )}
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.expenses.form.relatedLoanLabel')}</Label>
-          <Select
-            value={watch('related_loan')?.toString() || 'none'}
-            onValueChange={(v) =>
-              setValue('related_loan', v === 'none' ? null : parseInt(v))
-            }
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.fields.select_optional')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-              {eligibleLoans.map((loan) => (
-                <SelectItem key={loan.id} value={loan.id.toString()}>
-                  {loan.description} - Saldo: R$ {loan.remaining_balance || '0.00'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs">{t('pages.expenses.form.relatedLoanHint')}</p>
-        </div>
-        <div className="space-y-sm">
-          <Label>{t('pages.expenses.form.relatedPayableLabel')}</Label>
-          <Select
-            value={watch('related_payable')?.toString() || 'none'}
-            onValueChange={(v) =>
-              setValue('related_payable', v === 'none' ? null : parseInt(v))
-            }
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('common.fields.select_optional')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">{t('common.actions.none')}</SelectItem>
-              {eligiblePayables.map((payable) => (
-                <SelectItem key={payable.id} value={payable.id.toString()}>
-                  {payable.description} - Saldo: R$ {payable.remaining_value || '0.00'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs">{t('pages.expenses.form.relatedPayableHint')}</p>
-        </div>
-      </div>
+  const selectedAccount = accounts.find((a) => a.id === watchedAccount);
+  const hasEligibleLinks = eligibleLoans.length > 0 || eligiblePayables.length > 0;
 
+  return (
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+      {/* Seção: Informações Básicas */}
+      <FormSection title={t('common.form.sections.basicInfo')} icon={Store}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm md:col-span-2">
+            <Label htmlFor="description" className="flex items-center gap-xs">
+              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.descriptionLabel')}
+            </Label>
+            <Input
+              id="description"
+              {...register('description')}
+              placeholder={t('pages.expenses.form.descriptionPlaceholder')}
+              disabled={isLoading}
+            />
+            {errors.description && (
+              <p className="text-sm text-destructive">{errors.description.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm md:col-span-2">
+            <Label htmlFor="merchant" className="flex items-center gap-xs">
+              <Store className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.merchantLabel')}
+              <span className="ml-1 text-xs text-muted-foreground/70">
+                ({t('common.actions.none').toLowerCase()})
+              </span>
+            </Label>
+            <Input
+              id="merchant"
+              value={watch('merchant') ?? ''}
+              onChange={(e) => handleMerchantChange(e.target.value)}
+              placeholder={t('pages.expenses.form.merchantPlaceholder')}
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('pages.expenses.form.merchantHint')}
+            </p>
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Valores & Data */}
+      <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label htmlFor="value" className="flex items-center gap-xs">
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.valueLabel')}
+            </Label>
+            <CurrencyInput
+              id="value"
+              accentColor="destructive"
+              value={watchedValue}
+              onChange={(e) => setValue('value', parseFloat(e.target.value) || 0)}
+              disabled={isLoading}
+            />
+            {errors.value && (
+              <p className="text-sm text-destructive">{errors.value.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.paymentStatusLabel')}
+            </Label>
+            <StatusToggle
+              value={watchedPayed ? 'true' : 'false'}
+              options={[
+                {
+                  value: 'false',
+                  label: t('pages.expenses.form.pending'),
+                  activeClass: 'bg-background text-foreground shadow-sm',
+                },
+                {
+                  value: 'true',
+                  label: t('pages.expenses.form.paid'),
+                  activeClass: 'bg-success/15 text-success shadow-sm',
+                },
+              ]}
+              onChange={(v) => setValue('payed', v === 'true')}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="date" className="flex items-center gap-xs">
+              <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.dateLabel')}
+            </Label>
+            <DatePicker
+              value={watch('date')}
+              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              placeholder={t('common.fields.selectDate')}
+              disabled={isLoading}
+            />
+            {errors.date && (
+              <p className="text-sm text-destructive">{errors.date.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label htmlFor="horary" className="flex items-center gap-xs">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.horaryLabel')}
+            </Label>
+            <Input
+              id="horary"
+              type="time"
+              {...register('horary')}
+              disabled={isLoading}
+            />
+            {errors.horary && (
+              <p className="text-sm text-destructive">{errors.horary.message}</p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Classificação */}
+      <FormSection title={t('common.form.sections.classification')} icon={Tag}>
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.categoryLabel')}
+            </Label>
+            <Select
+              value={watch('category') || ''}
+              onValueChange={(v) => setValue('category', v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('common.actions.select')} />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPENSE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
+                  <SelectItem key={key} value={key}>
+                    {emoji ? `${emoji} ` : ''}
+                    {translate('expenseCategories', key)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.category && (
+              <p className="text-sm text-destructive">{errors.category.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.expenses.form.accountLabel')}
+            </Label>
+            <Select
+              value={watch('account')?.toString() || ''}
+              onValueChange={(v) => setValue('account', parseInt(v))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('common.actions.select')} />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id.toString()}>
+                    <span>{a.account_name}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      {parseFloat(a.balance).toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedAccount && (
+              <p className="text-xs text-muted-foreground">
+                {t('pages.expenses.form.balanceInfo', {
+                  value: parseFloat(selectedAccount.balance).toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                  }),
+                })}
+              </p>
+            )}
+            {errors.account && (
+              <p className="text-sm text-destructive">{errors.account.message}</p>
+            )}
+          </div>
+        </div>
+      </FormSection>
+
+      {/* Seção: Vínculos (colapsável) */}
+      {hasEligibleLinks && (
+        <div className="space-y-md">
+          <button
+            type="button"
+            onClick={() => setLinksOpen((o) => !o)}
+            className="flex w-full items-center gap-xs text-left"
+          >
+            <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t('common.form.sections.links')}
+            </span>
+            <div className="h-px flex-1 bg-border/50" />
+            {linksOpen ? (
+              <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            )}
+          </button>
+
+          {linksOpen && (
+            <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+              {eligibleLoans.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.expenses.form.relatedLoanLabel')}
+                  </Label>
+                  <Select
+                    value={watch('related_loan')?.toString() || 'none'}
+                    onValueChange={(v) =>
+                      setValue('related_loan', v === 'none' ? null : parseInt(v))
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('common.fields.select_optional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                      {eligibleLoans.map((loan) => (
+                        <SelectItem key={loan.id} value={loan.id.toString()}>
+                          {loan.description} — R$ {loan.remaining_balance || '0.00'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.expenses.form.relatedLoanHint')}
+                  </p>
+                </div>
+              )}
+
+              {eligiblePayables.length > 0 && (
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.expenses.form.relatedPayableLabel')}
+                  </Label>
+                  <Select
+                    value={watch('related_payable')?.toString() || 'none'}
+                    onValueChange={(v) =>
+                      setValue('related_payable', v === 'none' ? null : parseInt(v))
+                    }
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('common.fields.select_optional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('common.actions.none')}</SelectItem>
+                      {eligiblePayables.map((payable) => (
+                        <SelectItem key={payable.id} value={payable.id.toString()}>
+                          {payable.description} — R$ {payable.remaining_value || '0.00'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.expenses.form.relatedPayableHint')}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Alertas de saldo */}
       {isFutureDate && watchedAccount && watchedValue > 0 && (
         <div
           className={`flex items-start gap-2 rounded-md border p-sm text-sm ${
@@ -483,7 +607,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
       )}
 
-      <div className="flex justify-end gap-sm pt-md">
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>

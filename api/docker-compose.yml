@@ -24,14 +24,14 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - mindledger-network
+      - axiom-network
     environment:
       - LOG_FORMAT=json
 
   db:
     image: postgres:16.9-alpine
     environment:
-      POSTGRES_DB: mindledger_db
+      POSTGRES_DB: axiom_db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
@@ -42,13 +42,13 @@ services:
       - "39102:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d mindledger_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d axiom_db"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
     networks:
-      - mindledger-network
+      - axiom-network
 
 
 volumes:
@@ -56,5 +56,5 @@ volumes:
     driver: local
 
 networks:
-  mindledger-network:
+  axiom-network:
     driver: bridge

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger Backup Re-encryption (Key Rotation) Script
+# Axiom Backup Re-encryption (Key Rotation) Script
 # =============================================================================
 #
 # Re-encrypts existing backup files from one key version to another.
@@ -33,7 +33,7 @@
 #   MINIO_ENDPOINT  Required when --upload or --delete-old-remote is set
 #   MINIO_ACCESS_KEY
 #   MINIO_SECRET_KEY
-#   MINIO_BUCKET    (default: mindledger-backups)
+#   MINIO_BUCKET    (default: axiom-backups)
 #   MC_BIN          (default: /usr/local/bin/mc)
 #
 # ─────────────────────────────────────────────────────────────────────────────
@@ -68,7 +68,7 @@ set -euo pipefail
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 BACKUP_DIR="${BACKUP_DIR:-/backups}"
-MINIO_BUCKET="${MINIO_BUCKET:-mindledger-backups}"
+MINIO_BUCKET="${MINIO_BUCKET:-axiom-backups}"
 MC_BIN="${MC_BIN:-/usr/local/bin/mc}"
 
 FROM_VERSION=""
@@ -128,7 +128,7 @@ dryrun()  { echo -e "${YELLOW}[DRY-RUN]${NC} $*"; }
 
 # ── MinIO setup ───────────────────────────────────────────────────────────────
 if $OPT_UPLOAD || $OPT_DELETE_OLD_REMOTE; then
-    "$MC_BIN" alias set mindledger-minio \
+    "$MC_BIN" alias set axiom-minio \
         "$MINIO_ENDPOINT" \
         "$MINIO_ACCESS_KEY" \
         "$MINIO_SECRET_KEY" \
@@ -153,7 +153,7 @@ if [ ${#FILES[@]} -eq 0 ]; then
 fi
 
 log "════════════════════════════════════════════════════════════"
-log "MindLedger Backup Re-encryption"
+log "Axiom Backup Re-encryption"
 log "  From key version : ${FROM_VERSION}"
 log "  To   key version : ${TO_VERSION}"
 log "  Files found      : ${#FILES[@]}"
@@ -224,7 +224,7 @@ for OLD_ENC in "${FILES[@]}"; do
 
     # Upload new file
     if $OPT_UPLOAD; then
-        if "$MC_BIN" cp "$NEW_ENC" "mindledger-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+        if "$MC_BIN" cp "$NEW_ENC" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
             log "  Uploaded to MinIO: ${NEW_BASE}"
         else
             warning "  MinIO upload failed for ${NEW_BASE} (local file retained)"
@@ -233,7 +233,7 @@ for OLD_ENC in "${FILES[@]}"; do
 
     # Delete old remote file
     if $OPT_DELETE_OLD_REMOTE; then
-        if "$MC_BIN" rm "mindledger-minio/${MINIO_BUCKET}/db/${OLD_BASE}" > /dev/null 2>&1; then
+        if "$MC_BIN" rm "axiom-minio/${MINIO_BUCKET}/db/${OLD_BASE}" > /dev/null 2>&1; then
             log "  Deleted from MinIO: ${OLD_BASE}"
         else
             warning "  MinIO delete failed for ${OLD_BASE}"

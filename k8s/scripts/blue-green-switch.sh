@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger — Blue-Green Deployment Switch
+# Axiom — Blue-Green Deployment Switch
 # =============================================================================
 #
 # Implements zero-downtime production deploys:
@@ -20,8 +20,8 @@
 #   blue-green-switch.sh NEW_IMAGE [NAMESPACE] [SERVICE] [REPLICAS]
 #
 #   NEW_IMAGE   Full image reference, e.g.
-#               registry.gitlab.com/org/mindledger/api:abc1234
-#   NAMESPACE   Kubernetes namespace (default: mindledger)
+#               registry.gitlab.com/org/axiom/api:abc1234
+#   NAMESPACE   Kubernetes namespace (default: axiom)
 #   SERVICE     Service name whose selector is toggled (default: api-service)
 #   REPLICAS    Replica count for the new slot (default: 1)
 #
@@ -35,7 +35,7 @@
 set -euo pipefail
 
 NEW_IMAGE="${1:?Usage: $0 NEW_IMAGE [NAMESPACE] [SERVICE] [REPLICAS]}"
-NAMESPACE="${2:-mindledger}"
+NAMESPACE="${2:-axiom}"
 SERVICE="${3:-api-service}"
 REPLICAS="${4:-1}"
 

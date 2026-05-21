@@ -1,4 +1,4 @@
-# Prometheus Monitoring Stack for MindLedger
+# Prometheus Monitoring Stack for Axiom
 # -------------------------------------------
 # Apply order:
 #   kubectl apply -f k8s/monitoring/prometheus.yaml
@@ -90,7 +90,7 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
       external_labels:
-        cluster: mindledger
+        cluster: axiom
         environment: production
 
     alerting:
@@ -108,15 +108,15 @@ data:
         static_configs:
           - targets: ['localhost:9090']
 
-      # MindLedger Django API — auto-discovered via annotation on api-service:
+      # Axiom Django API — auto-discovered via annotation on api-service:
       #   prometheus.io/scrape: "true"
       #   prometheus.io/path:   "/metrics"
       #   prometheus.io/port:   "39100"
-      - job_name: mindledger-api
+      - job_name: axiom-api
         kubernetes_sd_configs:
           - role: endpoints
             namespaces:
-              names: [mindledger]
+              names: [axiom]
         relabel_configs:
           # Keep only endpoints whose service has prometheus.io/scrape=true
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
@@ -163,7 +163,7 @@ data:
 
   rules.yaml: |
     groups:
-      - name: mindledger.rules
+      - name: axiom.rules
         rules:
 
           # --- HTTP Error Rate > 1% ---
@@ -186,7 +186,7 @@ data:
           - alert: PodRestartingFrequently
             expr: |
               increase(
-                kube_pod_container_status_restarts_total{namespace="mindledger"}[15m]
+                kube_pod_container_status_restarts_total{namespace="axiom"}[15m]
               ) > 2
             for: 5m
             labels:

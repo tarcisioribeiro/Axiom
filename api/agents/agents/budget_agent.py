@@ -4,7 +4,7 @@ from typing import Any
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from agents.core.base_agent import AgentContext, BaseAgent
+from agents.core.base_agent import AgentContext, BaseAgent, safe_str
 from agents.core.prompts import get_system_prompt
 from agents.core.temporal import parse_temporal_intent
 
@@ -49,7 +49,6 @@ class BudgetAgent(BaseAgent):
         user = User.objects.get(pk=ctx.user_id)
         now = timezone.now().date()
 
-        # Detect temporal intent; explicit metadata date_from takes precedence.
         temporal = (
             parse_temporal_intent(ctx.query, now)
             if not ctx.metadata.get("date_from")
@@ -86,7 +85,6 @@ class BudgetAgent(BaseAgent):
         critical = [b for b in budgets if b["percentage"] >= 80]
         overbudget = [b for b in budgets if b["overbudget"]]
 
-        # Projections are only meaningful for the current (ongoing) month.
         projections: list[dict[str, Any]] = []
         if not is_historical:
             days_remaining = get_days_remaining_in_month()
@@ -126,39 +124,30 @@ class BudgetAgent(BaseAgent):
         else:
             lines = []
             for b in data["budgets"]:
-                status = (
+                status_icon = (
                     "🔴"
                     if b["overbudget"]
                     else ("🟡" if b["percentage"] >= 80 else "🟢")
                 )
                 lines.append(
-                    f"  {status} {b['category']}: "
+                    f"  {status_icon} {safe_str(b['category'])}: "
                     f"R$ {b['spent']:.2f} / R$ {b['limit']:.2f} "
                     f"({b['percentage']:.0f}%) — sobram R$ {b['remaining']:.2f}"
                 )
             budget_block = "\n".join(lines)
 
-        # Projections block (only for current month)
         if data["projections"]:
             proj_lines = []
             for p in data["projections"]:
                 if p["will_exceed"]:
                     excesso = p["projected"] - p["limit"]
                     proj_lines.append(
-                        f"  ⚠️ {p['category']}: projeção R$ {p['projected']:.2f}"
-                        f" (excede em R$ {excesso:.2f})"
+                        f"  ⚠️ {safe_str(p['category'])}: projeção"
+                        f" R$ {p['projected']:.2f} (excede em R$ {excesso:.2f})"
                     )
             projection_block = "\n".join(proj_lines) if proj_lines else ""
         else:
             projection_block = ""
-
-        history_block = ""
-        if ctx.history:
-            from agents.core.memory import ConversationMemory
-
-            history_block = (
-                f"\nHistórico:\n{ConversationMemory.format_for_prompt(ctx.history)}\n"
-            )
 
         header = (
             f"Mês: {data['month']}\n" f"Período das despesas: {data['period_label']}\n"
@@ -183,8 +172,7 @@ class BudgetAgent(BaseAgent):
         return (
             f"{header}\n"
             f"Orçamentos:\n{budget_block}\n"
-            f"{proj_section}"
-            f"{history_block}\n"
+            f"{proj_section}\n"
             f"Pergunta: {ctx.query}\n\n"
             "Seja direto sobre desvios. "
             "Sugira realocações ou cortes específicos quando necessário."
