@@ -689,8 +689,8 @@ deploy:staging:
     # Força nova revisão mesmo em retentativas do mesmo SHA (sem mudança de image
     # tag, kubectl apply não incrementa a generation nem reseta a condição
     # ProgressDeadlineExceeded — mesmo problema corrigido no Ollama acima).
-    - kubectl -n axiom-staging rollout restart deployment/api deployment/frontend
     - kubectl -n axiom-staging rollout resume deployment/api deployment/frontend
+    - kubectl -n axiom-staging rollout restart deployment/api deployment/frontend
     - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
     - kubectl -n axiom-staging rollout status deployment/frontend --timeout=300s
   after_script:
