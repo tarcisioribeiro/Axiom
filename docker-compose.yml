@@ -324,7 +324,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
       target: production
-    container_name: axiom-celery-worker
+    container_name: mindledger-celery-worker
     command: celery -A app worker --loglevel=info --concurrency=2 -Q celery
     env_file:
       - .env
@@ -370,7 +370,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
       target: production
-    container_name: axiom-celery-beat
+    container_name: mindledger-celery-beat
     command: >
       celery -A app beat --loglevel=info
       --scheduler django_celery_beat.schedulers:DatabaseScheduler
