@@ -686,10 +686,27 @@ deploy:staging:
     - |
       sed "s|image: .*:0\.0\.0|image: $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA|" \
         k8s/staging/frontend/deployment.yaml | kubectl apply -f -
+    # Força nova revisão mesmo em retentativas do mesmo SHA (sem mudança de image
+    # tag, kubectl apply não incrementa a generation nem reseta a condição
+    # ProgressDeadlineExceeded — mesmo problema corrigido no Ollama acima).
+    - kubectl -n axiom-staging rollout restart deployment/api deployment/frontend
     - kubectl -n axiom-staging rollout resume deployment/api deployment/frontend
-    - kubectl -n axiom-staging rollout status deployment/api --timeout=1140s
+    - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
     - kubectl -n axiom-staging rollout status deployment/frontend --timeout=300s
   after_script:
+    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - export KUBECONFIG=/tmp/kubeconfig
+    - |
+      if [ "$CI_JOB_STATUS" = "failed" ]; then
+        echo "=== Deploy falhou — coletando diagnóstico do pod api ==="
+        kubectl -n axiom-staging get pods -l app=api -o wide || true
+        echo "--- describe pod ---"
+        kubectl -n axiom-staging describe pod -l app=api || true
+        echo "--- logs (container atual) ---"
+        kubectl -n axiom-staging logs -l app=api --tail=150 || true
+        echo "--- logs (container anterior, se houver) ---"
+        kubectl -n axiom-staging logs -l app=api --tail=150 --previous || true
+      fi
     - rm -f /tmp/kubeconfig
 
 # ==============================================================================
