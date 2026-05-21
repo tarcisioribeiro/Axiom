@@ -3,6 +3,8 @@ from django.urls import path
 from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
+    FoodListCreateView,
+    FoodRetrieveUpdateDestroyView,
     GamificationProfileView,
     GoalDetailView,
     GoalListCreateView,
@@ -10,6 +12,14 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     GoalRegisterFailureView,
     GoalRestartView,
     InstancesForDateView,
+    MealLogListCreateView,
+    MealLogRetrieveUpdateDestroyView,
+    MealTypeListCreateView,
+    MealTypeRetrieveUpdateDestroyView,
+    MenuOptionIngredientListCreateView,
+    MenuOptionIngredientRetrieveUpdateDestroyView,
+    MenuOptionListCreateView,
+    MenuOptionRetrieveUpdateDestroyView,
     PersonalPlanningAnalyticsView,
     PersonalPlanningDashboardStatsView,
     RoutineTaskDetailView,
@@ -21,6 +31,18 @@ from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Go
     TaskInstanceDetailView,
     TaskInstanceListCreateView,
     TaskInstanceStatusUpdateView,
+    WorkoutDayListCreateView,
+    WorkoutDayRetrieveUpdateDestroyView,
+    WorkoutExerciseListCreateView,
+    WorkoutExerciseRetrieveUpdateDestroyView,
+    WorkoutPlanListCreateView,
+    WorkoutPlanRetrieveUpdateDestroyView,
+    WorkoutSessionExerciseListCreateView,
+    WorkoutSessionExerciseRetrieveUpdateDestroyView,
+    WorkoutSessionListCreateView,
+    WorkoutSessionRetrieveUpdateDestroyView,
+    WorkoutSessionSetListCreateView,
+    WorkoutSessionSetRetrieveUpdateDestroyView,
 )
 
 urlpatterns = [
@@ -116,5 +138,120 @@ urlpatterns = [
         "gamification/",
         GamificationProfileView.as_view(),
         name="gamification-profile",
+    ),
+    # Workout Plans
+    path(
+        "workout-plans/",
+        WorkoutPlanListCreateView.as_view(),
+        name="workout-plan-list-create",
+    ),
+    path(
+        "workout-plans/<int:pk>/",
+        WorkoutPlanRetrieveUpdateDestroyView.as_view(),
+        name="workout-plan-detail",
+    ),
+    # Workout Days
+    path(
+        "workout-days/",
+        WorkoutDayListCreateView.as_view(),
+        name="workout-day-list-create",
+    ),
+    path(
+        "workout-days/<int:pk>/",
+        WorkoutDayRetrieveUpdateDestroyView.as_view(),
+        name="workout-day-detail",
+    ),
+    # Workout Exercises
+    path(
+        "workout-exercises/",
+        WorkoutExerciseListCreateView.as_view(),
+        name="workout-exercise-list-create",
+    ),
+    path(
+        "workout-exercises/<int:pk>/",
+        WorkoutExerciseRetrieveUpdateDestroyView.as_view(),
+        name="workout-exercise-detail",
+    ),
+    # Workout Sessions
+    path(
+        "workout-sessions/",
+        WorkoutSessionListCreateView.as_view(),
+        name="workout-session-list-create",
+    ),
+    path(
+        "workout-sessions/<int:pk>/",
+        WorkoutSessionRetrieveUpdateDestroyView.as_view(),
+        name="workout-session-detail",
+    ),
+    # Workout Session Exercises
+    path(
+        "workout-session-exercises/",
+        WorkoutSessionExerciseListCreateView.as_view(),
+        name="workout-session-exercise-list-create",
+    ),
+    path(
+        "workout-session-exercises/<int:pk>/",
+        WorkoutSessionExerciseRetrieveUpdateDestroyView.as_view(),
+        name="workout-session-exercise-detail",
+    ),
+    # Workout Session Sets
+    path(
+        "workout-session-sets/",
+        WorkoutSessionSetListCreateView.as_view(),
+        name="workout-session-set-list-create",
+    ),
+    path(
+        "workout-session-sets/<int:pk>/",
+        WorkoutSessionSetRetrieveUpdateDestroyView.as_view(),
+        name="workout-session-set-detail",
+    ),
+    # Foods
+    path("foods/", FoodListCreateView.as_view(), name="food-list-create"),
+    path(
+        "foods/<int:pk>/", FoodRetrieveUpdateDestroyView.as_view(), name="food-detail"
+    ),
+    # Meal Types
+    path(
+        "meal-types/",
+        MealTypeListCreateView.as_view(),
+        name="meal-type-list-create",
+    ),
+    path(
+        "meal-types/<int:pk>/",
+        MealTypeRetrieveUpdateDestroyView.as_view(),
+        name="meal-type-detail",
+    ),
+    # Menu Options
+    path(
+        "menu-options/",
+        MenuOptionListCreateView.as_view(),
+        name="menu-option-list-create",
+    ),
+    path(
+        "menu-options/<int:pk>/",
+        MenuOptionRetrieveUpdateDestroyView.as_view(),
+        name="menu-option-detail",
+    ),
+    # Menu Option Ingredients
+    path(
+        "menu-option-ingredients/",
+        MenuOptionIngredientListCreateView.as_view(),
+        name="menu-option-ingredient-list-create",
+    ),
+    path(
+        "menu-option-ingredients/<int:pk>/",
+        MenuOptionIngredientRetrieveUpdateDestroyView.as_view(),
+        name="menu-option-ingredient-detail",
+    ),
+    # Meal Logs
+    path(
+        "meal-logs/",
+        MealLogListCreateView.as_view(),
+        name="meal-log-list-create",
+    ),
+    path(
+        "meal-logs/<int:pk>/",
+        MealLogRetrieveUpdateDestroyView.as_view(),
+        name="meal-log-detail",
     ),
 ]

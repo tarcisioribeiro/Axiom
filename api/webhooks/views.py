@@ -37,6 +37,7 @@ class WebhookDeliveryListView(APIView):
     """GET /api/v1/webhooks/{id}/deliveries/ — histórico de entregas."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Webhook.objects.none()
 
     def get(self, request: Request, pk: int) -> Response:
         webhook = Webhook.objects.filter(
@@ -68,6 +69,7 @@ class WebhookTestView(APIView):
     """POST /api/v1/webhooks/{id}/test/ — envia payload de teste."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = Webhook.objects.none()
 
     def post(self, request: Request, pk: int) -> Response:
         webhook = Webhook.objects.filter(

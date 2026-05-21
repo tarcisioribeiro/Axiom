@@ -104,6 +104,8 @@ const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 // Planning extras
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
+const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
+const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -484,6 +486,22 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <DailyReflections />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/planning/workout"
+            element={
+              <PageWrapper>
+                <WorkoutPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/planning/nutrition"
+            element={
+              <PageWrapper>
+                <NutritionPage />
               </PageWrapper>
             }
           />
