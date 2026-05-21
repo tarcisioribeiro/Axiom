@@ -657,6 +657,24 @@ deploy:staging:
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
         --dry-run=client -o yaml | kubectl apply -f -
+    # Sincroniza a senha do PostgreSQL com o Secret atual.
+    # O Postgres só lê POSTGRES_PASSWORD na inicialização do PVC; após isso a
+    # senha fica gravada no disco e mudanças no Secret são ignoradas.  Este passo
+    # conecta via socket local (peer auth) e emite ALTER USER para manter as
+    # credenciais em sincronia sempre que STAGING_DB_PASSWORD for rotacionada.
+    - |
+      POSTGRES_POD=$(kubectl -n axiom-staging get pods -l app=postgres \
+        -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+      if [ -n "$POSTGRES_POD" ]; then
+        echo "Sincronizando senha do PostgreSQL com o Secret atual..."
+        kubectl -n axiom-staging exec "$POSTGRES_POD" -- \
+          runuser -u postgres -- \
+          psql -c "ALTER USER \"${STAGING_DB_USER}\" WITH PASSWORD '${STAGING_DB_PASSWORD}';" \
+          && echo "Senha sincronizada com sucesso." \
+          || echo "AVISO: não foi possível sincronizar a senha do PostgreSQL — verifique se o pod está Running."
+      else
+        echo "Pod do PostgreSQL não encontrado — pulando sincronização de senha."
+      fi
     - kubectl apply -f k8s/staging/resource-quota.yaml
     - kubectl apply -f k8s/staging/ingress.yaml
     - kubectl apply -f k8s/staging/api/service.yaml
