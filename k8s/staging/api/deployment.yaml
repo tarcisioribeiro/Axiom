@@ -9,7 +9,7 @@ metadata:
     environment: staging
 spec:
   replicas: 1
-  progressDeadlineSeconds: 900
+  progressDeadlineSeconds: 1200
   revisionHistoryLimit: 3
   minReadySeconds: 30
   strategy:
@@ -87,12 +87,12 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            # Allow up to 40 × 15s = 600s for the entrypoint to finish
-            # (migrations, collectstatic, createsuperuser, setup_members).
+            # Allow up to 60 × 15s = 900s (+ 30s initial) for the entrypoint to finish
+            # (151 migrations + collectstatic + createsuperuser + setup_members).
             initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 5
-            failureThreshold: 40
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /ready/
