@@ -188,7 +188,7 @@ export default function Webhooks() {
     <PageContainer>
       <PageHeader
         title="Webhooks"
-        description="Receba notificações em tempo real de eventos do MindLedger em sistemas externos."
+        description="Receba notificações em tempo real de eventos do Axiom em sistemas externos."
         actions={
           <Button onClick={openCreate}>
             <Plus className="mr-sm h-md w-md" />
@@ -203,7 +203,7 @@ export default function Webhooks() {
         <EmptyState
           icon={<Zap className="h-10 w-10" />}
           title="Nenhum webhook configurado"
-          description="Conecte o MindLedger ao Zapier, n8n ou qualquer sistema externo."
+          description="Conecte o Axiom ao Zapier, n8n ou qualquer sistema externo."
           action={
             <Button onClick={openCreate}>
               <Plus className="mr-sm h-md w-md" />

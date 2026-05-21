@@ -1,6 +1,6 @@
 # Configuração LLM / Ollama
 
-O sistema de agentes do MindLedger (`api/agents/`) suporta dois provedores de LLM: **Ollama** (local, privado) e **Anthropic Claude** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin.
+O sistema de agentes do Axiom (`api/agents/`) suporta dois provedores de LLM: **Ollama** (local, privado) e **Anthropic Claude** (nuvem). O provedor ativo é controlado pela chave `LLM_PROVIDER` no painel admin.
 
 ## Índice
 
@@ -85,7 +85,7 @@ ID do modelo Claude a utilizar. Os IDs são versionados e mudam periodicamente; 
 
 ### Como o Ollama Funciona
 
-Ollama é um runtime que serve modelos de linguagem localmente via HTTP. O MindLedger se comunica com ele em duas situações:
+Ollama é um runtime que serve modelos de linguagem localmente via HTTP. O Axiom se comunica com ele em duas situações:
 
 1. **Chat** (`/api/chat`): o agente envia o histórico da conversa e recebe uma resposta gerada.
 2. **Embeddings** (`/api/embeddings`): o sistema converte texto em vetores numéricos para busca semântica (RAG sobre transações e documentos).
@@ -163,7 +163,7 @@ LLM_TIMEOUT_EMBED  = 30
 
 1. Acesse [console.anthropic.com](https://console.anthropic.com) e faça login (ou crie uma conta).
 2. No menu lateral, clique em **API Keys**.
-3. Clique em **Create Key**, dê um nome (ex: `MindLedger Production`) e confirme.
+3. Clique em **Create Key**, dê um nome (ex: `Axiom Production`) e confirme.
 4. **Copie a chave imediatamente** — ela só é exibida uma vez. Começa com `sk-ant-api03-`.
 5. Guarde em local seguro (gerenciador de senhas ou secret manager).
 

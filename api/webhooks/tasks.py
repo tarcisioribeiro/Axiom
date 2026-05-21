@@ -28,10 +28,10 @@ def deliver_webhook(self: Any, delivery_id: int) -> dict:
 
     headers = {
         "Content-Type": "application/json",
-        "X-MindLedger-Event": delivery.event,
-        "X-MindLedger-Signature": f"sha256={signature}",
-        "X-MindLedger-Delivery": str(delivery.uuid),
-        "User-Agent": "MindLedger-Webhook/1.0",
+        "X-Axiom-Event": delivery.event,
+        "X-Axiom-Signature": f"sha256={signature}",
+        "X-Axiom-Delivery": str(delivery.uuid),
+        "User-Agent": "Axiom-Webhook/1.0",
     }
 
     delivery.status = "retrying"

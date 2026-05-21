@@ -4,18 +4,18 @@
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: mindledger-staging-quota
-  namespace: mindledger-staging
+  name: axiom-staging-quota
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
     environment: staging
 spec:
   hard:
     requests.cpu: "2"
     limits.cpu: "4"
-    requests.memory: 2Gi
-    limits.memory: 4Gi
+    requests.memory: 4Gi
+    limits.memory: 6Gi
     pods: "15"
     persistentvolumeclaims: "8"
     services: "10"
@@ -25,10 +25,10 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: mindledger-staging-limit-range
-  namespace: mindledger-staging
+  name: axiom-staging-limit-range
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: resource-quota
     environment: staging
 spec:
@@ -41,8 +41,8 @@ spec:
         cpu: "50m"
         memory: "64Mi"
       max:
-        cpu: "1"
-        memory: "1Gi"
+        cpu: "2"
+        memory: "4Gi"
       min:
         cpu: "25m"
         memory: "32Mi"

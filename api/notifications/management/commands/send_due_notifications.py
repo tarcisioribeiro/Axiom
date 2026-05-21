@@ -30,7 +30,7 @@ from members.models import Member
 from notifications.models import Notification
 from notifications.services import dispatch_notification
 
-logger = logging.getLogger("mindledger")
+logger = logging.getLogger("axiom")
 
 
 def _get_or_create_notification(

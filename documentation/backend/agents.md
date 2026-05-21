@@ -1,6 +1,6 @@
 # Sistema de Agentes de IA
 
-O MindLedger possui um módulo de IA conversacional (`api/agents/`) composto por agentes especializados que respondem perguntas sobre finanças, orçamento, planejamento pessoal e biblioteca. O sistema suporta respostas em streaming (SSE) e modo síncrono, com memória de sessão via Redis e histórico permanente no banco de dados.
+O Axiom possui um módulo de IA conversacional (`api/agents/`) composto por agentes especializados que respondem perguntas sobre finanças, orçamento, planejamento pessoal e biblioteca. O sistema suporta respostas em streaming (SSE) e modo síncrono, com memória de sessão via Redis e histórico permanente no banco de dados.
 
 ## Índice
 

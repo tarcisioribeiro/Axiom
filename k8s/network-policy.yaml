@@ -1,14 +1,14 @@
 ---
 # Default deny-all ingress for every pod in the namespace.
 # Individual NetworkPolicies below explicitly allow only the traffic
-# required for MindLedger to operate.
+# required for Axiom to operate.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector: {}
@@ -21,9 +21,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress-to-frontend
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -47,9 +47,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress-to-api
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -72,9 +72,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-api-to-postgres
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -89,7 +89,7 @@ spec:
               app: api
         - podSelector:
             matchLabels:
-              app: mindledger-backup
+              app: axiom-backup
       ports:
         - protocol: TCP
           port: 5432
@@ -99,9 +99,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-api-to-redis
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -123,9 +123,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-api-to-minio
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -140,7 +140,7 @@ spec:
               app: api
         - podSelector:
             matchLabels:
-              app: mindledger-backup
+              app: axiom-backup
         - podSelector:
             matchLabels:
               app: minio-init
@@ -155,9 +155,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-api-to-ollama
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -181,9 +181,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress-to-minio
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -203,15 +203,15 @@ spec:
           port: 9001
 ---
 # Allow the nginx ingress controller to reach cert-manager ACME HTTP-01 solver pods.
-# These pods are created in the mindledger namespace and also blocked by default-deny-ingress.
+# These pods are created in the axiom namespace and also blocked by default-deny-ingress.
 # Without this policy, Let's Encrypt HTTP-01 challenges get 404 and TLS certs cannot be issued.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress-to-acme-solver
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:
@@ -234,9 +234,9 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-prometheus-scrape
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: network-policy
 spec:
   podSelector:

@@ -1,6 +1,6 @@
 # Diagramas UML
 
-Diagramas em [Mermaid](https://mermaid.js.org/) do MindLedger. Renderizados automaticamente no GitLab, GitHub e VS Code (extensão *Markdown Preview Mermaid Support*).
+Diagramas em [Mermaid](https://mermaid.js.org/) do Axiom. Renderizados automaticamente no GitLab, GitHub e VS Code (extensão *Markdown Preview Mermaid Support*).
 
 ## Índice
 
@@ -567,7 +567,7 @@ classDiagram
     }
 
     class BaseListCreateView {
-        <<MindLedger>>
+        <<Axiom>>
         +permission_classes = [IsAuthenticated, GlobalDefaultPermission]
         +filter_backends = [DjangoFilterBackend]
         +pagination_class = PageNumberPagination
@@ -575,7 +575,7 @@ classDiagram
     }
 
     class BaseRetrieveUpdateDestroyView {
-        <<MindLedger>>
+        <<Axiom>>
         +permission_classes = [IsAuthenticated, GlobalDefaultPermission]
         +perform_destroy(instance) soft_delete
     }

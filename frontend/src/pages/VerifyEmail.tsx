@@ -46,7 +46,7 @@ export default function VerifyEmail() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
           <div className="mx-auto flex items-center justify-center">
-            <img src={logo} alt="MindLedger" className="h-auto w-64" />
+            <img src={logo} alt="Axiom" className="h-auto w-64" />
           </div>
         </CardHeader>
         <CardContent className="space-y-md text-center">

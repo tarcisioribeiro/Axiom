@@ -23,7 +23,7 @@ Este documento cataloga funcionalidades que possuem infraestrutura parcial no co
 | Confirmação de email | ❌ Falta tudo | ❌ Falta tudo | Médio |
 | Export ZIP (Security) | ❌ Falta endpoint | ❌ Falta UI | Médio |
 | Import extrato (frontend) | ✅ Pronto | 🚧 Incompleto | Baixo |
-| Vault Health Report UI | ✅ Pronto | ❌ Falta página | Baixo |
+| Vault Health Report UI | ✅ Pronto | ✅ Implementado | — |
 | 2FA / TOTP | ❌ Falta tudo | ❌ Falta tudo | Alto |
 
 ---
@@ -85,7 +85,7 @@ EMAIL_HOST_USER=noreply@seudominio.com
 EMAIL_HOST_PASSWORD=sua_senha_ou_app_password_aqui
 
 # Endereço padrão de "remetente" (aparece no "De:" do email)
-DEFAULT_FROM_EMAIL=MindLedger <noreply@seudominio.com>
+DEFAULT_FROM_EMAIL=Axiom <noreply@seudominio.com>
 ```
 
 > **💡 Gmail**: Para usar o Gmail como SMTP, é necessário criar uma **App Password** em [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). A conta deve ter verificação em duas etapas ativada.
@@ -120,7 +120,7 @@ docker compose exec api python manage.py shell
 # Testar envio direto
 from django.core.mail import send_mail
 send_mail(
-    subject='Teste MindLedger',
+    subject='Teste Axiom',
     message='Funcionou!',
     from_email='noreply@seudominio.com',
     recipient_list=['seu@email.com'],
@@ -138,7 +138,7 @@ O management command `send_due_notifications` já está implementado. Configure 
 crontab -e
 
 # Executar todo dia às 8h da manhã (horário de Brasília)
-0 8 * * * docker compose -f /caminho/para/docker-compose.yml exec -T api python manage.py send_due_notifications >> /var/log/mindledger-notifications.log 2>&1
+0 8 * * * docker compose -f /caminho/para/docker-compose.yml exec -T api python manage.py send_due_notifications >> /var/log/axiom-notifications.log 2>&1
 ```
 
 **Opção B — adicionar ao docker-compose.yml como serviço separado**
@@ -240,11 +240,11 @@ def validate_reset_token(uidb64, token):
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Redefinição de Senha — MindLedger</title>
+  <title>Redefinição de Senha — Axiom</title>
 </head>
 <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
   <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px;">
-    <h2 style="color: #6d28d9;">MindLedger</h2>
+    <h2 style="color: #6d28d9;">Axiom</h2>
     <h3>Redefinição de Senha</h3>
     <p>Olá, {{ user.username }}!</p>
     <p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>
@@ -260,7 +260,7 @@ def validate_reset_token(uidb64, token):
       Se você não solicitou a redefinição, ignore este email.
     </p>
     <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
-    <p style="color: #999; font-size: 12px;">MindLedger — Gestão Financeira Pessoal</p>
+    <p style="color: #999; font-size: 12px;">Axiom — Gestão Financeira Pessoal</p>
   </div>
 </body>
 </html>
@@ -315,7 +315,7 @@ class PasswordResetRequestView(APIView):
             )
 
             send_mail(
-                subject="Redefinição de Senha — MindLedger",
+                subject="Redefinição de Senha — Axiom",
                 message=f"Acesse: {reset_url}",
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
@@ -516,10 +516,10 @@ docker compose exec api python manage.py migrate
 <!-- api/authentication/templates/email/email_verification.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head><meta charset="UTF-8"><title>Confirme seu Email — MindLedger</title></head>
+<head><meta charset="UTF-8"><title>Confirme seu Email — Axiom</title></head>
 <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
   <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px;">
-    <h2 style="color: #6d28d9;">Bem-vindo ao MindLedger!</h2>
+    <h2 style="color: #6d28d9;">Bem-vindo ao Axiom!</h2>
     <p>Olá, {{ user.username }}! Sua conta foi criada com sucesso.</p>
     <p>Para ativar sua conta, confirme seu endereço de email:</p>
     <a href="{{ verification_url }}"
@@ -561,7 +561,7 @@ class EmailVerificationSendView(APIView):
             {"user": request.user, "verification_url": verification_url},
         )
         send_mail(
-            subject="Confirme seu Email — MindLedger",
+            subject="Confirme seu Email — Axiom",
             message=f"Acesse: {verification_url}",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[request.user.email],
@@ -743,7 +743,7 @@ class VaultExportZipView(APIView):
 
         buffer.seek(0)
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"mindledger_vault_{timestamp}.zip"
+        filename = f"axiom_vault_{timestamp}.zip"
 
         response = HttpResponse(buffer.read(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -776,7 +776,7 @@ async exportVaultZip(): Promise<void> {
   const link = document.createElement('a');
   link.href = url;
   const timestamp = new Date().toISOString().slice(0, 10);
-  link.setAttribute('download', `mindledger_vault_${timestamp}.zip`);
+  link.setAttribute('download', `axiom_vault_${timestamp}.zip`);
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -975,7 +975,7 @@ class TOTPDevice(BaseModel):
     class Meta:
         verbose_name = "TOTP Device"
 
-    def generate_provisioning_uri(self, issuer="MindLedger"):
+    def generate_provisioning_uri(self, issuer="Axiom"):
         totp = pyotp.TOTP(self.secret)
         return totp.provisioning_uri(
             name=self.user.email or self.user.username,
@@ -1154,7 +1154,7 @@ EMAIL_USE_TLS=True
 EMAIL_USE_SSL=False
 EMAIL_HOST_USER=noreply@seudominio.com
 EMAIL_HOST_PASSWORD=sua_app_password
-DEFAULT_FROM_EMAIL=MindLedger <noreply@seudominio.com>
+DEFAULT_FROM_EMAIL=Axiom <noreply@seudominio.com>
 
 # URL do frontend (obrigatório para: reset de senha, confirmação de email)
 FRONTEND_URL=http://localhost:39101

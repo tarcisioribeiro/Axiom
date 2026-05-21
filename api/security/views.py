@@ -2062,7 +2062,7 @@ class VaultExportZipView(VaultLockedMixin, APIView):
 
         buffer.seek(0)
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"mindledger_vault_{timestamp}.zip"
+        filename = f"axiom_vault_{timestamp}.zip"
 
         response = HttpResponse(buffer.read(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'

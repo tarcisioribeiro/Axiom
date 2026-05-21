@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger Backup Verification Script
+# Axiom Backup Verification Script
 # =============================================================================
 #
 # Decrypts the most recent local encrypted dump, restores it into a temporary
@@ -36,7 +36,7 @@ DB_USER="${DB_USER:-postgres}"
 PGHOST="${PGHOST:-db}"
 PGPORT="${PGPORT:-5432}"
 MIN_TABLE_COUNT="${MIN_TABLE_COUNT:-20}"
-VERIFY_DB="mindledger_verify_$(date +%s)"
+VERIFY_DB="axiom_verify_$(date +%s)"
 VERIFY_STATUS_FILE="${BACKUP_DIR}/.last_verification_status"
 
 export PGHOST PGPORT PGPASSWORD
@@ -85,7 +85,7 @@ trap cleanup EXIT
 : "${BACKUP_ENCRYPTION_KEY:?BACKUP_ENCRYPTION_KEY is required}"
 
 log "════════════════════════════════════════════════════════════"
-log "MindLedger Backup Verification — $(date '+%Y-%m-%d %H:%M:%S %Z')"
+log "Axiom Backup Verification — $(date '+%Y-%m-%d %H:%M:%S %Z')"
 log "  Target DB : ${VERIFY_DB}@${PGHOST}:${PGPORT}"
 log "════════════════════════════════════════════════════════════"
 
@@ -208,7 +208,7 @@ if (( TABLE_COUNT < MIN_TABLE_COUNT )); then
     exit 1
 fi
 
-# Verify key Django / MindLedger tables are present
+# Verify key Django / Axiom tables are present
 REQUIRED_TABLES=(
     "django_migrations"
     "auth_user"

@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O frontend do MindLedger é uma aplicação React + TypeScript moderna, utilizando Vite como bundler e seguindo uma arquitetura modular e escalável.
+O frontend do Axiom é uma aplicação React + TypeScript moderna, utilizando Vite como bundler e seguindo uma arquitetura modular e escalável.
 
 ## Estrutura de Diretórios
 
