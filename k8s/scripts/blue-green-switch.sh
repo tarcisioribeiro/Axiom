@@ -39,7 +39,7 @@ NAMESPACE="${2:-axiom}"
 SERVICE="${3:-api-service}"
 REPLICAS="${4:-1}"
 
-TIMEOUT="${BLUE_GREEN_TIMEOUT:-300}"
+TIMEOUT="${BLUE_GREEN_TIMEOUT:-780}"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 log()   { echo "[$(date '+%H:%M:%S')] $*"; }
