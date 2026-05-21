@@ -387,12 +387,41 @@ class AgentStreamView(APIView):
                     user.pk, session_id, query, full_content, agent.name, query_id
                 )
                 persisted = True
+                print(persisted)
 
             except GeneratorExit:
-                if full_content and not persisted:
-                    _persist_conversation_async(
-                        user.pk, session_id, query, full_content, agent.name, query_id
-                    )
+                # Persiste o que foi acumulado antes da desconexão do cliente
+                if full_content:
+                    try:
+                        ConversationMemory.append(
+                            user.pk, session_id, query, full_content
+                        )
+                        AgentConversation.objects.bulk_create(
+                            [
+                                AgentConversation(
+                                    user=user,
+                                    session_id=session_id,
+                                    role="user",
+                                    content=query,
+                                    query_id=query_id,
+                                    created_by=user,
+                                    updated_by=user,
+                                ),
+                                AgentConversation(
+                                    user=user,
+                                    session_id=session_id,
+                                    role="agent",
+                                    content=full_content,
+                                    agent_name=agent.name,
+                                    query_id=query_id,
+                                    created_by=user,
+                                    updated_by=user,
+                                ),
+                            ]
+                        )
+                    except Exception:
+                        pass
+                return
 
         response = StreamingHttpResponse(
             event_stream(), content_type="text/event-stream"
