@@ -1,6 +1,22 @@
 from rest_framework import serializers
 
-from personal_planning.models import DailyReflection, Goal, RoutineTask, TaskInstance
+from personal_planning.models import (
+    DailyReflection,
+    Food,
+    Goal,
+    MealLog,
+    MealType,
+    MenuOption,
+    MenuOptionIngredient,
+    RoutineTask,
+    TaskInstance,
+    WorkoutDay,
+    WorkoutExercise,
+    WorkoutPlan,
+    WorkoutSession,
+    WorkoutSessionExercise,
+    WorkoutSessionSet,
+)
 
 # ============================================================================
 # ROUTINE TASK SERIALIZERS
@@ -370,3 +386,405 @@ class InstancesForDateResponseSerializer(serializers.Serializer):
     date = serializers.DateField()
     instances = TaskInstanceSerializer(many=True)
     summary = serializers.DictField()
+
+
+# ============================================================================
+# WORKOUT SERIALIZERS
+# ============================================================================
+
+
+class WorkoutExerciseSerializer(serializers.ModelSerializer):
+    load_unit_display = serializers.CharField(
+        source="get_load_unit_display", read_only=True, default=None
+    )
+
+    class Meta:
+        model = WorkoutExercise
+        fields = [
+            "id",
+            "uuid",
+            "workout_day",
+            "name",
+            "sets",
+            "reps_min",
+            "reps_max",
+            "order",
+            "notes",
+            "load_unit_display",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class WorkoutExerciseCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutExercise
+        fields = [
+            "id",
+            "workout_day",
+            "name",
+            "sets",
+            "reps_min",
+            "reps_max",
+            "order",
+            "notes",
+            "owner",
+        ]
+
+
+class WorkoutDaySerializer(serializers.ModelSerializer):
+    exercises = WorkoutExerciseSerializer(many=True, read_only=True)
+    exercise_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkoutDay
+        fields = [
+            "id",
+            "uuid",
+            "plan",
+            "name",
+            "muscle_groups",
+            "order",
+            "exercises",
+            "exercise_count",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_exercise_count(self, obj):
+        return obj.exercises.filter(deleted_at__isnull=True).count()
+
+
+class WorkoutDayCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutDay
+        fields = ["id", "plan", "name", "muscle_groups", "order", "owner"]
+
+
+class WorkoutPlanSerializer(serializers.ModelSerializer):
+    days = WorkoutDaySerializer(many=True, read_only=True)
+    day_count = serializers.SerializerMethodField()
+    exercise_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WorkoutPlan
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "description",
+            "is_active",
+            "days",
+            "day_count",
+            "exercise_count",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_day_count(self, obj):
+        return obj.days.filter(deleted_at__isnull=True).count()
+
+    def get_exercise_count(self, obj):
+        return WorkoutExercise.objects.filter(
+            workout_day__plan=obj, deleted_at__isnull=True
+        ).count()
+
+
+class WorkoutPlanCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutPlan
+        fields = ["id", "name", "description", "is_active", "owner"]
+
+
+class WorkoutSessionSetSerializer(serializers.ModelSerializer):
+    load_unit_display = serializers.CharField(
+        source="get_load_unit_display", read_only=True
+    )
+
+    class Meta:
+        model = WorkoutSessionSet
+        fields = [
+            "id",
+            "uuid",
+            "session_exercise",
+            "set_number",
+            "load",
+            "load_unit",
+            "load_unit_display",
+            "reps_done",
+            "completed",
+            "notes",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class WorkoutSessionSetCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutSessionSet
+        fields = [
+            "id",
+            "session_exercise",
+            "set_number",
+            "load",
+            "load_unit",
+            "reps_done",
+            "completed",
+            "notes",
+            "owner",
+        ]
+
+
+class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
+    sets = WorkoutSessionSetSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = WorkoutSessionExercise
+        fields = [
+            "id",
+            "uuid",
+            "session",
+            "exercise",
+            "exercise_name",
+            "sets_target",
+            "reps_target_min",
+            "reps_target_max",
+            "order",
+            "sets",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class WorkoutSessionExerciseCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutSessionExercise
+        fields = [
+            "id",
+            "session",
+            "exercise",
+            "exercise_name",
+            "sets_target",
+            "reps_target_min",
+            "reps_target_max",
+            "order",
+            "owner",
+        ]
+
+
+class WorkoutSessionSerializer(serializers.ModelSerializer):
+    workout_day_name = serializers.CharField(
+        source="workout_day.name", read_only=True, default=None
+    )
+    workout_day_muscle_groups = serializers.CharField(
+        source="workout_day.muscle_groups", read_only=True, default=None
+    )
+    duration_minutes = serializers.IntegerField(read_only=True)
+    session_exercises = WorkoutSessionExerciseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = WorkoutSession
+        fields = [
+            "id",
+            "uuid",
+            "workout_day",
+            "workout_day_name",
+            "workout_day_muscle_groups",
+            "date",
+            "started_at",
+            "finished_at",
+            "duration_minutes",
+            "notes",
+            "session_exercises",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class WorkoutSessionCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkoutSession
+        fields = [
+            "id",
+            "workout_day",
+            "date",
+            "started_at",
+            "finished_at",
+            "notes",
+            "owner",
+        ]
+
+
+# ============================================================================
+# NUTRITION SERIALIZERS
+# ============================================================================
+
+
+class FoodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Food
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "description",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class FoodCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Food
+        fields = ["id", "name", "description", "owner"]
+
+
+class MenuOptionIngredientSerializer(serializers.ModelSerializer):
+    food_name = serializers.CharField(source="food.name", read_only=True)
+    unit_display = serializers.CharField(source="get_unit_display", read_only=True)
+
+    class Meta:
+        model = MenuOptionIngredient
+        fields = [
+            "id",
+            "uuid",
+            "menu_option",
+            "food",
+            "food_name",
+            "quantity",
+            "unit",
+            "unit_display",
+            "is_optional",
+            "notes",
+            "order",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class MenuOptionIngredientCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuOptionIngredient
+        fields = [
+            "id",
+            "menu_option",
+            "food",
+            "quantity",
+            "unit",
+            "is_optional",
+            "notes",
+            "order",
+            "owner",
+        ]
+
+
+class MenuOptionSerializer(serializers.ModelSerializer):
+    ingredients = MenuOptionIngredientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MenuOption
+        fields = [
+            "id",
+            "uuid",
+            "meal_type",
+            "name",
+            "order",
+            "ingredients",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class MenuOptionCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuOption
+        fields = ["id", "meal_type", "name", "order", "owner"]
+
+
+class MealTypeSerializer(serializers.ModelSerializer):
+    options = MenuOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MealType
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "suggested_time",
+            "order",
+            "is_active",
+            "options",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class MealTypeCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealType
+        fields = ["id", "name", "suggested_time", "order", "is_active", "owner"]
+
+
+class MealLogSerializer(serializers.ModelSerializer):
+    meal_type_name = serializers.CharField(source="meal_type.name", read_only=True)
+    meal_type_suggested_time = serializers.TimeField(
+        source="meal_type.suggested_time", read_only=True
+    )
+    menu_option_name = serializers.CharField(
+        source="menu_option.name", read_only=True, default=None
+    )
+
+    class Meta:
+        model = MealLog
+        fields = [
+            "id",
+            "uuid",
+            "meal_type",
+            "meal_type_name",
+            "meal_type_suggested_time",
+            "menu_option",
+            "menu_option_name",
+            "is_free_meal",
+            "date",
+            "time",
+            "notes",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class MealLogCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealLog
+        fields = [
+            "id",
+            "meal_type",
+            "menu_option",
+            "is_free_meal",
+            "date",
+            "time",
+            "notes",
+            "owner",
+        ]
