@@ -100,7 +100,7 @@ export function MealTypeForm({
         <Switch
           id="meal-active"
           checked={isActive}
-          onCheckedChange={(val) => setValue('is_active', val === true)}
+          onCheckedChange={(val: boolean) => setValue('is_active', val)}
         />
         <Label htmlFor="meal-active">
           {t('pages.nutritionMealTypes.mealTypeActive')}
@@ -108,11 +108,11 @@ export function MealTypeForm({
       </div>
       <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          {t('common.cancel')}
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t('common.save')}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

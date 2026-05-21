@@ -75,11 +75,11 @@ export function FoodForm({
       </div>
       <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          {t('common.cancel')}
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t('common.save')}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>
