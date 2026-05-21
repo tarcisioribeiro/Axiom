@@ -12,6 +12,9 @@ spec:
   # to match the active slot's replica count before switching traffic.
   replicas: 0
   revisionHistoryLimit: 3
+  # Must exceed the startupProbe budget (620s) so Kubernetes does not declare
+  # ProgressDeadlineExceeded before the pod has had a chance to finish starting.
+  progressDeadlineSeconds: 720
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -93,6 +96,20 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+          # startupProbe absorbs slow cold-starts (image pull + migrations +
+          # collectstatic). Kubernetes will not apply readiness/liveness probes
+          # until startupProbe succeeds. Budget: 20s initial + 60 × 10s = 620s.
+          startupProbe:
+            httpGet:
+              path: /ready/
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /ready/
@@ -100,7 +117,7 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            initialDelaySeconds: 30
+            initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
@@ -111,7 +128,7 @@ spec:
               httpHeaders:
                 - name: Host
                   value: api-service
-            initialDelaySeconds: 40
+            initialDelaySeconds: 0
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 3
