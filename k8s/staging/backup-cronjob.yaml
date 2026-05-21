@@ -1,19 +1,19 @@
 # =============================================================================
-# MindLedger Staging — Automated Database Backup
+# Axiom Staging — Automated Database Backup
 # =============================================================================
 #
 # Adapted from k8s/backup-cronjob.yaml (production).
 # Key differences from production:
-#   - namespace: mindledger-staging
-#   - CronJob name: mindledger-db-backup-staging
-#   - DB secrets read from mindledger-secrets (same secret used by the API)
-#   - MINIO_BUCKET: mindledger-backups (shared bucket; backups land under db/)
+#   - namespace: axiom-staging
+#   - CronJob name: axiom-db-backup-staging
+#   - DB secrets read from axiom-secrets (same secret used by the API)
+#   - MINIO_BUCKET: axiom-backups (shared bucket; backups land under db/)
 #   - KEEP_DAILY/WEEKLY/MONTHLY: trimmed down for staging
 #
 # Prerequisites (applied once per cluster / namespace):
 #
-#   The Secret "mindledger-backup-secrets" must exist in the
-#   mindledger-staging namespace before applying this file.
+#   The Secret "axiom-backup-secrets" must exist in the
+#   axiom-staging namespace before applying this file.
 #   It is created (or refreshed) by the backup:staging CI job on every
 #   pipeline run from the develop branch.
 #
@@ -27,11 +27,11 @@
 #   kubectl apply -f k8s/staging/backup-cronjob.yaml
 #
 # Trigger a manual run:
-#   kubectl create job --from=cronjob/mindledger-db-backup-staging \
-#     mindledger-backup-staging-manual -n mindledger-staging
+#   kubectl create job --from=cronjob/axiom-db-backup-staging \
+#     axiom-backup-staging-manual -n axiom-staging
 #
 # Watch logs:
-#   kubectl logs -f -l app=mindledger-backup -n mindledger-staging
+#   kubectl logs -f -l app=axiom-backup -n axiom-staging
 #
 # =============================================================================
 
@@ -41,9 +41,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: backup-pvc-staging
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: backup
     environment: staging
 spec:
@@ -60,14 +60,14 @@ spec:
 # To regenerate this ConfigMap section after editing backup.sh:
 #   kubectl create configmap backup-script-staging \
 #     --from-file=backup.sh=api/scripts/backup.sh \
-#     --dry-run=client -o yaml -n mindledger-staging
+#     --dry-run=client -o yaml -n axiom-staging
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backup-script-staging
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: backup
     environment: staging
 data:
@@ -77,11 +77,11 @@ data:
 
     BACKUP_DIR="${BACKUP_DIR:-/backups}"
     DATE=$(date +%Y%m%d_%H%M%S)
-    DB_NAME="${DB_NAME:-mindledger_db}"
+    DB_NAME="${DB_NAME:-axiom_db}"
     DB_USER="${DB_USER:-postgres}"
     PGHOST="${PGHOST:-db}"
     PGPORT="${PGPORT:-5432}"
-    MINIO_BUCKET="${MINIO_BUCKET:-mindledger-backups}"
+    MINIO_BUCKET="${MINIO_BUCKET:-axiom-backups}"
     MC_BIN="${MC_BIN:-/tools/mc}"
 
     KEEP_DAILY="${KEEP_DAILY:-3}"
@@ -109,7 +109,7 @@ data:
     STATUS_FILE="$BACKUP_DIR/.last_backup_status"
 
     log "════════════════════════════════════════════════════════════"
-    log "MindLedger Staging Backup — $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    log "Axiom Staging Backup — $(date '+%Y-%m-%d %H:%M:%S %Z')"
     log "  Database  : ${DB_NAME}@${PGHOST}:${PGPORT}"
     log "  Bucket    : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
     log "  Retention : ${KEEP_DAILY}d / ${KEEP_WEEKLY}w / ${KEEP_MONTHLY}m"
@@ -148,19 +148,19 @@ data:
     log "Unencrypted dump removed"
 
     log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
-    "$MC_BIN" alias set mindledger-minio \
+    "$MC_BIN" alias set axiom-minio \
         "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY" \
         --api S3v4 > /dev/null 2>&1
-    "$MC_BIN" mb --ignore-existing "mindledger-minio/${MINIO_BUCKET}" > /dev/null 2>&1 || true
+    "$MC_BIN" mb --ignore-existing "axiom-minio/${MINIO_BUCKET}" > /dev/null 2>&1 || true
 
-    if ! "$MC_BIN" cp "$DB_ENC" "mindledger-minio/${MINIO_BUCKET}/db/"; then
+    if ! "$MC_BIN" cp "$DB_ENC" "axiom-minio/${MINIO_BUCKET}/db/"; then
         error "Failed to upload encrypted dump to MinIO"
         echo "failed:minio_upload:${DATE}" > "$STATUS_FILE"
         exit 1
     fi
     log "Encrypted dump uploaded"
 
-    if "$MC_BIN" cp "$DB_MANIFEST" "mindledger-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+    if "$MC_BIN" cp "$DB_MANIFEST" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
         log "Manifest uploaded"
     else
         warning "Manifest upload failed (non-critical)"
@@ -232,10 +232,10 @@ data:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: mindledger-db-backup-staging
-  namespace: mindledger-staging
+  name: axiom-db-backup-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: backup
     environment: staging
 spec:
@@ -251,8 +251,8 @@ spec:
       template:
         metadata:
           labels:
-            app: mindledger-backup
-            app.kubernetes.io/name: mindledger
+            app: axiom-backup
+            app.kubernetes.io/name: axiom
             app.kubernetes.io/component: backup
             environment: staging
         spec:
@@ -287,40 +287,40 @@ spec:
                 - name: DB_NAME
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-secrets
+                      name: axiom-secrets
                       key: DB_NAME
                 - name: DB_USER
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-secrets
+                      name: axiom-secrets
                       key: DB_USER
                 - name: PGPASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-secrets
+                      name: axiom-secrets
                       key: DB_PASSWORD
                 - name: BACKUP_ENCRYPTION_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-backup-secrets
+                      name: axiom-backup-secrets
                       key: BACKUP_ENCRYPTION_KEY
                 - name: MINIO_ENDPOINT
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-backup-secrets
+                      name: axiom-backup-secrets
                       key: MINIO_ENDPOINT
                 - name: MINIO_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-backup-secrets
+                      name: axiom-backup-secrets
                       key: MINIO_ACCESS_KEY
                 - name: MINIO_SECRET_KEY
                   valueFrom:
                     secretKeyRef:
-                      name: mindledger-backup-secrets
+                      name: axiom-backup-secrets
                       key: MINIO_SECRET_KEY
                 - name: MINIO_BUCKET
-                  value: "mindledger-backups"
+                  value: "axiom-backups"
                 - name: BACKUP_DIR
                   value: "/backups"
                 - name: KEEP_DAILY

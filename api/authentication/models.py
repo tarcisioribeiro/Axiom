@@ -40,7 +40,7 @@ class TOTPDevice(BaseModel):
     def __str__(self) -> str:
         return f"TOTPDevice({self.user.username}, active={self.is_active})"
 
-    def generate_provisioning_uri(self, issuer: str = "MindLedger") -> str:
+    def generate_provisioning_uri(self, issuer: str = "Axiom") -> str:
         totp = pyotp.TOTP(self.secret)
         return totp.provisioning_uri(
             name=self.user.email or self.user.username,

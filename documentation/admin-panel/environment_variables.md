@@ -47,8 +47,8 @@ Configurações do servidor SMTP usado para envios transacionais.
 | `EMAIL_USE_TLS` | | | `True` | Ativa STARTTLS. Use com porta `587`. Não defina `True` junto com `EMAIL_USE_SSL=True`. |
 | `EMAIL_HOST_USER` | | | — | Usuário de autenticação SMTP (geralmente o endereço de email completo). |
 | `EMAIL_HOST_PASSWORD` | 🔒 | | — | Senha SMTP. Para Gmail, use uma App Password, não a senha da conta. |
-| `DEFAULT_FROM_EMAIL` | | | `MindLedger <noreply@mindledger.app>` | Endereço "De" dos emails enviados. Formato: `Nome <email@dominio.com>`. |
-| `SITE_URL` | | | — | URL pública do frontend, usada em links de email (ex: `https://mindledger.seudominio.com`). |
+| `DEFAULT_FROM_EMAIL` | | | `Axiom <noreply@axiom.app>` | Endereço "De" dos emails enviados. Formato: `Nome <email@dominio.com>`. |
+| `SITE_URL` | | | — | URL pública do frontend, usada em links de email (ex: `https://axiom.seudominio.com`). |
 
 **Guia completo**: [Configuração de Email](email_configuration.md)
 
@@ -91,8 +91,8 @@ Comportamento geral do servidor Django/Gunicorn.
 | `DEBUG` | | **Sim** | `False` | Ativa o modo debug do Django. **Nunca use `True` em produção** — expõe tracebacks e desativa otimizações. |
 | `LOG_FORMAT` | | **Sim** | `json` | Formato dos logs. `json` para produção (estruturado, integrável com Grafana/Loki); `verbose` para desenvolvimento (legível no terminal). |
 | `BUDGET_ENFORCEMENT_MODE` | | | `soft` | Comportamento ao ultrapassar o orçamento. `soft`: retorna HTTP 201 com alerta. `hard`: bloqueia a operação com HTTP 400. |
-| `ALLOWED_HOSTS` | | **Sim** | — | Domínios aceitos pelo Django, separados por vírgula (ex: `mindledger.com,www.mindledger.com`). Em desenvolvimento, `localhost,127.0.0.1`. |
-| `CORS_ALLOWED_ORIGINS` | | **Sim** | — | Origens permitidas para requisições CORS, separadas por vírgula (ex: `https://mindledger.com,http://localhost:39101`). |
+| `ALLOWED_HOSTS` | | **Sim** | — | Domínios aceitos pelo Django, separados por vírgula (ex: `axiom.com,www.axiom.com`). Em desenvolvimento, `localhost,127.0.0.1`. |
+| `CORS_ALLOWED_ORIGINS` | | **Sim** | — | Origens permitidas para requisições CORS, separadas por vírgula (ex: `https://axiom.com,http://localhost:39101`). |
 | `GUNICORN_WORKERS` | | **Sim** | `2` | Número de processos worker do Gunicorn. Regra geral: `2 × núcleos_CPU + 1`. |
 
 ---
@@ -126,7 +126,7 @@ Nunca troque a `ENCRYPTION_KEY` diretamente pelo painel admin. Use o management 
 
 ```bash
 # 1. Faça backup do banco
-docker compose exec db pg_dump -U $DB_USER mindledger_db > backup_pre_rotation.sql
+docker compose exec db pg_dump -U $DB_USER axiom_db > backup_pre_rotation.sql
 
 # 2. Execute a rotação (dry-run primeiro)
 docker compose exec api python manage.py rotate_encryption_key \
@@ -151,7 +151,7 @@ Configurações do serviço MinIO usado para armazenamento de arquivos de mídia
 | Chave | Secret | Restart | Padrão | Descrição |
 |-------|:------:|:-------:|--------|-----------|
 | `MINIO_ENDPOINT` | | **Sim** | `minio:9000` | Endereço interno do MinIO (host:porta). Dentro do Docker, o service name `minio` resolve automaticamente. Para acesso externo, use `localhost:39105`. |
-| `MINIO_BUCKET_NAME` | | **Sim** | — | Nome do bucket principal para armazenamento de mídia (ex: `mindledger-media`). O bucket é criado automaticamente se não existir. |
+| `MINIO_BUCKET_NAME` | | **Sim** | — | Nome do bucket principal para armazenamento de mídia (ex: `axiom-media`). O bucket é criado automaticamente se não existir. |
 | `MINIO_ROOT_USER` | | **Sim** | — | Usuário root do MinIO (equivalente a `MINIO_ROOT_USER` no docker-compose). |
 | `MINIO_ROOT_PASSWORD` | 🔒 | **Sim** | — | Senha root do MinIO. Armazenada criptografada. |
 
@@ -165,9 +165,9 @@ Estas variáveis **não aparecem no painel admin** — são infraestrutura de ba
 
 | Variável | Descrição | Exemplo |
 |----------|-----------|---------|
-| `DB_USER` | Usuário PostgreSQL | `mindledger_user` |
+| `DB_USER` | Usuário PostgreSQL | `axiom_user` |
 | `DB_PASSWORD` | Senha PostgreSQL | `senha_segura` |
-| `DB_NAME` | Nome do banco | `mindledger_db` |
+| `DB_NAME` | Nome do banco | `axiom_db` |
 | `DB_HOST` | Host do banco. `db` no Docker; `localhost` localmente | `db` |
 | `DB_PORT` | Porta interna do PostgreSQL | `5432` |
 | `REDIS_URL` | URL de conexão Redis | `redis://redis:6379/0` |
@@ -175,7 +175,7 @@ Estas variáveis **não aparecem no painel admin** — são infraestrutura de ba
 | `VITE_API_BASE_URL` | URL da API para o frontend (build-time) | `http://localhost:39100` |
 | `VITE_SENTRY_DSN` | DSN do Sentry para error tracking (opcional) | `https://...@sentry.io/...` |
 | `DJANGO_SUPERUSER_USERNAME` | Superusuário criado no primeiro boot | `admin` |
-| `DJANGO_SUPERUSER_EMAIL` | Email do superusuário inicial | `admin@mindledger.com` |
+| `DJANGO_SUPERUSER_EMAIL` | Email do superusuário inicial | `admin@axiom.com` |
 | `DJANGO_SUPERUSER_PASSWORD` | Senha do superusuário inicial | — |
 | `BACKUP_ENCRYPTION_KEY_PREVIOUS` | Chave Fernet anterior após rotação. Mantida 24h para diagnóstico via `vault_recovery` | — |
 

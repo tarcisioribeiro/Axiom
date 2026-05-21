@@ -12,7 +12,7 @@ from django.utils.timezone import now
 from app.config import cfg
 from app.ip_utils import get_client_ip as _get_trusted_client_ip
 
-logger = logging.getLogger("mindledger.audit")
+logger = logging.getLogger("axiom.audit")
 
 
 class AuditLoggingMiddleware(MiddlewareMixin):

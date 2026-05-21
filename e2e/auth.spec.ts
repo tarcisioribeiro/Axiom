@@ -3,11 +3,11 @@ import { test, expect } from '@playwright/test';
 import { E2E_USERNAME, E2E_PASSWORD, login } from './helpers';
 
 test.describe('Authentication', () => {
-  test('login page renders the MindLedger logo and form', async ({ page }) => {
+  test('login page renders the Axiom logo and form', async ({ page }) => {
     await page.goto('/login');
 
     // Logo image is present
-    await expect(page.getByRole('img', { name: /mindledger/i })).toBeVisible();
+    await expect(page.getByRole('img', { name: /axiom/i })).toBeVisible();
 
     // Username and password inputs exist
     await expect(page.getByLabel(/usuário/i)).toBeVisible();

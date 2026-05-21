@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: mindledger
+  namespace: axiom
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: frontend
 spec:
   replicas: 1
@@ -16,7 +16,7 @@ spec:
     metadata:
       labels:
         app: frontend
-        app.kubernetes.io/name: mindledger
+        app.kubernetes.io/name: axiom
         app.kubernetes.io/component: frontend
     spec:
       hostAliases:
@@ -32,7 +32,7 @@ spec:
         - name: frontend
           # Image tag is pinned to the build digest on every deploy by CI/CD.
           # See deploy:production job in .gitlab-ci.yml.
-          image: registry.gitlab.com/tarcisioribeiro/mindledger/frontend:0.0.0
+          image: registry.gitlab.com/tarcisioribeiro/axiom/frontend:0.0.0
           ports:
             - containerPort: 80
               name: http

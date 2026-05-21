@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
 import { vaultsService } from '@/services/vaults-service';
 import type {
   Vault,
@@ -237,12 +239,13 @@ export function VaultContributionsDialog({
                   <Label htmlFor="contrib_start">
                     {t('pages.vaults.recurringContributions.fields.startDate')}
                   </Label>
-                  <Input
-                    id="contrib_start"
-                    type="date"
+                  <DatePicker
                     value={formData.start_date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, start_date: e.target.value })
+                    onChange={(date) =>
+                      setFormData({
+                        ...formData,
+                        start_date: date ? formatLocalDate(date) : '',
+                      })
                     }
                   />
                 </div>
@@ -250,16 +253,15 @@ export function VaultContributionsDialog({
                   <Label htmlFor="contrib_end">
                     {t('pages.vaults.recurringContributions.fields.endDate')}
                   </Label>
-                  <Input
-                    id="contrib_end"
-                    type="date"
-                    value={formData.end_date || ''}
-                    onChange={(e) =>
+                  <DatePicker
+                    value={formData.end_date ?? ''}
+                    onChange={(date) =>
                       setFormData({
                         ...formData,
-                        end_date: e.target.value || undefined,
+                        end_date: date ? formatLocalDate(date) : undefined,
                       })
                     }
+                    clearable
                   />
                 </div>
                 <div className="col-span-2 flex items-center gap-sm">

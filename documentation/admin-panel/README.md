@@ -1,6 +1,6 @@
 # Painel de Administração
 
-O **Painel de Administração** do MindLedger permite gerenciar configurações do sistema em tempo real, sem editar arquivos `.env` nem reconstruir containers. As configurações ficam salvas no banco de dados, com valores secretos criptografados via Fernet e todas as alterações auditadas (quem mudou o quê e quando).
+O **Painel de Administração** do Axiom permite gerenciar configurações do sistema em tempo real, sem editar arquivos `.env` nem reconstruir containers. As configurações ficam salvas no banco de dados, com valores secretos criptografados via Fernet e todas as alterações auditadas (quem mudou o quê e quando).
 
 ## Índice
 

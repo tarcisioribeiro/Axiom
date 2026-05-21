@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza **Zustand** para gerenciamento de estado global, com foco em simplicidade, performance e tipagem TypeScript.
+O Axiom utiliza **Zustand** para gerenciamento de estado global, com foco em simplicidade, performance e tipagem TypeScript.
 
 ## Por que Zustand?
 

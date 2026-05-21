@@ -1,5 +1,5 @@
 # =============================================================================
-# MindLedger — Backup Service Image
+# Axiom — Backup Service Image
 # =============================================================================
 # Based on postgres:16-alpine so pg_dump, pg_restore and openssl are already
 # present. Adds the MinIO mc client and dcron to schedule daily pg_dumps.

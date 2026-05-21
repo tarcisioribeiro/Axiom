@@ -1,4 +1,4 @@
-# Índices e Otimização de Banco de Dados - MindLedger
+# Índices e Otimização de Banco de Dados - Axiom
 
 > Guia completo de índices compostos, estratégias de performance e resolução de N+1 queries
 
@@ -16,7 +16,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza índices estrategicamente posicionados para otimizar consultas frequentes, especialmente aquelas envolvendo:
+O Axiom utiliza índices estrategicamente posicionados para otimizar consultas frequentes, especialmente aquelas envolvendo:
 
 - **Filtragem por data**: Transações financeiras ordenadas cronologicamente
 - **Filtragem por owner**: Dados isolados por usuário (multi-tenant)
@@ -786,7 +786,7 @@ WITH (m = 16, ef_construction = 64);
 
 ---
 
-### Índice Recomendado para MindLedger
+### Índice Recomendado para Axiom
 
 ```sql
 -- Para datasets típicos (< 100k embeddings), use IVFFlat
@@ -799,7 +799,7 @@ SET ivfflat.probes = 10;
 ```
 
 **Justificativa**:
-- MindLedger tem datasets pequenos por usuário (< 10k por owner)
+- Axiom tem datasets pequenos por usuário (< 10k por owner)
 - Filtro `owner=X` reduz drasticamente o conjunto de busca
 - IVFFlat é mais simples e eficiente para este caso
 

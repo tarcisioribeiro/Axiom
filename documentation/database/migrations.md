@@ -1,4 +1,4 @@
-# Guia Completo de Migrations - Django MindLedger
+# Guia Completo de Migrations - Django Axiom
 
 > Guia prático para criação, aplicação e resolução de conflitos de migrations no Django
 
@@ -210,7 +210,7 @@ expenses
 
 ```bash
 # 1. Backup do banco
-docker-compose exec db pg_dump -U $DB_USER mindledger_db > backup_pre_migration.sql
+docker-compose exec db pg_dump -U $DB_USER axiom_db > backup_pre_migration.sql
 
 # 2. Ver o que será executado
 docker-compose exec api python manage.py migrate --plan
@@ -886,7 +886,7 @@ docker-compose exec api python manage.py migrate
 
 ```bash
 # Criar banco de teste
-docker-compose exec db psql -U postgres -c "CREATE DATABASE test_mindledger;"
+docker-compose exec db psql -U postgres -c "CREATE DATABASE test_axiom;"
 
 # Aplicar migrations
 DJANGO_SETTINGS_MODULE=app.settings_test python manage.py migrate
@@ -895,7 +895,7 @@ DJANGO_SETTINGS_MODULE=app.settings_test python manage.py migrate
 # ...
 
 # Deletar banco
-docker-compose exec db psql -U postgres -c "DROP DATABASE test_mindledger;"
+docker-compose exec db psql -U postgres -c "DROP DATABASE test_axiom;"
 ```
 
 ---
@@ -975,7 +975,7 @@ class Migration(migrations.Migration):
 # SEMPRE fazer backup antes:
 
 # 1. Backup
-docker-compose exec db pg_dump -U $DB_USER mindledger_db > backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose exec db pg_dump -U $DB_USER axiom_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # 2. Aplicar migration
 docker-compose exec api python manage.py migrate
@@ -984,7 +984,7 @@ docker-compose exec api python manage.py migrate
 # ... testar aplicação ...
 
 # 4. Se algo der errado, restaurar:
-docker-compose exec -T db psql -U $DB_USER mindledger_db < backup_20260112_153045.sql
+docker-compose exec -T db psql -U $DB_USER axiom_db < backup_20260112_153045.sql
 ```
 
 ---

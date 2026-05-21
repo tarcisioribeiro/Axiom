@@ -1,6 +1,6 @@
 # Configuração do Ambiente
 
-Este guia detalha todas as configurações necessárias para executar o MindLedger.
+Este guia detalha todas as configurações necessárias para executar o Axiom.
 
 ## Índice
 
@@ -13,7 +13,7 @@ Este guia detalha todas as configurações necessárias para executar o MindLedg
 
 ## Visão Geral
 
-O MindLedger utiliza variáveis de ambiente para configuração. Existem dois níveis:
+O Axiom utiliza variáveis de ambiente para configuração. Existem dois níveis:
 
 1. **Raiz do projeto** (`.env`): Configurações compartilhadas (backend, banco de dados, portas)
 2. **Frontend** (`frontend/.env`): Configurações específicas do frontend
@@ -30,13 +30,13 @@ Este arquivo contém todas as configurações críticas do sistema.
 # ============================================
 
 # Usuário do banco de dados PostgreSQL
-DB_USER=mindledger_user
+DB_USER=axiom_user
 
 # Senha do banco de dados (use uma senha forte!)
 DB_PASSWORD=sua_senha_segura_aqui
 
 # Nome do banco de dados
-DB_NAME=mindledger_db
+DB_NAME=axiom_db
 
 # Host do banco de dados
 # Use "db" para Docker, "localhost" para instalação local
@@ -52,7 +52,7 @@ DB_PORT=5432
 
 # Superuser criado automaticamente pelo entrypoint.sh
 DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_EMAIL=admin@mindledger.com
+DJANGO_SUPERUSER_EMAIL=admin@axiom.com
 DJANGO_SUPERUSER_PASSWORD=admin123
 
 # ⚠️ IMPORTANTE: Mude estas credenciais em produção!
@@ -148,7 +148,7 @@ VITE_API_BASE_URL=http://localhost:39100
 VITE_API_BASE_URL=http://localhost:39100
 
 # Para produção, use a URL pública:
-# VITE_API_BASE_URL=https://api.mindledger.com
+# VITE_API_BASE_URL=https://api.axiom.com
 ```
 
 ## Gerando Chaves de Segurança
@@ -209,7 +209,7 @@ xKz9jR3mN8qL5wV2hY7tG4bF6cX8nM0pQ1wE3rT5yU9iO=
 
 ## Configuração de Portas
 
-O MindLedger usa as seguintes portas por padrão:
+O Axiom usa as seguintes portas por padrão:
 
 | Serviço | Porta Padrão | Variável | Customizável |
 |---------|--------------|----------|--------------|
@@ -254,7 +254,7 @@ netstat -ano | findstr :39100
 
 ## Configuração de Logging
 
-O MindLedger suporta dois formatos de logging:
+O Axiom suporta dois formatos de logging:
 
 ### JSON (Estruturado)
 
@@ -336,7 +336,7 @@ Para permitir requisições do frontend:
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",      # Vite dev server
     "http://localhost:39101",     # Frontend Docker
-    "https://mindledger.com",    # Produção
+    "https://axiom.com",    # Produção
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Necessário para cookies HttpOnly
@@ -392,8 +392,8 @@ GROQ_API_KEY=chave_de_producao
 AUTH_COOKIE_SECURE=True
 
 # Domínios permitidos
-ALLOWED_HOSTS=mindledger.com,www.mindledger.com
-CORS_ALLOWED_ORIGINS=https://mindledger.com
+ALLOWED_HOSTS=axiom.com,www.axiom.com
+CORS_ALLOWED_ORIGINS=https://axiom.com
 
 # Banco robusto
 DB_HOST=banco-producao.rds.amazonaws.com
@@ -403,7 +403,7 @@ DB_PORT=5432
 ```python
 # api/app/settings.py (produção)
 
-ALLOWED_HOSTS = ['mindledger.com', 'www.mindledger.com']
+ALLOWED_HOSTS = ['axiom.com', 'www.axiom.com']
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

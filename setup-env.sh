@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# MindLedger - Script de Configuração do Ambiente
+# Axiom - Script de Configuração do Ambiente
 # ============================================================================
 # Este script cria o arquivo .env interativamente ou automaticamente
 # Uso:
@@ -47,7 +47,7 @@ print_header() {
 # Função de ajuda
 show_help() {
     cat << EOF
-MindLedger - Script de Configuração do Ambiente
+Axiom - Script de Configuração do Ambiente
 
 Uso: ./setup-env.sh [OPÇÃO]
 
@@ -80,7 +80,7 @@ elif [ "$1" == "--auto" ] || [ "$1" == "-a" ]; then
 fi
 
 # Banner
-print_header "MindLedger - Configuração do Ambiente"
+print_header "Axiom - Configuração do Ambiente"
 
 # Verificar se .env já existe
 if [ -f ".env" ]; then
@@ -145,12 +145,12 @@ if [ "$MODE" == "auto" ]; then
 
     DB_HOST="db"
     DB_PORT="39102"
-    DB_NAME="mindledger_db"
-    DB_USER="mindledger_user"
+    DB_NAME="axiom_db"
+    DB_USER="axiom_user"
     DB_PASSWORD="$(openssl rand -base64 32 | tr -d /=+ | cut -c1-25)"
 
     DJANGO_SUPERUSER_USERNAME="admin"
-    DJANGO_SUPERUSER_EMAIL="admin@mindledger.local"
+    DJANGO_SUPERUSER_EMAIL="admin@axiom.local"
     DJANGO_SUPERUSER_PASSWORD="$(openssl rand -base64 32 | tr -d /=+ | cut -c1-20)"
 
     SECRET_KEY="$(generate_secret_key)"
@@ -176,9 +176,9 @@ if [ "$MODE" == "auto" ]; then
     ENABLE_DEBUG_TOOLBAR="False"
     SHOW_SQL_QUERIES="False"
 
-    MINIO_ROOT_USER="mindledger"
+    MINIO_ROOT_USER="axiom"
     MINIO_ROOT_PASSWORD="$(openssl rand -base64 32 | tr -d /=+ | cut -c1-25)"
-    MINIO_BUCKET_NAME="mindledger"
+    MINIO_BUCKET_NAME="axiom"
     MINIO_ENDPOINT="minio:9000"
     MINIO_EXTERNAL_ENDPOINT="localhost:39105"
     MINIO_USE_SSL="false"
@@ -195,7 +195,7 @@ if [ "$MODE" == "auto" ]; then
     EMAIL_USE_SSL="False"
     EMAIL_HOST_USER="your-smtp-username@example.com"
     EMAIL_HOST_PASSWORD="your-smtp-password-here"
-    DEFAULT_FROM_EMAIL="MindLedger <noreply@mindledger.app>"
+    DEFAULT_FROM_EMAIL="Axiom <noreply@axiom.app>"
     SITE_URL="http://localhost:39101"
 
     GUNICORN_WORKERS="4"
@@ -209,11 +209,11 @@ else
     read -p "Porta do banco de dados [39102]: " DB_PORT
     DB_PORT=${DB_PORT:-39102}
 
-    read -p "Nome do banco de dados [mindledger_db]: " DB_NAME
-    DB_NAME=${DB_NAME:-mindledger_db}
+    read -p "Nome do banco de dados [axiom_db]: " DB_NAME
+    DB_NAME=${DB_NAME:-axiom_db}
 
-    read -p "Usuário do banco de dados [mindledger_user]: " DB_USER
-    DB_USER=${DB_USER:-mindledger_user}
+    read -p "Usuário do banco de dados [axiom_user]: " DB_USER
+    DB_USER=${DB_USER:-axiom_user}
 
     read -sp "Senha do banco de dados: " DB_PASSWORD
     echo
@@ -227,8 +227,8 @@ else
     read -p "Username do superusuário [admin]: " DJANGO_SUPERUSER_USERNAME
     DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-admin}
 
-    read -p "Email do superusuário [admin@mindledger.local]: " DJANGO_SUPERUSER_EMAIL
-    DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@mindledger.local}
+    read -p "Email do superusuário [admin@axiom.local]: " DJANGO_SUPERUSER_EMAIL
+    DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-admin@axiom.local}
 
     read -sp "Senha do superusuário: " DJANGO_SUPERUSER_PASSWORD
     echo
@@ -285,8 +285,8 @@ else
     read -p "Endpoint externo do MinIO [localhost:39105]: " MINIO_EXTERNAL_ENDPOINT
     MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT:-localhost:39105}
 
-    read -p "Usuário do MinIO [mindledger]: " MINIO_ROOT_USER
-    MINIO_ROOT_USER=${MINIO_ROOT_USER:-mindledger}
+    read -p "Usuário do MinIO [axiom]: " MINIO_ROOT_USER
+    MINIO_ROOT_USER=${MINIO_ROOT_USER:-axiom}
 
     read -sp "Senha do MinIO (Enter para gerar aleatoriamente): " MINIO_ROOT_PASSWORD
     echo
@@ -295,8 +295,8 @@ else
         print_info "Senha gerada automaticamente"
     fi
 
-    read -p "Nome do bucket [mindledger]: " MINIO_BUCKET_NAME
-    MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-mindledger}
+    read -p "Nome do bucket [axiom]: " MINIO_BUCKET_NAME
+    MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-axiom}
 
     MINIO_USE_SSL="false"
     MINIO_PORT="39105"
@@ -336,8 +336,8 @@ else
     echo
     EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD:-your-smtp-password-here}
 
-    read -p "Remetente padrão [MindLedger <noreply@mindledger.app>]: " DEFAULT_FROM_EMAIL
-    DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-MindLedger <noreply@mindledger.app>}
+    read -p "Remetente padrão [Axiom <noreply@axiom.app>]: " DEFAULT_FROM_EMAIL
+    DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL:-Axiom <noreply@axiom.app>}
 
     read -p "URL pública do site (usada em links de e-mail) [http://localhost:39101]: " SITE_URL
     SITE_URL=${SITE_URL:-http://localhost:39101}
@@ -351,7 +351,7 @@ print_header "Criando arquivo .env"
 
 cat > .env << EOF
 # ============================================================================
-# MINDLEDGER - Variáveis de Ambiente
+# AXIOM - Variáveis de Ambiente
 # ============================================================================
 # Gerado automaticamente em $(date)
 # ============================================================================

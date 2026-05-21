@@ -1,6 +1,6 @@
 # Guia de Contribuição
 
-Este guia estabelece padrões e boas práticas para contribuir com o MindLedger.
+Este guia estabelece padrões e boas práticas para contribuir com o Axiom.
 
 ## Índice
 
@@ -19,11 +19,11 @@ Este guia estabelece padrões e boas práticas para contribuir com o MindLedger.
 ```bash
 # Fork no GitHub (botão Fork)
 # Clone seu fork
-git clone https://github.com/seu-usuario/MindLedger.git
-cd MindLedger
+git clone https://github.com/seu-usuario/Axiom.git
+cd Axiom
 
 # Adicione o repositório original como upstream
-git remote add upstream https://github.com/original-repo/MindLedger.git
+git remote add upstream https://github.com/original-repo/Axiom.git
 ```
 
 ### 2. Configurar Ambiente

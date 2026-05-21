@@ -6,21 +6,21 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: minio-tls
-  namespace: mindledger-staging
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: tls
     environment: staging
 spec:
   secretName: minio-tls
   duration: 8760h
   renewBefore: 720h
-  commonName: minio-service.mindledger-staging.svc.cluster.local
+  commonName: minio-service.axiom-staging.svc.cluster.local
   dnsNames:
     - minio-service
-    - minio-service.mindledger-staging
-    - minio-service.mindledger-staging.svc
-    - minio-service.mindledger-staging.svc.cluster.local
+    - minio-service.axiom-staging
+    - minio-service.axiom-staging.svc
+    - minio-service.axiom-staging.svc.cluster.local
   issuerRef:
     name: internal-ca-issuer
     kind: ClusterIssuer

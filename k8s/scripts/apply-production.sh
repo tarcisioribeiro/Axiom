@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MindLedger — Apply Production Manifests (k3s single-node VPS)
+# Axiom — Apply Production Manifests (k3s single-node VPS)
 # =============================================================================
 # Usage: bash k8s/scripts/apply-production.sh
 #
@@ -12,13 +12,13 @@
 #       --docker-server=registry.gitlab.com \
 #       --docker-username=YOUR_GITLAB_USERNAME \
 #       --docker-password=YOUR_PERSONAL_ACCESS_TOKEN \
-#       --namespace mindledger
+#       --namespace axiom
 #
 #   Required environment variables — set ALL before running:
-#     export MINDLEDGER_DOMAIN=mindledger.example.com   # your production domain
+#     export AXIOM_DOMAIN=axiom.example.com   # your production domain
 #     export LETSENCRYPT_EMAIL=admin@example.com        # cert notification email
-#     export DB_NAME=mindledger_db
-#     export DB_USER=mindledger
+#     export DB_NAME=axiom_db
+#     export DB_USER=axiom
 #     export DB_PASSWORD=$(openssl rand -base64 24)
 #     export SECRET_KEY=$(openssl rand -base64 48)
 #     export ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
@@ -39,7 +39,7 @@
 
 set -euo pipefail
 
-NAMESPACE="mindledger"
+NAMESPACE="axiom"
 
 echo "==> [1/10] Namespace"
 kubectl apply -f k8s/base/namespace.yaml
@@ -94,7 +94,7 @@ echo "==> [9/10] Backup CronJob"
 kubectl apply -f k8s/backup-cronjob.yaml
 
 echo "==> [10/10] Ingress"
-echo "    Applying ingress (MINDLEDGER_DOMAIN=${MINDLEDGER_DOMAIN})..."
+echo "    Applying ingress (AXIOM_DOMAIN=${AXIOM_DOMAIN})..."
 envsubst < k8s/ingress.yaml | kubectl apply -f -
 
 echo ""

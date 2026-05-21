@@ -1,13 +1,18 @@
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Target,
+  CalendarDays,
   CheckCircle2,
+  FileText,
   Link,
+  Pencil,
   PiggyBank,
+  Plus,
+  Sliders,
+  Tag,
+  Target,
+  Trash2,
   TrendingDown,
   TrendingUp,
+  Wallet,
 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +24,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CurrencyInput } from '@/components/ui/currency-input';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -38,9 +46,11 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
+import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { vaultsService, financialGoalsService } from '@/services/vaults-service';
 import type {
@@ -273,6 +283,21 @@ function GoalCard({
 }
 
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
+
+const GOAL_CATEGORY_EMOJIS: Record<string, string> = {
+  savings: '💰',
+  investment: '📈',
+  emergency: '🛡️',
+  travel: '✈️',
+  education: '📚',
+  property: '🏠',
+  vehicle: '🚗',
+  retirement: '👴',
+  health: '❤️',
+  reduce_expenses: '✂️',
+  increase_revenue: '⬆️',
+  other: '📦',
+};
 
 export default function FinancialGoals() {
   const { t } = useTranslation();
@@ -637,187 +662,262 @@ export default function FinancialGoals() {
                 : t('pages.financialGoals.newDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-md">
-            <div>
-              <Label htmlFor="description">{t('common.fields.description')} *</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder={t('pages.financialGoals.form.descriptionPlaceholder')}
-              />
-            </div>
-            <div>
-              <Label htmlFor="category">{t('common.fields.category')} *</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('common.fields.selectCategory')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {t(`pages.financialGoals.categories.${cat.value}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {formData.category === 'reduce_expenses' && (
-              <div>
-                <Label htmlFor="linked_expense_category">
-                  {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
-                </Label>
-                <Select
-                  value={formData.linked_expense_category || ''}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, linked_expense_category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t(
-                        'pages.financialGoals.form.linkedExpenseCategoryPlaceholder'
-                      )}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                      <SelectItem key={cat.key} value={cat.key}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
-              <div>
-                <Label htmlFor="linked_account">
-                  {t('pages.financialGoals.form.linkedAccountLabel')}
-                </Label>
-                <Select
-                  value={formData.linked_account?.toString() ?? ''}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      linked_account: value ? parseInt(value, 10) : null,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={t(
-                        'pages.financialGoals.form.linkedAccountPlaceholder'
-                      )}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((acc) => (
-                      <SelectItem key={acc.id} value={acc.id.toString()}>
-                        {acc.account_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            <div>
-              <Label htmlFor="target_value">
-                {t('pages.financialGoals.targetValueLabel')}
-              </Label>
-              <Input
-                id="target_value"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={formData.target_value || ''}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    target_value: parseFloat(e.target.value) || 0,
-                  })
-                }
-                placeholder="0,00"
-              />
-            </div>
-            <div>
-              <Label htmlFor="target_date">
-                {t('pages.financialGoals.targetDateLabel')}
-              </Label>
-              <Input
-                id="target_date"
-                type="date"
-                value={formData.target_date || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, target_date: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>{t('pages.financialGoals.associatedVaults')}</Label>
-              <div className="mt-xs max-h-[150px] space-y-sm overflow-y-auto rounded-md border p-3">
-                {vaults.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('pages.financialGoals.noVaults')}
-                  </p>
-                ) : (
-                  vaults.map((vault) => (
-                    <div key={vault.id} className="flex items-center gap-sm">
-                      <Checkbox
-                        id={`vault-${vault.id}`}
-                        checked={formData.vaults.includes(vault.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setFormData({
-                              ...formData,
-                              vaults: [...formData.vaults, vault.id],
-                            });
-                          } else {
-                            setFormData({
-                              ...formData,
-                              vaults: formData.vaults.filter((id) => id !== vault.id),
-                            });
-                          }
-                        }}
-                      />
-                      <Label
-                        htmlFor={`vault-${vault.id}`}
-                        className="flex-1 cursor-pointer"
+          <div className="space-y-lg">
+            {/* Seção: Identificação */}
+            <FormSection title={t('common.form.sections.basicInfo')} icon={Target}>
+              <div className="space-y-md">
+                <div className="space-y-sm">
+                  <Label htmlFor="description" className="flex items-center gap-xs">
+                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('common.fields.description')} *
+                  </Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    placeholder={t('pages.financialGoals.form.descriptionPlaceholder')}
+                  />
+                </div>
+
+                {/* Grid visual de categorias */}
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('common.fields.category')} *
+                  </Label>
+                  <div className="grid grid-cols-3 gap-xs">
+                    {CATEGORIES.map((cat) => (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, category: cat.value })
+                        }
+                        className={`flex items-center gap-xs rounded border px-sm py-xs text-xs font-medium transition-all ${
+                          formData.category === cat.value
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
+                        }`}
                       >
-                        <span>{vault.description}</span>
-                        <span className="ml-sm text-muted-foreground">
-                          ({formatCurrency(parseFloat(vault.current_balance))})
+                        <span>{GOAL_CATEGORY_EMOJIS[cat.value] ?? '📦'}</span>
+                        <span className="truncate">
+                          {t(`pages.financialGoals.categories.${cat.value}`)}
                         </span>
-                      </Label>
-                    </div>
-                  ))
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {formData.category === 'reduce_expenses' && (
+                  <div className="space-y-sm">
+                    <Label className="flex items-center gap-xs">
+                      <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t('pages.financialGoals.form.linkedExpenseCategoryLabel')}
+                    </Label>
+                    <Select
+                      value={formData.linked_expense_category || ''}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, linked_expense_category: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'pages.financialGoals.form.linkedExpenseCategoryPlaceholder'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
+                          <SelectItem key={cat.key} value={cat.key}>
+                            {cat.emoji} {translate('expenseCategories', cat.key)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {TRANSACTION_BASED_CATEGORIES.has(formData.category) && (
+                  <div className="space-y-sm">
+                    <Label className="flex items-center gap-xs">
+                      <Link className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t('pages.financialGoals.form.linkedAccountLabel')}
+                    </Label>
+                    <Select
+                      value={formData.linked_account?.toString() ?? ''}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          linked_account: value ? parseInt(value, 10) : null,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t(
+                            'pages.financialGoals.form.linkedAccountPlaceholder'
+                          )}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.map((acc) => (
+                          <SelectItem key={acc.id} value={acc.id.toString()}>
+                            {acc.account_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
               </div>
-            </div>
-            <div>
-              <Label htmlFor="notes">{t('common.fields.notes')}</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder={t('pages.financialGoals.form.notesPlaceholder')}
-              />
-            </div>
-            <div className="flex items-center gap-sm">
-              <Checkbox
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, is_active: !!checked })
-                }
-              />
-              <Label htmlFor="is_active">{t('pages.financialGoals.activeGoal')}</Label>
-            </div>
+            </FormSection>
+
+            {/* Seção: Valores e Prazo */}
+            <FormSection title={t('common.form.sections.values')} icon={Wallet}>
+              <div className="grid grid-cols-2 gap-md">
+                <div className="col-span-2 space-y-sm">
+                  <Label htmlFor="target_value" className="flex items-center gap-xs">
+                    <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.financialGoals.targetValueLabel')}
+                  </Label>
+                  <CurrencyInput
+                    id="target_value"
+                    accentColor="success"
+                    value={formData.target_value}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        target_value: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-sm">
+                  <Label htmlFor="target_date" className="flex items-center gap-xs">
+                    <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.financialGoals.targetDateLabel')}
+                  </Label>
+                  <DatePicker
+                    value={formData.target_date || ''}
+                    onChange={(date) =>
+                      setFormData({
+                        ...formData,
+                        target_date: date ? formatLocalDate(date) : '',
+                      })
+                    }
+                    placeholder={t('common.fields.selectDate')}
+                    clearable
+                  />
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Seção: Configuração */}
+            <FormSection title={t('common.form.sections.configuration')} icon={Sliders}>
+              <div className="space-y-md">
+                {/* Cofres associados */}
+                <div className="space-y-sm">
+                  <Label className="flex items-center gap-xs">
+                    <PiggyBank className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('pages.financialGoals.associatedVaults')}
+                  </Label>
+                  <div className="max-h-[140px] space-y-xs overflow-y-auto rounded-md border border-border/60 p-sm">
+                    {vaults.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t('pages.financialGoals.noVaults')}
+                      </p>
+                    ) : (
+                      vaults.map((vault) => {
+                        const isSelected = formData.vaults.includes(vault.id);
+                        return (
+                          <button
+                            key={vault.id}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setFormData({
+                                  ...formData,
+                                  vaults: formData.vaults.filter(
+                                    (id) => id !== vault.id
+                                  ),
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  vaults: [...formData.vaults, vault.id],
+                                });
+                              }
+                            }}
+                            className={`flex w-full items-center justify-between rounded px-sm py-xs text-left text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-primary/10 text-primary'
+                                : 'hover:bg-muted/50'
+                            }`}
+                          >
+                            <span>{vault.description}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatCurrency(parseFloat(vault.current_balance))}
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <Label htmlFor="notes" className="flex items-center gap-xs">
+                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t('common.fields.notes')}
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
+                    }
+                    placeholder={t('pages.financialGoals.form.notesPlaceholder')}
+                    rows={2}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({ ...formData, is_active: !formData.is_active })
+                  }
+                  className={`flex w-full items-start gap-sm rounded-lg border p-sm text-left transition-all ${
+                    formData.is_active
+                      ? 'border-success/50 bg-success/5 ring-1 ring-success/20'
+                      : 'border-border/60 bg-muted/20 opacity-70'
+                  }`}
+                >
+                  <div
+                    className={`mt-0.5 rounded-full p-1 ${
+                      formData.is_active
+                        ? 'bg-success/10 text-success'
+                        : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {t('pages.financialGoals.activeGoal')}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {formData.is_active
+                        ? t('pages.financialGoals.activeGoalDesc')
+                        : t('pages.financialGoals.inactiveGoalDesc')}
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </FormSection>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>

@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
+import { formatLocalDate } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { payableInstallmentsService } from '@/services/payable-installments-service';
 import type { Account, Payable } from '@/types';
@@ -263,15 +265,12 @@ export function PayablePaymentDialog({
                 : t('pages.payables.payment.date')}{' '}
               *
             </Label>
-            <Input
-              type="date"
+            <DatePicker
               value={form.date}
-              min={
-                scheduled
-                  ? new Date(Date.now() + 86400000).toISOString().split('T')[0]
-                  : undefined
+              minDate={scheduled ? new Date(Date.now() + 86400000) : undefined}
+              onChange={(date) =>
+                setForm((f) => ({ ...f, date: date ? formatLocalDate(date) : '' }))
               }
-              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
             />
           </div>
           <div className="space-y-xs">

@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O backend do MindLedger é organizado em apps Django modulares, cada uma responsável por um domínio específico da aplicação. A arquitetura segue os padrões Django e REST Framework com camadas bem definidas.
+O backend do Axiom é organizado em apps Django modulares, cada uma responsável por um domínio específico da aplicação. A arquitetura segue os padrões Django e REST Framework com camadas bem definidas.
 
 ## Estrutura de Diretórios
 

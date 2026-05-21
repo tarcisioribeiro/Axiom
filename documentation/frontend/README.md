@@ -1,6 +1,6 @@
 # Frontend React
 
-Documentação do frontend React + TypeScript do MindLedger.
+Documentação do frontend React + TypeScript do Axiom.
 
 **Stack**: React 19 · TypeScript 5.9 · Vite 7 · TailwindCSS 3 · Radix UI · Zustand · React Router v7 · TanStack Query v5 · React Hook Form + Zod
 

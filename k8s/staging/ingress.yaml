@@ -18,10 +18,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: mindledger-staging-ingress
-  namespace: mindledger-staging
+  name: axiom-staging-ingress
+  namespace: axiom-staging
   labels:
-    app.kubernetes.io/name: mindledger
+    app.kubernetes.io/name: axiom
     app.kubernetes.io/component: ingress
     environment: staging
   annotations:
@@ -35,10 +35,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - mindledger-staging.tjtux.duckdns.org
-      secretName: mindledger-staging-tls
+        - axiom-staging.tjtux.duckdns.org
+      secretName: axiom-staging-tls
   rules:
-    - host: mindledger-staging.tjtux.duckdns.org
+    - host: axiom-staging.tjtux.duckdns.org
       http:
         paths:
           - path: /api

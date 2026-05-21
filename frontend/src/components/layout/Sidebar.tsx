@@ -383,7 +383,7 @@ export const Sidebar = () => {
         <Link
           to="/"
           className="flex items-center gap-sm"
-          aria-label="MindLedger — página inicial"
+          aria-label="Axiom — página inicial"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/50">
             <img
@@ -402,7 +402,7 @@ export const Sidebar = () => {
                 transition={{ duration: 0.15 }}
                 className="gradient-primary bg-clip-text text-lg font-bold tracking-tight text-transparent"
               >
-                MindLedger
+                Axiom
               </motion.span>
             )}
           </AnimatePresence>

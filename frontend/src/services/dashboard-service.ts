@@ -95,7 +95,7 @@ class DashboardService {
     const a = document.createElement('a');
     const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
     a.href = url;
-    a.download = `mindledger_dados_${dateStr}.zip`;
+    a.download = `axiom_dados_${dateStr}.zip`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

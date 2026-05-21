@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza **shadcn/ui** como base para seus componentes de interface, construídos sobre **Radix UI** (componentes headless acessíveis) e estilizados com **TailwindCSS**.
+O Axiom utiliza **shadcn/ui** como base para seus componentes de interface, construídos sobre **Radix UI** (componentes headless acessíveis) e estilizados com **TailwindCSS**.
 
 ## Filosofia
 
@@ -20,8 +20,15 @@ src/components/ui/
 ├── button.tsx            # Botões com variantes
 ├── card.tsx              # Cards de conteúdo
 ├── checkbox.tsx          # Checkboxes
+├── circular-progress.tsx # Indicador circular de progresso
+├── currency-input.tsx    # Input BRL (R$) com variantes de cor
 ├── date-picker.tsx       # Seletor de datas
 ├── dialog.tsx            # Modais
+├── dropdown-menu.tsx     # Menus dropdown
+├── file-input.tsx        # Upload de arquivos
+├── form-field.tsx        # Campo de formulário com label e erro
+├── form-section.tsx      # Agrupador visual de campos com título+ícone
+├── icon-picker.tsx       # Seletor de ícones Lucide
 ├── input.tsx             # Campos de texto
 ├── label.tsx             # Labels de formulário
 ├── popover.tsx           # Popovers
@@ -29,11 +36,17 @@ src/components/ui/
 ├── radio-group.tsx       # Radio buttons
 ├── scroll-area.tsx       # Área com scroll customizado
 ├── select.tsx            # Dropdowns/selects
-├── skeleton.tsx          # Loading skeletons
+├── skeleton-variants.tsx # Variantes de skeleton pré-definidas
+├── skeleton.tsx          # Loading skeleton base
+├── star-rating.tsx       # Avaliação por estrelas (1-5)
+├── status-toggle.tsx     # Toggle binário de status (pill)
+├── success-animation.tsx # Animação de sucesso (checkmark)
 ├── table.tsx             # Tabelas
 ├── textarea.tsx          # Campos de texto multi-linha
 ├── toast.tsx             # Notificações toast
-└── toaster.tsx           # Container de toasts
+├── toaster.tsx           # Container de toasts
+├── tooltip.tsx           # Tooltips
+└── visually-hidden.tsx   # Texto acessível oculto visualmente
 ```
 
 ## Componentes Principais
@@ -267,7 +280,7 @@ import {
 Sistema de notificações temporárias.
 
 ```tsx
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 function MyComponent() {
   const { toast } = useToast();
@@ -414,6 +427,79 @@ import {
   </PopoverContent>
 </Popover>
 ```
+
+## Componentes de Formulário Especializados
+
+### CurrencyInput
+
+Input para valores monetários em BRL com prefixo "R$" fixo e variantes visuais de cor.
+
+```tsx
+import { CurrencyInput } from '@/components/ui/currency-input';
+
+// Valor padrão
+<CurrencyInput value={amount} onChange={...} placeholder="0,00" />
+
+// Variante destrutiva (ex: despesa)
+<CurrencyInput accentColor="destructive" {...field} />
+
+// Variante positiva (ex: receita)
+<CurrencyInput accentColor="success" {...field} />
+```
+
+**Props**: `accentColor?: 'default' | 'destructive' | 'success'` + todas as props nativas de `<input type="number">`.
+
+### FormSection
+
+Agrupador visual de campos de formulário com título, ícone opcional e linha divisória.
+
+```tsx
+import { FormSection } from '@/components/ui/form-section';
+import { Wallet } from 'lucide-react';
+
+<FormSection title="Informações Financeiras" icon={Wallet}>
+  <CurrencyInput {...field} />
+  <Select {...field} />
+</FormSection>
+```
+
+### StatusToggle
+
+Toggle binário em estilo "pill" para campos de status (pago/não pago, ativo/inativo, etc.).
+
+```tsx
+import { StatusToggle } from '@/components/ui/status-toggle';
+
+<StatusToggle
+  value={isPaid ? 'paid' : 'pending'}
+  options={[
+    { value: 'paid',    label: 'Pago',     activeClass: 'bg-success/10 text-success' },
+    { value: 'pending', label: 'Pendente', activeClass: 'bg-destructive/10 text-destructive' },
+  ]}
+  onChange={(v) => setIsPaid(v === 'paid')}
+/>
+```
+
+## Componentes Comuns (`components/common/`)
+
+Antes de criar novos componentes, verifique se os componentes comuns cobrem a necessidade:
+
+| Componente | Uso |
+|---|---|
+| `PageContainer` | Wrapper raiz de todas as páginas protegidas |
+| `PageHeader` | Cabeçalho de página com título, descrição e ações |
+| `EmptyState` | UI de estado vazio / sem resultados |
+| `LoadingState` | Skeleton loader de página inteira |
+| `DataTable` | Tabela paginada com prop `emptyState` |
+| `StatCard` | Card de estatística com ícone e valor |
+| `SearchInput` | Input de busca com debounce |
+| `IconButton` | Botão ícone + tooltip acessível |
+| `AnimatedPage` | Wrapper Framer Motion para transição de página |
+| `ExportModal` | Diálogo de exportação com seleção de intervalo de datas |
+| `StatementExportModal` | Variante de export para extratos |
+| `ErrorBoundary` | React Error Boundary para captura de erros |
+| `LanguageSelector` | Seletor PT-BR / EN-US |
+| `ThemeToggle` | Alternância Dracula / Alucard |
 
 ## Radix UI Primitives
 

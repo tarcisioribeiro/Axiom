@@ -1,4 +1,4 @@
-# Infraestrutura DNS — MindLedger
+# Infraestrutura DNS — Axiom
 
 Este documento descreve a configuração de DNS e TLS utilizada nos ambientes de
 staging e produção.
@@ -19,8 +19,8 @@ do VPS onde o cluster k3s está instalado.
 
 | Ambiente   | Hostname                                  | Serviço           |
 |------------|-------------------------------------------|-------------------|
-| Produção   | `mindledger.tjtux.duckdns.org`            | Frontend + API    |
-| Staging    | `mindledger-staging.tjtux.duckdns.org`    | Frontend + API    |
+| Produção   | `axiom.tjtux.duckdns.org`            | Frontend + API    |
+| Staging    | `axiom-staging.tjtux.duckdns.org`    | Frontend + API    |
 | MinIO      | `minio.tjtux.duckdns.org`                 | Object storage    |
 
 ---
@@ -32,7 +32,7 @@ Se o IP público do VPS mudar, atualize os registros no DuckDNS via API:
 ```bash
 # Substitua TOKEN e DOMAINS pelos valores da sua conta DuckDNS
 TOKEN="seu-token-duckdns"
-DOMAINS="mindledger,mindledger-staging,minio"
+DOMAINS="axiom,axiom-staging,minio"
 
 curl -s "https://www.duckdns.org/update?domains=${DOMAINS}&token=${TOKEN}&ip="
 # Resposta esperada: "OK"
@@ -42,7 +42,7 @@ Para automatizar, adicione um cronjob no VPS:
 
 ```bash
 # crontab -e
-*/5 * * * * curl -s "https://www.duckdns.org/update?domains=mindledger,mindledger-staging,minio&token=SEU_TOKEN&ip=" > /var/log/duckdns.log 2>&1
+*/5 * * * * curl -s "https://www.duckdns.org/update?domains=axiom,axiom-staging,minio&token=SEU_TOKEN&ip=" > /var/log/duckdns.log 2>&1
 ```
 
 ---
@@ -84,18 +84,18 @@ kubectl apply -f k8s/ingress.yaml
 
 | Secret                   | Namespace           | Hostname                               |
 |--------------------------|---------------------|----------------------------------------|
-| `mindledger-tls`         | `mindledger`        | `mindledger.tjtux.duckdns.org`         |
-| `mindledger-staging-tls` | `mindledger-staging`| `mindledger-staging.tjtux.duckdns.org` |
+| `axiom-tls`         | `axiom`        | `axiom.tjtux.duckdns.org`         |
+| `axiom-staging-tls` | `axiom-staging`| `axiom-staging.tjtux.duckdns.org` |
 
 Acompanhe a emissão do certificado:
 
 ```bash
 # Produção
-kubectl get certificate -n mindledger
-kubectl describe certificaterequest -n mindledger
+kubectl get certificate -n axiom
+kubectl describe certificaterequest -n axiom
 
 # Staging
-kubectl get certificate -n mindledger-staging
+kubectl get certificate -n axiom-staging
 ```
 
 ---
@@ -125,18 +125,18 @@ O MinIO tem um ingress próprio em `k8s/minio/ingress.yaml` apontando para
 
 ```bash
 # Confirmar que o DNS resolve
-dig mindledger.tjtux.duckdns.org
-dig mindledger-staging.tjtux.duckdns.org
+dig axiom.tjtux.duckdns.org
+dig axiom-staging.tjtux.duckdns.org
 
 # Confirmar que o certificado é válido
-curl -I https://mindledger.tjtux.duckdns.org/health/
+curl -I https://axiom.tjtux.duckdns.org/health/
 # Esperado: HTTP/2 200
 
-curl -I https://mindledger-staging.tjtux.duckdns.org/health/
+curl -I https://axiom-staging.tjtux.duckdns.org/health/
 # Esperado: HTTP/2 200
 
 # Inspecionar o certificado TLS
-echo | openssl s_client -connect mindledger.tjtux.duckdns.org:443 2>/dev/null \
+echo | openssl s_client -connect axiom.tjtux.duckdns.org:443 2>/dev/null \
   | openssl x509 -noout -dates -subject
 ```
 
@@ -152,6 +152,6 @@ Para forçar renovação:
 
 ```bash
 # Deletar o secret faz o cert-manager emitir um novo certificado
-kubectl delete secret mindledger-tls -n mindledger
-kubectl delete secret mindledger-staging-tls -n mindledger-staging
+kubectl delete secret axiom-tls -n axiom
+kubectl delete secret axiom-staging-tls -n axiom-staging
 ```

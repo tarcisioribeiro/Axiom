@@ -1,6 +1,6 @@
 # Arquitetura
 
-Decisões técnicas, fluxos de dados e diagramas do MindLedger.
+Decisões técnicas, fluxos de dados e diagramas do Axiom.
 
 ## Conteúdo
 
