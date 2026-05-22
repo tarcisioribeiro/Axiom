@@ -18,6 +18,16 @@ class MembersService extends BaseService<Member, MemberFormData> {
     return apiClient.get<Member>(API_CONFIG.ENDPOINTS.CURRENT_USER_MEMBER);
   }
 
+  async uploadProfilePhoto(file: File): Promise<Member> {
+    const formData = new FormData();
+    formData.append('profile_photo', file);
+    return apiClient.patch<Member>(API_CONFIG.ENDPOINTS.MEMBER_PROFILE_PHOTO, formData);
+  }
+
+  async deleteProfilePhoto(): Promise<Member> {
+    return apiClient.delete<Member>(API_CONFIG.ENDPOINTS.MEMBER_PROFILE_PHOTO);
+  }
+
   async getFinancialReport(
     memberId: number,
     params?: MemberReportParams

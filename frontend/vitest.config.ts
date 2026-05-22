@@ -5,6 +5,9 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify('0.0.0-test'),
+  },
   test: {
     environment: 'happy-dom',
     globals: false,
@@ -43,8 +46,10 @@ export default defineConfig({
         'src/components/members/**',
         'src/components/notifications/**',
         'src/components/payables/**',
+        'src/components/nutrition/**',
         'src/components/personal-planning/**',
         'src/components/providers/**',
+        'src/components/workout/**',
         'src/components/receipts/**',
         'src/components/revenues/**',
         'src/components/security/**',
@@ -57,7 +62,8 @@ export default defineConfig({
         'src/components/vaults/**',
         // UI utility components without standalone unit tests
         'src/components/common/ExportModal.tsx',
-        'src/components/common/ProgressBar.tsx',
+        'src/components/common/EnvironmentBanner.tsx',
+        'src/components/common/RouteProgressBar.tsx',
         'src/components/common/Skeleton.tsx',
         'src/components/common/StatementExportModal.tsx',
         // Barrel re-export files with no logic

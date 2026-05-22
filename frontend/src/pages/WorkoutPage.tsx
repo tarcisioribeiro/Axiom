@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
-  ChevronRight,
+  Calendar,
   ClipboardList,
   Clock,
   Dumbbell,
   Edit,
+  Flame,
   Plus,
+  Target,
   Trash2,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -20,7 +22,6 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -28,17 +29,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
+import { WorkoutExerciseModal } from '@/components/workout/WorkoutExerciseModal';
 import { WorkoutPlanForm } from '@/components/workout/WorkoutPlanForm';
 import { WorkoutSessionForm } from '@/components/workout/WorkoutSessionForm';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import {
+  exerciseService,
   workoutDayService,
   workoutExerciseService,
   workoutPlanService,
@@ -47,6 +52,7 @@ import {
   workoutSessionSetService,
 } from '@/services/workout-service';
 import type {
+  Exercise,
   WorkoutDay,
   WorkoutDayFormData,
   WorkoutExercise,
@@ -61,9 +67,19 @@ type DialogMode =
   | { type: 'edit-plan'; plan: WorkoutPlan }
   | { type: 'new-day'; planId: number }
   | { type: 'edit-day'; day: WorkoutDay }
+  | { type: 'add-exercise'; day: WorkoutDay }
+  | { type: 'edit-exercise'; exercise: WorkoutExercise; day: WorkoutDay }
   | { type: 'new-session' }
   | { type: 'edit-session'; session: WorkoutSession }
+  | { type: 'new-catalog-exercise' }
+  | { type: 'edit-catalog-exercise'; exercise: Exercise }
   | null;
+
+interface ExerciseCatalogFormValues {
+  name: string;
+  muscle_groups: string;
+  description: string;
+}
 
 function groupSessionsByWeek(sessions: WorkoutSession[]) {
   const now = new Date();
@@ -89,13 +105,40 @@ function groupSessionsByWeek(sessions: WorkoutSession[]) {
   return { thisWeek, lastWeek, older };
 }
 
+function getMuscleIcon(muscleGroups?: string | null): ReactNode {
+  if (!muscleGroups) return <Dumbbell className="h-4 w-4" />;
+  const mg = muscleGroups.toLowerCase();
+  if (
+    mg.includes('perna') ||
+    mg.includes('quad') ||
+    mg.includes('glút') ||
+    mg.includes('glut') ||
+    mg.includes('panturril')
+  )
+    return <Flame className="h-4 w-4" />;
+  if (mg.includes('abdômen') || mg.includes('abdome') || mg.includes('core'))
+    return <Target className="h-4 w-4" />;
+  if (mg.includes('cardio') || mg.includes('aerób'))
+    return <Activity className="h-4 w-4" />;
+  return <Dumbbell className="h-4 w-4" />;
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}min` : `${h}h`;
+}
+
 export default function WorkoutPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [activePlanSelectedDay, setActivePlanSelectedDay] = useState<number | null>(null);
+  const [activePlanSelectedDay, setActivePlanSelectedDay] = useState<number | null>(
+    null
+  );
   const [expandedInactivePlans, setExpandedInactivePlans] = useState<Set<number>>(
     new Set()
   );
@@ -124,6 +167,12 @@ export default function WorkoutPage() {
   const { data: allDays } = useQuery({
     queryKey: ['workout-days'],
     queryFn: () => workoutDayService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: catalogExercises = [] } = useQuery({
+    queryKey: ['exercises'],
+    queryFn: () => exerciseService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -180,37 +229,7 @@ export default function WorkoutPage() {
   });
 
   const createDayMutation = useMutation({
-    mutationFn: async ({
-      dayData,
-      exercises,
-    }: {
-      dayData: WorkoutDayFormData;
-      exercises: {
-        name: string;
-        sets: number;
-        reps_min: number;
-        reps_max: number;
-        order: number;
-        notes: string;
-      }[];
-    }) => {
-      const day = await workoutDayService.create(dayData);
-      await Promise.all(
-        exercises.map((ex) =>
-          workoutExerciseService.create({
-            workout_day: day.id,
-            name: ex.name,
-            sets: ex.sets,
-            reps_min: ex.reps_min,
-            reps_max: ex.reps_max,
-            order: ex.order,
-            notes: ex.notes || undefined,
-            owner: ownerId,
-          })
-        )
-      );
-      return day;
-    },
+    mutationFn: (dayData: WorkoutDayFormData) => workoutDayService.create(dayData),
     onSuccess: () => {
       void invalidatePlans();
       void invalidateDays();
@@ -223,55 +242,8 @@ export default function WorkoutPage() {
   });
 
   const updateDayMutation = useMutation({
-    mutationFn: async ({
-      id,
-      dayData,
-      exercises,
-    }: {
-      id: number;
-      dayData: WorkoutDayFormData;
-      exercises: {
-        id?: number;
-        name: string;
-        sets: number;
-        reps_min: number;
-        reps_max: number;
-        order: number;
-        notes: string;
-      }[];
-    }) => {
-      await workoutDayService.update(id, dayData);
-      const existing = await workoutExerciseService.getByDay(id);
-      const existingIds = new Set(existing.map((e) => e.id));
-      const incomingIds = new Set(exercises.filter((e) => e.id).map((e) => e.id!));
-      const toDelete = [...existingIds].filter((eid) => !incomingIds.has(eid));
-      await Promise.all(toDelete.map((eid) => workoutExerciseService.delete(eid)));
-      await Promise.all(
-        exercises.map((ex) =>
-          ex.id
-            ? workoutExerciseService.update(ex.id, {
-                workout_day: id,
-                name: ex.name,
-                sets: ex.sets,
-                reps_min: ex.reps_min,
-                reps_max: ex.reps_max,
-                order: ex.order,
-                notes: ex.notes || undefined,
-                owner: ownerId,
-              })
-            : workoutExerciseService.create({
-                workout_day: id,
-                name: ex.name,
-                sets: ex.sets,
-                reps_min: ex.reps_min,
-                reps_max: ex.reps_max,
-                order: ex.order,
-                notes: ex.notes || undefined,
-                owner: ownerId,
-              })
-        )
-      );
-    },
+    mutationFn: ({ id, dayData }: { id: number; dayData: WorkoutDayFormData }) =>
+      workoutDayService.update(id, dayData),
     onSuccess: () => {
       void invalidatePlans();
       void invalidateDays();
@@ -280,6 +252,79 @@ export default function WorkoutPage() {
         description: t('pages.workoutPlans.dayUpdatedDesc'),
       });
       setDialog(null);
+    },
+  });
+
+  const addExerciseMutation = useMutation({
+    mutationFn: (data: {
+      workout_day: number;
+      exercise: number;
+      name: string;
+      sets: number;
+      reps_min: number;
+      reps_max: number;
+      load: string | null;
+      load_unit: string;
+      order: number;
+      notes: string | null;
+    }) =>
+      workoutExerciseService.create({
+        ...data,
+        load: data.load ?? undefined,
+        notes: data.notes ?? undefined,
+        owner: ownerId,
+      }),
+    onSuccess: () => {
+      void invalidatePlans();
+      void invalidateDays();
+      toast({ title: t('pages.workoutPlans.exerciseAdded') });
+      setDialog(null);
+    },
+    onError: () =>
+      toast({ title: t('pages.workoutPlans.saveError'), variant: 'destructive' }),
+  });
+
+  const editExerciseMutation = useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: {
+        workout_day: number;
+        exercise: number;
+        name: string;
+        sets: number;
+        reps_min: number;
+        reps_max: number;
+        load: string | null;
+        load_unit: string;
+        order: number;
+        notes: string | null;
+      };
+    }) =>
+      workoutExerciseService.update(id, {
+        ...data,
+        load: data.load ?? undefined,
+        notes: data.notes ?? undefined,
+        owner: ownerId,
+      }),
+    onSuccess: () => {
+      void invalidatePlans();
+      void invalidateDays();
+      toast({ title: t('pages.workoutPlans.exerciseUpdated') });
+      setDialog(null);
+    },
+    onError: () =>
+      toast({ title: t('pages.workoutPlans.saveError'), variant: 'destructive' }),
+  });
+
+  const deleteExerciseMutation = useMutation({
+    mutationFn: (id: number) => workoutExerciseService.delete(id),
+    onSuccess: () => {
+      void invalidatePlans();
+      void invalidateDays();
+      toast({ title: t('pages.workoutPlans.exerciseDeleted') });
     },
   });
 
@@ -389,6 +434,49 @@ export default function WorkoutPage() {
     },
   });
 
+  const invalidateCatalog = () =>
+    queryClient.invalidateQueries({ queryKey: ['exercises'] });
+
+  const createCatalogExerciseMutation = useMutation({
+    mutationFn: (data: ExerciseCatalogFormValues) =>
+      exerciseService.create({ ...data, owner: ownerId }),
+    onSuccess: () => {
+      void invalidateCatalog();
+      toast({ title: t('pages.exercises.created') });
+      setDialog(null);
+    },
+    onError: () =>
+      toast({ title: t('pages.exercises.saveError'), variant: 'destructive' }),
+  });
+
+  const updateCatalogExerciseMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ExerciseCatalogFormValues }) =>
+      exerciseService.update(id, { ...data, owner: ownerId }),
+    onSuccess: () => {
+      void invalidateCatalog();
+      toast({ title: t('pages.exercises.updated') });
+      setDialog(null);
+    },
+    onError: () =>
+      toast({ title: t('pages.exercises.saveError'), variant: 'destructive' }),
+  });
+
+  const deleteCatalogExerciseMutation = useMutation({
+    mutationFn: (id: number) => exerciseService.delete(id),
+    onSuccess: () => {
+      void invalidateCatalog();
+      toast({ title: t('pages.exercises.deleted') });
+    },
+  });
+
+  const handleDeleteCatalogExercise = async (exercise: Exercise) => {
+    const confirmed = await showConfirm({
+      title: t('pages.exercises.deleteTitle'),
+      description: t('pages.exercises.deleteDesc', { name: exercise.name }),
+    });
+    if (confirmed) deleteCatalogExerciseMutation.mutate(exercise.id);
+  };
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const toggleInactivePlan = (id: number) => {
@@ -435,6 +523,14 @@ export default function WorkoutPage() {
 
   // ── Dialog title/desc ──────────────────────────────────────────────────────
 
+  const handleDeleteExercise = async (exercise: WorkoutExercise) => {
+    const confirmed = await showConfirm({
+      title: t('pages.workoutPlans.deleteExerciseTitle'),
+      description: t('pages.workoutPlans.deleteExerciseDesc'),
+    });
+    if (confirmed) deleteExerciseMutation.mutate(exercise.id);
+  };
+
   const dialogTitle = () => {
     if (!dialog) return '';
     switch (dialog.type) {
@@ -446,10 +542,18 @@ export default function WorkoutPage() {
         return t('pages.workoutPlans.newDayTitle');
       case 'edit-day':
         return t('pages.workoutPlans.editDayTitle');
+      case 'add-exercise':
+        return t('pages.workoutPlans.addExerciseTitle');
+      case 'edit-exercise':
+        return t('pages.workoutPlans.editExerciseTitle');
       case 'new-session':
         return t('pages.workoutSessions.newSessionTitle');
       case 'edit-session':
         return t('pages.workoutSessions.editSessionTitle');
+      case 'new-catalog-exercise':
+        return t('pages.exercises.newTitle');
+      case 'edit-catalog-exercise':
+        return t('pages.exercises.editTitle');
     }
   };
 
@@ -464,10 +568,18 @@ export default function WorkoutPage() {
         return t('pages.workoutPlans.newDayDesc');
       case 'edit-day':
         return t('pages.workoutPlans.editDayDesc');
+      case 'add-exercise':
+        return t('pages.workoutPlans.addExerciseDesc');
+      case 'edit-exercise':
+        return t('pages.workoutPlans.editExerciseDesc');
       case 'new-session':
         return t('pages.workoutSessions.newSessionDesc');
       case 'edit-session':
         return t('pages.workoutSessions.editSessionDesc');
+      case 'new-catalog-exercise':
+        return t('pages.exercises.newDesc');
+      case 'edit-catalog-exercise':
+        return t('pages.exercises.editDesc');
     }
   };
 
@@ -481,220 +593,21 @@ export default function WorkoutPage() {
           icon={<Dumbbell className="h-6 w-6 text-category-exercise" />}
         />
 
-        <Tabs defaultValue="plans" className="w-full">
+        <Tabs defaultValue="sessions" className="w-full">
           <TabsList className="mb-lg">
-            <TabsTrigger value="plans" className="gap-xs">
-              <ClipboardList className="h-4 w-4" />
-              {t('pages.workoutPlans.tabPlans')}
-            </TabsTrigger>
             <TabsTrigger value="sessions" className="gap-xs">
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
             </TabsTrigger>
+            <TabsTrigger value="plans" className="gap-xs">
+              <ClipboardList className="h-4 w-4" />
+              {t('pages.workoutPlans.tabPlans')}
+            </TabsTrigger>
+            <TabsTrigger value="exercises" className="gap-xs">
+              <Dumbbell className="h-4 w-4" />
+              {t('pages.workoutPlans.tabExercises')}
+            </TabsTrigger>
           </TabsList>
-
-          {/* ── Planos ──────────────────────────────────────────────────── */}
-          <TabsContent value="plans">
-            <div className="mb-md flex justify-end">
-              <Button onClick={() => setDialog({ type: 'new-plan' })}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('pages.workoutPlans.newPlanBtn')}
-              </Button>
-            </div>
-
-            {plansLoading ? (
-              <LoadingState />
-            ) : plans.length === 0 ? (
-              <EmptyState
-                title={t('pages.workoutPlans.emptyPlans')}
-                description={t('pages.workoutPlans.emptyPlansDesc')}
-                icon={<Dumbbell className="h-8 w-8" />}
-              />
-            ) : (
-              <div className="space-y-lg">
-                {/* Plano ativo */}
-                {activePlan && (
-                  <div className="space-y-sm">
-                    <div className="flex items-center gap-sm">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="flex items-center gap-xs text-xs font-semibold uppercase tracking-wider text-category-exercise">
-                        <Activity className="h-3 w-3" />
-                        {t('pages.workoutPlans.activePlan')}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-
-                    <Card className="border-category-exercise/30 bg-category-exercise/5">
-                      <CardHeader className="pb-sm">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="flex items-center gap-sm text-base">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-category-exercise/20">
-                                <Dumbbell className="h-4 w-4 text-category-exercise" />
-                              </div>
-                              {activePlan.name}
-                            </CardTitle>
-                            {activePlan.description && (
-                              <p className="mt-1 pl-10 text-sm text-muted-foreground">
-                                {activePlan.description}
-                              </p>
-                            )}
-                            <p className="mt-1 pl-10 text-xs text-muted-foreground">
-                              {activePlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
-                              {activePlan.exercise_count}{' '}
-                              {t('pages.workoutPlans.exercises')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-xs">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                setDialog({ type: 'edit-plan', plan: activePlan })
-                              }
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDeletePlan(activePlan)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="space-y-sm pt-0">
-                        {/* Chips de divisão */}
-                        <div className="flex flex-wrap gap-xs">
-                          {activePlan.days?.map((day) => (
-                            <button
-                              key={day.id}
-                              type="button"
-                              onClick={() =>
-                                setActivePlanSelectedDay(
-                                  activePlanSelectedDay === day.id ? null : day.id
-                                )
-                              }
-                              className={cn(
-                                'rounded-full border px-sm py-1 text-sm font-medium transition-colors',
-                                activePlanSelectedDay === day.id
-                                  ? 'border-category-exercise bg-category-exercise text-white'
-                                  : 'border-border bg-card hover:border-category-exercise/60 hover:bg-category-exercise/10'
-                              )}
-                            >
-                              {day.name}
-                              {day.muscle_groups && (
-                                <span className="ml-xs text-xs opacity-70">
-                                  · {day.muscle_groups}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 rounded-full"
-                            onClick={() =>
-                              setDialog({
-                                type: 'new-day',
-                                planId: activePlan.id,
-                              })
-                            }
-                          >
-                            <Plus className="mr-1 h-3 w-3" />
-                            {t('pages.workoutPlans.newDayBtn')}
-                          </Button>
-                        </div>
-
-                        {/* Exercícios da divisão selecionada */}
-                        {activePlanSelectedDay !== null && (() => {
-                          const day = activePlan.days?.find(
-                            (d) => d.id === activePlanSelectedDay
-                          );
-                          if (!day) return null;
-                          return (
-                            <div className="rounded-lg border border-category-exercise/20 bg-background p-sm">
-                              <div className="mb-sm flex items-center justify-between">
-                                <p className="text-sm font-semibold">
-                                  {day.name}
-                                  {day.muscle_groups && (
-                                    <span className="ml-xs font-normal text-muted-foreground">
-                                      — {day.muscle_groups}
-                                    </span>
-                                  )}
-                                </p>
-                                <div className="flex gap-xs">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => setDialog({ type: 'edit-day', day })}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                    onClick={() => handleDeleteDay(day)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                              {day.exercises && day.exercises.length > 0 ? (
-                                <ExercisesTable exercises={day.exercises} t={t} />
-                              ) : (
-                                <p className="py-sm text-center text-xs text-muted-foreground">
-                                  {t('pages.workoutPlans.noExercises')}
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* Outros planos */}
-                {inactivePlans.length > 0 && (
-                  <div className="space-y-sm">
-                    <div className="flex items-center gap-sm">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {t('pages.workoutPlans.otherPlans')}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-
-                    {inactivePlans.map((plan) => (
-                      <InactivePlanRow
-                        key={plan.id}
-                        plan={plan}
-                        expanded={expandedInactivePlans.has(plan.id)}
-                        expandedDays={expandedDays}
-                        onToggle={() => toggleInactivePlan(plan.id)}
-                        onToggleDay={toggleDay}
-                        onEdit={() => setDialog({ type: 'edit-plan', plan })}
-                        onDelete={() => handleDeletePlan(plan)}
-                        onNewDay={() =>
-                          setDialog({ type: 'new-day', planId: plan.id })
-                        }
-                        onEditDay={(day) => setDialog({ type: 'edit-day', day })}
-                        onDeleteDay={handleDeleteDay}
-                        t={t}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </TabsContent>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions">
@@ -720,6 +633,294 @@ export default function WorkoutPage() {
                 onDelete={handleDeleteSession}
                 t={t}
               />
+            )}
+          </TabsContent>
+
+          {/* ── Planos ──────────────────────────────────────────────────── */}
+          <TabsContent value="plans">
+            <div className="mb-md flex justify-end">
+              <Button onClick={() => setDialog({ type: 'new-plan' })}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('pages.workoutPlans.newPlanBtn')}
+              </Button>
+            </div>
+
+            {plansLoading ? (
+              <LoadingState />
+            ) : plans.length === 0 ? (
+              <EmptyState
+                title={t('pages.workoutPlans.emptyPlans')}
+                description={t('pages.workoutPlans.emptyPlansDesc')}
+                icon={<Dumbbell className="h-8 w-8" />}
+              />
+            ) : (
+              <div className="space-y-xl">
+                {/* Plano ativo — hero card */}
+                {activePlan && (
+                  <div className="space-y-sm">
+                    <div className="overflow-hidden rounded-2xl shadow-sm ring-1 ring-category-exercise/30">
+                      {/* Gradient header */}
+                      <div className="relative overflow-hidden bg-gradient-to-br from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg">
+                        <Dumbbell className="absolute -right-6 -top-6 h-36 w-36 rotate-12 text-white/10" />
+                        <div className="relative flex items-start justify-between">
+                          <div className="min-w-0">
+                            <div className="mb-sm inline-flex items-center gap-xs rounded-full bg-white/20 px-sm py-1 text-xs font-bold uppercase tracking-widest text-white">
+                              <Zap className="h-3 w-3" />
+                              {t('pages.workoutPlans.activePlan')}
+                            </div>
+                            <h2 className="text-2xl font-bold text-white">
+                              {activePlan.name}
+                            </h2>
+                            {activePlan.description && (
+                              <p className="mt-1 text-sm text-white/70">
+                                {activePlan.description}
+                              </p>
+                            )}
+                            <div className="mt-sm flex flex-wrap gap-md text-sm text-white/80">
+                              <span className="flex items-center gap-xs">
+                                <ClipboardList className="h-3.5 w-3.5" />
+                                {activePlan.day_count} {t('pages.workoutPlans.days')}
+                              </span>
+                              <span className="flex items-center gap-xs">
+                                <Dumbbell className="h-3.5 w-3.5" />
+                                {activePlan.exercise_count}{' '}
+                                {t('pages.workoutPlans.exercises')}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-md flex shrink-0 gap-xs">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDialog({ type: 'edit-plan', plan: activePlan })
+                              }
+                              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePlan(activePlan)}
+                              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Day cards */}
+                      <div className="bg-card p-md">
+                        <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          {t('pages.workoutPlans.days')}
+                        </p>
+                        <div className="flex gap-sm overflow-x-auto pb-1">
+                          {activePlan.days?.map((day) => (
+                            <button
+                              key={day.id}
+                              type="button"
+                              onClick={() =>
+                                setActivePlanSelectedDay(
+                                  activePlanSelectedDay === day.id ? null : day.id
+                                )
+                              }
+                              className={cn(
+                                'flex min-w-[130px] flex-col items-start rounded-lg border-2 p-sm text-left transition-all',
+                                activePlanSelectedDay === day.id
+                                  ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
+                                  : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  'mb-sm flex h-8 w-8 items-center justify-center rounded-lg',
+                                  activePlanSelectedDay === day.id
+                                    ? 'bg-category-exercise/20 text-category-exercise'
+                                    : 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                {getMuscleIcon(day.muscle_groups)}
+                              </div>
+                              <span
+                                className={cn(
+                                  'text-sm font-semibold leading-tight',
+                                  activePlanSelectedDay === day.id
+                                    ? 'text-category-exercise'
+                                    : 'text-foreground'
+                                )}
+                              >
+                                {day.name}
+                              </span>
+                              {day.muscle_groups && (
+                                <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                  {day.muscle_groups}
+                                </span>
+                              )}
+                              <span className="mt-sm text-xs text-muted-foreground">
+                                {day.exercise_count} {t('pages.workoutPlans.exercises')}
+                              </span>
+                            </button>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDialog({ type: 'new-day', planId: activePlan.id })
+                            }
+                            className="flex min-w-[100px] flex-col items-center justify-center gap-sm rounded-lg border-2 border-dashed border-border p-sm text-center transition-colors hover:border-category-exercise/40 hover:bg-category-exercise/5"
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                              <Plus className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {t('pages.workoutPlans.newDayBtn')}
+                            </span>
+                          </button>
+                        </div>
+
+                        {/* Exercícios da divisão selecionada */}
+                        {activePlanSelectedDay !== null &&
+                          (() => {
+                            const day = activePlan.days?.find(
+                              (d) => d.id === activePlanSelectedDay
+                            );
+                            if (!day) return null;
+                            return (
+                              <div className="mt-md rounded-lg border border-category-exercise/25 bg-category-exercise/5 p-md">
+                                <div className="mb-sm flex items-center justify-between">
+                                  <div>
+                                    <p className="font-semibold text-foreground">
+                                      {day.name}
+                                    </p>
+                                    {day.muscle_groups && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {day.muscle_groups}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-xs">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() =>
+                                        setDialog({ type: 'edit-day', day })
+                                      }
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteDay(day)}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                {day.exercises && day.exercises.length > 0 ? (
+                                  <ExerciseList
+                                    exercises={day.exercises}
+                                    onEdit={(ex) =>
+                                      setDialog({
+                                        type: 'edit-exercise',
+                                        exercise: ex,
+                                        day,
+                                      })
+                                    }
+                                    onDelete={handleDeleteExercise}
+                                  />
+                                ) : (
+                                  <p className="py-sm text-center text-xs text-muted-foreground">
+                                    {t('pages.workoutPlans.noExercises')}
+                                  </p>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setDialog({ type: 'add-exercise', day })
+                                  }
+                                  className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-sm text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                  {t('pages.workoutPlans.addExerciseBtn')}
+                                </button>
+                              </div>
+                            );
+                          })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Outros planos */}
+                {inactivePlans.length > 0 && (
+                  <div className="space-y-sm">
+                    <div className="flex items-center gap-sm">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {t('pages.workoutPlans.otherPlans')}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    {inactivePlans.map((plan) => (
+                      <InactivePlanRow
+                        key={plan.id}
+                        plan={plan}
+                        expanded={expandedInactivePlans.has(plan.id)}
+                        expandedDays={expandedDays}
+                        onToggle={() => toggleInactivePlan(plan.id)}
+                        onToggleDay={toggleDay}
+                        onEdit={() => setDialog({ type: 'edit-plan', plan })}
+                        onDelete={() => handleDeletePlan(plan)}
+                        onNewDay={() => setDialog({ type: 'new-day', planId: plan.id })}
+                        onEditDay={(day) => setDialog({ type: 'edit-day', day })}
+                        onDeleteDay={handleDeleteDay}
+                        onAddExercise={(day) =>
+                          setDialog({ type: 'add-exercise', day })
+                        }
+                        onEditExercise={(ex, day) =>
+                          setDialog({ type: 'edit-exercise', exercise: ex, day })
+                        }
+                        onDeleteExercise={handleDeleteExercise}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ── Exercícios (catálogo) ────────────────────────────────────── */}
+          <TabsContent value="exercises">
+            <div className="mb-md flex justify-end">
+              <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('pages.exercises.newBtn')}
+              </Button>
+            </div>
+
+            {catalogExercises.length === 0 ? (
+              <EmptyState
+                title={t('pages.exercises.empty')}
+                description={t('pages.exercises.emptyDesc')}
+                icon={<Dumbbell className="h-8 w-8" />}
+              />
+            ) : (
+              <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {catalogExercises.map((exercise) => (
+                  <ExerciseCatalogCard
+                    key={exercise.id}
+                    exercise={exercise}
+                    onEdit={() =>
+                      setDialog({ type: 'edit-catalog-exercise', exercise })
+                    }
+                    onDelete={() => handleDeleteCatalogExercise(exercise)}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
         </Tabs>
@@ -756,29 +957,46 @@ export default function WorkoutPage() {
 
             {(dialog?.type === 'new-day' || dialog?.type === 'edit-day') && (
               <WorkoutDayForm
-                day={
-                  dialog.type === 'edit-day'
-                    ? (dialog.day as WorkoutDay & { exercises: WorkoutExercise[] })
-                    : undefined
-                }
+                day={dialog.type === 'edit-day' ? dialog.day : undefined}
                 planId={dialog.type === 'new-day' ? dialog.planId : dialog.day.plan}
                 ownerId={ownerId}
-                onSubmit={async (dayData, exercises) => {
+                onSubmit={async (dayData) => {
                   if (dialog.type === 'edit-day') {
                     await updateDayMutation.mutateAsync({
                       id: dialog.day.id,
                       dayData: dayData as WorkoutDayFormData,
-                      exercises,
                     });
                   } else {
-                    await createDayMutation.mutateAsync({
-                      dayData: dayData as WorkoutDayFormData,
-                      exercises,
-                    });
+                    await createDayMutation.mutateAsync(dayData as WorkoutDayFormData);
                   }
                 }}
                 onCancel={() => setDialog(null)}
                 isLoading={createDayMutation.isPending || updateDayMutation.isPending}
+              />
+            )}
+
+            {(dialog?.type === 'add-exercise' || dialog?.type === 'edit-exercise') && (
+              <WorkoutExerciseModal
+                exercises={catalogExercises}
+                existing={dialog.type === 'edit-exercise' ? dialog.exercise : undefined}
+                nextOrder={dialog.day.exercises?.length ?? 0}
+                onSubmit={async (data) => {
+                  if (dialog.type === 'edit-exercise') {
+                    await editExerciseMutation.mutateAsync({
+                      id: dialog.exercise.id,
+                      data: { ...data, workout_day: dialog.day.id },
+                    });
+                  } else {
+                    await addExerciseMutation.mutateAsync({
+                      ...data,
+                      workout_day: dialog.day.id,
+                    });
+                  }
+                }}
+                onCancel={() => setDialog(null)}
+                isLoading={
+                  addExerciseMutation.isPending || editExerciseMutation.isPending
+                }
               />
             )}
 
@@ -793,6 +1011,30 @@ export default function WorkoutPage() {
                 isLoading={createSessionMutation.isPending}
               />
             )}
+
+            {(dialog?.type === 'new-catalog-exercise' ||
+              dialog?.type === 'edit-catalog-exercise') && (
+              <ExerciseCatalogForm
+                exercise={
+                  dialog.type === 'edit-catalog-exercise' ? dialog.exercise : undefined
+                }
+                onSubmit={async (data) => {
+                  if (dialog.type === 'edit-catalog-exercise') {
+                    await updateCatalogExerciseMutation.mutateAsync({
+                      id: dialog.exercise.id,
+                      data,
+                    });
+                  } else {
+                    await createCatalogExerciseMutation.mutateAsync(data);
+                  }
+                }}
+                onCancel={() => setDialog(null)}
+                isLoading={
+                  createCatalogExerciseMutation.isPending ||
+                  updateCatalogExerciseMutation.isPending
+                }
+              />
+            )}
           </DialogContent>
         </Dialog>
       </PageContainer>
@@ -800,40 +1042,177 @@ export default function WorkoutPage() {
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// ── Catalog exercise sub-components ────────────────────────────────────────
 
-function ExercisesTable({
-  exercises,
-  t,
+function ExerciseCatalogCard({
+  exercise,
+  onEdit,
+  onDelete,
 }: {
-  exercises: WorkoutExercise[];
-  t: (key: string) => string;
+  exercise: Exercise;
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-border text-xs text-muted-foreground">
-          <th className="py-xs text-left font-medium">
-            {t('pages.workoutPlans.exerciseName')}
-          </th>
-          <th className="w-16 py-xs text-center font-medium">
-            {t('pages.workoutPlans.sets')}
-          </th>
-          <th className="w-20 py-xs text-center font-medium">Reps</th>
-        </tr>
-      </thead>
-      <tbody>
-        {exercises.map((ex) => (
-          <tr key={ex.id} className="border-b border-border/50 last:border-0">
-            <td className="py-xs">{ex.name}</td>
-            <td className="py-xs text-center text-muted-foreground">{ex.sets}×</td>
-            <td className="py-xs text-center text-muted-foreground">
+    <div className="group relative flex flex-col rounded-lg border border-border bg-card p-md transition-shadow hover:shadow-md">
+      <div className="mb-sm flex items-start justify-between gap-sm">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/10">
+          <Dumbbell className="h-5 w-5 text-category-exercise" />
+        </div>
+        <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+            <Edit className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-destructive hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+      <p className="font-semibold leading-tight text-foreground">{exercise.name}</p>
+      {exercise.muscle_groups && (
+        <p className="mt-xs text-xs text-muted-foreground">{exercise.muscle_groups}</p>
+      )}
+      {exercise.description && (
+        <p className="mt-sm line-clamp-2 text-xs text-muted-foreground/70">
+          {exercise.description}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ExerciseCatalogForm({
+  exercise,
+  onSubmit,
+  onCancel,
+  isLoading,
+}: {
+  exercise?: Exercise;
+  onSubmit: (data: ExerciseCatalogFormValues) => Promise<void>;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  const { t } = useTranslation();
+  const [values, setValues] = useState<ExerciseCatalogFormValues>({
+    name: exercise?.name ?? '',
+    muscle_groups: exercise?.muscle_groups ?? '',
+    description: exercise?.description ?? '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!values.name.trim()) return;
+    await onSubmit(values);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-md">
+      <div className="space-y-sm">
+        <Label htmlFor="cat-ex-name">{t('pages.exercises.fieldName')}</Label>
+        <Input
+          id="cat-ex-name"
+          placeholder={t('pages.exercises.fieldNamePlaceholder')}
+          value={values.name}
+          onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-sm">
+        <Label htmlFor="cat-ex-muscles">{t('pages.exercises.fieldMuscles')}</Label>
+        <Input
+          id="cat-ex-muscles"
+          placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
+          value={values.muscle_groups}
+          onChange={(e) => setValues((v) => ({ ...v, muscle_groups: e.target.value }))}
+        />
+      </div>
+      <div className="space-y-sm">
+        <Label htmlFor="cat-ex-desc">{t('pages.exercises.fieldDescription')}</Label>
+        <Textarea
+          id="cat-ex-desc"
+          placeholder={t('pages.exercises.fieldDescriptionPlaceholder')}
+          rows={3}
+          value={values.description}
+          onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+        />
+      </div>
+      <div className="flex justify-end gap-sm pt-sm">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          {t('common.actions.cancel')}
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {t('common.actions.save')}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────
+
+function ExerciseList({
+  exercises,
+  onEdit,
+  onDelete,
+}: {
+  exercises: WorkoutExercise[];
+  onEdit?: (ex: WorkoutExercise) => void;
+  onDelete?: (ex: WorkoutExercise) => void;
+}) {
+  return (
+    <div className="space-y-xs">
+      {exercises.map((ex, idx) => (
+        <div
+          key={ex.id}
+          className="group flex items-center gap-sm rounded-lg bg-background px-sm py-xs"
+        >
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-category-exercise/20 text-xs font-bold text-category-exercise">
+            {idx + 1}
+          </span>
+          <span className="flex-1 text-sm font-medium">{ex.name}</span>
+          <div className="flex shrink-0 items-center gap-xs">
+            {ex.load && (
+              <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
+                {ex.load} {ex.load_unit}
+              </span>
+            )}
+            <span className="rounded-full bg-category-exercise/15 px-xs py-px text-xs font-semibold text-category-exercise">
+              {ex.sets}×
+            </span>
+            <span className="rounded-full bg-muted px-xs py-px text-xs text-muted-foreground">
               {ex.reps_min}–{ex.reps_max}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            </span>
+            {(onEdit || onDelete) && (
+              <div className="flex gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(ex)}
+                    className="rounded p-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <Edit className="h-3 w-3" />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(ex)}
+                    className="rounded p-xs text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -848,6 +1227,9 @@ interface InactivePlanRowProps {
   onNewDay: () => void;
   onEditDay: (day: WorkoutDay) => void;
   onDeleteDay: (day: WorkoutDay) => void;
+  onAddExercise: (day: WorkoutDay) => void;
+  onEditExercise: (ex: WorkoutExercise, day: WorkoutDay) => void;
+  onDeleteExercise: (ex: WorkoutExercise) => void;
   t: (key: string) => string;
 }
 
@@ -862,50 +1244,71 @@ function InactivePlanRow({
   onNewDay,
   onEditDay,
   onDeleteDay,
+  onAddExercise,
+  onEditExercise,
+  onDeleteExercise,
   t,
 }: InactivePlanRowProps) {
   return (
-    <Card className="border-border">
-      <CardHeader className="pb-sm">
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            className="flex min-w-0 flex-1 items-center gap-sm text-left"
-            onClick={onToggle}
-          >
-            <ChevronRight
-              className={cn(
-                'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
-                expanded && 'rotate-90'
-              )}
-            />
-            <div className="min-w-0">
-              <CardTitle className="truncate text-base">{plan.name}</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
-                {t('pages.workoutPlans.exercises')}
-              </p>
-            </div>
-          </button>
-          <div className="ml-sm flex shrink-0 items-center gap-xs">
-            <Badge variant="secondary">{t('pages.workoutPlans.inactive')}</Badge>
-            <Button variant="ghost" size="icon" onClick={onEdit}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <div className="overflow-hidden rounded-lg border border-border">
+      <div className="flex items-center gap-sm bg-card px-md py-sm">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-sm text-left"
+          onClick={onToggle}
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold text-foreground">{plan.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
+              {t('pages.workoutPlans.exercises')}
+            </p>
+          </div>
+          <div
+            className={cn(
+              'flex h-5 w-5 shrink-0 items-center justify-center rounded transition-transform',
+              expanded && 'rotate-90'
+            )}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-muted-foreground"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        </button>
+        <div className="ml-sm flex shrink-0 items-center gap-xs">
+          <Badge variant="secondary" className="text-xs">
+            {t('pages.workoutPlans.inactive')}
+          </Badge>
+          <Button variant="ghost" size="icon" onClick={onEdit}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
-      </CardHeader>
+      </div>
 
       {expanded && (
-        <CardContent className="space-y-sm pt-0">
+        <div className="space-y-sm border-t border-border bg-background p-md">
           <div className="flex justify-end">
             <Button variant="outline" size="sm" onClick={onNewDay}>
               <Plus className="mr-1 h-3 w-3" />
@@ -913,19 +1316,19 @@ function InactivePlanRow({
             </Button>
           </div>
           {plan.days?.map((day) => (
-            <div key={day.id} className="rounded-md border border-border bg-muted/30">
-              <div className="flex items-center justify-between px-sm py-xs">
+            <div
+              key={day.id}
+              className="overflow-hidden rounded-lg border border-border"
+            >
+              <div className="flex items-center justify-between bg-muted/30 px-sm py-xs">
                 <button
                   type="button"
                   className="flex min-w-0 flex-1 items-center gap-xs text-left"
                   onClick={() => onToggleDay(day.id)}
                 >
-                  <ChevronRight
-                    className={cn(
-                      'h-3 w-3 shrink-0 text-muted-foreground transition-transform',
-                      expandedDays.has(day.id) && 'rotate-90'
-                    )}
-                  />
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
+                    {getMuscleIcon(day.muscle_groups)}
+                  </div>
                   <span className="text-sm font-medium">{day.name}</span>
                   {day.muscle_groups && (
                     <span className="truncate text-xs text-muted-foreground">
@@ -955,16 +1358,30 @@ function InactivePlanRow({
                   </Button>
                 </div>
               </div>
-              {expandedDays.has(day.id) && day.exercises && day.exercises.length > 0 && (
-                <div className="px-sm pb-sm">
-                  <ExercisesTable exercises={day.exercises} t={t} />
+              {expandedDays.has(day.id) && (
+                <div className="space-y-xs px-sm pb-sm pt-xs">
+                  {day.exercises && day.exercises.length > 0 && (
+                    <ExerciseList
+                      exercises={day.exercises}
+                      onEdit={(ex) => onEditExercise(ex, day)}
+                      onDelete={onDeleteExercise}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onAddExercise(day)}
+                    className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-xs text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {t('pages.workoutPlans.addExerciseBtn')}
+                  </button>
                 </div>
               )}
             </div>
           ))}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -987,19 +1404,27 @@ function SessionsGrouped({ sessions, onEdit, onDelete, t }: SessionsGroupedProps
   return (
     <div className="space-y-lg">
       {groups.map((group) => (
-        <div key={group.key} className="space-y-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {group.label}
-          </p>
-          {group.items.map((session) => (
-            <SessionCard
-              key={session.id}
-              session={session}
-              onEdit={() => onEdit(session)}
-              onDelete={() => onDelete(session)}
-              t={t}
-            />
-          ))}
+        <div key={group.key}>
+          <div className="mb-sm flex items-center gap-sm">
+            <div className="h-px flex-1 bg-border" />
+            <span className="flex items-center gap-xs rounded-full bg-muted px-sm py-0.5 text-xs font-semibold text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              {group.label}
+              <span className="font-normal opacity-70">· {group.items.length}</span>
+            </span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <div className="space-y-sm">
+            {group.items.map((session) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                onEdit={() => onEdit(session)}
+                onDelete={() => onDelete(session)}
+                t={t}
+              />
+            ))}
+          </div>
         </div>
       ))}
     </div>
@@ -1015,54 +1440,72 @@ interface SessionCardProps {
 
 function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
   const exerciseCount = session.session_exercises?.length ?? 0;
+  const date = new Date(session.date + 'T12:00:00');
+  const dayNum = date.getDate();
+  const monthLabel = date
+    .toLocaleDateString('pt-BR', { month: 'short' })
+    .replace('.', '')
+    .toUpperCase();
 
   return (
-    <div className="group flex items-center gap-md rounded-lg border border-border bg-card px-md py-sm transition-colors hover:border-category-exercise/30 hover:bg-category-exercise/5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-category-exercise/10">
-        <Dumbbell className="h-4 w-4 text-category-exercise" />
+    <div className="group flex gap-md rounded-lg border border-border bg-card p-md transition-all hover:border-category-exercise/30 hover:shadow-sm">
+      {/* Date block */}
+      <div className="flex w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-category-exercise/10 py-sm text-center">
+        <span className="text-2xl font-bold leading-none text-category-exercise">
+          {dayNum}
+        </span>
+        <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-category-exercise/70">
+          {monthLabel}
+        </span>
       </div>
 
+      {/* Content */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">
-          {session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')}
-        </p>
-        {session.workout_day_muscle_groups && (
-          <p className="truncate text-xs text-muted-foreground">
-            {session.workout_day_muscle_groups}
-          </p>
-        )}
-      </div>
+        <div className="flex items-start justify-between gap-sm">
+          <div className="min-w-0">
+            <p className="font-semibold leading-snug">
+              {session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')}
+            </p>
+            {session.workout_day_muscle_groups && (
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {session.workout_day_muscle_groups}
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+              <Edit className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
 
-      <div className="flex shrink-0 items-center gap-md text-xs text-muted-foreground">
-        <span className="font-medium">{formatDate(session.date)}</span>
-        {session.duration_minutes != null && (
-          <span className="flex items-center gap-xs">
-            <Clock className="h-3 w-3" />
-            {t('pages.workoutSessions.durationMinutes', {
-              minutes: session.duration_minutes,
-            })}
-          </span>
-        )}
-        {exerciseCount > 0 && (
-          <span className="flex items-center gap-xs">
-            <Activity className="h-3 w-3" />
-            {exerciseCount} {t('pages.workoutPlans.exercises')}
-          </span>
-        )}
-      </div>
-
-      <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-          <Edit className="h-3 w-3" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-destructive hover:text-destructive"
-          onClick={onDelete}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        <div className="mt-sm flex flex-wrap items-center gap-xs">
+          {session.duration_minutes != null && (
+            <span className="flex items-center gap-xs rounded-full border border-border bg-background px-sm py-0.5 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              {formatDuration(session.duration_minutes)}
+            </span>
+          )}
+          {exerciseCount > 0 && (
+            <span className="flex items-center gap-xs rounded-full border border-border bg-background px-sm py-0.5 text-xs text-muted-foreground">
+              <Dumbbell className="h-3 w-3" />
+              {exerciseCount} {t('pages.workoutPlans.exercises')}
+            </span>
+          )}
+          {session.notes && (
+            <span className="line-clamp-1 text-xs text-muted-foreground">
+              {session.notes}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

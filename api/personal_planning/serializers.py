@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from personal_planning.models import (
     DailyReflection,
+    Exercise,
     Food,
     Goal,
     MealLog,
@@ -393,9 +394,34 @@ class InstancesForDateResponseSerializer(serializers.Serializer):
 # ============================================================================
 
 
+class ExerciseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercise
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "muscle_groups",
+            "description",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class ExerciseCreateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exercise
+        fields = ["id", "name", "muscle_groups", "description", "owner"]
+
+
 class WorkoutExerciseSerializer(serializers.ModelSerializer):
     load_unit_display = serializers.CharField(
         source="get_load_unit_display", read_only=True, default=None
+    )
+    exercise_catalog_name = serializers.CharField(
+        source="exercise.name", read_only=True, default=None
     )
 
     class Meta:
@@ -404,13 +430,17 @@ class WorkoutExerciseSerializer(serializers.ModelSerializer):
             "id",
             "uuid",
             "workout_day",
+            "exercise",
+            "exercise_catalog_name",
             "name",
             "sets",
             "reps_min",
             "reps_max",
+            "load",
+            "load_unit",
+            "load_unit_display",
             "order",
             "notes",
-            "load_unit_display",
             "owner",
             "created_at",
             "updated_at",
@@ -424,10 +454,13 @@ class WorkoutExerciseCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "workout_day",
+            "exercise",
             "name",
             "sets",
             "reps_min",
             "reps_max",
+            "load",
+            "load_unit",
             "order",
             "notes",
             "owner",
