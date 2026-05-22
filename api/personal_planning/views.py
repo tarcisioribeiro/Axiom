@@ -13,6 +13,7 @@ from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from members.models import Member
 from personal_planning.models import (
     DailyReflection,
+    Exercise,
     Food,
     GamificationProfile,
     Goal,
@@ -33,6 +34,8 @@ from personal_planning.models import (
 from personal_planning.serializers import (
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
+    ExerciseCreateUpdateSerializer,
+    ExerciseSerializer,
     FoodCreateUpdateSerializer,
     FoodSerializer,
     GoalCreateUpdateSerializer,
@@ -1521,6 +1524,24 @@ class GamificationProfileView(APIView):
 # ============================================================================
 
 
+class ExerciseListCreateView(BaseListCreateView):
+    serializer_class = ExerciseSerializer
+    create_serializer_class = ExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = ExerciseSerializer
+    create_serializer_class = ExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+
+
 class WorkoutPlanListCreateView(BaseListCreateView):
     serializer_class = WorkoutPlanSerializer
     create_serializer_class = WorkoutPlanCreateUpdateSerializer
@@ -1784,3 +1805,9 @@ class MealLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
         return MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.is_deleted = True
+        instance.save()

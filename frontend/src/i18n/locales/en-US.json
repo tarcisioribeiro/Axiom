@@ -220,6 +220,7 @@
       "bankReconciliation": "Bank Reconciliation",
       "receivables": "Receivables",
       "workout": "Workout",
+      "exercises": "Exercises",
       "nutrition": "Diet",
       "workoutSessions": "Workout Sessions",
       "workoutPlans": "Workout Plans",
@@ -4139,6 +4140,7 @@
       "title": "Workout",
       "tabPlans": "Plans",
       "tabSessions": "Sessions",
+      "tabExercises": "Exercises",
       "newPlanBtn": "New Plan",
       "newPlanTitle": "New Workout Plan",
       "editPlanTitle": "Edit Plan",
@@ -4185,6 +4187,20 @@
       "order": "Order",
       "exercisesSection": "Exercises",
       "addExercise": "Add Exercise",
+      "addExerciseBtn": "Add Exercise",
+      "addExerciseTitle": "Add Exercise to Split",
+      "addExerciseDesc": "Select an exercise from the catalog and set load and reps.",
+      "editExerciseTitle": "Edit Exercise",
+      "editExerciseDesc": "Update this exercise's settings for this split.",
+      "deleteExerciseTitle": "Delete exercise",
+      "deleteExerciseDesc": "Are you sure you want to remove this exercise from the split?",
+      "exerciseAdded": "Exercise added",
+      "exerciseUpdated": "Exercise updated",
+      "selectExercise": "Select Exercise",
+      "searchExercise": "Search exercise...",
+      "exerciseRequired": "Please select an exercise",
+      "load": "Load",
+      "loadUnit": "Unit",
       "exerciseName": "Exercise Name",
       "exerciseNamePlaceholder": "e.g. Smith Machine Bench Press",
       "sets": "Sets",
@@ -4198,6 +4214,28 @@
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Error loading plans",
       "saveError": "Error saving"
+    },
+    "exercises": {
+      "title": "Exercises",
+      "newBtn": "New Exercise",
+      "newTitle": "New Exercise",
+      "newDesc": "Add an exercise to your personal catalog.",
+      "editTitle": "Edit Exercise",
+      "editDesc": "Update the exercise information.",
+      "deleteTitle": "Delete exercise",
+      "deleteDesc": "Are you sure you want to delete \"{{name}}\"?",
+      "created": "Exercise created",
+      "updated": "Exercise updated",
+      "deleted": "Exercise deleted",
+      "saveError": "Error saving exercise",
+      "empty": "No exercises registered",
+      "emptyDesc": "Add exercises to use in your workout plans.",
+      "fieldName": "Name",
+      "fieldNamePlaceholder": "e.g. Bench Press",
+      "fieldMuscles": "Muscle Groups",
+      "fieldMusclesPlaceholder": "e.g. Chest / Triceps",
+      "fieldDescription": "Description",
+      "fieldDescriptionPlaceholder": "Technique, variations, tips..."
     },
     "workoutSessions": {
       "newSessionBtn": "Log Session",
@@ -4369,7 +4407,8 @@
       "actualTime": "Done at: {{time}}",
       "registerMeal": "Log",
       "loadError": "Error loading records",
-      "saveError": "Error saving"
+      "saveError": "Error saving",
+      "deleteError": "Error deleting"
     }
   },
   "userProfile": {
@@ -4412,6 +4451,16 @@
       "twoFactorInactive": "Inactive",
       "twoFactorManage": "Manage 2FA",
       "twoFactorDesc": "Add an extra layer of protection to your account"
+    },
+    "avatar": {
+      "change": "Change profile photo",
+      "remove": "Remove photo",
+      "uploadSuccess": "Profile photo updated.",
+      "uploadError": "Error uploading photo.",
+      "deleteSuccess": "Profile photo removed.",
+      "deleteError": "Error removing photo.",
+      "invalidFile": "Please select a valid image file.",
+      "fileTooLarge": "Image must be at most 5 MB."
     }
   },
   "activityDescriptions": {

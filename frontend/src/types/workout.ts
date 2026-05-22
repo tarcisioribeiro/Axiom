@@ -1,3 +1,21 @@
+export interface Exercise {
+  id: number;
+  uuid: string;
+  name: string;
+  muscle_groups?: string | null;
+  description?: string | null;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExerciseFormData {
+  name: string;
+  muscle_groups?: string | null;
+  description?: string | null;
+  owner: number;
+}
+
 export interface WorkoutPlan {
   id: number;
   uuid: string;
@@ -45,13 +63,17 @@ export interface WorkoutExercise {
   id: number;
   uuid: string;
   workout_day: number;
+  exercise?: number | null;
+  exercise_catalog_name?: string | null;
   name: string;
   sets: number;
   reps_min: number;
   reps_max: number;
+  load?: string | null;
+  load_unit: string;
+  load_unit_display?: string | null;
   order: number;
   notes?: string | null;
-  load_unit_display?: string | null;
   owner: number;
   created_at: string;
   updated_at: string;
@@ -59,10 +81,13 @@ export interface WorkoutExercise {
 
 export interface WorkoutExerciseFormData {
   workout_day: number;
+  exercise?: number | null;
   name: string;
   sets: number;
   reps_min: number;
   reps_max: number;
+  load?: string | null;
+  load_unit: string;
   order: number;
   notes?: string | null;
   owner: number;

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertCircle,
+  BookOpen,
   CalendarDays,
   CheckCircle2,
   ChevronDown,
@@ -16,7 +17,7 @@ import {
   Trash2,
   UtensilsCrossed,
 } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
@@ -30,7 +31,6 @@ import { MealTypeForm } from '@/components/nutrition/MealTypeForm';
 import { MenuOptionForm } from '@/components/nutrition/MenuOptionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -74,12 +73,84 @@ type DialogMode =
   | { type: 'edit-log'; log: MealLog }
   | null;
 
-function getMealPeriodIcon(time?: string | null) {
-  if (!time) return <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />;
+interface MealPeriodTheme {
+  cardBg: string;
+  border: string;
+  iconBg: string;
+  iconColor: string;
+  dotDone: string;
+  dotLate: string;
+  icon: ReactNode;
+  label: string;
+}
+
+function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
+  if (!time)
+    return {
+      cardBg: 'bg-card',
+      border: 'border-border',
+      iconBg: 'bg-muted',
+      iconColor: 'text-muted-foreground',
+      dotDone: 'border-success bg-success',
+      dotLate: 'border-warning bg-warning/30',
+      icon: <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />,
+      label: '',
+    };
   const h = parseInt(time.slice(0, 2));
-  if (h >= 5 && h < 12) return <Sunrise className="h-4 w-4 text-amber-400" />;
-  if (h >= 12 && h < 18) return <Sun className="h-4 w-4 text-orange-400" />;
-  return <Moon className="h-4 w-4 text-violet-400" />;
+  if (h >= 4 && h < 9)
+    return {
+      cardBg: 'bg-amber-500/5',
+      border: 'border-amber-500/30',
+      iconBg: 'bg-amber-500/15',
+      iconColor: 'text-amber-500',
+      dotDone: 'border-success bg-success',
+      dotLate: 'border-warning bg-warning/30',
+      icon: <Sunrise className="h-5 w-5 text-amber-500" />,
+      label: 'Manhã',
+    };
+  if (h >= 9 && h < 12)
+    return {
+      cardBg: 'bg-yellow-500/5',
+      border: 'border-yellow-500/25',
+      iconBg: 'bg-yellow-500/15',
+      iconColor: 'text-yellow-600',
+      dotDone: 'border-success bg-success',
+      dotLate: 'border-warning bg-warning/30',
+      icon: <Sun className="h-5 w-5 text-yellow-500" />,
+      label: 'Manhã',
+    };
+  if (h >= 12 && h < 15)
+    return {
+      cardBg: 'bg-orange-500/5',
+      border: 'border-orange-500/30',
+      iconBg: 'bg-orange-500/15',
+      iconColor: 'text-orange-500',
+      dotDone: 'border-success bg-success',
+      dotLate: 'border-warning bg-warning/30',
+      icon: <Sun className="h-5 w-5 text-orange-500" />,
+      label: 'Almoço',
+    };
+  if (h >= 15 && h < 19)
+    return {
+      cardBg: 'bg-amber-600/5',
+      border: 'border-amber-600/25',
+      iconBg: 'bg-amber-600/15',
+      iconColor: 'text-amber-600',
+      dotDone: 'border-success bg-success',
+      dotLate: 'border-warning bg-warning/30',
+      icon: <Sun className="h-5 w-5 text-amber-600" />,
+      label: 'Tarde',
+    };
+  return {
+    cardBg: 'bg-violet-500/5',
+    border: 'border-violet-500/30',
+    iconBg: 'bg-violet-500/15',
+    iconColor: 'text-violet-500',
+    dotDone: 'border-success bg-success',
+    dotLate: 'border-warning bg-warning/30',
+    icon: <Moon className="h-5 w-5 text-violet-500" />,
+    label: 'Noite',
+  };
 }
 
 export default function NutritionPage() {
@@ -366,6 +437,13 @@ export default function NutritionPage() {
         description: t('pages.nutritionLog.logDeletedDesc'),
       });
     },
+    onError: (err: unknown) => {
+      toast({
+        title: t('pages.nutritionLog.deleteError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    },
   });
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -428,13 +506,16 @@ export default function NutritionPage() {
     }
   };
 
-  // ── Today header ───────────────────────────────────────────────────────────
-
   const todayLabel = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   });
+
+  // SVG circular progress constants
+  const RADIUS = 30;
+  const CIRC = 2 * Math.PI * RADIUS;
+  const dashOffset = CIRC - (adherencePct / 100) * CIRC;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -464,33 +545,77 @@ export default function NutritionPage() {
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log">
-            <div className="mb-md space-y-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-semibold capitalize">{todayLabel}</p>
-                  <p className="text-xs text-muted-foreground">
+            {/* Header card com aderência */}
+            <div className="mb-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center justify-between gap-md px-lg py-md">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium capitalize text-muted-foreground">
+                    {todayLabel}
+                  </p>
+                  <div className="mt-1 flex items-baseline gap-xs">
+                    <span className="text-4xl font-bold tabular-nums text-category-nutrition">
+                      {todayLogs.length}
+                    </span>
+                    <span className="text-xl text-muted-foreground">
+                      / {activeMealTypes.length}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {t('pages.nutritionLog.mealsLogged', {
                       logged: todayLogs.length,
                       total: activeMealTypes.length,
                     })}
                   </p>
                 </div>
-                <Button size="sm" onClick={() => setDialog({ type: 'new-log' })}>
+
+                {/* Circular progress */}
+                {activeMealTypes.length > 0 && (
+                  <div className="relative shrink-0">
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 80 80"
+                      className="-rotate-90"
+                    >
+                      <circle
+                        cx="40"
+                        cy="40"
+                        r={RADIUS}
+                        fill="none"
+                        strokeWidth="7"
+                        className="stroke-muted"
+                      />
+                      <circle
+                        cx="40"
+                        cy="40"
+                        r={RADIUS}
+                        fill="none"
+                        strokeWidth="7"
+                        strokeLinecap="round"
+                        className="stroke-category-nutrition transition-all duration-500"
+                        strokeDasharray={CIRC}
+                        strokeDashoffset={dashOffset}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-category-nutrition">
+                        {adherencePct}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-border px-lg py-sm">
+                <Button
+                  size="sm"
+                  onClick={() => setDialog({ type: 'new-log' })}
+                  className="w-full sm:w-auto"
+                >
                   <Plus className="mr-1.5 h-4 w-4" />
                   {t('pages.nutritionLog.newLogBtn')}
                 </Button>
               </div>
-              {activeMealTypes.length > 0 && (
-                <div className="space-y-1">
-                  <Progress
-                    value={adherencePct}
-                    className="h-1.5 bg-muted [&>div]:bg-category-nutrition"
-                  />
-                  <p className="text-right text-xs text-muted-foreground">
-                    {adherencePct}%
-                  </p>
-                </div>
-              )}
             </div>
 
             {logsLoading ? (
@@ -578,7 +703,7 @@ export default function NutritionPage() {
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}
                   onChange={(e) => setFoodSearch(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
@@ -596,48 +721,20 @@ export default function NutritionPage() {
                 icon={<Salad className="h-8 w-8" />}
               />
             ) : (
-              <div className="grid gap-xs sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
                 {filteredFoods.map((food) => (
-                  <div
+                  <FoodCard
                     key={food.id}
-                    className="group flex items-center gap-sm rounded-lg border border-border bg-card px-md py-sm transition-colors hover:border-category-nutrition/40 hover:bg-category-nutrition/5"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-category-nutrition/10">
-                      <Salad className="h-4 w-4 text-category-nutrition" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{food.name}</p>
-                      {food.description && (
-                        <p className="truncate text-xs text-muted-foreground">
-                          {food.description}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setDialog({ type: 'edit-food', food })}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={async () => {
-                          const ok = await showConfirm({
-                            title: t('pages.nutritionFoods.deleteFoodTitle'),
-                            description: t('pages.nutritionFoods.deleteFoodDesc'),
-                          });
-                          if (ok) deleteFoodMutation.mutate(food.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                    food={food}
+                    onEdit={() => setDialog({ type: 'edit-food', food })}
+                    onDelete={async () => {
+                      const ok = await showConfirm({
+                        title: t('pages.nutritionFoods.deleteFoodTitle'),
+                        description: t('pages.nutritionFoods.deleteFoodDesc'),
+                      });
+                      if (ok) deleteFoodMutation.mutate(food.id);
+                    }}
+                  />
                 ))}
               </div>
             )}
@@ -771,70 +868,86 @@ function MealTypeCard({
   onDeleteOption,
   t,
 }: MealTypeCardProps) {
+  const theme = getMealPeriodTheme(mealType.suggested_time);
+
   return (
-    <Card
+    <div
       className={cn(
-        'border-l-4',
-        mealType.is_active ? 'border-l-category-nutrition' : 'border-l-border'
+        'overflow-hidden rounded-lg border',
+        mealType.is_active ? theme.border : 'border-border'
       )}
     >
-      <CardHeader className="pb-sm">
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            className="flex min-w-0 flex-1 items-center gap-sm text-left"
-            onClick={onToggle}
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-              {getMealPeriodIcon(mealType.suggested_time)}
-            </div>
-            <div className="min-w-0">
-              <CardTitle className="text-base">{mealType.name}</CardTitle>
-              <div className="mt-0.5 flex items-center gap-sm">
-                {mealType.suggested_time && (
-                  <span className="flex items-center gap-xs text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {mealType.suggested_time.slice(0, 5)}
-                  </span>
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {mealType.options.length}{' '}
-                  {mealType.options.length === 1
-                    ? t('pages.nutritionMealTypes.optionSingular')
-                    : t('pages.nutritionMealTypes.optionPlural')}
-                </span>
-              </div>
-            </div>
-            {expanded ? (
-              <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+      {/* Card header */}
+      <div
+        className={cn(
+          'flex items-center gap-sm px-md py-sm',
+          mealType.is_active ? theme.cardBg : 'bg-card'
+        )}
+      >
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-sm text-left"
+          onClick={onToggle}
+        >
+          <div
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
+              mealType.is_active ? theme.iconBg : 'bg-muted'
             )}
-          </button>
-          <div className="ml-sm flex shrink-0 items-center gap-xs">
-            <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
-              {mealType.is_active
-                ? t('pages.nutritionMealTypes.active')
-                : t('pages.nutritionMealTypes.inactive')}
-            </Badge>
-            <Button variant="ghost" size="icon" onClick={onEdit}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          >
+            {theme.icon}
           </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold leading-snug">{mealType.name}</p>
+            <div className="mt-0.5 flex items-center gap-sm">
+              {mealType.suggested_time && (
+                <span
+                  className={cn(
+                    'flex items-center gap-xs text-xs font-medium',
+                    mealType.is_active ? theme.iconColor : 'text-muted-foreground'
+                  )}
+                >
+                  <Clock className="h-3 w-3" />
+                  {mealType.suggested_time.slice(0, 5)}
+                </span>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {mealType.options.length}{' '}
+                {mealType.options.length === 1
+                  ? t('pages.nutritionMealTypes.optionSingular')
+                  : t('pages.nutritionMealTypes.optionPlural')}
+              </span>
+            </div>
+          </div>
+          {expanded ? (
+            <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
+        </button>
+        <div className="ml-sm flex shrink-0 items-center gap-xs">
+          <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
+            {mealType.is_active
+              ? t('pages.nutritionMealTypes.active')
+              : t('pages.nutritionMealTypes.inactive')}
+          </Badge>
+          <Button variant="ghost" size="icon" onClick={onEdit}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
-      </CardHeader>
+      </div>
 
       {expanded && (
-        <CardContent className="space-y-sm pt-0">
-          <div className="flex justify-end">
+        <div className="border-t border-border bg-card p-md">
+          <div className="mb-sm flex justify-end">
             <Button variant="outline" size="sm" onClick={onNewOption}>
               <Plus className="mr-1 h-3 w-3" />
               {t('pages.nutritionMealTypes.newOptionBtn')}
@@ -845,61 +958,74 @@ function MealTypeCard({
               {t('pages.nutritionMealTypes.noIngredients')}
             </p>
           ) : (
-            mealType.options.map((opt) => (
-              <div
-                key={opt.id}
-                className="rounded-md border border-border bg-muted/30 p-sm"
-              >
-                <div className="mb-xs flex items-center justify-between">
-                  <span className="text-sm font-medium">{opt.name}</span>
-                  <div className="flex gap-xs">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => onEditOption(opt)}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-destructive hover:text-destructive"
-                      onClick={() => onDeleteOption(opt)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-                {opt.ingredients.length > 0 ? (
-                  <ul className="space-y-0.5">
-                    {opt.ingredients.map((ing) => (
-                      <li
-                        key={ing.id}
-                        className="flex items-center gap-xs text-xs text-muted-foreground"
+            <div className="space-y-sm">
+              {mealType.options.map((opt) => (
+                <div
+                  key={opt.id}
+                  className="overflow-hidden rounded-lg border border-border bg-muted/20"
+                >
+                  {/* Option header */}
+                  <div className="flex items-center justify-between border-b border-border/60 bg-card px-sm py-xs">
+                    <div className="flex items-center gap-xs">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-category-nutrition/10">
+                        <BookOpen className="h-3.5 w-3.5 text-category-nutrition" />
+                      </div>
+                      <span className="text-sm font-semibold">{opt.name}</span>
+                    </div>
+                    <div className="flex gap-xs">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => onEditOption(opt)}
                       >
-                        {ing.is_optional && (
-                          <span className="italic text-muted-foreground/60">[opt]</span>
-                        )}
-                        <span>
-                          {ing.food_name}
-                          {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
-                          {ing.notes ? ` (${ing.notes})` : ''}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    {t('pages.nutritionMealTypes.noIngredients')}
-                  </p>
-                )}
-              </div>
-            ))
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => onDeleteOption(opt)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Ingredients */}
+                  {opt.ingredients.length > 0 ? (
+                    <div className="grid gap-xs p-sm sm:grid-cols-2">
+                      {opt.ingredients.map((ing) => (
+                        <div key={ing.id} className="flex items-start gap-xs">
+                          <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
+                          <span className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                              {ing.food_name}
+                            </span>
+                            {ing.quantity
+                              ? ` — ${ing.quantity} ${ing.unit_display}`
+                              : ''}
+                            {ing.is_optional && (
+                              <span className="ml-xs italic text-muted-foreground/60">
+                                (opt.)
+                              </span>
+                            )}
+                            {ing.notes ? ` · ${ing.notes}` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-sm py-xs text-xs text-muted-foreground">
+                      {t('pages.nutritionMealTypes.noIngredients')}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -912,7 +1038,14 @@ interface MealTimelineProps {
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: MealTimelineProps) {
+function MealTimeline({
+  mealTypes,
+  logs,
+  onEdit,
+  onDelete,
+  onRegister,
+  t,
+}: MealTimelineProps) {
   const now = new Date();
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
@@ -932,11 +1065,12 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: Meal
         const log = logs.find((l) => l.meal_type === mt.id);
         const isLate =
           !log && mt.suggested_time && mt.suggested_time.slice(0, 5) < currentTime;
+        const theme = getMealPeriodTheme(mt.suggested_time);
 
         return (
           <div key={mt.id} className="flex gap-sm">
             {/* Timeline spine */}
-            <div className="flex shrink-0 flex-col items-center pt-3">
+            <div className="flex shrink-0 flex-col items-center pt-4">
               <div
                 className={cn(
                   'h-3 w-3 rounded-full border-2 transition-colors',
@@ -954,24 +1088,48 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: Meal
               )}
             </div>
 
-            {/* Card */}
+            {/* Meal card */}
             <div
               className={cn(
-                'mb-xs flex-1 rounded-lg border p-sm transition-colors',
+                'mb-xs flex-1 overflow-hidden rounded-lg border transition-colors',
                 log
                   ? 'border-success/30 bg-success/5'
                   : isLate
                     ? 'border-warning/30 bg-warning/5'
-                    : 'border-border bg-card'
+                    : theme.border + ' ' + theme.cardBg
               )}
             >
-              <div className="flex items-start justify-between gap-sm">
+              {/* Period label strip */}
+              {theme.label && !log && !isLate && (
+                <div
+                  className={cn(
+                    'border-b px-sm py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                    theme.border,
+                    theme.iconColor
+                  )}
+                >
+                  {theme.label}
+                </div>
+              )}
+
+              <div className="flex items-start justify-between gap-sm p-sm">
                 <div className="flex min-w-0 items-start gap-sm">
-                  <div className="mt-0.5 shrink-0">
-                    {getMealPeriodIcon(mt.suggested_time)}
+                  <div
+                    className={cn(
+                      'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                      log ? 'bg-success/15' : isLate ? 'bg-warning/15' : theme.iconBg
+                    )}
+                  >
+                    {log ? (
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    ) : isLate ? (
+                      <AlertCircle className="h-5 w-5 text-warning" />
+                    ) : (
+                      theme.icon
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium">{mt.name}</p>
+                    <p className="font-semibold leading-snug">{mt.name}</p>
                     <div className="mt-0.5 flex flex-wrap items-center gap-xs">
                       {mt.suggested_time && (
                         <span className="flex items-center gap-xs text-xs text-muted-foreground">
@@ -1002,9 +1160,6 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: Meal
                 <div className="flex shrink-0 items-center gap-xs">
                   {log ? (
                     <>
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/20">
-                        <CheckCircle2 className="h-4 w-4 text-success" />
-                      </div>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1023,19 +1178,14 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: Meal
                       </Button>
                     </>
                   ) : isLate ? (
-                    <div className="flex items-center gap-xs">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20">
-                        <AlertCircle className="h-4 w-4 text-warning" />
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 border-warning/50 text-xs hover:bg-warning/10"
-                        onClick={() => onRegister(mt.id)}
-                      >
-                        {t('pages.nutritionLog.registerMeal')}
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 border-warning/50 text-xs hover:bg-warning/10"
+                      onClick={() => onRegister(mt.id)}
+                    >
+                      {t('pages.nutritionLog.registerMeal')}
+                    </Button>
                   ) : (
                     <Button
                       size="sm"
@@ -1052,6 +1202,46 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: Meal
           </div>
         );
       })}
+    </div>
+  );
+}
+
+interface FoodCardProps {
+  food: Food;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function FoodCard({ food, onEdit, onDelete }: FoodCardProps) {
+  const initial = food.name.charAt(0).toUpperCase();
+  return (
+    <div className="group flex items-center gap-sm rounded-lg border border-border bg-card p-md transition-all hover:border-category-nutrition/40 hover:shadow-sm">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/10">
+        <span className="text-base font-bold text-category-nutrition">{initial}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold leading-snug">{food.name}</p>
+        {food.description ? (
+          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+            {food.description}
+          </p>
+        ) : (
+          <p className="mt-0.5 text-xs text-muted-foreground/50">—</p>
+        )}
+      </div>
+      <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Edit className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
     </div>
   );
 }

@@ -68,6 +68,7 @@ export const API_CONFIG = {
     PAYABLES: '/api/v1/payables/',
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
+    MEMBER_PROFILE_PHOTO: '/api/v1/members/me/photo/',
     MEMBER_FINANCIAL_REPORT: '/api/v1/members/:id/financial-report/',
     AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
@@ -116,6 +117,7 @@ export const API_CONFIG = {
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
     // Workout
+    EXERCISES: '/api/v1/personal-planning/exercises/',
     WORKOUT_PLANS: '/api/v1/personal-planning/workout-plans/',
     WORKOUT_DAYS: '/api/v1/personal-planning/workout-days/',
     WORKOUT_EXERCISES: '/api/v1/personal-planning/workout-exercises/',

@@ -220,6 +220,7 @@
       "bankReconciliation": "Conciliação Bancária",
       "receivables": "Valores a Receber",
       "workout": "Treino",
+      "exercises": "Exercícios",
       "nutrition": "Dieta",
       "workoutSessions": "Sessões de Treino",
       "workoutPlans": "Planos de Treino",
@@ -4209,6 +4210,7 @@
       "title": "Treino",
       "tabPlans": "Planos",
       "tabSessions": "Sessões",
+      "tabExercises": "Exercícios",
       "newPlanBtn": "Novo Plano",
       "newPlanTitle": "Novo Plano de Treino",
       "editPlanTitle": "Editar Plano",
@@ -4255,6 +4257,20 @@
       "order": "Ordem",
       "exercisesSection": "Exercícios",
       "addExercise": "Adicionar Exercício",
+      "addExerciseBtn": "Adicionar Exercício",
+      "addExerciseTitle": "Adicionar Exercício à Divisão",
+      "addExerciseDesc": "Selecione um exercício do catálogo e defina a carga e repetições.",
+      "editExerciseTitle": "Editar Exercício",
+      "editExerciseDesc": "Atualize as informações do exercício nesta divisão.",
+      "deleteExerciseTitle": "Excluir exercício",
+      "deleteExerciseDesc": "Tem certeza que deseja remover este exercício da divisão?",
+      "exerciseAdded": "Exercício adicionado",
+      "exerciseUpdated": "Exercício atualizado",
+      "selectExercise": "Selecionar Exercício",
+      "searchExercise": "Buscar exercício...",
+      "exerciseRequired": "Selecione um exercício",
+      "load": "Carga",
+      "loadUnit": "Unidade",
       "exerciseName": "Nome do Exercício",
       "exerciseNamePlaceholder": "Ex: Supino Reto Smith",
       "sets": "Séries",
@@ -4268,6 +4284,28 @@
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Erro ao carregar planos",
       "saveError": "Erro ao salvar"
+    },
+    "exercises": {
+      "title": "Exercícios",
+      "newBtn": "Novo Exercício",
+      "newTitle": "Novo Exercício",
+      "newDesc": "Cadastre um exercício no seu catálogo pessoal.",
+      "editTitle": "Editar Exercício",
+      "editDesc": "Atualize as informações do exercício.",
+      "deleteTitle": "Excluir exercício",
+      "deleteDesc": "Tem certeza que deseja excluir \"{{name}}\"?",
+      "created": "Exercício criado",
+      "updated": "Exercício atualizado",
+      "deleted": "Exercício excluído",
+      "saveError": "Erro ao salvar exercício",
+      "empty": "Nenhum exercício cadastrado",
+      "emptyDesc": "Cadastre exercícios para usar nos seus planos de treino.",
+      "fieldName": "Nome",
+      "fieldNamePlaceholder": "Ex: Supino Reto",
+      "fieldMuscles": "Grupos Musculares",
+      "fieldMusclesPlaceholder": "Ex: Peitoral / Tríceps",
+      "fieldDescription": "Descrição",
+      "fieldDescriptionPlaceholder": "Técnica, variações, dicas..."
     },
     "workoutSessions": {
       "newSessionBtn": "Registrar Sessão",
@@ -4439,7 +4477,8 @@
       "actualTime": "Realizado: {{time}}",
       "registerMeal": "Registrar",
       "loadError": "Erro ao carregar registros",
-      "saveError": "Erro ao salvar"
+      "saveError": "Erro ao salvar",
+      "deleteError": "Erro ao excluir"
     }
   },
   "userProfile": {
@@ -4482,6 +4521,16 @@
       "twoFactorInactive": "Inativa",
       "twoFactorManage": "Gerenciar 2FA",
       "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta"
+    },
+    "avatar": {
+      "change": "Alterar foto de perfil",
+      "remove": "Remover foto",
+      "uploadSuccess": "Foto de perfil atualizada.",
+      "uploadError": "Erro ao enviar foto.",
+      "deleteSuccess": "Foto de perfil removida.",
+      "deleteError": "Erro ao remover foto.",
+      "invalidFile": "Selecione um arquivo de imagem válido.",
+      "fileTooLarge": "A imagem deve ter no máximo 5 MB."
     }
   },
   "activityDescriptions": {

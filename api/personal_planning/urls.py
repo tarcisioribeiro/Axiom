@@ -3,6 +3,8 @@ from django.urls import path
 from personal_planning.views import (  # noqa: E501  # Dashboard/RoutineTasks/Goals/Reflections/Instances
     DailyReflectionDetailView,
     DailyReflectionListCreateView,
+    ExerciseListCreateView,
+    ExerciseRetrieveUpdateDestroyView,
     FoodListCreateView,
     FoodRetrieveUpdateDestroyView,
     GamificationProfileView,
@@ -138,6 +140,13 @@ urlpatterns = [
         "gamification/",
         GamificationProfileView.as_view(),
         name="gamification-profile",
+    ),
+    # Exercise Catalog
+    path("exercises/", ExerciseListCreateView.as_view(), name="exercise-list-create"),
+    path(
+        "exercises/<int:pk>/",
+        ExerciseRetrieveUpdateDestroyView.as_view(),
+        name="exercise-detail",
     ),
     # Workout Plans
     path(

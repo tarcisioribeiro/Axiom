@@ -1093,6 +1093,37 @@ MEASUREMENT_UNIT_CHOICES = (
 # ============================================================================
 
 
+class Exercise(BaseModel):
+    """Catálogo de exercícios disponíveis para uso nos planos de treino."""
+
+    name = models.CharField(
+        max_length=200, null=False, blank=False, verbose_name="Nome"
+    )
+    muscle_groups = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name="Grupos Musculares",
+        help_text="Ex: Peitoral / Tríceps",
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="exercises_catalog",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Exercício"
+        verbose_name_plural = "Exercícios"
+        ordering = ["name"]
+        indexes = [models.Index(fields=["owner", "name"])]
+
+    def __str__(self):
+        return self.name
+
+
 class WorkoutPlan(BaseModel):
     """Plano de treino do usuário (pode ter múltiplas divisões)."""
 
@@ -1161,8 +1192,15 @@ class WorkoutDay(BaseModel):
         return f"{self.plan.name} — {self.name}"
 
 
+LOAD_UNIT_CHOICES = [
+    ("kg", "kg"),
+    ("lb", "lb"),
+    ("bw", "Peso corporal"),
+]
+
+
 class WorkoutExercise(BaseModel):
-    """Exercício dentro de uma divisão de treino."""
+    """Exercício dentro de uma divisão de treino, vinculado ao catálogo."""
 
     workout_day = models.ForeignKey(
         WorkoutDay,
@@ -1170,8 +1208,20 @@ class WorkoutExercise(BaseModel):
         related_name="exercises",
         verbose_name="Divisão de Treino",
     )
+    exercise = models.ForeignKey(
+        Exercise,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="workout_exercises",
+        verbose_name="Exercício do Catálogo",
+    )
     name = models.CharField(
-        max_length=200, null=False, blank=False, verbose_name="Nome do Exercício"
+        max_length=200,
+        null=False,
+        blank=False,
+        verbose_name="Nome do Exercício",
+        help_text="Preenchido automaticamente a partir do catálogo.",
     )
     sets = models.PositiveIntegerField(
         default=3, verbose_name="Séries", help_text="Número de séries"
@@ -1179,6 +1229,13 @@ class WorkoutExercise(BaseModel):
     reps_min = models.PositiveIntegerField(default=8, verbose_name="Repetições Mínimas")
     reps_max = models.PositiveIntegerField(
         default=12, verbose_name="Repetições Máximas"
+    )
+    load = models.CharField(max_length=20, null=True, blank=True, verbose_name="Carga")
+    load_unit = models.CharField(
+        max_length=10,
+        choices=LOAD_UNIT_CHOICES,
+        default="kg",
+        verbose_name="Unidade de Carga",
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")
@@ -1196,7 +1253,8 @@ class WorkoutExercise(BaseModel):
         indexes = [models.Index(fields=["workout_day", "order"])]
 
     def __str__(self):
-        return f"{self.name} — {self.sets}x{self.reps_min}-{self.reps_max}"
+        load_str = f" @ {self.load}{self.load_unit}" if self.load else ""
+        return f"{self.name} — {self.sets}x{self.reps_min}-{self.reps_max}{load_str}"
 
 
 class WorkoutSession(BaseModel):

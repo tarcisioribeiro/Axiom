@@ -6,7 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -88,6 +89,46 @@ def get_current_user_member(request):
             {"error": "Membro não encontrado para este usuário"},
             status=status.HTTP_404_NOT_FOUND,
         )
+
+
+@api_view(["PATCH", "DELETE"])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def manage_profile_photo(request):
+    """
+    PATCH: Faz upload da foto de perfil do membro do usuário logado.
+    DELETE: Remove a foto de perfil.
+    """
+    try:
+        member = Member.objects.get(user=request.user, is_deleted=False)
+    except Member.DoesNotExist:
+        return Response(
+            {"error": "Membro não encontrado para este usuário"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    if request.method == "DELETE":
+        if member.profile_photo:
+            member.profile_photo.delete(save=False)
+            member.profile_photo = None
+            member.save(update_fields=["profile_photo"])
+        serializer = MemberSerializer(member)
+        return Response(serializer.data)
+
+    if "profile_photo" not in request.FILES:
+        return Response(
+            {"error": "Nenhuma foto enviada"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if member.profile_photo:
+        member.profile_photo.delete(save=False)
+
+    member.profile_photo = request.FILES["profile_photo"]
+    member.save(update_fields=["profile_photo"])
+
+    serializer = MemberSerializer(member)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])

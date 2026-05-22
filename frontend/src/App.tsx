@@ -5,6 +5,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { AdminRoute } from './components/common/AdminRoute';
+import { EnvironmentBanner } from './components/common/EnvironmentBanner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { RouteProgressBar } from './components/common/RouteProgressBar';
@@ -694,6 +695,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <EnvironmentBanner />
         <RouteProgressBar />
         <AnimatedRoutes />
         <Toaster />

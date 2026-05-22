@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import type { HTMLMotionProps } from 'framer-motion';
 import * as React from 'react';
 
 import { cn } from '@/lib/utils';
@@ -19,7 +20,14 @@ interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
   onValueChange?: (value: string) => void;
 }
 
-function Tabs({ defaultValue, value, onValueChange, children, className, ...props }: TabsProps) {
+function Tabs({
+  defaultValue,
+  value,
+  onValueChange,
+  children,
+  className,
+  ...props
+}: TabsProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? '');
   const controlled = value !== undefined;
   const activeValue = controlled ? value : internalValue;
@@ -86,7 +94,7 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
 );
 TabsTrigger.displayName = 'TabsTrigger';
 
-interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
+interface TabsContentProps extends HTMLMotionProps<'div'> {
   value: string;
 }
 
@@ -107,7 +115,7 @@ const TabsContent = React.forwardRef<HTMLDivElement, TabsContentProps>(
           'mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           className
         )}
-        {...(props as React.HTMLAttributes<HTMLDivElement>)}
+        {...props}
       >
         {children}
       </motion.div>
