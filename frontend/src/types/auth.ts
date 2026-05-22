@@ -16,6 +16,7 @@ export interface User {
   last_name: string;
   groups: string[];
   is_superuser?: boolean;
+  profile_photo?: string | null;
 }
 
 export interface Permission {

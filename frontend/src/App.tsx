@@ -5,6 +5,7 @@ import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { AdminRoute } from './components/common/AdminRoute';
+import { EnvironmentBanner } from './components/common/EnvironmentBanner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { RouteProgressBar } from './components/common/RouteProgressBar';
@@ -104,6 +105,8 @@ const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 // Planning extras
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
 const DailyReflections = lazy(() => import('./pages/DailyReflections'));
+const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
+const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
@@ -487,6 +490,22 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
+          <Route
+            path="/planning/workout"
+            element={
+              <PageWrapper>
+                <WorkoutPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/planning/nutrition"
+            element={
+              <PageWrapper>
+                <NutritionPage />
+              </PageWrapper>
+            }
+          />
 
           {/* Budgets Module routes */}
           <Route
@@ -676,6 +695,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <EnvironmentBanner />
         <RouteProgressBar />
         <AnimatedRoutes />
         <Toaster />
