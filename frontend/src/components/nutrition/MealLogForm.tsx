@@ -22,6 +22,7 @@ interface MealLogFormProps {
   log?: MealLog;
   mealTypes: MealType[];
   ownerId: number;
+  prefillMealTypeId?: number;
   onSubmit: (data: MealLogFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -31,6 +32,7 @@ export function MealLogForm({
   log,
   mealTypes,
   ownerId,
+  prefillMealTypeId,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -48,7 +50,7 @@ export function MealLogForm({
     formState: { errors },
   } = useForm<MealLogFormData>({
     defaultValues: {
-      meal_type: log?.meal_type ?? (0 as unknown as number),
+      meal_type: log?.meal_type ?? prefillMealTypeId ?? (0 as unknown as number),
       menu_option: log?.menu_option ?? undefined,
       is_free_meal: log?.is_free_meal ?? false,
       date: log?.date ?? today,

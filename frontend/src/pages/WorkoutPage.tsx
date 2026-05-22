@@ -1,5 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronRight, Dumbbell, Edit, Plus, Trash2 } from 'lucide-react';
+import {
+  Activity,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Dumbbell,
+  Edit,
+  Plus,
+  Trash2,
+  Zap,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -55,13 +65,40 @@ type DialogMode =
   | { type: 'edit-session'; session: WorkoutSession }
   | null;
 
+function groupSessionsByWeek(sessions: WorkoutSession[]) {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const startOfThisWeek = new Date(now);
+  startOfThisWeek.setDate(now.getDate() + diffToMonday);
+  startOfThisWeek.setHours(0, 0, 0, 0);
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+  const thisWeek: WorkoutSession[] = [];
+  const lastWeek: WorkoutSession[] = [];
+  const older: WorkoutSession[] = [];
+
+  for (const s of sessions) {
+    const d = new Date(s.date + 'T12:00:00');
+    if (d >= startOfThisWeek) thisWeek.push(s);
+    else if (d >= startOfLastWeek) lastWeek.push(s);
+    else older.push(s);
+  }
+
+  return { thisWeek, lastWeek, older };
+}
+
 export default function WorkoutPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [expandedPlans, setExpandedPlans] = useState<Set<number>>(new Set());
+  const [activePlanSelectedDay, setActivePlanSelectedDay] = useState<number | null>(null);
+  const [expandedInactivePlans, setExpandedInactivePlans] = useState<Set<number>>(
+    new Set()
+  );
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
 
   const { data: member } = useQuery({
@@ -93,6 +130,9 @@ export default function WorkoutPage() {
   const plans = plansData ?? [];
   const sessions = sessionsData ?? [];
   const allDaysList = allDays ?? [];
+
+  const activePlan = plans.find((p) => p.is_active) ?? null;
+  const inactivePlans = plans.filter((p) => !p.is_active);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -351,14 +391,11 @@ export default function WorkoutPage() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const togglePlan = (id: number) => {
-    setExpandedPlans((prev) => {
+  const toggleInactivePlan = (id: number) => {
+    setExpandedInactivePlans((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -366,11 +403,8 @@ export default function WorkoutPage() {
   const toggleDay = (id: number) => {
     setExpandedDays((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -449,8 +483,12 @@ export default function WorkoutPage() {
 
         <Tabs defaultValue="plans" className="w-full">
           <TabsList className="mb-lg">
-            <TabsTrigger value="plans">{t('pages.workoutPlans.tabPlans')}</TabsTrigger>
-            <TabsTrigger value="sessions">
+            <TabsTrigger value="plans" className="gap-xs">
+              <ClipboardList className="h-4 w-4" />
+              {t('pages.workoutPlans.tabPlans')}
+            </TabsTrigger>
+            <TabsTrigger value="sessions" className="gap-xs">
+              <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
             </TabsTrigger>
           </TabsList>
@@ -473,23 +511,187 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
               />
             ) : (
-              <div className="space-y-md">
-                {plans.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    expanded={expandedPlans.has(plan.id)}
-                    expandedDays={expandedDays}
-                    onToggle={() => togglePlan(plan.id)}
-                    onToggleDay={toggleDay}
-                    onEditPlan={() => setDialog({ type: 'edit-plan', plan })}
-                    onDeletePlan={() => handleDeletePlan(plan)}
-                    onNewDay={() => setDialog({ type: 'new-day', planId: plan.id })}
-                    onEditDay={(day) => setDialog({ type: 'edit-day', day })}
-                    onDeleteDay={handleDeleteDay}
-                    t={t}
-                  />
-                ))}
+              <div className="space-y-lg">
+                {/* Plano ativo */}
+                {activePlan && (
+                  <div className="space-y-sm">
+                    <div className="flex items-center gap-sm">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="flex items-center gap-xs text-xs font-semibold uppercase tracking-wider text-category-exercise">
+                        <Activity className="h-3 w-3" />
+                        {t('pages.workoutPlans.activePlan')}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    <Card className="border-category-exercise/30 bg-category-exercise/5">
+                      <CardHeader className="pb-sm">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="flex items-center gap-sm text-base">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-category-exercise/20">
+                                <Dumbbell className="h-4 w-4 text-category-exercise" />
+                              </div>
+                              {activePlan.name}
+                            </CardTitle>
+                            {activePlan.description && (
+                              <p className="mt-1 pl-10 text-sm text-muted-foreground">
+                                {activePlan.description}
+                              </p>
+                            )}
+                            <p className="mt-1 pl-10 text-xs text-muted-foreground">
+                              {activePlan.day_count} {t('pages.workoutPlans.days')} ·{' '}
+                              {activePlan.exercise_count}{' '}
+                              {t('pages.workoutPlans.exercises')}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-xs">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                setDialog({ type: 'edit-plan', plan: activePlan })
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDeletePlan(activePlan)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="space-y-sm pt-0">
+                        {/* Chips de divisão */}
+                        <div className="flex flex-wrap gap-xs">
+                          {activePlan.days?.map((day) => (
+                            <button
+                              key={day.id}
+                              type="button"
+                              onClick={() =>
+                                setActivePlanSelectedDay(
+                                  activePlanSelectedDay === day.id ? null : day.id
+                                )
+                              }
+                              className={cn(
+                                'rounded-full border px-sm py-1 text-sm font-medium transition-colors',
+                                activePlanSelectedDay === day.id
+                                  ? 'border-category-exercise bg-category-exercise text-white'
+                                  : 'border-border bg-card hover:border-category-exercise/60 hover:bg-category-exercise/10'
+                              )}
+                            >
+                              {day.name}
+                              {day.muscle_groups && (
+                                <span className="ml-xs text-xs opacity-70">
+                                  · {day.muscle_groups}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-full"
+                            onClick={() =>
+                              setDialog({
+                                type: 'new-day',
+                                planId: activePlan.id,
+                              })
+                            }
+                          >
+                            <Plus className="mr-1 h-3 w-3" />
+                            {t('pages.workoutPlans.newDayBtn')}
+                          </Button>
+                        </div>
+
+                        {/* Exercícios da divisão selecionada */}
+                        {activePlanSelectedDay !== null && (() => {
+                          const day = activePlan.days?.find(
+                            (d) => d.id === activePlanSelectedDay
+                          );
+                          if (!day) return null;
+                          return (
+                            <div className="rounded-lg border border-category-exercise/20 bg-background p-sm">
+                              <div className="mb-sm flex items-center justify-between">
+                                <p className="text-sm font-semibold">
+                                  {day.name}
+                                  {day.muscle_groups && (
+                                    <span className="ml-xs font-normal text-muted-foreground">
+                                      — {day.muscle_groups}
+                                    </span>
+                                  )}
+                                </p>
+                                <div className="flex gap-xs">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => setDialog({ type: 'edit-day', day })}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                    onClick={() => handleDeleteDay(day)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              {day.exercises && day.exercises.length > 0 ? (
+                                <ExercisesTable exercises={day.exercises} t={t} />
+                              ) : (
+                                <p className="py-sm text-center text-xs text-muted-foreground">
+                                  {t('pages.workoutPlans.noExercises')}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Outros planos */}
+                {inactivePlans.length > 0 && (
+                  <div className="space-y-sm">
+                    <div className="flex items-center gap-sm">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        {t('pages.workoutPlans.otherPlans')}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+
+                    {inactivePlans.map((plan) => (
+                      <InactivePlanRow
+                        key={plan.id}
+                        plan={plan}
+                        expanded={expandedInactivePlans.has(plan.id)}
+                        expandedDays={expandedDays}
+                        onToggle={() => toggleInactivePlan(plan.id)}
+                        onToggleDay={toggleDay}
+                        onEdit={() => setDialog({ type: 'edit-plan', plan })}
+                        onDelete={() => handleDeletePlan(plan)}
+                        onNewDay={() =>
+                          setDialog({ type: 'new-day', planId: plan.id })
+                        }
+                        onEditDay={(day) => setDialog({ type: 'edit-day', day })}
+                        onDeleteDay={handleDeleteDay}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
@@ -512,17 +714,12 @@ export default function WorkoutPage() {
                 icon={<Dumbbell className="h-8 w-8" />}
               />
             ) : (
-              <div className="space-y-sm">
-                {sessions.map((session) => (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    onEdit={() => setDialog({ type: 'edit-session', session })}
-                    onDelete={() => handleDeleteSession(session)}
-                    t={t}
-                  />
-                ))}
-              </div>
+              <SessionsGrouped
+                sessions={sessions}
+                onEdit={(s) => setDialog({ type: 'edit-session', session: s })}
+                onDelete={handleDeleteSession}
+                t={t}
+              />
             )}
           </TabsContent>
         </Tabs>
@@ -605,40 +802,70 @@ export default function WorkoutPage() {
 
 // ── Sub-components ─────────────────────────────────────────────────────────
 
-interface PlanCardProps {
+function ExercisesTable({
+  exercises,
+  t,
+}: {
+  exercises: WorkoutExercise[];
+  t: (key: string) => string;
+}) {
+  return (
+    <table className="w-full text-sm">
+      <thead>
+        <tr className="border-b border-border text-xs text-muted-foreground">
+          <th className="py-xs text-left font-medium">
+            {t('pages.workoutPlans.exerciseName')}
+          </th>
+          <th className="w-16 py-xs text-center font-medium">
+            {t('pages.workoutPlans.sets')}
+          </th>
+          <th className="w-20 py-xs text-center font-medium">Reps</th>
+        </tr>
+      </thead>
+      <tbody>
+        {exercises.map((ex) => (
+          <tr key={ex.id} className="border-b border-border/50 last:border-0">
+            <td className="py-xs">{ex.name}</td>
+            <td className="py-xs text-center text-muted-foreground">{ex.sets}×</td>
+            <td className="py-xs text-center text-muted-foreground">
+              {ex.reps_min}–{ex.reps_max}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+interface InactivePlanRowProps {
   plan: WorkoutPlan;
   expanded: boolean;
   expandedDays: Set<number>;
   onToggle: () => void;
   onToggleDay: (id: number) => void;
-  onEditPlan: () => void;
-  onDeletePlan: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
   onNewDay: () => void;
   onEditDay: (day: WorkoutDay) => void;
   onDeleteDay: (day: WorkoutDay) => void;
   t: (key: string) => string;
 }
 
-function PlanCard({
+function InactivePlanRow({
   plan,
   expanded,
   expandedDays,
   onToggle,
   onToggleDay,
-  onEditPlan,
-  onDeletePlan,
+  onEdit,
+  onDelete,
   onNewDay,
   onEditDay,
   onDeleteDay,
   t,
-}: PlanCardProps) {
+}: InactivePlanRowProps) {
   return (
-    <Card
-      className={cn(
-        'border-l-4',
-        plan.is_active ? 'border-l-category-exercise' : 'border-l-border'
-      )}
-    >
+    <Card className="border-border">
       <CardHeader className="pb-sm">
         <div className="flex items-center justify-between">
           <button
@@ -646,38 +873,30 @@ function PlanCard({
             className="flex min-w-0 flex-1 items-center gap-sm text-left"
             onClick={onToggle}
           >
-            {expanded ? (
-              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )}
+            <ChevronRight
+              className={cn(
+                'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                expanded && 'rotate-90'
+              )}
+            />
             <div className="min-w-0">
               <CardTitle className="truncate text-base">{plan.name}</CardTitle>
-              {plan.description && (
-                <p className="truncate text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
+                {t('pages.workoutPlans.exercises')}
+              </p>
             </div>
           </button>
           <div className="ml-sm flex shrink-0 items-center gap-xs">
-            <Badge variant={plan.is_active ? 'success' : 'secondary'}>
-              {plan.is_active
-                ? t('pages.workoutPlans.active')
-                : t('pages.workoutPlans.inactive')}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {plan.day_count} {t('pages.workoutPlans.days')} · {plan.exercise_count}{' '}
-              {t('pages.workoutPlans.exercises')}
-            </span>
-            <Button variant="ghost" size="icon" onClick={onEditPlan}>
+            <Badge variant="secondary">{t('pages.workoutPlans.inactive')}</Badge>
+            <Button variant="ghost" size="icon" onClick={onEdit}>
               <Edit className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               className="text-destructive hover:text-destructive"
-              onClick={onDeletePlan}
+              onClick={onDelete}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -694,15 +913,54 @@ function PlanCard({
             </Button>
           </div>
           {plan.days?.map((day) => (
-            <DayAccordion
-              key={day.id}
-              day={day}
-              expanded={expandedDays.has(day.id)}
-              onToggle={() => onToggleDay(day.id)}
-              onEdit={() => onEditDay(day)}
-              onDelete={() => onDeleteDay(day)}
-              t={t}
-            />
+            <div key={day.id} className="rounded-md border border-border bg-muted/30">
+              <div className="flex items-center justify-between px-sm py-xs">
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 items-center gap-xs text-left"
+                  onClick={() => onToggleDay(day.id)}
+                >
+                  <ChevronRight
+                    className={cn(
+                      'h-3 w-3 shrink-0 text-muted-foreground transition-transform',
+                      expandedDays.has(day.id) && 'rotate-90'
+                    )}
+                  />
+                  <span className="text-sm font-medium">{day.name}</span>
+                  {day.muscle_groups && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      — {day.muscle_groups}
+                    </span>
+                  )}
+                </button>
+                <div className="flex shrink-0 items-center gap-xs">
+                  <span className="text-xs text-muted-foreground">
+                    {day.exercise_count} {t('pages.workoutPlans.exercises')}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => onEditDay(day)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={() => onDeleteDay(day)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              {expandedDays.has(day.id) && day.exercises && day.exercises.length > 0 && (
+                <div className="px-sm pb-sm">
+                  <ExercisesTable exercises={day.exercises} t={t} />
+                </div>
+              )}
+            </div>
           ))}
         </CardContent>
       )}
@@ -710,97 +968,40 @@ function PlanCard({
   );
 }
 
-interface DayAccordionProps {
-  day: WorkoutDay;
-  expanded: boolean;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  t: (key: string) => string;
+interface SessionsGroupedProps {
+  sessions: WorkoutSession[];
+  onEdit: (s: WorkoutSession) => void;
+  onDelete: (s: WorkoutSession) => Promise<void>;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function DayAccordion({
-  day,
-  expanded,
-  onToggle,
-  onEdit,
-  onDelete,
-  t,
-}: DayAccordionProps) {
-  return (
-    <div className="rounded-md border border-border bg-muted/30">
-      <div className="flex items-center justify-between px-sm py-xs">
-        <button
-          type="button"
-          className="flex min-w-0 flex-1 items-center gap-xs text-left"
-          onClick={onToggle}
-        >
-          {expanded ? (
-            <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
-          )}
-          <span className="text-sm font-medium">{day.name}</span>
-          {day.muscle_groups && (
-            <span className="truncate text-xs text-muted-foreground">
-              — {day.muscle_groups}
-            </span>
-          )}
-        </button>
-        <div className="flex shrink-0 items-center gap-xs">
-          <span className="text-xs text-muted-foreground">
-            {day.exercise_count} {t('pages.workoutPlans.exercises')}
-          </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-            <Edit className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
+function SessionsGrouped({ sessions, onEdit, onDelete, t }: SessionsGroupedProps) {
+  const { thisWeek, lastWeek, older } = groupSessionsByWeek(sessions);
 
-      {expanded && (
-        <div className="px-sm pb-sm">
-          {day.exercises && day.exercises.length > 0 ? (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th className="py-xs text-left font-medium">
-                    {t('pages.workoutPlans.exerciseName')}
-                  </th>
-                  <th className="w-16 py-xs text-center font-medium">
-                    {t('pages.workoutPlans.sets')}
-                  </th>
-                  <th className="w-24 py-xs text-center font-medium">Reps</th>
-                </tr>
-              </thead>
-              <tbody>
-                {day.exercises.map((ex) => (
-                  <tr key={ex.id} className="border-b border-border/50 last:border-0">
-                    <td className="py-xs">{ex.name}</td>
-                    <td className="py-xs text-center text-muted-foreground">
-                      {ex.sets}×
-                    </td>
-                    <td className="py-xs text-center text-muted-foreground">
-                      {ex.reps_min}–{ex.reps_max}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="py-xs text-center text-xs text-muted-foreground">
-              {t('pages.workoutPlans.noExercises')}
-            </p>
-          )}
+  const groups = [
+    { key: 'thisWeek', label: t('pages.workoutSessions.thisWeek'), items: thisWeek },
+    { key: 'lastWeek', label: t('pages.workoutSessions.lastWeek'), items: lastWeek },
+    { key: 'older', label: t('pages.workoutSessions.older'), items: older },
+  ].filter((g) => g.items.length > 0);
+
+  return (
+    <div className="space-y-lg">
+      {groups.map((group) => (
+        <div key={group.key} className="space-y-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {group.label}
+          </p>
+          {group.items.map((session) => (
+            <SessionCard
+              key={session.id}
+              session={session}
+              onEdit={() => onEdit(session)}
+              onDelete={() => onDelete(session)}
+              t={t}
+            />
+          ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -816,52 +1017,52 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
   const exerciseCount = session.session_exercises?.length ?? 0;
 
   return (
-    <div className="flex items-center justify-between rounded-md border border-border bg-card px-md py-sm transition-colors hover:bg-muted/30">
-      <div className="flex min-w-0 items-center gap-md">
-        <div className="h-8 w-2 shrink-0 rounded-full bg-category-exercise" />
-        <div className="min-w-0">
-          <p className="text-sm font-medium">
-            {session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')}
-          </p>
-          {session.workout_day_muscle_groups && (
-            <p className="truncate text-xs text-muted-foreground">
-              {session.workout_day_muscle_groups}
-            </p>
-          )}
-        </div>
+    <div className="group flex items-center gap-md rounded-lg border border-border bg-card px-md py-sm transition-colors hover:border-category-exercise/30 hover:bg-category-exercise/5">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-category-exercise/10">
+        <Dumbbell className="h-4 w-4 text-category-exercise" />
       </div>
-      <div className="flex shrink-0 items-center gap-lg text-xs text-muted-foreground">
-        <span>{formatDate(session.date)}</span>
-        {session.started_at && session.finished_at && (
-          <span>
-            {session.started_at.slice(0, 5)} – {session.finished_at.slice(0, 5)}
-          </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">
+          {session.workout_day_name ?? t('pages.workoutSessions.noWorkoutDay')}
+        </p>
+        {session.workout_day_muscle_groups && (
+          <p className="truncate text-xs text-muted-foreground">
+            {session.workout_day_muscle_groups}
+          </p>
         )}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-md text-xs text-muted-foreground">
+        <span className="font-medium">{formatDate(session.date)}</span>
         {session.duration_minutes != null && (
-          <span>
+          <span className="flex items-center gap-xs">
+            <Clock className="h-3 w-3" />
             {t('pages.workoutSessions.durationMinutes', {
               minutes: session.duration_minutes,
             })}
           </span>
         )}
         {exerciseCount > 0 && (
-          <span>
+          <span className="flex items-center gap-xs">
+            <Activity className="h-3 w-3" />
             {exerciseCount} {t('pages.workoutPlans.exercises')}
           </span>
         )}
-        <div className="flex gap-xs">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
-            <Edit className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-destructive hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
+      </div>
+
+      <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Edit className="h-3 w-3" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
       </div>
     </div>
   );

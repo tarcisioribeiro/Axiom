@@ -4233,6 +4233,8 @@
       "days": "divisões",
       "active": "Ativo",
       "inactive": "Inativo",
+      "activePlan": "Plano Ativo",
+      "otherPlans": "Outros Planos",
       "newDayBtn": "Nova Divisão",
       "newDayTitle": "Nova Divisão",
       "editDayTitle": "Editar Divisão",
@@ -4310,12 +4312,15 @@
       "removeSet": "Remover série",
       "filterDateFrom": "De",
       "filterDateTo": "Até",
+      "thisWeek": "Esta semana",
+      "lastWeek": "Semana passada",
+      "older": "Anteriores",
       "loadError": "Erro ao carregar sessões",
       "saveError": "Erro ao salvar sessão"
     },
     "nutritionFoods": {
       "title": "Dieta",
-      "tabMealTypes": "Plano Alimentar",
+      "tabMealTypes": "Plano",
       "tabFoods": "Alimentos",
       "tabLog": "Diário",
       "newFoodBtn": "Novo Alimento",
@@ -4371,6 +4376,8 @@
       "editOptionDesc": "Atualize a opção de cardápio.",
       "deleteOptionTitle": "Excluir opção",
       "deleteOptionDesc": "Tem certeza que deseja excluir esta opção?",
+      "optionSingular": "opção",
+      "optionPlural": "opções",
       "optionCreated": "Opção criada",
       "optionCreatedDesc": "A opção de cardápio foi criada com sucesso.",
       "optionUpdated": "Opção atualizada",
@@ -4430,6 +4437,7 @@
       "late": "Atrasada",
       "suggestedTime": "Previsto: {{time}}",
       "actualTime": "Realizado: {{time}}",
+      "registerMeal": "Registrar",
       "loadError": "Erro ao carregar registros",
       "saveError": "Erro ao salvar"
     }

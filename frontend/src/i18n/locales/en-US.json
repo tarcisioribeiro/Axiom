@@ -4163,6 +4163,8 @@
       "days": "splits",
       "active": "Active",
       "inactive": "Inactive",
+      "activePlan": "Active Plan",
+      "otherPlans": "Other Plans",
       "newDayBtn": "New Split",
       "newDayTitle": "New Split",
       "editDayTitle": "Edit Split",
@@ -4240,12 +4242,15 @@
       "removeSet": "Remove set",
       "filterDateFrom": "From",
       "filterDateTo": "To",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "older": "Older",
       "loadError": "Error loading sessions",
       "saveError": "Error saving session"
     },
     "nutritionFoods": {
       "title": "Diet",
-      "tabMealTypes": "Meal Plan",
+      "tabMealTypes": "Plan",
       "tabFoods": "Foods",
       "tabLog": "Diary",
       "newFoodBtn": "New Food",
@@ -4301,6 +4306,8 @@
       "editOptionDesc": "Update the menu option.",
       "deleteOptionTitle": "Delete option",
       "deleteOptionDesc": "Are you sure you want to delete this option?",
+      "optionSingular": "option",
+      "optionPlural": "options",
       "optionCreated": "Option created",
       "optionCreatedDesc": "The menu option was created successfully.",
       "optionUpdated": "Option updated",
@@ -4360,6 +4367,7 @@
       "late": "Late",
       "suggestedTime": "Scheduled: {{time}}",
       "actualTime": "Done at: {{time}}",
+      "registerMeal": "Log",
       "loadError": "Error loading records",
       "saveError": "Error saving"
     }
