@@ -1436,6 +1436,18 @@ smoke:production:
     - |
       set -e
 
+      # Optional NAT-bypass for local CI runners: set PRODUCTION_SMOKE_HOST
+      # (GitLab → Settings → CI/CD → Variables) to the LAN/internal IP of the
+      # production host so curl connects directly instead of going through the
+      # public IP (which fails when NAT hairpin is not supported by the router).
+      # curl --resolve keeps the Host header intact so nginx-ingress routing works.
+      RESOLVE_ARGS=""
+      if [ -n "${PRODUCTION_SMOKE_HOST:-}" ]; then
+        DOMAIN=$(printf '%s' "$SMOKE_URL" | sed 's|https\?://||' | cut -d/ -f1 | cut -d: -f1)
+        RESOLVE_ARGS="--resolve ${DOMAIN}:80:${PRODUCTION_SMOKE_HOST} --resolve ${DOMAIN}:443:${PRODUCTION_SMOKE_HOST}"
+        echo "NAT bypass: resolving ${DOMAIN} → ${PRODUCTION_SMOKE_HOST}"
+      fi
+
       check() {
         local label="$1"
         local url="$2"
@@ -1448,10 +1460,10 @@ smoke:production:
 
         while [ $attempt -lt $max_retries ]; do
           if [ -n "$auth_header" ]; then
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 $RESOLVE_ARGS \
               -H "$auth_header" "$url") || true
           else
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$url") || true
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 $RESOLVE_ARGS "$url") || true
           fi
           if [ "$STATUS" = "$expected" ]; then
             echo "OK   $label → HTTP $STATUS"
@@ -1478,7 +1490,7 @@ smoke:production:
       # Obtain a fresh JWT via cookie-based login (access token is set as an
       # HttpOnly cookie, not returned in the response body).
       SMOKE_COOKIE_JAR=$(mktemp)
-      LOGIN_RESP=$(curl -s --max-time 10 \
+      LOGIN_RESP=$(curl -s --max-time 10 $RESOLVE_ARGS \
         -c "$SMOKE_COOKIE_JAR" \
         -X POST "${SMOKE_URL}/api/v1/authentication/token/" \
         -H "Content-Type: application/json" \

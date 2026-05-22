@@ -1031,3 +1031,589 @@ class UserBadge(BaseModel):
 
     def __str__(self):
         return f"{self.profile.member} — {self.badge.name}"
+
+
+# ============================================================================
+# MEASUREMENT UNIT CHOICES (treino + nutrição)
+# ============================================================================
+
+MEASUREMENT_UNIT_CHOICES = (
+    # Massa
+    ("g", "g"),
+    ("kg", "kg"),
+    ("mg", "mg"),
+    ("lb", "lb"),
+    ("oz", "oz"),
+    # Volume
+    ("ml", "ml"),
+    ("l", "l"),
+    ("dl", "dl"),
+    ("cl", "cl"),
+    # Culinário
+    ("teaspoon", "colher de chá"),
+    ("tablespoon", "colher de sopa"),
+    ("dessert_spoon", "colher de sobremesa"),
+    ("cup", "xícara"),
+    ("glass", "copo"),
+    ("slice", "fatia"),
+    ("portion", "porção"),
+    ("pinch", "pitada"),
+    ("drizzle", "fio"),
+    ("to_taste", "a gosto"),
+    ("at_will", "à vontade"),
+    # Contagem
+    ("unit", "unidade"),
+    ("piece", "peça"),
+    ("segment", "gomo"),
+    ("clove", "dente"),
+    ("leaf", "folha"),
+    ("sprig", "ramo"),
+    ("handful", "punhado"),
+    ("scoop", "scoop"),
+    # Fitness
+    ("rep", "repetição"),
+    ("set", "série"),
+    ("minute", "minuto"),
+    ("second", "segundo"),
+    ("hour", "hora"),
+    ("km", "km"),
+    ("m", "metro"),
+    ("step", "passo"),
+    # Saúde / Suplementos
+    ("dose", "dose"),
+    ("tablet", "comprimido"),
+    ("capsule", "cápsula"),
+    ("mcg", "mcg"),
+    ("ui", "UI"),
+)
+
+
+# ============================================================================
+# WORKOUT MODELS
+# ============================================================================
+
+
+class Exercise(BaseModel):
+    """Catálogo de exercícios disponíveis para uso nos planos de treino."""
+
+    name = models.CharField(
+        max_length=200, null=False, blank=False, verbose_name="Nome"
+    )
+    muscle_groups = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name="Grupos Musculares",
+        help_text="Ex: Peitoral / Tríceps",
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="exercises_catalog",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Exercício"
+        verbose_name_plural = "Exercícios"
+        ordering = ["name"]
+        indexes = [models.Index(fields=["owner", "name"])]
+
+    def __str__(self):
+        return self.name
+
+
+class WorkoutPlan(BaseModel):
+    """Plano de treino do usuário (pode ter múltiplas divisões)."""
+
+    name = models.CharField(
+        max_length=200, null=False, blank=False, verbose_name="Nome do Plano"
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    is_active = models.BooleanField(default=True, verbose_name="Plano Ativo")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="workout_plans",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Plano de Treino"
+        verbose_name_plural = "Planos de Treino"
+        ordering = ["-is_active", "-created_at"]
+        indexes = [models.Index(fields=["owner", "is_active"])]
+
+    def __str__(self):
+        return f"{self.name} ({'ativo' if self.is_active else 'inativo'})"
+
+
+class WorkoutDay(BaseModel):
+    """Divisão de treino dentro de um plano (ex: Treino A — Costas/Ombro/Bíceps)."""
+
+    plan = models.ForeignKey(
+        WorkoutPlan,
+        on_delete=models.CASCADE,
+        related_name="days",
+        verbose_name="Plano de Treino",
+    )
+    name = models.CharField(
+        max_length=100,
+        null=False,
+        blank=False,
+        verbose_name="Nome da Divisão",
+        help_text="Ex: Treino A",
+    )
+    muscle_groups = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name="Grupos Musculares",
+        help_text="Ex: Costas / Ombro / Bíceps",
+    )
+    order = models.PositiveIntegerField(
+        default=0, verbose_name="Ordem", help_text="Ordem de exibição dentro do plano"
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="workout_days",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Divisão de Treino"
+        verbose_name_plural = "Divisões de Treino"
+        ordering = ["plan", "order", "name"]
+        indexes = [models.Index(fields=["plan", "order"])]
+
+    def __str__(self):
+        return f"{self.plan.name} — {self.name}"
+
+
+LOAD_UNIT_CHOICES = [
+    ("kg", "kg"),
+    ("lb", "lb"),
+    ("bw", "Peso corporal"),
+]
+
+
+class WorkoutExercise(BaseModel):
+    """Exercício dentro de uma divisão de treino, vinculado ao catálogo."""
+
+    workout_day = models.ForeignKey(
+        WorkoutDay,
+        on_delete=models.CASCADE,
+        related_name="exercises",
+        verbose_name="Divisão de Treino",
+    )
+    exercise = models.ForeignKey(
+        Exercise,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="workout_exercises",
+        verbose_name="Exercício do Catálogo",
+    )
+    name = models.CharField(
+        max_length=200,
+        null=False,
+        blank=False,
+        verbose_name="Nome do Exercício",
+        help_text="Preenchido automaticamente a partir do catálogo.",
+    )
+    sets = models.PositiveIntegerField(
+        default=3, verbose_name="Séries", help_text="Número de séries"
+    )
+    reps_min = models.PositiveIntegerField(default=8, verbose_name="Repetições Mínimas")
+    reps_max = models.PositiveIntegerField(
+        default=12, verbose_name="Repetições Máximas"
+    )
+    load = models.CharField(max_length=20, null=True, blank=True, verbose_name="Carga")
+    load_unit = models.CharField(
+        max_length=10,
+        choices=LOAD_UNIT_CHOICES,
+        default="kg",
+        verbose_name="Unidade de Carga",
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="workout_exercises",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Exercício de Treino"
+        verbose_name_plural = "Exercícios de Treino"
+        ordering = ["workout_day", "order", "name"]
+        indexes = [models.Index(fields=["workout_day", "order"])]
+
+    def __str__(self):
+        load_str = f" @ {self.load}{self.load_unit}" if self.load else ""
+        return f"{self.name} — {self.sets}x{self.reps_min}-{self.reps_max}{load_str}"
+
+
+class WorkoutSession(BaseModel):
+    """Sessão de treino executada (log de um dia de treino realizado)."""
+
+    workout_day = models.ForeignKey(
+        WorkoutDay,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sessions",
+        verbose_name="Divisão de Treino",
+        help_text="Divisão executada (opcional — permite sessão avulsa)",
+    )
+    date = models.DateField(null=False, blank=False, verbose_name="Data do Treino")
+    started_at = models.TimeField(null=True, blank=True, verbose_name="Hora de Início")
+    finished_at = models.TimeField(
+        null=True, blank=True, verbose_name="Hora de Término"
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="workout_sessions",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Sessão de Treino"
+        verbose_name_plural = "Sessões de Treino"
+        ordering = ["-date", "-started_at"]
+        indexes = [
+            models.Index(fields=["owner", "-date"]),
+            models.Index(fields=["workout_day", "-date"]),
+        ]
+
+    @property
+    def duration_minutes(self):
+        """Duração da sessão em minutos, se início e fim estão definidos."""
+        if self.started_at and self.finished_at:
+            from datetime import datetime
+
+            start = datetime.combine(self.date, self.started_at)
+            end = datetime.combine(self.date, self.finished_at)
+            delta = end - start
+            return max(0, int(delta.total_seconds() / 60))
+        return None
+
+    def __str__(self):
+        label = self.workout_day.name if self.workout_day else "Avulso"
+        return f"Sessão {label} — {self.date}"
+
+
+class WorkoutSessionExercise(BaseModel):
+    """Exercício executado dentro de uma sessão de treino."""
+
+    session = models.ForeignKey(
+        WorkoutSession,
+        on_delete=models.CASCADE,
+        related_name="session_exercises",
+        verbose_name="Sessão de Treino",
+    )
+    exercise = models.ForeignKey(
+        WorkoutExercise,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="session_exercises",
+        verbose_name="Exercício do Plano",
+        help_text="Referência ao exercício do plano (nullable para exercício avulso)",
+    )
+    exercise_name = models.CharField(
+        max_length=200,
+        verbose_name="Nome do Exercício",
+        help_text="Snapshot do nome — preservado mesmo se o exercício for alterado",
+    )
+    sets_target = models.PositiveIntegerField(default=3, verbose_name="Séries Alvo")
+    reps_target_min = models.PositiveIntegerField(
+        default=8, verbose_name="Repetições Alvo (mín.)"
+    )
+    reps_target_max = models.PositiveIntegerField(
+        default=12, verbose_name="Repetições Alvo (máx.)"
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="session_exercises",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Exercício da Sessão"
+        verbose_name_plural = "Exercícios da Sessão"
+        ordering = ["session", "order"]
+        indexes = [models.Index(fields=["session", "order"])]
+
+    def __str__(self):
+        return f"{self.exercise_name} — {self.session}"
+
+
+class WorkoutSessionSet(BaseModel):
+    """Série individual executada dentro de um exercício da sessão."""
+
+    session_exercise = models.ForeignKey(
+        WorkoutSessionExercise,
+        on_delete=models.CASCADE,
+        related_name="sets",
+        verbose_name="Exercício da Sessão",
+    )
+    set_number = models.PositiveIntegerField(
+        verbose_name="Número da Série", help_text="Ex: 1, 2, 3..."
+    )
+    load = models.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Carga",
+        help_text="Peso utilizado (deixe em branco para exercícios com peso corporal)",
+    )
+    load_unit = models.CharField(
+        max_length=20,
+        choices=MEASUREMENT_UNIT_CHOICES,
+        default="kg",
+        verbose_name="Unidade da Carga",
+    )
+    reps_done = models.PositiveIntegerField(
+        null=True, blank=True, verbose_name="Repetições Realizadas"
+    )
+    completed = models.BooleanField(default=True, verbose_name="Série Concluída")
+    notes = models.CharField(
+        max_length=300, null=True, blank=True, verbose_name="Observações"
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="session_sets",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Série da Sessão"
+        verbose_name_plural = "Séries da Sessão"
+        ordering = ["session_exercise", "set_number"]
+        unique_together = [["session_exercise", "set_number"]]
+        indexes = [models.Index(fields=["session_exercise", "set_number"])]
+
+    def __str__(self):
+        load_str = f"{self.load}{self.load_unit}" if self.load else "s/carga"
+        reps_str = f"×{self.reps_done}" if self.reps_done else ""
+        return f"Série {self.set_number} — {load_str}{reps_str}"
+
+
+# ============================================================================
+# NUTRITION MODELS
+# ============================================================================
+
+
+class Food(BaseModel):
+    """Alimento/ingrediente cadastrado pelo usuário."""
+
+    name = models.CharField(
+        max_length=200, null=False, blank=False, verbose_name="Nome do Alimento"
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="foods",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Alimento"
+        verbose_name_plural = "Alimentos"
+        ordering = ["name"]
+        unique_together = [["name", "owner"]]
+        indexes = [models.Index(fields=["owner", "name"])]
+
+    def __str__(self):
+        return self.name
+
+
+class MealType(BaseModel):
+    """Tipo de refeição definido pelo usuário (ex: Café da Manhã, Almoço)."""
+
+    name = models.CharField(
+        max_length=100, null=False, blank=False, verbose_name="Nome da Refeição"
+    )
+    suggested_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário Sugerido",
+        help_text="Horário de referência para esta refeição",
+    )
+    order = models.PositiveIntegerField(
+        default=0, verbose_name="Ordem", help_text="Ordem de exibição"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Ativa")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="meal_types",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Tipo de Refeição"
+        verbose_name_plural = "Tipos de Refeição"
+        ordering = ["order", "suggested_time", "name"]
+        indexes = [models.Index(fields=["owner", "is_active"])]
+
+    def __str__(self):
+        time_str = (
+            f" ({self.suggested_time.strftime('%H:%M')})" if self.suggested_time else ""
+        )
+        return f"{self.name}{time_str}"
+
+
+class MenuOption(BaseModel):
+    """Opção de cardápio dentro de um tipo de refeição (ex: Opção 1, Opção 2)."""
+
+    meal_type = models.ForeignKey(
+        MealType,
+        on_delete=models.CASCADE,
+        related_name="options",
+        verbose_name="Tipo de Refeição",
+    )
+    name = models.CharField(
+        max_length=100,
+        null=False,
+        blank=False,
+        verbose_name="Nome da Opção",
+        help_text="Ex: Opção 1",
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="menu_options",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Opção de Cardápio"
+        verbose_name_plural = "Opções de Cardápio"
+        ordering = ["meal_type", "order", "name"]
+        indexes = [models.Index(fields=["meal_type", "order"])]
+
+    def __str__(self):
+        return f"{self.meal_type.name} — {self.name}"
+
+
+class MenuOptionIngredient(BaseModel):
+    """Ingrediente dentro de uma opção de cardápio."""
+
+    menu_option = models.ForeignKey(
+        MenuOption,
+        on_delete=models.CASCADE,
+        related_name="ingredients",
+        verbose_name="Opção de Cardápio",
+    )
+    food = models.ForeignKey(
+        Food,
+        on_delete=models.PROTECT,
+        related_name="menu_ingredients",
+        verbose_name="Alimento",
+    )
+    quantity = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Quantidade",
+        help_text="Deixe em branco para quantidades do tipo 'a gosto'",
+    )
+    unit = models.CharField(
+        max_length=20,
+        choices=MEASUREMENT_UNIT_CHOICES,
+        verbose_name="Unidade",
+    )
+    is_optional = models.BooleanField(
+        default=False, verbose_name="Ingrediente Opcional"
+    )
+    notes = models.CharField(
+        max_length=300,
+        null=True,
+        blank=True,
+        verbose_name="Observações",
+        help_text="Ex: tempero a gosto, orégano à vontade",
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="menu_ingredients",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Ingrediente da Opção"
+        verbose_name_plural = "Ingredientes da Opção"
+        ordering = ["menu_option", "order"]
+        indexes = [models.Index(fields=["menu_option", "order"])]
+
+    def __str__(self):
+        qty_str = f"{self.quantity} {self.unit}" if self.quantity else self.unit
+        opt_str = " (opcional)" if self.is_optional else ""
+        return f"{self.food.name} — {qty_str}{opt_str}"
+
+
+class MealLog(BaseModel):
+    """Registro de uma refeição realizada pelo usuário."""
+
+    meal_type = models.ForeignKey(
+        MealType,
+        on_delete=models.PROTECT,
+        related_name="logs",
+        verbose_name="Tipo de Refeição",
+    )
+    menu_option = models.ForeignKey(
+        MenuOption,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="logs",
+        verbose_name="Opção de Cardápio Seguida",
+        help_text="Qual opção foi seguida (nulo em caso de refeição livre)",
+    )
+    is_free_meal = models.BooleanField(
+        default=False,
+        verbose_name="Refeição Livre",
+        help_text="Marque quando for a refeição livre permitida pelo plano",
+    )
+    date = models.DateField(null=False, blank=False, verbose_name="Data")
+    time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Horário Real",
+        help_text="Horário em que a refeição foi feita",
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="meal_logs",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Registro de Refeição"
+        verbose_name_plural = "Registros de Refeição"
+        ordering = ["-date", "meal_type__order"]
+        indexes = [
+            models.Index(fields=["owner", "-date"]),
+            models.Index(fields=["meal_type", "-date"]),
+        ]
+
+    def __str__(self):
+        option_str = self.menu_option.name if self.menu_option else "Livre"
+        return f"{self.meal_type.name} ({option_str}) — {self.date}"

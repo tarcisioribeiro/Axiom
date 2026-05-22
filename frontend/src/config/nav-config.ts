@@ -30,6 +30,8 @@ import {
   Bell,
   BotMessageSquare,
   BadgeDollarSign,
+  Dumbbell,
+  UtensilsCrossed,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -90,6 +92,12 @@ export const navModules: NavModule[] = [
         icon: Calendar,
       },
       { titleKey: 'nav.items.goals', href: '/planning/goals', icon: Target },
+      { titleKey: 'nav.items.workout', href: '/planning/workout', icon: Dumbbell },
+      {
+        titleKey: 'nav.items.nutrition',
+        href: '/planning/nutrition',
+        icon: UtensilsCrossed,
+      },
     ],
   },
   {
