@@ -34,7 +34,7 @@ export default function UserProfile() {
         <div className="bg-primary/8 absolute -bottom-8 -left-8 h-32 w-32 rounded-full blur-2xl" />
 
         <div className="relative flex flex-col gap-md p-lg sm:flex-row sm:items-center sm:gap-lg sm:p-xl">
-          <ProfileAvatar name={fullName} />
+          <ProfileAvatar name={fullName} photoUrl={member?.profile_photo} />
 
           <div className="flex-1 space-y-xs">
             <div className="flex flex-wrap items-center gap-sm">

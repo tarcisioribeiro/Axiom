@@ -15,6 +15,7 @@ import {
 } from '@/config/nav-config';
 import { useSidebar, useIsMobile } from '@/hooks/use-sidebar';
 import { useThemeAssets } from '@/hooks/use-theme-assets';
+import { APP_ENV, APP_VERSION, IS_PRODUCTION } from '@/lib/app-info';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -122,7 +123,7 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { hasPermission } = useAuthStore();
+  const { hasPermission, user } = useAuthStore();
   const { isOpen, isCollapsed, close, toggleCollapsed } = useSidebar();
   const isMobile = useIsMobile();
   const { icon } = useThemeAssets();
@@ -441,11 +442,89 @@ export const Sidebar = () => {
         )}
       </nav>
 
+      {/* User profile */}
+      {user && (
+        <div
+          className={cn(
+            'mt-sm border-t border-border/40 pt-sm',
+            isCollapsed && !isMobile ? 'flex justify-center' : ''
+          )}
+        >
+          {isCollapsed && !isMobile ? (
+            <Tooltip
+              content={`${user.first_name} ${user.last_name}`.trim() || user.username}
+              side="right"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50">
+                {user.profile_photo ? (
+                  <img
+                    src={user.profile_photo}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-primary">
+                    {(user.first_name?.[0] ?? user.username?.[0] ?? '?').toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-sm">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50">
+                {user.profile_photo ? (
+                  <img
+                    src={user.profile_photo}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <span className="text-xs font-semibold text-primary">
+                    {(user.first_name?.[0] ?? user.username?.[0] ?? '?').toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {`${user.first_name} ${user.last_name}`.trim() || user.username}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {user.username}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Version info (desktop expanded only) */}
+      {!isMobile && !isCollapsed && (
+        <div className="mt-sm flex items-center justify-center gap-xs">
+          <span className="select-none font-mono text-[10px] text-muted-foreground/40">
+            v{APP_VERSION}
+          </span>
+          {!IS_PRODUCTION && (
+            <span
+              className={cn(
+                'select-none rounded px-xs py-px text-[9px] font-bold uppercase tracking-wide',
+                APP_ENV === 'staging'
+                  ? 'bg-orange-500/10 text-orange-500'
+                  : 'bg-sky-500/10 text-sky-500'
+              )}
+            >
+              {APP_ENV}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Collapse toggle (desktop only) */}
       {!isMobile && (
         <div
           className={cn(
-            'mt-md border-t border-border/40 pt-3',
+            'mt-sm border-t border-border/40 pt-3',
             isCollapsed ? 'flex justify-center' : ''
           )}
         >

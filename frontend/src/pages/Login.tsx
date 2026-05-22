@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 
+import { AppVersionBadge } from '@/components/common/AppVersionBadge';
 import { ThemeToggle } from '@/components/common/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -46,6 +47,7 @@ export default function Login() {
     return (
       <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
         <ThemeToggle className="absolute right-4 top-4" />
+        <AppVersionBadge className="absolute bottom-4 right-4" />
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-md text-center">
             <div className="mx-auto flex items-center justify-center">
@@ -129,6 +131,7 @@ export default function Login() {
   return (
     <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
       <ThemeToggle className="absolute right-4 top-4" />
+      <AppVersionBadge className="absolute bottom-4 right-4" />
 
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-md text-center">
