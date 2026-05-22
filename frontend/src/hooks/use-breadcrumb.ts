@@ -32,6 +32,8 @@ import {
   Highlighter,
   BarChart3,
   FileInput,
+  Dumbbell,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -83,6 +85,18 @@ const routeConfigs: Record<string, RouteConfig> = {
   '/planning/goals': {
     labelKey: 'breadcrumb.goals',
     icon: Target,
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
+  },
+  '/planning/workout': {
+    labelKey: 'breadcrumb.workout',
+    icon: Dumbbell,
+    moduleKey: 'breadcrumb.planning',
+    moduleIcon: Calendar,
+  },
+  '/planning/nutrition': {
+    labelKey: 'breadcrumb.nutrition',
+    icon: UtensilsCrossed,
     moduleKey: 'breadcrumb.planning',
     moduleIcon: Calendar,
   },

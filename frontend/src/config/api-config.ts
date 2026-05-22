@@ -68,6 +68,7 @@ export const API_CONFIG = {
     PAYABLES: '/api/v1/payables/',
     MEMBERS: '/api/v1/members/',
     CURRENT_USER_MEMBER: '/api/v1/members/me/',
+    MEMBER_PROFILE_PHOTO: '/api/v1/members/me/photo/',
     MEMBER_FINANCIAL_REPORT: '/api/v1/members/:id/financial-report/',
     AVAILABLE_PERMISSIONS: '/api/v1/permissions/available/',
 
@@ -115,6 +116,20 @@ export const API_CONFIG = {
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
+    // Workout
+    EXERCISES: '/api/v1/personal-planning/exercises/',
+    WORKOUT_PLANS: '/api/v1/personal-planning/workout-plans/',
+    WORKOUT_DAYS: '/api/v1/personal-planning/workout-days/',
+    WORKOUT_EXERCISES: '/api/v1/personal-planning/workout-exercises/',
+    WORKOUT_SESSIONS: '/api/v1/personal-planning/workout-sessions/',
+    WORKOUT_SESSION_EXERCISES: '/api/v1/personal-planning/workout-session-exercises/',
+    WORKOUT_SESSION_SETS: '/api/v1/personal-planning/workout-session-sets/',
+    // Nutrition
+    FOODS: '/api/v1/personal-planning/foods/',
+    MEAL_TYPES: '/api/v1/personal-planning/meal-types/',
+    MENU_OPTIONS: '/api/v1/personal-planning/menu-options/',
+    MENU_OPTION_INGREDIENTS: '/api/v1/personal-planning/menu-option-ingredients/',
+    MEAL_LOGS: '/api/v1/personal-planning/meal-logs/',
 
     // Vaults Module
     VAULTS: '/api/v1/vaults/',

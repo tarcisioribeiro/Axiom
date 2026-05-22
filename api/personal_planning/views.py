@@ -13,23 +13,59 @@ from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from members.models import Member
 from personal_planning.models import (
     DailyReflection,
+    Exercise,
+    Food,
     GamificationProfile,
     Goal,
+    MealLog,
+    MealType,
+    MenuOption,
+    MenuOptionIngredient,
     RoutineTask,
     TaskInstance,
     UserBadge,
+    WorkoutDay,
+    WorkoutExercise,
+    WorkoutPlan,
+    WorkoutSession,
+    WorkoutSessionExercise,
+    WorkoutSessionSet,
 )
 from personal_planning.serializers import (
     DailyReflectionCreateUpdateSerializer,
     DailyReflectionSerializer,
+    ExerciseCreateUpdateSerializer,
+    ExerciseSerializer,
+    FoodCreateUpdateSerializer,
+    FoodSerializer,
     GoalCreateUpdateSerializer,
     GoalSerializer,
+    MealLogCreateUpdateSerializer,
+    MealLogSerializer,
+    MealTypeCreateUpdateSerializer,
+    MealTypeSerializer,
+    MenuOptionCreateUpdateSerializer,
+    MenuOptionIngredientCreateUpdateSerializer,
+    MenuOptionIngredientSerializer,
+    MenuOptionSerializer,
     RoutineTaskCreateUpdateSerializer,
     RoutineTaskSerializer,
     TaskInstanceCreateSerializer,
     TaskInstanceSerializer,
     TaskInstanceStatusUpdateSerializer,
     TaskInstanceUpdateSerializer,
+    WorkoutDayCreateUpdateSerializer,
+    WorkoutDaySerializer,
+    WorkoutExerciseCreateUpdateSerializer,
+    WorkoutExerciseSerializer,
+    WorkoutPlanCreateUpdateSerializer,
+    WorkoutPlanSerializer,
+    WorkoutSessionCreateUpdateSerializer,
+    WorkoutSessionExerciseCreateUpdateSerializer,
+    WorkoutSessionExerciseSerializer,
+    WorkoutSessionSerializer,
+    WorkoutSessionSetCreateUpdateSerializer,
+    WorkoutSessionSetSerializer,
 )
 
 
@@ -1481,3 +1517,297 @@ class GamificationProfileView(APIView):
                 ],
             }
         )
+
+
+# ============================================================================
+# WORKOUT VIEWS
+# ============================================================================
+
+
+class ExerciseListCreateView(BaseListCreateView):
+    serializer_class = ExerciseSerializer
+    create_serializer_class = ExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class ExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = ExerciseSerializer
+    create_serializer_class = ExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return Exercise.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutPlanListCreateView(BaseListCreateView):
+    serializer_class = WorkoutPlanSerializer
+    create_serializer_class = WorkoutPlanCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutPlan.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutPlanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutPlanSerializer
+    create_serializer_class = WorkoutPlanCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutPlan.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutDayListCreateView(BaseListCreateView):
+    serializer_class = WorkoutDaySerializer
+    create_serializer_class = WorkoutDayCreateUpdateSerializer
+    filterset_fields = ["plan", "owner"]
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WorkoutDay.objects.filter(owner=member, deleted_at__isnull=True)
+        plan_id = self.request.query_params.get("plan")
+        if plan_id:
+            qs = qs.filter(plan_id=plan_id)
+        return qs
+
+
+class WorkoutDayRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutDaySerializer
+    create_serializer_class = WorkoutDayCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutDay.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutExerciseListCreateView(BaseListCreateView):
+    serializer_class = WorkoutExerciseSerializer
+    create_serializer_class = WorkoutExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WorkoutExercise.objects.filter(owner=member, deleted_at__isnull=True)
+        workout_day_id = self.request.query_params.get("workout_day")
+        if workout_day_id:
+            qs = qs.filter(workout_day_id=workout_day_id)
+        return qs
+
+
+class WorkoutExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutExerciseSerializer
+    create_serializer_class = WorkoutExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutExercise.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutSessionListCreateView(BaseListCreateView):
+    serializer_class = WorkoutSessionSerializer
+    create_serializer_class = WorkoutSessionCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WorkoutSession.objects.filter(owner=member, deleted_at__isnull=True)
+        workout_day_id = self.request.query_params.get("workout_day")
+        if workout_day_id:
+            qs = qs.filter(workout_day_id=workout_day_id)
+        date_from = self.request.query_params.get("date_from")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        date_to = self.request.query_params.get("date_to")
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        return qs
+
+
+class WorkoutSessionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutSessionSerializer
+    create_serializer_class = WorkoutSessionCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutSession.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class WorkoutSessionExerciseListCreateView(BaseListCreateView):
+    serializer_class = WorkoutSessionExerciseSerializer
+    create_serializer_class = WorkoutSessionExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WorkoutSessionExercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
+        session_id = self.request.query_params.get("session")
+        if session_id:
+            qs = qs.filter(session_id=session_id)
+        return qs
+
+
+class WorkoutSessionExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutSessionExerciseSerializer
+    create_serializer_class = WorkoutSessionExerciseCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutSessionExercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
+
+
+class WorkoutSessionSetListCreateView(BaseListCreateView):
+    serializer_class = WorkoutSessionSetSerializer
+    create_serializer_class = WorkoutSessionSetCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = WorkoutSessionSet.objects.filter(owner=member, deleted_at__isnull=True)
+        session_exercise_id = self.request.query_params.get("session_exercise")
+        if session_exercise_id:
+            qs = qs.filter(session_exercise_id=session_exercise_id)
+        return qs
+
+
+class WorkoutSessionSetRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = WorkoutSessionSetSerializer
+    create_serializer_class = WorkoutSessionSetCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return WorkoutSessionSet.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+# ============================================================================
+# NUTRITION VIEWS
+# ============================================================================
+
+
+class FoodListCreateView(BaseListCreateView):
+    serializer_class = FoodSerializer
+    create_serializer_class = FoodCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = Food.objects.filter(owner=member, deleted_at__isnull=True)
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(name__icontains=search)
+        return qs
+
+
+class FoodRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = FoodSerializer
+    create_serializer_class = FoodCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return Food.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class MealTypeListCreateView(BaseListCreateView):
+    serializer_class = MealTypeSerializer
+    create_serializer_class = MealTypeCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = MealType.objects.filter(owner=member, deleted_at__isnull=True)
+        is_active = self.request.query_params.get("is_active")
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active.lower() == "true")
+        return qs
+
+
+class MealTypeRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = MealTypeSerializer
+    create_serializer_class = MealTypeCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return MealType.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class MenuOptionListCreateView(BaseListCreateView):
+    serializer_class = MenuOptionSerializer
+    create_serializer_class = MenuOptionCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = MenuOption.objects.filter(owner=member, deleted_at__isnull=True)
+        meal_type_id = self.request.query_params.get("meal_type")
+        if meal_type_id:
+            qs = qs.filter(meal_type_id=meal_type_id)
+        return qs
+
+
+class MenuOptionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = MenuOptionSerializer
+    create_serializer_class = MenuOptionCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return MenuOption.objects.filter(owner=member, deleted_at__isnull=True)
+
+
+class MenuOptionIngredientListCreateView(BaseListCreateView):
+    serializer_class = MenuOptionIngredientSerializer
+    create_serializer_class = MenuOptionIngredientCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = MenuOptionIngredient.objects.filter(owner=member, deleted_at__isnull=True)
+        menu_option_id = self.request.query_params.get("menu_option")
+        if menu_option_id:
+            qs = qs.filter(menu_option_id=menu_option_id)
+        return qs
+
+
+class MenuOptionIngredientRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = MenuOptionIngredientSerializer
+    create_serializer_class = MenuOptionIngredientCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return MenuOptionIngredient.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
+
+
+class MealLogListCreateView(BaseListCreateView):
+    serializer_class = MealLogSerializer
+    create_serializer_class = MealLogCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        qs = MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+        date_param = self.request.query_params.get("date")
+        if date_param:
+            qs = qs.filter(date=date_param)
+        date_from = self.request.query_params.get("date_from")
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        date_to = self.request.query_params.get("date_to")
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        meal_type_id = self.request.query_params.get("meal_type")
+        if meal_type_id:
+            qs = qs.filter(meal_type_id=meal_type_id)
+        return qs
+
+
+class MealLogRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    serializer_class = MealLogSerializer
+    create_serializer_class = MealLogCreateUpdateSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return MealLog.objects.filter(owner=member, deleted_at__isnull=True)
+
+    def perform_destroy(self, instance):
+        instance.deleted_at = timezone.now()
+        instance.deleted_by = self.request.user
+        instance.is_deleted = True
+        instance.save()

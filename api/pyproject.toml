@@ -91,7 +91,11 @@ omit = [
     # Infrastructure/operational modules — not unit-testable
     "app/metrics.py",
     "app/celery.py",
-    "agents/tasks.py",
+    "app/storage.py",
+    # Celery background tasks — require a Celery worker; not unit-testable
+    "*/tasks.py",
+    # Development/tooling files — not application code
+    "flake8_no_serializer_all.py",
 ]
 
 [tool.coverage.report]

@@ -14,6 +14,7 @@ export async function enrichUserWithMemberData(
         ...user,
         first_name: nameParts[0] || '',
         last_name: nameParts.slice(1).join(' ') || '',
+        profile_photo: memberData.profile_photo ?? null,
       };
     }
   } catch (error) {
