@@ -1,11 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   Clock,
   Edit,
+  Moon,
   Plus,
   Salad,
+  Search,
+  Sun,
+  Sunrise,
   Trash2,
   UtensilsCrossed,
 } from 'lucide-react';
@@ -31,6 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -62,9 +70,17 @@ type DialogMode =
   | { type: 'edit-meal-type'; mealType: MealType }
   | { type: 'new-option'; mealTypeId: number }
   | { type: 'edit-option'; option: MenuOption }
-  | { type: 'new-log' }
+  | { type: 'new-log'; prefillMealType?: number }
   | { type: 'edit-log'; log: MealLog }
   | null;
+
+function getMealPeriodIcon(time?: string | null) {
+  if (!time) return <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />;
+  const h = parseInt(time.slice(0, 2));
+  if (h >= 5 && h < 12) return <Sunrise className="h-4 w-4 text-amber-400" />;
+  if (h >= 12 && h < 18) return <Sun className="h-4 w-4 text-orange-400" />;
+  return <Moon className="h-4 w-4 text-violet-400" />;
+}
 
 export default function NutritionPage() {
   const { t } = useTranslation();
@@ -73,6 +89,7 @@ export default function NutritionPage() {
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
+  const [foodSearch, setFoodSearch] = useState('');
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -105,6 +122,15 @@ export default function NutritionPage() {
 
   const today = new Date().toISOString().slice(0, 10);
   const todayLogs = logs.filter((l) => l.date === today);
+  const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
+  const adherencePct =
+    activeMealTypes.length > 0
+      ? Math.round((todayLogs.length / activeMealTypes.length) * 100)
+      : 0;
+
+  const filteredFoods = foods.filter((f) =>
+    f.name.toLowerCase().includes(foodSearch.toLowerCase())
+  );
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -402,6 +428,14 @@ export default function NutritionPage() {
     }
   };
 
+  // ── Today header ───────────────────────────────────────────────────────────
+
+  const todayLabel = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -412,16 +446,74 @@ export default function NutritionPage() {
           icon={<UtensilsCrossed className="h-6 w-6 text-category-nutrition" />}
         />
 
-        <Tabs defaultValue="meal-types" className="w-full">
+        <Tabs defaultValue="log" className="w-full">
           <TabsList className="mb-lg">
-            <TabsTrigger value="meal-types">
+            <TabsTrigger value="log" className="gap-xs">
+              <CalendarDays className="h-4 w-4" />
+              {t('pages.nutritionFoods.tabLog')}
+            </TabsTrigger>
+            <TabsTrigger value="meal-types" className="gap-xs">
+              <UtensilsCrossed className="h-4 w-4" />
               {t('pages.nutritionFoods.tabMealTypes')}
             </TabsTrigger>
-            <TabsTrigger value="foods">
+            <TabsTrigger value="foods" className="gap-xs">
+              <Salad className="h-4 w-4" />
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
-            <TabsTrigger value="log">{t('pages.nutritionFoods.tabLog')}</TabsTrigger>
           </TabsList>
+
+          {/* ── Diário ───────────────────────────────────────────────────── */}
+          <TabsContent value="log">
+            <div className="mb-md space-y-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-semibold capitalize">{todayLabel}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.nutritionLog.mealsLogged', {
+                      logged: todayLogs.length,
+                      total: activeMealTypes.length,
+                    })}
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => setDialog({ type: 'new-log' })}>
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  {t('pages.nutritionLog.newLogBtn')}
+                </Button>
+              </div>
+              {activeMealTypes.length > 0 && (
+                <div className="space-y-1">
+                  <Progress
+                    value={adherencePct}
+                    className="h-1.5 bg-muted [&>div]:bg-category-nutrition"
+                  />
+                  <p className="text-right text-xs text-muted-foreground">
+                    {adherencePct}%
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {logsLoading ? (
+              <LoadingState />
+            ) : (
+              <MealTimeline
+                mealTypes={activeMealTypes}
+                logs={todayLogs}
+                onEdit={(log) => setDialog({ type: 'edit-log', log })}
+                onDelete={async (log) => {
+                  const ok = await showConfirm({
+                    title: t('pages.nutritionLog.deleteLogTitle'),
+                    description: t('pages.nutritionLog.deleteLogDesc'),
+                  });
+                  if (ok) deleteLogMutation.mutate(log.id);
+                }}
+                onRegister={(mealTypeId) =>
+                  setDialog({ type: 'new-log', prefillMealType: mealTypeId })
+                }
+                t={t}
+              />
+            )}
+          </TabsContent>
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
           <TabsContent value="meal-types">
@@ -478,7 +570,17 @@ export default function NutritionPage() {
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}
           <TabsContent value="foods">
-            <div className="mb-md flex justify-end">
+            <div className="mb-md flex items-center gap-sm">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder={t('pages.nutritionFoods.searchPlaceholder')}
+                  value={foodSearch}
+                  onChange={(e) => setFoodSearch(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
                 <Plus className="mr-2 h-4 w-4" />
                 {t('pages.nutritionFoods.newFoodBtn')}
@@ -487,20 +589,23 @@ export default function NutritionPage() {
 
             {foodsLoading ? (
               <LoadingState />
-            ) : foods.length === 0 ? (
+            ) : filteredFoods.length === 0 ? (
               <EmptyState
                 title={t('pages.nutritionFoods.emptyFoods')}
                 description={t('pages.nutritionFoods.emptyFoodsDesc')}
                 icon={<Salad className="h-8 w-8" />}
               />
             ) : (
-              <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3">
-                {foods.map((food) => (
+              <div className="grid gap-xs sm:grid-cols-2 lg:grid-cols-3">
+                {filteredFoods.map((food) => (
                   <div
                     key={food.id}
-                    className="flex items-center justify-between rounded-md border border-border bg-card px-md py-sm transition-colors hover:bg-muted/30"
+                    className="group flex items-center gap-sm rounded-lg border border-border bg-card px-md py-sm transition-colors hover:border-category-nutrition/40 hover:bg-category-nutrition/5"
                   >
-                    <div className="min-w-0">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-category-nutrition/10">
+                      <Salad className="h-4 w-4 text-category-nutrition" />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{food.name}</p>
                       {food.description && (
                         <p className="truncate text-xs text-muted-foreground">
@@ -508,7 +613,7 @@ export default function NutritionPage() {
                         </p>
                       )}
                     </div>
-                    <div className="ml-sm flex shrink-0 gap-xs">
+                    <div className="flex shrink-0 gap-xs opacity-0 transition-opacity group-hover:opacity-100">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -535,43 +640,6 @@ export default function NutritionPage() {
                   </div>
                 ))}
               </div>
-            )}
-          </TabsContent>
-
-          {/* ── Diário ───────────────────────────────────────────────────── */}
-          <TabsContent value="log">
-            <div className="mb-md flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {t('pages.nutritionLog.mealsLogged', {
-                    logged: todayLogs.length,
-                    total: mealTypes.filter((mt) => mt.is_active).length,
-                  })}
-                </p>
-              </div>
-              <Button onClick={() => setDialog({ type: 'new-log' })}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t('pages.nutritionLog.newLogBtn')}
-              </Button>
-            </div>
-
-            {logsLoading ? (
-              <LoadingState />
-            ) : (
-              <MealTimeline
-                mealTypes={mealTypes.filter((mt) => mt.is_active)}
-                logs={todayLogs}
-                onEdit={(log) => setDialog({ type: 'edit-log', log })}
-                onDelete={async (log) => {
-                  const ok = await showConfirm({
-                    title: t('pages.nutritionLog.deleteLogTitle'),
-                    description: t('pages.nutritionLog.deleteLogDesc'),
-                  });
-                  if (ok) deleteLogMutation.mutate(log.id);
-                }}
-                onNewLog={() => setDialog({ type: 'new-log' })}
-                t={t}
-              />
             )}
           </TabsContent>
         </Tabs>
@@ -655,6 +723,9 @@ export default function NutritionPage() {
             {(dialog?.type === 'new-log' || dialog?.type === 'edit-log') && (
               <MealLogForm
                 log={dialog.type === 'edit-log' ? dialog.log : undefined}
+                prefillMealTypeId={
+                  dialog.type === 'new-log' ? dialog.prefillMealType : undefined
+                }
                 mealTypes={mealTypes}
                 ownerId={ownerId}
                 onSubmit={async (data) => {
@@ -714,20 +785,31 @@ function MealTypeCard({
             className="flex min-w-0 flex-1 items-center gap-sm text-left"
             onClick={onToggle}
           >
-            {expanded ? (
-              <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )}
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
+              {getMealPeriodIcon(mealType.suggested_time)}
+            </div>
             <div className="min-w-0">
               <CardTitle className="text-base">{mealType.name}</CardTitle>
-              {mealType.suggested_time && (
-                <p className="mt-0.5 flex items-center gap-xs text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  {mealType.suggested_time.slice(0, 5)}
-                </p>
-              )}
+              <div className="mt-0.5 flex items-center gap-sm">
+                {mealType.suggested_time && (
+                  <span className="flex items-center gap-xs text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    {mealType.suggested_time.slice(0, 5)}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {mealType.options.length}{' '}
+                  {mealType.options.length === 1
+                    ? t('pages.nutritionMealTypes.optionSingular')
+                    : t('pages.nutritionMealTypes.optionPlural')}
+                </span>
+              </div>
             </div>
+            {expanded ? (
+              <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+            )}
           </button>
           <div className="ml-sm flex shrink-0 items-center gap-xs">
             <Badge variant={mealType.is_active ? 'success' : 'secondary'}>
@@ -758,57 +840,63 @@ function MealTypeCard({
               {t('pages.nutritionMealTypes.newOptionBtn')}
             </Button>
           </div>
-          {mealType.options.map((opt) => (
-            <div
-              key={opt.id}
-              className="rounded-md border border-border bg-muted/30 p-sm"
-            >
-              <div className="mb-xs flex items-center justify-between">
-                <span className="text-sm font-medium">{opt.name}</span>
-                <div className="flex gap-xs">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onEditOption(opt)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => onDeleteOption(opt)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              {opt.ingredients.length > 0 ? (
-                <ul className="space-y-0.5">
-                  {opt.ingredients.map((ing) => (
-                    <li
-                      key={ing.id}
-                      className="flex items-center gap-xs text-xs text-muted-foreground"
+          {mealType.options.length === 0 ? (
+            <p className="py-sm text-center text-xs text-muted-foreground">
+              {t('pages.nutritionMealTypes.noIngredients')}
+            </p>
+          ) : (
+            mealType.options.map((opt) => (
+              <div
+                key={opt.id}
+                className="rounded-md border border-border bg-muted/30 p-sm"
+              >
+                <div className="mb-xs flex items-center justify-between">
+                  <span className="text-sm font-medium">{opt.name}</span>
+                  <div className="flex gap-xs">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onEditOption(opt)}
                     >
-                      {ing.is_optional && (
-                        <span className="italic text-muted-foreground/60">[opt]</span>
-                      )}
-                      <span>
-                        {ing.food_name}
-                        {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
-                        {ing.notes ? ` (${ing.notes})` : ''}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t('pages.nutritionMealTypes.noIngredients')}
-                </p>
-              )}
-            </div>
-          ))}
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => onDeleteOption(opt)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                {opt.ingredients.length > 0 ? (
+                  <ul className="space-y-0.5">
+                    {opt.ingredients.map((ing) => (
+                      <li
+                        key={ing.id}
+                        className="flex items-center gap-xs text-xs text-muted-foreground"
+                      >
+                        {ing.is_optional && (
+                          <span className="italic text-muted-foreground/60">[opt]</span>
+                        )}
+                        <span>
+                          {ing.food_name}
+                          {ing.quantity ? ` — ${ing.quantity} ${ing.unit_display}` : ''}
+                          {ing.notes ? ` (${ing.notes})` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {t('pages.nutritionMealTypes.noIngredients')}
+                  </p>
+                )}
+              </div>
+            ))
+          )}
         </CardContent>
       )}
     </Card>
@@ -820,33 +908,44 @@ interface MealTimelineProps {
   logs: MealLog[];
   onEdit: (log: MealLog) => void;
   onDelete: (log: MealLog) => void;
-  onNewLog: () => void;
+  onRegister: (mealTypeId: number) => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }
 
-function MealTimeline({ mealTypes, logs, onEdit, onDelete, t }: MealTimelineProps) {
+function MealTimeline({ mealTypes, logs, onEdit, onDelete, onRegister, t }: MealTimelineProps) {
   const now = new Date();
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
+  if (mealTypes.length === 0) {
+    return (
+      <EmptyState
+        title={t('pages.nutritionLog.emptyLog')}
+        description={t('pages.nutritionLog.emptyLogDesc')}
+        icon={<UtensilsCrossed className="h-8 w-8" />}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-sm">
+    <div className="space-y-xs">
       {mealTypes.map((mt, idx) => {
         const log = logs.find((l) => l.meal_type === mt.id);
         const isLate =
           !log && mt.suggested_time && mt.suggested_time.slice(0, 5) < currentTime;
 
         return (
-          <div key={mt.id} className="flex gap-md">
-            <div className="flex shrink-0 flex-col items-center">
+          <div key={mt.id} className="flex gap-sm">
+            {/* Timeline spine */}
+            <div className="flex shrink-0 flex-col items-center pt-3">
               <div
                 className={cn(
-                  'mt-1 h-3 w-3 rounded-full border-2',
+                  'h-3 w-3 rounded-full border-2 transition-colors',
                   log
                     ? log.is_free_meal
                       ? 'border-primary bg-primary'
                       : 'border-success bg-success'
                     : isLate
-                      ? 'border-warning bg-warning/20'
+                      ? 'border-warning bg-warning/30'
                       : 'border-border bg-background'
                 )}
               />
@@ -854,42 +953,58 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, t }: MealTimelineProp
                 <div className="mt-1 w-0.5 flex-1 bg-border" />
               )}
             </div>
+
+            {/* Card */}
             <div
               className={cn(
-                'mb-sm flex-1 rounded-md border p-sm transition-colors',
+                'mb-xs flex-1 rounded-lg border p-sm transition-colors',
                 log
-                  ? 'border-success/40 bg-success/5'
+                  ? 'border-success/30 bg-success/5'
                   : isLate
-                    ? 'border-warning/40 bg-warning/5'
+                    ? 'border-warning/30 bg-warning/5'
                     : 'border-border bg-card'
               )}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{mt.name}</p>
-                  {mt.suggested_time && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('pages.nutritionLog.suggestedTime', {
-                        time: mt.suggested_time.slice(0, 5),
-                      })}
-                    </p>
-                  )}
-                  {log?.time && (
-                    <p className="text-xs text-success">
-                      {t('pages.nutritionLog.actualTime', {
-                        time: log.time.slice(0, 5),
-                      })}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-xs">
-                  {log ? (
-                    <>
-                      <Badge variant={log.is_free_meal ? 'default' : 'success'}>
+              <div className="flex items-start justify-between gap-sm">
+                <div className="flex min-w-0 items-start gap-sm">
+                  <div className="mt-0.5 shrink-0">
+                    {getMealPeriodIcon(mt.suggested_time)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{mt.name}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                      {mt.suggested_time && (
+                        <span className="flex items-center gap-xs text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {t('pages.nutritionLog.suggestedTime', {
+                            time: mt.suggested_time.slice(0, 5),
+                          })}
+                        </span>
+                      )}
+                      {log?.time && (
+                        <span className="text-xs font-medium text-success">
+                          {t('pages.nutritionLog.actualTime', {
+                            time: log.time.slice(0, 5),
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    {log && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
                         {log.is_free_meal
                           ? t('pages.nutritionLog.freeMeal')
                           : (log.menu_option_name ?? t('pages.nutritionLog.done'))}
-                      </Badge>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-xs">
+                  {log ? (
+                    <>
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/20">
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      </div>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -907,12 +1022,29 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, t }: MealTimelineProp
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </>
+                  ) : isLate ? (
+                    <div className="flex items-center gap-xs">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-warning/20">
+                        <AlertCircle className="h-4 w-4 text-warning" />
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 border-warning/50 text-xs hover:bg-warning/10"
+                        onClick={() => onRegister(mt.id)}
+                      >
+                        {t('pages.nutritionLog.registerMeal')}
+                      </Button>
+                    </div>
                   ) : (
-                    <Badge variant={isLate ? 'warning' : 'outline'}>
-                      {isLate
-                        ? t('pages.nutritionLog.late')
-                        : t('pages.nutritionLog.pending')}
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => onRegister(mt.id)}
+                    >
+                      {t('pages.nutritionLog.registerMeal')} →
+                    </Button>
                   )}
                 </div>
               </div>
@@ -920,14 +1052,6 @@ function MealTimeline({ mealTypes, logs, onEdit, onDelete, t }: MealTimelineProp
           </div>
         );
       })}
-
-      {mealTypes.length === 0 && (
-        <EmptyState
-          title={t('pages.nutritionLog.emptyLog')}
-          description={t('pages.nutritionLog.emptyLogDesc')}
-          icon={<UtensilsCrossed className="h-8 w-8" />}
-        />
-      )}
     </div>
   );
 }
