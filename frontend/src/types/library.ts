@@ -1,10 +1,4 @@
-export type Era = 'AC' | 'DC';
-
-export const ERAS = [
-  { value: 'DC' as Era, label: 'Depois de Cristo (DC)' },
-  { value: 'AC' as Era, label: 'Antes de Cristo (AC)' },
-];
-
+import type { Era } from './library-constants';
 export interface Author {
   id: number;
   uuid: string;

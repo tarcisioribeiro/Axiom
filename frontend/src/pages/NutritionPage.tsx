@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   BookOpen,
@@ -945,86 +946,97 @@ function MealTypeCard({
         </div>
       </div>
 
-      {expanded && (
-        <div className="border-t border-border bg-card p-md">
-          <div className="mb-sm flex justify-end">
-            <Button variant="outline" size="sm" onClick={onNewOption}>
-              <Plus className="mr-1 h-3 w-3" />
-              {t('pages.nutritionMealTypes.newOptionBtn')}
-            </Button>
-          </div>
-          {mealType.options.length === 0 ? (
-            <p className="py-sm text-center text-xs text-muted-foreground">
-              {t('pages.nutritionMealTypes.noIngredients')}
-            </p>
-          ) : (
-            <div className="space-y-sm">
-              {mealType.options.map((opt) => (
-                <div
-                  key={opt.id}
-                  className="overflow-hidden rounded-lg border border-border bg-muted/20"
-                >
-                  {/* Option header */}
-                  <div className="flex items-center justify-between border-b border-border/60 bg-card px-sm py-xs">
-                    <div className="flex items-center gap-xs">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-category-nutrition/10">
-                        <BookOpen className="h-3.5 w-3.5 text-category-nutrition" />
-                      </div>
-                      <span className="text-sm font-semibold">{opt.name}</span>
-                    </div>
-                    <div className="flex gap-xs">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => onEditOption(opt)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => onDeleteOption(opt)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {/* Ingredients */}
-                  {opt.ingredients.length > 0 ? (
-                    <div className="grid gap-xs p-sm sm:grid-cols-2">
-                      {opt.ingredients.map((ing) => (
-                        <div key={ing.id} className="flex items-start gap-xs">
-                          <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
-                          <span className="text-xs text-muted-foreground">
-                            <span className="font-medium text-foreground">
-                              {ing.food_name}
-                            </span>
-                            {ing.quantity
-                              ? ` — ${ing.quantity} ${ing.unit_display}`
-                              : ''}
-                            {ing.is_optional && (
-                              <span className="ml-xs italic text-muted-foreground/60">
-                                (opt.)
-                              </span>
-                            )}
-                            {ing.notes ? ` · ${ing.notes}` : ''}
-                          </span>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="meal-type-content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="border-t border-border bg-card p-md">
+              <div className="mb-sm flex justify-end">
+                <Button variant="outline" size="sm" onClick={onNewOption}>
+                  <Plus className="mr-1 h-3 w-3" />
+                  {t('pages.nutritionMealTypes.newOptionBtn')}
+                </Button>
+              </div>
+              {mealType.options.length === 0 ? (
+                <p className="py-sm text-center text-xs text-muted-foreground">
+                  {t('pages.nutritionMealTypes.noIngredients')}
+                </p>
+              ) : (
+                <div className="space-y-sm">
+                  {mealType.options.map((opt) => (
+                    <div
+                      key={opt.id}
+                      className="overflow-hidden rounded-lg border border-border bg-muted/20"
+                    >
+                      {/* Option header */}
+                      <div className="flex items-center justify-between border-b border-border/60 bg-card px-sm py-xs">
+                        <div className="flex items-center gap-xs">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-category-nutrition/10">
+                            <BookOpen className="h-3.5 w-3.5 text-category-nutrition" />
+                          </div>
+                          <span className="text-sm font-semibold">{opt.name}</span>
                         </div>
-                      ))}
+                        <div className="flex gap-xs">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onEditOption(opt)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => onDeleteOption(opt)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      {/* Ingredients */}
+                      {opt.ingredients.length > 0 ? (
+                        <div className="grid gap-xs p-sm sm:grid-cols-2">
+                          {opt.ingredients.map((ing) => (
+                            <div key={ing.id} className="flex items-start gap-xs">
+                              <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
+                              <span className="text-xs text-muted-foreground">
+                                <span className="font-medium text-foreground">
+                                  {ing.food_name}
+                                </span>
+                                {ing.quantity
+                                  ? ` — ${ing.quantity} ${ing.unit_display}`
+                                  : ''}
+                                {ing.is_optional && (
+                                  <span className="ml-xs italic text-muted-foreground/60">
+                                    (opt.)
+                                  </span>
+                                )}
+                                {ing.notes ? ` · ${ing.notes}` : ''}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="px-sm py-xs text-xs text-muted-foreground">
+                          {t('pages.nutritionMealTypes.noIngredients')}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="px-sm py-xs text-xs text-muted-foreground">
-                      {t('pages.nutritionMealTypes.noIngredients')}
-                    </p>
-                  )}
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

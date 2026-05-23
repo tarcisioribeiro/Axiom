@@ -32,6 +32,10 @@ import {
   BadgeDollarSign,
   Dumbbell,
   UtensilsCrossed,
+  GraduationCap,
+  Brain,
+  Highlighter,
+  BookMarked,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -192,14 +196,50 @@ export const navModules: NavModule[] = [
     id: 'library',
     titleKey: 'nav.modules.library',
     icon: Library,
-    items: [
+    topItems: [
       { titleKey: 'nav.dashboard', href: '/library/dashboard', icon: LayoutDashboard },
-      { titleKey: 'nav.items.books', href: '/library/books', icon: BookOpen },
-      { titleKey: 'nav.items.authors', href: '/library/authors', icon: UserPen },
+    ],
+    subModules: [
       {
-        titleKey: 'nav.items.publishers',
-        href: '/library/publishers',
-        icon: Building2,
+        id: 'library-books',
+        titleKey: 'nav.submodules.books',
+        icon: BookOpen,
+        items: [
+          { titleKey: 'nav.items.books', href: '/library/books', icon: BookOpen },
+          { titleKey: 'nav.items.authors', href: '/library/authors', icon: UserPen },
+          {
+            titleKey: 'nav.items.publishers',
+            href: '/library/publishers',
+            icon: Building2,
+          },
+          {
+            titleKey: 'nav.items.highlights',
+            href: '/library/highlights',
+            icon: Highlighter,
+          },
+          {
+            titleKey: 'nav.items.readingQueue',
+            href: '/library/reading-queue',
+            icon: BookMarked,
+          },
+        ],
+      },
+      {
+        id: 'library-intellect',
+        titleKey: 'nav.submodules.intellect',
+        icon: Brain,
+        items: [
+          {
+            titleKey: 'nav.items.courses',
+            href: '/library/courses',
+            icon: GraduationCap,
+          },
+          {
+            titleKey: 'nav.items.skills',
+            href: '/library/skills',
+            icon: Brain,
+          },
+        ],
       },
     ],
   },

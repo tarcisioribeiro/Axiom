@@ -27,6 +27,7 @@ export default defineConfig({
       threshold: 1024,
     }),
     // PWA — service worker + manifest
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.png', 'icon-dark.png', 'icon-light.png', 'logo.png'],

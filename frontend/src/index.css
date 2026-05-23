@@ -82,6 +82,7 @@
     --category-nutrition: 48 73% 30%; /* yellow Alucard */
     --category-work: 49 18% 36%; /* current line */
     --category-leisure: 6 66% 48%; /* red Alucard */
+    --category-intellect: 265 72% 42%; /* violet Alucard */
 
     /* Texto sobre superfícies coloridas (semantic on-colors) */
     --on-primary: 48 100% 96%;
@@ -210,6 +211,7 @@
     --category-nutrition: 65 92% 76%; /* yellow */
     --category-work: 225 27% 78%; /* lightened comment for WCAG AA contrast */
     --category-leisure: 0 100% 67%; /* red */
+    --category-intellect: 265 89% 78%; /* purple Dracula */
 
     /* Texto sobre superfícies coloridas (semantic on-colors) */
     --on-primary: 235 15% 18%;
@@ -291,6 +293,7 @@
     --category-nutrition: 41 86% 83%;
     --category-work: 231 11% 60%;
     --category-leisure: 343 81% 75%;
+    --category-intellect: 267 84% 81%; /* mauve Catppuccin Mocha */
 
     --on-primary: 240 21% 15%;
     --on-secondary: 226 64% 88%;
@@ -364,6 +367,7 @@
     --category-nutrition: 37 66% 64%;
     --category-work: 230 22% 55%;
     --category-leisure: 349 86% 71%;
+    --category-intellect: 265 78% 72%; /* purple Tokyo Night */
 
     --on-primary: 234 18% 13%;
     --on-secondary: 226 72% 86%;
@@ -437,6 +441,7 @@
     --category-nutrition: 42 95% 58%;
     --category-work: 25 10% 60%;
     --category-leisure: 5 96% 59%;
+    --category-intellect: 271 38% 62%; /* purple Gruvbox Dark */
 
     --on-primary: 0 0% 16%;
     --on-secondary: 43 60% 80%;
@@ -510,6 +515,7 @@
     --category-nutrition: 54 100% 50%;
     --category-work: 240 20% 55%;
     --category-leisure: 346 100% 50%;
+    --category-intellect: 275 100% 74%; /* neon purple Cyberpunk */
 
     --on-primary: 240 31% 8%;
     --on-secondary: 240 100% 94%;
@@ -583,6 +589,7 @@
     --category-nutrition: 43 92% 66%;
     --category-work: 220 7% 62%;
     --category-leisure: 344 76% 67%;
+    --category-intellect: 265 68% 70%; /* purple Flat Remix */
 
     --on-primary: 224 14% 25%;
     --on-secondary: 210 22% 86%;
@@ -657,6 +664,7 @@
     --category-nutrition: 40 56% 68%;
     --category-work: 111 5% 49%;
     --category-leisure: 359 68% 70%;
+    --category-intellect: 265 30% 64%; /* purple Everforest Dark */
 
     --on-primary: 205 14% 20%;
     --on-secondary: 41 32% 75%;
@@ -731,6 +739,7 @@
     --category-nutrition: 35 78% 42%;
     --category-work: 228 10% 46%;
     --category-leisure: 347 87% 44%;
+    --category-intellect: 266 85% 58%; /* mauve Catppuccin Latte */
 
     --on-primary: 220 23% 95%;
     --on-secondary: 234 16% 36%;
@@ -805,6 +814,7 @@
     --category-nutrition: 35 90% 40%;
     --category-work: 271 9% 45%;
     --category-leisure: 343 35% 48%;
+    --category-intellect: 267 42% 54%; /* iris Rose Pinê Dawn */
 
     --on-primary: 35 61% 95%;
     --on-secondary: 245 20% 40%;
@@ -879,6 +889,7 @@
     --category-nutrition: 43 100% 38%;
     --category-work: 102 7% 44%;
     --category-leisure: 1 72% 48%;
+    --category-intellect: 265 28% 52%; /* purple Everforest Light */
 
     --on-primary: 48 39% 92%;
     --on-secondary: 202 11% 40%;
@@ -953,6 +964,7 @@
     --category-nutrition: 40 74% 38%;
     --category-work: 30 12% 42%;
     --category-leisure: 2 75% 46%;
+    --category-intellect: 271 16% 46%; /* purple Gruvbox Light */
 
     --on-primary: 8 5% 22%;
     --on-secondary: 8 5% 22%;
@@ -1027,6 +1039,7 @@
     --category-nutrition: 45 100% 32%;
     --category-work: 194 13% 38%;
     --category-leisure: 1 70% 46%;
+    --category-intellect: 237 44% 53%; /* violet Solarized Light */
 
     --on-primary: 44 87% 94%;
     --on-secondary: 194 13% 40%;
@@ -1101,6 +1114,7 @@
     --category-nutrition: 40 55% 38%;
     --category-work: 220 16% 38%;
     --category-leisure: 354 40% 46%;
+    --category-intellect: 265 34% 57%; /* purple Nord Light */
 
     --on-primary: 218 27% 94%;
     --on-secondary: 220 17% 22%;
