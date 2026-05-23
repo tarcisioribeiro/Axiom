@@ -355,7 +355,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                 {t('pages.creditCardExpenses.form.installmentsSummary', {
                   total: formatCurrency(watchedTotalValue),
                   count: watchedTotalInstallments,
-                  each: formatCurrency(installmentValue),
+                  installmentValue: formatCurrency(installmentValue),
                 })}
               </p>
             ) : (
