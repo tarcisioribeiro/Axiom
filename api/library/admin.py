@@ -4,10 +4,15 @@ from library.models import (
     Author,
     Book,
     BookHighlight,
+    Course,
+    CourseLesson,
+    CourseModule,
+    CourseSession,
     LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
+    Skill,
     Summary,
 )
 
@@ -80,3 +85,38 @@ class BookHighlightAdmin(admin.ModelAdmin):
     ]
     search_fields = ["text", "book__title"]
     list_filter = ["highlight_type", "color"]
+
+
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ["title", "platform", "category", "status", "owner", "created_at"]
+    search_fields = ["title"]
+    list_filter = ["platform", "category", "status"]
+
+
+@admin.register(CourseModule)
+class CourseModuleAdmin(admin.ModelAdmin):
+    list_display = ["title", "course", "order", "owner", "created_at"]
+    search_fields = ["title", "course__title"]
+    list_filter = ["course"]
+
+
+@admin.register(CourseLesson)
+class CourseLessonAdmin(admin.ModelAdmin):
+    list_display = ["title", "module", "order", "is_completed", "owner", "created_at"]
+    search_fields = ["title", "module__title"]
+    list_filter = ["is_completed"]
+
+
+@admin.register(CourseSession)
+class CourseSessionAdmin(admin.ModelAdmin):
+    list_display = ["course", "session_date", "duration_minutes", "owner", "created_at"]
+    search_fields = ["course__title"]
+    list_filter = ["session_date"]
+
+
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ["name", "category", "proficiency", "status", "owner", "created_at"]
+    search_fields = ["name"]
+    list_filter = ["category", "proficiency", "status"]

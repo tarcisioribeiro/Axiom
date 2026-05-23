@@ -28,7 +28,8 @@
       "seeLess": "Ver menos",
       "update": "Atualizar",
       "select": "Selecione",
-      "none": "Nenhum"
+      "none": "Nenhum",
+      "total": "Total"
     },
     "messages": {
       "loadError": "Erro ao carregar dados",
@@ -176,11 +177,13 @@
       "planning": "Planejamento Pessoal",
       "finance": "Controle Financeiro",
       "security": "Segurança",
-      "library": "Leitura"
+      "library": "Intelecto"
     },
     "submodules": {
       "registrations": "Cadastros",
-      "records": "Registros"
+      "records": "Registros",
+      "books": "Livros",
+      "intellect": "Intelecto"
     },
     "items": {
       "accounts": "Contas",
@@ -226,7 +229,9 @@
       "workoutPlans": "Planos de Treino",
       "mealTypes": "Plano Alimentar",
       "foods": "Alimentos",
-      "mealLog": "Diário Alimentar"
+      "mealLog": "Diário Alimentar",
+      "courses": "Cursos",
+      "skills": "Habilidades"
     },
     "agents": "Agentes IA"
   },
@@ -282,7 +287,7 @@
     "storedCards": "Cartões Armazenados",
     "storedAccounts": "Contas Armazenadas",
     "archives": "Arquivos",
-    "libraryDashboard": "Leitura",
+    "libraryDashboard": "Intelecto",
     "books": "Livros",
     "authors": "Autores",
     "publishers": "Editoras",
@@ -295,11 +300,13 @@
     "planning": "Planejamento Pessoal",
     "finance": "Controle Financeiro",
     "security": "Segurança",
-    "library": "Leitura",
+    "library": "Intelecto",
     "bankReconciliation": "Conciliação Bancária",
     "memberFinancialReport": "Relatório Financeiro",
     "workout": "Treino",
-    "nutrition": "Dieta"
+    "nutrition": "Dieta",
+    "courses": "Cursos",
+    "skills": "Habilidades"
   },
   "auth": {
     "login": {
@@ -431,13 +438,13 @@
         ]
       },
       "library": {
-        "title": "Leitura",
+        "title": "Intelecto",
         "features": [
           "Catálogo de Livros",
           "Autores e Editoras",
           "Resumos e Anotações",
-          "Progresso de Leitura",
-          "Metas de Leitura"
+          "Cursos Online",
+          "Mapa de Habilidades"
         ]
       },
       "quickActionsTitle": "Ações Rápidas",
@@ -2398,7 +2405,7 @@
       "desc": "Crie senhas criptograficamente seguras com opções configuráveis. As senhas são geradas no servidor usando algoritmos seguros."
     },
     "libraryDashboard": {
-      "title": "Dashboard de Leitura",
+      "title": "Dashboard Intelecto",
       "overview": "Visão Geral",
       "books": "Livros",
       "authors": "Autores",
@@ -2540,7 +2547,24 @@
       "booksReadCount_one": "{{count}} livro lido",
       "booksReadCount_other": "{{count}} livros lidos",
       "pagesReadCount_one": "{{count}} página",
-      "pagesReadCount_other": "{{count}} páginas"
+      "pagesReadCount_other": "{{count}} páginas",
+      "coursesTitle": "Cursos",
+      "totalCourses": "Total de Cursos",
+      "coursesInProgress": "Em Andamento",
+      "coursesCompleted": "Concluídos",
+      "coursesInvestedHours": "Horas Investidas",
+      "noCourses": "Nenhum curso cadastrado",
+      "skillsTitle": "Habilidades",
+      "totalSkills": "Total de Habilidades",
+      "skillsMastered": "Dominadas",
+      "skillsEvolving": "Evoluindo",
+      "skillsLearning": "Aprendendo",
+      "noSkills": "Nenhuma habilidade cadastrada",
+      "contentDistribution": "Distribuição de Conteúdo",
+      "contentDistributionDesc": "Livros lidos vs. Cursos concluídos",
+      "booksReadLabel": "Livros Lidos",
+      "coursesCompletedLabel": "Cursos Concluídos",
+      "noContentDistribution": "Leia livros ou conclua cursos para ver a distribuição"
     },
     "books": {
       "title": "Lista de Leitura",
@@ -2983,6 +3007,182 @@
         "allBooks": "Todos os livros",
         "allTypes": "Todos os tipos",
         "allColors": "Todas as cores"
+      }
+    },
+    "courses": {
+      "title": "Cursos",
+      "subtitle": "Meus Cursos Online",
+      "newBtn": "Novo Curso",
+      "searchPlaceholder": "Buscar cursos...",
+      "emptyState": "Nenhum curso cadastrado. Clique em \"Novo Curso\" para começar.",
+      "emptySearch": "Nenhum curso encontrado para a pesquisa atual.",
+      "newTitle": "Novo Curso",
+      "editTitle": "Editar Curso",
+      "newDesc": "Adicione um novo curso online à sua biblioteca de aprendizado.",
+      "editDesc": "Atualize as informações do curso.",
+      "deleted": "Curso excluído",
+      "updated": "Curso atualizado",
+      "saved": "Curso salvo",
+      "deleteConfirm": "Deseja excluir o curso \"{{title}}\"? Esta ação não pode ser desfeita.",
+      "tabs": {
+        "overview": "Visão Geral",
+        "modules": "Módulos",
+        "sessions": "Sessões"
+      },
+      "stats": {
+        "progress": "Progresso",
+        "lessons": "Aulas",
+        "investedHours": "Horas Investidas",
+        "estimatedHours": "Horas Estimadas"
+      },
+      "filters": {
+        "all": "Todos",
+        "not_started": "Não Iniciado",
+        "in_progress": "Em Andamento",
+        "completed": "Concluído",
+        "paused": "Pausado"
+      },
+      "status": {
+        "not_started": "Não Iniciado",
+        "in_progress": "Em Andamento",
+        "completed": "Concluído",
+        "paused": "Pausado"
+      },
+      "platform": {
+        "udemy": "Udemy",
+        "coursera": "Coursera",
+        "youtube": "YouTube",
+        "linkedin": "LinkedIn Learning",
+        "alura": "Alura",
+        "pluralsight": "Pluralsight",
+        "other": "Outra"
+      },
+      "category": {
+        "technology": "Tecnologia",
+        "languages": "Idiomas",
+        "design": "Design",
+        "business": "Negócios",
+        "science": "Ciências",
+        "arts": "Artes",
+        "other": "Outro"
+      },
+      "form": {
+        "sectionInfo": "Informações do Curso",
+        "sectionDetails": "Detalhes & Progresso",
+        "titleLabel": "Título",
+        "titlePlaceholder": "Nome do curso",
+        "platformLabel": "Plataforma",
+        "categoryLabel": "Categoria",
+        "descriptionLabel": "Descrição",
+        "descriptionPlaceholder": "Sobre o curso...",
+        "urlLabel": "URL do Curso",
+        "urlPlaceholder": "https://...",
+        "estimatedHoursLabel": "Carga Horária Estimada (h)",
+        "statusLabel": "Status",
+        "startDateLabel": "Data de Início",
+        "endDateLabel": "Data de Conclusão"
+      },
+      "modules": {
+        "title": "Módulos",
+        "newBtn": "Novo Módulo",
+        "emptyState": "Nenhum módulo cadastrado.",
+        "newTitle": "Novo Módulo",
+        "editTitle": "Editar Módulo",
+        "saved": "Módulo salvo",
+        "updated": "Módulo atualizado",
+        "deleted": "Módulo excluído",
+        "titleLabel": "Título do Módulo",
+        "titlePlaceholder": "Nome do módulo",
+        "orderLabel": "Ordem",
+        "lessonsCount": "{{count}} aula",
+        "lessonsCount_other": "{{count}} aulas",
+        "completedCount": "{{completed}}/{{total}} concluídas"
+      },
+      "lessons": {
+        "title": "Aulas",
+        "newBtn": "Nova Aula",
+        "emptyState": "Nenhuma aula cadastrada.",
+        "newTitle": "Nova Aula",
+        "editTitle": "Editar Aula",
+        "saved": "Aula salva",
+        "updated": "Aula atualizada",
+        "deleted": "Aula excluída",
+        "titleLabel": "Título da Aula",
+        "titlePlaceholder": "Nome da aula",
+        "orderLabel": "Ordem",
+        "completed": "Concluída",
+        "pending": "Pendente",
+        "toggleError": "Erro ao atualizar aula"
+      },
+      "sessions": {
+        "title": "Sessões de Estudo",
+        "newBtn": "Registrar Sessão",
+        "emptyState": "Nenhuma sessão registrada.",
+        "newTitle": "Nova Sessão de Estudo",
+        "editTitle": "Editar Sessão",
+        "saved": "Sessão registrada",
+        "updated": "Sessão atualizada",
+        "deleted": "Sessão excluída",
+        "dateLabel": "Data",
+        "durationLabel": "Duração (minutos)",
+        "durationPlaceholder": "Ex: 90",
+        "notesLabel": "Notas",
+        "notesPlaceholder": "O que estudou nessa sessão?",
+        "totalHours": "Total: {{hours}}h"
+      }
+    },
+    "skills": {
+      "title": "Habilidades",
+      "subtitle": "Mapa de Habilidades",
+      "newBtn": "Nova Habilidade",
+      "searchPlaceholder": "Buscar habilidades...",
+      "emptyState": "Nenhuma habilidade cadastrada. Clique em \"Nova Habilidade\" para começar.",
+      "emptySearch": "Nenhuma habilidade encontrada para a pesquisa atual.",
+      "newTitle": "Nova Habilidade",
+      "editTitle": "Editar Habilidade",
+      "newDesc": "Adicione uma habilidade ao seu mapa de desenvolvimento.",
+      "editDesc": "Atualize o progresso da sua habilidade.",
+      "deleted": "Habilidade excluída",
+      "updated": "Habilidade atualizada",
+      "saved": "Habilidade salva",
+      "deleteConfirm": "Deseja excluir a habilidade \"{{name}}\"? Esta ação não pode ser desfeita.",
+      "viewList": "Lista",
+      "viewRadar": "Radar",
+      "proficiency": {
+        "beginner": "Iniciante",
+        "basic": "Básico",
+        "intermediate": "Intermediário",
+        "advanced": "Avançado",
+        "expert": "Especialista"
+      },
+      "status": {
+        "learning": "Aprendendo",
+        "evolving": "Evoluindo",
+        "mastered": "Dominado"
+      },
+      "category": {
+        "technology": "Tecnologia",
+        "languages": "Idiomas",
+        "design": "Design",
+        "business": "Negócios",
+        "science": "Ciências",
+        "arts": "Artes",
+        "other": "Outro"
+      },
+      "form": {
+        "sectionInfo": "Identificação",
+        "sectionProgress": "Progresso & Status",
+        "nameLabel": "Nome da Habilidade",
+        "namePlaceholder": "Ex: Python, Inglês, Figma...",
+        "categoryLabel": "Categoria",
+        "proficiencyLabel": "Nível de Proficiência",
+        "statusLabel": "Status",
+        "notesLabel": "Notas",
+        "notesPlaceholder": "Observações sobre esta habilidade..."
+      },
+      "radarChart": {
+        "title": "Radar de Habilidades",
+        "emptyState": "Adicione habilidades para visualizar o radar"
       }
     },
     "planningDashboard": {

@@ -115,6 +115,51 @@ HIGHLIGHT_COLOR_CHOICES = (
     ("orange", "Laranja"),
 )
 
+# ============================================================================
+# COURSE / SKILL CHOICE CONSTANTS
+# ============================================================================
+
+COURSE_STATUS_CHOICES = (
+    ("not_started", "Não iniciado"),
+    ("in_progress", "Em andamento"),
+    ("completed", "Concluído"),
+    ("paused", "Pausado"),
+)
+
+COURSE_PLATFORM_CHOICES = (
+    ("udemy", "Udemy"),
+    ("coursera", "Coursera"),
+    ("youtube", "YouTube"),
+    ("linkedin", "LinkedIn Learning"),
+    ("alura", "Alura"),
+    ("pluralsight", "Pluralsight"),
+    ("other", "Outro"),
+)
+
+INTELLECT_CATEGORY_CHOICES = (
+    ("technology", "Tecnologia"),
+    ("languages", "Idiomas"),
+    ("design", "Design"),
+    ("business", "Negócios"),
+    ("science", "Ciências"),
+    ("arts", "Artes"),
+    ("other", "Outro"),
+)
+
+SKILL_PROFICIENCY_CHOICES = (
+    ("beginner", "Iniciante"),
+    ("basic", "Básico"),
+    ("intermediate", "Intermediário"),
+    ("advanced", "Avançado"),
+    ("expert", "Especialista"),
+)
+
+SKILL_STATUS_CHOICES = (
+    ("learning", "Aprendendo"),
+    ("evolving", "Evoluindo"),
+    ("mastered", "Dominando"),
+)
+
 
 # ============================================================================
 # AUTHOR MODEL
@@ -660,3 +705,243 @@ class BookHighlight(BaseModel):
     def __str__(self):
         page = f" (p. {self.page_number})" if self.page_number else ""
         return f"{self.get_highlight_type_display()} de '{self.book}'{page}"
+
+
+# ============================================================================
+# COURSE MODEL
+# ============================================================================
+
+
+class Course(BaseModel):
+    """Modelo para cursos online."""
+
+    title = models.CharField(max_length=200, verbose_name="Título")
+    platform = models.CharField(
+        max_length=20,
+        choices=COURSE_PLATFORM_CHOICES,
+        default="other",
+        verbose_name="Plataforma",
+    )
+    category = models.CharField(
+        max_length=20,
+        choices=INTELLECT_CATEGORY_CHOICES,
+        default="technology",
+        verbose_name="Categoria",
+    )
+    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    url = models.URLField(null=True, blank=True, verbose_name="Link")
+    estimated_hours = models.DecimalField(
+        max_digits=6,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="Carga horária estimada (h)",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=COURSE_STATUS_CHOICES,
+        default="not_started",
+        verbose_name="Status",
+    )
+    start_date = models.DateField(null=True, blank=True, verbose_name="Data de início")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Data de conclusão")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="courses",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Curso"
+        verbose_name_plural = "Cursos"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def total_lessons(self):
+        return CourseLesson.objects.filter(
+            module__course=self, deleted_at__isnull=True
+        ).count()
+
+    @property
+    def completed_lessons(self):
+        return CourseLesson.objects.filter(
+            module__course=self, is_completed=True, deleted_at__isnull=True
+        ).count()
+
+    @property
+    def progress_percentage(self):
+        total = self.total_lessons
+        if total == 0:
+            return 0.0
+        return round((self.completed_lessons / total) * 100, 1)
+
+    @property
+    def invested_hours(self):
+        result = CourseSession.objects.filter(
+            course=self, deleted_at__isnull=True
+        ).aggregate(total=Sum("duration_minutes"))
+        minutes = result["total"] or 0
+        return round(minutes / 60, 1)
+
+
+# ============================================================================
+# COURSE MODULE MODEL
+# ============================================================================
+
+
+class CourseModule(BaseModel):
+    """Módulo (seção) de um curso."""
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="modules",
+        verbose_name="Curso",
+    )
+    title = models.CharField(max_length=200, verbose_name="Título")
+    order = models.PositiveIntegerField(default=1, verbose_name="Ordem")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="course_modules",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Módulo"
+        verbose_name_plural = "Módulos"
+        ordering = ["order", "created_at"]
+
+    def __str__(self):
+        return f"{self.course.title} — {self.title}"
+
+
+# ============================================================================
+# COURSE LESSON MODEL
+# ============================================================================
+
+
+class CourseLesson(BaseModel):
+    """Aula de um módulo de curso."""
+
+    module = models.ForeignKey(
+        CourseModule,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+        verbose_name="Módulo",
+    )
+    title = models.CharField(max_length=200, verbose_name="Título")
+    order = models.PositiveIntegerField(default=1, verbose_name="Ordem")
+    is_completed = models.BooleanField(default=False, verbose_name="Concluída")
+    completed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Concluída em"
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="course_lessons",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Aula"
+        verbose_name_plural = "Aulas"
+        ordering = ["order", "created_at"]
+
+    def __str__(self):
+        return f"{self.module.title} — {self.title}"
+
+    def toggle_completed(self):
+        self.is_completed = not self.is_completed
+        self.completed_at = timezone.now() if self.is_completed else None
+        self.save(update_fields=["is_completed", "completed_at", "updated_at"])
+
+
+# ============================================================================
+# COURSE SESSION MODEL
+# ============================================================================
+
+
+class CourseSession(BaseModel):
+    """Sessão de estudo de um curso."""
+
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="sessions",
+        verbose_name="Curso",
+    )
+    session_date = models.DateField(default=timezone.now, verbose_name="Data da Sessão")
+    duration_minutes = models.PositiveIntegerField(
+        verbose_name="Duração (minutos)", default=60
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Anotações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="course_sessions",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Sessão de Estudo"
+        verbose_name_plural = "Sessões de Estudo"
+        ordering = ["-session_date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.course.title} — {self.session_date} ({self.duration_minutes}min)"
+
+
+# ============================================================================
+# SKILL MODEL
+# ============================================================================
+
+
+class Skill(BaseModel):
+    """Habilidade mapeada pelo usuário."""
+
+    name = models.CharField(max_length=200, verbose_name="Nome")
+    category = models.CharField(
+        max_length=20,
+        choices=INTELLECT_CATEGORY_CHOICES,
+        default="technology",
+        verbose_name="Categoria",
+    )
+    proficiency = models.CharField(
+        max_length=20,
+        choices=SKILL_PROFICIENCY_CHOICES,
+        default="beginner",
+        verbose_name="Proficiência",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=SKILL_STATUS_CHOICES,
+        default="learning",
+        verbose_name="Status",
+    )
+    notes = models.TextField(null=True, blank=True, verbose_name="Observações")
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="skills",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Habilidade"
+        verbose_name_plural = "Habilidades"
+        ordering = ["category", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "owner"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_skill_name_owner_active",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_proficiency_display()})"
