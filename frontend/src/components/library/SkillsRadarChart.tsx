@@ -9,7 +9,6 @@ import {
   Tooltip,
 } from 'recharts';
 
-import { EmptyState } from '@/components/common/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { IntellectCategory, Skill } from '@/types';
 

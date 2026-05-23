@@ -64,7 +64,9 @@ describe('SkillsRadarChart', () => {
     ];
     render(<SkillsRadarChart skills={skills} />);
     expect(screen.getByTestId('radar-chart')).toBeInTheDocument();
-    expect(screen.queryByText('pages.skills.radarChart.emptyState')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('pages.skills.radarChart.emptyState')
+    ).not.toBeInTheDocument();
   });
 
   it('renders chart title', () => {

@@ -5,7 +5,6 @@ import {
   Check,
   CheckCircle2,
   Circle,
-  Clock,
   Edit,
   GraduationCap,
   Layers,
@@ -28,7 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
@@ -47,7 +45,6 @@ import {
 } from '@/services/courses-service';
 import type {
   Course,
-  CourseLesson,
   CourseLessonFormData,
   CourseModule,
   CourseModuleFormData,
@@ -87,8 +84,7 @@ function ModuleItem({
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { confirm } = useAlertDialog();
-  const queryClient = useQueryClient();
+  const { showConfirm } = useAlertDialog();
   const [editingTitle, setEditingTitle] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [showAddLesson, setShowAddLesson] = useState(false);
@@ -136,7 +132,7 @@ function ModuleItem({
       void refetchLessons();
       onUpdated();
     },
-    onError: (err) =>
+    onError: () =>
       toast({ title: t('pages.courses.lessons.toggleError'), variant: 'destructive' }),
   });
 
@@ -162,7 +158,6 @@ function ModuleItem({
                 value={editingTitle}
                 onChange={(e) => setEditingTitle(e.target.value)}
                 className="h-7 text-sm"
-                autoFocus
               />
               <Button
                 size="sm"
@@ -198,10 +193,11 @@ function ModuleItem({
             variant="ghost"
             className="h-6 w-6 text-destructive hover:text-destructive"
             onClick={() => {
-              void confirm({
-                title: t('common.confirmDelete'),
+              void showConfirm({
+                title: t('common.messages.confirmDeleteTitle'),
                 description: mod.title,
-                onConfirm: () => deleteMod.mutate(),
+              }).then((ok) => {
+                if (ok) deleteMod.mutate();
               });
             }}
           >
@@ -248,10 +244,11 @@ function ModuleItem({
               variant="ghost"
               className="h-5 w-5 shrink-0 text-muted-foreground hover:text-destructive"
               onClick={() => {
-                void confirm({
-                  title: t('common.confirmDelete'),
+                void showConfirm({
+                  title: t('common.messages.confirmDeleteTitle'),
                   description: lesson.title,
-                  onConfirm: () => deleteLesson.mutate(lesson.id),
+                }).then((ok) => {
+                  if (ok) deleteLesson.mutate(lesson.id);
                 });
               }}
             >
@@ -267,7 +264,6 @@ function ModuleItem({
               onChange={(e) => setNewLessonTitle(e.target.value)}
               placeholder={t('pages.courses.lessons.titlePlaceholder')}
               className="h-7 text-sm"
-              autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && newLessonTitle.trim()) {
                   addLesson.mutate({
@@ -327,7 +323,7 @@ function SessionItem({
 }) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { confirm } = useAlertDialog();
+  const { showConfirm } = useAlertDialog();
 
   const deleteSession = useMutation({
     mutationFn: () => courseSessionsService.delete(session.id),
@@ -360,10 +356,11 @@ function SessionItem({
           variant="ghost"
           className="h-6 w-6 text-muted-foreground hover:text-destructive"
           onClick={() => {
-            void confirm({
-              title: t('common.confirmDelete'),
+            void showConfirm({
+              title: t('common.messages.confirmDeleteTitle'),
               description: formatDate(session.session_date),
-              onConfirm: () => deleteSession.mutate(),
+            }).then((ok) => {
+              if (ok) deleteSession.mutate();
             });
           }}
         >
@@ -466,7 +463,7 @@ function AddSessionForm({
       </div>
       <div className="flex justify-end gap-sm">
         <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          {t('common.cancel')}
+          {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
@@ -477,7 +474,7 @@ function AddSessionForm({
           {create.isPending ? (
             <Loader2 className="mr-xs h-3.5 w-3.5 animate-spin" />
           ) : null}
-          {t('common.save')}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>
@@ -627,7 +624,7 @@ export function CourseDetailModal({
               onClick={() => onEdit(displayCourse)}
             >
               <Edit className="h-3.5 w-3.5" />
-              {t('common.edit')}
+              {t('common.actions.edit')}
             </Button>
             <Button
               size="sm"
@@ -636,7 +633,7 @@ export function CourseDetailModal({
               onClick={() => onDelete(displayCourse)}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              {t('common.delete')}
+              {t('common.actions.delete')}
             </Button>
           </div>
         </div>
@@ -709,7 +706,6 @@ export function CourseDetailModal({
                   onChange={(e) => setNewModuleTitle(e.target.value)}
                   placeholder={t('pages.courses.modules.titlePlaceholder')}
                   className="text-sm"
-                  autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newModuleTitle.trim()) {
                       addModule.mutate({
