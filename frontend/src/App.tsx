@@ -51,12 +51,14 @@ const Archives = lazy(() => import('./pages/Archives'));
 const VaultHealthReport = lazy(() => import('./pages/VaultHealthReport'));
 const TwoFactorSetup = lazy(() => import('./pages/TwoFactorSetup'));
 
-// Library Module
+// Library / Intellect Module
 const LibraryDashboard = lazy(() => import('./pages/LibraryDashboard'));
 const Books = lazy(() => import('./pages/Books'));
 const Authors = lazy(() => import('./pages/Authors'));
 const Publishers = lazy(() => import('./pages/Publishers'));
 const BookReader = lazy(() => import('./pages/BookReader'));
+const Courses = lazy(() => import('./pages/Courses'));
+const Skills = lazy(() => import('./pages/Skills'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -434,6 +436,22 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <ReadingQueue />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/courses"
+            element={
+              <PageWrapper>
+                <Courses />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/skills"
+            element={
+              <PageWrapper>
+                <Skills />
               </PageWrapper>
             }
           />

@@ -21,10 +21,15 @@ from library.models import (
     Author,
     Book,
     BookHighlight,
+    Course,
+    CourseLesson,
+    CourseModule,
+    CourseSession,
     LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
+    Skill,
     Summary,
 )
 from library.serializers import (
@@ -35,6 +40,14 @@ from library.serializers import (
     BookHighlightSerializer,
     BookReorderItemSerializer,
     BookSerializer,
+    CourseCreateUpdateSerializer,
+    CourseLessonCreateUpdateSerializer,
+    CourseLessonSerializer,
+    CourseModuleCreateUpdateSerializer,
+    CourseModuleSerializer,
+    CourseSerializer,
+    CourseSessionCreateUpdateSerializer,
+    CourseSessionSerializer,
     LiteraryTypeGoalCreateUpdateSerializer,
     LiteraryTypeGoalSerializer,
     MarkAsReadSerializer,
@@ -44,6 +57,8 @@ from library.serializers import (
     ReadingGoalCreateUpdateSerializer,
     ReadingGoalSerializer,
     ReadingSerializer,
+    SkillCreateUpdateSerializer,
+    SkillSerializer,
     SummaryCreateUpdateSerializer,
     SummarySerializer,
 )
@@ -1882,3 +1897,274 @@ class BookHighlightExportView(APIView):
         response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+
+# ============================================================================
+# COURSE VIEWS
+# ============================================================================
+
+
+class CourseListCreateView(BaseListCreateView):
+    """Lista todos os cursos ou cria um novo."""
+
+    queryset = Course.objects.all()
+
+    def get_queryset(self):
+        qs = Course.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+        params = self.request.query_params
+        if status_filter := params.get("status"):
+            qs = qs.filter(status=status_filter)
+        if category := params.get("category"):
+            qs = qs.filter(category=category)
+        if platform := params.get("platform"):
+            qs = qs.filter(platform=platform)
+        if search := params.get("search"):
+            qs = qs.filter(
+                Q(title__icontains=search) | Q(description__icontains=search)
+            )
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CourseCreateUpdateSerializer
+        return CourseSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class CourseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um curso."""
+
+    queryset = Course.objects.all()
+
+    def get_queryset(self):
+        return Course.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseCreateUpdateSerializer
+        return CourseSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+# ============================================================================
+# COURSE MODULE VIEWS
+# ============================================================================
+
+
+class CourseModuleListCreateView(BaseListCreateView):
+    """Lista módulos de um curso ou cria um novo."""
+
+    queryset = CourseModule.objects.all()
+
+    def get_queryset(self):
+        qs = CourseModule.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "course")
+        if course_id := self.request.query_params.get("course"):
+            qs = qs.filter(course_id=course_id)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CourseModuleCreateUpdateSerializer
+        return CourseModuleSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class CourseModuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um módulo."""
+
+    queryset = CourseModule.objects.all()
+
+    def get_queryset(self):
+        return CourseModule.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "course")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseModuleCreateUpdateSerializer
+        return CourseModuleSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+# ============================================================================
+# COURSE LESSON VIEWS
+# ============================================================================
+
+
+class CourseLessonListCreateView(BaseListCreateView):
+    """Lista aulas de um módulo ou cria uma nova."""
+
+    queryset = CourseLesson.objects.all()
+
+    def get_queryset(self):
+        qs = CourseLesson.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "module", "module__course")
+        if module_id := self.request.query_params.get("module"):
+            qs = qs.filter(module_id=module_id)
+        if course_id := self.request.query_params.get("course"):
+            qs = qs.filter(module__course_id=course_id)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CourseLessonCreateUpdateSerializer
+        return CourseLessonSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class CourseLessonRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta uma aula."""
+
+    queryset = CourseLesson.objects.all()
+
+    def get_queryset(self):
+        return CourseLesson.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "module")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseLessonCreateUpdateSerializer
+        return CourseLessonSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+class CourseLessonToggleView(APIView):
+    """Alterna o estado de conclusão de uma aula."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = CourseLesson.objects.all()
+
+    def patch(self, request, pk):
+        try:
+            lesson = CourseLesson.objects.get(
+                pk=pk,
+                owner__user=request.user,
+                deleted_at__isnull=True,
+            )
+        except CourseLesson.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        lesson.toggle_completed()
+        return Response(CourseLessonSerializer(lesson).data)
+
+
+# ============================================================================
+# COURSE SESSION VIEWS
+# ============================================================================
+
+
+class CourseSessionListCreateView(BaseListCreateView):
+    """Lista sessões de estudo de um curso ou cria uma nova."""
+
+    queryset = CourseSession.objects.all()
+
+    def get_queryset(self):
+        qs = CourseSession.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "course")
+        if course_id := self.request.query_params.get("course"):
+            qs = qs.filter(course_id=course_id)
+        if date_from := self.request.query_params.get("date_from"):
+            qs = qs.filter(session_date__gte=date_from)
+        if date_to := self.request.query_params.get("date_to"):
+            qs = qs.filter(session_date__lte=date_to)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return CourseSessionCreateUpdateSerializer
+        return CourseSessionSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class CourseSessionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta uma sessão de estudo."""
+
+    queryset = CourseSession.objects.all()
+
+    def get_queryset(self):
+        return CourseSession.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner", "course")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return CourseSessionCreateUpdateSerializer
+        return CourseSessionSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+# ============================================================================
+# SKILL VIEWS
+# ============================================================================
+
+
+class SkillListCreateView(BaseListCreateView):
+    """Lista todas as habilidades ou cria uma nova."""
+
+    queryset = Skill.objects.all()
+
+    def get_queryset(self):
+        qs = Skill.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+        params = self.request.query_params
+        if category := params.get("category"):
+            qs = qs.filter(category=category)
+        if proficiency := params.get("proficiency"):
+            qs = qs.filter(proficiency=proficiency)
+        if skill_status := params.get("status"):
+            qs = qs.filter(status=skill_status)
+        if search := params.get("search"):
+            qs = qs.filter(Q(name__icontains=search) | Q(notes__icontains=search))
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return SkillCreateUpdateSerializer
+        return SkillSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class SkillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta uma habilidade."""
+
+    queryset = Skill.objects.all()
+
+    def get_queryset(self):
+        return Skill.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return SkillCreateUpdateSerializer
+        return SkillSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)

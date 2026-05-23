@@ -176,11 +176,13 @@
       "planning": "Personal Planning",
       "finance": "Financial Control",
       "security": "Security",
-      "library": "Reading"
+      "library": "Intellect"
     },
     "submodules": {
       "registrations": "Registrations",
-      "records": "Records"
+      "records": "Records",
+      "books": "Books",
+      "intellect": "Intellect"
     },
     "items": {
       "accounts": "Accounts",
@@ -226,7 +228,9 @@
       "workoutPlans": "Workout Plans",
       "mealTypes": "Meal Plan",
       "foods": "Foods",
-      "mealLog": "Meal Diary"
+      "mealLog": "Meal Diary",
+      "courses": "Courses",
+      "skills": "Skills"
     },
     "agents": "AI Agents"
   },
@@ -282,7 +286,7 @@
     "storedCards": "Stored Cards",
     "storedAccounts": "Stored Accounts",
     "archives": "Archives",
-    "libraryDashboard": "Reading",
+    "libraryDashboard": "Intellect",
     "books": "Books",
     "authors": "Authors",
     "publishers": "Publishers",
@@ -295,11 +299,13 @@
     "planning": "Personal Planning",
     "finance": "Financial Control",
     "security": "Security",
-    "library": "Reading",
+    "library": "Intellect",
     "bankReconciliation": "Bank Reconciliation",
     "memberFinancialReport": "Financial Report",
     "workout": "Workout",
-    "nutrition": "Diet"
+    "nutrition": "Diet",
+    "courses": "Courses",
+    "skills": "Skills"
   },
   "auth": {
     "login": {
@@ -431,13 +437,13 @@
         ]
       },
       "library": {
-        "title": "Reading",
+        "title": "Intellect",
         "features": [
           "Book Catalog",
           "Authors & Publishers",
           "Summaries & Notes",
-          "Reading Progress",
-          "Reading Goals"
+          "Online Courses",
+          "Skills Map"
         ]
       },
       "quickActionsTitle": "Quick Actions",
@@ -2328,7 +2334,7 @@
       "desc": "Create cryptographically secure passwords with configurable options. Passwords are generated on the server using secure algorithms."
     },
     "libraryDashboard": {
-      "title": "Reading Dashboard",
+      "title": "Intellect Dashboard",
       "overview": "Overview",
       "books": "Books",
       "authors": "Authors",
@@ -2913,6 +2919,182 @@
         "allBooks": "All books",
         "allTypes": "All types",
         "allColors": "All colors"
+      }
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "My Online Courses",
+      "newBtn": "New Course",
+      "searchPlaceholder": "Search courses...",
+      "emptyState": "No courses registered. Click \"New Course\" to get started.",
+      "emptySearch": "No courses found for the current search.",
+      "newTitle": "New Course",
+      "editTitle": "Edit Course",
+      "newDesc": "Add a new online course to your learning library.",
+      "editDesc": "Update course information.",
+      "deleted": "Course deleted",
+      "updated": "Course updated",
+      "saved": "Course saved",
+      "deleteConfirm": "Delete course \"{{title}}\"? This action cannot be undone.",
+      "tabs": {
+        "overview": "Overview",
+        "modules": "Modules",
+        "sessions": "Sessions"
+      },
+      "stats": {
+        "progress": "Progress",
+        "lessons": "Lessons",
+        "investedHours": "Hours Invested",
+        "estimatedHours": "Estimated Hours"
+      },
+      "filters": {
+        "all": "All",
+        "not_started": "Not Started",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "paused": "Paused"
+      },
+      "status": {
+        "not_started": "Not Started",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "paused": "Paused"
+      },
+      "platform": {
+        "udemy": "Udemy",
+        "coursera": "Coursera",
+        "youtube": "YouTube",
+        "linkedin": "LinkedIn Learning",
+        "alura": "Alura",
+        "pluralsight": "Pluralsight",
+        "other": "Other"
+      },
+      "category": {
+        "technology": "Technology",
+        "languages": "Languages",
+        "design": "Design",
+        "business": "Business",
+        "science": "Science",
+        "arts": "Arts",
+        "other": "Other"
+      },
+      "form": {
+        "sectionInfo": "Course Information",
+        "sectionDetails": "Details & Progress",
+        "titleLabel": "Title",
+        "titlePlaceholder": "Course name",
+        "platformLabel": "Platform",
+        "categoryLabel": "Category",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "About this course...",
+        "urlLabel": "Course URL",
+        "urlPlaceholder": "https://...",
+        "estimatedHoursLabel": "Estimated Duration (h)",
+        "statusLabel": "Status",
+        "startDateLabel": "Start Date",
+        "endDateLabel": "Completion Date"
+      },
+      "modules": {
+        "title": "Modules",
+        "newBtn": "New Module",
+        "emptyState": "No modules registered.",
+        "newTitle": "New Module",
+        "editTitle": "Edit Module",
+        "saved": "Module saved",
+        "updated": "Module updated",
+        "deleted": "Module deleted",
+        "titleLabel": "Module Title",
+        "titlePlaceholder": "Module name",
+        "orderLabel": "Order",
+        "lessonsCount": "{{count}} lesson",
+        "lessonsCount_other": "{{count}} lessons",
+        "completedCount": "{{completed}}/{{total}} completed"
+      },
+      "lessons": {
+        "title": "Lessons",
+        "newBtn": "New Lesson",
+        "emptyState": "No lessons registered.",
+        "newTitle": "New Lesson",
+        "editTitle": "Edit Lesson",
+        "saved": "Lesson saved",
+        "updated": "Lesson updated",
+        "deleted": "Lesson deleted",
+        "titleLabel": "Lesson Title",
+        "titlePlaceholder": "Lesson name",
+        "orderLabel": "Order",
+        "completed": "Completed",
+        "pending": "Pending",
+        "toggleError": "Error updating lesson"
+      },
+      "sessions": {
+        "title": "Study Sessions",
+        "newBtn": "Log Session",
+        "emptyState": "No sessions logged.",
+        "newTitle": "New Study Session",
+        "editTitle": "Edit Session",
+        "saved": "Session logged",
+        "updated": "Session updated",
+        "deleted": "Session deleted",
+        "dateLabel": "Date",
+        "durationLabel": "Duration (minutes)",
+        "durationPlaceholder": "E.g. 90",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "What did you study in this session?",
+        "totalHours": "Total: {{hours}}h"
+      }
+    },
+    "skills": {
+      "title": "Skills",
+      "subtitle": "Skills Map",
+      "newBtn": "New Skill",
+      "searchPlaceholder": "Search skills...",
+      "emptyState": "No skills registered. Click \"New Skill\" to get started.",
+      "emptySearch": "No skills found for the current search.",
+      "newTitle": "New Skill",
+      "editTitle": "Edit Skill",
+      "newDesc": "Add a skill to your development map.",
+      "editDesc": "Update your skill progress.",
+      "deleted": "Skill deleted",
+      "updated": "Skill updated",
+      "saved": "Skill saved",
+      "deleteConfirm": "Delete skill \"{{name}}\"? This action cannot be undone.",
+      "viewList": "List",
+      "viewRadar": "Radar",
+      "proficiency": {
+        "beginner": "Beginner",
+        "basic": "Basic",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced",
+        "expert": "Expert"
+      },
+      "status": {
+        "learning": "Learning",
+        "evolving": "Evolving",
+        "mastered": "Mastered"
+      },
+      "category": {
+        "technology": "Technology",
+        "languages": "Languages",
+        "design": "Design",
+        "business": "Business",
+        "science": "Science",
+        "arts": "Arts",
+        "other": "Other"
+      },
+      "form": {
+        "sectionInfo": "Identification",
+        "sectionProgress": "Progress & Status",
+        "nameLabel": "Skill Name",
+        "namePlaceholder": "E.g. Python, English, Figma...",
+        "categoryLabel": "Category",
+        "proficiencyLabel": "Proficiency Level",
+        "statusLabel": "Status",
+        "notesLabel": "Notes",
+        "notesPlaceholder": "Notes about this skill..."
+      },
+      "radarChart": {
+        "title": "Skills Radar",
+        "emptyState": "Add skills to visualize the radar"
       }
     },
     "planningDashboard": {

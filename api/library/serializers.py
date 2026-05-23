@@ -7,10 +7,15 @@ from library.models import (
     Author,
     Book,
     BookHighlight,
+    Course,
+    CourseLesson,
+    CourseModule,
+    CourseSession,
     LiteraryTypeGoal,
     Publisher,
     Reading,
     ReadingGoal,
+    Skill,
     Summary,
 )
 
@@ -743,3 +748,288 @@ class MarkAsReadSerializer(serializers.Serializer):
                 }
             )
         return data
+
+
+# ============================================================================
+# COURSE SERIALIZERS
+# ============================================================================
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de cursos."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    platform_display = serializers.CharField(
+        source="get_platform_display", read_only=True
+    )
+    category_display = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    total_lessons = serializers.IntegerField(read_only=True)
+    completed_lessons = serializers.IntegerField(read_only=True)
+    progress_percentage = serializers.FloatField(read_only=True)
+    invested_hours = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "uuid",
+            "title",
+            "platform",
+            "platform_display",
+            "category",
+            "category_display",
+            "description",
+            "url",
+            "estimated_hours",
+            "status",
+            "status_display",
+            "start_date",
+            "end_date",
+            "total_lessons",
+            "completed_lessons",
+            "progress_percentage",
+            "invested_hours",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+
+class CourseCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de cursos."""
+
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "title",
+            "platform",
+            "category",
+            "description",
+            "url",
+            "estimated_hours",
+            "status",
+            "start_date",
+            "end_date",
+            "owner",
+        ]
+
+
+# ============================================================================
+# COURSE MODULE SERIALIZERS
+# ============================================================================
+
+
+class CourseLessonSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de aulas."""
+
+    module_title = serializers.CharField(source="module.title", read_only=True)
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+
+    class Meta:
+        model = CourseLesson
+        fields = [
+            "id",
+            "uuid",
+            "module",
+            "module_title",
+            "title",
+            "order",
+            "is_completed",
+            "completed_at",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at", "completed_at"]
+
+
+class CourseLessonCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de aulas."""
+
+    class Meta:
+        model = CourseLesson
+        fields = ["id", "module", "title", "order", "is_completed", "owner"]
+
+
+class CourseModuleSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de módulos com suas aulas."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    lessons = serializers.SerializerMethodField()
+    total_lessons = serializers.SerializerMethodField()
+    completed_lessons = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CourseModule
+        fields = [
+            "id",
+            "uuid",
+            "course",
+            "course_title",
+            "title",
+            "order",
+            "lessons",
+            "total_lessons",
+            "completed_lessons",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_lessons(self, obj):
+        lessons = obj.lessons.filter(deleted_at__isnull=True).order_by("order")
+        return CourseLessonSerializer(lessons, many=True).data
+
+    def get_total_lessons(self, obj):
+        return obj.lessons.filter(deleted_at__isnull=True).count()
+
+    def get_completed_lessons(self, obj):
+        return obj.lessons.filter(is_completed=True, deleted_at__isnull=True).count()
+
+
+class CourseModuleCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de módulos."""
+
+    class Meta:
+        model = CourseModule
+        fields = ["id", "course", "title", "order", "owner"]
+
+
+# ============================================================================
+# COURSE SESSION SERIALIZERS
+# ============================================================================
+
+
+class CourseSessionSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de sessões de estudo."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
+    duration_hours = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CourseSession
+        fields = [
+            "id",
+            "uuid",
+            "course",
+            "course_title",
+            "session_date",
+            "duration_minutes",
+            "duration_hours",
+            "notes",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_duration_hours(self, obj):
+        return round(obj.duration_minutes / 60, 1)
+
+
+class CourseSessionCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de sessões de estudo."""
+
+    class Meta:
+        model = CourseSession
+        fields = [
+            "id",
+            "course",
+            "session_date",
+            "duration_minutes",
+            "notes",
+            "owner",
+        ]
+
+
+# ============================================================================
+# SKILL SERIALIZERS
+# ============================================================================
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de habilidades."""
+
+    owner_name = serializers.CharField(source="owner.name", read_only=True)
+    category_display = serializers.CharField(
+        source="get_category_display", read_only=True
+    )
+    proficiency_display = serializers.CharField(
+        source="get_proficiency_display", read_only=True
+    )
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    proficiency_level = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Skill
+        fields = [
+            "id",
+            "uuid",
+            "name",
+            "category",
+            "category_display",
+            "proficiency",
+            "proficiency_display",
+            "proficiency_level",
+            "status",
+            "status_display",
+            "notes",
+            "owner",
+            "owner_name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uuid", "created_at", "updated_at"]
+
+    def get_proficiency_level(self, obj):
+        levels = {
+            "beginner": 1,
+            "basic": 2,
+            "intermediate": 3,
+            "advanced": 4,
+            "expert": 5,
+        }
+        return levels.get(obj.proficiency, 1)
+
+
+class SkillCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de habilidades."""
+
+    def validate(self, data):
+        owner = data.get("owner") or (self.instance.owner if self.instance else None)
+        name = data.get("name") or (self.instance.name if self.instance else None)
+        if owner and name:
+            qs = Skill.objects.filter(
+                name__iexact=name, owner=owner, deleted_at__isnull=True
+            )
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError(
+                    {"name": "Já existe uma habilidade com esse nome."}
+                )
+        return data
+
+    class Meta:
+        model = Skill
+        fields = [
+            "id",
+            "name",
+            "category",
+            "proficiency",
+            "status",
+            "notes",
+            "owner",
+        ]
