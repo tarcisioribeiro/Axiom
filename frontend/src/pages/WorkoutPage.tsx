@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
   Calendar,
@@ -6,7 +7,10 @@ import {
   Clock,
   Dumbbell,
   Edit,
+  FileText,
   Flame,
+  Layers,
+  Loader2,
   Plus,
   Target,
   Trash2,
@@ -29,8 +33,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
@@ -181,7 +185,7 @@ export default function WorkoutPage() {
   const allDaysList = allDays ?? [];
 
   const activePlan = plans.find((p) => p.is_active) ?? null;
-  const inactivePlans = plans.filter((p) => !p.is_active);
+  const inactivePlans = plans.filter((p) => p !== activePlan);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -1086,6 +1090,21 @@ function ExerciseCatalogCard({
   );
 }
 
+const CATALOG_MUSCLE_CHIPS = [
+  'Peito',
+  'Costas',
+  'Ombros',
+  'Bíceps',
+  'Tríceps',
+  'Abdômen',
+  'Quadríceps',
+  'Posteriores',
+  'Glúteos',
+  'Panturrilha',
+  'Cardio',
+  'Full Body',
+];
+
 function ExerciseCatalogForm({
   exercise,
   onSubmit,
@@ -1103,6 +1122,24 @@ function ExerciseCatalogForm({
     muscle_groups: exercise?.muscle_groups ?? '',
     description: exercise?.description ?? '',
   });
+  const [selectedChips, setSelectedChips] = useState<string[]>(() =>
+    exercise?.muscle_groups
+      ? exercise.muscle_groups
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : []
+  );
+
+  const toggleChip = (label: string) => {
+    setSelectedChips((prev) => {
+      const next = prev.includes(label)
+        ? prev.filter((c) => c !== label)
+        : [...prev, label];
+      setValues((v) => ({ ...v, muscle_groups: next.join(', ') }));
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1111,41 +1148,92 @@ function ExerciseCatalogForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-md">
-      <div className="space-y-sm">
-        <Label htmlFor="cat-ex-name">{t('pages.exercises.fieldName')}</Label>
+    <form onSubmit={handleSubmit} className="space-y-lg">
+      {/* Header */}
+      <div className="flex items-center gap-md rounded-xl bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
+          <Dumbbell className="h-5 w-5 text-category-exercise" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-category-exercise">
+            {exercise
+              ? t('pages.exercises.editTitle', 'Editar Exercício')
+              : t('pages.exercises.newTitle', 'Novo Exercício')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {values.name ||
+              t('pages.exercises.newDesc', 'Cadastre um exercício no catálogo')}
+          </p>
+        </div>
+      </div>
+
+      {/* Nome */}
+      <FormSection title={t('pages.exercises.fieldName')} icon={Dumbbell}>
         <Input
-          id="cat-ex-name"
           placeholder={t('pages.exercises.fieldNamePlaceholder')}
           value={values.name}
           onChange={(e) => setValues((v) => ({ ...v, name: e.target.value }))}
           required
         />
-      </div>
-      <div className="space-y-sm">
-        <Label htmlFor="cat-ex-muscles">{t('pages.exercises.fieldMuscles')}</Label>
-        <Input
-          id="cat-ex-muscles"
-          placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
-          value={values.muscle_groups}
-          onChange={(e) => setValues((v) => ({ ...v, muscle_groups: e.target.value }))}
-        />
-      </div>
-      <div className="space-y-sm">
-        <Label htmlFor="cat-ex-desc">{t('pages.exercises.fieldDescription')}</Label>
+      </FormSection>
+
+      {/* Grupos musculares */}
+      <FormSection title={t('pages.exercises.fieldMuscles')} icon={Layers}>
+        <div className="space-y-sm">
+          <div className="flex flex-wrap gap-xs">
+            {CATALOG_MUSCLE_CHIPS.map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => toggleChip(label)}
+                className={cn(
+                  'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                  selectedChips.includes(label)
+                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <Input
+            placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
+            value={values.muscle_groups}
+            onChange={(e) => {
+              setValues((v) => ({ ...v, muscle_groups: e.target.value }));
+              setSelectedChips(
+                e.target.value
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              );
+            }}
+          />
+        </div>
+      </FormSection>
+
+      {/* Descrição */}
+      <FormSection title={t('pages.exercises.fieldDescription')} icon={FileText}>
         <Textarea
-          id="cat-ex-desc"
           placeholder={t('pages.exercises.fieldDescriptionPlaceholder')}
           rows={3}
           value={values.description}
           onChange={(e) => setValues((v) => ({ ...v, description: e.target.value }))}
+          className="resize-none"
         />
-      </div>
-      <div className="flex justify-end gap-sm pt-sm">
+      </FormSection>
+
+      <div className="flex justify-end gap-sm border-t border-border pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-category-exercise hover:bg-category-exercise/90"
+        >
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {t('common.actions.save')}
         </Button>
       </div>
@@ -1307,80 +1395,91 @@ function InactivePlanRow({
         </div>
       </div>
 
-      {expanded && (
-        <div className="space-y-sm border-t border-border bg-background p-md">
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={onNewDay}>
-              <Plus className="mr-1 h-3 w-3" />
-              {t('pages.workoutPlans.newDayBtn')}
-            </Button>
-          </div>
-          {plan.days?.map((day) => (
-            <div
-              key={day.id}
-              className="overflow-hidden rounded-lg border border-border"
-            >
-              <div className="flex items-center justify-between bg-muted/30 px-sm py-xs">
-                <button
-                  type="button"
-                  className="flex min-w-0 flex-1 items-center gap-xs text-left"
-                  onClick={() => onToggleDay(day.id)}
-                >
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
-                    {getMuscleIcon(day.muscle_groups)}
-                  </div>
-                  <span className="text-sm font-medium">{day.name}</span>
-                  {day.muscle_groups && (
-                    <span className="truncate text-xs text-muted-foreground">
-                      — {day.muscle_groups}
-                    </span>
-                  )}
-                </button>
-                <div className="flex shrink-0 items-center gap-xs">
-                  <span className="text-xs text-muted-foreground">
-                    {day.exercise_count} {t('pages.workoutPlans.exercises')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => onEditDay(day)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => onDeleteDay(day)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="inactive-plan-content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="space-y-sm border-t border-border bg-background p-md">
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={onNewDay}>
+                  <Plus className="mr-1 h-3 w-3" />
+                  {t('pages.workoutPlans.newDayBtn')}
+                </Button>
               </div>
-              {expandedDays.has(day.id) && (
-                <div className="space-y-xs px-sm pb-sm pt-xs">
-                  {day.exercises && day.exercises.length > 0 && (
-                    <ExerciseList
-                      exercises={day.exercises}
-                      onEdit={(ex) => onEditExercise(ex, day)}
-                      onDelete={onDeleteExercise}
-                    />
+              {plan.days?.map((day) => (
+                <div
+                  key={day.id}
+                  className="overflow-hidden rounded-lg border border-border"
+                >
+                  <div className="flex items-center justify-between bg-muted/30 px-sm py-xs">
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center gap-xs text-left"
+                      onClick={() => onToggleDay(day.id)}
+                    >
+                      <div className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
+                        {getMuscleIcon(day.muscle_groups)}
+                      </div>
+                      <span className="text-sm font-medium">{day.name}</span>
+                      {day.muscle_groups && (
+                        <span className="truncate text-xs text-muted-foreground">
+                          — {day.muscle_groups}
+                        </span>
+                      )}
+                    </button>
+                    <div className="flex shrink-0 items-center gap-xs">
+                      <span className="text-xs text-muted-foreground">
+                        {day.exercise_count} {t('pages.workoutPlans.exercises')}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => onEditDay(day)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => onDeleteDay(day)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  {expandedDays.has(day.id) && (
+                    <div className="space-y-xs px-sm pb-sm pt-xs">
+                      {day.exercises && day.exercises.length > 0 && (
+                        <ExerciseList
+                          exercises={day.exercises}
+                          onEdit={(ex) => onEditExercise(ex, day)}
+                          onDelete={onDeleteExercise}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onAddExercise(day)}
+                        className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-xs text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {t('pages.workoutPlans.addExerciseBtn')}
+                      </button>
+                    </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => onAddExercise(day)}
-                    className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-xs text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
-                  >
-                    <Plus className="h-3 w-3" />
-                    {t('pages.workoutPlans.addExerciseBtn')}
-                  </button>
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

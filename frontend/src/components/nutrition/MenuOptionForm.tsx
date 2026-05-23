@@ -1,10 +1,19 @@
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import {
+  GripVertical,
+  ListChecks,
+  Loader2,
+  Plus,
+  Salad,
+  StickyNote,
+  Trash2,
+} from 'lucide-react';
 import { useEffect } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import type { Food, MenuOption } from '@/types/nutrition';
 
 const UNIT_KEYS = [
@@ -140,6 +150,8 @@ export function MenuOptionForm({
     }
   }, [option, reset]);
 
+  const nameValue = watch('name');
+
   const handleFormSubmit = async (data: MenuOptionFormValues) => {
     try {
       const { ingredients, ...optionData } = data;
@@ -153,75 +165,96 @@ export function MenuOptionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
-      <div className="grid grid-cols-2 gap-sm">
-        <div className="space-y-sm">
-          <Label htmlFor="opt-name">{t('pages.nutritionMealTypes.optionName')}</Label>
-          <Input
-            id="opt-name"
-            placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
-            {...register('name', { required: true })}
-            className={errors.name ? 'border-destructive' : ''}
-          />
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
+      {/* Header */}
+      <div className="flex items-center gap-md rounded-xl bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
+          <ListChecks className="h-5 w-5 text-category-nutrition" />
         </div>
-        <div className="space-y-sm">
-          <Label htmlFor="opt-order">{t('pages.nutritionMealTypes.optionOrder')}</Label>
-          <Input
-            id="opt-order"
-            type="number"
-            min={0}
-            {...register('order', { valueAsNumber: true })}
-          />
+        <div>
+          <p className="text-sm font-semibold text-category-nutrition">
+            {option
+              ? t('pages.nutritionMealTypes.editOptionTitle')
+              : t('pages.nutritionMealTypes.newOptionTitle')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {nameValue || t('pages.nutritionMealTypes.newOptionDesc')}
+          </p>
         </div>
       </div>
 
-      <div className="space-y-sm">
-        <div className="flex items-center justify-between">
-          <Label>{t('pages.nutritionMealTypes.ingredientsSection')}</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              append({
-                food: '',
-                quantity: '',
-                unit: 'g',
-                is_optional: false,
-                notes: '',
-                order: fields.length,
-              })
-            }
-          >
-            <Plus className="mr-1 h-3 w-3" />
-            {t('pages.nutritionMealTypes.addIngredient')}
-          </Button>
+      {/* Nome e ordem */}
+      <FormSection title={t('pages.nutritionMealTypes.optionName')} icon={ListChecks}>
+        <div className="grid grid-cols-[1fr_80px] gap-sm">
+          <div>
+            <Input
+              placeholder={t('pages.nutritionMealTypes.optionNamePlaceholder')}
+              {...register('name', { required: true })}
+              className={cn(errors.name && 'border-destructive')}
+            />
+            {errors.name && (
+              <p className="mt-xs text-xs text-destructive">{t('common.required')}</p>
+            )}
+          </div>
+          <Input
+            type="number"
+            min={0}
+            aria-label={t('pages.nutritionMealTypes.optionOrder')}
+            {...register('order', { valueAsNumber: true })}
+            className="text-center"
+          />
         </div>
+      </FormSection>
 
-        {fields.length === 0 && (
-          <p className="py-sm text-center text-sm text-muted-foreground">
-            {t('pages.nutritionMealTypes.noIngredients')}
-          </p>
-        )}
+      {/* Ingredientes */}
+      <FormSection
+        title={t('pages.nutritionMealTypes.ingredientsSection')}
+        icon={Salad}
+      >
+        <div className="space-y-sm">
+          {fields.length === 0 ? (
+            <div className="rounded-lg border-2 border-dashed border-category-nutrition/20 py-md text-center">
+              <Salad className="mx-auto mb-xs h-8 w-8 text-category-nutrition/30" />
+              <p className="text-sm text-muted-foreground">
+                {t('pages.nutritionMealTypes.noIngredients')}
+              </p>
+            </div>
+          ) : (
+            <div className="max-h-80 space-y-sm overflow-y-auto pr-1">
+              {fields.map((field, idx) => (
+                <div
+                  key={field.id}
+                  className="group relative rounded-lg border border-border bg-card p-sm transition-all hover:border-category-nutrition/30"
+                >
+                  {/* Row header */}
+                  <div className="mb-sm flex items-center gap-xs">
+                    <GripVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-category-nutrition/15 text-[10px] font-bold text-category-nutrition">
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('pages.nutritionMealTypes.ingredientsSection')} {idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => remove(idx)}
+                      className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
 
-        <div className="max-h-72 space-y-sm overflow-y-auto pr-1">
-          {fields.map((field, idx) => (
-            <div
-              key={field.id}
-              className="space-y-sm rounded-md border border-border bg-card p-sm"
-            >
-              <div className="grid grid-cols-[1fr_auto] items-start gap-xs">
-                <div className="space-y-sm">
-                  <div className="grid grid-cols-2 gap-xs">
+                  {/* Food + Quantity + Unit */}
+                  <div className="grid grid-cols-[1fr_80px_100px] gap-xs">
                     <div className="space-y-xs">
-                      <Label className="text-xs">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                         {t('pages.nutritionMealTypes.food')}
                       </Label>
                       <Select
                         value={watch(`ingredients.${idx}.food`)}
                         onValueChange={(v) => setValue(`ingredients.${idx}.food`, v)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-8 text-sm">
                           <SelectValue
                             placeholder={t('pages.nutritionMealTypes.foodPlaceholder')}
                           />
@@ -235,81 +268,99 @@ export function MenuOptionForm({
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-2 gap-xs">
-                      <div className="space-y-xs">
-                        <Label className="text-xs">
-                          {t('pages.nutritionMealTypes.quantity')}
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min={0}
-                          {...register(`ingredients.${idx}.quantity`)}
-                        />
-                      </div>
-                      <div className="space-y-xs">
-                        <Label className="text-xs">
-                          {t('pages.nutritionMealTypes.unit')}
-                        </Label>
-                        <Select
-                          value={watch(`ingredients.${idx}.unit`)}
-                          onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {UNIT_KEYS.map((u) => (
-                              <SelectItem key={u} value={u}>
-                                {t(`units.${u}`)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-xs">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {t('pages.nutritionMealTypes.quantity')}
+                      </Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        placeholder="0"
+                        {...register(`ingredients.${idx}.quantity`)}
+                        className="h-8 text-center text-sm"
+                      />
+                    </div>
+                    <div className="space-y-xs">
+                      <Label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                        {t('pages.nutritionMealTypes.unit')}
+                      </Label>
+                      <Select
+                        value={watch(`ingredients.${idx}.unit`)}
+                        onValueChange={(v) => setValue(`ingredients.${idx}.unit`, v)}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNIT_KEYS.map((u) => (
+                            <SelectItem key={u} value={u}>
+                              {t(`units.${u}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-[auto_1fr] items-center gap-xs">
-                    <div className="flex items-center gap-xs">
+
+                  {/* Optional + Notes */}
+                  <div className="mt-xs flex items-center gap-sm">
+                    <label className="flex cursor-pointer items-center gap-xs">
                       <Checkbox
-                        id={`opt-${idx}`}
                         checked={watch(`ingredients.${idx}.is_optional`)}
                         onCheckedChange={(v) =>
                           setValue(`ingredients.${idx}.is_optional`, Boolean(v))
                         }
                       />
-                      <Label htmlFor={`opt-${idx}`} className="text-xs">
+                      <span className="text-xs text-muted-foreground">
                         {t('pages.nutritionMealTypes.optional')}
-                      </Label>
+                      </span>
+                    </label>
+                    <div className="relative flex-1">
+                      <StickyNote className="absolute left-xs top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/50" />
+                      <Input
+                        placeholder={t(
+                          'pages.nutritionMealTypes.ingredientNotesPlaceholder'
+                        )}
+                        {...register(`ingredients.${idx}.notes`)}
+                        className="h-7 pl-6 text-xs"
+                      />
                     </div>
-                    <Input
-                      placeholder={t(
-                        'pages.nutritionMealTypes.ingredientNotesPlaceholder'
-                      )}
-                      {...register(`ingredients.${idx}.notes`)}
-                    />
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="mt-0.5 shrink-0 text-destructive hover:text-destructive"
-                  onClick={() => remove(idx)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      <div className="flex justify-end gap-sm pt-sm">
+          <button
+            type="button"
+            onClick={() =>
+              append({
+                food: '',
+                quantity: '',
+                unit: 'g',
+                is_optional: false,
+                notes: '',
+                order: fields.length,
+              })
+            }
+            className="flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-nutrition/30 py-sm text-sm font-medium text-category-nutrition transition-all hover:border-category-nutrition/60 hover:bg-category-nutrition/5"
+          >
+            <Plus className="h-4 w-4" />
+            {t('pages.nutritionMealTypes.addIngredient')}
+          </button>
+        </div>
+      </FormSection>
+
+      <div className="flex justify-end gap-sm border-t border-border pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
           {t('common.actions.cancel')}
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="bg-category-nutrition hover:bg-category-nutrition/90"
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {t('common.actions.save')}
         </Button>
