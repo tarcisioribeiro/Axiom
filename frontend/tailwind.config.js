@@ -103,6 +103,7 @@ export default {
           nutrition: 'hsl(var(--category-nutrition))',
           work: 'hsl(var(--category-work))',
           leisure: 'hsl(var(--category-leisure))',
+          intellect: 'hsl(var(--category-intellect))',
         },
       },
       borderRadius: {

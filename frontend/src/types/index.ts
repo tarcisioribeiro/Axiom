@@ -97,37 +97,7 @@ export type {
   ChartData,
   TimeSeriesData,
 } from './dashboard';
-export type {
-  VaultStatus,
-  VaultSetupData,
-  VaultUnlockData,
-  VaultChangePasswordData,
-  Password,
-  PasswordFormData,
-  PasswordReveal,
-  CredentialShareToken,
-  CreateShareTokenData,
-  SharedCredential,
-  StoredCreditCard,
-  StoredCreditCardFormData,
-  StoredCreditCardReveal,
-  StoredBankAccount,
-  StoredBankAccountFormData,
-  StoredBankAccountReveal,
-  Archive,
-  ArchiveFormData,
-  ArchiveReveal,
-  PasswordGenerateRequest,
-  PasswordGenerateResponse,
-  ActivityLog,
-} from './security';
-export {
-  PASSWORD_CATEGORIES,
-  CARD_FLAGS,
-  ACCOUNT_TYPES,
-  ARCHIVE_CATEGORIES,
-  ARCHIVE_TYPES,
-} from './security-constants';
+export * from './security-all';
 export type {
   Era,
   Author,
@@ -146,6 +116,21 @@ export type {
   ReadingGoalFormData,
   BookHighlight,
   BookHighlightFormData,
+  Course,
+  CourseFormData,
+  CourseModule,
+  CourseModuleFormData,
+  CourseLesson,
+  CourseLessonFormData,
+  CourseSession,
+  CourseSessionFormData,
+  Skill,
+  SkillFormData,
+  CourseStatus,
+  CoursePlatform,
+  IntellectCategory,
+  SkillProficiency,
+  SkillStatus,
 } from './library';
 export { ERAS } from './library';
 export {
