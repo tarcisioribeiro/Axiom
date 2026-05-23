@@ -1,6 +1,6 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Reading/ReadingGoal/Highlight/Dashboard views
+from library.views import (  # noqa: E501
     AuthorDetailView,
     AuthorListCreateView,
     AuthorPhotoStreamView,
@@ -15,6 +15,15 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     BookMarkAsReadView,
     BookReadingQueueView,
     BookReorderView,
+    CourseLessonListCreateView,
+    CourseLessonRetrieveUpdateDestroyView,
+    CourseLessonToggleView,
+    CourseListCreateView,
+    CourseModuleListCreateView,
+    CourseModuleRetrieveUpdateDestroyView,
+    CourseRetrieveUpdateDestroyView,
+    CourseSessionListCreateView,
+    CourseSessionRetrieveUpdateDestroyView,
     LibraryDashboardStatsView,
     LiteraryTypeGoalDetailView,
     LiteraryTypeGoalListCreateView,
@@ -24,6 +33,8 @@ from library.views import (  # noqa: E501  # Author/Publisher/Book/Summary/Readi
     ReadingGoalDetailView,
     ReadingGoalListCreateView,
     ReadingListCreateView,
+    SkillListCreateView,
+    SkillRetrieveUpdateDestroyView,
     SummaryDetailView,
     SummaryListCreateView,
 )
@@ -119,5 +130,57 @@ urlpatterns = [
         "highlights/<int:pk>/",
         BookHighlightDetailView.as_view(),
         name="highlight-detail",
+    ),
+    # Courses
+    path("courses/", CourseListCreateView.as_view(), name="course-list-create"),
+    path(
+        "courses/<int:pk>/",
+        CourseRetrieveUpdateDestroyView.as_view(),
+        name="course-detail",
+    ),
+    # Course Modules
+    path(
+        "course-modules/",
+        CourseModuleListCreateView.as_view(),
+        name="course-module-list-create",
+    ),
+    path(
+        "course-modules/<int:pk>/",
+        CourseModuleRetrieveUpdateDestroyView.as_view(),
+        name="course-module-detail",
+    ),
+    # Course Lessons
+    path(
+        "course-lessons/",
+        CourseLessonListCreateView.as_view(),
+        name="course-lesson-list-create",
+    ),
+    path(
+        "course-lessons/<int:pk>/",
+        CourseLessonRetrieveUpdateDestroyView.as_view(),
+        name="course-lesson-detail",
+    ),
+    path(
+        "course-lessons/<int:pk>/toggle/",
+        CourseLessonToggleView.as_view(),
+        name="course-lesson-toggle",
+    ),
+    # Course Sessions
+    path(
+        "course-sessions/",
+        CourseSessionListCreateView.as_view(),
+        name="course-session-list-create",
+    ),
+    path(
+        "course-sessions/<int:pk>/",
+        CourseSessionRetrieveUpdateDestroyView.as_view(),
+        name="course-session-detail",
+    ),
+    # Skills
+    path("skills/", SkillListCreateView.as_view(), name="skill-list-create"),
+    path(
+        "skills/<int:pk>/",
+        SkillRetrieveUpdateDestroyView.as_view(),
+        name="skill-detail",
     ),
 ]

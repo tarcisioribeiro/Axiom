@@ -21,6 +21,11 @@ import {
   Moon,
   Sun,
   Sunset,
+  GraduationCap,
+  Brain,
+  CheckCircle2,
+  Play,
+  Award,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +48,9 @@ import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { coursesService } from '@/services/courses-service';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
+import { skillsService } from '@/services/skills-service';
 
 export default function LibraryDashboard() {
   const { t } = useTranslation();
@@ -52,6 +59,18 @@ export default function LibraryDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['libraryDashboard'],
     queryFn: () => libraryDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: courses = [] } = useQuery({
+    queryKey: ['courses'],
+    queryFn: () => coursesService.getAll({ page_size: 200 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: skills = [] } = useQuery({
+    queryKey: ['skills'],
+    queryFn: () => skillsService.getAll({ page_size: 200 }),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -153,6 +172,39 @@ export default function LibraryDashboard() {
       }),
     [stats?.reading_by_time_of_day, t]
   );
+
+  const courseStats = useMemo(
+    () => ({
+      total: courses.length,
+      inProgress: courses.filter((c) => c.status === 'in_progress').length,
+      completed: courses.filter((c) => c.status === 'completed').length,
+      investedHours: courses.reduce((sum, c) => sum + (c.invested_hours || 0), 0),
+    }),
+    [courses]
+  );
+
+  const skillStats = useMemo(
+    () => ({
+      total: skills.length,
+      mastered: skills.filter((s) => s.status === 'mastered').length,
+      evolving: skills.filter((s) => s.status === 'evolving').length,
+      learning: skills.filter((s) => s.status === 'learning').length,
+    }),
+    [skills]
+  );
+
+  const contentDistributionData = useMemo(() => {
+    const booksRead = stats?.books_read || 0;
+    const coursesCompleted = courseStats.completed;
+    if (booksRead === 0 && coursesCompleted === 0) return [];
+    return [
+      { name: t('pages.libraryDashboard.booksReadLabel'), value: booksRead },
+      {
+        name: t('pages.libraryDashboard.coursesCompletedLabel'),
+        value: coursesCompleted,
+      },
+    ];
+  }, [stats?.books_read, courseStats.completed, t]);
 
   const exportCSV = () => {
     if (!stats) return;
@@ -357,6 +409,148 @@ export default function LibraryDashboard() {
           }
         />
       </div>
+
+      {/* Intelecto: Cursos & Habilidades */}
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+        {/* Cursos */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="flex items-center gap-sm">
+              <GraduationCap className="h-4 w-4 text-category-intellect" />
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.coursesTitle')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <BookOpen className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.totalCourses')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">{courseStats.total}</span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Play className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.coursesInProgress')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-info">
+                  {courseStats.inProgress}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.coursesCompleted')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-success">
+                  {courseStats.completed}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.coursesInvestedHours')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {courseStats.investedHours.toFixed(0)}h
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Habilidades */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="flex items-center gap-sm">
+              <Brain className="h-4 w-4 text-category-intellect" />
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.skillsTitle')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Brain className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.totalSkills')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">{skillStats.total}</span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Award className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.skillsMastered')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-success">
+                  {skillStats.mastered}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.skillsEvolving')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-warning">
+                  {skillStats.evolving}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.skillsLearning')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold text-info">
+                  {skillStats.learning}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Distribuição de Conteúdo */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
+          <p className="text-sm">
+            {t('pages.libraryDashboard.contentDistributionDesc')}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer
+            chartId="intellect-content-distribution"
+            data={contentDistributionData}
+            dataKey="value"
+            nameKey="name"
+            formatter={(value) => String(value)}
+            colors={[COLORS[0], 'hsl(var(--category-intellect))']}
+            emptyMessage={t('pages.libraryDashboard.noContentDistribution')}
+            lockChartType="pie"
+            height={250}
+          />
+        </CardContent>
+      </Card>
 
       {/* Block 2: Estatísticas Gerais */}
       <Card>

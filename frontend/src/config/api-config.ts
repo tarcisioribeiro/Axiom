@@ -106,6 +106,13 @@ export const API_CONFIG = {
     BOOK_HIGHLIGHTS: '/api/v1/library/highlights/',
     BOOK_HIGHLIGHTS_EXPORT: '/api/v1/library/highlights/export/',
     LITERARY_TYPE_GOALS: '/api/v1/library/literary-type-goals/',
+    LIBRARY_DASHBOARD_STATS: '/api/v1/library/dashboard/stats/',
+    // Intellect — Courses & Skills
+    COURSES: '/api/v1/library/courses/',
+    COURSE_MODULES: '/api/v1/library/course-modules/',
+    COURSE_LESSONS: '/api/v1/library/course-lessons/',
+    COURSE_SESSIONS: '/api/v1/library/course-sessions/',
+    SKILLS: '/api/v1/library/skills/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',
