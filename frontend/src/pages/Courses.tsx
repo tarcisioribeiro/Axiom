@@ -6,7 +6,6 @@ import {
   Clock,
   GraduationCap,
   Layers,
-  Loader2,
   Plus,
   Search,
   Timer,
@@ -160,7 +159,7 @@ function CourseCard({
           }}
         >
           <Edit className="h-3 w-3" />
-          {t('common.edit')}
+          {t('common.actions.edit')}
         </Button>
         <Button
           size="sm"
@@ -172,7 +171,7 @@ function CourseCard({
           }}
         >
           <Trash2 className="h-3 w-3" />
-          {t('common.delete')}
+          {t('common.actions.delete')}
         </Button>
       </div>
     </motion.div>
@@ -182,7 +181,7 @@ function CourseCard({
 export default function Courses() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { confirm } = useAlertDialog();
+  const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
@@ -251,10 +250,11 @@ export default function Courses() {
   };
 
   const handleDelete = (course: Course) => {
-    void confirm({
-      title: t('common.confirmDelete'),
+    void showConfirm({
+      title: t('common.messages.confirmDeleteTitle'),
       description: t('pages.courses.deleteConfirm', { title: course.title }),
-      onConfirm: () => deleteMutation.mutate(course.id),
+    }).then((ok) => {
+      if (ok) deleteMutation.mutate(course.id);
     });
   };
 

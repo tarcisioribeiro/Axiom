@@ -1,5 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Brain, FileText, Layers, Tag } from 'lucide-react';
+import {
+  Atom,
+  Brain,
+  Briefcase,
+  Code2,
+  Globe,
+  Layers,
+  MoreHorizontal,
+  Paintbrush,
+  Palette,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -62,6 +73,16 @@ const CATEGORIES: IntellectCategory[] = [
   'arts',
   'other',
 ];
+
+const CATEGORY_ICONS: Record<IntellectCategory, LucideIcon> = {
+  technology: Code2,
+  languages: Globe,
+  design: Palette,
+  business: Briefcase,
+  science: Atom,
+  arts: Paintbrush,
+  other: MoreHorizontal,
+};
 
 const STATUSES: SkillStatus[] = ['learning', 'evolving', 'mastered'];
 
@@ -204,11 +225,17 @@ export function SkillForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {t(`pages.skills.category.${c}`)}
-                </SelectItem>
-              ))}
+              {CATEGORIES.map((c) => {
+                const Icon = CATEGORY_ICONS[c];
+                return (
+                  <SelectItem key={c} value={c}>
+                    <div className="flex items-center gap-xs">
+                      <Icon className="h-3.5 w-3.5 text-category-intellect" />
+                      {t(`pages.skills.category.${c}`)}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -257,14 +284,14 @@ export function SkillForm({
 
       <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          {t('common.cancel')}
+          {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
           className="bg-category-intellect text-white hover:bg-category-intellect/90"
         >
-          {t('common.save')}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

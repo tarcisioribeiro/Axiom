@@ -99,7 +99,6 @@ export type {
 } from './dashboard';
 export * from './security-all';
 export type {
-  Era,
   Author,
   AuthorFormData,
   Publisher,
@@ -116,6 +115,8 @@ export type {
   ReadingGoalFormData,
   BookHighlight,
   BookHighlightFormData,
+} from './library';
+export type {
   Course,
   CourseFormData,
   CourseModule,
@@ -131,9 +132,9 @@ export type {
   IntellectCategory,
   SkillProficiency,
   SkillStatus,
-} from './library';
-export { ERAS } from './library';
+} from './intellect';
 export {
+  ERAS,
   NATIONALITIES,
   COUNTRIES,
   BOOK_LANGUAGES,

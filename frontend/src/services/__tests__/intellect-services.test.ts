@@ -4,7 +4,6 @@ import { apiClient } from '@/services/api-client';
 import {
   coursesService,
   courseModulesService,
-  courseLessonsService,
   courseSessionsService,
 } from '@/services/courses-service';
 import { skillsService } from '@/services/skills-service';
@@ -250,7 +249,11 @@ describe('SkillsService', () => {
   });
 
   it('updates a skill via update', async () => {
-    const updated = { ...mockSkill, proficiency: 'advanced' as const, proficiency_level: 4 };
+    const updated = {
+      ...mockSkill,
+      proficiency: 'advanced' as const,
+      proficiency_level: 4,
+    };
     vi.mocked(apiClient.put).mockResolvedValueOnce(updated);
 
     const data: SkillFormData = {

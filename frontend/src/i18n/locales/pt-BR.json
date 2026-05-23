@@ -28,7 +28,8 @@
       "seeLess": "Ver menos",
       "update": "Atualizar",
       "select": "Selecione",
-      "none": "Nenhum"
+      "none": "Nenhum",
+      "total": "Total"
     },
     "messages": {
       "loadError": "Erro ao carregar dados",

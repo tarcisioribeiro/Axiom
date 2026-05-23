@@ -1,16 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Brain,
-  LayoutGrid,
-  List,
-  Loader2,
-  Plus,
-  Search,
-  Trash2,
-  Edit,
-  Radar,
-} from 'lucide-react';
+import { Brain, Edit, LayoutGrid, Plus, Radar, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +28,7 @@ import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
 import { skillsService } from '@/services/skills-service';
-import type { IntellectCategory, Skill, SkillFormData, SkillStatus } from '@/types';
+import type { Skill, SkillFormData, SkillStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type ViewMode = 'list' | 'radar';
@@ -126,7 +116,7 @@ function SkillCard({
           onClick={() => onEdit(skill)}
         >
           <Edit className="h-3 w-3" />
-          {t('common.edit')}
+          {t('common.actions.edit')}
         </Button>
         <Button
           size="sm"
@@ -135,7 +125,7 @@ function SkillCard({
           onClick={() => onDelete(skill)}
         >
           <Trash2 className="h-3 w-3" />
-          {t('common.delete')}
+          {t('common.actions.delete')}
         </Button>
       </div>
     </motion.div>
@@ -145,7 +135,7 @@ function SkillCard({
 export default function Skills() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { confirm } = useAlertDialog();
+  const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
@@ -211,10 +201,11 @@ export default function Skills() {
   };
 
   const handleDelete = (skill: Skill) => {
-    void confirm({
-      title: t('common.confirmDelete'),
+    void showConfirm({
+      title: t('common.messages.confirmDeleteTitle'),
       description: t('pages.skills.deleteConfirm', { name: skill.name }),
-      onConfirm: () => deleteMutation.mutate(skill.id),
+    }).then((ok) => {
+      if (ok) deleteMutation.mutate(skill.id);
     });
   };
 
@@ -251,7 +242,7 @@ export default function Skills() {
         <div className="grid grid-cols-3 gap-md">
           {[
             {
-              label: t('common.total'),
+              label: t('common.actions.total'),
               value: skills.length,
               color: 'text-foreground',
             },

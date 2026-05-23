@@ -1,14 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  BookOpen,
-  Calendar,
+  Atom,
+  Briefcase,
   Clock,
+  Code2,
   ExternalLink,
+  Globe,
   GraduationCap,
-  Info,
   Layers,
-  Tag,
+  MoreHorizontal,
+  Paintbrush,
+  Palette,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -42,7 +46,7 @@ const courseSchema = z.object({
   category: z.string().min(1),
   description: z.string().optional().nullable(),
   url: z.string().url().optional().or(z.literal('')).nullable(),
-  estimated_hours: z.coerce.number().positive().optional().nullable(),
+  estimated_hours: z.number().positive().optional().nullable(),
   status: z.string().min(1),
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
@@ -77,6 +81,16 @@ const CATEGORIES: IntellectCategory[] = [
   'arts',
   'other',
 ];
+
+const CATEGORY_ICONS: Record<IntellectCategory, LucideIcon> = {
+  technology: Code2,
+  languages: Globe,
+  design: Palette,
+  business: Briefcase,
+  science: Atom,
+  arts: Paintbrush,
+  other: MoreHorizontal,
+};
 const STATUSES: CourseStatus[] = ['not_started', 'in_progress', 'completed', 'paused'];
 
 export function CourseForm({
@@ -194,11 +208,17 @@ export function CourseForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {t(`pages.courses.category.${c}`)}
-                  </SelectItem>
-                ))}
+                {CATEGORIES.map((c) => {
+                  const Icon = CATEGORY_ICONS[c];
+                  return (
+                    <SelectItem key={c} value={c}>
+                      <div className="flex items-center gap-xs">
+                        <Icon className="h-3.5 w-3.5 text-category-intellect" />
+                        {t(`pages.courses.category.${c}`)}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -265,7 +285,7 @@ export function CourseForm({
               type="number"
               min={0}
               step={0.5}
-              {...register('estimated_hours')}
+              {...register('estimated_hours', { valueAsNumber: true })}
             />
           </div>
         </div>
@@ -290,14 +310,14 @@ export function CourseForm({
 
       <div className="flex justify-end gap-sm pt-sm">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          {t('common.cancel')}
+          {t('common.actions.cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
           className="bg-category-intellect text-white hover:bg-category-intellect/90"
         >
-          {t('common.save')}
+          {t('common.actions.save')}
         </Button>
       </div>
     </form>

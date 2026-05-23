@@ -1,3 +1,10 @@
+export type Era = 'AC' | 'DC';
+
+export const ERAS = [
+  { value: 'DC' as Era, label: 'Depois de Cristo (DC)' },
+  { value: 'AC' as Era, label: 'Antes de Cristo (AC)' },
+];
+
 export const NATIONALITIES = [
   { value: 'ALE', label: 'Alemã' },
   { value: 'USA', label: 'Americana' },
