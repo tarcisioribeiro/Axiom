@@ -173,25 +173,96 @@ export default function LibraryDashboard() {
     [stats?.reading_by_time_of_day, t]
   );
 
-  const courseStats = useMemo(
-    () => ({
-      total: courses.length,
-      inProgress: courses.filter((c) => c.status === 'in_progress').length,
-      completed: courses.filter((c) => c.status === 'completed').length,
-      investedHours: courses.reduce((sum, c) => sum + (c.invested_hours || 0), 0),
-    }),
-    [courses]
-  );
+  const courseStats = useMemo(() => {
+    const inProgress = courses.filter((c) => c.status === 'in_progress');
+    const completed = courses.filter((c) => c.status === 'completed');
+    const notStarted = courses.filter((c) => c.status === 'not_started');
+    const paused = courses.filter((c) => c.status === 'paused');
+    const avgProgress =
+      inProgress.length > 0
+        ? inProgress.reduce((sum, c) => sum + (c.progress_percentage || 0), 0) /
+          inProgress.length
+        : 0;
+    const completionRate =
+      courses.length > 0 ? (completed.length / courses.length) * 100 : 0;
 
-  const skillStats = useMemo(
-    () => ({
+    const byCategory: Record<string, number> = {};
+    courses.forEach((c) => {
+      byCategory[c.category_display] = (byCategory[c.category_display] ?? 0) + 1;
+    });
+    const byCategoryData = Object.entries(byCategory).map(([name, count]) => ({
+      name,
+      count,
+    }));
+
+    const byPlatform: Record<string, number> = {};
+    courses.forEach((c) => {
+      byPlatform[c.platform_display] = (byPlatform[c.platform_display] ?? 0) + 1;
+    });
+    const byPlatformData = Object.entries(byPlatform).map(([name, count]) => ({
+      name,
+      count,
+    }));
+
+    return {
+      total: courses.length,
+      inProgress: inProgress.length,
+      completed: completed.length,
+      notStarted: notStarted.length,
+      paused: paused.length,
+      investedHours: courses.reduce((sum, c) => sum + (c.invested_hours || 0), 0),
+      avgProgress,
+      completionRate,
+      byCategoryData,
+      byPlatformData,
+    };
+  }, [courses]);
+
+  const skillStats = useMemo(() => {
+    const mastered = skills.filter((s) => s.status === 'mastered').length;
+    const evolving = skills.filter((s) => s.status === 'evolving').length;
+    const learning = skills.filter((s) => s.status === 'learning').length;
+
+    const proficiencyOrder = [
+      'beginner',
+      'basic',
+      'intermediate',
+      'advanced',
+      'expert',
+    ];
+    const proficiencyLabels: Record<string, string> = {
+      beginner: 'Iniciante',
+      basic: 'Básico',
+      intermediate: 'Intermediário',
+      advanced: 'Avançado',
+      expert: 'Especialista',
+    };
+    const byProficiency: Record<string, number> = {};
+    skills.forEach((s) => {
+      byProficiency[s.proficiency] = (byProficiency[s.proficiency] ?? 0) + 1;
+    });
+    const byProficiencyData = proficiencyOrder
+      .filter((p) => byProficiency[p] !== undefined)
+      .map((p) => ({ name: proficiencyLabels[p] ?? p, count: byProficiency[p] ?? 0 }));
+
+    const byCategory: Record<string, number> = {};
+    skills.forEach((s) => {
+      byCategory[s.category_display] = (byCategory[s.category_display] ?? 0) + 1;
+    });
+    const byCategoryData = Object.entries(byCategory).map(([name, count]) => ({
+      name,
+      count,
+    }));
+
+    return {
       total: skills.length,
-      mastered: skills.filter((s) => s.status === 'mastered').length,
-      evolving: skills.filter((s) => s.status === 'evolving').length,
-      learning: skills.filter((s) => s.status === 'learning').length,
-    }),
-    [skills]
-  );
+      mastered,
+      evolving,
+      learning,
+      byProficiencyData,
+      byCategoryData,
+    };
+  }, [skills]);
 
   const contentDistributionData = useMemo(() => {
     const booksRead = stats?.books_read || 0;
@@ -410,121 +481,314 @@ export default function LibraryDashboard() {
         />
       </div>
 
-      {/* Intelecto: Cursos & Habilidades */}
+      {/* Intelecto: Cursos — métricas principais */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <div className="flex items-center gap-sm">
+            <GraduationCap className="h-4 w-4 text-category-intellect" />
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.coursesTitle')}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-md sm:grid-cols-6">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <BookOpen className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.totalCourses')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">{courseStats.total}</span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Play className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesInProgress')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-info">
+                {courseStats.inProgress}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesCompleted')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-success">
+                {courseStats.completed}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.coursesInvestedHours')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold">
+                {courseStats.investedHours.toFixed(0)}h
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-xs">Taxa de conclusão</span>
+              </div>
+              <span className="text-2xl font-bold text-category-intellect">
+                {courseStats.completionRate.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span className="text-xs">Progresso médio</span>
+              </div>
+              <span className="text-2xl font-bold">
+                {courseStats.avgProgress.toFixed(0)}%
+              </span>
+              <span className="text-xs text-muted-foreground">em andamento</span>
+            </div>
+          </div>
+
+          {/* Barra de progresso visual por status */}
+          {courseStats.total > 0 && (
+            <div className="mt-md space-y-sm border-t pt-md">
+              {[
+                {
+                  label: 'Concluídos',
+                  count: courseStats.completed,
+                  colorClass: 'bg-success',
+                },
+                {
+                  label: 'Em andamento',
+                  count: courseStats.inProgress,
+                  colorClass: 'bg-info',
+                },
+                {
+                  label: 'Pausados',
+                  count: courseStats.paused,
+                  colorClass: 'bg-warning',
+                },
+                {
+                  label: 'Não iniciados',
+                  count: courseStats.notStarted,
+                  colorClass: 'bg-muted-foreground/40',
+                },
+              ]
+                .filter((s) => s.count > 0)
+                .map((s) => {
+                  const pct = (s.count / courseStats.total) * 100;
+                  return (
+                    <div key={s.label} className="flex items-center gap-3">
+                      <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                        {s.label}
+                      </span>
+                      <div className="flex flex-1 items-center gap-sm">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={`h-full rounded-full transition-all ${s.colorClass}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-8 text-right text-xs font-medium">
+                          {s.count}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Cursos: distribuição por categoria e plataforma */}
       <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
-        {/* Cursos */}
         <Card>
           <CardHeader className="pb-sm">
-            <div className="flex items-center gap-sm">
-              <GraduationCap className="h-4 w-4 text-category-intellect" />
-              <CardTitle className="text-sm font-medium">
-                {t('pages.libraryDashboard.coursesTitle')}
-              </CardTitle>
-            </div>
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <GraduationCap className="h-4 w-4" />
+              Cursos por categoria
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.totalCourses')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">{courseStats.total}</span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Play className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.coursesInProgress')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-info">
-                  {courseStats.inProgress}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.coursesCompleted')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-success">
-                  {courseStats.completed}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.coursesInvestedHours')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">
-                  {courseStats.investedHours.toFixed(0)}h
-                </span>
-              </div>
-            </div>
+            <ChartContainer
+              chartId="intellect-courses-by-category"
+              data={courseStats.byCategoryData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) => `${value} curso(s)`}
+              colors={COLORS}
+              emptyMessage="Nenhum curso cadastrado"
+              lockChartType="pie"
+              height={250}
+            />
           </CardContent>
         </Card>
 
-        {/* Habilidades */}
         <Card>
           <CardHeader className="pb-sm">
-            <div className="flex items-center gap-sm">
-              <Brain className="h-4 w-4 text-category-intellect" />
-              <CardTitle className="text-sm font-medium">
-                {t('pages.libraryDashboard.skillsTitle')}
-              </CardTitle>
-            </div>
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Play className="h-4 w-4" />
+              Cursos por plataforma
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Brain className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.totalSkills')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold">{skillStats.total}</span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Award className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.skillsMastered')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-success">
-                  {skillStats.mastered}
+            <ChartContainer
+              chartId="intellect-courses-by-platform"
+              data={courseStats.byPlatformData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) => `${value} curso(s)`}
+              colors={COLORS}
+              emptyMessage="Nenhum curso cadastrado"
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Intelecto: Habilidades — métricas principais */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <div className="flex items-center gap-sm">
+            <Brain className="h-4 w-4 text-category-intellect" />
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.skillsTitle')}
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Brain className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.totalSkills')}
                 </span>
               </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.skillsEvolving')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-warning">
-                  {skillStats.evolving}
-                </span>
-              </div>
-              <div className="flex flex-col gap-xs">
-                <div className="flex items-center gap-sm text-muted-foreground">
-                  <Zap className="h-4 w-4" />
-                  <span className="text-xs">
-                    {t('pages.libraryDashboard.skillsLearning')}
-                  </span>
-                </div>
-                <span className="text-2xl font-bold text-info">
-                  {skillStats.learning}
-                </span>
-              </div>
+              <span className="text-2xl font-bold">{skillStats.total}</span>
             </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Award className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsMastered')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-success">
+                {skillStats.mastered}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsEvolving')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-warning">
+                {skillStats.evolving}
+              </span>
+            </div>
+            <div className="flex flex-col gap-xs">
+              <div className="flex items-center gap-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.skillsLearning')}
+                </span>
+              </div>
+              <span className="text-2xl font-bold text-info">
+                {skillStats.learning}
+              </span>
+            </div>
+          </div>
+
+          {/* Distribuição por proficiência */}
+          {skillStats.byProficiencyData.length > 0 && (
+            <div className="mt-md space-y-sm border-t pt-md">
+              <p className="mb-sm text-xs font-semibold text-muted-foreground">
+                Distribuição por proficiência
+              </p>
+              {skillStats.byProficiencyData.map((item, i) => {
+                const max = Math.max(
+                  ...skillStats.byProficiencyData.map((d) => d.count)
+                );
+                const pct = max > 0 ? (item.count / max) * 100 : 0;
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-28 shrink-0 text-xs text-muted-foreground">
+                      {item.name}
+                    </span>
+                    <div className="flex flex-1 items-center gap-sm">
+                      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-category-intellect/70 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-6 text-right text-xs font-medium">
+                        {item.count}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Habilidades: distribuição por categoria + status */}
+      <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Brain className="h-4 w-4" />
+              Habilidades por categoria
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-skills-by-category"
+              data={skillStats.byCategoryData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) => `${value} habilidade(s)`}
+              colors={COLORS}
+              emptyMessage="Nenhuma habilidade cadastrada"
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm">
+              <Award className="h-4 w-4" />
+              Habilidades por proficiência
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-skills-proficiency"
+              data={skillStats.byProficiencyData}
+              dataKey="count"
+              nameKey="name"
+              formatter={(value) => `${value} habilidade(s)`}
+              colors={COLORS}
+              emptyMessage="Nenhuma habilidade cadastrada"
+              lockChartType="bar"
+              height={250}
+            />
           </CardContent>
         </Card>
       </div>
