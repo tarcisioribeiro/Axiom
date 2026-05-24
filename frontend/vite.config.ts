@@ -27,7 +27,6 @@ export default defineConfig({
       threshold: 1024,
     }),
     // PWA — service worker + manifest
-
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.png', 'icon-dark.png', 'icon-light.png', 'logo.png'],
