@@ -154,6 +154,24 @@ SKILL_PROFICIENCY_CHOICES = (
     ("expert", "Especialista"),
 )
 
+KNOWLEDGE_NODE_TYPE_CHOICES = (
+    ("book", "Livro"),
+    ("course", "Curso"),
+    ("skill", "Habilidade"),
+    ("highlight", "Destaque"),
+    ("summary", "Sumário"),
+    ("author", "Autor"),
+)
+
+KNOWLEDGE_LINK_RELATION_CHOICES = (
+    ("relates", "Relaciona"),
+    ("supports", "Apoia"),
+    ("contradicts", "Contradiz"),
+    ("deepens", "Aprofunda"),
+    ("derived_from", "Derivado de"),
+    ("applies", "Aplica"),
+)
+
 SKILL_STATUS_CHOICES = (
     ("learning", "Aprendendo"),
     ("evolving", "Evoluindo"),
@@ -945,3 +963,60 @@ class Skill(BaseModel):
 
     def __str__(self):
         return f"{self.name} ({self.get_proficiency_display()})"
+
+
+# ============================================================================
+# KNOWLEDGE LINK MODEL
+# ============================================================================
+
+
+class KnowledgeLink(BaseModel):
+    """Conexão explícita entre dois nós do grafo de conhecimento."""
+
+    source_type = models.CharField(
+        max_length=20,
+        choices=KNOWLEDGE_NODE_TYPE_CHOICES,
+        verbose_name="Tipo de origem",
+    )
+    source_id = models.UUIDField(verbose_name="ID de origem")
+    target_type = models.CharField(
+        max_length=20,
+        choices=KNOWLEDGE_NODE_TYPE_CHOICES,
+        verbose_name="Tipo de destino",
+    )
+    target_id = models.UUIDField(verbose_name="ID de destino")
+    relation_label = models.CharField(
+        max_length=20,
+        choices=KNOWLEDGE_LINK_RELATION_CHOICES,
+        default="relates",
+        verbose_name="Tipo de relação",
+    )
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="knowledge_links",
+        verbose_name="Proprietário",
+    )
+
+    class Meta:
+        verbose_name = "Link de Conhecimento"
+        verbose_name_plural = "Links de Conhecimento"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "source_type",
+                    "source_id",
+                    "target_type",
+                    "target_id",
+                    "owner",
+                ],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_knowledge_link_active",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.source_type}:{self.source_id} → {self.target_type}:{self.target_id}"
+        )

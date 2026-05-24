@@ -342,7 +342,7 @@ class TestAgentRouterSemantic(TestCase):
 
     @patch("agents.core.router.semantic_domain_scores")
     @patch("agents.core.router.LLMClient")
-    def test_semantic_bonus_selects_library_agent(
+    def test_semantic_bonus_selects_library_domain_agent(
         self, mock_llm: MagicMock, mock_scores: MagicMock
     ) -> None:
         from agents.core.base_agent import AgentContext
@@ -360,7 +360,9 @@ class TestAgentRouterSemantic(TestCase):
         ctx = AgentContext(user_id=self.user.pk, query="livro resumo leitura")
         agent = AgentRouter.select(ctx)
 
-        self.assertEqual(agent.name, "library")
+        # Both 'intellect' and 'library' agents map to the library domain —
+        # either is a valid selection when semantic score is high for that domain.
+        self.assertIn(agent.name, {"library", "intellect"})
         mock_scores.assert_called_once_with([0.1] * 4, self.user.pk)
 
     @patch("agents.core.router.LLMClient")
@@ -394,3 +396,100 @@ class TestAgentRouterSemantic(TestCase):
         # Must not raise even when semantic_domain_scores blows up
         agent = AgentRouter.select(ctx)
         self.assertIsNotNone(agent)
+
+
+class TestNewModularAgents(TestCase):
+    """Testes básicos dos 4 novos agentes modulares."""
+
+    def _assert_model(self, agent_cls, provider: str, expected_model: str) -> None:
+        agent = agent_cls()
+        with patch("agents.core.base_agent.cfg", return_value=provider):
+            self.assertEqual(agent.get_model(), expected_model)
+
+    def test_personal_agent_ollama_model(self) -> None:
+        from agents.agents.personal_agent import PersonalAgent
+
+        self._assert_model(PersonalAgent, "ollama", "llama3.1:8b")
+
+    def test_personal_agent_anthropic_model(self) -> None:
+        from agents.agents.personal_agent import PersonalAgent
+
+        self._assert_model(PersonalAgent, "anthropic", "claude-sonnet-4-6")
+
+    def test_financial_agent_ollama_model(self) -> None:
+        from agents.agents.financial_agent import FinancialAgent
+
+        self._assert_model(FinancialAgent, "ollama", "qwen2.5:14b")
+
+    def test_financial_agent_anthropic_model(self) -> None:
+        from agents.agents.financial_agent import FinancialAgent
+
+        self._assert_model(FinancialAgent, "anthropic", "claude-sonnet-4-6")
+
+    def test_security_agent_ollama_model(self) -> None:
+        from agents.agents.security_agent import SecurityAgent
+
+        self._assert_model(SecurityAgent, "ollama", "mistral:7b-instruct")
+
+    def test_security_agent_anthropic_model(self) -> None:
+        from agents.agents.security_agent import SecurityAgent
+
+        self._assert_model(SecurityAgent, "anthropic", "claude-sonnet-4-6")
+
+    def test_intellect_agent_ollama_model(self) -> None:
+        from agents.agents.intellect_agent import IntellectAgent
+
+        self._assert_model(IntellectAgent, "ollama", "llama3.1:8b")
+
+    def test_intellect_agent_anthropic_model(self) -> None:
+        from agents.agents.intellect_agent import IntellectAgent
+
+        self._assert_model(IntellectAgent, "anthropic", "claude-sonnet-4-6")
+
+    def test_personal_agent_can_handle_high_score(self) -> None:
+        from agents.agents.personal_agent import PersonalAgent
+
+        agent = PersonalAgent()
+        score = agent.can_handle("quais são minhas rotinas de treino e nutrição hoje?")
+        self.assertGreater(score, 0.2)
+
+    def test_financial_agent_can_handle_high_score(self) -> None:
+        from agents.agents.financial_agent import FinancialAgent
+
+        agent = FinancialAgent()
+        score = agent.can_handle("quanto gastei em despesas esse mês no cartão?")
+        self.assertGreater(score, 0.2)
+
+    def test_security_agent_can_handle_high_score(self) -> None:
+        from agents.agents.security_agent import SecurityAgent
+
+        agent = SecurityAgent()
+        score = agent.can_handle("quantas senhas tenho cadastradas no cofre?")
+        self.assertGreater(score, 0.2)
+
+    def test_intellect_agent_can_handle_high_score(self) -> None:
+        from agents.agents.intellect_agent import IntellectAgent
+
+        agent = IntellectAgent()
+        score = agent.can_handle("quais livros li e quais cursos completei esse mês?")
+        self.assertGreater(score, 0.2)
+
+    def test_router_select_by_name_personal(self) -> None:
+        from agents.core.router import AgentRouter
+
+        agent = AgentRouter.select_by_name("personal")
+        self.assertIsNotNone(agent)
+        self.assertEqual(agent.name, "personal")  # type: ignore[union-attr]
+
+    def test_router_select_by_name_financial(self) -> None:
+        from agents.core.router import AgentRouter
+
+        agent = AgentRouter.select_by_name("financial")
+        self.assertIsNotNone(agent)
+        self.assertEqual(agent.name, "financial")  # type: ignore[union-attr]
+
+    def test_router_select_by_name_invalid_returns_none(self) -> None:
+        from agents.core.router import AgentRouter
+
+        agent = AgentRouter.select_by_name("nonexistent_agent")
+        self.assertIsNone(agent)

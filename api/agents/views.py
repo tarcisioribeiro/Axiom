@@ -204,7 +204,7 @@ class AgentAskView(APIView):
             },
         )
 
-        agent_response = AgentRouter.route(ctx)
+        agent_response = AgentRouter.route(ctx, agent_override=data.get("agent_name"))
 
         # Persistência assíncrona — não bloqueia o retorno da resposta
         _persist_conversation_async(
@@ -271,12 +271,10 @@ class AgentStatusView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request: Request) -> Response:
-        from agents.agents.budget_agent import BudgetAgent
-        from agents.agents.finance_agent import FinanceAgent
-        from agents.agents.forecast_agent import ForecastAgent
-        from agents.agents.insight_agent import InsightAgent
-        from agents.agents.library_agent import LibraryAgent
-        from agents.agents.planning_agent import PlanningAgent
+        from agents.agents.financial_agent import FinancialAgent
+        from agents.agents.intellect_agent import IntellectAgent
+        from agents.agents.personal_agent import PersonalAgent
+        from agents.agents.security_agent import SecurityAgent
         from agents.core.circuit_breaker import ollama_circuit
         from agents.core.llm_client import LLMClient, _cfg
 
@@ -285,12 +283,10 @@ class AgentStatusView(APIView):
         models = LLMClient.list_models() if provider == "ollama" else []
 
         agent_instances: list = [
-            FinanceAgent(),
-            BudgetAgent(),
-            ForecastAgent(),
-            PlanningAgent(),
-            LibraryAgent(),
-            InsightAgent(),
+            PersonalAgent(),
+            FinancialAgent(),
+            SecurityAgent(),
+            IntellectAgent(),
         ]
         agents_info = [
             {
@@ -361,7 +357,7 @@ class AgentStreamView(APIView):
             },
         )
 
-        agent = AgentRouter.select(ctx)
+        agent = AgentRouter.select(ctx, agent_override=data.get("agent_name"))
 
         def event_stream() -> Generator[str, None, None]:
             full_content = ""

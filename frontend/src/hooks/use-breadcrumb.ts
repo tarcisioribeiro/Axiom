@@ -28,12 +28,13 @@ import {
   ClipboardList,
   ShoppingCart,
   Tag,
-  ListOrdered,
-  Highlighter,
   BarChart3,
   FileInput,
   Dumbbell,
   UtensilsCrossed,
+  GraduationCap,
+  Brain,
+  Network,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -296,15 +297,21 @@ const routeConfigs: Record<string, RouteConfig> = {
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },
-  '/library/reading-queue': {
-    labelKey: 'breadcrumb.readingQueue',
-    icon: ListOrdered,
+  '/library/courses': {
+    labelKey: 'breadcrumb.courses',
+    icon: GraduationCap,
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },
-  '/library/highlights': {
-    labelKey: 'breadcrumb.highlights',
-    icon: Highlighter,
+  '/library/skills': {
+    labelKey: 'breadcrumb.skills',
+    icon: Brain,
+    moduleKey: 'breadcrumb.library',
+    moduleIcon: Library,
+  },
+  '/library/knowledge-graph': {
+    labelKey: 'breadcrumb.knowledgeGraph',
+    icon: Network,
     moduleKey: 'breadcrumb.library',
     moduleIcon: Library,
   },
