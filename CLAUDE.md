@@ -19,9 +19,17 @@ Axiom/
 
 ### Backend (Django)
 
-**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, agents
+**Apps**: accounts, credit_cards, expenses, revenues, loans, transfers, payables, receivables, vaults, dashboard, authentication, members, app (core config), security, library, personal_planning, notifications, budgets, bank_reconciliation, agents, exchange_rates, webhooks, admin_panel
 
-**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances.
+**Multi-module apps**: `library` is split into sub-packages: `books`, `authors`, `publishers`, `readings`, `summaries`. `security` is split into: `passwords`, `stored_cards`, `stored_accounts`, `archives`, `activity_logs`. `personal_planning` has a `services/instance_generator.py` that lazily generates task instances from `RoutineTask` templates — it does not modify already-generated instances. `personal_planning` also includes workout tracking (exercises, workout plans, days, sessions, sets) and nutrition tracking (foods, meal types, menu options, meal logs) under the same app.
+
+**Receivables** (`api/receivables/`): Mirror of `payables` for the revenue side — tracks money owed to the user (fees, reimbursements, services rendered). Creating a `Receivable` does NOT auto-create a revenue record; only recording receipt (`received_value`) triggers that. Statuses: `active`, `received`, `overdue`, `cancelled`.
+
+**Exchange Rates** (`api/exchange_rates/`): Stores daily BRL exchange rates fetched from BCB PTAX API (official Brazilian Central Bank). Use `ExchangeRate.convert(amount, from_currency, to_currency)` as a utility anywhere in the codebase. Cross-rate conversions go through BRL. Rates are refreshed via a Celery periodic task.
+
+**Webhooks** (`api/webhooks/`): Outbound webhook system. Users configure `Webhook` endpoints subscribed to specific events. Call `dispatch_event(event, payload, user=user)` from `webhooks.dispatch` to trigger deliveries. Payloads are signed with HMAC-SHA256 in the `X-Axiom-Signature` header. Deliveries are queued via Celery with retry logic. Event types include: `expense.created/updated/deleted`, `revenue.*`, `transfer.created`, `loan.*`, `budget.exceeded`, `vault.deposit/withdrawal`, `health_score.updated`.
+
+**Admin Panel** (`api/admin_panel/`): `SystemConfig` model stores encrypted system configuration (LLM keys, email, MinIO, backup settings) editable via Django Admin. Values marked `is_secret=True` are stored encrypted with `ENCRYPTION_KEY`. Access via Django Admin at `/admin/`, not the frontend `/admin/` route.
 
 **Base Model**: All models should extend `BaseModel` from `app/models.py`, which provides `uuid` PK, `created_at`/`updated_at`, audit fields (`created_by`, `updated_by`, `deleted_by`, `deleted_at`), and `is_deleted`. The same file also defines shared choice tuples reused across apps: `PAYMENT_FREQUENCY_CHOICES`, `PAYMENT_METHOD_CHOICES`, `LOAN_STATUS_CHOICES`, `BILL_STATUS_CHOICES`.
 
@@ -33,13 +41,15 @@ Axiom/
 
 **Soft Delete**: Models use `is_deleted=False` filtering in querysets rather than actual deletion.
 
-**Signals**: accounts, credit_cards, loans, payables, personal_planning, transfers apps use Django signals (registered via `apps.py:ready()`).
+**Signals**: accounts, credit_cards, loans, payables, receivables, personal_planning, transfers apps use Django signals (registered via `apps.py:ready()`).
 
 **Encryption**: `app/encryption.py:FieldEncryption` (Fernet). Encrypted fields use `_` prefix convention (e.g., `_account_number`, `_card_number`). Decryption cache per-request via `DecryptionCacheMiddleware`. Use `defer('_field')` in list querysets to skip encrypted fields for performance.
 
 **Middleware order** (settings.py): PrometheusBeforeMiddleware → DecryptionCacheMiddleware → SecurityMiddleware → CorsMiddleware → SessionMiddleware → CommonMiddleware → CsrfViewMiddleware → AuthenticationMiddleware → JWTCookieMiddleware → AuditLoggingMiddleware → MessageMiddleware → XFrameOptionsMiddleware → SecurityHeadersMiddleware → PrometheusAfterMiddleware
 
-**Authentication**: JWT tokens stored in HttpOnly cookies. `authentication/middleware.py:JWTCookieMiddleware` extracts cookies → Authorization header. Access token: 15min, refresh: 1h.
+**Authentication**: JWT tokens stored in HttpOnly cookies. `authentication/middleware.py:JWTCookieMiddleware` extracts cookies → Authorization header. Access token: 15min, refresh: 1h. **2FA**: TOTP-based via `pyotp`. `TOTPDevice` model (one per user) stores the HMAC secret; backup codes are stored as SHA-256 hashes (plaintext never saved). Setup flow: `setup/` → `activate/` → `verify/` on subsequent logins. Email verification and password reset also handled in `authentication/` via token-based flows.
+
+**Async Tasks** (`Celery`): Worker container is `mindledger-celery-worker` (`celery -A app worker --concurrency=2`). Beat scheduler is `mindledger-celery-beat` using `DatabaseScheduler` (schedules stored in DB via `django_celery_beat`). In tests, `CELERY_TASK_ALWAYS_EAGER=True` so tasks run synchronously without Redis.
 
 **API Versioning**: All endpoints under `/api/v1/`. API docs at `/api/docs/` (Swagger) and `/api/redoc/`.
 
@@ -91,6 +101,7 @@ Axiom/
 ```bash
 docker compose up -d                                    # Start all services
 docker compose logs -f api                              # View API logs
+docker compose logs -f celery-worker                    # View Celery worker logs
 docker compose exec api python manage.py <command>      # Run management commands
 docker compose up -d --build                            # Rebuild after dependency changes
 ```
@@ -313,9 +324,18 @@ Key testing conventions:
 - `ENCRYPTION_KEY`: Fernet key (44 chars base64) — rotate safely using the procedure below; do **not** change it manually without running `rotate_encryption_key` first
 - `BACKUP_ENCRYPTION_KEY_PREVIOUS`: previous Fernet key kept after a rotation — set this so `vault_recovery` can report its presence as a fallback hint; clear it once you confirm all fields decrypted correctly with the new key
 - `DB_USER`, `DB_PASSWORD`, `DB_NAME`: PostgreSQL credentials
+- `DB_HOST`: `db` for Docker, `localhost` for local
+- `REDIS_URL`: Redis connection string (default: `redis://localhost:6379/0`); also used as Celery broker/result backend
+- `REDIS_PASSWORD`: Redis auth password (required in Docker; set on `redis-server --requirepass`)
 - `VITE_API_BASE_URL`: Backend URL (default: `http://localhost:39100`)
 - `VITE_SENTRY_DSN`: Sentry DSN for frontend error tracking (optional — Sentry is silently disabled when unset)
-- `DB_HOST`: `db` for Docker, `localhost` for local
+- `EMAIL_BACKEND`: defaults to `smtp`; set to `django.core.mail.backends.console.EmailBackend` for local dev
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`: SMTP configuration
+- `MINIO_ENDPOINT`: hostname:port of MinIO (e.g. `minio:9000`); when set, media files use S3/MinIO storage instead of local filesystem
+- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`: MinIO credentials (required when `MINIO_ENDPOINT` is set)
+- `MINIO_BUCKET_NAME`: target bucket (default: `axiom`)
+- `MINIO_USE_SSL`: `true`/`false` (default: `false`)
+- `MINIO_CA_BUNDLE`: path to CA cert for self-signed MinIO TLS (e.g. `/etc/ssl/minio/ca.crt` in k8s)
 - `LLM_PROVIDER`: `ollama` (default), `groq`, or `anthropic`
 - `OLLAMA_BASE_URL`: Ollama server URL (default: `http://ollama:11434`)
 - `OLLAMA_MODEL`: chat model (default: `mistral:7b-instruct`)
