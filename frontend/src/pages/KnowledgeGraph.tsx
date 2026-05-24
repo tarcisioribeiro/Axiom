@@ -938,7 +938,9 @@ export default function KnowledgeGraph() {
               <div className="flex h-full flex-col items-center justify-center gap-md text-muted-foreground">
                 <Sparkles className="h-12 w-12 opacity-30" />
                 <p className="text-sm">
-                  {search ? t('pages.knowledgeGraph.emptySearch') : t('pages.knowledgeGraph.empty')}
+                  {search
+                    ? t('pages.knowledgeGraph.emptySearch')
+                    : t('pages.knowledgeGraph.empty')}
                 </p>
               </div>
             ) : (
