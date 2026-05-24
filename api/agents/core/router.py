@@ -2,27 +2,35 @@
 Roteador de agentes: seleciona o agente mais adequado para cada query.
 
 Melhorias implementadas:
-- ForecastAgent adicionado ao mapa de domínios semânticos
-- Scoring semântico consolidado em 1 SQL com GROUP BY (era 5 queries seriais)
-- Embedding no roteamento é opcional via LLM_SEMANTIC_ROUTING_ENABLED (padrão: true)
-- SemanticRouter com exemplares pré-computados: classifica por similaridade com
-  queries canônicas por agente, sem depender de dados do usuário no banco
+- Suporte a agent_override (seleção direta sem roteamento automático)
+- Normalização de acentos no scoring de keywords
+- 4 novos agentes modulares: personal, financial, security, intellect
+- Exemplares semânticos ampliados (15–20 por agente)
+- Scoring semântico consolidado em 1 SQL com GROUP BY
+- Embedding opcional via LLM_SEMANTIC_ROUTING_ENABLED (padrão: true)
+- SemanticRouter com exemplares pré-computados
 - Fallback gracioso: se embedding falhar, usa apenas keyword scoring
 """
 
 import logging
 import math
+import unicodedata
 
 from agents.core.base_agent import AgentContext, AgentResponse, BaseAgent
 from agents.core.llm_client import LLMClient
 
 logger = logging.getLogger(__name__)
 
-# Mapa agente.name → domínio de embedding (inclui forecast agora)
+# Mapa agente.name → domínio de embedding
 _AGENT_TO_DOMAIN: dict[str, str] = {
+    "personal": "planning",
+    "financial": "finance",
+    "security": "general",
+    "intellect": "library",
+    # Agentes legados
     "finance": "finance",
     "budget": "budget",
-    "forecast": "finance",  # forecast usa embeddings do domínio finance
+    "forecast": "finance",
     "planning": "planning",
     "library": "library",
     "insight": "general",
@@ -30,9 +38,77 @@ _AGENT_TO_DOMAIN: dict[str, str] = {
 
 _DOMAINS = ["finance", "budget", "planning", "library", "general"]
 
-# Exemplares canônicos por agente para SemanticRouter
-# Estes são representativos — adicionar mais exemplos melhora precisão
+# Exemplares canônicos por agente — ampliados para melhor precisão semântica
 _AGENT_EXEMPLARS: dict[str, list[str]] = {
+    "personal": [
+        "Como estão minhas rotinas esta semana?",
+        "Quantas tarefas completei hoje?",
+        "Qual minha taxa de cumprimento de hábitos?",
+        "Quais hábitos estou deixando de fazer?",
+        "Mostre meu progresso nas metas pessoais",
+        "Quantas vezes treinei esta semana?",
+        "Como está minha dieta esta semana?",
+        "Qual meu plano de treino atual?",
+        "Quantas refeições registrei hoje?",
+        "Quais rotinas tenho mais dificuldade em manter?",
+        "Minha meta de ganho de massa está progredindo?",
+        "Qual o histórico dos meus treinos no último mês?",
+        "Preciso melhorar minha disciplina com os exercícios",
+        "Mostre as tarefas pendentes de hoje",
+        "Como estou indo com meus objetivos pessoais?",
+    ],
+    "financial": [
+        "Quanto gastei em alimentação este mês?",
+        "Quais foram minhas maiores despesas em março?",
+        "Mostre meus gastos por categoria na semana passada",
+        "Qual meu total de receitas este mês?",
+        "Vou estourar meu orçamento de lazer?",
+        "Quanto ainda posso gastar esta semana?",
+        "Qual o status dos meus orçamentos?",
+        "Quanto vou ter no final do mês?",
+        "Meu saldo vai ficar negativo?",
+        "Previsão de saldo para os próximos 30 dias",
+        "Quais contas vencem essa semana?",
+        "Qual o saldo atual das minhas contas?",
+        "Quanto ainda devo no empréstimo?",
+        "Quais são minhas despesas fixas?",
+        "Faça um resumo financeiro do mês",
+        "Onde estou gastando mais dinheiro?",
+        "Qual a fatura do meu cartão de crédito?",
+        "Tenho receitas recorrentes cadastradas?",
+    ],
+    "security": [
+        "Quantas senhas tenho armazenadas?",
+        "Tenho senhas desatualizadas?",
+        "Como está a segurança do meu cofre?",
+        "Mostre os últimos acessos registrados",
+        "Quais categorias de senhas tenho?",
+        "Tenho cartões armazenados no cofre?",
+        "Houve atividade suspeita recentemente?",
+        "Minhas senhas precisam de atualização?",
+        "Quantos arquivos seguros tenho?",
+        "Como está minha segurança digital?",
+        "Preciso atualizar alguma senha importante?",
+        "Mostre o histórico de atividade da minha conta",
+    ],
+    "intellect": [
+        "O que aprendi com o livro Pai Rico Pobre Rico?",
+        "Quais livros li nos últimos 3 meses?",
+        "Que insight o autor menciona sobre investimentos?",
+        "Resuma o livro que estou lendo",
+        "Quais são meus destaques de leitura recentes?",
+        "Que livros tenho na fila para ler?",
+        "Qual meu progresso no curso de Python?",
+        "Quais habilidades estou desenvolvendo?",
+        "Mostre meu mapa de habilidades",
+        "Quantos cursos terminei?",
+        "Que livros você recomenda sobre finanças?",
+        "Quais são meus livros favoritos?",
+        "Me fale sobre o que aprendi no último livro",
+        "Tenho algum livro de tecnologia na biblioteca?",
+        "Qual o status do meu aprendizado este mês?",
+    ],
+    # Agentes legados — mantidos para compatibilidade
     "finance": [
         "Quanto gastei em alimentação este mês?",
         "Quais foram minhas maiores despesas em março?",
@@ -78,15 +154,34 @@ _AGENT_EXEMPLARS: dict[str, list[str]] = {
 }
 
 
+def _normalize(text: str) -> str:
+    """Remove acentos e converte para minúsculas para matching robusto."""
+    return "".join(
+        c
+        for c in unicodedata.normalize("NFD", text.lower())
+        if unicodedata.category(c) != "Mn"
+    )
+
+
 def _build_registry() -> list[BaseAgent]:
     from agents.agents.budget_agent import BudgetAgent
     from agents.agents.finance_agent import FinanceAgent
+    from agents.agents.financial_agent import FinancialAgent
     from agents.agents.forecast_agent import ForecastAgent
     from agents.agents.insight_agent import InsightAgent
+    from agents.agents.intellect_agent import IntellectAgent
     from agents.agents.library_agent import LibraryAgent
+    from agents.agents.personal_agent import PersonalAgent
     from agents.agents.planning_agent import PlanningAgent
+    from agents.agents.security_agent import SecurityAgent
 
     return [
+        # Agentes principais (novos, modulares)
+        PersonalAgent(),
+        FinancialAgent(),
+        SecurityAgent(),
+        IntellectAgent(),
+        # Agentes legados (preservados para compatibilidade e roteamento automático)
         FinanceAgent(),
         BudgetAgent(),
         ForecastAgent(),
@@ -94,6 +189,33 @@ def _build_registry() -> list[BaseAgent]:
         PlanningAgent(),
         InsightAgent(),
     ]
+
+
+def _build_name_map() -> dict[str, type[BaseAgent]]:
+    from agents.agents.budget_agent import BudgetAgent
+    from agents.agents.finance_agent import FinanceAgent
+    from agents.agents.financial_agent import FinancialAgent
+    from agents.agents.forecast_agent import ForecastAgent
+    from agents.agents.insight_agent import InsightAgent
+    from agents.agents.intellect_agent import IntellectAgent
+    from agents.agents.library_agent import LibraryAgent
+    from agents.agents.personal_agent import PersonalAgent
+    from agents.agents.planning_agent import PlanningAgent
+    from agents.agents.security_agent import SecurityAgent
+
+    return {
+        "personal": PersonalAgent,
+        "financial": FinancialAgent,
+        "security": SecurityAgent,
+        "intellect": IntellectAgent,
+        # Aliases para compatibilidade
+        "finance": FinanceAgent,
+        "budget": BudgetAgent,
+        "forecast": ForecastAgent,
+        "planning": PlanningAgent,
+        "library": LibraryAgent,
+        "insight": InsightAgent,
+    }
 
 
 def _is_postgres() -> bool:
@@ -112,12 +234,7 @@ def _cosine_sim(a: list[float], b: list[float]) -> float:
 
 
 def _pg_all_domains_avg(embedding: list[float], user_pk: int) -> dict[str, float]:
-    """
-    Uma única query SQL retornando média de similaridade top-3 por domínio.
-
-    Substitui as 5 queries seriais anteriores — reduz round-trips de 5→1.
-    Usa ROW_NUMBER() OVER PARTITION para selecionar top-3 por domínio antes do AVG.
-    """
+    """Uma única query SQL retornando média de similaridade top-3 por domínio."""
     from django.db import connection
 
     emb_str = "[" + ",".join(f"{x:.6f}" for x in embedding) + "]"
@@ -189,10 +306,7 @@ class SemanticRouter:
     Router semântico baseado em similaridade com queries exemplares por agente.
 
     Exemplares são embeddings de queries canônicas pré-computados na primeira
-    chamada (lazy init). Independe do banco de embeddings do usuário — funciona
-    mesmo sem histórico de uso.
-
-    Uso em scoring: merged = 0.55 * keyword + 0.30 * exemplar + 0.15 * user_pgvector
+    chamada (lazy init). Independe do banco de embeddings do usuário.
     """
 
     _instance: "SemanticRouter | None" = None
@@ -256,11 +370,35 @@ class SemanticRouter:
 
 class AgentRouter:
     @staticmethod
-    def select(ctx: AgentContext) -> BaseAgent:
+    def select_by_name(name: str) -> BaseAgent | None:
+        """Instancia agente diretamente pelo nome, sem roteamento automático."""
+        name_map = _build_name_map()
+        cls = name_map.get(name)
+        if cls is None:
+            logger.warning(
+                "AgentRouter.select_by_name: agente '%s' não encontrado", name
+            )
+            return None
+        logger.info("AgentRouter: override direto para agente '%s'", name)
+        return cls()
+
+    @staticmethod
+    def select(ctx: AgentContext, agent_override: str | None = None) -> BaseAgent:
         from app.config import cfg
 
+        # Override direto: bypassa roteamento automático
+        if agent_override:
+            agent = AgentRouter.select_by_name(agent_override)
+            if agent is not None:
+                return agent
+            logger.warning(
+                "AgentRouter: override '%s' inválido, usando roteamento automático",
+                agent_override,
+            )
+
         registry = _build_registry()
-        # Keyword scoring (sempre executado — rápido, O(keywords))
+
+        # Keyword scoring com normalização de acentos
         score_map: dict[BaseAgent, float] = {
             agent: agent.can_handle(ctx.query) for agent in registry
         }
@@ -321,5 +459,5 @@ class AgentRouter:
         return best_agent
 
     @staticmethod
-    def route(ctx: AgentContext) -> AgentResponse:
-        return AgentRouter.select(ctx).run(ctx)
+    def route(ctx: AgentContext, agent_override: str | None = None) -> AgentResponse:
+        return AgentRouter.select(ctx, agent_override=agent_override).run(ctx)

@@ -34,8 +34,7 @@ import {
   UtensilsCrossed,
   GraduationCap,
   Brain,
-  Highlighter,
-  BookMarked,
+  Network,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -212,16 +211,6 @@ export const navModules: NavModule[] = [
             href: '/library/publishers',
             icon: Building2,
           },
-          {
-            titleKey: 'nav.items.highlights',
-            href: '/library/highlights',
-            icon: Highlighter,
-          },
-          {
-            titleKey: 'nav.items.readingQueue',
-            href: '/library/reading-queue',
-            icon: BookMarked,
-          },
         ],
       },
       {
@@ -238,6 +227,11 @@ export const navModules: NavModule[] = [
             titleKey: 'nav.items.skills',
             href: '/library/skills',
             icon: Brain,
+          },
+          {
+            titleKey: 'nav.items.knowledgeGraph',
+            href: '/library/knowledge-graph',
+            icon: Network,
           },
         ],
       },

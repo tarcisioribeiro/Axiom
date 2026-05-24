@@ -155,3 +155,100 @@ export interface SkillFormData {
   notes?: string | null;
   owner: number;
 }
+
+// ============================================================================
+// KNOWLEDGE GRAPH TYPES
+// ============================================================================
+
+export type KnowledgeNodeType =
+  | 'book'
+  | 'course'
+  | 'skill'
+  | 'highlight'
+  | 'summary'
+  | 'author';
+
+export type KnowledgeLinkRelation =
+  | 'relates'
+  | 'supports'
+  | 'contradicts'
+  | 'deepens'
+  | 'derived_from'
+  | 'applies';
+
+export interface KnowledgeLink {
+  id: number;
+  uuid: string;
+  source_type: KnowledgeNodeType;
+  source_type_display: string;
+  source_id: string;
+  target_type: KnowledgeNodeType;
+  target_type_display: string;
+  target_id: string;
+  relation_label: KnowledgeLinkRelation;
+  relation_label_display: string;
+  owner: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeLinkFormData {
+  source_type: KnowledgeNodeType;
+  source_id: string;
+  target_type: KnowledgeNodeType;
+  target_id: string;
+  relation_label: KnowledgeLinkRelation;
+  owner: number;
+}
+
+export interface GraphNodeMetadata {
+  // Book
+  genre?: string;
+  read_status?: string;
+  pages?: number;
+  rating?: number | null;
+  // Author
+  nationality_display?: string;
+  // Summary
+  book_title?: string | null;
+  // Highlight
+  highlight_type?: string;
+  color?: string;
+  page_number?: number | null;
+  // Course
+  platform?: string;
+  category?: string;
+  status?: string;
+  progress_percentage?: number;
+  // Skill
+  proficiency?: string;
+}
+
+export interface GraphNode {
+  id: string;
+  type: KnowledgeNodeType;
+  label: string;
+  metadata: GraphNodeMetadata;
+  // runtime fields populated by force-graph
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number;
+  fy?: number;
+  [others: string]: unknown;
+}
+
+export interface GraphLink {
+  source: string | GraphNode;
+  target: string | GraphNode;
+  type: 'implicit' | 'explicit';
+  relation: string;
+  relation_display?: string;
+  link_id?: number;
+}
+
+export interface KnowledgeGraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}

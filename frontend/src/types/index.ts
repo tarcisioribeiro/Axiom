@@ -14,6 +14,7 @@ export type {
   AgentRole,
   AgentMessage,
   AgentHistoryResponse,
+  AgentName,
   AgentAskRequest,
   AgentAskResponse,
   AgentStatus,
@@ -132,6 +133,13 @@ export type {
   IntellectCategory,
   SkillProficiency,
   SkillStatus,
+  KnowledgeLink,
+  KnowledgeLinkFormData,
+  KnowledgeNodeType,
+  KnowledgeLinkRelation,
+  GraphNode,
+  GraphLink,
+  KnowledgeGraphData,
 } from './intellect';
 export {
   ERAS,

@@ -25,6 +25,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    KnowledgeLink,
     LiteraryTypeGoal,
     Publisher,
     Reading,
@@ -48,6 +49,8 @@ from library.serializers import (
     CourseSerializer,
     CourseSessionCreateUpdateSerializer,
     CourseSessionSerializer,
+    KnowledgeLinkCreateUpdateSerializer,
+    KnowledgeLinkSerializer,
     LiteraryTypeGoalCreateUpdateSerializer,
     LiteraryTypeGoalSerializer,
     MarkAsReadSerializer,
@@ -2168,3 +2171,224 @@ class SkillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
+
+
+# ============================================================================
+# KNOWLEDGE GRAPH VIEWS
+# ============================================================================
+
+
+class KnowledgeLinkListCreateView(BaseListCreateView):
+    """Lista todos os links de conhecimento ou cria um novo."""
+
+    queryset = KnowledgeLink.objects.all()
+
+    def get_queryset(self):
+        return KnowledgeLink.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return KnowledgeLinkCreateUpdateSerializer
+        return KnowledgeLinkSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+
+
+class KnowledgeLinkRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+    """Recupera, atualiza ou deleta um link de conhecimento."""
+
+    queryset = KnowledgeLink.objects.all()
+
+    def get_queryset(self):
+        return KnowledgeLink.objects.filter(
+            owner__user=self.request.user, deleted_at__isnull=True
+        ).select_related("owner")
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return KnowledgeLinkCreateUpdateSerializer
+        return KnowledgeLinkSerializer
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+class KnowledgeGraphView(APIView):
+    """Retorna todos os nós e arestas do grafo de conhecimento."""
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    queryset = KnowledgeLink.objects.all()
+
+    def get(self, request):
+        member_qs = request.user.member if hasattr(request.user, "member") else None
+        if not member_qs:
+            return Response({"nodes": [], "links": []})
+
+        include_highlights = (
+            request.query_params.get("include_highlights", "false").lower() == "true"
+        )
+
+        nodes = []
+        links = []
+
+        # --- Authors ---
+        authors = Author.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        )
+        for a in authors:
+            nodes.append(
+                {
+                    "id": f"author-{a.uuid}",
+                    "type": "author",
+                    "label": a.name,
+                    "metadata": {
+                        "nationality_display": a.get_nationality_display(),
+                    },
+                }
+            )
+
+        # --- Books ---
+        books = Book.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        ).prefetch_related("authors")
+        for b in books:
+            nodes.append(
+                {
+                    "id": f"book-{b.uuid}",
+                    "type": "book",
+                    "label": b.title,
+                    "metadata": {
+                        "genre": b.genre,
+                        "read_status": b.read_status,
+                        "pages": b.pages,
+                        "rating": b.rating,
+                    },
+                }
+            )
+            for author in b.authors.filter(deleted_at__isnull=True):
+                links.append(
+                    {
+                        "source": f"book-{b.uuid}",
+                        "target": f"author-{author.uuid}",
+                        "type": "implicit",
+                        "relation": "written_by",
+                    }
+                )
+
+        # --- Summaries ---
+        summaries = Summary.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        ).select_related("book")
+        for s in summaries:
+            nodes.append(
+                {
+                    "id": f"summary-{s.uuid}",
+                    "type": "summary",
+                    "label": s.title,
+                    "metadata": {
+                        "book_title": s.book.title if s.book else None,
+                    },
+                }
+            )
+            if s.book:
+                links.append(
+                    {
+                        "source": f"book-{s.book.uuid}",
+                        "target": f"summary-{s.uuid}",
+                        "type": "implicit",
+                        "relation": "has_summary",
+                    }
+                )
+
+        # --- Highlights (optional) ---
+        if include_highlights:
+            highlights = BookHighlight.objects.filter(
+                owner__user=request.user, deleted_at__isnull=True
+            ).select_related("book", "summary")
+            for h in highlights:
+                label = h.text[:80] + ("…" if len(h.text) > 80 else "")
+                nodes.append(
+                    {
+                        "id": f"highlight-{h.uuid}",
+                        "type": "highlight",
+                        "label": label,
+                        "metadata": {
+                            "highlight_type": h.highlight_type,
+                            "color": h.color,
+                            "page_number": h.page_number,
+                        },
+                    }
+                )
+                links.append(
+                    {
+                        "source": f"book-{h.book.uuid}",
+                        "target": f"highlight-{h.uuid}",
+                        "type": "implicit",
+                        "relation": "has_highlight",
+                    }
+                )
+                if h.summary:
+                    links.append(
+                        {
+                            "source": f"highlight-{h.uuid}",
+                            "target": f"summary-{h.summary.uuid}",
+                            "type": "implicit",
+                            "relation": "linked_to",
+                        }
+                    )
+
+        # --- Courses ---
+        courses = Course.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        )
+        for c in courses:
+            nodes.append(
+                {
+                    "id": f"course-{c.uuid}",
+                    "type": "course",
+                    "label": c.title,
+                    "metadata": {
+                        "platform": c.platform,
+                        "category": c.category,
+                        "status": c.status,
+                        "progress_percentage": c.progress_percentage,
+                    },
+                }
+            )
+
+        # --- Skills ---
+        skills = Skill.objects.filter(owner__user=request.user, deleted_at__isnull=True)
+        for sk in skills:
+            nodes.append(
+                {
+                    "id": f"skill-{sk.uuid}",
+                    "type": "skill",
+                    "label": sk.name,
+                    "metadata": {
+                        "category": sk.category,
+                        "proficiency": sk.proficiency,
+                        "status": sk.status,
+                    },
+                }
+            )
+
+        # --- Explicit KnowledgeLinks ---
+        knowledge_links = KnowledgeLink.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        )
+        for kl in knowledge_links:
+            links.append(
+                {
+                    "source": f"{kl.source_type}-{kl.source_id}",
+                    "target": f"{kl.target_type}-{kl.target_id}",
+                    "type": "explicit",
+                    "relation": kl.relation_label,
+                    "relation_display": kl.get_relation_label_display(),
+                    "link_id": kl.id,
+                }
+            )
+
+        return Response({"nodes": nodes, "links": links})

@@ -30,7 +30,6 @@ import {
   Sun,
   Plus,
   ShoppingCart,
-  ListOrdered,
   FileUp,
 } from 'lucide-react';
 
@@ -361,15 +360,6 @@ export const navigationCommands: Command[] = [
     icon: BookMarked,
     href: '/library/readings',
     keywords: ['leituras', 'readings', 'historico'],
-    section: 'navigation',
-  },
-  {
-    id: 'reading-queue',
-    title: 'Fila de Leitura',
-    description: 'Reordenar a fila de livros para ler',
-    icon: ListOrdered,
-    href: '/library/reading-queue',
-    keywords: ['fila', 'leitura', 'prioridade', 'queue', 'ordem'],
     section: 'navigation',
   },
 ];

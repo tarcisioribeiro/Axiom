@@ -231,7 +231,8 @@
       "foods": "Alimentos",
       "mealLog": "Diário Alimentar",
       "courses": "Cursos",
-      "skills": "Habilidades"
+      "skills": "Habilidades",
+      "knowledgeGraph": "Grafo de Conhecimento"
     },
     "agents": "Agentes IA"
   },
@@ -306,7 +307,8 @@
     "workout": "Treino",
     "nutrition": "Dieta",
     "courses": "Cursos",
-    "skills": "Habilidades"
+    "skills": "Habilidades",
+    "knowledgeGraph": "Grafo de Conhecimento"
   },
   "auth": {
     "login": {
@@ -3793,19 +3795,72 @@
     },
     "agents": {
       "title": "Agentes IA",
-      "subtitle": "Converse com os agentes inteligentes do Axiom",
+      "subtitle": "Converse com os agentes inteligentes do MindLedger",
       "newSession": "Nova sessão",
       "clearHistory": "Limpar histórico",
       "clearConfirm": "Deseja apagar todas as mensagens desta sessão?",
-      "inputPlaceholder": "Faça uma pergunta sobre suas finanças, planejamento ou leituras...",
       "send": "Enviar",
       "thinking": "Pensando...",
-      "noMessages": "Nenhuma mensagem ainda. Comece fazendo uma pergunta!",
+      "noMessages": "Selecione um agente e faça sua primeira pergunta!",
       "session": "Sessão",
       "provider": "Provedor",
       "unavailable": "LLM indisponível. Verifique as configurações no painel admin.",
       "sources": "Fontes",
+      "keyboardHint": "Enter para enviar · Shift+Enter para nova linha",
+      "selectAgent": "Escolha um agente",
+      "selectAgentDesc": "Selecione o assistente especializado para começar a conversa",
+      "changeAgent": "Trocar agente",
+      "agentActive": "Agente ativo",
+      "agentSelector": {
+        "personal": {
+          "name": "Agente Pessoal",
+          "description": "Rotinas, hábitos, metas, treino físico e nutrição",
+          "examples": [
+            "Como estão minhas rotinas?",
+            "Treinei essa semana?",
+            "Progresso nas metas"
+          ]
+        },
+        "financial": {
+          "name": "Agente Financeiro",
+          "description": "Despesas, receitas, orçamentos, previsão de saldo e empréstimos",
+          "examples": [
+            "Quanto gastei este mês?",
+            "Vou estourar orçamento?",
+            "Previsão de saldo"
+          ]
+        },
+        "security": {
+          "name": "Agente de Segurança",
+          "description": "Cofre digital, senhas armazenadas e logs de atividade",
+          "examples": [
+            "Senhas desatualizadas?",
+            "Atividade recente",
+            "Segurança digital"
+          ]
+        },
+        "intellect": {
+          "name": "Agente Intelectual",
+          "description": "Livros lidos, destaques, cursos e mapa de habilidades",
+          "examples": [
+            "O que aprendi no último livro?",
+            "Progresso nos cursos",
+            "Minhas habilidades"
+          ]
+        }
+      },
+      "inputPlaceholder": {
+        "personal": "Pergunte sobre rotinas, treinos, metas ou nutrição...",
+        "financial": "Pergunte sobre gastos, saldo, orçamentos ou previsões...",
+        "security": "Pergunte sobre senhas, cofre ou atividade de segurança...",
+        "intellect": "Pergunte sobre livros, cursos, habilidades ou leituras...",
+        "default": "Faça uma pergunta ao agente..."
+      },
       "agentNames": {
+        "personal": "Agente Pessoal",
+        "financial": "Agente Financeiro",
+        "security": "Agente de Segurança",
+        "intellect": "Agente Intelectual",
         "finance_agent": "Finanças",
         "budget_agent": "Orçamentos",
         "forecast_agent": "Projeção",
@@ -4679,6 +4734,75 @@
       "loadError": "Erro ao carregar registros",
       "saveError": "Erro ao salvar",
       "deleteError": "Erro ao excluir"
+    },
+    "knowledgeGraph": {
+      "title": "Grafo de Conhecimento",
+      "description": "Visualize e conecte livros, cursos, habilidades e notas",
+      "search": "Buscar nós...",
+      "nodeTypesFilter": "Tipos de nó",
+      "includeHighlights": "Incluir destaques",
+      "loading": "Carregando grafo...",
+      "empty": "Nenhum dado para exibir",
+      "emptySearch": "Nenhum nó encontrado para esta busca",
+      "explicitConnections": "Conexões explícitas",
+      "createLink": "Criar conexão",
+      "clickToConnect": "Clique em outro nó para conectar",
+      "clickToConnectWith": "Clique em outro nó para conectar com",
+      "nodeTypes": {
+        "book": "Livro",
+        "author": "Autor",
+        "course": "Curso",
+        "skill": "Habilidade",
+        "summary": "Sumário",
+        "highlight": "Destaque"
+      },
+      "relations": {
+        "relates": "Relaciona",
+        "supports": "Apoia",
+        "contradicts": "Contradiz",
+        "deepens": "Aprofunda",
+        "derived_from": "Derivado de",
+        "applies": "Aplica"
+      },
+      "meta": {
+        "genre": "Gênero",
+        "status": "Status",
+        "pages": "Páginas",
+        "rating": "Avaliação",
+        "nationality": "Nacionalidade",
+        "platform": "Plataforma",
+        "category": "Categoria",
+        "progress": "Progresso",
+        "proficiency": "Proficiência",
+        "book": "Livro",
+        "type": "Tipo",
+        "page": "Página"
+      },
+      "stats": {
+        "nodes": "Nós",
+        "connections": "Conexões",
+        "explicit": "Explícitas"
+      },
+      "createLinkModal": {
+        "title": "Criar Conexão",
+        "cancel": "Cancelar",
+        "creating": "Criando…",
+        "confirm": "Criar"
+      },
+      "deleteLink": {
+        "title": "Remover conexão",
+        "description": "Tem certeza que deseja remover esta conexão?",
+        "confirm": "Remover"
+      },
+      "toasts": {
+        "linkCreated": "Conexão criada com sucesso.",
+        "linkDeleted": "Conexão removida.",
+        "linkCreateError": "Erro ao criar conexão"
+      },
+      "legend": {
+        "explicit": "Conexão explícita",
+        "implicit": "Conexão implícita"
+      }
     }
   },
   "userProfile": {
