@@ -34,12 +34,9 @@ import { getErrorMessage } from '@/utils/error-utils';
 type ViewMode = 'list' | 'radar';
 
 const STATUS_COLORS: Record<SkillStatus, string> = {
-  learning:
-    'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800',
-  evolving:
-    'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800',
-  mastered:
-    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800',
+  learning: 'bg-info/10 text-info border-info/30',
+  evolving: 'bg-warning/10 text-warning border-warning/30',
+  mastered: 'bg-success/10 text-success border-success/30',
 };
 
 function ProficiencyDots({ level }: { level: number }) {
@@ -230,7 +227,7 @@ export default function Skills() {
                 setEditingSkill(null);
                 setFormOpen(true);
               }}
-              className="gap-sm bg-category-intellect text-white hover:bg-category-intellect/90"
+              className="gap-sm bg-category-intellect text-primary-foreground hover:bg-category-intellect/90"
             >
               <Plus className="h-4 w-4" />
               {t('pages.skills.newBtn')}
@@ -249,12 +246,12 @@ export default function Skills() {
             {
               label: t('pages.skills.status.mastered'),
               value: masteredCount,
-              color: 'text-emerald-600',
+              color: 'text-success',
             },
             {
               label: t('pages.skills.status.learning'),
               value: learningCount,
-              color: 'text-blue-600',
+              color: 'text-info',
             },
           ].map(({ label, value, color }) => (
             <div
@@ -290,7 +287,7 @@ export default function Skills() {
               className={cn(
                 'rounded-l-lg px-md py-sm transition-colors',
                 viewMode === 'list'
-                  ? 'bg-category-intellect text-white'
+                  ? 'bg-category-intellect text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
               )}
             >
@@ -302,7 +299,7 @@ export default function Skills() {
               className={cn(
                 'rounded-r-lg px-md py-sm transition-colors',
                 viewMode === 'radar'
-                  ? 'bg-category-intellect text-white'
+                  ? 'bg-category-intellect text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
               )}
             >

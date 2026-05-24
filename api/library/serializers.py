@@ -11,6 +11,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    KnowledgeLink,
     LiteraryTypeGoal,
     Publisher,
     Reading,
@@ -1031,5 +1032,57 @@ class SkillCreateUpdateSerializer(serializers.ModelSerializer):
             "proficiency",
             "status",
             "notes",
+            "owner",
+        ]
+
+
+# ============================================================================
+# KNOWLEDGE LINK SERIALIZERS
+# ============================================================================
+
+
+class KnowledgeLinkSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de links de conhecimento."""
+
+    relation_label_display = serializers.CharField(
+        source="get_relation_label_display", read_only=True
+    )
+    source_type_display = serializers.CharField(
+        source="get_source_type_display", read_only=True
+    )
+    target_type_display = serializers.CharField(
+        source="get_target_type_display", read_only=True
+    )
+
+    class Meta:
+        model = KnowledgeLink
+        fields = [
+            "id",
+            "uuid",
+            "source_type",
+            "source_type_display",
+            "source_id",
+            "target_type",
+            "target_type_display",
+            "target_id",
+            "relation_label",
+            "relation_label_display",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class KnowledgeLinkCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para criação/atualização de links de conhecimento."""
+
+    class Meta:
+        model = KnowledgeLink
+        fields = [
+            "source_type",
+            "source_id",
+            "target_type",
+            "target_id",
+            "relation_label",
             "owner",
         ]
