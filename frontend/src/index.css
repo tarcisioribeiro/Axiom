@@ -1188,6 +1188,41 @@
     box-shadow: var(--shadow-card-hover);
   }
 
+  /* Agent badge colors — semantic tokens via category CSS variables, sem hardcode */
+  .agent-badge-personal {
+    background-color: hsl(var(--category-health) / 0.15);
+    color: hsl(var(--category-health));
+  }
+  .agent-badge-financial {
+    background-color: hsl(var(--category-finance) / 0.15);
+    color: hsl(var(--category-finance));
+  }
+  .agent-badge-security {
+    background-color: hsl(var(--category-studies) / 0.15);
+    color: hsl(var(--category-studies));
+  }
+  .agent-badge-intellect {
+    background-color: hsl(var(--category-intellect) / 0.15);
+    color: hsl(var(--category-intellect));
+  }
+  .agent-badge-legacy {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+  /* Agent card border accent */
+  .agent-card-personal {
+    border-color: hsl(var(--category-health));
+  }
+  .agent-card-financial {
+    border-color: hsl(var(--category-finance));
+  }
+  .agent-card-security {
+    border-color: hsl(var(--category-studies));
+  }
+  .agent-card-intellect {
+    border-color: hsl(var(--category-intellect));
+  }
+
   /* Status colors */
   .text-success {
     @apply text-[hsl(var(--success))];

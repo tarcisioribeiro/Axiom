@@ -14,6 +14,8 @@ export interface AgentHistoryResponse {
   session_id: string;
 }
 
+export type AgentName = 'personal' | 'financial' | 'security' | 'intellect';
+
 export interface AgentAskRequest {
   query: string;
   session_id: string;
@@ -21,6 +23,7 @@ export interface AgentAskRequest {
   date_to?: string;
   forecast_days?: number;
   language?: string;
+  agent_name?: AgentName | null;
 }
 
 export interface AgentAskResponse {

@@ -283,7 +283,7 @@ export default function Courses() {
           actions={
             <Button
               onClick={openNew}
-              className="gap-sm bg-category-intellect text-white hover:bg-category-intellect/90"
+              className="gap-sm bg-category-intellect text-primary-foreground hover:bg-category-intellect/90"
             >
               <Plus className="h-4 w-4" />
               {t('pages.courses.newBtn')}
@@ -345,7 +345,7 @@ export default function Courses() {
                 className={cn(
                   'rounded-lg px-md py-xs text-xs font-medium transition-colors',
                   statusFilter === s
-                    ? 'bg-category-intellect text-white'
+                    ? 'bg-category-intellect text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >

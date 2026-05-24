@@ -59,6 +59,7 @@ const Publishers = lazy(() => import('./pages/Publishers'));
 const BookReader = lazy(() => import('./pages/BookReader'));
 const Courses = lazy(() => import('./pages/Courses'));
 const Skills = lazy(() => import('./pages/Skills'));
+const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
 
 // Personal Planning Module
 const PersonalPlanningDashboard = lazy(
@@ -99,10 +100,6 @@ const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
 const ActivityLogs = lazy(() => import('./pages/ActivityLogs'));
 const PasswordImport = lazy(() => import('./pages/PasswordImport'));
 const Permissions = lazy(() => import('./pages/Permissions'));
-
-// Library extras
-const Highlights = lazy(() => import('./pages/Highlights'));
-const ReadingQueue = lazy(() => import('./pages/ReadingQueue'));
 
 // Planning extras
 const DailyChecklist = lazy(() => import('./pages/DailyChecklist'));
@@ -424,22 +421,6 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/library/highlights"
-            element={
-              <PageWrapper>
-                <Highlights />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/library/reading-queue"
-            element={
-              <PageWrapper>
-                <ReadingQueue />
-              </PageWrapper>
-            }
-          />
-          <Route
             path="/library/courses"
             element={
               <PageWrapper>
@@ -452,6 +433,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <Skills />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/library/knowledge-graph"
+            element={
+              <PageWrapper>
+                <KnowledgeGraphPage />
               </PageWrapper>
             }
           />

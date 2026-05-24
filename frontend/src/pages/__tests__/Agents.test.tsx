@@ -44,6 +44,7 @@ vi.mock('@/hooks/use-agent-stream', () => ({
     ...streamingState,
     send: mockSend,
     cancel: vi.fn(),
+    reset: vi.fn(),
   }),
 }));
 
@@ -82,6 +83,15 @@ function renderAgents() {
   );
 }
 
+/** Clicks an agent card by its display name to set selectedAgent state. */
+async function selectAgent(
+  user: ReturnType<typeof userEvent.setup>,
+  agentName: string
+) {
+  const card = await screen.findByText(agentName);
+  await user.click(card);
+}
+
 describe('Agents page', () => {
   beforeEach(() => {
     queryClient.clear();
@@ -97,73 +107,90 @@ describe('Agents page', () => {
     };
   });
 
-  it('renders the chat input and send button', async () => {
+  it('renders the agent selector on first load', async () => {
     renderAgents();
 
     await waitFor(() => {
+      expect(screen.getByText('Escolha um agente')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Agente Pessoal')).toBeInTheDocument();
+    expect(screen.getByText('Agente Financeiro')).toBeInTheDocument();
+    expect(screen.getByText('Agente de Segurança')).toBeInTheDocument();
+    expect(screen.getByText('Agente Intelectual')).toBeInTheDocument();
+  });
+
+  it('shows chat input after selecting an agent', async () => {
+    const user = userEvent.setup();
+    renderAgents();
+
+    await selectAgent(user, 'Agente Pessoal');
+
+    await waitFor(() => {
       expect(
-        screen.getByRole('textbox', { name: /faça uma pergunta/i })
+        screen.getByPlaceholderText(/Pergunte sobre rotinas/i)
       ).toBeInTheDocument();
     });
 
     expect(screen.getByRole('button', { name: /enviar/i })).toBeInTheDocument();
   });
 
-  it('input and send button are enabled when not streaming', async () => {
+  it('input and send button are enabled when agent selected and not streaming', async () => {
+    const user = userEvent.setup();
     renderAgents();
 
+    await selectAgent(user, 'Agente Financeiro');
+
     await waitFor(() => {
-      expect(
-        screen.getByRole('textbox', { name: /faça uma pergunta/i })
-      ).not.toBeDisabled();
+      expect(screen.getByPlaceholderText(/Pergunte sobre gastos/i)).not.toBeDisabled();
     });
 
-    expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled(); // disabled because query is empty
+    // Send button disabled when query is empty
+    expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled();
   });
 
-  it('input and send button are disabled while isStreaming=true', async () => {
+  it('input is disabled while isStreaming=true', async () => {
     streamingState = { ...streamingState, isStreaming: true };
 
     renderAgents();
 
+    // When streaming is active from the start, showStreamingBubble=true → input visible but disabled
     await waitFor(() => {
-      expect(
-        screen.getByRole('textbox', { name: /faça uma pergunta/i })
-      ).toBeDisabled();
+      const textarea = screen.getByRole('textbox');
+      expect(textarea).toBeDisabled();
     });
 
     expect(screen.getByRole('button', { name: /enviar/i })).toBeDisabled();
   });
 
-  it('input is enabled after streaming is done (isStreaming=false)', async () => {
-    streamingState = {
-      isStreaming: false,
-      accumulatedText: 'Resposta do agente',
-      currentAgent: 'finance_agent',
-      sources: [],
-      queryId: 'q1',
-      error: null,
-    };
-
-    renderAgents();
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('textbox', { name: /faça uma pergunta/i })
-      ).not.toBeDisabled();
-    });
-  });
-
-  it('calls send with the typed query when Enter is pressed', async () => {
+  it('input is enabled when agent is selected and streaming is done', async () => {
     const user = userEvent.setup();
     renderAgents();
 
-    const textarea = await screen.findByRole('textbox', { name: /faça uma pergunta/i });
+    // Select agent first (streaming not active)
+    await selectAgent(user, 'Agente Pessoal');
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Pergunte sobre rotinas/i)).not.toBeDisabled();
+    });
+  });
+
+  it('calls send with the typed query and agent_name when Enter is pressed', async () => {
+    const user = userEvent.setup();
+    renderAgents();
+
+    await selectAgent(user, 'Agente Pessoal');
+
+    const textarea = await screen.findByPlaceholderText(/Pergunte sobre rotinas/i);
     await user.click(textarea);
-    await user.type(textarea, 'Qual meu saldo?');
+    await user.type(textarea, 'Quais são minhas rotinas de hoje?');
     await user.keyboard('{Enter}');
 
-    expect(mockSend).toHaveBeenCalledWith('Qual meu saldo?', 'default');
+    expect(mockSend).toHaveBeenCalledWith(
+      'Quais são minhas rotinas de hoje?',
+      expect.any(String),
+      { agent_name: 'personal' }
+    );
   });
 
   it('shows error toast when error is set', async () => {

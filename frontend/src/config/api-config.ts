@@ -113,6 +113,8 @@ export const API_CONFIG = {
     COURSE_LESSONS: '/api/v1/library/course-lessons/',
     COURSE_SESSIONS: '/api/v1/library/course-sessions/',
     SKILLS: '/api/v1/library/skills/',
+    KNOWLEDGE_GRAPH: '/api/v1/library/knowledge-graph/',
+    KNOWLEDGE_LINKS: '/api/v1/library/knowledge-links/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',

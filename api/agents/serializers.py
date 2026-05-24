@@ -2,6 +2,19 @@ from rest_framework import serializers
 
 from agents.models import AgentConversation, EmbeddingDocument
 
+_VALID_AGENT_NAMES = {
+    "personal",
+    "financial",
+    "security",
+    "intellect",
+    "finance",
+    "budget",
+    "forecast",
+    "planning",
+    "library",
+    "insight",
+}
+
 
 class AgentAskSerializer(serializers.Serializer):
     query = serializers.CharField(max_length=2000)
@@ -12,6 +25,18 @@ class AgentAskSerializer(serializers.Serializer):
         required=False, min_value=7, max_value=90, default=30
     )
     language = serializers.CharField(max_length=10, required=False, default="pt-BR")
+    agent_name = serializers.CharField(
+        max_length=32, required=False, allow_null=True, allow_blank=True, default=None
+    )
+
+    def validate_agent_name(self, value: str | None) -> str | None:
+        if not value:
+            return None
+        if value not in _VALID_AGENT_NAMES:
+            raise serializers.ValidationError(
+                f"Agente '{value}' inválido. Opções: {sorted(_VALID_AGENT_NAMES)}"
+            )
+        return value
 
 
 class AgentResponseSerializer(serializers.Serializer):
