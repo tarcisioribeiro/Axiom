@@ -24,6 +24,9 @@ from library.views import (  # noqa: E501
     CourseRetrieveUpdateDestroyView,
     CourseSessionListCreateView,
     CourseSessionRetrieveUpdateDestroyView,
+    KnowledgeGraphView,
+    KnowledgeLinkListCreateView,
+    KnowledgeLinkRetrieveUpdateDestroyView,
     LibraryDashboardStatsView,
     LiteraryTypeGoalDetailView,
     LiteraryTypeGoalListCreateView,
@@ -182,5 +185,21 @@ urlpatterns = [
         "skills/<int:pk>/",
         SkillRetrieveUpdateDestroyView.as_view(),
         name="skill-detail",
+    ),
+    # Knowledge Graph
+    path(
+        "knowledge-graph/",
+        KnowledgeGraphView.as_view(),
+        name="knowledge-graph",
+    ),
+    path(
+        "knowledge-links/",
+        KnowledgeLinkListCreateView.as_view(),
+        name="knowledge-link-list-create",
+    ),
+    path(
+        "knowledge-links/<int:pk>/",
+        KnowledgeLinkRetrieveUpdateDestroyView.as_view(),
+        name="knowledge-link-detail",
     ),
 ]

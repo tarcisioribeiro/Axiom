@@ -231,7 +231,8 @@
       "foods": "Foods",
       "mealLog": "Meal Diary",
       "courses": "Courses",
-      "skills": "Skills"
+      "skills": "Skills",
+      "knowledgeGraph": "Knowledge Graph"
     },
     "agents": "AI Agents"
   },
@@ -306,7 +307,8 @@
     "workout": "Workout",
     "nutrition": "Diet",
     "courses": "Courses",
-    "skills": "Skills"
+    "skills": "Skills",
+    "knowledgeGraph": "Knowledge Graph"
   },
   "auth": {
     "login": {
@@ -3723,19 +3725,72 @@
     },
     "agents": {
       "title": "AI Agents",
-      "subtitle": "Chat with Axiom intelligent agents",
+      "subtitle": "Chat with MindLedger intelligent agents",
       "newSession": "New session",
       "clearHistory": "Clear history",
       "clearConfirm": "Delete all messages in this session?",
-      "inputPlaceholder": "Ask about your finances, planning, or reading...",
       "send": "Send",
       "thinking": "Thinking...",
-      "noMessages": "No messages yet. Start by asking a question!",
+      "noMessages": "Select an agent and ask your first question!",
       "session": "Session",
       "provider": "Provider",
       "unavailable": "LLM unavailable. Check settings in the admin panel.",
       "sources": "Sources",
+      "keyboardHint": "Enter to send · Shift+Enter for new line",
+      "selectAgent": "Choose an agent",
+      "selectAgentDesc": "Select the specialized assistant to start the conversation",
+      "changeAgent": "Change agent",
+      "agentActive": "Active agent",
+      "agentSelector": {
+        "personal": {
+          "name": "Personal Agent",
+          "description": "Routines, habits, goals, workout and nutrition",
+          "examples": [
+            "How are my routines this week?",
+            "Did I work out this week?",
+            "Goal progress"
+          ]
+        },
+        "financial": {
+          "name": "Financial Agent",
+          "description": "Expenses, revenues, budgets, balance forecast and loans",
+          "examples": [
+            "How much did I spend this month?",
+            "Will I exceed my budget?",
+            "Balance forecast"
+          ]
+        },
+        "security": {
+          "name": "Security Agent",
+          "description": "Digital vault, stored passwords and activity logs",
+          "examples": [
+            "Any outdated passwords?",
+            "Recent vault activity",
+            "My digital security"
+          ]
+        },
+        "intellect": {
+          "name": "Intellectual Agent",
+          "description": "Books read, highlights, courses and skills map",
+          "examples": [
+            "What did I learn in my last book?",
+            "Course progress",
+            "My skills"
+          ]
+        }
+      },
+      "inputPlaceholder": {
+        "personal": "Ask about routines, workouts, goals or nutrition...",
+        "financial": "Ask about expenses, balance, budgets or forecasts...",
+        "security": "Ask about passwords, vault or security activity...",
+        "intellect": "Ask about books, courses, skills or reading...",
+        "default": "Ask the agent a question..."
+      },
       "agentNames": {
+        "personal": "Personal Agent",
+        "financial": "Financial Agent",
+        "security": "Security Agent",
+        "intellect": "Intellectual Agent",
         "finance_agent": "Finance",
         "budget_agent": "Budgets",
         "forecast_agent": "Forecast",
@@ -4609,6 +4664,75 @@
       "loadError": "Error loading records",
       "saveError": "Error saving",
       "deleteError": "Error deleting"
+    },
+    "knowledgeGraph": {
+      "title": "Knowledge Graph",
+      "description": "Visualize and connect books, courses, skills and notes",
+      "search": "Search nodes...",
+      "nodeTypesFilter": "Node types",
+      "includeHighlights": "Include highlights",
+      "loading": "Loading graph...",
+      "empty": "No data to display",
+      "emptySearch": "No nodes found for this search",
+      "explicitConnections": "Explicit connections",
+      "createLink": "Create connection",
+      "clickToConnect": "Click another node to connect",
+      "clickToConnectWith": "Click another node to connect with",
+      "nodeTypes": {
+        "book": "Book",
+        "author": "Author",
+        "course": "Course",
+        "skill": "Skill",
+        "summary": "Summary",
+        "highlight": "Highlight"
+      },
+      "relations": {
+        "relates": "Relates",
+        "supports": "Supports",
+        "contradicts": "Contradicts",
+        "deepens": "Deepens",
+        "derived_from": "Derived from",
+        "applies": "Applies"
+      },
+      "meta": {
+        "genre": "Genre",
+        "status": "Status",
+        "pages": "Pages",
+        "rating": "Rating",
+        "nationality": "Nationality",
+        "platform": "Platform",
+        "category": "Category",
+        "progress": "Progress",
+        "proficiency": "Proficiency",
+        "book": "Book",
+        "type": "Type",
+        "page": "Page"
+      },
+      "stats": {
+        "nodes": "Nodes",
+        "connections": "Connections",
+        "explicit": "Explicit"
+      },
+      "createLinkModal": {
+        "title": "Create Connection",
+        "cancel": "Cancel",
+        "creating": "Creating…",
+        "confirm": "Create"
+      },
+      "deleteLink": {
+        "title": "Remove connection",
+        "description": "Are you sure you want to remove this connection?",
+        "confirm": "Remove"
+      },
+      "toasts": {
+        "linkCreated": "Connection created successfully.",
+        "linkDeleted": "Connection removed.",
+        "linkCreateError": "Error creating connection"
+      },
+      "legend": {
+        "explicit": "Explicit connection",
+        "implicit": "Implicit connection"
+      }
     }
   },
   "userProfile": {
