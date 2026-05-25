@@ -182,7 +182,7 @@
     "submodules": {
       "registrations": "Cadastros",
       "records": "Registros",
-      "books": "Livros",
+      "books": "Obras",
       "intellect": "Aprendizado"
     },
     "items": {
@@ -209,7 +209,7 @@
       "passwordGenerator": "Gerador de Senhas",
       "passwordImport": "Importar Senhas",
       "archives": "Arquivos",
-      "books": "Livros",
+      "books": "Obras",
       "authors": "Autores",
       "publishers": "Editoras",
       "summaries": "Resumos",
@@ -217,6 +217,7 @@
       "readingQueue": "Fila de Leitura",
       "highlights": "Destaques",
       "todayTasks": "Tarefas de Hoje",
+      "tasksGoals": "Tarefas e Objetivos",
       "dailyChecklist": "Checklist Diário",
       "routineTasks": "Tarefas Rotineiras",
       "goals": "Objetivos",
@@ -263,6 +264,7 @@
     "dashboard": "Dashboard",
     "planningDashboard": "Planejamento Pessoal",
     "todayTasks": "Tarefas de Hoje",
+    "tasksGoals": "Tarefas e Objetivos",
     "dailyChecklist": "Checklist Diário",
     "routineTasks": "Tarefas Rotineiras",
     "goals": "Objetivos",
@@ -289,7 +291,7 @@
     "storedAccounts": "Contas Armazenadas",
     "archives": "Arquivos",
     "libraryDashboard": "Intelecto",
-    "books": "Livros",
+    "books": "Obras",
     "authors": "Autores",
     "publishers": "Editoras",
     "summaries": "Resumos",
@@ -460,7 +462,7 @@
         "transfer": "Transferência",
         "cards": "Cartões",
         "passwords": "Senhas",
-        "books": "Livros"
+        "books": "Obras"
       },
       "infoCards": {
         "financeTitle": "Finanças Organizadas",
@@ -2409,7 +2411,7 @@
     "libraryDashboard": {
       "title": "Dashboard Intelecto",
       "overview": "Visão Geral",
-      "books": "Livros",
+      "books": "Obras",
       "authors": "Autores",
       "publishers": "Editoras",
       "pagesRead": "Páginas Lidas",
@@ -2569,7 +2571,7 @@
       "noContentDistribution": "Leia livros ou conclua cursos para ver a distribuição"
     },
     "books": {
-      "title": "Lista de Leitura",
+      "title": "Obras",
       "newBtn": "Novo Livro",
       "editTitle": "Editar Livro",
       "newTitle": "Novo Livro",
@@ -3029,7 +3031,8 @@
       "tabs": {
         "overview": "Visão Geral",
         "modules": "Módulos",
-        "sessions": "Sessões"
+        "sessions": "Sessões",
+        "certificate": "Certificado"
       },
       "stats": {
         "progress": "Progresso",
@@ -3088,6 +3091,8 @@
         "title": "Módulos",
         "newBtn": "Novo Módulo",
         "emptyState": "Nenhum módulo cadastrado.",
+        "emptyTitle": "Nenhum módulo ainda",
+        "emptyHint": "Crie um módulo primeiro. Depois, dentro de cada módulo, você pode adicionar aulas e marcar o progresso.",
         "newTitle": "Novo Módulo",
         "editTitle": "Editar Módulo",
         "saved": "Módulo salvo",
@@ -3131,6 +3136,15 @@
         "notesLabel": "Notas",
         "notesPlaceholder": "O que estudou nessa sessão?",
         "totalHours": "Total: {{hours}}h"
+      },
+      "certificate": {
+        "fileLabel": "Comprovante de Conclusão",
+        "emptyTitle": "Nenhum comprovante anexado",
+        "emptyHint": "Clique para enviar o certificado ou comprovante de conclusão (PDF, JPG, PNG).",
+        "uploaded": "Comprovante enviado",
+        "removed": "Comprovante removido",
+        "uploadError": "Erro ao enviar comprovante",
+        "replace": "Clique para substituir o comprovante"
       }
     },
     "skills": {
