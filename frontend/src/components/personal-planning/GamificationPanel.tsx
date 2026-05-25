@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Award, Flame, Medal, Star, TrendingUp, Zap } from 'lucide-react';
 
-
 import { LoadingState } from '@/components/common/LoadingState';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';

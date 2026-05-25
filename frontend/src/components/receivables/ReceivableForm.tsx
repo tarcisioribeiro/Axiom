@@ -261,7 +261,9 @@ export function ReceivableForm({
                   return (
                     <SelectItem key={key} value={key}>
                       <span className="flex items-center gap-2">
-                        {Icon && <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                        {Icon && (
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
                         {translate('revenueCategories', key)}
                       </span>
                     </SelectItem>

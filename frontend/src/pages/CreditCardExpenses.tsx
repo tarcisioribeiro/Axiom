@@ -574,7 +574,7 @@ export default function CreditCardExpenses() {
       key: 'category',
       label: t('pages.creditCardExpenses.columns.category'),
       render: (installment) => {
-          const CatIcon =
+        const CatIcon =
           EXPENSE_CATEGORY_ICONS[installment.category ?? ''] ??
           EXPENSE_CATEGORY_ICONS['others'];
         return (

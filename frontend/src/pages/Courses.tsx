@@ -62,7 +62,6 @@ const STATUS_BADGE: Record<
   paused: 'destructive',
 };
 
-
 function CourseCard({
   course,
   onOpen,
@@ -95,7 +94,8 @@ function CourseCard({
       <div className="flex items-center gap-sm bg-primary/10 px-md pb-sm pt-md">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/20">
           {(() => {
-            const PlatformIcon = PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
+            const PlatformIcon =
+              PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
             return <PlatformIcon className="h-5 w-5 text-primary" />;
           })()}
         </div>

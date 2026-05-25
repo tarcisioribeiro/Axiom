@@ -100,7 +100,6 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   const balanceAccent =
     balanceVal > 0 ? 'success' : balanceVal < 0 ? 'destructive' : 'default';
 
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Mini preview da conta */}
@@ -195,7 +194,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               <SelectContent>
                 {Object.entries(TRANSLATIONS.institutions).map(([key, value]) => (
                   <SelectItem key={key} value={key}>
-                      <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2">
                       {(() => {
                         const InstIcon = INSTITUTION_ICONS_CONFIG[key] ?? Building2;
                         return <InstIcon className="h-4 w-4" />;

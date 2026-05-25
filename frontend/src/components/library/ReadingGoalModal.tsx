@@ -302,7 +302,9 @@ export function ReadingGoalModal({
                           <option key={v} value={v}>
                             {(() => {
                               const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
-                              return LitIcon ? <LitIcon className="h-4 w-4 inline mr-1" /> : null;
+                              return LitIcon ? (
+                                <LitIcon className="mr-1 inline h-4 w-4" />
+                              ) : null;
                             })()}
                             {t(
                               `pages.libraryDashboard.readingGoals.literaryTypes.${v}`

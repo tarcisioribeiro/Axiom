@@ -62,7 +62,12 @@ const s = StyleSheet.create({
     color: C.primary,
     letterSpacing: 0.6,
   },
-  emptyDay: { fontSize: 8, color: C.mutedForeground, fontStyle: 'italic', marginLeft: 4 },
+  emptyDay: {
+    fontSize: 8,
+    color: C.mutedForeground,
+    fontStyle: 'italic',
+    marginLeft: 4,
+  },
 
   // ── Task entry ────────────────────────────────────────────────────────────
   taskRow: {
@@ -72,7 +77,12 @@ const s = StyleSheet.create({
     paddingBottom: 3,
   },
   fieldRow: { flexDirection: 'row', marginBottom: 2, alignItems: 'flex-start' },
-  labelText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.mutedForeground, width: 65 },
+  labelText: {
+    fontSize: 8,
+    fontFamily: 'Helvetica-Bold',
+    color: C.mutedForeground,
+    width: 65,
+  },
   valueText: { fontSize: 8, color: C.foreground, flex: 1, lineHeight: 1.4 },
   taskTitleValue: {
     fontSize: 9,
@@ -189,7 +199,10 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                               cx="4"
                               cy="4"
                               r="4"
-                              fill={CATEGORY_COLORS[entry.task.category] ?? C.mutedForeground}
+                              fill={
+                                CATEGORY_COLORS[entry.task.category] ??
+                                C.mutedForeground
+                              }
                             />
                           </Svg>
                           <Text style={s.valueText}>

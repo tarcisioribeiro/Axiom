@@ -96,8 +96,16 @@ export default function Dashboard() {
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return { icon: GREETING_ICONS.morning, text: t('pages.dashboard.greetingMorning') };
-    if (hour < 18) return { icon: GREETING_ICONS.afternoon, text: t('pages.dashboard.greetingAfternoon') };
+    if (hour < 12)
+      return {
+        icon: GREETING_ICONS.morning,
+        text: t('pages.dashboard.greetingMorning'),
+      };
+    if (hour < 18)
+      return {
+        icon: GREETING_ICONS.afternoon,
+        text: t('pages.dashboard.greetingAfternoon'),
+      };
     return { icon: GREETING_ICONS.evening, text: t('pages.dashboard.greetingEvening') };
   }, [t]);
   const displayName = user?.first_name || user?.username || '';

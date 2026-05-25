@@ -53,7 +53,6 @@ import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
 
@@ -323,10 +322,14 @@ export default function Budgets() {
                   className="flex items-center justify-between gap-3 rounded-lg border p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium flex items-center gap-1.5">
+                    <p className="flex items-center gap-1.5 text-sm font-medium">
                       {(() => {
-                        const CatIcon = EXPENSE_CATEGORY_ICONS[s.category] ?? EXPENSE_CATEGORY_ICONS['others'];
-                        return CatIcon ? <CatIcon className="h-4 w-4 shrink-0" /> : null;
+                        const CatIcon =
+                          EXPENSE_CATEGORY_ICONS[s.category] ??
+                          EXPENSE_CATEGORY_ICONS['others'];
+                        return CatIcon ? (
+                          <CatIcon className="h-4 w-4 shrink-0" />
+                        ) : null;
                       })()}
                       {translate('expenseCategories', s.category)}
                     </p>
@@ -711,7 +714,9 @@ function BudgetCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-sm">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50">
-              {CategoryIcon && <CategoryIcon className="h-5 w-5 text-muted-foreground" />}
+              {CategoryIcon && (
+                <CategoryIcon className="h-5 w-5 text-muted-foreground" />
+              )}
             </div>
             <div>
               <p className="font-semibold leading-tight">{categoryLabel}</p>
