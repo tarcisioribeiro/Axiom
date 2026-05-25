@@ -28,19 +28,13 @@ import { useAuthStore } from './stores/auth-store';
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
-const Expenses = lazy(() => import('./pages/Expenses'));
-const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
-const FixedRevenues = lazy(() => import('./pages/FixedRevenues'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
-const Revenues = lazy(() => import('./pages/Revenues'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
 const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
-const Payables = lazy(() => import('./pages/Payables'));
-const Receivables = lazy(() => import('./pages/Receivables'));
 const Members = lazy(() => import('./pages/Members'));
 const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
@@ -67,9 +61,6 @@ const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
 const PersonalPlanningDashboard = lazy(
   () => import('./pages/PersonalPlanningDashboard')
 );
-const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
-const Goals = lazy(() => import('./pages/Goals'));
-const TodayTasks = lazy(() => import('./pages/TodayTasks'));
 const TasksAndGoals = lazy(() => import('./pages/TasksAndGoals'));
 
 // Vaults Module (Cofres e Metas)

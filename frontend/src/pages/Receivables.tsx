@@ -52,6 +52,10 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
 export default function Receivables({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -184,11 +188,7 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
 
   if (isLoading) return <LoadingState />;
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
     <Wrapper>
