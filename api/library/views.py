@@ -6,7 +6,7 @@ from datetime import timedelta
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Q, Sum
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -536,7 +536,13 @@ class BookFileStreamView(APIView):
         filename = book.book_file.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
         content_type = "application/epub+zip" if ext == "epub" else "application/pdf"
-        file_obj = book.book_file.open("rb")
+        try:
+            file_obj = book.book_file.open("rb")
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         response = FileResponse(file_obj, content_type=content_type)
         response["Content-Disposition"] = f'inline; filename="{filename}"'
         return response
@@ -568,6 +574,9 @@ class BookCoverStreamView(APIView):
                 {"detail": "Este livro não possui capa."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        url = book.cover.url
+        if url.startswith("http://") or url.startswith("https://"):
+            return HttpResponseRedirect(url)
         filename = book.cover.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
         mime_map = {
@@ -578,7 +587,13 @@ class BookCoverStreamView(APIView):
             "gif": "image/gif",
         }
         content_type = mime_map.get(ext, "image/jpeg")
-        file_obj = book.cover.open("rb")
+        try:
+            file_obj = book.cover.open("rb")
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         response = FileResponse(file_obj, content_type=content_type)
         response["Cache-Control"] = "public, max-age=86400"
         return response
@@ -610,6 +625,9 @@ class AuthorPhotoStreamView(APIView):
                 {"detail": "Este autor não possui foto."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        url = author.photo.url
+        if url.startswith("http://") or url.startswith("https://"):
+            return HttpResponseRedirect(url)
         filename = author.photo.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
         mime_map = {
@@ -620,7 +638,13 @@ class AuthorPhotoStreamView(APIView):
             "gif": "image/gif",
         }
         content_type = mime_map.get(ext, "image/jpeg")
-        file_obj = author.photo.open("rb")
+        try:
+            file_obj = author.photo.open("rb")
+        except Exception:
+            return Response(
+                {"detail": "Arquivo não encontrado no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         response = FileResponse(file_obj, content_type=content_type)
         response["Cache-Control"] = "public, max-age=86400"
         return response

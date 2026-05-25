@@ -635,6 +635,10 @@ class ArchiveDownloadView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        import os
+
+        filename = archive.file_name or archive.encrypted_file.name.split("/")[-1]
+
         # Log da atividade
         log_activity(
             request,
@@ -646,8 +650,17 @@ class ArchiveDownloadView(APIView):
             description_params={"name": archive.title},
         )
 
-        # Retornar o arquivo via streaming (proxy through Django to avoid CORS)
-        import os
+        # Return a presigned URL so the browser downloads directly from MinIO,
+        # avoiding the Django proxy stream which requires the internal TLS connection.
+        # Falls back to proxy streaming only for local filesystem (dev without MinIO).
+        url = archive.encrypted_file.storage.url(
+            archive.encrypted_file.name,
+            parameters={
+                "ResponseContentDisposition": f'attachment; filename="{filename}"'
+            },
+        )
+        if url.startswith("http://") or url.startswith("https://"):
+            return Response({"url": url, "filename": filename})
 
         from django.http import FileResponse
 
@@ -661,9 +674,7 @@ class ArchiveDownloadView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        filename = archive.file_name or archive.encrypted_file.name.split("/")[-1]
         _, ext = os.path.splitext(filename.lower())
-        # Derive Content-Type from the upload whitelist only — never from user input
         content_type = ALLOWED_UPLOAD_TYPES.get(ext, "application/octet-stream")
 
         response = FileResponse(

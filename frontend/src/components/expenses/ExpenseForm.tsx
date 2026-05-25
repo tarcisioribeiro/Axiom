@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { logger } from '@/lib/logger';
@@ -407,12 +408,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
-                {EXPENSE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
-                  <SelectItem key={key} value={key}>
-                    {emoji ? `${emoji} ` : ''}
-                    {translate('expenseCategories', key)}
-                  </SelectItem>
-                ))}
+                {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                  const Icon = EXPENSE_CATEGORY_ICONS[key];
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        {Icon && (
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        {translate('expenseCategories', key)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.category && (

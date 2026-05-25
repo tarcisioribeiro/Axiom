@@ -67,8 +67,10 @@ class ArchivesService extends BaseService<
     return apiClient.get<ArchiveReveal>(`${this.endpoint}${id}/reveal/`);
   }
 
-  async download(id: number): Promise<Blob> {
-    return apiClient.getBlob(`${this.endpoint}${id}/download/`);
+  async getDownloadUrl(id: number): Promise<{ url: string; filename: string }> {
+    return apiClient.get<{ url: string; filename: string }>(
+      `${this.endpoint}${id}/download/`
+    );
   }
 }
 

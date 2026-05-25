@@ -23,37 +23,37 @@ const VAULT_COLORS = [
     bg: 'from-emerald-500/20 to-teal-500/10',
     accent: 'text-emerald-600 dark:text-emerald-400',
     border: 'border-emerald-500/30',
-    barColor: '#10b981',
+    barColor: 'hsl(var(--success))',
   },
   {
     bg: 'from-blue-500/20 to-indigo-500/10',
     accent: 'text-blue-600 dark:text-blue-400',
     border: 'border-blue-500/30',
-    barColor: '#3b82f6',
+    barColor: 'hsl(var(--info))',
   },
   {
     bg: 'from-violet-500/20 to-purple-500/10',
     accent: 'text-violet-600 dark:text-violet-400',
     border: 'border-violet-500/30',
-    barColor: '#8b5cf6',
+    barColor: 'hsl(var(--primary))',
   },
   {
     bg: 'from-amber-500/20 to-orange-500/10',
     accent: 'text-amber-600 dark:text-amber-400',
     border: 'border-amber-500/30',
-    barColor: '#f59e0b',
+    barColor: 'hsl(var(--warning))',
   },
   {
     bg: 'from-rose-500/20 to-pink-500/10',
     accent: 'text-rose-600 dark:text-rose-400',
     border: 'border-rose-500/30',
-    barColor: '#f43f5e',
+    barColor: 'hsl(var(--destructive))',
   },
   {
     bg: 'from-cyan-500/20 to-sky-500/10',
     accent: 'text-cyan-600 dark:text-cyan-400',
     border: 'border-cyan-500/30',
-    barColor: '#06b6d4',
+    barColor: 'hsl(var(--accent))',
   },
 ];
 

@@ -460,6 +460,7 @@ class ReadingSerializer(serializers.ModelSerializer):
             "pages_read",
             "notes",
             "current_page",
+            "current_cfi",
             "time_of_day",
             "time_of_day_display",
             "owner",
@@ -483,6 +484,7 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
             "pages_read",
             "notes",
             "current_page",
+            "current_cfi",
             "time_of_day",
             "owner",
         ]

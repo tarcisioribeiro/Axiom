@@ -33,6 +33,7 @@ import {
   TRANSLATIONS,
   translate,
 } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { formatLocalDate } from '@/lib/utils';
 import type {
@@ -208,14 +209,34 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               onValueChange={(v) => setValue('category', v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder={t('common.fields.selectCategory')} />
+                {watchedCategory ? (
+                  <span className="flex items-center gap-2">
+                    {(() => {
+                      const TrigIcon = EXPENSE_CATEGORY_ICONS[watchedCategory];
+                      return TrigIcon ? (
+                        <TrigIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      ) : null;
+                    })()}
+                    <span>{translate('expenseCategories', watchedCategory)}</span>
+                  </span>
+                ) : (
+                  <SelectValue placeholder={t('common.fields.selectCategory')} />
+                )}
               </SelectTrigger>
               <SelectContent>
-                {EXPENSE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
-                  <SelectItem key={key} value={key}>
-                    {emoji} {translate('expenseCategories', key)}
-                  </SelectItem>
-                ))}
+                {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                  const Icon = EXPENSE_CATEGORY_ICONS[key];
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        {Icon && (
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        {translate('expenseCategories', key)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
