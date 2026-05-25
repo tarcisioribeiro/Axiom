@@ -496,23 +496,20 @@ build:frontend:
     # HEAD^2 is the develop tip on a merge commit; falls back to HEAD^1 on fast-forward.
     - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        DEVELOP_SHA=$(git rev-parse HEAD^2 2>/dev/null | cut -c1-8 \
-          || git rev-parse HEAD^1 | cut -c1-8)
-        if [ -n "$DEVELOP_SHA" ] && docker pull "$FRONTEND_IMAGE:$DEVELOP_SHA" 2>/dev/null; then
-          echo "main: re-tagging $FRONTEND_IMAGE:$DEVELOP_SHA → :$CI_COMMIT_SHORT_SHA and :main"
-          docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-          docker tag "$FRONTEND_IMAGE:$DEVELOP_SHA" "$FRONTEND_IMAGE:main"
-          docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-          docker push "$FRONTEND_IMAGE:main"
-        else
-          echo "main: develop image ($FRONTEND_IMAGE:$DEVELOP_SHA) not found — building from source"
-          docker build --network=host -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
-          docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
-          docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-          docker push "$FRONTEND_IMAGE:main"
-        fi
+        # VITE_APP_ENV is baked into the JS bundle at build time, so the staging
+        # image (develop branch) cannot be re-tagged for production — it would
+        # carry VITE_APP_ENV=staging in the bundle. Always rebuild for main.
+        echo "main: building production image with VITE_APP_ENV=production"
+        docker build --network=host \
+          --build-arg VITE_APP_ENV=production \
+          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+        docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:main"
+        docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
+        docker push "$FRONTEND_IMAGE:main"
       else
-        docker build --network=host -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
+        docker build --network=host \
+          --build-arg VITE_APP_ENV=staging \
+          -t "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" ./frontend
         docker push "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
         if [ -n "${CI_COMMIT_TAG:-}" ]; then
           docker tag "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" "$FRONTEND_IMAGE:$CI_COMMIT_TAG"

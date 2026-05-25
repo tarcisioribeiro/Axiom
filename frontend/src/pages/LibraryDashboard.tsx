@@ -1472,12 +1472,13 @@ export default function LibraryDashboard() {
                   );
                   const pct = total > 0 ? (item.session_count / total) * 100 : 0;
                   const barColors: Record<string, string> = {
-                    morning: '#f59e0b',
-                    afternoon: '#f97316',
-                    evening: '#60a5fa',
-                    dawn: '#818cf8',
+                    morning: 'hsl(var(--warning))',
+                    afternoon: 'hsl(var(--accent))',
+                    evening: 'hsl(var(--info))',
+                    dawn: 'hsl(var(--primary))',
                   };
-                  const barColor = barColors[item.time_of_day] ?? '#6b7280';
+                  const barColor =
+                    barColors[item.time_of_day] ?? 'hsl(var(--muted-foreground))';
                   return (
                     <div key={item.time_of_day} className="space-y-xs">
                       <div className="flex items-center justify-between text-sm">

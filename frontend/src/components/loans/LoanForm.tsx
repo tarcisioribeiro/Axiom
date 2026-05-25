@@ -1,6 +1,8 @@
 import {
   AlertCircle,
+  ArrowDownToLine,
   ArrowRight,
+  ArrowUpFromLine,
   BadgePercent,
   CalendarDays,
   Check,
@@ -31,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
 import { formatLocalDate } from '@/lib/utils';
@@ -265,9 +268,11 @@ export function LoanForm({
                           : 'border-border/50 bg-muted/10 text-muted-foreground hover:border-primary/40'
                       }`}
                     >
-                      <span className="text-2xl">
-                        {type === 'borrowed' ? '📥' : '📤'}
-                      </span>
+                      {type === 'borrowed' ? (
+                        <ArrowDownToLine className="h-6 w-6" />
+                      ) : (
+                        <ArrowUpFromLine className="h-6 w-6" />
+                      )}
                       <span className="text-sm font-medium">
                         {t(`pages.loans.form.${type}`)}
                       </span>
@@ -375,11 +380,19 @@ export function LoanForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXPENSE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
-                    <SelectItem key={key} value={key}>
-                      {emoji} {translate('expenseCategories', key)}
-                    </SelectItem>
-                  ))}
+                  {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => {
+                    const Icon = EXPENSE_CATEGORY_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <span className="flex items-center gap-2">
+                          {Icon && (
+                            <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          )}
+                          {translate('expenseCategories', key)}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

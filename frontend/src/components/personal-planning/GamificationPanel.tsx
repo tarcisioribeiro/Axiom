@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Award, Flame, Star, TrendingUp, Zap } from 'lucide-react';
+import { Award, Flame, Medal, Star, TrendingUp, Zap } from 'lucide-react';
 
 import { LoadingState } from '@/components/common/LoadingState';
 import { StatCard } from '@/components/common/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getIconByName } from '@/components/ui/icon-picker';
 import { Progress } from '@/components/ui/progress';
 import { apiClient } from '@/services/api-client';
 
@@ -121,7 +122,10 @@ export function GamificationPanel() {
                   title={`${b.name}: ${b.description}\n${new Date(b.earned_at).toLocaleDateString('pt-BR')}`}
                   className="flex cursor-default items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-sm"
                 >
-                  <span>{b.icon}</span>
+                  {(() => {
+                    const BadgeIcon = getIconByName(b.icon) ?? Medal;
+                    return <BadgeIcon className="h-4 w-4 text-yellow-500" />;
+                  })()}
                   <span>{b.name}</span>
                 </div>
               ))}

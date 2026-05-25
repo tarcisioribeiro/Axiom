@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { CARD_FLAG_ICON } from '@/config/icons';
 import { storedCardSchema, type StoredCreditCardFormData } from '@/lib/validations';
 import { CARD_FLAGS } from '@/types';
 import type { StoredCreditCard, CreditCard, Member } from '@/types';
@@ -37,16 +38,6 @@ const YEARS = Array.from({ length: 20 }, (_, i) => ({
   value: currentYear + i,
   label: String(currentYear + i),
 }));
-
-const CARD_FLAG_EMOJIS: Record<string, string> = {
-  MSC: '🔴',
-  VSA: '💳',
-  ELO: '🟡',
-  EXP: '💠',
-  HCD: '🟠',
-  DIN: '⬛',
-  OTHER: '🌐',
-};
 
 interface StoredCardFormProps {
   card?: StoredCreditCard;
@@ -163,10 +154,12 @@ export function StoredCardForm({
               <SelectContent>
                 {CARD_FLAGS.map((flag) => (
                   <SelectItem key={flag.value} value={flag.value}>
-                    {CARD_FLAG_EMOJIS[flag.value] ?? '💳'}{' '}
-                    {flag.value === 'OTHER'
-                      ? t('pages.storedCards.otherBrand')
-                      : flag.label}
+                    <span className="flex items-center gap-2">
+                      <CARD_FLAG_ICON className="h-4 w-4" />
+                      {flag.value === 'OTHER'
+                        ? t('pages.storedCards.otherBrand')
+                        : flag.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

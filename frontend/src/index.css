@@ -99,6 +99,14 @@
     /* Star rating color - golden yellow */
     --star: 45 90% 48%;
 
+    /* Heatmap cell colors — derived from semantic tokens, adapt per theme */
+    --heatmap-empty: hsl(var(--muted));
+    --heatmap-missed: hsl(var(--destructive) / 0.15);
+    --heatmap-low: hsl(var(--success) / 0.22);
+    --heatmap-medium-low: hsl(var(--success) / 0.44);
+    --heatmap-medium: hsl(var(--success) / 0.66);
+    --heatmap-high: hsl(var(--success));
+
     /* Typography scale */
     --text-xs: 0.75rem;
     --text-sm: 0.875rem;
@@ -227,6 +235,12 @@
 
     /* Star rating color - Dracula yellow (#F1FA8C) */
     --star: 65 92% 76%;
+
+    /* Heatmap dark overrides — higher opacity needed on dark backgrounds */
+    --heatmap-missed: hsl(var(--destructive) / 0.28);
+    --heatmap-low: hsl(var(--success) / 0.15);
+    --heatmap-medium-low: hsl(var(--success) / 0.3);
+    --heatmap-medium: hsl(var(--success) / 0.55);
 
     /* Card hover elevation shadow */
     --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
