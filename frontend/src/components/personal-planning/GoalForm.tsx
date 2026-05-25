@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { GOAL_TYPE_ICONS, GOAL_STATUS_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { goalSchema } from '@/lib/validations';
@@ -32,20 +33,6 @@ import {
 type GoalFormData = z.infer<typeof goalSchema>;
 
 const AUTO_GOAL_TYPES = new Set(['consecutive_days', 'total_days', 'avoid_habit']);
-
-const GOAL_TYPE_EMOJIS: Record<string, string> = {
-  consecutive_days: '🔥',
-  total_days: '📅',
-  avoid_habit: '🚫',
-  custom: '⚙️',
-};
-
-const GOAL_STATUS_EMOJIS: Record<string, string> = {
-  active: '✅',
-  completed: '🏆',
-  failed: '❌',
-  cancelled: '🚫',
-};
 
 interface GoalFormProps {
   goal?: Goal;
@@ -173,12 +160,17 @@ export function GoalForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {GOAL_TYPE_CHOICES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {GOAL_TYPE_EMOJIS[type.value] ?? ''}{' '}
-                    {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
-                  </SelectItem>
-                ))}
+                {GOAL_TYPE_CHOICES.map((type) => {
+                  const TypeIcon = GOAL_TYPE_ICONS[type.value];
+                  return (
+                    <SelectItem key={type.value} value={type.value}>
+                      <span className="flex items-center gap-2">
+                        {TypeIcon && <TypeIcon className="h-4 w-4" />}
+                        {t(`pages.goals.form.goalTypeOptions.${type.value}`)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.goal_type && (
@@ -332,8 +324,13 @@ export function GoalForm({
             <SelectContent>
               {GOAL_STATUS_CHOICES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
-                  {GOAL_STATUS_EMOJIS[status.value] ?? ''}{' '}
-                  {t(`pages.goals.form.statusOptions.${status.value}`)}
+                  <span className="flex items-center gap-2">
+                    {(() => {
+                      const StatusIcon = GOAL_STATUS_ICONS[status.value];
+                      return StatusIcon ? <StatusIcon className="h-4 w-4" /> : null;
+                    })()}
+                    {t(`pages.goals.form.statusOptions.${status.value}`)}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

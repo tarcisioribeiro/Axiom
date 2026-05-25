@@ -31,6 +31,7 @@ import {
   TRANSLATIONS,
   translate,
 } from '@/config/constants';
+import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { membersService } from '@/services/members-service';
@@ -138,7 +139,6 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
       : Object.keys(TRANSLATIONS.revenueCategories).map((k) => ({
           key: k,
           label: '',
-          emoji: '',
         }));
 
   return (
@@ -258,12 +258,19 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
                 <SelectValue placeholder={t('common.actions.select')} />
               </SelectTrigger>
               <SelectContent>
-                {revenueCategories.map(({ key, emoji }) => (
-                  <SelectItem key={key} value={key}>
-                    {emoji ? `${emoji} ` : ''}
-                    {translate('revenueCategories', key)}
-                  </SelectItem>
-                ))}
+                {revenueCategories.map(({ key }) => {
+                  const Icon = REVENUE_CATEGORY_ICONS[key];
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        {Icon && (
+                          <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        )}
+                        {translate('revenueCategories', key)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

@@ -14,6 +14,7 @@ import {
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BOOK_LITERARY_TYPE_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { readingGoalSchema, type ReadingGoalFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -25,13 +26,6 @@ const LITERARY_TYPE_GOAL_VALUES = [
   'article',
   'essay',
 ] as const;
-
-const LITERARY_TYPE_EMOJIS: Record<string, string> = {
-  collection: '📚',
-  magazine: '📰',
-  article: '📄',
-  essay: '✍️',
-};
 
 export interface LiteraryTypeGoalDraft {
   id?: number;
@@ -306,7 +300,12 @@ export function ReadingGoalModal({
                             ) === -1
                         ).map((v) => (
                           <option key={v} value={v}>
-                            {LITERARY_TYPE_EMOJIS[v] ?? ''}{' '}
+                            {(() => {
+                              const LitIcon = BOOK_LITERARY_TYPE_ICONS[v];
+                              return LitIcon ? (
+                                <LitIcon className="mr-1 inline h-4 w-4" />
+                              ) : null;
+                            })()}
                             {t(
                               `pages.libraryDashboard.readingGoals.literaryTypes.${v}`
                             )}

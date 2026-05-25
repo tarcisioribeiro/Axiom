@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -35,26 +36,6 @@ import { cn } from '@/lib/utils';
 import { categorizationRulesService } from '@/services/categorization-rules-service';
 import type { CategorizationRule, CategorizationRuleFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
-
-function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
-    'food and drink': '🍽️',
-    supermarket: '🛒',
-    transport: '🚗',
-    'bills and services': '⚡',
-    entertainment: '🎬',
-    education: '📚',
-    'health and care': '❤️',
-    house: '🏠',
-    vestuary: '👔',
-    travels: '✈️',
-    investments: '📈',
-    electronics: '💻',
-    'digital signs': '📱',
-    others: '📦',
-  };
-  return icons[category] ?? '📦';
-}
 
 function getCategoryBg(category: string): string {
   const bgs: Record<string, string> = {
@@ -94,8 +75,6 @@ function RuleForm({
   const [isActive, setIsActive] = useState(rule?.is_active ?? true);
   const [priority, setPriority] = useState(rule?.priority ?? 100);
 
-  const selectedCategory = EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === category);
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!merchantContains.trim() || !category) return;
@@ -120,7 +99,11 @@ function RuleForm({
             <Zap className="h-3 w-3 text-primary" />
           </div>
           <div className="flex items-center gap-xs rounded-md bg-primary/10 px-sm py-xs text-xs font-semibold text-primary">
-            <span>{selectedCategory?.emoji ?? '📦'}</span>
+            {(() => {
+              const CatIcon =
+                EXPENSE_CATEGORY_ICONS[category] ?? EXPENSE_CATEGORY_ICONS['others'];
+              return CatIcon ? <CatIcon className="h-3.5 w-3.5" /> : null;
+            })()}
             <span>{translate('expenseCategories', category)}</span>
           </div>
         </div>
@@ -160,11 +143,17 @@ function RuleForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                  <SelectItem key={cat.key} value={cat.key}>
-                    {cat.emoji} {translate('expenseCategories', cat.key)}
-                  </SelectItem>
-                ))}
+                {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                  const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                  return (
+                    <SelectItem key={cat.key} value={cat.key}>
+                      <span className="flex items-center gap-2">
+                        {CatIcon && <CatIcon className="h-4 w-4" />}
+                        {translate('expenseCategories', cat.key)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -417,9 +406,14 @@ export default function CategorizationRules() {
                     getCategoryBg(rule.category)
                   )}
                 >
-                  <span className="text-lg" aria-hidden="true">
-                    {getCategoryIcon(rule.category)}
-                  </span>
+                  {(() => {
+                    const CatIcon =
+                      EXPENSE_CATEGORY_ICONS[rule.category] ??
+                      EXPENSE_CATEGORY_ICONS['others'];
+                    return CatIcon ? (
+                      <CatIcon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    ) : null;
+                  })()}
                   <div>
                     <p className="text-xs text-muted-foreground">
                       {t('pages.categorizationRules.categorizeAs')}

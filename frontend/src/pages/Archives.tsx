@@ -211,15 +211,15 @@ export default function Archives() {
     }
 
     try {
-      const blob = await archivesService.download(archive.id);
-      const url = window.URL.createObjectURL(blob);
+      const { url, filename } = await archivesService.getDownloadUrl(archive.id);
       const link = document.createElement('a');
       link.href = url;
-      link.download = archive.file_name || `${archive.title}.bin`;
+      link.download = filename || archive.file_name || `${archive.title}.bin`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
       toast({
         title: t('pages.archives.downloadStarted'),
         description: t('pages.archives.downloadDesc'),

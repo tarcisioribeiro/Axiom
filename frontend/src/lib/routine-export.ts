@@ -3,6 +3,33 @@ import { Workbook } from 'exceljs';
 import { translate } from '@/config/constants';
 import type { RoutineTask } from '@/types';
 
+// ── PDF palette ───────────────────────────────────────────────────────────────
+// react-pdf/renderer generates static documents and cannot use CSS variables.
+// All PDF components must reference this object instead of inlining hex values.
+// Locked to the Alucard light theme (the only theme used for PDF output).
+export const PDF_PALETTE = {
+  background: '#FFFBEB',
+  card: '#FFFAF2',
+  primary: '#644AC9',
+  primaryLight: '#EDE9F8',
+  foreground: '#1F1F1F',
+  mutedForeground: '#6C664B',
+  success: '#14710A',
+  successLight: '#E6F4E5',
+  destructive: '#CB3A2A',
+  destructiveLight: '#FAECEC',
+  warning: '#A34D14',
+  info: '#036A96',
+  infoLight: '#E0F2FA',
+  border: '#C8C8D8',
+  borderSubtle: '#E8E8F0',
+  white: '#FFFFFF',
+  surface: '#F9F9FB',
+  separator: '#D4D4D8',
+  timeText: '#4A33A0',
+  timeBg: '#EDE9F8',
+} as const;
+
 export interface DayScheduleEntry {
   time: string | null;
   task: RoutineTask;
@@ -14,28 +41,14 @@ export interface DaySchedule {
   entries: DayScheduleEntry[];
 }
 
-// Hex values derived from light-theme CSS variables (matches StatementDocument palette)
 export const PRIORITY_PDF_COLORS: Record<string, string> = {
-  low: '#6C664B', // --muted-foreground
-  medium: '#036A96', // --info
-  high: '#A34D14', // --warning
-  critical: '#CB3A2A', // --destructive
+  low: PDF_PALETTE.mutedForeground,
+  medium: PDF_PALETTE.info,
+  high: PDF_PALETTE.warning,
+  critical: PDF_PALETTE.destructive,
 };
 
-export const CATEGORY_EMOJIS: Record<string, string> = {
-  health: '💊',
-  intellect: '📚',
-  spiritual: '🙏',
-  exercise: '🏋️',
-  nutrition: '🍽️',
-  work: '💼',
-  social: '🤝',
-  finance: '💰',
-  household: '🏠',
-  personal_care: '✨',
-  other: '📌',
-};
-
+// Category dot colors for PDF — intentional fixed colors, not mapped to CSS vars
 export const CATEGORY_COLORS: Record<string, string> = {
   health: '#CB3A2A',
   intellect: '#644AC9',

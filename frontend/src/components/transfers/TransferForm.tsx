@@ -1,11 +1,14 @@
+import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
   ArrowLeftRight,
   ArrowRight,
+  Building2,
   CalendarDays,
   Clock,
   FileText,
   Wallet,
+  Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -40,11 +43,11 @@ interface TransferFormProps {
   isLoading?: boolean;
 }
 
-const TRANSFER_TYPE_ICONS: Record<string, string> = {
-  pix: '⚡',
-  ted: '🏦',
-  doc: '📄',
-  internal: '🔄',
+const TRANSFER_TYPE_ICONS: Record<string, LucideIcon> = {
+  pix: Zap,
+  ted: Building2,
+  doc: FileText,
+  internal: ArrowLeftRight,
 };
 
 export const TransferForm: React.FC<TransferFormProps> = ({
@@ -197,21 +200,24 @@ export const TransferForm: React.FC<TransferFormProps> = ({
       {/* Seção: Tipo de Transferência */}
       <FormSection title={t('pages.transfers.form.typeLabel')} icon={ArrowRight}>
         <div className="grid grid-cols-2 gap-sm sm:grid-cols-4">
-          {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setValue('category', k)}
-              className={`flex flex-col items-center gap-1 rounded-lg border p-sm text-sm font-medium transition-all ${
-                watchedCategory === k
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
-              }`}
-            >
-              <span className="text-lg">{TRANSFER_TYPE_ICONS[k] ?? '💸'}</span>
-              <span>{v}</span>
-            </button>
-          ))}
+          {Object.entries(TRANSLATIONS.transferTypes).map(([k, v]) => {
+            const Icon = TRANSFER_TYPE_ICONS[k] ?? ArrowLeftRight;
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setValue('category', k)}
+                className={`flex flex-col items-center gap-1 rounded-lg border p-sm text-sm font-medium transition-all ${
+                  watchedCategory === k
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border/70 bg-muted/20 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{v}</span>
+              </button>
+            );
+          })}
         </div>
       </FormSection>
 

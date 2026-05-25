@@ -72,7 +72,12 @@ function UsageArc({ pct, size = 48 }: { pct: number; size?: number }) {
   const r = (size - 6) / 2;
   const circ = 2 * Math.PI * r;
   const filled = (pct / 100) * circ;
-  const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#22c55e';
+  const color =
+    pct >= 90
+      ? 'hsl(var(--destructive))'
+      : pct >= 70
+        ? 'hsl(var(--warning))'
+        : 'hsl(var(--success))';
   return (
     <svg width={size} height={size} className="-rotate-90">
       <circle

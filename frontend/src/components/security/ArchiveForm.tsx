@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
@@ -40,22 +41,12 @@ const ARCHIVE_CATEGORY_KEYS = [
   'other',
 ] as const;
 
-const ARCHIVE_CATEGORY_EMOJIS: Record<string, string> = {
-  personal: '👤',
-  financial: '💰',
-  legal: '⚖️',
-  medical: '🏥',
-  tax: '📊',
-  work: '💼',
-  other: '📦',
-};
-
 const ARCHIVE_TYPE_OPTIONS = [
-  { value: 'text', icon: FileText, label: '📝', translationKey: 'text' },
-  { value: 'pdf', icon: File, label: '📄', translationKey: 'pdf' },
-  { value: 'image', icon: FileImage, label: '🖼️', translationKey: 'image' },
-  { value: 'document', icon: FileText, label: '📋', translationKey: 'document' },
-  { value: 'other', icon: Package, label: '📦', translationKey: 'other' },
+  { value: 'text', icon: FileText, translationKey: 'text' },
+  { value: 'pdf', icon: File, translationKey: 'pdf' },
+  { value: 'image', icon: FileImage, translationKey: 'image' },
+  { value: 'document', icon: FileText, translationKey: 'document' },
+  { value: 'other', icon: Package, translationKey: 'other' },
 ] as const;
 
 const FILE_TYPES_ACCEPT = [
@@ -205,8 +196,13 @@ export function ArchiveForm({
               <SelectContent>
                 {ARCHIVE_CATEGORY_KEYS.map((key) => (
                   <SelectItem key={key} value={key}>
-                    {ARCHIVE_CATEGORY_EMOJIS[key] ?? '📁'}{' '}
-                    {t(`pages.archives.categories.${key}`)}
+                    <span className="flex items-center gap-2">
+                      {(() => {
+                        const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
+                        return CatIcon ? <CatIcon className="h-4 w-4" /> : null;
+                      })()}
+                      {t(`pages.archives.categories.${key}`)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -229,27 +225,24 @@ export function ArchiveForm({
               {t('pages.archives.form.typeLabel')}
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
-              {ARCHIVE_TYPE_OPTIONS.map(
-                ({ value, icon: Icon, label, translationKey }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setValue('archive_type', value)}
-                    disabled={isLoading}
-                    className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
-                      watchedArchiveType === value
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{label}</span>
-                    <span className="hidden sm:inline">
-                      {t(`pages.archives.types.${translationKey}`)}
-                    </span>
-                  </button>
-                )
-              )}
+              {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setValue('archive_type', value)}
+                  disabled={isLoading}
+                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                    watchedArchiveType === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">
+                    {t(`pages.archives.types.${translationKey}`)}
+                  </span>
+                </button>
+              ))}
             </div>
             {errors.archive_type && (
               <p className="mt-xs text-sm text-destructive">

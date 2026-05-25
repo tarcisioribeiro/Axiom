@@ -23,6 +23,17 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { useParams } from 'react-router-dom';
 
+// ============================================================================
+// COMPONENT PROPS
+// ============================================================================
+
+interface BookReaderProps {
+  /** When provided, the reader runs embedded (modal mode) using this book id. */
+  bookIdProp?: number;
+  /** Called when the user closes the reader in modal mode. */
+  onClose?: () => void;
+}
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -553,11 +564,25 @@ function PdfReader({
 // MAIN READER PAGE
 // ============================================================================
 
-export default function BookReader() {
+export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}) {
   const { t } = useTranslation();
-  const { bookId } = useParams<{ bookId: string }>();
+  const { bookId: bookIdParam } = useParams<{ bookId: string }>();
+  const bookId = bookIdProp !== undefined ? String(bookIdProp) : bookIdParam;
   const { toast } = useToast();
   const { isDark } = useTheme();
+
+  // Close via callback (modal) or window.close() (standalone tab)
+  const handleClose = onClose ?? (() => window.close());
+
+  // Escape key closes modal
+  useEffect(() => {
+    if (!onClose) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const [book, setBook] = useState<Book | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -609,14 +634,15 @@ export default function BookReader() {
       ]);
 
       setBook(bookData);
-      // Use stream URL to avoid CORS issues with direct MinIO access from PDF.js worker
+      // Stream via Django proxy (same-origin) to avoid CORS restrictions from PDF.js worker
       const streamUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.BOOK_FILE_STREAM}${id}/file/stream/`;
       setFileUrl(streamUrl);
       setAnnotations(highlights);
       setOwnerId(member.id);
 
       const ext = fileData.name.split('.').pop()?.toLowerCase();
-      setFileType(ext === 'epub' ? 'epub' : 'pdf');
+      const isEpub = ext === 'epub';
+      setFileType(isEpub ? 'epub' : 'pdf');
 
       if (readingsData.length > 0) {
         const latest = [...readingsData].sort(
@@ -626,6 +652,9 @@ export default function BookReader() {
         if (latest.current_page) {
           setCurrentPage(latest.current_page);
           setPageInput(String(latest.current_page));
+        }
+        if (isEpub && latest.current_cfi) {
+          setCurrentCfi(latest.current_cfi);
         }
       }
     } catch (err) {
@@ -640,12 +669,15 @@ export default function BookReader() {
   };
 
   const saveProgress = useCallback(
-    (page: number) => {
+    (page: number, cfi?: string) => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
         if (!bookId || !ownerId) return;
         const doSave = async () => {
-          const payload = { current_page: page };
+          const payload: { current_page: number; current_cfi?: string } = {
+            current_page: page,
+          };
+          if (cfi) payload.current_cfi = cfi;
           if (latestReadingId) {
             await readingsService.patch(latestReadingId, payload);
           } else {
@@ -655,6 +687,7 @@ export default function BookReader() {
               reading_time: 0,
               pages_read: 0,
               current_page: page,
+              current_cfi: cfi,
               owner: ownerId,
             });
             setLatestReadingId(created.id);
@@ -681,7 +714,7 @@ export default function BookReader() {
   const handleEpubLocationChange = (cfi: string, page: number) => {
     setCurrentCfi(cfi);
     setCurrentPage(page);
-    saveProgress(page);
+    saveProgress(page, cfi);
   };
 
   const handleThemeChange = (t: ReaderTheme) => {
@@ -730,7 +763,7 @@ export default function BookReader() {
         <p className="text-lg text-muted-foreground">
           {t('pages.bookReader.fileNotFound')}
         </p>
-        <Button variant="outline" onClick={() => window.close()}>
+        <Button variant="outline" onClick={handleClose}>
           Fechar
         </Button>
       </div>
@@ -892,7 +925,7 @@ export default function BookReader() {
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => window.close()}
+            onClick={handleClose}
             title={t('pages.bookReader.closeReader')}
             style={{ color: cfg.color }}
           >
