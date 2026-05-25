@@ -43,6 +43,7 @@ import {
 import { API_CONFIG } from '@/config/api-config';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -52,21 +53,6 @@ import { budgetsService } from '@/services/budgets-service';
 import type { Budget, BudgetFormData, BudgetStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'food and drink': '🍽️',
-  supermarket: '🛒',
-  transport: '🚗',
-  'bills and services': '⚡',
-  entertainment: '🎬',
-  education: '📚',
-  health: '❤️',
-  'health and care': '❤️',
-  house: '🏠',
-  vestuary: '👔',
-  travels: '✈️',
-  investments: '📈',
-  others: '📦',
-};
 
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
@@ -337,8 +323,11 @@ export default function Budgets() {
                   className="flex items-center justify-between gap-3 rounded-lg border p-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">
-                      {CATEGORY_ICONS[s.category] ?? '📦'}{' '}
+                    <p className="text-sm font-medium flex items-center gap-1.5">
+                      {(() => {
+                        const CatIcon = EXPENSE_CATEGORY_ICONS[s.category] ?? EXPENSE_CATEGORY_ICONS['others'];
+                        return CatIcon ? <CatIcon className="h-4 w-4 shrink-0" /> : null;
+                      })()}
                       {translate('expenseCategories', s.category)}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -519,12 +508,17 @@ export default function Budgets() {
                     <SelectValue placeholder={t('common.fields.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                      <SelectItem key={cat.key} value={cat.key}>
-                        {(cat as { key: string; emoji?: string }).emoji ?? ''}{' '}
-                        {translate('expenseCategories', cat.key)}
-                      </SelectItem>
-                    ))}
+                    {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                      const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                      return (
+                        <SelectItem key={cat.key} value={cat.key}>
+                          <span className="flex items-center gap-2">
+                            {CatIcon && <CatIcon className="h-4 w-4" />}
+                            {translate('expenseCategories', cat.key)}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -699,7 +693,8 @@ function BudgetCard({
   const barColor =
     pct > 100 ? 'bg-destructive' : pct >= 70 ? 'bg-warning' : 'bg-success';
 
-  const categoryIcon = CATEGORY_ICONS[budget.category] ?? '📦';
+  const CategoryIcon =
+    EXPENSE_CATEGORY_ICONS[budget.category] ?? EXPENSE_CATEGORY_ICONS['others'];
 
   return (
     <div
@@ -715,9 +710,9 @@ function BudgetCard({
       <div className="p-md">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-sm">
-            <span className="text-2xl" role="img" aria-hidden="true">
-              {categoryIcon}
-            </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50">
+              {CategoryIcon && <CategoryIcon className="h-5 w-5 text-muted-foreground" />}
+            </div>
             <div>
               <p className="font-semibold leading-tight">{categoryLabel}</p>
               <p className="text-xs text-muted-foreground">

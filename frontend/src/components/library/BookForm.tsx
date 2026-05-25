@@ -31,6 +31,12 @@ import {
 } from '@/components/ui/select';
 import { StarRating } from '@/components/ui/star-rating';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  BOOK_GENRE_ICONS,
+  BOOK_LITERARY_TYPE_ICONS,
+  BOOK_LANGUAGE_ICON,
+  READ_STATUS_ICONS,
+} from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { bookSchema, type BookFormData } from '@/lib/validations';
@@ -38,40 +44,9 @@ import { membersService } from '@/services/members-service';
 import { BOOK_LANGUAGES, BOOK_GENRES, LITERARY_TYPES } from '@/types';
 import type { Book, Author, Publisher } from '@/types';
 
-const GENRE_EMOJIS: Record<string, string> = {
-  Philosophy: '🤔',
-  History: '🏛️',
-  Psychology: '🧠',
-  Fiction: '✨',
-  Policy: '🗳️',
-  Technology: '💻',
-  Theology: '✝️',
-};
-
-const LITERARY_TYPE_EMOJIS: Record<string, string> = {
-  book: '📖',
-  collection: '📚',
-  magazine: '📰',
-  article: '📄',
-  essay: '✍️',
-};
-
-const LANGUAGE_EMOJIS: Record<string, string> = {
-  Por: '🇧🇷',
-  Ing: '🇺🇸',
-  Esp: '🇪🇸',
-};
-
-const READ_STATUS_EMOJIS: Record<string, string> = {
-  to_read: '📚',
-  reading: '📖',
-  read: '✅',
-  paused: '⏸️',
-};
-
 const MEDIA_TYPE_OPTIONS = [
-  { value: 'Phi', icon: BookOpen, label: '📖', translationKey: 'Phi' },
-  { value: 'Dig', icon: Smartphone, label: '📱', translationKey: 'Dig' },
+  { value: 'Phi', icon: BookOpen, translationKey: 'Phi' },
+  { value: 'Dig', icon: Smartphone, translationKey: 'Dig' },
 ] as const;
 
 const READ_STATUS_VALUES = ['to_read', 'reading', 'read', 'paused'] as const;
@@ -380,7 +355,7 @@ export function BookForm({
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
               {MEDIA_TYPE_OPTIONS.map(
-                ({ value, icon: Icon, label, translationKey }) => (
+                ({ value, icon: Icon, translationKey }) => (
                   <button
                     key={value}
                     type="button"
@@ -393,7 +368,7 @@ export function BookForm({
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
-                    {label} {t(`pages.books.mediaTypes.${translationKey}`)}
+                    {t(`pages.books.mediaTypes.${translationKey}`)}
                   </button>
                 )
               )}
@@ -419,12 +394,17 @@ export function BookForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {BOOK_GENRES.map((genre) => (
-                  <SelectItem key={genre.value} value={genre.value}>
-                    {GENRE_EMOJIS[genre.value] ?? '📖'}{' '}
-                    {t(`pages.books.genres.${genre.value}`)}
-                  </SelectItem>
-                ))}
+                {BOOK_GENRES.map((genre) => {
+                  const GenreIcon = BOOK_GENRE_ICONS[genre.value];
+                  return (
+                    <SelectItem key={genre.value} value={genre.value}>
+                      <span className="flex items-center gap-2">
+                        {GenreIcon && <GenreIcon className="h-4 w-4" />}
+                        {t(`pages.books.genres.${genre.value}`)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.genre && (
@@ -446,12 +426,17 @@ export function BookForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {LITERARY_TYPES.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {LITERARY_TYPE_EMOJIS[type.value] ?? '📄'}{' '}
-                    {t(`pages.books.literaryTypes.${type.value}`)}
-                  </SelectItem>
-                ))}
+                {LITERARY_TYPES.map((type) => {
+                  const LitIcon = BOOK_LITERARY_TYPE_ICONS[type.value];
+                  return (
+                    <SelectItem key={type.value} value={type.value}>
+                      <span className="flex items-center gap-2">
+                        {LitIcon && <LitIcon className="h-4 w-4" />}
+                        {t(`pages.books.literaryTypes.${type.value}`)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.literarytype && (
@@ -477,8 +462,10 @@ export function BookForm({
               <SelectContent>
                 {BOOK_LANGUAGES.map((lang) => (
                   <SelectItem key={lang.value} value={lang.value}>
-                    {LANGUAGE_EMOJIS[lang.value] ?? '🌐'}{' '}
-                    {t(`pages.books.languages.${lang.value}`)}
+                    <span className="flex items-center gap-2">
+                      <BOOK_LANGUAGE_ICON className="h-4 w-4" />
+                      {t(`pages.books.languages.${lang.value}`)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -697,7 +684,10 @@ export function BookForm({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <span>{READ_STATUS_EMOJIS[value]}</span>
+                  {(() => {
+                    const StatusIcon = READ_STATUS_ICONS[value];
+                    return StatusIcon ? <StatusIcon className="h-3.5 w-3.5" /> : null;
+                  })()}
                   <span className="hidden sm:inline">
                     {t(`pages.books.readStatus.${value}`)}
                   </span>

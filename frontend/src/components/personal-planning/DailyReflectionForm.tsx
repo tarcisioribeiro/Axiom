@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { MOOD_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { dailyReflectionSchema } from '@/lib/validations';
@@ -24,14 +25,6 @@ import { membersService } from '@/services/members-service';
 import { MOOD_CHOICES, type DailyReflection } from '@/types';
 
 type DailyReflectionFormData = z.infer<typeof dailyReflectionSchema>;
-
-const MOOD_EMOJIS: Record<string, string> = {
-  excellent: '😊',
-  good: '🙂',
-  neutral: '😐',
-  bad: '😕',
-  terrible: '😢',
-};
 
 interface DailyReflectionFormProps {
   reflection?: DailyReflection;
@@ -126,11 +119,17 @@ export function DailyReflectionForm({
                 <SelectItem value="none">
                   {t('pages.dailyReflections.filters.allMoods')}
                 </SelectItem>
-                {MOOD_CHOICES.map((choice) => (
-                  <SelectItem key={choice.value} value={choice.value}>
-                    {MOOD_EMOJIS[choice.value]} {choice.label}
-                  </SelectItem>
-                ))}
+                {MOOD_CHOICES.map((choice) => {
+                  const MoodIcon = MOOD_ICONS[choice.value];
+                  return (
+                    <SelectItem key={choice.value} value={choice.value}>
+                      <span className="flex items-center gap-2">
+                        {MoodIcon && <MoodIcon className="h-4 w-4" />}
+                        {choice.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.mood && (

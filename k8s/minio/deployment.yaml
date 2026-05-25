@@ -160,6 +160,8 @@ spec:
                 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
               mc --insecure mb --ignore-existing myminio/axiom
               echo "Bucket created (or already exists)"
+              echo 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPENPUlNDb25maWd1cmF0aW9uPgogIDxDT1JTUnVsZT4KICAgIDxBbGxvd2VkT3JpZ2luPmh0dHBzOi8vYXhpb20udGp0dXguZHVja2Rucy5vcmc8L0FsbG93ZWRPcmlnaW4+CiAgICA8QWxsb3dlZE1ldGhvZD5HRVQ8L0FsbG93ZWRNZXRob2Q+CiAgICA8QWxsb3dlZE1ldGhvZD5IRUFEPC9BbGxvd2VkTWV0aG9kPgogICAgPEFsbG93ZWRIZWFkZXI+KjwvQWxsb3dlZEhlYWRlcj4KICAgIDxFeHBvc2VIZWFkZXI+Q29udGVudC1EaXNwb3NpdGlvbjwvRXhwb3NlSGVhZGVyPgogICAgPEV4cG9zZUhlYWRlcj5Db250ZW50LUxlbmd0aDwvRXhwb3NlSGVhZGVyPgogICAgPE1heEFnZVNlY29uZHM+MzYwMDwvTWF4QWdlU2Vjb25kcz4KICA8L0NPUlNSdWxlPgo8L0NPUlNDb25maWd1cmF0aW9uPgo=' | base64 -d | mc --insecure cors set myminio/axiom -
+              echo "CORS configured for axiom bucket"
           resources:
             requests:
               memory: "32Mi"

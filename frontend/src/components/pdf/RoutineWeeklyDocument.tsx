@@ -12,21 +12,12 @@ import {
 import { translate } from '@/config/constants';
 import {
   CATEGORY_COLORS,
+  PDF_PALETTE,
   PRIORITY_PDF_COLORS,
   type DaySchedule,
 } from '@/lib/routine-export';
 
-// ── Design tokens (Alucard light theme) ──────────────────────────────────────
-const C = {
-  background: '#FFFBEB',
-  primary: '#644AC9',
-  primaryLight: '#EDE9F8',
-  foreground: '#1F1F1F',
-  muted: '#6C664B',
-  separator: '#D4D4D8',
-  timeText: '#4A33A0',
-  timeBg: '#EDE9F8',
-};
+const C = PDF_PALETTE;
 
 Font.registerHyphenationCallback((word) => [word]);
 
@@ -54,7 +45,7 @@ const s = StyleSheet.create({
   brand: { fontSize: 18, fontFamily: 'Helvetica-Bold', color: C.primary },
   headerRight: { flexDirection: 'column', alignItems: 'flex-end' },
   headerTitle: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: C.foreground },
-  headerSub: { fontSize: 8, color: C.muted, marginTop: 2 },
+  headerSub: { fontSize: 8, color: C.mutedForeground, marginTop: 2 },
 
   // ── Day block ─────────────────────────────────────────────────────────────
   dayBlock: { marginBottom: 16 },
@@ -71,7 +62,7 @@ const s = StyleSheet.create({
     color: C.primary,
     letterSpacing: 0.6,
   },
-  emptyDay: { fontSize: 8, color: C.muted, fontStyle: 'italic', marginLeft: 4 },
+  emptyDay: { fontSize: 8, color: C.mutedForeground, fontStyle: 'italic', marginLeft: 4 },
 
   // ── Task entry ────────────────────────────────────────────────────────────
   taskRow: {
@@ -81,7 +72,7 @@ const s = StyleSheet.create({
     paddingBottom: 3,
   },
   fieldRow: { flexDirection: 'row', marginBottom: 2, alignItems: 'flex-start' },
-  labelText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.muted, width: 65 },
+  labelText: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: C.mutedForeground, width: 65 },
   valueText: { fontSize: 8, color: C.foreground, flex: 1, lineHeight: 1.4 },
   taskTitleValue: {
     fontSize: 9,
@@ -105,7 +96,7 @@ const s = StyleSheet.create({
     bottom: 20,
     right: 40,
     fontSize: 7,
-    color: C.muted,
+    color: C.mutedForeground,
   },
 });
 
@@ -167,7 +158,7 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                           <Text
                             style={[
                               s.valueText,
-                              { color: C.muted, fontStyle: 'italic' },
+                              { color: C.mutedForeground, fontStyle: 'italic' },
                             ]}
                           >
                             Sem horário definido
@@ -198,7 +189,7 @@ export function RoutineWeeklyDocument({ schedule, ownerName }: Props) {
                               cx="4"
                               cy="4"
                               r="4"
-                              fill={CATEGORY_COLORS[entry.task.category] ?? C.muted}
+                              fill={CATEGORY_COLORS[entry.task.category] ?? C.mutedForeground}
                             />
                           </Svg>
                           <Text style={s.valueText}>

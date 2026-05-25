@@ -45,6 +45,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Exclude large on-demand chunks (e.g. exceljs) from precache
+        globIgnores: ['**/routine-export-*.js'],
         // Cache-first para listas estáticas; network-first para API
         runtimeCaching: [
           {

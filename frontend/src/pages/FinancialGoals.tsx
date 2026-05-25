@@ -47,6 +47,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
 import { translate } from '@/config/constants';
+import { FINANCIAL_GOAL_CATEGORY_ICONS, EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -66,7 +67,7 @@ import { getErrorMessage } from '@/utils/error-utils';
 function ProgressRing({
   pct,
   size = 80,
-  color = '#22c55e',
+  color = 'hsl(var(--success))',
 }: {
   pct: number;
   size?: number;
@@ -130,21 +131,21 @@ function GoalCard({
     { icon: React.ReactNode; color: string; ringColor: string }
   > = {
     reduce_expenses: {
-      icon: <TrendingDown className="h-5 w-5 text-orange-500" />,
-      color: 'text-orange-500',
-      ringColor: '#f97316',
+      icon: <TrendingDown className="h-5 w-5 text-warning" />,
+      color: 'text-warning',
+      ringColor: 'hsl(var(--warning))',
     },
     increase_revenue: {
-      icon: <TrendingUp className="h-5 w-5 text-blue-500" />,
-      color: 'text-blue-500',
-      ringColor: '#3b82f6',
+      icon: <TrendingUp className="h-5 w-5 text-info" />,
+      color: 'text-info',
+      ringColor: 'hsl(var(--info))',
     },
   };
 
   const config = categoryConfig[goal.category] ?? {
     icon: <PiggyBank className="h-5 w-5 text-success" />,
     color: 'text-success',
-    ringColor: '#22c55e',
+    ringColor: 'hsl(var(--success))',
   };
 
   const daysLeft = goal.target_date
@@ -284,20 +285,6 @@ function GoalCard({
 
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
 
-const GOAL_CATEGORY_EMOJIS: Record<string, string> = {
-  savings: '💰',
-  investment: '📈',
-  emergency: '🛡️',
-  travel: '✈️',
-  education: '📚',
-  property: '🏠',
-  vehicle: '🚗',
-  retirement: '👴',
-  health: '❤️',
-  reduce_expenses: '✂️',
-  increase_revenue: '⬆️',
-  other: '📦',
-};
 
 export default function FinancialGoals() {
   const { t } = useTranslation();
@@ -701,7 +688,10 @@ export default function FinancialGoals() {
                             : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
                         }`}
                       >
-                        <span>{GOAL_CATEGORY_EMOJIS[cat.value] ?? '📦'}</span>
+                        {(() => {
+                          const CatIcon = FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ?? FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                          return CatIcon ? <CatIcon className="h-3.5 w-3.5 shrink-0" /> : null;
+                        })()}
                         <span className="truncate">
                           {t(`pages.financialGoals.categories.${cat.value}`)}
                         </span>
@@ -730,11 +720,17 @@ export default function FinancialGoals() {
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {EXPENSE_CATEGORIES_CANONICAL.map((cat) => (
-                          <SelectItem key={cat.key} value={cat.key}>
-                            {cat.emoji} {translate('expenseCategories', cat.key)}
-                          </SelectItem>
-                        ))}
+                        {EXPENSE_CATEGORIES_CANONICAL.map((cat) => {
+                          const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
+                          return (
+                            <SelectItem key={cat.key} value={cat.key}>
+                              <span className="flex items-center gap-2">
+                                {CatIcon && <CatIcon className="h-4 w-4" />}
+                                {translate('expenseCategories', cat.key)}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>

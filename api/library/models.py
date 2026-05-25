@@ -475,6 +475,11 @@ class Reading(BaseModel):
         blank=True,
         verbose_name="Página Atual",
     )
+    current_cfi = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Posição EPUB (CFI)",
+    )
     time_of_day = models.CharField(
         max_length=20,
         choices=TIME_OF_DAY_CHOICES,

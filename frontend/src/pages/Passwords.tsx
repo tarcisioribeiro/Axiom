@@ -54,6 +54,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { PASSWORD_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
@@ -638,11 +639,21 @@ export default function Passwords() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PASSWORD_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {t(`pages.passwords.categories.${cat.value}`)}
-                      </SelectItem>
-                    ))}
+                    {PASSWORD_CATEGORIES.map((cat) => {
+                      const Icon =
+                        PASSWORD_CATEGORY_ICONS[cat.value] ??
+                        PASSWORD_CATEGORY_ICONS['other'];
+                      return (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          <span className="flex items-center gap-2">
+                            {Icon && (
+                              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            )}
+                            {t(`pages.passwords.categories.${cat.value}`)}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 {errors.category && (

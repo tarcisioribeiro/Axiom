@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
@@ -512,11 +513,17 @@ export default function FixedRevenues() {
                     <SelectValue placeholder={t('common.actions.select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {REVENUE_CATEGORIES_CANONICAL.map(({ key, emoji }) => (
-                      <SelectItem key={key} value={key}>
-                        {emoji} {translate('revenueCategories', key)}
-                      </SelectItem>
-                    ))}
+                    {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+                      const Icon = REVENUE_CATEGORY_ICONS[key];
+                      return (
+                        <SelectItem key={key} value={key}>
+                          <span className="flex items-center gap-2">
+                            {Icon && <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                            {translate('revenueCategories', key)}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

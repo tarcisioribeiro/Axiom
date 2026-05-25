@@ -191,26 +191,6 @@ export function HabitHeatmap({ taskId, taskName }: HabitHeatmapProps) {
         <div className="h-[110px] animate-pulse rounded-md bg-muted" />
       ) : (
         <div className="relative overflow-x-auto pb-xs">
-          {/* CSS variables for colours — works in both light and dark mode */}
-          <style>{`
-            :root {
-              --heatmap-empty:      #e5e7eb;
-              --heatmap-missed:     #fecdd3;
-              --heatmap-low:        #bbf7d0;
-              --heatmap-medium-low: #86efac;
-              --heatmap-medium:     #4ade80;
-              --heatmap-high:       #16a34a;
-            }
-            .dark {
-              --heatmap-empty:      #1f2937;
-              --heatmap-missed:     #7f1d1d;
-              --heatmap-low:        #14532d;
-              --heatmap-medium-low: #166534;
-              --heatmap-medium:     #15803d;
-              --heatmap-high:       #4ade80;
-            }
-          `}</style>
-
           {/* Wrapper with left padding for weekday labels */}
           <div className="flex gap-xs">
             {/* Weekday labels */}

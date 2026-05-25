@@ -49,7 +49,7 @@ def _notify_goal_completed(goal):
         Notification.objects.create(
             owner=goal.owner,
             notification_type="task_today",
-            title=f"🎯 Objetivo concluído: {goal.title}",
+            title=f"Objetivo concluído: {goal.title}",
             message=(
                 f"Parabéns! Você atingiu sua meta de {goal.target_value} "
                 f'para o objetivo "{goal.title}".'
@@ -90,10 +90,10 @@ def award_xp_on_task_completion(sender, instance, created, **kwargs):
 
         # Badge de marcos de tarefas
         for milestone, slug, name, reward in [
-            (10, "tasks_10", "Iniciante ✅", 20),
-            (50, "tasks_50", "Consistente 💼", 100),
-            (100, "tasks_100", "Dedicado 🌟", 250),
-            (500, "tasks_500", "Mestre das Rotinas 🏆", 1000),
+            (10, "tasks_10", "Iniciante", 20),
+            (50, "tasks_50", "Consistente", 100),
+            (100, "tasks_100", "Dedicado", 250),
+            (500, "tasks_500", "Mestre das Rotinas", 1000),
         ]:
             if profile.tasks_completed_total == milestone:
                 from personal_planning.models import Badge, UserBadge
@@ -104,7 +104,7 @@ def award_xp_on_task_completion(sender, instance, created, **kwargs):
                         "name": name,
                         "description": f"Concluiu {milestone} tarefas",
                         "category": "completion",
-                        "icon": "✅",
+                        "icon": "CheckCircle",
                         "xp_reward": reward,
                         "created_by": instance.created_by,
                     },
@@ -143,7 +143,7 @@ def award_xp_on_goal_completed(sender, instance, created, **kwargs):
                 "name": f"Primeiro Objetivo ({instance.get_goal_type_display()})",
                 "description": "Concluiu o primeiro objetivo deste tipo",
                 "category": "goal",
-                "icon": "🎯",
+                "icon": "Target",
                 "xp_reward": 0,
                 "created_by": instance.created_by,
             },

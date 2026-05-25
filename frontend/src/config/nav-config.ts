@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Wallet,
   Shield,
-  Library,
+  Lightbulb,
   CreditCard,
   ShoppingCart,
   TrendingDown,
@@ -194,7 +194,7 @@ export const navModules: NavModule[] = [
   {
     id: 'library',
     titleKey: 'nav.modules.library',
-    icon: Library,
+    icon: Brain,
     topItems: [
       { titleKey: 'nav.dashboard', href: '/library/dashboard', icon: LayoutDashboard },
     ],
@@ -216,7 +216,7 @@ export const navModules: NavModule[] = [
       {
         id: 'library-intellect',
         titleKey: 'nav.submodules.intellect',
-        icon: Brain,
+        icon: Lightbulb,
         items: [
           {
             titleKey: 'nav.items.courses',
