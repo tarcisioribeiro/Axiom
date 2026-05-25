@@ -1935,6 +1935,7 @@ class CourseListCreateView(BaseListCreateView):
     """Lista todos os cursos ou cria um novo."""
 
     queryset = Course.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         qs = Course.objects.filter(
@@ -1966,6 +1967,7 @@ class CourseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     """Recupera, atualiza ou deleta um curso."""
 
     queryset = Course.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Course.objects.filter(

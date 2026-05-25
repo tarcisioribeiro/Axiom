@@ -10,7 +10,7 @@ import {
   Sheet,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -52,7 +52,11 @@ import { getErrorMessage } from '@/utils/error-utils';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
 
-export default function RoutineTasks() {
+interface RoutineTasksProps {
+  embedded?: boolean;
+}
+
+export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { t } = useTranslation();
   const [tasks, setTasks] = useState<RoutineTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -392,8 +396,14 @@ export default function RoutineTasks() {
     return <LoadingState />;
   }
 
+  const Wrapper = embedded
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.routineTasks.title')} icon={<CheckSquare />}>
         <div className="flex items-center gap-sm">
           <DropdownMenu>
@@ -499,6 +509,6 @@ export default function RoutineTasks() {
           )}
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

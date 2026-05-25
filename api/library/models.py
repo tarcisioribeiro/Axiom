@@ -768,6 +768,12 @@ class Course(BaseModel):
     )
     start_date = models.DateField(null=True, blank=True, verbose_name="Data de início")
     end_date = models.DateField(null=True, blank=True, verbose_name="Data de conclusão")
+    completion_certificate = models.FileField(
+        upload_to="courses/certificates/",
+        null=True,
+        blank=True,
+        verbose_name="Comprovante de conclusão",
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,

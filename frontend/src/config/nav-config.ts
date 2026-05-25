@@ -35,6 +35,7 @@ import {
   GraduationCap,
   Brain,
   Network,
+  Library,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -85,16 +86,10 @@ export const navModules: NavModule[] = [
     items: [
       { titleKey: 'nav.dashboard', href: '/planning/dashboard', icon: LayoutDashboard },
       {
-        titleKey: 'nav.items.todayTasks',
-        href: '/planning/today-tasks',
+        titleKey: 'nav.items.tasksGoals',
+        href: '/planning/tasks-goals',
         icon: CheckCircle2,
       },
-      {
-        titleKey: 'nav.items.routineTasks',
-        href: '/planning/routine-tasks',
-        icon: Calendar,
-      },
-      { titleKey: 'nav.items.goals', href: '/planning/goals', icon: Target },
       { titleKey: 'nav.items.workout', href: '/planning/workout', icon: Dumbbell },
       {
         titleKey: 'nav.items.nutrition',
@@ -202,9 +197,9 @@ export const navModules: NavModule[] = [
       {
         id: 'library-books',
         titleKey: 'nav.submodules.books',
-        icon: BookOpen,
+        icon: Library,
         items: [
-          { titleKey: 'nav.items.books', href: '/library/books', icon: BookOpen },
+          { titleKey: 'nav.items.books', href: '/library/books', icon: Library },
           { titleKey: 'nav.items.authors', href: '/library/authors', icon: UserPen },
           {
             titleKey: 'nav.items.publishers',

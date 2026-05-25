@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  Award,
   BookOpen,
   Calendar,
   Check,
   CheckCircle2,
   Circle,
   Edit,
+  ExternalLink,
   GraduationCap,
   Layers,
   Loader2,
   Plus,
   Timer,
   Trash2,
+  Upload,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -489,10 +493,12 @@ export function CourseDetailModal({
   onDelete,
 }: CourseDetailModalProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showAddModule, setShowAddModule] = useState(false);
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [showAddSession, setShowAddSession] = useState(false);
+  const [uploadingCert, setUploadingCert] = useState(false);
 
   const { data: modules = [], refetch: refetchModules } = useQuery({
     queryKey: ['course-modules', course?.id],
@@ -532,6 +538,40 @@ export function CourseDetailModal({
     void refetchModules();
     void refetchCourse();
     void queryClient.invalidateQueries({ queryKey: ['courses'] });
+  };
+
+  const handleCertificateUpload = async (file: File) => {
+    if (!displayCourse) return;
+    setUploadingCert(true);
+    try {
+      const form = new FormData();
+      form.append('completion_certificate', file);
+      await coursesService.patch(displayCourse.id, form as unknown as Partial<never>);
+      void refetchCourse();
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast({ title: t('pages.courses.certificate.uploaded') });
+    } catch {
+      toast({ title: t('pages.courses.certificate.uploadError'), variant: 'destructive' });
+    } finally {
+      setUploadingCert(false);
+    }
+  };
+
+  const handleCertificateRemove = async () => {
+    if (!displayCourse) return;
+    setUploadingCert(true);
+    try {
+      const form = new FormData();
+      form.append('completion_certificate', '');
+      await coursesService.patch(displayCourse.id, form as unknown as Partial<never>);
+      void refetchCourse();
+      void queryClient.invalidateQueries({ queryKey: ['courses'] });
+      toast({ title: t('pages.courses.certificate.removed') });
+    } catch {
+      toast({ title: t('pages.courses.certificate.uploadError'), variant: 'destructive' });
+    } finally {
+      setUploadingCert(false);
+    }
   };
 
   const handleSessionUpdated = () => {
@@ -653,6 +693,10 @@ export function CourseDetailModal({
               <Timer className="mr-xs h-4 w-4" />
               {t('pages.courses.tabs.sessions')}
             </TabsTrigger>
+            <TabsTrigger value="certificate" className="flex-1">
+              <Award className="mr-xs h-4 w-4" />
+              {t('pages.courses.tabs.certificate')}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-md space-y-md">
@@ -689,6 +733,18 @@ export function CourseDetailModal({
           </TabsContent>
 
           <TabsContent value="modules" className="mt-md space-y-sm">
+            {modules.length === 0 && !showAddModule && (
+              <div className="rounded-lg border border-dashed border-category-intellect/30 bg-category-intellect/5 p-lg text-center">
+                <Layers className="mx-auto mb-sm h-8 w-8 text-category-intellect/40" />
+                <p className="text-sm font-medium text-foreground">
+                  {t('pages.courses.modules.emptyTitle')}
+                </p>
+                <p className="mt-xs text-xs text-muted-foreground">
+                  {t('pages.courses.modules.emptyHint')}
+                </p>
+              </div>
+            )}
+
             {modules.map((mod) => (
               <ModuleItem
                 key={mod.id}
@@ -788,6 +844,86 @@ export function CourseDetailModal({
               sessions.map((s) => (
                 <SessionItem key={s.id} session={s} onDeleted={handleSessionUpdated} />
               ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="certificate" className="mt-md space-y-md">
+            {displayCourse.completion_certificate ? (
+              <div className="space-y-md">
+                <div className="flex items-center gap-md rounded-lg border border-category-intellect/20 bg-category-intellect/5 p-md">
+                  <Award className="h-8 w-8 shrink-0 text-category-intellect" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {t('pages.courses.certificate.fileLabel')}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {displayCourse.completion_certificate.split('/').pop()}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-xs">
+                    <a
+                      href={displayCourse.completion_certificate}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                    <button
+                      type="button"
+                      disabled={uploadingCert}
+                      onClick={() => void handleCertificateRemove()}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-destructive transition-colors hover:bg-destructive/10"
+                    >
+                      {uploadingCert ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <label className="flex cursor-pointer flex-col items-center gap-sm rounded-lg border border-dashed border-border p-md text-center transition-colors hover:bg-muted/30">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {t('pages.courses.certificate.replace')}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleCertificateUpload(file);
+                    }}
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer flex-col items-center gap-md rounded-lg border border-dashed border-category-intellect/30 bg-category-intellect/5 p-xl text-center transition-colors hover:bg-category-intellect/10">
+                {uploadingCert ? (
+                  <Loader2 className="h-10 w-10 animate-spin text-category-intellect/50" />
+                ) : (
+                  <Award className="h-10 w-10 text-category-intellect/40" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {t('pages.courses.certificate.emptyTitle')}
+                  </p>
+                  <p className="mt-xs text-xs text-muted-foreground">
+                    {t('pages.courses.certificate.emptyHint')}
+                  </p>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void handleCertificateUpload(file);
+                  }}
+                />
+              </label>
             )}
           </TabsContent>
         </Tabs>

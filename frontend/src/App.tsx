@@ -68,6 +68,7 @@ const PersonalPlanningDashboard = lazy(
 const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
 const Goals = lazy(() => import('./pages/Goals'));
 const TodayTasks = lazy(() => import('./pages/TodayTasks'));
+const TasksAndGoals = lazy(() => import('./pages/TasksAndGoals'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
@@ -470,32 +471,28 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/planning/routine-tasks"
+            path="/planning/tasks-goals"
             element={
               <PageWrapper>
-                <RoutineTasks />
+                <TasksAndGoals />
               </PageWrapper>
             }
+          />
+          <Route
+            path="/planning/routine-tasks"
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/goals"
-            element={
-              <PageWrapper>
-                <Goals />
-              </PageWrapper>
-            }
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/daily"
-            element={<Navigate to="/planning/today-tasks" replace />}
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/today-tasks"
-            element={
-              <PageWrapper>
-                <TodayTasks />
-              </PageWrapper>
-            }
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/daily-checklist"
