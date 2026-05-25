@@ -1,5 +1,5 @@
 import { Plus, Pencil, Trash2, Calendar, TrendingDown } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -28,7 +28,7 @@ import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense, FixedExpenseFormData, Account, CreditCard } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-export default function FixedExpenses() {
+export default function FixedExpenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -191,8 +191,12 @@ export default function FixedExpenses() {
     },
   ];
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
         title={t('pages.fixedExpenses.title')}
         icon={<Calendar className="h-6 w-6" />}
@@ -372,6 +376,6 @@ export default function FixedExpenses() {
         fixedExpenses={fixedExpenses.filter((e) => e.is_active)}
         onSuccess={loadData}
       />
-    </PageContainer>
+    </Wrapper>
   );
 }

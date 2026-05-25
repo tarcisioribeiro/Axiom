@@ -11,7 +11,7 @@ import {
   Wallet,
   CalendarDays,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -79,7 +79,7 @@ function getDefaultMonth(): string {
   return `${y}-${m}`;
 }
 
-export default function FixedRevenues() {
+export default function FixedRevenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const [fixedRevenues, setFixedRevenues] = useState<FixedRevenue[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -297,8 +297,12 @@ export default function FixedRevenues() {
     0
   );
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
         title={t('pages.fixedRevenues.title')}
         icon={<Calendar className="h-6 w-6" />}
@@ -675,7 +679,7 @@ export default function FixedRevenues() {
         fixedRevenues={activeRevenues}
         onSuccess={loadData}
       />
-    </PageContainer>
+    </Wrapper>
   );
 }
 
