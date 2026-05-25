@@ -1,5 +1,5 @@
 import { CheckCircle2, Moon, Sun, Sunset } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -16,6 +16,10 @@ const VIEW_MODE_KEY = 'todayTasks.viewMode';
 
 interface TodayTasksProps {
   embedded?: boolean;
+}
+
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
 }
 
 export default function TodayTasks({ embedded = false }: TodayTasksProps) {
@@ -56,11 +60,7 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
 
   if (isLoading) return <LoadingState />;
 
-  const Wrapper = embedded
-    ? ({ children }: { children: React.ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   const todayTasksCount = viewMode === 'kanban' ? cards.length : todayTasks.length;
   const doneCount =

@@ -42,6 +42,10 @@ import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
 export default function Expenses({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -119,11 +123,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       }));
   }, [expenses]);
 
-  const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => (
-        <div className="space-y-lg">{children}</div>
-      )
-    : PageContainer;
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
     <Wrapper>
