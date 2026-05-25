@@ -32,6 +32,7 @@ import {
   Brain,
   Network,
   Library,
+  Scale,
 } from 'lucide-react';
 
 export interface NavSubItem {
@@ -113,6 +114,13 @@ export const navModules: NavModule[] = [
             href: '/credit-cards',
             icon: CreditCard,
           },
+          { titleKey: 'nav.items.members', href: '/members', icon: Users },
+          { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
+          {
+            titleKey: 'nav.items.financialGoals',
+            href: '/financial-goals',
+            icon: Target,
+          },
           {
             titleKey: 'nav.items.recurring',
             href: '/recurring',
@@ -123,18 +131,6 @@ export const navModules: NavModule[] = [
             href: '/categorization-rules',
             icon: Tag,
           },
-          { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
-          {
-            titleKey: 'nav.items.bills',
-            href: '/bills',
-            icon: Receipt,
-          },
-          {
-            titleKey: 'nav.items.financialGoals',
-            href: '/financial-goals',
-            icon: Target,
-          },
-          { titleKey: 'nav.items.members', href: '/members', icon: Users },
         ],
       },
       {
@@ -148,8 +144,18 @@ export const navModules: NavModule[] = [
             icon: TrendingDown,
           },
           { titleKey: 'nav.items.transfers', href: '/transfers', icon: ArrowLeftRight },
-          { titleKey: 'nav.items.loans', href: '/loans', icon: HandCoins },
+          {
+            titleKey: 'nav.items.bills',
+            href: '/bills',
+            icon: Receipt,
+          },
           { titleKey: 'nav.items.vaults', href: '/vaults', icon: Vault },
+          { titleKey: 'nav.items.loans', href: '/loans', icon: HandCoins },
+          {
+            titleKey: 'nav.items.bankReconciliation',
+            href: '/bank-reconciliation',
+            icon: Scale,
+          },
         ],
       },
     ],
