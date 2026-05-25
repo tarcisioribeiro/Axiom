@@ -1,25 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
-// ── Design tokens (extraídos do design system Alucard light) ─────────────────
-const COLORS = {
-  background: '#FFFBEB',
-  card: '#FFFAF2',
-  primary: '#644AC9',
-  primaryLight: '#EDE9F8',
-  success: '#14710A',
-  successLight: '#E6F4E5',
-  destructive: '#CB3A2A',
-  destructiveLight: '#FAECEC',
-  warning: '#A34D14',
-  foreground: '#1F1F1F',
-  muted: '#6C664B',
-  border: '#C8C8D8',
-  borderSubtle: '#E8E8F0',
-  white: '#FFFFFF',
-  gray50: '#F9F9FB',
-  transfer: '#036A96',
-  transferLight: '#E0F2FA',
-};
+import { PDF_PALETTE as COLORS } from '@/lib/routine-export';
 
 Font.registerHyphenationCallback((word) => [word]);
 
@@ -56,7 +37,7 @@ const styles = StyleSheet.create({
   },
   brandTagline: {
     fontSize: 8,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
     letterSpacing: 0.5,
   },
   headerMeta: {
@@ -71,7 +52,7 @@ const styles = StyleSheet.create({
   },
   headerMetaText: {
     fontSize: 8,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
   },
 
   // ── Summary cards ────────────────────────────────────────────────────────────
@@ -101,7 +82,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 7,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 4,
@@ -115,7 +96,7 @@ const styles = StyleSheet.create({
   summaryValueBalance: { color: COLORS.primary },
   summarySubtext: {
     fontSize: 7,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
     marginTop: 3,
   },
 
@@ -123,7 +104,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 6,
@@ -156,7 +137,7 @@ const styles = StyleSheet.create({
   },
   accountChipInstitution: {
     fontSize: 7,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
   },
   accountChipBalance: {
     fontSize: 9,
@@ -195,7 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tableRowEven: {
-    backgroundColor: COLORS.gray50,
+    backgroundColor: COLORS.surface,
   },
   tableRowOdd: {
     backgroundColor: COLORS.card,
@@ -206,7 +187,7 @@ const styles = StyleSheet.create({
   },
   tableCellMuted: {
     fontSize: 7,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
   },
 
   // column widths
@@ -219,7 +200,7 @@ const styles = StyleSheet.create({
   // Value colors
   valueRevenue: { color: COLORS.success, fontFamily: 'Helvetica-Bold' },
   valueExpense: { color: COLORS.destructive, fontFamily: 'Helvetica-Bold' },
-  valueTransfer: { color: COLORS.transfer, fontFamily: 'Helvetica-Bold' },
+  valueTransfer: { color: COLORS.info, fontFamily: 'Helvetica-Bold' },
 
   // ── Footer ────────────────────────────────────────────────────────────────────
   footer: {
@@ -236,7 +217,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 7,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
   },
   footerBrand: {
     fontSize: 7,
@@ -252,7 +233,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 9,
-    color: COLORS.muted,
+    color: COLORS.mutedForeground,
     textAlign: 'center',
   },
 

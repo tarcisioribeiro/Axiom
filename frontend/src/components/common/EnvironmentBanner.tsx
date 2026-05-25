@@ -1,15 +1,20 @@
 import { APP_ENV, IS_PRODUCTION } from '@/lib/app-info';
 
-const ENV_CONFIG: Record<string, { label: string; bg: string; shadow: string }> = {
+const ENV_CONFIG: Record<
+  string,
+  { label: string; bg: string; textColor: string; shadow: string }
+> = {
   staging: {
     label: 'STAGING',
-    bg: '#f97316',
-    shadow: 'rgba(249,115,22,0.4)',
+    bg: 'hsl(var(--warning))',
+    textColor: 'hsl(var(--warning-foreground))',
+    shadow: 'hsl(var(--warning) / 0.4)',
   },
   development: {
     label: 'DEV',
-    bg: '#0ea5e9',
-    shadow: 'rgba(14,165,233,0.4)',
+    bg: 'hsl(var(--info))',
+    textColor: 'hsl(var(--info-foreground))',
+    shadow: 'hsl(var(--info) / 0.4)',
   },
 };
 
@@ -45,7 +50,7 @@ export function EnvironmentBanner() {
           width: 130,
           textAlign: 'center',
           background: config.bg,
-          color: '#fff',
+          color: config.textColor,
           fontSize: 9,
           fontWeight: 700,
           letterSpacing: '0.12em',

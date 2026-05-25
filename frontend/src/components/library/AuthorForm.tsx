@@ -24,59 +24,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { NATIONALITY_ICON } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { authorSchema } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { NATIONALITIES, ERAS } from '@/types';
 import type { Author, AuthorFormData } from '@/types';
-
-const NATIONALITY_EMOJIS: Record<string, string> = {
-  ALE: '🇩🇪',
-  USA: '🇺🇸',
-  ARG: '🇦🇷',
-  AUL: '🇦🇺',
-  AUS: '🇦🇹',
-  BEL: '🇧🇪',
-  BRA: '🇧🇷',
-  CAN: '🇨🇦',
-  CZE: '🇨🇿',
-  CHL: '🇨🇱',
-  CHN: '🇨🇳',
-  COL: '🇨🇴',
-  CUB: '🇨🇺',
-  DEN: '🇩🇰',
-  EGI: '🇪🇬',
-  SCO: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  ESP: '🇪🇸',
-  FIN: '🇫🇮',
-  FRA: '🇫🇷',
-  GRE: '🇬🇷',
-  NLD: '🇳🇱',
-  HUN: '🇭🇺',
-  IND: '🇮🇳',
-  ING: '🇬🇧',
-  IRL: '🇮🇪',
-  ISR: '🇮🇱',
-  ITA: '🇮🇹',
-  JPN: '🇯🇵',
-  MEX: '🇲🇽',
-  NGA: '🇳🇬',
-  NOR: '🇳🇴',
-  PER: '🇵🇪',
-  POL: '🇵🇱',
-  POR: '🇵🇹',
-  ROM: '🇷🇴',
-  RUS: '🇷🇺',
-  SUE: '🇸🇪',
-  SUI: '🇨🇭',
-  TUR: '🇹🇷',
-  UKR: '🇺🇦',
-};
-
-const ERA_EMOJIS: Record<string, string> = {
-  DC: '📅',
-  AC: '🏛️',
-};
 
 interface AuthorFormProps {
   author?: Author;
@@ -241,8 +194,10 @@ export function AuthorForm({
               <SelectContent>
                 {NATIONALITIES.map((nat) => (
                   <SelectItem key={nat.value} value={nat.value}>
-                    {NATIONALITY_EMOJIS[nat.value] ?? '🌐'}{' '}
-                    {t(`pages.authors.nationalities.${nat.value}`)}
+                    <span className="flex items-center gap-2">
+                      <NATIONALITY_ICON className="h-4 w-4" />
+                      {t(`pages.authors.nationalities.${nat.value}`)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -295,7 +250,7 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {ERA_EMOJIS[era.value] ?? ''} {t(`pages.authors.eras.${era.value}`)}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -346,7 +301,7 @@ export function AuthorForm({
               <SelectContent>
                 {ERAS.map((era) => (
                   <SelectItem key={era.value} value={era.value}>
-                    {ERA_EMOJIS[era.value] ?? ''} {t(`pages.authors.eras.${era.value}`)}
+                    {t(`pages.authors.eras.${era.value}`)}
                   </SelectItem>
                 ))}
               </SelectContent>

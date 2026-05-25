@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TIME_OF_DAY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { readingSchema, type ReadingFormData } from '@/lib/validations';
@@ -24,13 +25,6 @@ import { membersService } from '@/services/members-service';
 import type { Reading, Book } from '@/types';
 
 const TIME_OF_DAY_KEYS = ['morning', 'afternoon', 'evening', 'dawn'] as const;
-
-const TIME_OF_DAY_EMOJIS: Record<string, string> = {
-  morning: '🌅',
-  afternoon: '☀️',
-  evening: '🌙',
-  dawn: '🌄',
-};
 
 interface ReadingFormProps {
   reading?: Reading;
@@ -249,14 +243,19 @@ export function ReadingForm({
                 />
               </SelectTrigger>
               <SelectContent>
-                {TIME_OF_DAY_KEYS.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {TIME_OF_DAY_EMOJIS[key]}{' '}
-                    {t(
-                      `pages.readings.form.timeOfDay${key.charAt(0).toUpperCase() + key.slice(1)}`
-                    )}
-                  </SelectItem>
-                ))}
+                {TIME_OF_DAY_KEYS.map((key) => {
+                  const TimeIcon = TIME_OF_DAY_ICONS[key];
+                  return (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        {TimeIcon && <TimeIcon className="h-4 w-4" />}
+                        {t(
+                          `pages.readings.form.timeOfDay${key.charAt(0).toUpperCase() + key.slice(1)}`
+                        )}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

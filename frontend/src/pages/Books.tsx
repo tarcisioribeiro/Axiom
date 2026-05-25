@@ -7,6 +7,7 @@ import {
   BookMarked,
   FileText,
   Highlighter,
+  Loader2,
   MoreHorizontal,
   Download,
   BookText,
@@ -15,8 +16,10 @@ import {
   LayoutGrid,
   List,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+
+const BookReader = lazy(() => import('./BookReader'));
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { FilterBar } from '@/components/common/FilterBar';
@@ -153,12 +156,14 @@ function BookGridCard({
   onEdit,
   onDelete,
   onOpenDetail,
+  onOpenReader,
 }: {
   book: Book;
   onOpen: (b: Book, tab: DetailTab) => void;
   onEdit: (b: Book) => void;
   onDelete: (id: number) => void;
   onOpenDetail: (b: Book) => void;
+  onOpenReader: (b: Book) => void;
 }) {
   const { t } = useTranslation();
   const pb = priorityBadge(book.reading_priority, t);
@@ -246,9 +251,7 @@ function BookGridCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {book.media_type === 'Dig' && book.book_file && (
-              <DropdownMenuItem
-                onClick={() => window.open(`/library/reader/${book.id}`, '_blank')}
-              >
+              <DropdownMenuItem onClick={() => onOpenReader(book)}>
                 <BookText className="mr-sm h-4 w-4" />
                 {t('pages.books.openReader')}
               </DropdownMenuItem>
@@ -313,6 +316,9 @@ export default function Books() {
   const [detailBook, setDetailBook] = useState<Book | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailInitialTab, setDetailInitialTab] = useState<DetailTab>('info');
+
+  // Inline reader modal
+  const [readerBookId, setReaderBookId] = useState<number | null>(null);
 
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -464,7 +470,7 @@ export default function Books() {
   };
 
   const handleOpenReader = (book: Book) => {
-    window.open(`/library/reader/${book.id}`, '_blank');
+    setReaderBookId(book.id);
   };
 
   const STATUS_ORDER: Record<string, number> = { reading: 0, to_read: 1, read: 2 };
@@ -612,6 +618,7 @@ export default function Books() {
               onEdit={handleEdit}
               onDelete={(id) => void handleDelete(id)}
               onOpenDetail={(b) => openDetail(b, 'info')}
+              onOpenReader={handleOpenReader}
             />
           ))}
         </div>
@@ -886,6 +893,24 @@ export default function Books() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Fullscreen reader overlay */}
+      {readerBookId !== null && (
+        <div className="fixed inset-0 z-50">
+          <Suspense
+            fallback={
+              <div className="flex h-full items-center justify-center bg-background">
+                <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
+              </div>
+            }
+          >
+            <BookReader
+              bookIdProp={readerBookId}
+              onClose={() => setReaderBookId(null)}
+            />
+          </Suspense>
+        </div>
+      )}
     </PageContainer>
   );
 }

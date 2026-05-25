@@ -994,7 +994,7 @@ class Badge(BaseModel):
     category = models.CharField(
         max_length=20, choices=BADGE_CATEGORY_CHOICES, verbose_name="Categoria"
     )
-    icon = models.CharField(max_length=10, default="🏅", verbose_name="Ícone (emoji)")
+    icon = models.CharField(max_length=50, default="Medal", verbose_name="Ícone")
     xp_reward = models.PositiveSmallIntegerField(default=0, verbose_name="XP bônus")
 
     class Meta:

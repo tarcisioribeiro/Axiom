@@ -155,6 +155,7 @@ export interface Reading {
   pages_read: number;
   notes?: string;
   current_page?: number | null;
+  current_cfi?: string | null;
   time_of_day?: string | null;
   time_of_day_display?: string | null;
   owner: number;
@@ -170,6 +171,7 @@ export interface ReadingFormData {
   pages_read: number;
   notes?: string;
   current_page?: number | null;
+  current_cfi?: string | null;
   time_of_day?: string | null;
   owner: number;
 }

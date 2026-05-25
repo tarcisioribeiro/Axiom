@@ -34,6 +34,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
+import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
@@ -50,35 +51,6 @@ import {
 } from '@/types';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
-
-const TASK_CATEGORY_EMOJIS: Record<string, string> = {
-  health: '❤️',
-  intellect: '🧠',
-  spiritual: '🙏',
-  exercise: '💪',
-  nutrition: '🥗',
-  work: '💼',
-  social: '👥',
-  finance: '💰',
-  household: '🏠',
-  personal_care: '🧴',
-  other: '📦',
-};
-
-const PRIORITY_EMOJIS: Record<string, string> = {
-  low: '🟢',
-  medium: '🟡',
-  high: '🟠',
-  critical: '🔴',
-};
-
-const PERIODICITY_EMOJIS: Record<string, string> = {
-  daily: '📅',
-  weekdays: '📋',
-  weekly: '📆',
-  monthly: '🗓️',
-  custom: '⚙️',
-};
 
 interface RoutineTaskFormProps {
   task?: RoutineTask;
@@ -285,12 +257,17 @@ export function RoutineTaskForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {TASK_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {TASK_CATEGORY_EMOJIS[cat.value] ?? '📦'}{' '}
-                    {translate('taskCategories', cat.value)}
-                  </SelectItem>
-                ))}
+                {TASK_CATEGORIES.map((cat) => {
+                  const CatIcon = TASK_CATEGORY_ICONS[cat.value];
+                  return (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      <span className="flex items-center gap-2">
+                        {CatIcon && <CatIcon className="h-4 w-4" />}
+                        {translate('taskCategories', cat.value)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.category && (
@@ -340,7 +317,10 @@ export function RoutineTaskForm({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <span>{PERIODICITY_EMOJIS[period.value]}</span>
+                  {(() => {
+                    const PeriodIcon = PERIODICITY_ICONS[period.value];
+                    return PeriodIcon ? <PeriodIcon className="h-3.5 w-3.5" /> : null;
+                  })()}
                   <span className="hidden sm:inline">
                     {t(`pages.routineTasks.form.periodicityOptions.${period.value}`)}
                   </span>
@@ -772,12 +752,17 @@ export function RoutineTaskForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PRIORITY_CHOICES.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    {PRIORITY_EMOJIS[p.value] ?? ''}{' '}
-                    {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
-                  </SelectItem>
-                ))}
+                {PRIORITY_CHOICES.map((p) => {
+                  const PriorIcon = PRIORITY_ICONS[p.value];
+                  return (
+                    <SelectItem key={p.value} value={p.value}>
+                      <span className="flex items-center gap-2">
+                        {PriorIcon && <PriorIcon className="h-4 w-4" />}
+                        {t(`pages.routineTasks.form.priorityOptions.${p.value}`)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.priority && (
