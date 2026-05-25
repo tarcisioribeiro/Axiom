@@ -120,7 +120,9 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
   }, [expenses]);
 
   const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
     : PageContainer;
 
   return (

@@ -298,7 +298,9 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
   );
 
   const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
     : PageContainer;
 
   return (

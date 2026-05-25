@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -53,7 +53,7 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-export default function CreditCardBills() {
+export default function CreditCardBills({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const [bills, setBills] = useState<CreditCardBill[]>([]);
   const [filteredBills, setFilteredBills] = useState<CreditCardBill[]>([]);
@@ -415,8 +415,14 @@ export default function CreditCardBills() {
     },
   ];
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.creditCardBills.title')} icon={<Receipt />}>
         <div className="flex flex-wrap items-center gap-sm">
           <Select value={cardFilter} onValueChange={setCardFilter}>
@@ -664,6 +670,6 @@ export default function CreditCardBills() {
           )}
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }
