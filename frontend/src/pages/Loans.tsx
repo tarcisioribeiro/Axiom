@@ -10,7 +10,10 @@ import {
   CheckCircle2,
   Clock,
   Banknote,
+  Users,
+  Building2,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -231,11 +234,11 @@ export default function Loans() {
           <div className="flex overflow-hidden rounded-lg border">
             {(
               [
-                { key: 'all', icon: '📋' },
-                { key: 'benefited', icon: '🤲' },
-                { key: 'creditor', icon: '🏦' },
-              ] as { key: LoanRole; icon: string }[]
-            ).map(({ key, icon }) => (
+                { key: 'all', icon: List },
+                { key: 'benefited', icon: Users },
+                { key: 'creditor', icon: Building2 },
+              ] as { key: LoanRole; icon: LucideIcon }[]
+            ).map(({ key, icon: Icon }) => (
               <button
                 key={key}
                 type="button"
@@ -247,7 +250,7 @@ export default function Loans() {
                     : 'bg-background text-muted-foreground hover:bg-muted'
                 )}
               >
-                <span>{icon}</span>
+                <Icon className="h-4 w-4" />
                 {t(`pages.loans.filter.${key}`)}
               </button>
             ))}

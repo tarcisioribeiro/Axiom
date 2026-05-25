@@ -25,25 +25,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { STORED_ACCOUNT_TYPE_ICONS, INSTITUTION_ICONS } from '@/config/icons';
 import { storedAccountSchema, type StoredBankAccountFormData } from '@/lib/validations';
 import type { StoredBankAccount, Account, Member } from '@/types';
 
 const ACCOUNT_TYPE_VALUES = ['CC', 'CS', 'CP', 'CI', 'OTHER'] as const;
 
-const ACCOUNT_TYPE_EMOJIS: Record<string, string> = {
-  CC: '💳',
-  CS: '💰',
-  CP: '🐷',
-  CI: '📈',
-  OTHER: '🏦',
-};
-
 const INSTITUTIONS = [
-  { value: 'NUB', label: 'Nubank', emoji: '🟣' },
-  { value: 'SIC', label: 'Sicoob', emoji: '🟢' },
-  { value: 'MPG', label: 'Mercado Pago', emoji: '🟡' },
-  { value: 'IFB', label: 'Ifood Benefícios', emoji: '🟠' },
-  { value: 'CEF', label: 'Caixa Econômica Federal', emoji: '🔵' },
+  { value: 'NUB', label: 'Nubank' },
+  { value: 'SIC', label: 'Sicoob' },
+  { value: 'MPG', label: 'Mercado Pago' },
+  { value: 'IFB', label: 'Ifood Benefícios' },
+  { value: 'CEF', label: 'Caixa Econômica Federal' },
 ];
 
 interface StoredAccountFormProps {
@@ -144,7 +137,13 @@ export function StoredAccountForm({
               <SelectContent>
                 {INSTITUTIONS.map((inst) => (
                   <SelectItem key={inst.value} value={inst.value}>
-                    {inst.emoji} {inst.label}
+                    <span className="flex items-center gap-2">
+                      {(() => {
+                        const InstIcon = INSTITUTION_ICONS[inst.value] ?? Building2;
+                        return <InstIcon className="h-4 w-4" />;
+                      })()}
+                      {inst.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -175,12 +174,17 @@ export function StoredAccountForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {ACCOUNT_TYPE_VALUES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {ACCOUNT_TYPE_EMOJIS[value] ?? '🏦'}{' '}
-                    {t(`pages.storedAccounts.accountTypes.${value}`)}
-                  </SelectItem>
-                ))}
+                {ACCOUNT_TYPE_VALUES.map((value) => {
+                  const TypeIcon = STORED_ACCOUNT_TYPE_ICONS[value] ?? Building2;
+                  return (
+                    <SelectItem key={value} value={value}>
+                      <span className="flex items-center gap-2">
+                        <TypeIcon className="h-4 w-4" />
+                        {t(`pages.storedAccounts.accountTypes.${value}`)}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.account_type && (

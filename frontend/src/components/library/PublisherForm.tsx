@@ -15,18 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { COUNTRY_ICON } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { publisherSchema, type PublisherFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
 import { COUNTRIES } from '@/types';
 import type { Publisher } from '@/types';
-
-const COUNTRY_EMOJIS: Record<string, string> = {
-  BRA: '🇧🇷',
-  USA: '🇺🇸',
-  UK: '🇬🇧',
-  POR: '🇵🇹',
-};
 
 interface PublisherFormProps {
   publisher?: Publisher;
@@ -123,8 +117,10 @@ export function PublisherForm({
               <SelectContent>
                 {COUNTRIES.map((country) => (
                   <SelectItem key={country.value} value={country.value}>
-                    {COUNTRY_EMOJIS[country.value] ?? '🌐'}{' '}
-                    {t(`pages.publishers.countries.${country.value}`)}
+                    <span className="flex items-center gap-2">
+                      <COUNTRY_ICON className="h-4 w-4" />
+                      {t(`pages.publishers.countries.${country.value}`)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

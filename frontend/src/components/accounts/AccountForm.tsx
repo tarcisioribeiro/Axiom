@@ -24,6 +24,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TRANSLATIONS, translate } from '@/config/constants';
+import {
+  ACCOUNT_TYPE_ICONS as ACCOUNT_TYPE_ICONS_CONFIG,
+  INSTITUTION_ICONS as INSTITUTION_ICONS_CONFIG,
+} from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { accountSchema, type AccountFormData } from '@/lib/validations';
 import { membersService } from '@/services/members-service';
@@ -96,36 +100,17 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   const balanceAccent =
     balanceVal > 0 ? 'success' : balanceVal < 0 ? 'destructive' : 'default';
 
-  const ACCOUNT_TYPE_ICONS: Record<string, string> = {
-    CC: '🏦',
-    CS: '💰',
-    FG: '🛡️',
-    VA: '🍽️',
-    VR: '🥗',
-    CP: '💎',
-  };
-  const INSTITUTION_EMOJIS: Record<string, string> = {
-    NUB: '🟣',
-    SIC: '🟢',
-    MPG: '🔵',
-    IFB: '🔴',
-    CEF: '🟡',
-    BB: '⭐',
-    SAN: '🔴',
-    ITA: '🔵',
-    BRA: '🔵',
-    INT: '🟠',
-    C6B: '⚫',
-    PIC: '🟢',
-  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Mini preview da conta */}
       <div className="relative overflow-hidden rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-md">
         <div className="flex items-center gap-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-xl">
-            {INSTITUTION_EMOJIS[institution] ?? '🏦'}
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+            {(() => {
+              const InstIcon = INSTITUTION_ICONS_CONFIG[institution] ?? Building2;
+              return <InstIcon className="h-5 w-5 text-primary" />;
+            })()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold leading-tight">
@@ -178,7 +163,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                       : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
                   }`}
                 >
-                  <span>{ACCOUNT_TYPE_ICONS[key] ?? '🏦'}</span>
+                  {(() => {
+                    const TypeIcon = ACCOUNT_TYPE_ICONS_CONFIG[key] ?? Building2;
+                    return <TypeIcon className="h-4 w-4 shrink-0" />;
+                  })()}
                   <span className="truncate">{translate('accountTypes', key)}</span>
                 </button>
               ))}
@@ -207,7 +195,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
               <SelectContent>
                 {Object.entries(TRANSLATIONS.institutions).map(([key, value]) => (
                   <SelectItem key={key} value={key}>
-                    {INSTITUTION_EMOJIS[key] ?? '🏦'} {value}
+                      <span className="flex items-center gap-2">
+                      {(() => {
+                        const InstIcon = INSTITUTION_ICONS_CONFIG[key] ?? Building2;
+                        return <InstIcon className="h-4 w-4" />;
+                      })()}
+                      {value}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

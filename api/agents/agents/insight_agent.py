@@ -111,7 +111,7 @@ class InsightAgent(BaseAgent):
             f"  - Receitas: R$ {mt['revenues']:.2f}\n"
             f"  - Despesas: R$ {mt['expenses']:.2f}\n"
             f"  - Resultado: R$ {mt['balance']:.2f} "
-            f"({'✅ positivo' if mt['balance'] >= 0 else '🔴 negativo'})\n"
+            f"({'positivo' if mt['balance'] >= 0 else 'negativo'})\n"
             f"  - Saldo total em contas: R$ {data['total_balance']:.2f}"
         )
 
@@ -121,15 +121,15 @@ class InsightAgent(BaseAgent):
                 f"{safe_str(b['category'])} (+R$ {b['spent'] - b['limit']:.0f})"
                 for b in data["overbudget"]
             )
-            budget_block += f"\n🔴 **Orçamentos estourados:** {items}"
+            budget_block += f"\n**Orçamentos estourados:** {items}"
         if data["critical_budgets"]:
             items = ", ".join(
                 f"{safe_str(b['category'])} ({b['percentage']:.0f}%)"
                 for b in data["critical_budgets"]
             )
-            budget_block += f"\n🟡 **Orçamentos críticos (>80%):** {items}"
+            budget_block += f"\n**Orçamentos críticos (>80%):** {items}"
         if not budget_block:
-            budget_block = "\n✅ Todos os orçamentos dentro do limite."
+            budget_block = "\nTodos os orçamentos dentro do limite."
 
         bills_block = ""
         if data["upcoming_bills"]:

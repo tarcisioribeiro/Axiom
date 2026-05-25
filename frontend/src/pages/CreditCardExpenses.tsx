@@ -39,6 +39,7 @@ import {
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
 } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -573,23 +574,12 @@ export default function CreditCardExpenses() {
       key: 'category',
       label: t('pages.creditCardExpenses.columns.category'),
       render: (installment) => {
-        const categoryEmoji: Record<string, string> = {
-          'food and drink': '🍽️',
-          supermarket: '🛒',
-          transport: '🚗',
-          entertainment: '🎬',
-          education: '📚',
-          'health and care': '❤️',
-          house: '🏠',
-          electronics: '💻',
-          travels: '✈️',
-          vestuary: '👔',
-          others: '📦',
-        };
-        const emoji = categoryEmoji[installment.category ?? ''] ?? '📦';
+          const CatIcon =
+          EXPENSE_CATEGORY_ICONS[installment.category ?? ''] ??
+          EXPENSE_CATEGORY_ICONS['others'];
         return (
           <Badge variant="secondary" className="gap-xs">
-            <span>{emoji}</span>
+            {CatIcon && <CatIcon className="h-3.5 w-3.5" />}
             {translate('expenseCategories', installment.category ?? '')}
           </Badge>
         );

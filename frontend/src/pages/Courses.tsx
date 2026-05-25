@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { PLATFORM_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
@@ -61,15 +62,6 @@ const STATUS_BADGE: Record<
   paused: 'destructive',
 };
 
-const PLATFORM_ICONS: Record<string, string> = {
-  udemy: '🎓',
-  coursera: '📚',
-  youtube: '▶️',
-  linkedin: '💼',
-  alura: '🚀',
-  pluralsight: '⚡',
-  other: '🌐',
-};
 
 function CourseCard({
   course,
@@ -100,9 +92,12 @@ function CourseCard({
       }}
     >
       {/* Header band */}
-      <div className="flex items-center gap-sm bg-category-intellect/10 px-md pb-sm pt-md">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-category-intellect/20 text-lg">
-          {PLATFORM_ICONS[course.platform] ?? '🌐'}
+      <div className="flex items-center gap-sm bg-primary/10 px-md pb-sm pt-md">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+          {(() => {
+            const PlatformIcon = PLATFORM_ICONS[course.platform] ?? PLATFORM_ICONS['other'];
+            return <PlatformIcon className="h-5 w-5 text-primary" />;
+          })()}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold leading-tight">{course.title}</p>
@@ -132,13 +127,13 @@ function CourseCard({
             <span className="text-muted-foreground">
               {t('pages.courses.stats.progress')}
             </span>
-            <span className="font-semibold text-category-intellect">
+            <span className="font-semibold text-primary">
               {course.progress_percentage}%
             </span>
           </div>
           <Progress
             value={course.progress_percentage}
-            className="h-1.5 bg-category-intellect/20"
+            className="h-1.5 bg-primary/20"
           />
         </div>
 
@@ -279,11 +274,11 @@ export default function Courses() {
         <PageHeader
           title={t('pages.courses.title')}
           subtitle={t('pages.courses.subtitle')}
-          icon={<GraduationCap className="h-6 w-6 text-category-intellect" />}
+          icon={<GraduationCap className="h-6 w-6 text-primary" />}
           actions={
             <Button
               onClick={openNew}
-              className="gap-sm bg-category-intellect text-primary-foreground hover:bg-category-intellect/90"
+              className="gap-sm bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Plus className="h-4 w-4" />
               {t('pages.courses.newBtn')}
@@ -314,8 +309,8 @@ export default function Courses() {
               key={label}
               className="flex items-center gap-md rounded-xl border border-border bg-card p-md"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-category-intellect/10">
-                <Icon className="h-5 w-5 text-category-intellect" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-xl font-bold">{value}</p>
@@ -345,7 +340,7 @@ export default function Courses() {
                 className={cn(
                   'rounded-lg px-md py-xs text-xs font-medium transition-colors',
                   statusFilter === s
-                    ? 'bg-category-intellect text-primary-foreground'
+                    ? 'bg-primary text-primary-foreground'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 )}
               >
@@ -399,8 +394,8 @@ export default function Courses() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <div className="flex items-center gap-sm">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-category-intellect/20">
-                  <GraduationCap className="h-4 w-4 text-category-intellect" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20">
+                  <GraduationCap className="h-4 w-4 text-primary" />
                 </div>
                 <div>
                   <DialogTitle>
