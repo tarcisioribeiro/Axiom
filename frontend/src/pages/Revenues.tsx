@@ -119,7 +119,9 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
   }, [revenues]);
 
   const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
     : PageContainer;
 
   return (

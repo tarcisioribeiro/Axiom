@@ -185,7 +185,9 @@ export default function Receivables({ embedded = false }: { embedded?: boolean }
   if (isLoading) return <LoadingState />;
 
   const Wrapper = embedded
-    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
     : PageContainer;
 
   return (

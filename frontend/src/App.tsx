@@ -36,8 +36,7 @@ const Revenues = lazy(() => import('./pages/Revenues'));
 const Transactions = lazy(() => import('./pages/Transactions'));
 const RecurringItems = lazy(() => import('./pages/RecurringItems'));
 const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
-const CreditCards = lazy(() => import('./pages/CreditCards'));
-const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
+const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
 const Payables = lazy(() => import('./pages/Payables'));
@@ -93,9 +92,6 @@ const UserProfile = lazy(() => import('./pages/UserProfile'));
 const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
 const BankStatementImport = lazy(() => import('./pages/BankStatementImport'));
-
-// Credit Card Bills
-const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
 
 // Vault Simulator
 const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
@@ -213,14 +209,8 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
-          <Route
-            path="/expenses"
-            element={<Navigate to="/transactions" replace />}
-          />
-          <Route
-            path="/revenues"
-            element={<Navigate to="/transactions" replace />}
-          />
+          <Route path="/expenses" element={<Navigate to="/transactions" replace />} />
+          <Route path="/revenues" element={<Navigate to="/transactions" replace />} />
           <Route
             path="/recurring"
             element={
@@ -249,25 +239,17 @@ function AnimatedRoutes() {
             path="/credit-cards"
             element={
               <PageWrapper>
-                <CreditCards />
+                <CreditCardManagement />
               </PageWrapper>
             }
           />
           <Route
             path="/credit-card-bills"
-            element={
-              <PageWrapper>
-                <CreditCardBills />
-              </PageWrapper>
-            }
+            element={<Navigate to="/credit-cards" replace />}
           />
           <Route
             path="/credit-card-expenses"
-            element={
-              <PageWrapper>
-                <CreditCardExpenses />
-              </PageWrapper>
-            }
+            element={<Navigate to="/credit-cards" replace />}
           />
           <Route
             path="/transfers"
@@ -293,14 +275,8 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
-          <Route
-            path="/payables"
-            element={<Navigate to="/bills" replace />}
-          />
-          <Route
-            path="/receivables"
-            element={<Navigate to="/bills" replace />}
-          />
+          <Route path="/payables" element={<Navigate to="/bills" replace />} />
+          <Route path="/receivables" element={<Navigate to="/bills" replace />} />
           <Route
             path="/members"
             element={

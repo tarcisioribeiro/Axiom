@@ -551,7 +551,10 @@ export function CourseDetailModal({
       void queryClient.invalidateQueries({ queryKey: ['courses'] });
       toast({ title: t('pages.courses.certificate.uploaded') });
     } catch {
-      toast({ title: t('pages.courses.certificate.uploadError'), variant: 'destructive' });
+      toast({
+        title: t('pages.courses.certificate.uploadError'),
+        variant: 'destructive',
+      });
     } finally {
       setUploadingCert(false);
     }
@@ -568,7 +571,10 @@ export function CourseDetailModal({
       void queryClient.invalidateQueries({ queryKey: ['courses'] });
       toast({ title: t('pages.courses.certificate.removed') });
     } catch {
-      toast({ title: t('pages.courses.certificate.uploadError'), variant: 'destructive' });
+      toast({
+        title: t('pages.courses.certificate.uploadError'),
+        variant: 'destructive',
+      });
     } finally {
       setUploadingCert(false);
     }
