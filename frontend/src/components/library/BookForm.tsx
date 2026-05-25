@@ -354,24 +354,22 @@ export function BookForm({
               {t('pages.books.form.mediaTypeLabel')}
             </Label>
             <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
-              {MEDIA_TYPE_OPTIONS.map(
-                ({ value, icon: Icon, translationKey }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setValue('media_type', value)}
-                    disabled={isLoading}
-                    className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
-                      mediaType === value
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {t(`pages.books.mediaTypes.${translationKey}`)}
-                  </button>
-                )
-              )}
+              {MEDIA_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setValue('media_type', value)}
+                  disabled={isLoading}
+                  className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+                    mediaType === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {t(`pages.books.mediaTypes.${translationKey}`)}
+                </button>
+              ))}
             </div>
             {errors.media_type && (
               <p className="mt-xs text-sm text-destructive">

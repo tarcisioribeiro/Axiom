@@ -100,7 +100,8 @@ function RuleForm({
           </div>
           <div className="flex items-center gap-xs rounded-md bg-primary/10 px-sm py-xs text-xs font-semibold text-primary">
             {(() => {
-              const CatIcon = EXPENSE_CATEGORY_ICONS[category] ?? EXPENSE_CATEGORY_ICONS['others'];
+              const CatIcon =
+                EXPENSE_CATEGORY_ICONS[category] ?? EXPENSE_CATEGORY_ICONS['others'];
               return CatIcon ? <CatIcon className="h-3.5 w-3.5" /> : null;
             })()}
             <span>{translate('expenseCategories', category)}</span>

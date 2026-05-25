@@ -285,7 +285,6 @@ function GoalCard({
 
 const TRANSACTION_BASED_CATEGORIES = new Set(['reduce_expenses', 'increase_revenue']);
 
-
 export default function FinancialGoals() {
   const { t } = useTranslation();
   const todayTimestamp = useMemo(() => Date.now(), []);
@@ -689,8 +688,12 @@ export default function FinancialGoals() {
                         }`}
                       >
                         {(() => {
-                          const CatIcon = FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ?? FINANCIAL_GOAL_CATEGORY_ICONS['other'];
-                          return CatIcon ? <CatIcon className="h-3.5 w-3.5 shrink-0" /> : null;
+                          const CatIcon =
+                            FINANCIAL_GOAL_CATEGORY_ICONS[cat.value] ??
+                            FINANCIAL_GOAL_CATEGORY_ICONS['other'];
+                          return CatIcon ? (
+                            <CatIcon className="h-3.5 w-3.5 shrink-0" />
+                          ) : null;
                         })()}
                         <span className="truncate">
                           {t(`pages.financialGoals.categories.${cat.value}`)}

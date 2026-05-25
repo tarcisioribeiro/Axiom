@@ -34,11 +34,7 @@ import {
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
-import {
-  TASK_CATEGORY_ICONS,
-  PRIORITY_ICONS,
-  PERIODICITY_ICONS,
-} from '@/config/icons';
+import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
 import { formatLocalDate } from '@/lib/utils';
 import { routineTaskSchema } from '@/lib/validations';
@@ -55,7 +51,6 @@ import {
 } from '@/types';
 
 type RoutineTaskFormData = z.infer<typeof routineTaskSchema>;
-
 
 interface RoutineTaskFormProps {
   task?: RoutineTask;
