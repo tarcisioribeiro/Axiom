@@ -33,6 +33,9 @@ const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
 const FixedRevenues = lazy(() => import('./pages/FixedRevenues'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
 const Revenues = lazy(() => import('./pages/Revenues'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const RecurringItems = lazy(() => import('./pages/RecurringItems'));
+const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
 const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
 const Transfers = lazy(() => import('./pages/Transfers'));
@@ -203,42 +206,42 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/expenses"
+            path="/transactions"
             element={
               <PageWrapper>
-                <Expenses />
+                <Transactions />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={<Navigate to="/transactions" replace />}
+          />
+          <Route
+            path="/revenues"
+            element={<Navigate to="/transactions" replace />}
+          />
+          <Route
+            path="/recurring"
+            element={
+              <PageWrapper>
+                <RecurringItems />
               </PageWrapper>
             }
           />
           <Route
             path="/fixed-expenses"
-            element={
-              <PageWrapper>
-                <FixedExpenses />
-              </PageWrapper>
-            }
+            element={<Navigate to="/recurring" replace />}
           />
           <Route
             path="/fixed-revenues"
-            element={
-              <PageWrapper>
-                <FixedRevenues />
-              </PageWrapper>
-            }
+            element={<Navigate to="/recurring" replace />}
           />
           <Route
             path="/categorization-rules"
             element={
               <PageWrapper>
                 <CategorizationRules />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/revenues"
-            element={
-              <PageWrapper>
-                <Revenues />
               </PageWrapper>
             }
           />
@@ -283,20 +286,20 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/payables"
+            path="/bills"
             element={
               <PageWrapper>
-                <Payables />
+                <PayablesReceivables />
               </PageWrapper>
             }
           />
           <Route
+            path="/payables"
+            element={<Navigate to="/bills" replace />}
+          />
+          <Route
             path="/receivables"
-            element={
-              <PageWrapper>
-                <Receivables />
-              </PageWrapper>
-            }
+            element={<Navigate to="/bills" replace />}
           />
           <Route
             path="/members"

@@ -10,7 +10,7 @@ import {
   Clock,
   Wallet,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -52,7 +52,7 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
-export default function Receivables() {
+export default function Receivables({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -184,8 +184,12 @@ export default function Receivables() {
 
   if (isLoading) return <LoadingState />;
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => <div className="space-y-lg">{children}</div>
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.receivables.title')} icon={<TrendingUp />}>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
@@ -482,6 +486,6 @@ export default function Receivables() {
           void queryClient.invalidateQueries({ queryKey: ['receivables'] })
         }
       />
-    </PageContainer>
+    </Wrapper>
   );
 }

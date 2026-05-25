@@ -7,13 +7,11 @@ import {
   CreditCard,
   ShoppingCart,
   TrendingDown,
-  TrendingUp,
   CalendarClock,
   ArrowLeftRight,
   HandCoins,
   Archive,
   Key,
-  BookOpen,
   UserPen,
   Building2,
   Home,
@@ -29,7 +27,6 @@ import {
   Tag,
   Bell,
   BotMessageSquare,
-  BadgeDollarSign,
   Dumbbell,
   UtensilsCrossed,
   GraduationCap,
@@ -118,14 +115,9 @@ export const navModules: NavModule[] = [
             icon: CreditCard,
           },
           {
-            titleKey: 'nav.items.fixedExpenses',
-            href: '/fixed-expenses',
+            titleKey: 'nav.items.recurring',
+            href: '/recurring',
             icon: CalendarClock,
-          },
-          {
-            titleKey: 'nav.items.fixedRevenues',
-            href: '/fixed-revenues',
-            icon: TrendingUp,
           },
           {
             titleKey: 'nav.items.categorizationRules',
@@ -133,11 +125,10 @@ export const navModules: NavModule[] = [
             icon: Tag,
           },
           { titleKey: 'nav.items.budgets', href: '/budgets', icon: PiggyBank },
-          { titleKey: 'nav.items.payables', href: '/payables', icon: Receipt },
           {
-            titleKey: 'nav.items.receivables',
-            href: '/receivables',
-            icon: BadgeDollarSign,
+            titleKey: 'nav.items.bills',
+            href: '/bills',
+            icon: Receipt,
           },
           {
             titleKey: 'nav.items.financialGoals',
@@ -152,8 +143,11 @@ export const navModules: NavModule[] = [
         titleKey: 'nav.submodules.records',
         icon: ClipboardList,
         items: [
-          { titleKey: 'nav.items.expenses', href: '/expenses', icon: TrendingDown },
-          { titleKey: 'nav.items.revenues', href: '/revenues', icon: TrendingUp },
+          {
+            titleKey: 'nav.items.transactions',
+            href: '/transactions',
+            icon: TrendingDown,
+          },
           {
             titleKey: 'nav.items.creditCardExpenses',
             href: '/credit-card-expenses',
