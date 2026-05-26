@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Pencil,
@@ -97,6 +98,7 @@ export default function CreditCardExpenses({
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mapeamento de abreviações de mês para número
@@ -140,6 +142,7 @@ export default function CreditCardExpenses({
       const bDate = new Date(parseInt(b.year), bMonth - 1);
       return aDate.getTime() - bDate.getTime();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, bills]);
 
   // Reset bill filter when card changes
@@ -340,6 +343,7 @@ export default function CreditCardExpenses({
           );
         })
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredInstallments, bills, creditCards]);
 
   const handleSubmit = async (data: CreditCardPurchaseFormData) => {

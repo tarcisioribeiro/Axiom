@@ -25,7 +25,9 @@ class BaseSecurityTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Test User",
             document_hash="a" * 64,
@@ -50,7 +52,9 @@ class ArchiveFileValidatorTest(BaseSecurityTestCase):
     # --- Size ---
 
     def test_rejects_oversized_file(self):
-        large = self._make_uploaded_file("doc.pdf", b"%PDF" + b"x" * MAX_UPLOAD_SIZE)
+        large = self._make_uploaded_file(
+            "doc.pdf", b"%PDF" + b"x" * MAX_UPLOAD_SIZE
+        )
         with self.assertRaises(drf_serializers.ValidationError) as ctx:
             validate_uploaded_file(large)
         self.assertIn("excede", str(ctx.exception.detail[0]))
@@ -94,7 +98,9 @@ class ArchiveFileValidatorTest(BaseSecurityTestCase):
         self.assertIn("conteúdo", str(ctx.exception.detail[0]))
 
     def test_rejects_mismatched_magic_bytes_png(self):
-        f = self._make_uploaded_file("fake.png", b"\xff\xd8\xff\xe0" + b"\x00" * 10)
+        f = self._make_uploaded_file(
+            "fake.png", b"\xff\xd8\xff\xe0" + b"\x00" * 10
+        )
         with self.assertRaises(drf_serializers.ValidationError) as ctx:
             validate_uploaded_file(f)
         self.assertIn("conteúdo", str(ctx.exception.detail[0]))
@@ -122,7 +128,10 @@ class ArchiveFileValidatorTest(BaseSecurityTestCase):
         self.assertEqual(result, f)
 
     def test_rejects_svg_as_disallowed_extension(self):
-        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        svg = (
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<script>alert(1)</script></svg>"
+        )
         f = self._make_uploaded_file("xss.svg", svg)
         with self.assertRaises(drf_serializers.ValidationError):
             validate_uploaded_file(f)
@@ -170,7 +179,10 @@ class ArchiveUploadViewTest(BaseSecurityTestCase):
         self.assertIn("encrypted_file", response.data)
 
     def test_upload_svg_rejected(self):
-        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        svg = (
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<script>alert(1)</script></svg>"
+        )
         response = self._upload("xss.svg", svg)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("encrypted_file", response.data)
@@ -230,7 +242,8 @@ class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
         self.assertIn("attachment", response.get("Content-Disposition", ""))
 
     def test_unknown_extension_falls_back_to_octet_stream(self):
-        """Files that somehow bypassed validation get application/octet-stream."""
+        """Files that somehow bypassed validation get
+        application/octet-stream."""
         from security.models import Archive
 
         archive = Archive.objects.create(
@@ -245,8 +258,9 @@ class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
         archive.save()
 
         url = reverse("archive-download", kwargs={"pk": archive.id})
-        # The file won't exist in storage, so we just verify the content-type logic
-        # by checking that the view handles the missing file gracefully
+        # The file won't exist in storage, so we just verify the
+        # content-type logic by checking that the view handles the
+        # missing file gracefully
         response = self.client.get(url)
         # Either 404 (file not on disk) or 200 with octet-stream
         self.assertIn(

@@ -26,7 +26,9 @@ class BaseExtraTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Extra User",
             document_hash="e" * 64,
@@ -175,7 +177,9 @@ class VaultTransactionViewTest(BaseExtraTestCase):
         )
         self.vault_pk = vault_resp.data["id"]  # type: ignore
         deposit_url = reverse("vault-deposit", args=[self.vault_pk])
-        self.client.post(deposit_url, {"amount": "1000.00", "description": "Init"})
+        self.client.post(
+            deposit_url, {"amount": "1000.00", "description": "Init"}
+        )
 
     def test_vault_transaction_list(self):
         url = reverse("vault-transactions", args=[self.vault_pk])

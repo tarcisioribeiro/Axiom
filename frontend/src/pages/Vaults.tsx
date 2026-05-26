@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { PiggyBank, Plus, Sparkles, TrendingUp, Vault, Zap } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

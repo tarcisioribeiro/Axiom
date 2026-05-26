@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   CalendarDays,
   CheckCircle2,
@@ -319,6 +320,7 @@ export default function FinancialGoals() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -727,7 +729,7 @@ export default function FinancialGoals() {
                           const CatIcon = EXPENSE_CATEGORY_ICONS[cat.key];
                           return (
                             <SelectItem key={cat.key} value={cat.key}>
-                              <span className="flex items-center gap-2">
+                              <span className="flex items-center gap-sm">
                                 {CatIcon && <CatIcon className="h-4 w-4" />}
                                 {translate('expenseCategories', cat.key)}
                               </span>

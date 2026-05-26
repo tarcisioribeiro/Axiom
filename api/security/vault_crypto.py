@@ -57,7 +57,9 @@ class VaultLockedException(APIException):
     """Retornado quando o cofre está configurado mas não desbloqueado."""
 
     status_code = 423
-    default_detail = "O cofre está bloqueado. Digite a senha mestre para desbloquear."
+    default_detail = (
+        "O cofre está bloqueado. Digite a senha mestre para desbloquear."
+    )
     default_code = "vault_locked"
 
 
@@ -80,7 +82,8 @@ class VaultEncryption:
     def derive_key(master_password: str, salt: bytes) -> bytes:
         """
         Deriva uma chave Fernet a partir da senha mestre e do salt.
-        Usa PBKDF2-HMAC-SHA256 com 600.000 iterações (mínimo NIST SP 800-132 rev. 2023).
+        Usa PBKDF2-HMAC-SHA256 com 600.000 iterações
+        (mínimo NIST SP 800-132 rev. 2023).
 
         Returns:
             bytes: Chave Fernet de 32 bytes (base64url-safe)
@@ -91,7 +94,9 @@ class VaultEncryption:
             salt=salt,
             iterations=VaultEncryption.ITERATIONS,
         )
-        return base64.urlsafe_b64encode(kdf.derive(master_password.encode("utf-8")))
+        return base64.urlsafe_b64encode(
+            kdf.derive(master_password.encode("utf-8"))
+        )
 
     @staticmethod
     def generate_vault_key() -> bytes:
@@ -105,7 +110,9 @@ class VaultEncryption:
         return f.encrypt(vault_key).decode()
 
     @staticmethod
-    def decrypt_vault_key(encrypted_vault_key: str, derived_key: bytes) -> bytes:
+    def decrypt_vault_key(
+        encrypted_vault_key: str, derived_key: bytes
+    ) -> bytes:
         """
         Decifra a vault_key com a derived_key.
 
@@ -129,8 +136,10 @@ class VaultEncryptedField:
     Descriptor para campos criptografados de itens do cofre de segurança.
 
     Comportamento:
-    - __set__: usa vault_key do contexto de thread se disponível, senão usa app key
-    - __get__: tenta vault_key primeiro; se falhar ou não disponível, tenta app key
+    - __set__: usa vault_key do contexto de thread se disponível, senão usa app
+    key
+    - __get__: tenta vault_key primeiro; se falhar ou não disponível, tenta app
+    key
                 (compatibilidade retroativa durante migração de dados)
 
     Uso no modelo:
@@ -187,7 +196,9 @@ class VaultEncryptedField:
 
     def __set__(self, obj: Any, value: Any) -> None:
         if value:
-            v: str = self.preprocessor(value) if self.preprocessor else str(value)
+            v: str = (
+                self.preprocessor(value) if self.preprocessor else str(value)
+            )
             if self.validator is not None:
                 self.validator(v)
             vault_key = get_current_vault_key()
@@ -198,7 +209,9 @@ class VaultEncryptedField:
                     FieldEncryption.encrypt_with_key(v, vault_key),
                 )
             else:
-                setattr(obj, self.storage_attr, FieldEncryption.encrypt_data(v))
+                setattr(
+                    obj, self.storage_attr, FieldEncryption.encrypt_data(v)
+                )
         else:
             setattr(obj, self.storage_attr, None)
 
@@ -213,10 +226,13 @@ class VaultMaskedEncryptedField:
     Descriptor somente-leitura que retorna versão mascarada (****1234) de um
     campo criptografado do cofre de segurança.
 
-    Idêntico a MaskedEncryptedField, mas usa vault_key do contexto se disponível.
+    Idêntico a MaskedEncryptedField, mas usa vault_key do contexto se
+    disponível.
     """
 
-    def __init__(self, storage_attr: str, fallback: Optional[str] = None) -> None:
+    def __init__(
+        self, storage_attr: str, fallback: Optional[str] = None
+    ) -> None:
         self.storage_attr = storage_attr
         self.fallback = fallback
         self.public_name = ""
@@ -225,7 +241,9 @@ class VaultMaskedEncryptedField:
         self.public_name = name
 
     @overload
-    def __get__(self, obj: None, objtype: Any) -> "VaultMaskedEncryptedField": ...
+    def __get__(
+        self, obj: None, objtype: Any
+    ) -> "VaultMaskedEncryptedField": ...
 
     @overload
     def __get__(self, obj: Any, objtype: Any) -> Optional[str]: ...
@@ -260,5 +278,6 @@ class VaultMaskedEncryptedField:
 
     def __set__(self, obj: Any, value: Any) -> None:
         raise AttributeError(
-            f"'{type(obj).__name__}.{self.public_name}' is a read-only masked field"
+            f"'{type(obj).__name__}.{self.public_name}'"
+            " is a read-only masked field"
         )

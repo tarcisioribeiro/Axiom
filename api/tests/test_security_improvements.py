@@ -52,7 +52,9 @@ class BaseSecurityTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Imp User",
             document_hash="i" * 64,
@@ -195,7 +197,8 @@ class VaultLockoutTest(BaseSecurityTestCase):
         resp = self.client.post(url, {"master_password": "Str0ng!Pass99"})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Counter should be reset — another wrong attempt should not lock immediately
+        # Counter should be reset — another wrong attempt should not lock
+        # immediately
         resp = self.client.post(url, {"master_password": "WrongPass1!"})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         error_msg = str(resp.data)
@@ -283,7 +286,9 @@ class ArchiveTagsTest(BaseSecurityTestCase):
     def test_tags_normalised_to_lowercase(self):
         url = reverse("archive-list-create")
         resp = self.client.post(
-            url, self._archive_data(["FINANCEIRO", "  Imposto  "]), format="json"
+            url,
+            self._archive_data(["FINANCEIRO", "  Imposto  "]),
+            format="json",
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         tags = resp.data["tags"]  # type: ignore
@@ -391,7 +396,8 @@ class OnePaswordCSVParserTest(APITestCase):
 
     def test_parse_basic_csv(self):
         content = (
-            self._1P_HEADER + b"Gmail,user@g.com,secret,https://gmail.com,,login\n"
+            self._1P_HEADER
+            + b"Gmail,user@g.com,secret,https://gmail.com,,login\n"
         )  # noqa: E501
         entries = parse_onepassword_csv(content)
         self.assertEqual(len(entries), 1)
@@ -409,7 +415,9 @@ class OnePaswordCSVParserTest(APITestCase):
         self.assertEqual(entries[0]["title"], "Login")
 
     def test_empty_file_returns_empty_list(self):
-        entries = parse_onepassword_csv(b"Title,Username,Password,URL,Notes,Type\n")
+        entries = parse_onepassword_csv(
+            b"Title,Username,Password,URL,Notes,Type\n"
+        )
         self.assertEqual(entries, [])
 
 
@@ -417,13 +425,17 @@ class DashlaneCSVParserTest(APITestCase):
     _DL_HEADER = b"name,username,password,url,note,category,type\n"
 
     def test_parse_basic_csv(self):
-        content = self._DL_HEADER + b"Gmail,user@g.com,secret,https://gmail.com,,,\n"
+        content = (
+            self._DL_HEADER + b"Gmail,user@g.com,secret,https://gmail.com,,,\n"
+        )
         entries = parse_dashlane_csv(content)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0]["title"], "Gmail")
 
     def test_category_mapped_to_banking(self):
-        content = self._DL_HEADER + b"Bank,user,secret,https://bank.com,,finance,\n"
+        content = (
+            self._DL_HEADER + b"Bank,user,secret,https://bank.com,,finance,\n"
+        )
         entries = parse_dashlane_csv(content)
         self.assertEqual(entries[0]["category"], "banking")
 

@@ -111,15 +111,20 @@ class BankStatementImportListSerializer(serializers.ModelSerializer):
 
 
 class BankStatementEntryManualMatchSerializer(serializers.Serializer):
-    matched_expense_id = serializers.IntegerField(required=False, allow_null=True)
-    matched_revenue_id = serializers.IntegerField(required=False, allow_null=True)
+    matched_expense_id = serializers.IntegerField(
+        required=False, allow_null=True
+    )
+    matched_revenue_id = serializers.IntegerField(
+        required=False, allow_null=True
+    )
 
     def validate(self, attrs):
         exp_id = attrs.get("matched_expense_id")
         rev_id = attrs.get("matched_revenue_id")
         if exp_id and rev_id:
             raise serializers.ValidationError(
-                "Informe apenas matched_expense_id ou matched_revenue_id, não ambos."
+                "Informe apenas matched_expense_id"
+                " ou matched_revenue_id, não ambos."
             )
         if not exp_id and not rev_id:
             raise serializers.ValidationError(

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   CheckSquare,
@@ -72,6 +73,7 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

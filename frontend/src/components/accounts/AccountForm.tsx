@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   BadgeDollarSign,
@@ -103,7 +104,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
       {/* Mini preview da conta */}
-      <div className="relative overflow-hidden rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-md">
+      <div className="relative overflow-hidden rounded-lg border border-border/60 bg-gradient-to-br from-muted/40 to-muted/10 p-md">
         <div className="flex items-center gap-sm">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             {(() => {

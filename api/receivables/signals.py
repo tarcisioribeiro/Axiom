@@ -9,7 +9,9 @@ from django.dispatch import receiver
 def nullify_revenues_on_receivable_delete(sender, instance, **kwargs):
     from revenues.models import Revenue
 
-    Revenue.objects.filter(related_receivable=instance).update(related_receivable=None)
+    Revenue.objects.filter(related_receivable=instance).update(
+        related_receivable=None
+    )
 
 
 def update_receivable_received_value(receivable):

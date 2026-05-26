@@ -14,7 +14,12 @@ def get_account_balances(user: User) -> list[dict[str, Any]]:
         owner__user=user,
         is_active=True,
         is_deleted=False,
-    ).values("account_name", "institution_name", "current_balance", "minimum_balance")
+    ).values(
+        "account_name",
+        "institution_name",
+        "current_balance",
+        "minimum_balance",
+    )
     return [
         {
             "name": str(a["account_name"]),
@@ -26,7 +31,9 @@ def get_account_balances(user: User) -> list[dict[str, Any]]:
     ]
 
 
-def get_fixed_expenses_upcoming(user: User, days: int = 30) -> list[dict[str, Any]]:
+def get_fixed_expenses_upcoming(
+    user: User, days: int = 30
+) -> list[dict[str, Any]]:
     """Retorna despesas fixas que vencem nos próximos N dias."""
     from expenses.models import FixedExpense
 
@@ -55,7 +62,9 @@ def get_fixed_expenses_upcoming(user: User, days: int = 30) -> list[dict[str, An
             try:
                 next_due = next_month.replace(day=due_day)
             except ValueError:
-                last = calendar.monthrange(next_month.year, next_month.month)[1]
+                last = calendar.monthrange(next_month.year, next_month.month)[
+                    1
+                ]
                 next_due = next_month.replace(day=last)
 
         days_until = (next_due - today).days
@@ -75,7 +84,9 @@ def get_fixed_expenses_upcoming(user: User, days: int = 30) -> list[dict[str, An
 
 
 def get_expected_revenues(user: User, days: int = 30) -> list[dict[str, Any]]:
-    """Retorna receitas recorrentes históricas para estimar entradas futuras."""
+    """
+    Retorna receitas recorrentes históricas para estimar entradas futuras.
+    """
     from revenues.models import Revenue
 
     cutoff = timezone.now().date() - timedelta(days=90)
@@ -107,7 +118,9 @@ def compute_balance_projection(
     days: int = 30,
 ) -> dict[str, Any]:
     """Projeção simplificada de saldo ao fim do período."""
-    outflows = sum(fe["value"] for fe in fixed_expenses if fe["days_until"] <= days)
+    outflows = sum(
+        fe["value"] for fe in fixed_expenses if fe["days_until"] <= days
+    )
     inflows = sum(r["avg_value"] for r in expected_revenues)
 
     projected = total_balance + inflows - outflows

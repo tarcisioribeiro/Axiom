@@ -5,7 +5,16 @@ from datetime import timedelta
 
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Avg, Count, ExpressionWrapper, F, FloatField, Max, Q, Sum
+from django.db.models import (
+    Avg,
+    Count,
+    ExpressionWrapper,
+    F,
+    FloatField,
+    Max,
+    Q,
+    Sum,
+)
 from django.http import FileResponse, HttpResponseRedirect
 from django.utils import timezone
 from rest_framework import status
@@ -297,7 +306,9 @@ class BookListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         qs = (
-            Book.objects.filter(owner__user=self.request.user, deleted_at__isnull=True)
+            Book.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
             .select_related("owner", "publisher")
             .prefetch_related("authors", "readings")
         )
@@ -347,7 +358,9 @@ class BookDetailView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         return (
-            Book.objects.filter(owner__user=self.request.user, deleted_at__isnull=True)
+            Book.objects.filter(
+                owner__user=self.request.user, deleted_at__isnull=True
+            )
             .select_related("owner", "publisher")
             .prefetch_related("authors", "readings")
         )
@@ -420,7 +433,9 @@ class BookFileView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         url = book.book_file.url
-        return Response({"url": url, "name": book.book_file.name.split("/")[-1]})
+        return Response(
+            {"url": url, "name": book.book_file.name.split("/")[-1]}
+        )
 
     def patch(self, request, pk):
         """Faz upload ou substituição do arquivo do livro."""
@@ -432,7 +447,12 @@ class BookFileView(APIView):
             )
         if book.media_type != "Dig":
             return Response(
-                {"detail": "Upload de arquivo só é permitido para livros digitais."},
+                {
+                    "detail": (
+                        "Upload de arquivo só é permitido para"
+                        " livros digitais."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         uploaded_file = request.FILES.get("book_file")
@@ -469,7 +489,9 @@ class BookFileView(APIView):
             description_params={"name": book.title},
         )
         file_name = book.book_file.name.split("/")[-1]
-        return Response({"detail": "Arquivo enviado com sucesso.", "name": file_name})
+        return Response(
+            {"detail": "Arquivo enviado com sucesso.", "name": file_name}
+        )
 
     def delete(self, request, pk):
         """Remove o arquivo do livro."""
@@ -535,7 +557,9 @@ class BookFileStreamView(APIView):
             )
         filename = book.book_file.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-        content_type = "application/epub+zip" if ext == "epub" else "application/pdf"
+        content_type = (
+            "application/epub+zip" if ext == "epub" else "application/pdf"
+        )
         try:
             file_obj = book.book_file.open("rb")
         except Exception:
@@ -554,7 +578,8 @@ class BookFileStreamView(APIView):
 
 
 class BookCoverStreamView(APIView):
-    """Proxy da capa do livro via Django, contornando acesso direto ao MinIO."""
+    """Proxy da capa do livro via Django, contornando acesso direto
+    ao MinIO."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Book.objects.all()
@@ -605,7 +630,8 @@ class BookCoverStreamView(APIView):
 
 
 class AuthorPhotoStreamView(APIView):
-    """Proxy da foto do autor via Django, contornando acesso direto ao MinIO."""
+    """Proxy da foto do autor via Django, contornando acesso direto
+    ao MinIO."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Author.objects.all()
@@ -681,7 +707,12 @@ class BookMarkAsReadView(APIView):
 
         if book.readings.filter(deleted_at__isnull=True).exists():
             return Response(
-                {"detail": "Este livro já possui sessões de leitura registradas."},
+                {
+                    "detail": (
+                        "Este livro já possui sessões"
+                        " de leitura registradas."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -722,7 +753,9 @@ class BookMarkAsReadView(APIView):
             Reading.objects.bulk_create(readings)
             book.read_status = "read"
             book.updated_by = request.user
-            book.save(update_fields=["read_status", "updated_at", "updated_by"])
+            book.save(
+                update_fields=["read_status", "updated_at", "updated_by"]
+            )
 
         cache.delete(f"library_dashboard_stats_{request.user.id}")
 
@@ -731,7 +764,8 @@ class BookMarkAsReadView(APIView):
             "update",
             "Book",
             book.id,
-            f"Marcou '{book.title}' como lido com {len(readings)} sessões geradas.",
+            f"Marcou '{book.title}' como lido com"
+            f" {len(readings)} sessões geradas.",
             description_key="book.mark_read",
             description_params={"name": book.title, "sessions": len(readings)},
         )
@@ -757,7 +791,9 @@ class BookMarkAsReadView(APIView):
 
         count = readings_qs.count()
         if count == 0:
-            return READING_SPEED_FALLBACK.get(literarytype, DEFAULT_READING_SPEED)
+            return READING_SPEED_FALLBACK.get(
+                literarytype, DEFAULT_READING_SPEED
+            )
 
         total = sum(r.min_per_page for r in readings_qs)
         return total / count
@@ -968,7 +1004,8 @@ class ReadingGoalListCreateView(BaseListCreateView):
             "create",
             "ReadingGoal",
             goal.id,
-            f"Criou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            f"Criou meta de leitura para {goal.year}:"
+            f" {goal.books_goal} livros",
             description_key="reading_goal.create",
             description_params={"year": goal.year, "count": goal.books_goal},
         )
@@ -996,7 +1033,8 @@ class ReadingGoalDetailView(BaseRetrieveUpdateDestroyView):
             "update",
             "ReadingGoal",
             goal.id,
-            f"Atualizou meta de leitura para {goal.year}: {goal.books_goal} livros",
+            f"Atualizou meta de leitura para {goal.year}:"
+            f" {goal.books_goal} livros",
             description_key="reading_goal.update",
             description_params={"year": goal.year, "count": goal.books_goal},
         )
@@ -1051,7 +1089,10 @@ class LiteraryTypeGoalListCreateView(BaseListCreateView):
             goal.id,
             f"Criou meta de {goal.literary_type}: {goal.goal_count}",
             description_key="literary_goal.create",
-            description_params={"type": goal.literary_type, "count": goal.goal_count},
+            description_params={
+                "type": goal.literary_type,
+                "count": goal.goal_count,
+            },
         )
 
 
@@ -1080,7 +1121,10 @@ class LiteraryTypeGoalDetailView(BaseRetrieveUpdateDestroyView):
             goal.id,
             f"Atualizou meta de {goal.literary_type}: {goal.goal_count}",
             description_key="literary_goal.update",
-            description_params={"type": goal.literary_type, "count": goal.goal_count},
+            description_params={
+                "type": goal.literary_type,
+                "count": goal.goal_count,
+            },
         )
 
     def perform_destroy(self, instance):
@@ -1170,7 +1214,9 @@ class BookReorderView(APIView):
     def patch(self, request):
         serializer = BookReorderItemSerializer(data=request.data, many=True)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
         items = serializer.validated_data
         ids = [item["id"] for item in items]
@@ -1254,12 +1300,18 @@ class LibraryDashboardStatsView(APIView):
             return Response(cached)
 
         # Querysets filtrados por owner e não deletados
-        books_qs = Book.objects.filter(owner__user=user, deleted_at__isnull=True)
-        authors_qs = Author.objects.filter(owner__user=user, deleted_at__isnull=True)
+        books_qs = Book.objects.filter(
+            owner__user=user, deleted_at__isnull=True
+        )
+        authors_qs = Author.objects.filter(
+            owner__user=user, deleted_at__isnull=True
+        )
         publishers_qs = Publisher.objects.filter(
             owner__user=user, deleted_at__isnull=True
         )
-        readings_qs = Reading.objects.filter(owner__user=user, deleted_at__isnull=True)
+        readings_qs = Reading.objects.filter(
+            owner__user=user, deleted_at__isnull=True
+        )
 
         # Contadores gerais
         total_books = books_qs.count()
@@ -1275,7 +1327,9 @@ class LibraryDashboardStatsView(APIView):
         avg_rating = books_qs.aggregate(avg=Avg("rating"))["avg"] or 0.0
 
         # Total de páginas lidas
-        total_pages = readings_qs.aggregate(total=Sum("pages_read"))["total"] or 0
+        total_pages = (
+            readings_qs.aggregate(total=Sum("pages_read"))["total"] or 0
+        )
 
         # Tempo total de leitura (horas)
         total_reading_time = (
@@ -1310,17 +1364,21 @@ class LibraryDashboardStatsView(APIView):
 
         current_reading_books = []
         current_reading_book = None
-        for book in books_qs.filter(read_status="reading").order_by("-updated_at"):
+        for book in books_qs.filter(read_status="reading").order_by(
+            "-updated_at"
+        ):
             pages_read_so_far = (
-                readings_qs.filter(book=book).aggregate(total=Sum("pages_read"))[
-                    "total"
-                ]
+                readings_qs.filter(book=book).aggregate(
+                    total=Sum("pages_read")
+                )["total"]
                 or 0
             )
             remaining_pages = max(0, book.pages - pages_read_so_far)
             estimated_days = None
             if avg_pages_per_day > 0 and remaining_pages > 0:
-                estimated_days = max(1, round(remaining_pages / avg_pages_per_day))
+                estimated_days = max(
+                    1, round(remaining_pages / avg_pages_per_day)
+                )
             book_data = {
                 "title": book.title,
                 "total_pages": book.pages,
@@ -1339,8 +1397,12 @@ class LibraryDashboardStatsView(APIView):
         prev_year = curr_year if curr_month > 1 else curr_year - 1
 
         def _month_stats(year, month):
-            qs = readings_qs.filter(reading_date__year=year, reading_date__month=month)
-            agg = qs.aggregate(pages=Sum("pages_read"), minutes=Sum("reading_time"))
+            qs = readings_qs.filter(
+                reading_date__year=year, reading_date__month=month
+            )
+            agg = qs.aggregate(
+                pages=Sum("pages_read"), minutes=Sum("reading_time")
+            )
             pages = agg["pages"] or 0
             hours = round((agg["minutes"] or 0) / 60, 1)
             completed = (
@@ -1376,17 +1438,21 @@ class LibraryDashboardStatsView(APIView):
                     curr_stats["pages_read"], prev_stats["pages_read"]
                 ),
                 "reading_time_hours": _pct_change(
-                    curr_stats["reading_time_hours"], prev_stats["reading_time_hours"]
+                    curr_stats["reading_time_hours"],
+                    prev_stats["reading_time_hours"],
                 ),
                 "books_completed": _pct_change(
-                    curr_stats["books_completed"], prev_stats["books_completed"]
+                    curr_stats["books_completed"],
+                    prev_stats["books_completed"],
                 ),
             },
         }
 
         # Livros por gênero (Top 5)
         books_by_genre = list(
-            books_qs.values("genre").annotate(count=Count("id")).order_by("-count")[:5]
+            books_qs.values("genre")
+            .annotate(count=Count("id"))
+            .order_by("-count")[:5]
         )
 
         # Adicionar display name dos gêneros
@@ -1394,13 +1460,19 @@ class LibraryDashboardStatsView(APIView):
 
         genre_dict = dict(GENRES)
         for item in books_by_genre:
-            item["genre_display"] = genre_dict.get(item["genre"], item["genre"])
+            item["genre_display"] = genre_dict.get(
+                item["genre"], item["genre"]
+            )
 
         # Top 3 gêneros por tempo de leitura (ano atual)
         top_genres_by_time_raw = list(
-            readings_qs.filter(reading_date__year=curr_year, reading_time__gt=0)
+            readings_qs.filter(
+                reading_date__year=curr_year, reading_time__gt=0
+            )
             .values(genre=F("book__genre"))
-            .annotate(total_time=Sum("reading_time"), total_pages=Sum("pages_read"))
+            .annotate(
+                total_time=Sum("reading_time"), total_pages=Sum("pages_read")
+            )
             .order_by("-total_time")[:3]
         )
         top_genres_by_time = []
@@ -1408,7 +1480,9 @@ class LibraryDashboardStatsView(APIView):
             top_genres_by_time.append(
                 {
                     "genre": item["genre"],
-                    "genre_display": genre_dict.get(item["genre"], item["genre"]),
+                    "genre_display": genre_dict.get(
+                        item["genre"], item["genre"]
+                    ),
                     "total_time_hours": round(item["total_time"] / 60, 1),
                     "total_pages": item["total_pages"],
                 }
@@ -1416,7 +1490,9 @@ class LibraryDashboardStatsView(APIView):
 
         # Livros por idioma
         books_by_language = list(
-            books_qs.values("language").annotate(count=Count("id")).order_by("-count")
+            books_qs.values("language")
+            .annotate(count=Count("id"))
+            .order_by("-count")
         )
 
         # Adicionar display name dos idiomas
@@ -1471,7 +1547,9 @@ class LibraryDashboardStatsView(APIView):
                 {
                     "title": book.title,
                     "rating": book.rating,
-                    "authors_names": [author.name for author in book.authors.all()],
+                    "authors_names": [
+                        author.name for author in book.authors.all()
+                    ],
                 }
             )
 
@@ -1482,11 +1560,17 @@ class LibraryDashboardStatsView(APIView):
         if read_books_qs.exists():
             author_stats = (
                 Author.objects.filter(
-                    books__in=read_books_qs, owner__user=user, deleted_at__isnull=True
+                    books__in=read_books_qs,
+                    owner__user=user,
+                    deleted_at__isnull=True,
                 )
                 .annotate(
-                    books_count=Count("books", filter=Q(books__in=read_books_qs)),
-                    total_pages=Sum("books__pages", filter=Q(books__in=read_books_qs)),
+                    books_count=Count(
+                        "books", filter=Q(books__in=read_books_qs)
+                    ),
+                    total_pages=Sum(
+                        "books__pages", filter=Q(books__in=read_books_qs)
+                    ),
                 )
                 .order_by("-books_count", "-total_pages")
                 .first()
@@ -1503,11 +1587,17 @@ class LibraryDashboardStatsView(APIView):
         if read_books_qs.exists():
             publisher_stats = (
                 Publisher.objects.filter(
-                    books__in=read_books_qs, owner__user=user, deleted_at__isnull=True
+                    books__in=read_books_qs,
+                    owner__user=user,
+                    deleted_at__isnull=True,
                 )
                 .annotate(
-                    books_count=Count("books", filter=Q(books__in=read_books_qs)),
-                    total_pages=Sum("books__pages", filter=Q(books__in=read_books_qs)),
+                    books_count=Count(
+                        "books", filter=Q(books__in=read_books_qs)
+                    ),
+                    total_pages=Sum(
+                        "books__pages", filter=Q(books__in=read_books_qs)
+                    ),
                 )
                 .order_by("-books_count", "-total_pages")
                 .first()
@@ -1542,7 +1632,8 @@ class LibraryDashboardStatsView(APIView):
             readings_qs.filter(reading_date__gte=six_months_ago)
             .values("reading_date")
             .annotate(
-                pages_read=Sum("pages_read"), reading_time_minutes=Sum("reading_time")
+                pages_read=Sum("pages_read"),
+                reading_time_minutes=Sum("reading_time"),
             )
             .order_by("reading_date")
         )
@@ -1550,7 +1641,9 @@ class LibraryDashboardStatsView(APIView):
         # Formatar date e adicionar reading_time_hours
         for item in reading_timeline:
             item["date"] = item["reading_date"].isoformat()
-            item["reading_time_hours"] = round(item["reading_time_minutes"] / 60, 1)
+            item["reading_time_hours"] = round(
+                item["reading_time_minutes"] / 60, 1
+            )
             del item["reading_time_minutes"]
             del item["reading_date"]
 
@@ -1592,7 +1685,9 @@ class LibraryDashboardStatsView(APIView):
         )
 
         # Maior sessão (máximo de páginas em uma única sessão)
-        longest_session_pages = readings_qs.aggregate(mx=Max("pages_read"))["mx"] or 0
+        longest_session_pages = (
+            readings_qs.aggregate(mx=Max("pages_read"))["mx"] or 0
+        )
 
         # Dia da semana mais produtivo
         from django.db.models.functions import ExtractIsoWeekDay
@@ -1845,10 +1940,12 @@ class BookHighlightExportView(APIView):
         safe_book_suffix = ""
         if book_id:
             try:
-                book_obj = Book.objects.get(pk=book_id, owner__user=request.user)
-                safe_book_suffix = "_" + book_obj.title[:40].replace(" ", "_").replace(
-                    "/", "-"
+                book_obj = Book.objects.get(
+                    pk=book_id, owner__user=request.user
                 )
+                safe_book_suffix = "_" + book_obj.title[:40].replace(
+                    " ", "_"
+                ).replace("/", "-")
             except Book.DoesNotExist:
                 pass
 
@@ -1870,13 +1967,17 @@ class BookHighlightExportView(APIView):
             response = HttpResponse(
                 content, content_type="application/json; charset=utf-8"
             )
-            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            response["Content-Disposition"] = (
+                f'attachment; filename="{filename}"'
+            )
             return response
 
         if export_format == "csv":
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(["Livro", "Tipo", "Cor", "Página", "Capítulo", "Texto"])
+            writer.writerow(
+                ["Livro", "Tipo", "Cor", "Página", "Capítulo", "Texto"]
+            )
             for h in qs:
                 writer.writerow(
                     [
@@ -1892,7 +1993,9 @@ class BookHighlightExportView(APIView):
             response = HttpResponse(
                 output.getvalue(), content_type="text/csv; charset=utf-8"
             )
-            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            response["Content-Disposition"] = (
+                f'attachment; filename="{filename}"'
+            )
             return response
 
         # Default: markdown
@@ -1912,7 +2015,9 @@ class BookHighlightExportView(APIView):
                 location_parts.append(h.chapter)
             if h.page_number:
                 location_parts.append(f"p. {h.page_number}")
-            location = f" — {', '.join(location_parts)}" if location_parts else ""
+            location = (
+                f" — {', '.join(location_parts)}" if location_parts else ""
+            )
 
             lines.append(f"**[{type_label}{location}]**")
             lines.append("")
@@ -1921,7 +2026,9 @@ class BookHighlightExportView(APIView):
 
         content = "\n".join(lines)
         filename = f"destaques{safe_book_suffix}.md"
-        response = HttpResponse(content, content_type="text/markdown; charset=utf-8")
+        response = HttpResponse(
+            content, content_type="text/markdown; charset=utf-8"
+        )
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
@@ -1960,7 +2067,9 @@ class CourseListCreateView(BaseListCreateView):
         return CourseSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class CourseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2007,7 +2116,9 @@ class CourseModuleListCreateView(BaseListCreateView):
         return CourseModuleSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class CourseModuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2055,7 +2166,9 @@ class CourseLessonListCreateView(BaseListCreateView):
         return CourseLessonSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class CourseLessonRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2124,7 +2237,9 @@ class CourseSessionListCreateView(BaseListCreateView):
         return CourseSessionSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class CourseSessionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2168,7 +2283,9 @@ class SkillListCreateView(BaseListCreateView):
         if skill_status := params.get("status"):
             qs = qs.filter(status=skill_status)
         if search := params.get("search"):
-            qs = qs.filter(Q(name__icontains=search) | Q(notes__icontains=search))
+            qs = qs.filter(
+                Q(name__icontains=search) | Q(notes__icontains=search)
+            )
         return qs
 
     def get_serializer_class(self):
@@ -2177,7 +2294,9 @@ class SkillListCreateView(BaseListCreateView):
         return SkillSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class SkillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2220,7 +2339,9 @@ class KnowledgeLinkListCreateView(BaseListCreateView):
         return KnowledgeLinkSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class KnowledgeLinkRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -2249,12 +2370,15 @@ class KnowledgeGraphView(APIView):
     queryset = KnowledgeLink.objects.all()
 
     def get(self, request):
-        member_qs = request.user.member if hasattr(request.user, "member") else None
+        member_qs = (
+            request.user.member if hasattr(request.user, "member") else None
+        )
         if not member_qs:
             return Response({"nodes": [], "links": []})
 
         include_highlights = (
-            request.query_params.get("include_highlights", "false").lower() == "true"
+            request.query_params.get("include_highlights", "false").lower()
+            == "true"
         )
 
         nodes = []
@@ -2386,7 +2510,9 @@ class KnowledgeGraphView(APIView):
             )
 
         # --- Skills ---
-        skills = Skill.objects.filter(owner__user=request.user, deleted_at__isnull=True)
+        skills = Skill.objects.filter(
+            owner__user=request.user, deleted_at__isnull=True
+        )
         for sk in skills:
             nodes.append(
                 {

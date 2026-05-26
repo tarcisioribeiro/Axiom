@@ -5,7 +5,8 @@ from members.models import Member
 
 
 class MemberSerializer(serializers.ModelSerializer):
-    # Declare explicitly so DRF treats it as writable (descriptor, not a DB field)
+    # Declare explicitly so DRF treats it as writable (descriptor, not a DB
+    # field)
     document = serializers.CharField(required=True)
 
     class Meta:
@@ -87,5 +88,7 @@ class MemberPermissionsSerializer(serializers.Serializer):
     permission_codenames = serializers.ListField(
         child=serializers.CharField(),
         required=True,
-        help_text="Lista de codenames de permissões a serem atribuídas ao membro",
+        help_text=(
+            "Lista de codenames de permissões" " a serem atribuídas ao membro"
+        ),
     )

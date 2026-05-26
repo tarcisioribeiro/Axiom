@@ -1,6 +1,7 @@
 """
 Tests targeting uncovered modules to push coverage well above 80%:
-- loans/views.py: LoanInstallmentListView, LoanPaymentView, LoanAmortizationView
+- loans/views.py: LoanInstallmentListView, LoanPaymentView,
+LoanAmortizationView
 - payables/views.py: PayableInstallmentListView, PayablePaymentView
 - revenues/services.py: bulk_generate_fixed_revenues, get_fixed_revenues_stats
 - transfers/services.py: bulk_generate_fixed_transfers
@@ -37,7 +38,9 @@ class BaseMissingCoverageTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.account = Account.objects.create(
             account_name="Missing Cov Account",
             institution_name="TestBank",
@@ -146,7 +149,9 @@ class LoanInstallmentListViewTest(BaseMissingCoverageTestCase):
 
     def test_patch_loan_not_found_returns_404(self):
         url = reverse("loan-installments", args=[99999])
-        response = self.client.patch(url, {"installment_number": 1}, format="json")
+        response = self.client.patch(
+            url, {"installment_number": 1}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_patch_missing_installment_number_returns_400(self):
@@ -156,7 +161,9 @@ class LoanInstallmentListViewTest(BaseMissingCoverageTestCase):
 
     def test_patch_installment_not_found_returns_404(self):
         url = reverse("loan-installments", args=[self.loan.pk])
-        response = self.client.patch(url, {"installment_number": 999}, format="json")
+        response = self.client.patch(
+            url, {"installment_number": 999}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -190,7 +197,11 @@ class LoanPaymentViewTest(BaseMissingCoverageTestCase):
         url = reverse("loan-payment", args=[99999])
         response = self.client.post(
             url,
-            {"value": "100.00", "account": self.account.pk, "date": str(date.today())},
+            {
+                "value": "100.00",
+                "account": self.account.pk,
+                "date": str(date.today()),
+            },
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -424,7 +435,9 @@ class PayableInstallmentListViewTest(BaseMissingCoverageTestCase):
 
     def test_patch_payable_not_found_returns_404(self):
         url = reverse("payable-installments", args=[99999])
-        response = self.client.patch(url, {"installment_number": 1}, format="json")
+        response = self.client.patch(
+            url, {"installment_number": 1}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_patch_missing_installment_number_returns_400(self):
@@ -434,7 +447,9 @@ class PayableInstallmentListViewTest(BaseMissingCoverageTestCase):
 
     def test_patch_installment_not_found_returns_404(self):
         url = reverse("payable-installments", args=[self.payable.pk])
-        response = self.client.patch(url, {"installment_number": 999}, format="json")
+        response = self.client.patch(
+            url, {"installment_number": 999}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
@@ -468,7 +483,11 @@ class PayablePaymentViewTest(BaseMissingCoverageTestCase):
         url = reverse("payable-payment", args=[99999])
         response = self.client.post(
             url,
-            {"value": "100.00", "account": self.account.pk, "date": str(date.today())},
+            {
+                "value": "100.00",
+                "account": self.account.pk,
+                "date": str(date.today()),
+            },
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -504,7 +523,8 @@ class PayablePaymentViewTest(BaseMissingCoverageTestCase):
 
 
 # ===========================================================================
-# revenues/services.py — bulk_generate_fixed_revenues + get_fixed_revenues_stats
+# revenues/services.py — bulk_generate_fixed_revenues +
+# get_fixed_revenues_stats
 # ===========================================================================
 
 
@@ -530,7 +550,10 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         result = bulk_generate_fixed_revenues(
             month="2026-06",
             revenue_values=[
-                {"fixed_revenue_id": self.fixed_rev.id, "value": Decimal("5000.00")}
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": Decimal("5000.00"),
+                }
             ],
             user=self.user,
         )
@@ -543,14 +566,20 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         bulk_generate_fixed_revenues(
             month="2026-07",
             revenue_values=[
-                {"fixed_revenue_id": self.fixed_rev.id, "value": Decimal("5000.00")}
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": Decimal("5000.00"),
+                }
             ],
             user=self.user,
         )
         result = bulk_generate_fixed_revenues(
             month="2026-07",
             revenue_values=[
-                {"fixed_revenue_id": self.fixed_rev.id, "value": Decimal("5000.00")}
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": Decimal("5000.00"),
+                }
             ],
             user=self.user,
         )
@@ -563,7 +592,10 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         bulk_generate_fixed_revenues(
             month="2026-08",
             revenue_values=[
-                {"fixed_revenue_id": self.fixed_rev.id, "value": Decimal("5000.00")}
+                {
+                    "fixed_revenue_id": self.fixed_rev.id,
+                    "value": Decimal("5000.00"),
+                }
             ],
             user=self.user,
         )
@@ -580,7 +612,10 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         result = bulk_generate_fixed_revenues(
             month="2026-08",
             revenue_values=[
-                {"fixed_revenue_id": fixed_rev2.id, "value": Decimal("1500.00")}
+                {
+                    "fixed_revenue_id": fixed_rev2.id,
+                    "value": Decimal("1500.00"),
+                }
             ],
             user=self.user,
         )
@@ -616,7 +651,10 @@ class BulkGenerateFixedRevenuesServiceTest(BaseMissingCoverageTestCase):
         result = bulk_generate_fixed_revenues(
             month="2026-02",
             revenue_values=[
-                {"fixed_revenue_id": fixed_rev_31.id, "value": Decimal("2000.00")}
+                {
+                    "fixed_revenue_id": fixed_rev_31.id,
+                    "value": Decimal("2000.00"),
+                }
             ],
             user=self.user,
         )
@@ -770,7 +808,8 @@ class BulkGenerateFixedTransfersServiceTest(BaseMissingCoverageTestCase):
         bulk_generate_fixed_transfers(month="2026-08", user=self.user)
         bulk_generate_fixed_transfers(month="2026-08", user=self.user)
         self.assertEqual(
-            FixedTransferGenerationLog.objects.filter(month="2026-08").count(), 1
+            FixedTransferGenerationLog.objects.filter(month="2026-08").count(),
+            1,
         )
 
     def test_bulk_generate_edge_day_31_in_february(self):

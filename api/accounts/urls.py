@@ -4,7 +4,9 @@ from . import views
 
 urlpatterns = [
     path(
-        "accounts/", views.AccountCreateListView.as_view(), name="account-create-list"
+        "accounts/",
+        views.AccountCreateListView.as_view(),
+        name="account-create-list",
     ),
     path(
         "accounts/<int:pk>/",

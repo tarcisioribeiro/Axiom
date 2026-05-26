@@ -138,14 +138,18 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
             try:
                 plaintext = FieldEncryption.decrypt_data(pw._password)
                 assert plaintext is not None
-                pw._password = FieldEncryption.encrypt_with_key(plaintext, vault_key)
+                pw._password = FieldEncryption.encrypt_with_key(
+                    plaintext, vault_key
+                )
                 pw.save(update_fields=["_password"])
             except Exception as e:
                 logger.error(f"Erro ao re-criptografar senha {pw.id}: {e}")
                 raise
 
     # Stored Credit Cards
-    for card in StoredCreditCard.objects.filter(owner=member, deleted_at__isnull=True):
+    for card in StoredCreditCard.objects.filter(
+        owner=member, deleted_at__isnull=True
+    ):
         update_fields = []
         try:
             if card._card_number:
@@ -169,7 +173,9 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
             raise
 
     # Stored Bank Accounts
-    for acc in StoredBankAccount.objects.filter(owner=member, deleted_at__isnull=True):
+    for acc in StoredBankAccount.objects.filter(
+        owner=member, deleted_at__isnull=True
+    ):
         update_fields = []
         try:
             if acc._account_number:
@@ -182,7 +188,9 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
             if acc._password:
                 plaintext = FieldEncryption.decrypt_data(acc._password)
                 assert plaintext is not None
-                acc._password = FieldEncryption.encrypt_with_key(plaintext, vault_key)
+                acc._password = FieldEncryption.encrypt_with_key(
+                    plaintext, vault_key
+                )
                 update_fields.append("_password")
             if acc._digital_password:
                 plaintext = FieldEncryption.decrypt_data(acc._digital_password)
@@ -194,22 +202,29 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
             if update_fields:
                 acc.save(update_fields=update_fields)
         except Exception as e:
-            logger.error(f"Erro ao re-criptografar conta bancária {acc.id}: {e}")
+            logger.error(
+                f"Erro ao re-criptografar conta bancária {acc.id}: {e}"
+            )
             raise
 
     # Archives — text content and encrypted files
-    for archive in Archive.objects.filter(owner=member, deleted_at__isnull=True):
+    for archive in Archive.objects.filter(
+        owner=member, deleted_at__isnull=True
+    ):
         update_fields = []
         try:
             if archive._encrypted_text:
-                plaintext = FieldEncryption.decrypt_data(archive._encrypted_text)
+                plaintext = FieldEncryption.decrypt_data(
+                    archive._encrypted_text
+                )
                 assert plaintext is not None
                 archive._encrypted_text = FieldEncryption.encrypt_with_key(
                     plaintext, vault_key
                 )
                 update_fields.append("_encrypted_text")
 
-            # Re-encrypt binary files that were previously encrypted with the app key
+            # Re-encrypt binary files that were previously encrypted with the
+            # app key
             if archive.encrypted_file and archive.is_file_encrypted:
                 try:
                     raw_bytes = archive.encrypted_file.read()
@@ -222,7 +237,8 @@ def _re_encrypt_all_items(member, vault_key: bytes) -> None:
                     archive.encrypted_file.file.truncate()
                 except Exception as fe:
                     logger.warning(
-                        "Não foi possível re-criptografar arquivo do archive" " %s: %s",
+                        "Não foi possível re-criptografar arquivo do archive"
+                        " %s: %s",
                         archive.id,
                         fe,
                     )
@@ -246,9 +262,11 @@ class VaultLockedMixin:
     Comportamento:
     - Se usuário não tem VaultConfig: usa a app key (retrocompatibilidade).
     - Se tem VaultConfig e cofre está desbloqueado: set_vault_key() e processa.
-    - Se tem VaultConfig e cofre está bloqueado: levanta VaultLockedException (423).
+    - Se tem VaultConfig e cofre está bloqueado:
+      levanta VaultLockedException (423).
 
-    A vault_key é limpa do thread-local ao final de cada request via dispatch/finally,
+    A vault_key é limpa do thread-local ao final de cada request via
+    dispatch/finally,
     garantindo limpeza mesmo em caso de exceções não tratadas.
     """
 
@@ -263,7 +281,7 @@ class VaultLockedMixin:
 
     def dispatch(self, request, *args, **kwargs):
         try:
-            return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
+            return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]  # noqa: E501
         finally:
             clear_vault_key()
 
@@ -271,7 +289,8 @@ class VaultLockedMixin:
         super().initial(request, *args, **kwargs)  # type: ignore[misc]
         vault_config = self._get_vault_config(request)
         if vault_config is None:
-            # Cofre não configurado → continua com app key (sem vault_key no context)
+            # Cofre não configurado → continua com app key (sem vault_key no
+            # context)
             return
 
         vault_key = _get_vault_key_from_cache(request.user.id)
@@ -287,7 +306,8 @@ class VaultLockedMixin:
 
 
 def _validate_master_password_complexity(value: str) -> None:
-    """Valida que a senha mestre atende aos critérios mínimos de complexidade."""
+    """Valida que a senha mestre atende aos critérios
+    mínimos de complexidade."""
     criteria = [
         bool(re.search(r"[A-Z]", value)),
         bool(re.search(r"[a-z]", value)),
@@ -395,7 +415,9 @@ class VaultStatusView(APIView):
             is_configured = False
 
         is_unlocked = _get_vault_key_from_cache(request.user.id) is not None
-        expires_at = _get_vault_key_expiry(request.user.id) if is_unlocked else None
+        expires_at = (
+            _get_vault_key_expiry(request.user.id) if is_unlocked else None
+        )
 
         return Response(
             {
@@ -433,7 +455,8 @@ class VaultSetupView(APIView):
                 {
                     "error": (
                         "O cofre já está configurado. "
-                        "Use 'change-master-password' para alterar a senha mestre."
+                        "Use 'change-master-password'"
+                        " para alterar a senha mestre."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -451,7 +474,9 @@ class VaultSetupView(APIView):
         vault_key = VaultEncryption.generate_vault_key()
 
         # Cifra a vault_key com a derived_key (envelope encryption)
-        encrypted_vault_key = VaultEncryption.encrypt_vault_key(vault_key, derived_key)
+        encrypted_vault_key = VaultEncryption.encrypt_vault_key(
+            vault_key, derived_key
+        )
 
         try:
             with transaction.atomic():
@@ -567,7 +592,8 @@ class VaultUnlockView(APIView):
                 user=request.user,
                 action="failed_vault_unlock",
                 description=(
-                    f"Tentativa de desbloqueio do cofre falhou (tentativa {attempts})"
+                    f"Tentativa de desbloqueio do cofre"
+                    f" falhou (tentativa {attempts})"
                 ),
                 model_name="VaultConfig",
                 object_id=vault_config.id,
@@ -579,15 +605,19 @@ class VaultUnlockView(APIView):
                 msg += f" Tentativas restantes antes do bloqueio: {remaining}."
             else:
                 msg = (
-                    f"Cofre bloqueado temporariamente após {VAULT_MAX_FAILED_ATTEMPTS} "
-                    "tentativas incorretas. Tente novamente em 15 minutos."
+                    f"Cofre bloqueado temporariamente"
+                    f" após {VAULT_MAX_FAILED_ATTEMPTS} "
+                    "tentativas incorretas."
+                    " Tente novamente em 15 minutos."
                 )
             return Response(
                 {"error": msg},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
-            logger.error(f"Erro ao desbloquear cofre do usuário {request.user.id}: {e}")
+            logger.error(
+                f"Erro ao desbloquear cofre do usuário {request.user.id}: {e}"
+            )
             return Response(
                 {"error": "Erro ao desbloquear o cofre. Tente novamente."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -677,7 +707,9 @@ class VaultChangePasswordView(APIView):
 
         vault_config.salt = base64.b64encode(new_salt).decode()
         vault_config.encrypted_vault_key = new_encrypted_vault_key
-        vault_config.save(update_fields=["salt", "encrypted_vault_key", "updated_at"])
+        vault_config.save(
+            update_fields=["salt", "encrypted_vault_key", "updated_at"]
+        )
 
         # Invalida sessão ativa anterior antes de criar uma nova
         _delete_vault_key_from_cache(request.user.id)

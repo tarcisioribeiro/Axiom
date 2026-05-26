@@ -27,7 +27,9 @@ class BaseCoverageTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Cov User",
             document_hash="c" * 64,
@@ -145,8 +147,9 @@ class VaultYieldOperationsViewTest(BaseCoverageTestCase):
         return resp.data["id"]  # type: ignore
 
     def test_vault_apply_yield(self):
-        # No contributions yet — may succeed (no-op) or return 400 if validation
-        # requires prior contributions; both are legitimate outcomes.
+        # No contributions yet — may succeed (no-op) or return 400 if
+        # validation requires prior contributions; both are legitimate
+        # outcomes.
         url = reverse("vault-apply-yield", args=[self.vault_pk])
         response = self.client.post(url)
         self.assertIn(
@@ -271,7 +274,11 @@ class DashboardStatsViewTest(BaseCoverageTestCase):
         url = reverse("balance-forecast")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for key in ("forecast_balance", "pending_expenses", "pending_revenues"):
+        for key in (
+            "forecast_balance",
+            "pending_expenses",
+            "pending_revenues",
+        ):
             self.assertIn(key, response.data)
 
 
@@ -310,7 +317,11 @@ class ExpenseServiceViewTest(BaseCoverageTestCase):
         )
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_201_CREATED,
+                status.HTTP_400_BAD_REQUEST,
+            ],
         )
 
     def test_categorization_rule_detail(self):

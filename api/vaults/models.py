@@ -11,7 +11,8 @@ from app.models import BaseModel
 
 def count_business_days(start_date, end_date):
     """
-    Conta dias úteis (seg-sex) entre start_date (exclusivo) e end_date (inclusivo).
+    Conta dias úteis (seg-sex) entre start_date (exclusivo)
+    e end_date (inclusivo).
     """
     if end_date <= start_date:
         return 0
@@ -52,7 +53,9 @@ class Vault(BaseModel):
     """
 
     description = models.CharField(
-        max_length=200, verbose_name="Descrição", help_text="Nome ou descrição do cofre"
+        max_length=200,
+        verbose_name="Descrição",
+        help_text="Nome ou descrição do cofre",
     )
     account = models.ForeignKey(
         "accounts.Account",
@@ -124,7 +127,8 @@ class Vault(BaseModel):
     def daily_yield_rate(self):
         """
         Calcula a taxa diária a partir da taxa anual.
-        Se annual_yield_rate > 0, usa ela. Caso contrário, usa yield_rate (legado).
+        Se annual_yield_rate > 0, usa ela. Caso contrário,
+        usa yield_rate (legado).
         """
         if self.annual_yield_rate > 0:
             return (self.annual_yield_rate / Decimal("252")).quantize(
@@ -160,9 +164,13 @@ class Vault(BaseModel):
         # Rendimento composto diário
         # Fórmula: V = P * (1 + r)^n - P
         rate = Decimal(str(self.daily_yield_rate))
-        principal = self.current_balance - self.accumulated_yield  # Apenas o principal
+        principal = (
+            self.current_balance - self.accumulated_yield
+        )  # Apenas o principal
         if principal <= 0:
-            principal = self.current_balance  # Se não há distinção, usa o saldo total
+            principal = (
+                self.current_balance
+            )  # Se não há distinção, usa o saldo total
 
         total_value = principal * ((1 + rate) ** days)
         yield_value = total_value - principal
@@ -233,7 +241,8 @@ class Vault(BaseModel):
         if self.account.current_balance < amount:
             raise ValueError(
                 f"Saldo insuficiente na conta. "
-                f"Disponível: {self.account.current_balance}, Solicitado: {amount}"
+                f"Disponível: {self.account.current_balance},"
+                f" Solicitado: {amount}"
             )
 
         # Aplicar rendimentos pendentes antes do depósito
@@ -357,7 +366,9 @@ class Vault(BaseModel):
 
         # Recalcular a partir do primeiro depósito ou from_date
         first_deposit = (
-            self.transactions.filter(transaction_type="deposit", is_deleted=False)
+            self.transactions.filter(
+                transaction_type="deposit", is_deleted=False
+            )
             .order_by("created_at")
             .first()
         )
@@ -390,9 +401,13 @@ class VaultTransaction(BaseModel):
         related_name="transactions",
     )
     transaction_type = models.CharField(
-        max_length=20, choices=VAULT_TRANSACTION_TYPES, verbose_name="Tipo de Transação"
+        max_length=20,
+        choices=VAULT_TRANSACTION_TYPES,
+        verbose_name="Tipo de Transação",
     )
-    amount = models.DecimalField(verbose_name="Valor", max_digits=15, decimal_places=2)
+    amount = models.DecimalField(
+        verbose_name="Valor", max_digits=15, decimal_places=2
+    )
     balance_after = models.DecimalField(
         verbose_name="Saldo Após Transação", max_digits=15, decimal_places=2
     )
@@ -501,7 +516,8 @@ class VaultRecurringContribution(BaseModel):
 
     def __str__(self):
         return (
-            f"{self.description} - Dia {self.day_of_month} - {self.vault.description}"
+            f"{self.description} - Dia {self.day_of_month}"
+            f" - {self.vault.description}"
         )
 
     @property
@@ -569,7 +585,9 @@ class FinancialGoal(BaseModel):
     """
 
     description = models.CharField(
-        max_length=200, verbose_name="Descrição", help_text="Nome ou descrição da meta"
+        max_length=200,
+        verbose_name="Descrição",
+        help_text="Nome ou descrição da meta",
     )
     category = models.CharField(
         max_length=50,
@@ -686,7 +704,9 @@ class FinancialGoal(BaseModel):
         months = days / 30
         if months <= 0:
             return None
-        return (self.remaining_value / Decimal(str(months))).quantize(Decimal("0.01"))
+        return (self.remaining_value / Decimal(str(months))).quantize(
+            Decimal("0.01")
+        )
 
     def check_completion(self):
         """
@@ -703,9 +723,9 @@ class FinancialGoal(BaseModel):
         """
         Retorna um resumo dos cofres associados à meta.
         """
-        vaults = self.vaults.filter(is_deleted=False, is_active=True).select_related(
-            "account"
-        )
+        vaults = self.vaults.filter(
+            is_deleted=False, is_active=True
+        ).select_related("account")
 
         return [
             {

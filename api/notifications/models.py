@@ -70,7 +70,12 @@ class Notification(BaseModel):
         ordering = ["-created_at"]
         verbose_name = "Notificação"
         verbose_name_plural = "Notificações"
-        unique_together = ("owner", "notification_type", "content_type", "object_id")
+        unique_together = (
+            "owner",
+            "notification_type",
+            "content_type",
+            "object_id",
+        )
         indexes = [
             models.Index(fields=["owner", "is_read"]),
             models.Index(fields=["notification_type"]),

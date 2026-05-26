@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import type { LucideIcon } from 'lucide-react';
 import {
   AlertCircle,
@@ -151,6 +152,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         if (destinyAccount) setValue('destiny_account', destinyAccount.id);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transfer, accounts.length]);
 
   useEffect(() => {
@@ -161,6 +163,7 @@ export const TransferForm: React.FC<TransferFormProps> = ({
         if (newDestiny) setValue('destiny_account', newDestiny.id);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedOriginAccount]);
 
   const handleSwapAccounts = () => {

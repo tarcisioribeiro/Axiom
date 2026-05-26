@@ -49,7 +49,9 @@ class BaseBudgetEnforcementTest(APITestCase):
         self.today = date.today()
         self.expense_url = reverse("expense-create-list")
 
-    def _expense_payload(self, value="100.00", payed=True, category="food and drink"):
+    def _expense_payload(
+        self, value="100.00", payed=True, category="food and drink"
+    ):
         return {
             "description": "Test expense",
             "value": value,
@@ -68,7 +70,8 @@ class BaseBudgetEnforcementTest(APITestCase):
 
 class NoBudgetTest(BaseBudgetEnforcementTest):
     def test_expense_created_without_budget(self):
-        """When no budget exists for the category, expense is created normally."""
+        """When no budget exists for the category, expense is created
+        normally."""
         response = self.client.post(
             self.expense_url, self._expense_payload(value="9999.00")
         )
@@ -93,8 +96,11 @@ class SoftModeTest(BaseBudgetEnforcementTest):
         )
 
     def test_soft_overage_returns_201_with_warning(self):
-        """Soft mode: expense that exceeds budget returns 201 with budget_warning."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"):
+        """Soft mode: expense that exceeds budget returns 201 with
+        budget_warning."""
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"
+        ):
             # First expense: R$150 (within limit)
             Expense.objects.create(
                 description="Prior expense",
@@ -106,7 +112,8 @@ class SoftModeTest(BaseBudgetEnforcementTest):
                 payed=True,
                 created_by=self.user,
             )
-            # Second expense: R$100 → projects total to R$250, exceeding R$200 limit
+            # Second expense: R$100 → projects total to R$250, exceeding
+            # R$200 limit
             response = self.client.post(
                 self.expense_url, self._expense_payload(value="100.00")
             )
@@ -118,8 +125,11 @@ class SoftModeTest(BaseBudgetEnforcementTest):
         self.assertIn("limit_amount", warning)
 
     def test_soft_within_limit_no_warning(self):
-        """Soft mode: expense within budget limit returns 201 without budget_warning."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"):
+        """Soft mode: expense within budget limit returns 201 without
+        budget_warning."""
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"
+        ):
             response = self.client.post(
                 self.expense_url, self._expense_payload(value="50.00")
             )
@@ -128,7 +138,9 @@ class SoftModeTest(BaseBudgetEnforcementTest):
 
     def test_unpaid_expense_skips_budget_check(self):
         """Unpaid expenses do not trigger budget enforcement."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"):
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"
+        ):
             response = self.client.post(
                 self.expense_url,
                 self._expense_payload(value="9999.00", payed=False),
@@ -174,7 +186,9 @@ class HardModeTest(BaseBudgetEnforcementTest):
 
     def test_hard_within_limit_returns_201(self):
         """Hard mode: expense within limit is allowed normally."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"):
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"
+        ):
             response = self.client.post(
                 self.expense_url, self._expense_payload(value="50.00")
             )
@@ -182,7 +196,9 @@ class HardModeTest(BaseBudgetEnforcementTest):
 
     def test_hard_unpaid_skips_check(self):
         """Hard mode: unpaid expense is never blocked."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"):
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "hard"
+        ):
             response = self.client.post(
                 self.expense_url,
                 self._expense_payload(value="9999.00", payed=False),
@@ -215,11 +231,16 @@ class UpdateEnforcementTest(BaseBudgetEnforcementTest):
             payed=True,
             created_by=self.user,
         )
-        self.detail_url = reverse("expense-detail-view", args=[self.expense.pk])
+        self.detail_url = reverse(
+            "expense-detail-view", args=[self.expense.pk]
+        )
 
     def test_update_within_limit_no_warning(self):
-        """PATCH that keeps total within limit returns 200 without budget_warning."""
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"):
+        """PATCH that keeps total within limit returns 200 without
+        budget_warning."""
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"
+        ):
             response = self.client.patch(self.detail_url, {"value": "150.00"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn("budget_warning", response.data)
@@ -227,7 +248,8 @@ class UpdateEnforcementTest(BaseBudgetEnforcementTest):
     def test_update_exceeds_limit_soft_warning(self):
         """PATCH (soft) that pushes total over limit returns 200 +"""
         """budget_warning."""
-        # Add another expense so we're already at R$180, excluding the one being updated
+        # Add another expense so we're already at R$180, excluding the one
+        # being updated
         Expense.objects.create(
             description="Other expense",
             value=Decimal("180.00"),
@@ -238,8 +260,10 @@ class UpdateEnforcementTest(BaseBudgetEnforcementTest):
             payed=True,
             created_by=self.user,
         )
-        with mock.patch("django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"):
-            # Update the original expense to R$50 — other R$180 + R$50 = R$230 > R$200
+        with mock.patch(
+            "django.conf.settings.BUDGET_ENFORCEMENT_MODE", "soft"
+        ):
+            # R$50 update — other R$180 + R$50 = R$230 > R$200 limit
             response = self.client.patch(self.detail_url, {"value": "50.00"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("budget_warning", response.data)
@@ -278,7 +302,8 @@ class OffModeTest(BaseBudgetEnforcementTest):
         )
 
     def test_off_mode_ignores_budget(self):
-        """Off mode: expense that far exceeds budget is created without any warning."""
+        """Off mode: expense that far exceeds budget is created without any
+        warning."""
         with mock.patch("budgets.services.cfg", return_value="off"):
             response = self.client.post(
                 self.expense_url, self._expense_payload(value="9999.00")

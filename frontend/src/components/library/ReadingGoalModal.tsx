@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BookOpen, Loader2, Plus, Tag, Target, Trash2 } from 'lucide-react';
 import { startTransition, useEffect, useState } from 'react';

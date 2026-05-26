@@ -8,7 +8,9 @@ DOMAIN_CHOICES = ["finance", "budget", "planning", "library", "all"]
 
 
 class Command(BaseCommand):
-    help = "Gera embeddings vetoriais (AgentEmbedding) para registros existentes."
+    help = (
+        "Gera embeddings vetoriais (AgentEmbedding) para registros existentes."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -20,7 +22,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--reset",
             action="store_true",
-            help="Remove embeddings existentes do domínio antes de reprocessar",
+            help=(
+                "Remove embeddings existentes do domínio"
+                " antes de reprocessar"
+            ),
         )
         parser.add_argument(
             "--batch-size",
@@ -40,7 +45,8 @@ class Command(BaseCommand):
 
         if not LLMClient.is_available():
             raise CommandError(
-                "LLM não disponível. Verifique OLLAMA_BASE_URL ou ANTHROPIC_API_KEY."
+                "LLM não disponível. Verifique"
+                " OLLAMA_BASE_URL ou ANTHROPIC_API_KEY."
             )
 
         domain = options["domain"]
@@ -71,7 +77,9 @@ class Command(BaseCommand):
             deleted, _ = AgentEmbedding.objects.filter(
                 user=user, domain=domain
             ).delete()
-            self.stdout.write(f"  [{domain}] Reset: {deleted} embeddings removidos")
+            self.stdout.write(
+                f"  [{domain}] Reset: {deleted} embeddings removidos"
+            )
 
         handlers = {
             "finance": self._process_finance,
@@ -82,7 +90,8 @@ class Command(BaseCommand):
         generated, errors = handlers[domain](user, options["batch_size"])
         self.stdout.write(
             self.style.SUCCESS(
-                f"  Domínio {domain}: {generated} embeddings gerados, {errors} erros"
+                f"  Domínio {domain}: {generated} embeddings"
+                f" gerados, {errors} erros"
             )
         )
 
@@ -209,7 +218,8 @@ class Command(BaseCommand):
                 source_type="budget",
                 source_id=budget["uuid"],
                 source_title=(
-                    f"{budget['category']}" f" {budget['month']:02d}/{budget['year']}"
+                    f"{budget['category']}"
+                    f" {budget['month']:02d}/{budget['year']}"
                 ),
                 content=text,
             )
@@ -224,7 +234,9 @@ class Command(BaseCommand):
     # Planning domain: routine tasks + goals
     # -------------------------------------------------------------------------
 
-    def _process_planning(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _process_planning(
+        self, user: User, batch_size: int
+    ) -> tuple[int, int]:
         generated, errors = 0, 0
         g, e = self._embed_routines(user, batch_size)
         generated += g
@@ -237,14 +249,16 @@ class Command(BaseCommand):
     def _embed_routines(self, user: User, batch_size: int) -> tuple[int, int]:
         from personal_planning.models import RoutineTask
 
-        qs = RoutineTask.objects.filter(owner__user=user, is_deleted=False).values(
-            "uuid", "name", "description", "periodicity"
-        )
+        qs = RoutineTask.objects.filter(
+            owner__user=user, is_deleted=False
+        ).values("uuid", "name", "description", "periodicity")
         total = qs.count()
         generated, errors = 0, 0
 
         for i, task in enumerate(qs.iterator(chunk_size=batch_size)):
-            self.stdout.write(f"    [routine {i + 1}/{total}] {task['name'][:50]}")
+            self.stdout.write(
+                f"    [routine {i + 1}/{total}] {task['name'][:50]}"
+            )
             description = task["description"] or ""
             text = (
                 f"Rotina '{task['name']}': {description},"
@@ -269,13 +283,20 @@ class Command(BaseCommand):
         from personal_planning.models import Goal
 
         qs = Goal.objects.filter(owner__user=user, is_deleted=False).values(
-            "uuid", "title", "description", "current_value", "target_value", "end_date"
+            "uuid",
+            "title",
+            "description",
+            "current_value",
+            "target_value",
+            "end_date",
         )
         total = qs.count()
         generated, errors = 0, 0
 
         for i, goal in enumerate(qs.iterator(chunk_size=batch_size)):
-            self.stdout.write(f"    [goal {i + 1}/{total}] {goal['title'][:50]}")
+            self.stdout.write(
+                f"    [goal {i + 1}/{total}] {goal['title'][:50]}"
+            )
             description = goal["description"] or ""
             target = goal["target_value"] or 1
             progress = int(goal["current_value"] / target * 100)
@@ -332,7 +353,8 @@ class Command(BaseCommand):
 
         for i, summary in enumerate(qs.iterator(chunk_size=batch_size)):
             self.stdout.write(
-                f"    [book_summary {i + 1}/{total}] {summary['book__title'][:50]}"
+                f"    [book_summary {i + 1}/{total}]"
+                f" {summary['book__title'][:50]}"
             )
             ok = self._upsert_embedding(
                 user=user,
@@ -349,7 +371,9 @@ class Command(BaseCommand):
 
         return generated, errors
 
-    def _embed_reading_notes(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_reading_notes(
+        self, user: User, batch_size: int
+    ) -> tuple[int, int]:
         from library.models import Reading
 
         qs = (
@@ -364,14 +388,17 @@ class Command(BaseCommand):
 
         for i, reading in enumerate(qs.iterator(chunk_size=batch_size)):
             self.stdout.write(
-                f"    [reading_note {i + 1}/{total}] {reading['book__title'][:50]}"
+                f"    [reading_note {i + 1}/{total}]"
+                f" {reading['book__title'][:50]}"
             )
             ok = self._upsert_embedding(
                 user=user,
                 domain="library",
                 source_type="reading_note",
                 source_id=reading["uuid"],
-                source_title=f"{reading['book__title']} ({reading['reading_date']})",
+                source_title=(
+                    f"{reading['book__title']}" f" ({reading['reading_date']})"
+                ),
                 content=reading["notes"] or "",
             )
             if ok:
@@ -381,7 +408,9 @@ class Command(BaseCommand):
 
         return generated, errors
 
-    def _embed_highlights(self, user: User, batch_size: int) -> tuple[int, int]:
+    def _embed_highlights(
+        self, user: User, batch_size: int
+    ) -> tuple[int, int]:
         from library.models import BookHighlight
 
         qs = (
@@ -436,7 +465,9 @@ class Command(BaseCommand):
             embedding = LLMClient.embed(content)
             if not embedding:
                 self.stdout.write(
-                    self.style.WARNING(f"      Falha no embedding: {source_title[:60]}")
+                    self.style.WARNING(
+                        f"      Falha no embedding: {source_title[:60]}"
+                    )
                 )
                 return False
 

@@ -26,7 +26,10 @@ class PurgeDeletedSerializer(serializers.Serializer):
     days = serializers.IntegerField(
         default=90,
         min_value=1,
-        help_text="Records soft-deleted more than this many days ago will be purged.",
+        help_text=(
+            "Records soft-deleted more than this many days"
+            " ago will be purged."
+        ),
     )
     dry_run = serializers.BooleanField(
         default=False,
@@ -73,7 +76,9 @@ class PurgeDeletedView(APIView):
         total = 0
 
         for label, model, anonymize_fn in self._get_sensitive_models():
-            qs = model.all_objects.filter(is_deleted=True, deleted_at__lte=cutoff)
+            qs = model.all_objects.filter(
+                is_deleted=True, deleted_at__lte=cutoff
+            )
             count = qs.count()
 
             if not dry_run and count > 0:
@@ -120,7 +125,11 @@ class PurgeDeletedView(APIView):
         return [
             ("members.Member", Member, self._anonymize_member),
             ("accounts.Account", Account, self._anonymize_account),
-            ("credit_cards.CreditCard", CreditCard, self._anonymize_credit_card),
+            (
+                "credit_cards.CreditCard",
+                CreditCard,
+                self._anonymize_credit_card,
+            ),
             ("security.Password", Password, self._anonymize_password),
             (
                 "security.StoredCreditCard",
@@ -185,8 +194,10 @@ class PurgeDeletedView(APIView):
                 user=triggered_by,
                 action="purge",
                 description=(
-                    f"Registro {label} id={instance.pk} (uuid={instance.uuid}) "
-                    "permanentemente removido por política de retenção LGPD/GDPR."
+                    f"Registro {label} id={instance.pk}"
+                    f" (uuid={instance.uuid}) "
+                    "permanentemente removido por política"
+                    " de retenção LGPD/GDPR."
                 ),
                 model_name=label,
                 object_id=instance.pk,

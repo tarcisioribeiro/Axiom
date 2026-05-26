@@ -27,7 +27,9 @@ class BaseVaultOperationsTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Vault Ops User",
             document_hash="o" * 64,
@@ -206,11 +208,15 @@ class VaultTransactionListFilterTest(BaseVaultOperationsTestCase):
         self.vault_pk = self._create_vault()
         # Create a deposit transaction
         self.client.post(
-            reverse("vault-deposit", args=[self.vault_pk]), {"amount": "200.00"}
+            reverse("vault-deposit", args=[self.vault_pk]),
+            {"amount": "200.00"},
         )
 
     def test_transaction_list_filter_by_type_deposit(self):
-        """GET /vaults/<pk>/transactions/?type=deposit filters deposit transactions."""
+        """
+        GET /vaults/<pk>/transactions/?type=deposit filters deposit
+        transactions.
+        """
         url = reverse("vault-transactions", args=[self.vault_pk])
         response = self.client.get(url, {"type": "deposit"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -225,7 +231,9 @@ class VaultTransactionListFilterTest(BaseVaultOperationsTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_all_vault_transactions_filter_by_type(self):
-        """GET /vault-transactions/?type=deposit filters by transaction_type."""
+        """
+        GET /vault-transactions/?type=deposit filters by transaction_type.
+        """
         url = reverse("all-vault-transactions")
         response = self.client.get(url, {"type": "deposit"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -244,9 +252,11 @@ class VaultTransactionUpdateDeleteTest(BaseVaultOperationsTestCase):
         self.vault_pk = self._create_vault()
         # Deposit to fund the vault
         self.client.post(
-            reverse("vault-deposit", args=[self.vault_pk]), {"amount": "1000.00"}
+            reverse("vault-deposit", args=[self.vault_pk]),
+            {"amount": "1000.00"},
         )
-        # Create a yield transaction directly so patch/delete tests are not skipped
+        # Create a yield transaction directly so patch/delete tests are not
+        # skipped
         vault = Vault.objects.get(pk=self.vault_pk)
         vault.current_balance += Decimal("10.00")
         vault.accumulated_yield += Decimal("10.00")
@@ -270,7 +280,9 @@ class VaultTransactionUpdateDeleteTest(BaseVaultOperationsTestCase):
         self.assertIn("vault", response.data)
 
     def test_delete_yield_transaction(self):
-        """DELETE /vault-transactions/<pk>/ soft-deletes a yield transaction."""
+        """
+        DELETE /vault-transactions/<pk>/ soft-deletes a yield transaction.
+        """
         # Create a separate yield tx so patch test doesn't interfere
         from vaults.models import Vault, VaultTransaction
 
@@ -297,7 +309,8 @@ class VaultTransactionUpdateDeleteTest(BaseVaultOperationsTestCase):
         """PATCH on a non-yield transaction returns 400."""
         # Get a deposit transaction
         tx_list_resp = self.client.get(
-            reverse("vault-transactions", args=[self.vault_pk]), {"type": "deposit"}
+            reverse("vault-transactions", args=[self.vault_pk]),
+            {"type": "deposit"},
         )
         results = tx_list_resp.data.get("results", tx_list_resp.data)
         if not results:
@@ -311,7 +324,8 @@ class VaultTransactionUpdateDeleteTest(BaseVaultOperationsTestCase):
     def test_delete_non_yield_transaction_returns_400(self):
         """DELETE on a non-yield transaction returns 400."""
         tx_list_resp = self.client.get(
-            reverse("vault-transactions", args=[self.vault_pk]), {"type": "deposit"}
+            reverse("vault-transactions", args=[self.vault_pk]),
+            {"type": "deposit"},
         )
         results = tx_list_resp.data.get("results", tx_list_resp.data)
         if not results:
@@ -371,7 +385,9 @@ class VaultYieldExtraTest(BaseVaultOperationsTestCase):
         self.assertIn("accumulated_yield_changed", response.data)
 
     def test_update_yield_with_recalculate(self):
-        """update-yield with recalculate=True recalculates yield transactions."""
+        """
+        update-yield with recalculate=True recalculates yield transactions.
+        """
         from vaults.models import Vault, VaultTransaction
 
         vault_pk = self._create_vault()
@@ -410,7 +426,8 @@ class VaultYieldExtraTest(BaseVaultOperationsTestCase):
 class VaultApplyYieldSuccessTest(BaseVaultOperationsTestCase):
     def test_apply_yield_with_past_last_yield_date(self):
         """
-        Covers count_business_days (lines 19-36), calculate_yield (lines 156-164),
+        Covers count_business_days (lines 19-36),
+        calculate_yield (lines 156-164),
         and apply_yield result > 0 block (lines 187-201) in vaults/models.py.
         """
         import datetime
@@ -425,7 +442,9 @@ class VaultApplyYieldSuccessTest(BaseVaultOperationsTestCase):
 
         # Set last_yield_date to 7 days ago so yield is non-zero
         vault = Vault.objects.get(pk=vault_pk)
-        vault.last_yield_date = datetime.date.today() - datetime.timedelta(days=7)
+        vault.last_yield_date = datetime.date.today() - datetime.timedelta(
+            days=7
+        )
         vault.save()
 
         url = reverse("vault-apply-yield", args=[vault_pk])

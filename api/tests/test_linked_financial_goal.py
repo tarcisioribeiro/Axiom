@@ -28,7 +28,9 @@ class BaseLinkedGoalTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Linked Goal User",
             document_hash="l" * 64,
@@ -89,12 +91,16 @@ class LinkedFinancialGoalModelTest(BaseLinkedGoalTestCase):
         self.task.linked_financial_goal = self.financial_goal
         self.task.save()
         self.task.refresh_from_db()
-        self.assertEqual(self.task.linked_financial_goal_id, self.financial_goal.pk)
+        self.assertEqual(
+            self.task.linked_financial_goal_id, self.financial_goal.pk
+        )
 
     def test_reverse_relation(self):
         self.task.linked_financial_goal = self.financial_goal
         self.task.save()
-        self.assertIn(self.task, self.financial_goal.linked_routine_tasks.all())
+        self.assertIn(
+            self.task, self.financial_goal.linked_routine_tasks.all()
+        )
 
     def test_set_null_on_goal_delete(self):
         self.task.linked_financial_goal = self.financial_goal
@@ -113,7 +119,9 @@ class LinkedFinancialGoalAPITest(BaseLinkedGoalTestCase):
         )
         resp = self.client.post(url, data, format="json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(resp.data["linked_financial_goal"], self.financial_goal.pk)
+        self.assertEqual(
+            resp.data["linked_financial_goal"], self.financial_goal.pk
+        )
 
     def test_create_task_without_linked_goal(self):
         url = reverse("routine-task-list-create")
@@ -127,7 +135,9 @@ class LinkedFinancialGoalAPITest(BaseLinkedGoalTestCase):
         data = self._task_data(linked_financial_goal=self.financial_goal.pk)
         resp = self.client.put(url, data, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data["linked_financial_goal"], self.financial_goal.pk)
+        self.assertEqual(
+            resp.data["linked_financial_goal"], self.financial_goal.pk
+        )
 
     def test_update_task_clears_linked_goal(self):
         self.task.linked_financial_goal = self.financial_goal
@@ -163,7 +173,9 @@ class LinkedFinancialGoalAPITest(BaseLinkedGoalTestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data["results"]
         task_data = next(t for t in results if t["id"] == self.task.pk)
-        self.assertEqual(task_data["linked_financial_goal"], self.financial_goal.pk)
+        self.assertEqual(
+            task_data["linked_financial_goal"], self.financial_goal.pk
+        )
         self.assertEqual(
             task_data["linked_financial_goal_description"],
             self.financial_goal.description,

@@ -27,7 +27,9 @@ class BaseAPITestCase(APITestCase):
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
         self.access_token = str(refresh.access_token)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+        )
 
         self.account = Account.objects.create(
             account_name="TEST",
@@ -110,7 +112,9 @@ class BankReconciliationImportOFXTest(BaseAPITestCase):
         self.assertEqual(stmt_import.total_entries, 2)
         self.assertEqual(stmt_import.file_format, "ofx")
 
-        entries = BankStatementEntry.objects.filter(statement_import=stmt_import)
+        entries = BankStatementEntry.objects.filter(
+            statement_import=stmt_import
+        )
         self.assertEqual(entries.count(), 2)
 
         debit_entry = entries.get(transaction_type="debit")
@@ -132,7 +136,11 @@ class BankReconciliationDuplicateTest(BaseAPITestCase):
         file_obj.name = "extrato.ofx"
         response = self.client.post(
             url,
-            {"file": file_obj, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -142,7 +150,11 @@ class BankReconciliationDuplicateTest(BaseAPITestCase):
         file_obj2.name = "extrato.ofx"
         response2 = self.client.post(
             url,
-            {"file": file_obj2, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj2,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
@@ -176,7 +188,9 @@ class BankReconciliationImportCSVTest(BaseAPITestCase):
         self.assertEqual(stmt_import.status, "completed")
         self.assertEqual(stmt_import.total_entries, 2)
 
-        entries = BankStatementEntry.objects.filter(statement_import=stmt_import)
+        entries = BankStatementEntry.objects.filter(
+            statement_import=stmt_import
+        )
         self.assertEqual(entries.count(), 2)
 
         debit = entries.get(transaction_type="debit")
@@ -205,13 +219,15 @@ class BankReconciliationMalformedFileTest(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("detail", response.data)
 
-        # Import should be marked as failed (or not exist if error before creation)
+        # Import should be marked as failed (or not exist if error before
+        # creation)
         failed = BankStatementImport.objects.filter(status="failed")
         self.assertTrue(failed.exists())
 
 
 class BankReconciliationMatchTest(BaseAPITestCase):
-    """Test 5: Run match — entries receive suggestions when matching expenses exist."""
+    """Test 5: Run match — entries receive suggestions when matching expenses
+    exist."""
 
     def setUp(self):
         super().setUp()
@@ -234,14 +250,20 @@ class BankReconciliationMatchTest(BaseAPITestCase):
         file_obj.name = "extrato.ofx"
         resp = self.client.post(
             url_create,
-            {"file": file_obj, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         import_id = resp.data["id"]
 
         # Run matching
-        url_match = reverse("bank-reconciliation-match", kwargs={"pk": import_id})
+        url_match = reverse(
+            "bank-reconciliation-match", kwargs={"pk": import_id}
+        )
         resp_match = self.client.post(url_match)
         self.assertEqual(resp_match.status_code, status.HTTP_200_OK)
 
@@ -277,12 +299,18 @@ class BankReconciliationEntryAcceptTest(BaseAPITestCase):
         file_obj.name = "extrato.ofx"
         resp = self.client.post(
             url_create,
-            {"file": file_obj, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.import_id = resp.data["id"]
 
-        url_match = reverse("bank-reconciliation-match", kwargs={"pk": self.import_id})
+        url_match = reverse(
+            "bank-reconciliation-match", kwargs={"pk": self.import_id}
+        )
         self.client.post(url_match)
 
         self.debit_entry = BankStatementEntry.objects.get(
@@ -291,7 +319,8 @@ class BankReconciliationEntryAcceptTest(BaseAPITestCase):
 
     def test_accept_match_updates_status(self):
         url = reverse(
-            "bank-reconciliation-entry-update", kwargs={"pk": self.debit_entry.pk}
+            "bank-reconciliation-entry-update",
+            kwargs={"pk": self.debit_entry.pk},
         )
         response = self.client.patch(
             url,
@@ -318,7 +347,11 @@ class BankReconciliationEntryIgnoreTest(BaseAPITestCase):
         file_obj.name = "extrato.ofx"
         resp = self.client.post(
             url_create,
-            {"file": file_obj, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.import_id = resp.data["id"]
@@ -328,7 +361,8 @@ class BankReconciliationEntryIgnoreTest(BaseAPITestCase):
 
     def test_ignore_entry_updates_counts(self):
         url = reverse(
-            "bank-reconciliation-entry-update", kwargs={"pk": self.debit_entry.pk}
+            "bank-reconciliation-entry-update",
+            kwargs={"pk": self.debit_entry.pk},
         )
         response = self.client.patch(url, {"status": "ignored"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -350,7 +384,11 @@ class BankReconciliationEntryUnmatchedTest(BaseAPITestCase):
         file_obj.name = "extrato.ofx"
         resp = self.client.post(
             url_create,
-            {"file": file_obj, "account": self.account.id, "file_format": "ofx"},
+            {
+                "file": file_obj,
+                "account": self.account.id,
+                "file_format": "ofx",
+            },
             format="multipart",
         )
         self.import_id = resp.data["id"]
@@ -360,9 +398,12 @@ class BankReconciliationEntryUnmatchedTest(BaseAPITestCase):
 
     def test_mark_unmatched(self):
         url = reverse(
-            "bank-reconciliation-entry-update", kwargs={"pk": self.debit_entry.pk}
+            "bank-reconciliation-entry-update",
+            kwargs={"pk": self.debit_entry.pk},
         )
-        response = self.client.patch(url, {"status": "unmatched"}, format="json")
+        response = self.client.patch(
+            url, {"status": "unmatched"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.debit_entry.refresh_from_db()

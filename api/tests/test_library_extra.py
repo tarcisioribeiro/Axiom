@@ -1,5 +1,6 @@
 """
-Additional library view tests — reading goals, reading queue, library dashboard,
+Additional library view tests — reading goals, reading queue, library
+dashboard,
 book highlights, and detail/update/delete for readings, summaries.
 """
 
@@ -25,7 +26,9 @@ class BaseLibraryTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Lib User",
             document_hash="l" * 64,
@@ -76,7 +79,9 @@ class ReadingDetailViewTest(BaseLibraryTestCase):
 
     def test_update_reading(self):
         url = reverse("reading-detail", args=[self.reading.pk])
-        response = self.client.patch(url, {"pages_read": 50, "book": self.book.pk})
+        response = self.client.patch(
+            url, {"pages_read": 50, "book": self.book.pk}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_reading(self):
@@ -222,7 +227,10 @@ class BookHighlightViewTest(BaseLibraryTestCase):
             url,
             {
                 "book": self.book.pk,
-                "text": "Somebody must have made a false accusation against Josef K.",
+                "text": (
+                    "Somebody must have made a false"
+                    " accusation against Josef K."
+                ),
                 "page": 1,
                 "chapter": "First Chapter",
                 "owner": self.member.pk,
@@ -275,7 +283,9 @@ class BookMarkAsReadViewTest(BaseLibraryTestCase):
 
         from library.models import Reading
 
-        readings = Reading.objects.filter(book=self.book, deleted_at__isnull=True)
+        readings = Reading.objects.filter(
+            book=self.book, deleted_at__isnull=True
+        )
         self.assertEqual(readings.count(), 5)
         total_pages = sum(r.pages_read for r in readings)
         self.assertEqual(total_pages, self.book.pages)
@@ -306,9 +316,9 @@ class BookMarkAsReadViewTest(BaseLibraryTestCase):
         from library.models import Reading
 
         readings = list(
-            Reading.objects.filter(book=book, deleted_at__isnull=True).order_by(
-                "reading_date"
-            )
+            Reading.objects.filter(
+                book=book, deleted_at__isnull=True
+            ).order_by("reading_date")
         )
         self.assertEqual(readings[0].pages_read, 3)
         self.assertEqual(readings[1].pages_read, 3)

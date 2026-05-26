@@ -35,7 +35,9 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
 
 urlpatterns = [
     # Vault config (senha mestre)
-    path("vault/export/", VaultExportZipView.as_view(), name="vault-export-zip"),
+    path(
+        "vault/export/", VaultExportZipView.as_view(), name="vault-export-zip"
+    ),
     path("vault/status/", VaultStatusView.as_view(), name="vault-status"),
     path("vault/setup/", VaultSetupView.as_view(), name="vault-setup"),
     path("vault/unlock/", VaultUnlockView.as_view(), name="vault-unlock"),
@@ -52,9 +54,15 @@ urlpatterns = [
         name="security-dashboard-stats",
     ),
     # Passwords
-    path("passwords/", PasswordListCreateView.as_view(), name="password-list-create"),
     path(
-        "passwords/generate/", PasswordGenerateView.as_view(), name="password-generate"
+        "passwords/",
+        PasswordListCreateView.as_view(),
+        name="password-list-create",
+    ),
+    path(
+        "passwords/generate/",
+        PasswordGenerateView.as_view(),
+        name="password-generate",
     ),
     path(
         "passwords/health/",
@@ -71,7 +79,11 @@ urlpatterns = [
         PasswordImportConfirmView.as_view(),
         name="password-import-confirm",
     ),
-    path("passwords/<int:pk>/", PasswordDetailView.as_view(), name="password-detail"),
+    path(
+        "passwords/<int:pk>/",
+        PasswordDetailView.as_view(),
+        name="password-detail",
+    ),
     path(
         "passwords/<int:pk>/reveal/",
         PasswordRevealView.as_view(),
@@ -110,10 +122,20 @@ urlpatterns = [
         name="stored-account-reveal",
     ),
     # Archives
-    path("archives/", ArchiveListCreateView.as_view(), name="archive-list-create"),
-    path("archives/<int:pk>/", ArchiveDetailView.as_view(), name="archive-detail"),
     path(
-        "archives/<int:pk>/reveal/", ArchiveRevealView.as_view(), name="archive-reveal"
+        "archives/",
+        ArchiveListCreateView.as_view(),
+        name="archive-list-create",
+    ),
+    path(
+        "archives/<int:pk>/",
+        ArchiveDetailView.as_view(),
+        name="archive-detail",
+    ),
+    path(
+        "archives/<int:pk>/reveal/",
+        ArchiveRevealView.as_view(),
+        name="archive-reveal",
     ),
     path(
         "archives/<int:pk>/download/",
@@ -121,7 +143,11 @@ urlpatterns = [
         name="archive-download",
     ),
     # Activity Logs
-    path("activity-logs/", ActivityLogListView.as_view(), name="activity-log-list"),
+    path(
+        "activity-logs/",
+        ActivityLogListView.as_view(),
+        name="activity-log-list",
+    ),
     # Credential Share Tokens
     path(
         "passwords/<int:pk>/share-tokens/",

@@ -39,7 +39,10 @@ class Account(BaseModel):
         max_length=100, choices=ACCOUNT_TYPES, verbose_name="Tipo de Conta"
     )
     account_image = models.ImageField(
-        upload_to="accounts/", blank=True, null=True, verbose_name="Logo da conta"
+        upload_to="accounts/",
+        blank=True,
+        null=True,
+        verbose_name="Logo da conta",
     )
     is_active = models.BooleanField(verbose_name="Ativa", default=True)
     _account_number = models.TextField(

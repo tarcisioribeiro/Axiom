@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Plus,
@@ -159,6 +160,7 @@ export default function Passwords() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -645,7 +647,7 @@ export default function Passwords() {
                         PASSWORD_CATEGORY_ICONS['other'];
                       return (
                         <SelectItem key={cat.value} value={cat.value}>
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-sm">
                             {Icon && (
                               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                             )}

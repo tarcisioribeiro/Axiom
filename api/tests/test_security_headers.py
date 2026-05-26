@@ -46,26 +46,34 @@ class CSPHeaderTest(TestCase):
 
     def test_style_src_has_no_unsafe_inline(self):
         csp = self._get_csp()
-        self.assertNotEqual(csp, "", "Content-Security-Policy header must be present")
+        self.assertNotEqual(
+            csp, "", "Content-Security-Policy header must be present"
+        )
         # Extract the style-src directive value
         match = re.search(r"style-src\s+([^;]+)", csp)
-        self.assertIsNotNone(match, "style-src directive must be present in CSP")
+        self.assertIsNotNone(
+            match, "style-src directive must be present in CSP"
+        )
         style_src = match.group(1)
         self.assertNotIn(
             "'unsafe-inline'",
             style_src,
-            f"'unsafe-inline' must not appear in style-src; got: {style_src!r}",
+            f"'unsafe-inline' must not appear in style-src;"
+            f" got: {style_src!r}",
         )
 
     def test_script_src_has_no_unsafe_inline(self):
         csp = self._get_csp()
         match = re.search(r"script-src\s+([^;]+)", csp)
-        self.assertIsNotNone(match, "script-src directive must be present in CSP")
+        self.assertIsNotNone(
+            match, "script-src directive must be present in CSP"
+        )
         script_src = match.group(1)
         self.assertNotIn(
             "'unsafe-inline'",
             script_src,
-            f"'unsafe-inline' must not appear in script-src; got: {script_src!r}",
+            f"'unsafe-inline' must not appear in script-src;"
+            f" got: {script_src!r}",
         )
 
     # ------------------------------------------------------------------
@@ -80,7 +88,8 @@ class CSPHeaderTest(TestCase):
         self.assertRegex(
             style_src,
             r"'nonce-[A-Za-z0-9+/=]+'",
-            f"A per-request nonce must appear in style-src; got: {style_src!r}",
+            f"A per-request nonce must appear in style-src;"
+            f" got: {style_src!r}",
         )
 
     def test_csp_nonce_present_in_script_src(self):
@@ -91,11 +100,14 @@ class CSPHeaderTest(TestCase):
         self.assertRegex(
             script_src,
             r"'nonce-[A-Za-z0-9+/=]+'",
-            f"A per-request nonce must appear in script-src; got: {script_src!r}",
+            f"A per-request nonce must appear in script-src;"
+            f" got: {script_src!r}",
         )
 
     def test_nonce_differs_across_requests(self):
-        """Each request must receive a unique nonce (no static/reused nonce)."""
+        """
+        Each request must receive a unique nonce (no static/reused nonce).
+        """
         nonces = set()
         for _ in range(3):
             csp = self._get_csp()
@@ -122,7 +134,9 @@ class CSPHeaderTest(TestCase):
 
     def test_csp_header_present_on_json_response(self):
         csp = self._get_csp()
-        self.assertNotEqual(csp, "", "Content-Security-Policy header must be set")
+        self.assertNotEqual(
+            csp, "", "Content-Security-Policy header must be set"
+        )
 
     def test_x_content_type_options_nosniff(self):
         url = reverse("health-check")

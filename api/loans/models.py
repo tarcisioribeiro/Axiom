@@ -1,7 +1,11 @@
 from django.db import models
 
 from accounts.models import Account
-from app.models import LOAN_STATUS_CHOICES, PAYMENT_FREQUENCY_CHOICES, BaseModel
+from app.models import (
+    LOAN_STATUS_CHOICES,
+    PAYMENT_FREQUENCY_CHOICES,
+    BaseModel,
+)
 from expenses.models import EXPENSES_CATEGORIES
 from members.models import Member
 
@@ -11,7 +15,11 @@ class Loan(BaseModel):
         max_length=200, verbose_name="Descrição", null=False, blank=False
     )
     value = models.DecimalField(
-        verbose_name="Valor", null=False, blank=False, max_digits=10, decimal_places=2
+        verbose_name="Valor",
+        null=False,
+        blank=False,
+        max_digits=10,
+        decimal_places=2,
     )
     payed_value = models.DecimalField(
         verbose_name="Valor Pago",
@@ -30,7 +38,11 @@ class Loan(BaseModel):
         verbose_name="Categoria",
     )
     account = models.ForeignKey(
-        Account, on_delete=models.PROTECT, null=False, blank=False, verbose_name="Conta"
+        Account,
+        on_delete=models.PROTECT,
+        null=False,
+        blank=False,
+        verbose_name="Conta",
     )
     benefited = models.ForeignKey(
         Member,
@@ -56,7 +68,9 @@ class Loan(BaseModel):
         null=True,
         blank=True,
     )
-    installments = models.IntegerField(verbose_name="Número de Parcelas", default=1)
+    installments = models.IntegerField(
+        verbose_name="Número de Parcelas", default=1
+    )
     due_date = models.DateField(
         verbose_name="Data de Vencimento", null=True, blank=True
     )
@@ -73,7 +87,10 @@ class Loan(BaseModel):
         default="monthly",
     )
     late_fee = models.DecimalField(
-        verbose_name="Multa por Atraso", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Multa por Atraso",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     guarantor = models.ForeignKey(
         Member,
@@ -153,9 +170,15 @@ class LoanInstallment(BaseModel):
         related_name="installment_schedule",
         verbose_name="Empréstimo",
     )
-    installment_number = models.PositiveIntegerField(verbose_name="Número da Parcela")
+    installment_number = models.PositiveIntegerField(
+        verbose_name="Número da Parcela"
+    )
     value = models.DecimalField(
-        max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Valor"
+        max_digits=10,
+        decimal_places=2,
+        null=False,
+        blank=False,
+        verbose_name="Valor",
     )
     due_date = models.DateField(verbose_name="Data de Vencimento")
     payed = models.BooleanField(default=False, verbose_name="Pago")

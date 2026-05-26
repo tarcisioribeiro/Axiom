@@ -6,7 +6,9 @@ from rest_framework import serializers
 from app.config import cfg
 
 
-def validate_budget_limit(category, value, month, year, user, exclude_expense_id=None):
+def validate_budget_limit(
+    category, value, month, year, user, exclude_expense_id=None
+):
     """
     Check whether adding `value` to the given category/month/year would exceed
     the user's configured budget limit.
@@ -48,7 +50,9 @@ def validate_budget_limit(category, value, month, year, user, exclude_expense_id
     if exclude_expense_id is not None:
         qs = qs.exclude(pk=exclude_expense_id)
 
-    current_total = qs.aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+    current_total = qs.aggregate(total=Sum("value"))["total"] or Decimal(
+        "0.00"
+    )
     projected_total = current_total + Decimal(str(value))
 
     if projected_total <= budget.limit_amount:
@@ -67,7 +71,8 @@ def validate_budget_limit(category, value, month, year, user, exclude_expense_id
         raise serializers.ValidationError(
             {
                 "budget": (
-                    f"Limite de orçamento excedido para a categoria '{category}'. "
+                    f"Limite de orçamento excedido"
+                    f" para a categoria '{category}'. "
                     f"Limite: R$ {budget.limit_amount}, "
                     f"Total projetado: R$ {projected_total} "
                     f"(excesso: R$ {overage})."

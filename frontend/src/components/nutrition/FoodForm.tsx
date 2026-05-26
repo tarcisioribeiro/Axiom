@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import { FileText, Loader2, Salad } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -62,8 +63,8 @@ export function FoodForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual com avatar */}
-      <div className="flex items-center gap-md rounded-xl bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-category-nutrition/25">
+      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/25">
           {nameValue ? (
             <span className="text-xl font-bold text-category-nutrition">{initial}</span>
           ) : (

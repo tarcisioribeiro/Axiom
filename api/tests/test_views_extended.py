@@ -1,7 +1,8 @@
 """
 Extended view tests to increase overall backend coverage.
 
-Covers: library, personal_planning, payables, loans, budgets, dashboard, expenses
+Covers: library, personal_planning, payables, loans, budgets, dashboard,
+expenses
 """
 
 from datetime import date, time
@@ -34,7 +35,9 @@ class BaseWithMemberTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
         # Many views filter by owner__user=request.user
         self.member = Member.objects.create(
@@ -70,7 +73,7 @@ class AuthorViewTest(BaseWithMemberTestCase):
         url = reverse("author-list-create")
         response = self.client.post(url, self._author_data())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["name"], "Marcus Aurelius")  # type: ignore
+        self.assertEqual(response.data["name"], "Marcus Aurelius")  # type: ignore  # noqa: E501
 
     def test_retrieve_author(self):
         from library.models import Author
@@ -151,7 +154,9 @@ class BookViewTest(BaseWithMemberTestCase):
         super().setUp()
         from library.models import Author, Publisher
 
-        self.author = Author.objects.create(name="Dostoevsky", owner=self.member)
+        self.author = Author.objects.create(
+            name="Dostoevsky", owner=self.member
+        )
         self.publisher = Publisher.objects.create(
             name="Penguin Classics", owner=self.member
         )
@@ -225,7 +230,9 @@ class SummaryViewTest(BaseWithMemberTestCase):
         from library.models import Author, Book, Publisher
 
         author = Author.objects.create(name="Tolstoy", owner=self.member)
-        publisher = Publisher.objects.create(name="Oxford Press", owner=self.member)
+        publisher = Publisher.objects.create(
+            name="Oxford Press", owner=self.member
+        )
         self.book = Book.objects.create(
             title="War and Peace",
             pages=1200,
@@ -267,7 +274,9 @@ class ReadingViewTest(BaseWithMemberTestCase):
         from library.models import Author, Book, Publisher
 
         author = Author.objects.create(name="Camus", owner=self.member)
-        publisher = Publisher.objects.create(name="Gallimard", owner=self.member)
+        publisher = Publisher.objects.create(
+            name="Gallimard", owner=self.member
+        )
         self.book = Book.objects.create(
             title="The Stranger",
             pages=123,
@@ -636,7 +645,11 @@ class BudgetViewTest(BaseWithMemberTestCase):
         # 201 or 400 (if validation fails), just check it's not 5xx
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_201_CREATED,
+                status.HTTP_400_BAD_REQUEST,
+            ],
         )
 
 

@@ -17,7 +17,11 @@ class Transfer(BaseModel):
         max_length=200, null=False, blank=False, verbose_name="Descrição"
     )
     value = models.DecimalField(
-        verbose_name="Valor", null=False, blank=False, decimal_places=2, max_digits=10
+        verbose_name="Valor",
+        null=False,
+        blank=False,
+        decimal_places=2,
+        max_digits=10,
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
     horary = models.TimeField(verbose_name="Horário", null=False, blank=False)
@@ -84,7 +88,10 @@ class Transfer(BaseModel):
         verbose_name="Processado em", null=True, blank=True
     )
     confirmation_code = models.CharField(
-        max_length=50, verbose_name="Código de Confirmação", null=True, blank=True
+        max_length=50,
+        verbose_name="Código de Confirmação",
+        null=True,
+        blank=True,
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
     receipt = models.FileField(
@@ -162,7 +169,8 @@ class FixedTransfer(BaseModel):
     Template para transferências fixas mensais recorrentes.
     Exemplo: "Dia 5, R$800 para conta conjunta".
 
-    A geração é manual via endpoint /fixed-transfers/generate/ (análogo a FixedExpense).
+    A geração é manual via endpoint /fixed-transfers/generate/
+    (análogo a FixedExpense).
     """
 
     description = models.CharField(
@@ -240,7 +248,8 @@ class FixedTransfer(BaseModel):
                 raise ValidationError(
                     {
                         "destiny_account": (
-                            "A conta de destino deve ser diferente da de origem."
+                            "A conta de destino deve ser diferente"
+                            " da de origem."
                         )
                     }
                 )
@@ -254,7 +263,9 @@ class FixedTransfer(BaseModel):
 
 
 class FixedTransferGenerationLog(BaseModel):
-    """Histórico de geração de transferências fixas por mês. Previne duplicação."""
+    """
+    Histórico de geração de transferências fixas por mês. Previne duplicação.
+    """
 
     month = models.CharField(
         max_length=7,

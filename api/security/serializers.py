@@ -42,11 +42,18 @@ class PasswordSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "last_password_change", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "last_password_change",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer para criação/atualização de senhas (aceita senha em texto)."""
+    """
+    Serializer para criação/atualização de senhas (aceita senha em texto).
+    """
 
     password = serializers.CharField(
         write_only=True, required=True, style={"input_type": "password"}
@@ -108,7 +115,9 @@ class StoredCreditCardSerializer(serializers.ModelSerializer):
     """Serializer para visualização de cartões (número mascarado)."""
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
-    flag_display = serializers.CharField(source="get_flag_display", read_only=True)
+    flag_display = serializers.CharField(
+        source="get_flag_display", read_only=True
+    )
     card_number_masked = serializers.CharField(read_only=True)
     finance_card_name = serializers.CharField(
         source="finance_card.name", read_only=True, allow_null=True
@@ -134,14 +143,24 @@ class StoredCreditCardSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "card_number_masked", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "card_number_masked",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer para criação/atualização de cartões (aceita dados sensíveis)."""
+    """
+    Serializer para criação/atualização de cartões (aceita dados
+    sensíveis).
+    """
 
     card_number = serializers.CharField(write_only=True, required=True)
-    security_code = serializers.CharField(write_only=True, required=True, max_length=4)
+    security_code = serializers.CharField(
+        write_only=True, required=True, max_length=4
+    )
 
     class Meta:
         model = StoredCreditCard
@@ -160,7 +179,10 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_card_number(self, value):
-        from security.models import _normalize_card_number, _validate_card_number
+        from security.models import (
+            _normalize_card_number,
+            _validate_card_number,
+        )
 
         normalized = _normalize_card_number(value)
         try:
@@ -258,14 +280,21 @@ class StoredBankAccountSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "account_number_masked", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "account_number_masked",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class StoredBankAccountCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criação/atualização de contas bancárias."""
 
     account_number = serializers.CharField(write_only=True, required=True)
-    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    password = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
     digital_password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
@@ -358,7 +387,8 @@ ALLOWED_UPLOAD_TYPES = {
     ".zip": "application/zip",
     ".doc": "application/msword",
     ".docx": (
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        "application/vnd.openxmlformats-officedocument"
+        ".wordprocessingml.document"
     ),
 }
 
@@ -399,7 +429,8 @@ def validate_uploaded_file(value):
         header = value.read(max_read)
         value.seek(0)
         if not any(
-            header[offset : offset + len(sig)] == sig for sig, offset in signatures
+            header[offset : offset + len(sig)] == sig
+            for sig, offset in signatures
         ):
             raise serializers.ValidationError(
                 "O conteúdo do arquivo não corresponde à extensão informada."
@@ -426,7 +457,9 @@ class ArchiveSerializer(serializers.ModelSerializer):
     has_text = serializers.SerializerMethodField()
     has_file = serializers.SerializerMethodField()
     tags = serializers.ListField(
-        child=serializers.CharField(max_length=100), required=False, default=list
+        child=serializers.CharField(max_length=100),
+        required=False,
+        default=list,
     )
 
     class Meta:
@@ -551,9 +584,15 @@ class ArchiveRevealSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(read_only=True)
-    text_content = serializers.CharField(read_only=True, allow_null=True, default=None)
-    error = serializers.CharField(read_only=True, allow_null=True, default=None)
-    error_type = serializers.CharField(read_only=True, allow_null=True, default=None)
+    text_content = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
+    error = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
+    error_type = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
 
 
 # ============================================================================
@@ -580,17 +619,23 @@ class CreateShareTokenSerializer(serializers.Serializer):
         child=serializers.IPAddressField(),
         required=False,
         default=list,
-        help_text="IPs autorizados a resgatar este token. Vazio = qualquer IP.",
+        help_text=(
+            "IPs autorizados a resgatar este token." " Vazio = qualquer IP."
+        ),
     )
 
 
 class CredentialShareTokenSerializer(serializers.ModelSerializer):
     """Serializer para visualização de tokens de compartilhamento."""
 
-    is_token_valid = serializers.BooleanField(source="is_valid", read_only=True)
+    is_token_valid = serializers.BooleanField(
+        source="is_valid", read_only=True
+    )
     is_expired = serializers.BooleanField(read_only=True)
     is_exhausted = serializers.BooleanField(read_only=True)
-    password_title = serializers.CharField(source="password.title", read_only=True)
+    password_title = serializers.CharField(
+        source="password.title", read_only=True
+    )
 
     class Meta:
         model = CredentialShareToken
@@ -613,7 +658,9 @@ class CredentialShareTokenSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class CredentialShareTokenCreateResponseSerializer(serializers.ModelSerializer):
+class CredentialShareTokenCreateResponseSerializer(
+    serializers.ModelSerializer
+):
     """
     Serializer para a resposta de criação de token.
 
@@ -622,10 +669,14 @@ class CredentialShareTokenCreateResponseSerializer(serializers.ModelSerializer):
     no fragment (#key=...) do link de compartilhamento.
     """
 
-    is_token_valid = serializers.BooleanField(source="is_valid", read_only=True)
+    is_token_valid = serializers.BooleanField(
+        source="is_valid", read_only=True
+    )
     is_expired = serializers.BooleanField(read_only=True)
     is_exhausted = serializers.BooleanField(read_only=True)
-    password_title = serializers.CharField(source="password.title", read_only=True)
+    password_title = serializers.CharField(
+        source="password.title", read_only=True
+    )
     token_key = serializers.SerializerMethodField(
         help_text="Chave Fernet (base64) para decriptação do snapshot. "
         "Exibida apenas na criação — não fica armazenada no servidor."
@@ -671,7 +722,9 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         source="user.username", read_only=True, allow_null=True
     )
-    action_display = serializers.CharField(source="get_action_display", read_only=True)
+    action_display = serializers.CharField(
+        source="get_action_display", read_only=True
+    )
 
     class Meta:
         model = ActivityLog

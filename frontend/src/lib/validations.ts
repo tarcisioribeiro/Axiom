@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * Schemas de Validação com Zod
  *

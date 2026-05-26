@@ -32,7 +32,12 @@ def get_budget_status(
     target_month = month if month is not None else now.month
 
     key = _cache_key(
-        "budget_status", user.pk, target_year, target_month, expense_start, expense_end
+        "budget_status",
+        user.pk,
+        target_year,
+        target_month,
+        expense_start,
+        expense_end,
     )
     cached = cache.get(key)
     if cached is not None:
@@ -47,7 +52,9 @@ def get_budget_status(
             month=target_month,
             year=target_year,
             is_deleted=False,
-        ).values("category", "limit_amount", "rollover_amount", "rollover_enabled")
+        ).values(
+            "category", "limit_amount", "rollover_amount", "rollover_enabled"
+        )
     )
 
     if expense_start is not None and expense_end is not None:
@@ -74,7 +81,11 @@ def get_budget_status(
         effective_limit = float(budget["limit_amount"]) + float(
             budget["rollover_amount"] or 0
         )
-        pct = (float(spent) / effective_limit * 100) if effective_limit > 0 else 0
+        pct = (
+            (float(spent) / effective_limit * 100)
+            if effective_limit > 0
+            else 0
+        )
         result.append(
             {
                 "category": budget["category"],

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { addDays, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

@@ -32,7 +32,13 @@ def get_workout_summary(
                 owner__user=user,
                 date__range=(period_start, period_end),
                 is_deleted=False,
-            ).values("date", "workout_day__name", "started_at", "finished_at", "notes")
+            ).values(
+                "date",
+                "workout_day__name",
+                "started_at",
+                "finished_at",
+                "notes",
+            )
         )
 
         result = []
@@ -94,14 +100,20 @@ def get_nutrition_summary(
                 date__range=(period_start, period_end),
                 is_deleted=False,
             ).values(
-                "date", "meal_type__name", "menu_option__name", "is_free_meal", "notes"
+                "date",
+                "meal_type__name",
+                "menu_option__name",
+                "is_free_meal",
+                "notes",
             )
         )
 
         free_meals = sum(1 for entry in logs if entry["is_free_meal"])
         recent = [
             {
-                "date": entry["date"].strftime("%d/%m/%Y") if entry["date"] else "",
+                "date": (
+                    entry["date"].strftime("%d/%m/%Y") if entry["date"] else ""
+                ),
                 "meal": entry["meal_type__name"] or "Refeição",
                 "option": entry["menu_option__name"] or "Livre",
                 "free": entry["is_free_meal"],

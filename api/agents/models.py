@@ -70,12 +70,18 @@ class AgentEmbedding(models.Model):
         verbose_name="Tipo de Fonte",
     )
     source_id = models.UUIDField(verbose_name="ID da Fonte")
-    source_title = models.CharField(max_length=255, verbose_name="Título da Fonte")
+    source_title = models.CharField(
+        max_length=255, verbose_name="Título da Fonte"
+    )
     content = models.TextField(verbose_name="Conteúdo")
     embedding = VectorField(dimensions=768, verbose_name="Embedding")
     is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Criado em"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, verbose_name="Atualizado em"
+    )
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -117,7 +123,8 @@ class AgentEmbedding(models.Model):
 
 class EmbeddingDocument(BaseModel):
     """
-    DEPRECATED: Substituído por AgentEmbedding (VectorField real, schema vectors).
+    DEPRECATED: Substituído por AgentEmbedding (VectorField real,
+    schema vectors).
     Mantido com managed=True para não quebrar o migration history.
     Não deve ser usado em novos fluxos — use AgentEmbedding.
     """
@@ -144,7 +151,10 @@ class EmbeddingDocument(BaseModel):
     content = models.TextField(verbose_name="Conteúdo do Chunk")
     embedding_json = models.TextField(
         verbose_name="Embedding (JSON)",
-        help_text="Lista de floats serializada como JSON. Usada com pgvector em prod.",
+        help_text=(
+            "Lista de floats serializada como JSON."
+            " Usada com pgvector em prod."
+        ),
         blank=True,
         default="[]",
     )

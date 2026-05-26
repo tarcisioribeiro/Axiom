@@ -4,7 +4,11 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from accounts.models import Account
-from app.models import PAYMENT_FREQUENCY_CHOICES, PAYMENT_METHOD_CHOICES, BaseModel
+from app.models import (
+    PAYMENT_FREQUENCY_CHOICES,
+    PAYMENT_METHOD_CHOICES,
+    BaseModel,
+)
 
 
 class Tag(BaseModel):
@@ -14,7 +18,9 @@ class Tag(BaseModel):
     Exemplos: 'filho', 'pet', 'viagem-europa-2025', 'trabalho'.
     """
 
-    name = models.CharField(max_length=50, null=False, blank=False, verbose_name="Nome")
+    name = models.CharField(
+        max_length=50, null=False, blank=False, verbose_name="Nome"
+    )
     color = models.CharField(
         max_length=7,
         default="#6366f1",
@@ -76,7 +82,11 @@ class Expense(BaseModel):
         max_length=100, null=False, blank=False, verbose_name="Descrição"
     )
     value = models.DecimalField(
-        null=False, blank=False, verbose_name="Valor", max_digits=10, decimal_places=2
+        null=False,
+        blank=False,
+        verbose_name="Valor",
+        max_digits=10,
+        decimal_places=2,
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
     horary = models.TimeField(verbose_name="Horário", null=True, blank=True)
@@ -123,7 +133,9 @@ class Expense(BaseModel):
         blank=True,
     )
     notes = models.TextField(verbose_name="Observações", null=True, blank=True)
-    recurring = models.BooleanField(verbose_name="Despesa Recorrente", default=False)
+    recurring = models.BooleanField(
+        verbose_name="Despesa Recorrente", default=False
+    )
     frequency = models.CharField(
         max_length=20,
         choices=PAYMENT_FREQUENCY_CHOICES,
@@ -183,7 +195,10 @@ class Expense(BaseModel):
     auto_categorized = models.BooleanField(
         default=False,
         verbose_name="Categorizado Automaticamente",
-        help_text="Categoria preenchida automaticamente por uma regra de categorização",
+        help_text=(
+            "Categoria preenchida automaticamente por uma regra de"
+            " categorização"
+        ),
     )
     is_initial_balance = models.BooleanField(
         default=False,
@@ -399,7 +414,8 @@ class FixedExpenseGenerationLog(BaseModel):
 
 class CategorizationRule(BaseModel):
     """
-    Regra para categorização automática de despesas com base no estabelecimento.
+    Regra para categorização automática de despesas com base no
+    estabelecimento.
 
     Quando uma despesa é criada com categoria 'others' e merchant preenchido,
     a primeira regra ativa cujo merchant_contains esteja contido no merchant
