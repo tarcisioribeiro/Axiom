@@ -3,7 +3,8 @@ Tests for all Django signal handlers.
 
 Covers:
 - accounts/signals.py  — initial revenue on account creation
-                         (balance updates are covered by tests/test_accounts.py)
+                         (balance updates are covered by
+                          tests/test_accounts.py)
 - credit_cards/signals.py — bill total recalculation, bill defaults
 - transfers/signals.py    — auto-create expense/revenue, cleanup on delete
 - payables/signals.py     — paid_value sync
@@ -43,7 +44,9 @@ def _make_member(name="Test Member", document_hash=None):
         # Use a unique hash derived from the name to avoid collisions
         import hashlib
 
-        document_hash = hashlib.md5(name.encode()).hexdigest().ljust(64, "0")[:64]
+        document_hash = (
+            hashlib.md5(name.encode()).hexdigest().ljust(64, "0")[:64]
+        )
     return Member.objects.create(
         name=name,
         document_hash=document_hash,
@@ -86,7 +89,10 @@ def _make_revenue(account, value="100.00", received=True, **kwargs):
 
 
 class AccountInitialRevenueSignalTest(TestCase):
-    """create_initial_revenue_on_account_creation creates Revenue for new accounts."""
+    """
+    create_initial_revenue_on_account_creation creates Revenue for new
+    accounts.
+    """
 
     def test_initial_revenue_created_when_account_has_positive_balance(self):
         account = Account.objects.create(
@@ -96,7 +102,9 @@ class AccountInitialRevenueSignalTest(TestCase):
             is_active=True,
             current_balance=Decimal("500.00"),
         )
-        revenues = Revenue.objects.filter(account=account, description="Saldo inicial")
+        revenues = Revenue.objects.filter(
+            account=account, description="Saldo inicial"
+        )
         self.assertEqual(revenues.count(), 1)
         self.assertEqual(revenues.first().value, Decimal("500.00"))
 
@@ -108,7 +116,9 @@ class AccountInitialRevenueSignalTest(TestCase):
             is_active=True,
             current_balance=Decimal("0.00"),
         )
-        revenues = Revenue.objects.filter(account=account, description="Saldo inicial")
+        revenues = Revenue.objects.filter(
+            account=account, description="Saldo inicial"
+        )
         self.assertEqual(revenues.count(), 0)
 
     def test_initial_revenue_uses_opening_date_when_set(self):
@@ -135,7 +145,9 @@ class AccountInitialRevenueSignalTest(TestCase):
         # Saving again should NOT create another initial revenue
         account.account_name = "UpdateAcc2"
         account.save()
-        revenues = Revenue.objects.filter(account=account, description="Saldo inicial")
+        revenues = Revenue.objects.filter(
+            account=account, description="Saldo inicial"
+        )
         self.assertEqual(revenues.count(), 1)
 
 
@@ -306,8 +318,12 @@ class TransferSignalTest(TestCase):
             account=self.dest,
         ).first()
 
-        self.assertIsNotNone(expense, "Expense should be created for origin account")
-        self.assertIsNotNone(revenue, "Revenue should be created for dest account")
+        self.assertIsNotNone(
+            expense, "Expense should be created for origin account"
+        )
+        self.assertIsNotNone(
+            revenue, "Revenue should be created for dest account"
+        )
         self.assertEqual(expense.value, Decimal("200.00"))
         self.assertEqual(revenue.value, Decimal("200.00"))
 
@@ -331,17 +347,27 @@ class TransferSignalTest(TestCase):
 
     def test_no_expense_revenue_when_transfer_not_completed(self):
         transfer = self._make_transfer(transfered=False)
-        self.assertFalse(Expense.objects.filter(related_transfer=transfer).exists())
-        self.assertFalse(Revenue.objects.filter(related_transfer=transfer).exists())
+        self.assertFalse(
+            Expense.objects.filter(related_transfer=transfer).exists()
+        )
+        self.assertFalse(
+            Revenue.objects.filter(related_transfer=transfer).exists()
+        )
 
     def test_no_duplicate_expense_on_transfer_update(self):
-        """Saving the same transfer again must not create duplicate transactions."""
+        """
+        Saving the same transfer again must not create duplicate
+        transactions.
+        """
         transfer = self._make_transfer(transfered=True)
-        initial_count = Expense.objects.filter(related_transfer=transfer).count()
+        initial_count = Expense.objects.filter(
+            related_transfer=transfer
+        ).count()
         transfer.notes = "updated"
         transfer.save()
         self.assertEqual(
-            Expense.objects.filter(related_transfer=transfer).count(), initial_count
+            Expense.objects.filter(related_transfer=transfer).count(),
+            initial_count,
         )
 
     def test_related_transactions_deleted_when_transfer_deleted(self):
@@ -423,10 +449,16 @@ class PayableSignalTest(TestCase):
 
     def test_paid_value_sums_multiple_expenses(self):
         _make_expense(
-            self.account, value="100.00", payed=True, related_payable=self.payable
+            self.account,
+            value="100.00",
+            payed=True,
+            related_payable=self.payable,
         )
         _make_expense(
-            self.account, value="50.00", payed=True, related_payable=self.payable
+            self.account,
+            value="50.00",
+            payed=True,
+            related_payable=self.payable,
         )
         self.payable.refresh_from_db()
         self.assertEqual(self.payable.paid_value, Decimal("150.00"))
@@ -434,9 +466,13 @@ class PayableSignalTest(TestCase):
     def test_soft_deleted_expense_excluded_from_paid_value(self):
         """is_deleted=True expenses are excluded from the paid_value total."""
         exp = _make_expense(
-            self.account, value="100.00", payed=True, related_payable=self.payable
+            self.account,
+            value="100.00",
+            payed=True,
+            related_payable=self.payable,
         )
-        # Soft-delete by setting is_deleted and saving via update (bypasses signal)
+        # Soft-delete by setting is_deleted and saving via update (bypasses
+        # signal)
         Expense.objects.filter(pk=exp.pk).update(is_deleted=True)
         # Trigger signal by saving another expense to force recalculation
         # (payables signal checks is_deleted=False in filter)
@@ -481,12 +517,16 @@ class LoanSignalTest(TestCase):
         self.loan = self._make_loan("500.00")
 
     def test_payed_value_updated_when_expense_linked(self):
-        _make_expense(self.account, value="200.00", payed=True, related_loan=self.loan)
+        _make_expense(
+            self.account, value="200.00", payed=True, related_loan=self.loan
+        )
         self.loan.refresh_from_db()
         self.assertEqual(self.loan.payed_value, Decimal("200.00"))
 
     def test_loan_status_becomes_paid_when_fully_covered_by_expenses(self):
-        _make_expense(self.account, value="500.00", payed=True, related_loan=self.loan)
+        _make_expense(
+            self.account, value="500.00", payed=True, related_loan=self.loan
+        )
         self.loan.refresh_from_db()
         self.assertEqual(self.loan.status, "paid")
 
@@ -498,7 +538,9 @@ class LoanSignalTest(TestCase):
         self.assertEqual(self.loan.payed_value, Decimal("150.00"))
 
     def test_payed_value_sums_expense_and_revenue(self):
-        _make_expense(self.account, value="100.00", payed=True, related_loan=self.loan)
+        _make_expense(
+            self.account, value="100.00", payed=True, related_loan=self.loan
+        )
         _make_revenue(
             self.account, value="100.00", received=True, related_loan=self.loan
         )
@@ -690,7 +732,10 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertTrue(exp.auto_categorized)
 
     def test_edit_to_specific_category_clears_auto_flag(self):
-        """Manually setting a specific category clears the auto_categorized flag."""
+        """
+        Manually setting a specific category clears the auto_categorized
+        flag.
+        """
         CategorizationRule.objects.create(
             merchant_contains="uber",
             category="transport",
@@ -720,8 +765,13 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         self.assertEqual(exp.category, "food and drink")
         self.assertFalse(exp.auto_categorized)
 
-    def test_edit_other_fields_category_already_others_no_recategorization(self):
-        """Updating other fields when category is already 'others' does not re-apply."""
+    def test_edit_other_fields_category_already_others_no_recategorization(
+        self,
+    ):
+        """
+        Updating other fields when category is already 'others' does not
+        re-apply.
+        """
         exp = Expense.objects.create(
             description="Mystery",
             value=Decimal("10.00"),
@@ -747,7 +797,8 @@ class AutoCategorizeExpenseSignalTest(TestCase):
         exp.save()
         exp.refresh_from_db()
 
-        # category stays 'others', auto_categorized stays False (no category change)
+        # category stays 'others', auto_categorized stays False (no category
+        # change)
         self.assertEqual(exp.category, "others")
         self.assertFalse(exp.auto_categorized)
 
@@ -808,7 +859,9 @@ class GoalProgressSignalTest(TestCase):
     def test_goal_status_unchanged_when_target_not_reached(self):
         # Signal now uses calculated_current_value; current_value field is not
         # incremented directly. The goal stays active while below target.
-        instance = self._make_instance(self.task, self.member, status="pending")
+        instance = self._make_instance(
+            self.task, self.member, status="pending"
+        )
         instance.status = "completed"
         instance.save()
 
@@ -816,7 +869,9 @@ class GoalProgressSignalTest(TestCase):
         self.assertEqual(self.goal.status, "active")
 
     def test_goal_not_updated_when_instance_not_completed(self):
-        instance = self._make_instance(self.task, self.member, status="pending")
+        instance = self._make_instance(
+            self.task, self.member, status="pending"
+        )
         instance.status = "in_progress"
         instance.save()
 
@@ -827,7 +882,9 @@ class GoalProgressSignalTest(TestCase):
         self.goal.target_value = 1
         self.goal.save()
 
-        instance = self._make_instance(self.task, self.member, status="pending")
+        instance = self._make_instance(
+            self.task, self.member, status="pending"
+        )
         instance.status = "completed"
         instance.save()
 
@@ -862,7 +919,9 @@ class GoalProgressSignalTest(TestCase):
         other_goal = self._make_goal(self.member, other_task)
 
         # Complete instance for the main task
-        instance = self._make_instance(self.task, self.member, status="pending")
+        instance = self._make_instance(
+            self.task, self.member, status="pending"
+        )
         instance.status = "completed"
         instance.save()
 

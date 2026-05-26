@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { AlertCircle, CalendarClock, CreditCard } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

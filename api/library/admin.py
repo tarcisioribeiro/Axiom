@@ -56,7 +56,13 @@ class SummaryAdmin(admin.ModelAdmin):
 
 @admin.register(Reading)
 class ReadingAdmin(admin.ModelAdmin):
-    list_display = ["book", "reading_date", "pages_read", "reading_time", "owner"]
+    list_display = [
+        "book",
+        "reading_date",
+        "pages_read",
+        "reading_time",
+        "owner",
+    ]
     search_fields = ["book__title"]
     list_filter = ["reading_date"]
 
@@ -69,7 +75,12 @@ class ReadingGoalAdmin(admin.ModelAdmin):
 
 @admin.register(LiteraryTypeGoal)
 class LiteraryTypeGoalAdmin(admin.ModelAdmin):
-    list_display = ["reading_goal", "literary_type", "goal_count", "created_at"]
+    list_display = [
+        "reading_goal",
+        "literary_type",
+        "goal_count",
+        "created_at",
+    ]
     list_filter = ["literary_type"]
 
 
@@ -89,7 +100,14 @@ class BookHighlightAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ["title", "platform", "category", "status", "owner", "created_at"]
+    list_display = [
+        "title",
+        "platform",
+        "category",
+        "status",
+        "owner",
+        "created_at",
+    ]
     search_fields = ["title"]
     list_filter = ["platform", "category", "status"]
 
@@ -103,20 +121,40 @@ class CourseModuleAdmin(admin.ModelAdmin):
 
 @admin.register(CourseLesson)
 class CourseLessonAdmin(admin.ModelAdmin):
-    list_display = ["title", "module", "order", "is_completed", "owner", "created_at"]
+    list_display = [
+        "title",
+        "module",
+        "order",
+        "is_completed",
+        "owner",
+        "created_at",
+    ]
     search_fields = ["title", "module__title"]
     list_filter = ["is_completed"]
 
 
 @admin.register(CourseSession)
 class CourseSessionAdmin(admin.ModelAdmin):
-    list_display = ["course", "session_date", "duration_minutes", "owner", "created_at"]
+    list_display = [
+        "course",
+        "session_date",
+        "duration_minutes",
+        "owner",
+        "created_at",
+    ]
     search_fields = ["course__title"]
     list_filter = ["session_date"]
 
 
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ["name", "category", "proficiency", "status", "owner", "created_at"]
+    list_display = [
+        "name",
+        "category",
+        "proficiency",
+        "status",
+        "owner",
+        "created_at",
+    ]
     search_fields = ["name"]
     list_filter = ["category", "proficiency", "status"]

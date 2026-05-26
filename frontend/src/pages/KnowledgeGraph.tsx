@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -270,7 +271,7 @@ function NodeDetailPanel({
               )}
               {node.metadata.progress_percentage !== undefined && (
                 <div>
-                  <p className="mb-1 text-xs text-muted-foreground">
+                  <p className="mb-xs text-xs text-muted-foreground">
                     {t('pages.knowledgeGraph.meta.progress')}
                   </p>
                   <div className="h-1.5 rounded-full bg-muted">
@@ -282,7 +283,7 @@ function NodeDetailPanel({
                       }}
                     />
                   </div>
-                  <p className="mt-1 text-right text-xs text-muted-foreground">
+                  <p className="mt-xs text-right text-xs text-muted-foreground">
                     {node.metadata.progress_percentage}%
                   </p>
                 </div>
@@ -341,7 +342,7 @@ function NodeDetailPanel({
             <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {t('pages.knowledgeGraph.explicitConnections')}
             </p>
-            <div className="space-y-2">
+            <div className="space-y-sm">
               {explicitLinks.map((link, i) => {
                 const other =
                   (link.source as GraphNode).id === node.id
@@ -353,9 +354,9 @@ function NodeDetailPanel({
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-md bg-muted/40 px-sm py-1.5"
+                    className="flex items-center justify-between rounded-md bg-muted/40 px-sm py-xs"
                   >
-                    <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="flex min-w-0 items-center gap-xs">
                       <span
                         className="h-2 w-2 shrink-0 rounded-full"
                         style={{
@@ -370,7 +371,7 @@ function NodeDetailPanel({
                     {link.link_id && (
                       <button
                         onClick={() => onDeleteLink(link.link_id!)}
-                        className="ml-1 shrink-0 text-destructive/60 transition-colors hover:text-destructive"
+                        className="ml-xs shrink-0 text-destructive/60 transition-colors hover:text-destructive"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -391,7 +392,7 @@ function NodeDetailPanel({
           className="w-full"
           onClick={() => onStartLink(node)}
         >
-          <Link2 className="mr-2 h-3.5 w-3.5" />
+          <Link2 className="mr-sm h-3.5 w-3.5" />
           {linkingFrom?.id === node.id
             ? t('pages.knowledgeGraph.clickToConnect')
             : t('pages.knowledgeGraph.createLink')}
@@ -441,14 +442,14 @@ function CreateLinkModal({
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
-        className="w-96 rounded-xl border border-border bg-card p-lg shadow-2xl"
+        className="w-96 rounded-lg border border-border bg-card p-lg shadow-2xl"
       >
         <h3 className="mb-md text-base font-semibold">
           {t('pages.knowledgeGraph.createLinkModal.title')}
         </h3>
         <div className="mb-md flex items-center gap-sm text-sm">
           <span
-            className="rounded-md px-2 py-0.5 text-xs font-medium"
+            className="rounded-md px-sm py-0.5 text-xs font-medium"
             style={{
               backgroundColor: `hsl(var(${NODE_COLOR_VARS[from.type]}) / 0.2)`,
               color: `hsl(var(${NODE_COLOR_VARS[from.type]}))`,
@@ -458,7 +459,7 @@ function CreateLinkModal({
           </span>
           <span className="text-muted-foreground">→</span>
           <span
-            className="rounded-md px-2 py-0.5 text-xs font-medium"
+            className="rounded-md px-sm py-0.5 text-xs font-medium"
             style={{
               backgroundColor: `hsl(var(${NODE_COLOR_VARS[to.type]}) / 0.2)`,
               color: `hsl(var(${NODE_COLOR_VARS[to.type]}))`,
@@ -468,13 +469,13 @@ function CreateLinkModal({
           </span>
         </div>
 
-        <div className="mb-lg grid grid-cols-3 gap-2">
+        <div className="mb-lg grid grid-cols-3 gap-sm">
           {ALL_RELATIONS.map((key) => (
             <button
               key={key}
               onClick={() => setRelation(key)}
               className={cn(
-                'rounded-md border px-sm py-1.5 text-xs transition-all',
+                'rounded-md border px-sm py-xs text-xs transition-all',
                 relation === key
                   ? 'border-transparent text-background'
                   : 'border-border bg-muted/30 text-foreground hover:bg-muted'
@@ -820,7 +821,7 @@ export default function KnowledgeGraph() {
           icon={<Network className="h-5 w-5" />}
         />
 
-        <div className="relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-xl border border-border bg-card">
+        <div className="relative flex h-[calc(100vh-12rem)] overflow-hidden rounded-lg border border-border bg-card">
           {/* Left sidebar */}
           <div className="z-10 flex w-52 shrink-0 flex-col gap-md border-r border-border bg-card p-md">
             {/* Search */}
@@ -830,7 +831,7 @@ export default function KnowledgeGraph() {
                 placeholder={t('pages.knowledgeGraph.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 pl-8 text-xs"
+                className="h-8 pl-xl text-xs"
               />
               {search && (
                 <button
@@ -847,7 +848,7 @@ export default function KnowledgeGraph() {
               <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 {t('pages.knowledgeGraph.nodeTypesFilter')}
               </p>
-              <div className="space-y-1.5">
+              <div className="space-y-xs">
                 {ALL_NODE_TYPES.filter(
                   (tp) => tp !== 'highlight' || includeHighlights
                 ).map((type) => (
@@ -855,7 +856,7 @@ export default function KnowledgeGraph() {
                     key={type}
                     onClick={() => toggleType(type)}
                     className={cn(
-                      'flex w-full items-center gap-2 rounded-md px-sm py-1 text-xs transition-all',
+                      'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs transition-all',
                       activeTypes.has(type)
                         ? 'bg-muted/60 text-foreground'
                         : 'text-muted-foreground opacity-50 hover:opacity-75'
@@ -886,7 +887,7 @@ export default function KnowledgeGraph() {
                   }
                 }}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded-md px-sm py-1 text-xs transition-all',
+                  'flex w-full items-center gap-sm rounded-md px-sm py-xs text-xs transition-all',
                   includeHighlights
                     ? 'bg-muted/60 text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -986,7 +987,7 @@ export default function KnowledgeGraph() {
             )}
 
             {/* Zoom controls */}
-            <div className="absolute bottom-md right-md flex flex-col gap-1">
+            <div className="absolute bottom-md right-md flex flex-col gap-xs">
               <button
                 onClick={() => {
                   const g = graphRef.current as {
@@ -1024,9 +1025,9 @@ export default function KnowledgeGraph() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute left-1/2 top-md -translate-x-1/2 rounded-full border border-accent/40 bg-accent/10 px-md py-1.5 text-xs text-accent backdrop-blur-sm"
+                  className="absolute left-1/2 top-md -translate-x-1/2 rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
                 >
-                  <Link2 className="mr-1.5 inline h-3 w-3" />
+                  <Link2 className="mr-xs inline h-3 w-3" />
                   {t('pages.knowledgeGraph.clickToConnectWith')}{' '}
                   <strong>
                     {linkingFrom.label.length > 20
@@ -1035,7 +1036,7 @@ export default function KnowledgeGraph() {
                   </strong>
                   <button
                     onClick={() => setLinkingFrom(null)}
-                    className="ml-2 text-accent/70 hover:text-accent"
+                    className="ml-sm text-accent/70 hover:text-accent"
                   >
                     <X className="inline h-3 w-3" />
                   </button>
@@ -1060,10 +1061,10 @@ export default function KnowledgeGraph() {
         </div>
 
         {/* Legend */}
-        <div className="mt-sm flex flex-wrap items-center gap-md px-1">
+        <div className="mt-sm flex flex-wrap items-center gap-md px-xs">
           {ALL_NODE_TYPES.filter((tp) => tp !== 'highlight' || includeHighlights).map(
             (type) => (
-              <div key={type} className="flex items-center gap-1.5">
+              <div key={type} className="flex items-center gap-xs">
                 <span
                   className="h-2.5 w-2.5 rounded-full"
                   style={{
@@ -1076,13 +1077,13 @@ export default function KnowledgeGraph() {
               </div>
             )
           )}
-          <div className="ml-auto flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-xs">
             <div className="h-px w-6 border-b border-dashed border-muted-foreground/50" />
             <span className="text-xs text-muted-foreground">
               {t('pages.knowledgeGraph.legend.explicit')}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-xs">
             <div className="h-px w-6 border-b border-muted-foreground/30" />
             <span className="text-xs text-muted-foreground">
               {t('pages.knowledgeGraph.legend.implicit')}

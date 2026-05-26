@@ -28,7 +28,9 @@ class TOTPDevice(BaseModel):
         help_text="False até o usuário confirmar o primeiro código.",
     )
     # Lista de hashes SHA-256 dos backup codes (plaintext nunca armazenado)
-    backup_codes = models.JSONField(default=list, verbose_name="Backup codes (hashed)")
+    backup_codes = models.JSONField(
+        default=list, verbose_name="Backup codes (hashed)"
+    )
     activated_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Ativado em"
     )

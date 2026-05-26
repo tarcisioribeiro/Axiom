@@ -24,11 +24,14 @@ class MinIOStorage(S3Boto3Storage):
     def __init__(self, **settings: Any) -> None:
         super().__init__(**settings)
 
-        # AdminConfig overrides the env-var credentials baked into Django settings
+        # AdminConfig overrides the env-var credentials baked into Django
+        # settings
         # at startup. This ensures HeadObject/GetObject/PutObject use the same
         # credentials as presigned URL signing, even if the k8s secret drifts.
         _key = cfg("MINIO_ROOT_USER") or os.getenv("MINIO_ROOT_USER")
-        _secret = cfg("MINIO_ROOT_PASSWORD") or os.getenv("MINIO_ROOT_PASSWORD")
+        _secret = cfg("MINIO_ROOT_PASSWORD") or os.getenv(
+            "MINIO_ROOT_PASSWORD"
+        )
         if _key:
             self.access_key = _key
         if _secret:
@@ -80,6 +83,9 @@ class MinIOStorage(S3Boto3Storage):
             )
         return str(
             super().url(  # type: ignore[return-value]
-                name, parameters=parameters, expire=expire, http_method=http_method
+                name,
+                parameters=parameters,
+                expire=expire,
+                http_method=http_method,
             )
         )

@@ -47,7 +47,9 @@ class Command(BaseCommand):
 
         if dry_run:
             self.stdout.write(
-                self.style.WARNING(f"[DRY RUN] Simulando geração para {month_str}")
+                self.style.WARNING(
+                    f"[DRY RUN] Simulando geração para {month_str}"
+                )
             )
         else:
             self.stdout.write(f"Gerando contribuições para {month_str}...")
@@ -63,14 +65,16 @@ class Command(BaseCommand):
         for contrib in contributions:
             if not contrib.is_in_scope_for_month(year_int, month_int):
                 self.stdout.write(
-                    f"  Ignorado [{contrib.id}] {contrib.description}: fora do período"
+                    f"  Ignorado [{contrib.id}] {contrib.description}:"
+                    f" fora do período"
                 )
                 skipped += 1
                 continue
 
             if contrib.last_generated_month == month_str:
                 self.stdout.write(
-                    f"  Ignorado [{contrib.id}] {contrib.description}: já gerado"
+                    f"  Ignorado [{contrib.id}] {contrib.description}:"
+                    f" já gerado"
                 )
                 skipped += 1
                 continue
@@ -85,8 +89,9 @@ class Command(BaseCommand):
             if dry_run:
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f"  [DRY RUN] Depositaria R$ {contrib.amount} no cofre "
-                        f"'{contrib.vault.description}' em {deposit_date}"
+                        f"  [DRY RUN] Depositaria R$ {contrib.amount}"
+                        f" no cofre '{contrib.vault.description}'"
+                        f" em {deposit_date}"
                     )
                 )
                 generated += 1
@@ -94,7 +99,9 @@ class Command(BaseCommand):
 
             try:
                 with transaction.atomic():
-                    vault = Vault.objects.select_for_update().get(pk=contrib.vault_id)
+                    vault = Vault.objects.select_for_update().get(
+                        pk=contrib.vault_id
+                    )
                     account = Account.objects.select_for_update().get(
                         pk=vault.account_id
                     )
@@ -108,7 +115,10 @@ class Command(BaseCommand):
                     vault_tx.recurring_contribution = contrib
                     vault_tx.transaction_date = deposit_date
                     vault_tx.save(
-                        update_fields=["recurring_contribution", "transaction_date"]
+                        update_fields=[
+                            "recurring_contribution",
+                            "transaction_date",
+                        ]
                     )
 
                     contrib.last_generated_month = month_str
@@ -117,7 +127,8 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.SUCCESS(
                         f"  OK [{contrib.id}] {contrib.description}:"
-                        f" R$ {contrib.amount} -> '{contrib.vault.description}'"
+                        f" R$ {contrib.amount}"
+                        f" -> '{contrib.vault.description}'"
                     )
                 )
                 generated += 1

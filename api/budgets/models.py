@@ -58,7 +58,9 @@ class Budget(BaseModel):
         decimal_places=2,
         default=0,
         verbose_name="Saldo Rolado",
-        help_text="Valor não utilizado do mês anterior acumulado neste orçamento.",
+        help_text=(
+            "Valor não utilizado do mês anterior" " acumulado neste orçamento."
+        ),
     )
 
     class Meta:
@@ -78,5 +80,6 @@ class Budget(BaseModel):
 
     def __str__(self) -> str:
         return (
-            f"{self.category} - {self.month:02d}/{self.year} (R$ {self.limit_amount})"
+            f"{self.category} - {self.month:02d}/{self.year}"
+            f" (R$ {self.limit_amount})"
         )

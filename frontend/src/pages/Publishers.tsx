@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -71,6 +72,7 @@ export default function Publishers() {
 
   useEffect(() => {
     void loadPublishers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadPublishers = async () => {

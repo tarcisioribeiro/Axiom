@@ -64,7 +64,9 @@ class InsightAgent(BaseAgent):
 
         if temporal:
             fin_start, fin_end = temporal
-            month_totals = get_current_month_totals(user, start=fin_start, end=fin_end)
+            month_totals = get_current_month_totals(
+                user, start=fin_start, end=fin_end
+            )
             budgets = get_budget_status(
                 user,
                 year=fin_start.year,
@@ -87,7 +89,9 @@ class InsightAgent(BaseAgent):
             period_label = now.strftime("%B/%Y")
 
         overbudget = [b for b in budgets if b["overbudget"]]
-        critical = [b for b in budgets if b["percentage"] >= 80 and not b["overbudget"]]
+        critical = [
+            b for b in budgets if b["percentage"] >= 80 and not b["overbudget"]
+        ]
 
         return {
             "system_prompt": get_system_prompt(ctx.language),
@@ -118,7 +122,8 @@ class InsightAgent(BaseAgent):
         budget_block = ""
         if data["overbudget"]:
             items = ", ".join(
-                f"{safe_str(b['category'])} (+R$ {b['spent'] - b['limit']:.0f})"
+                f"{safe_str(b['category'])}"
+                f" (+R$ {b['spent'] - b['limit']:.0f})"
                 for b in data["overbudget"]
             )
             budget_block += f"\n**Orçamentos estourados:** {items}"
@@ -136,7 +141,8 @@ class InsightAgent(BaseAgent):
             total_bills = sum(b["value"] for b in data["upcoming_bills"])
             bills_block = (
                 f"\n\n**Contas nos próximos 15 dias:** "
-                f"R$ {total_bills:.2f} ({len(data['upcoming_bills'])} lançamentos)"
+                f"R$ {total_bills:.2f}"
+                f" ({len(data['upcoming_bills'])} lançamentos)"
             )
 
         p = data["planning"]

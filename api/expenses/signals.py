@@ -38,7 +38,8 @@ def _apply_categorization_rules(user, instance):
         rule_lower = rule.merchant_contains.lower()
         if (
             rule_lower in merchant_lower
-            or fuzz.partial_ratio(rule_lower, merchant_lower) >= FUZZY_MATCH_THRESHOLD
+            or fuzz.partial_ratio(rule_lower, merchant_lower)
+            >= FUZZY_MATCH_THRESHOLD
         ):
             instance.category = rule.category
             instance.auto_categorized = True
@@ -54,7 +55,8 @@ def auto_categorize_expense(sender, instance, **kwargs):
     - Aplica regra se category='others' e merchant preenchido.
 
     Atualização:
-    - Se category mudou para 'others' e merchant está preenchido: re-aplica regras.
+    - Se category mudou para 'others' e merchant está preenchido:
+      re-aplica regras.
     - Se category foi definida com um valor específico (não 'others'): limpa
       o flag auto_categorized para indicar escolha manual.
     """
@@ -110,7 +112,9 @@ def record_expense_metric(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="expenses.Expense")
 def embed_expense(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = f"{instance.category} — {instance.date}"
 

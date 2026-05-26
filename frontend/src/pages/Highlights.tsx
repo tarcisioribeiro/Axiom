@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   BookMarked,
   ChevronLeft,
@@ -388,6 +389,7 @@ export default function Highlights() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

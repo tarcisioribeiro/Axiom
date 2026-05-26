@@ -41,7 +41,9 @@ class BaseUnhappyTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
         self.member = Member.objects.create(
             name="Unhappy User",
@@ -112,7 +114,8 @@ class ExpenseUnhappyTest(BaseUnhappyTestCase):
 
     def test_create_expense_missing_required_fields_returns_400(self):
         url = reverse("expense-create-list")
-        # Only send date — description, value, category, account, horary are missing
+        # Only send date — description, value, category, account, horary are
+        # missing
         response = self.client.post(url, {"date": date.today().isoformat()})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("description", response.data)  # type: ignore
@@ -208,7 +211,8 @@ class LoanUnhappyTest(BaseUnhappyTestCase):
 
     def test_create_loan_missing_required_fields_returns_400(self):
         url = reverse("loan-create-list")
-        # description is required; omit it along with many other required fields
+        # description is required; omit it along with many other required
+        # fields
         response = self.client.post(url, {"value": "100.00"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("description", response.data)  # type: ignore
@@ -243,7 +247,9 @@ class CreditCardUnhappyTest(BaseUnhappyTestCase):
             created_by=self.user,
         )
         self.card._security_code = FieldEncryption.encrypt_data("123")
-        self.card._card_number = FieldEncryption.encrypt_data("4111111111111111")
+        self.card._card_number = FieldEncryption.encrypt_data(
+            "4111111111111111"
+        )
         self.card.save()
 
     def test_get_nonexistent_credit_card_returns_404(self):
@@ -253,7 +259,8 @@ class CreditCardUnhappyTest(BaseUnhappyTestCase):
 
     def test_create_credit_card_missing_required_fields_returns_400(self):
         url = reverse("credit_card-create-list")
-        # Only send name — flag, validation_date, credit_limit, etc. are missing
+        # Only send name — flag, validation_date, credit_limit, etc. are
+        # missing
         response = self.client.post(url, {"name": "Incomplete Card"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("flag", response.data)  # type: ignore
@@ -331,7 +338,9 @@ class PasswordUnhappyTest(APITestCase):
         )
         self.client_a = APIClient()
         refresh_a = RefreshToken.for_user(self.user_a)
-        self.client_a.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh_a.access_token}")
+        self.client_a.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh_a.access_token}"
+        )
         self.member_a = Member.objects.create(
             name="User A",
             document_hash="d" * 64,
@@ -349,7 +358,9 @@ class PasswordUnhappyTest(APITestCase):
         )
         self.client_b = APIClient()
         refresh_b = RefreshToken.for_user(self.user_b)
-        self.client_b.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh_b.access_token}")
+        self.client_b.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh_b.access_token}"
+        )
         Member.objects.create(
             name="User B",
             document_hash="e" * 64,
@@ -375,7 +386,9 @@ class PasswordUnhappyTest(APITestCase):
         self.password_pk = resp.data["id"]  # type: ignore
 
     def test_read_other_users_password_returns_404(self):
-        """User B cannot access User A's password — queryset filters by owner."""
+        """
+        User B cannot access User A's password — queryset filters by owner.
+        """
         url = reverse("password-detail", args=[self.password_pk])
         response = self.client_b.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

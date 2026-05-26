@@ -95,7 +95,11 @@ urlpatterns = [
         GoalRecalculateView.as_view(),
         name="goal-recalculate",
     ),
-    path("goals/<int:pk>/restart/", GoalRestartView.as_view(), name="goal-restart"),
+    path(
+        "goals/<int:pk>/restart/",
+        GoalRestartView.as_view(),
+        name="goal-restart",
+    ),
     path(
         "goals/<int:pk>/register-failure/",
         GoalRegisterFailureView.as_view(),
@@ -124,7 +128,9 @@ urlpatterns = [
         name="task-instance-detail",
     ),
     path(
-        "instances/for-date/", InstancesForDateView.as_view(), name="instances-for-date"
+        "instances/for-date/",
+        InstancesForDateView.as_view(),
+        name="instances-for-date",
     ),
     path(
         "instances/<int:pk>/status/",
@@ -142,7 +148,11 @@ urlpatterns = [
         name="gamification-profile",
     ),
     # Exercise Catalog
-    path("exercises/", ExerciseListCreateView.as_view(), name="exercise-list-create"),
+    path(
+        "exercises/",
+        ExerciseListCreateView.as_view(),
+        name="exercise-list-create",
+    ),
     path(
         "exercises/<int:pk>/",
         ExerciseRetrieveUpdateDestroyView.as_view(),
@@ -217,7 +227,9 @@ urlpatterns = [
     # Foods
     path("foods/", FoodListCreateView.as_view(), name="food-list-create"),
     path(
-        "foods/<int:pk>/", FoodRetrieveUpdateDestroyView.as_view(), name="food-detail"
+        "foods/<int:pk>/",
+        FoodRetrieveUpdateDestroyView.as_view(),
+        name="food-detail",
     ),
     # Meal Types
     path(

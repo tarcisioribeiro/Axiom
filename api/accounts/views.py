@@ -39,7 +39,8 @@ class AccountCreateListView(BaseListCreateView):
     ordering = ["name"]
 
     def get_queryset(self) -> QuerySet[Account]:
-        # Usa defer() para excluir campo criptografado na listagem (performance)
+        # Usa defer() para excluir campo criptografado na listagem
+        # (performance)
         return Account.objects.filter(
             created_by=self.request.user  # type: ignore[misc]
         ).defer("_account_number")
@@ -106,11 +107,12 @@ class AccountProjectedBalanceView(APIView):
 
         try:
             account = Account.objects.get(
-                pk=pk, created_by=request.user, is_deleted=False  # type: ignore[misc]
+                pk=pk, created_by=request.user, is_deleted=False  # type: ignore[misc]  # noqa: E501
             )
         except Account.DoesNotExist:
             return Response(
-                {"detail": "Conta não encontrada."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Conta não encontrada."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         projected = get_projected_balance(account.id, target_date)

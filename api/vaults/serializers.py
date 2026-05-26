@@ -3,7 +3,12 @@ from decimal import Decimal
 from django.db import models
 from rest_framework import serializers
 
-from .models import FinancialGoal, Vault, VaultRecurringContribution, VaultTransaction
+from .models import (
+    FinancialGoal,
+    Vault,
+    VaultRecurringContribution,
+    VaultTransaction,
+)
 from .services.goal_progress import compute_progress
 
 
@@ -44,7 +49,9 @@ class VaultTransactionSerializer(serializers.ModelSerializer):
 class VaultSerializer(serializers.ModelSerializer):
     """Serializer para cofres."""
 
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     account_balance = serializers.DecimalField(
         source="account.current_balance",
         max_digits=15,
@@ -106,7 +113,9 @@ class VaultSerializer(serializers.ModelSerializer):
         ]
 
     def get_yield_rate_percentage(self, obj):
-        """Retorna a taxa de rendimento diária (legado) em formato de porcentagem."""
+        """
+        Retorna a taxa de rendimento diária (legado) em formato de porcentagem.
+        """
         return float(obj.yield_rate * 100)
 
     def get_annual_yield_rate_percentage(self, obj):
@@ -258,19 +267,30 @@ class VaultRecurringContributionSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        end_date = data.get("end_date") or (self.instance and self.instance.end_date)
+        end_date = data.get("end_date") or (
+            self.instance and self.instance.end_date
+        )
         start_date = data.get("start_date") or (
             self.instance and self.instance.start_date
         )
         if end_date and start_date and end_date < start_date:
             raise serializers.ValidationError(
-                {"end_date": "A data de término deve ser posterior à data de início."}
+                {
+                    "end_date": (
+                        "A data de término deve ser posterior"
+                        " à data de início."
+                    )
+                }
             )
         return data
 
 
-class VaultRecurringContributionCreateSerializer(VaultRecurringContributionSerializer):
-    """Serializer para criação de contribuições recorrentes (vault é obrigatório)."""
+class VaultRecurringContributionCreateSerializer(
+    VaultRecurringContributionSerializer
+):
+    """
+    Serializer para criação de contribuições recorrentes (vault é obrigatório).
+    """
 
     class Meta(VaultRecurringContributionSerializer.Meta):
         read_only_fields = [
@@ -290,7 +310,9 @@ class VaultSummarySerializer(serializers.Serializer):
     uuid = serializers.UUIDField()
     description = serializers.CharField()
     current_balance = serializers.DecimalField(max_digits=15, decimal_places=2)
-    accumulated_yield = serializers.DecimalField(max_digits=15, decimal_places=2)
+    accumulated_yield = serializers.DecimalField(
+        max_digits=15, decimal_places=2
+    )
     account_name = serializers.CharField()
 
 

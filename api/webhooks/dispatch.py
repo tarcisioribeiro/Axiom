@@ -11,7 +11,9 @@ from __future__ import annotations
 from typing import Any
 
 
-def dispatch_event(event: str, payload: dict[str, Any], user: Any = None) -> int:
+def dispatch_event(
+    event: str, payload: dict[str, Any], user: Any = None
+) -> int:
     """
     Cria WebhookDelivery para cada Webhook ativo que assina o evento e
     enfileira a entrega assíncrona via Celery.

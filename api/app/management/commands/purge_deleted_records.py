@@ -37,8 +37,11 @@ class Command(BaseCommand):
             "--days",
             type=int,
             default=90,
-            help="Retention period in days (default: 90). Records soft-deleted "
-            "more than this many days ago will be purged.",
+            help=(
+                "Retention period in days (default: 90). Records"
+                " soft-deleted more than this many days ago will"
+                " be purged."
+            ),
         )
         parser.add_argument(
             "--dry-run",
@@ -64,7 +67,9 @@ class Command(BaseCommand):
         results = {}
 
         for label, model, anonymize_fn in self._get_sensitive_models():
-            qs = model.all_objects.filter(is_deleted=True, deleted_at__lte=cutoff)
+            qs = model.all_objects.filter(
+                is_deleted=True, deleted_at__lte=cutoff
+            )
             count = qs.count()
             results[label] = count
 
@@ -85,7 +90,8 @@ class Command(BaseCommand):
                     except Exception as e:
                         self.stdout.write(
                             self.style.ERROR(
-                                f"    ERROR purging {label} id={instance.pk}: {e}"
+                                f"    ERROR purging {label}"
+                                f" id={instance.pk}: {e}"
                             )
                         )
                         count -= 1
@@ -128,7 +134,11 @@ class Command(BaseCommand):
         return [
             ("members.Member", Member, self._anonymize_member),
             ("accounts.Account", Account, self._anonymize_account),
-            ("credit_cards.CreditCard", CreditCard, self._anonymize_credit_card),
+            (
+                "credit_cards.CreditCard",
+                CreditCard,
+                self._anonymize_credit_card,
+            ),
             ("security.Password", Password, self._anonymize_password),
             (
                 "security.StoredCreditCard",
@@ -159,7 +169,9 @@ class Command(BaseCommand):
         """
         if hasattr(instance, "anonymize"):
             instance.anonymize()
-            instance.save(update_fields=self._anonymize_update_fields(instance))
+            instance.save(
+                update_fields=self._anonymize_update_fields(instance)
+            )
         else:
             anonymize_fn(instance)
             instance.save()
@@ -250,7 +262,9 @@ class Command(BaseCommand):
                 "pk": str(instance.pk),
                 "uuid": str(instance.uuid),
                 "deleted_at": (
-                    instance.deleted_at.isoformat() if instance.deleted_at else None
+                    instance.deleted_at.isoformat()
+                    if instance.deleted_at
+                    else None
                 ),
                 "purged_at": timezone.now().isoformat(),
             },
@@ -283,8 +297,9 @@ class Command(BaseCommand):
                 user=None,
                 action="purge",
                 description=(
-                    f"Registro {label} id={instance.pk} (uuid={instance.uuid}) "
-                    "permanentemente removido por política de retenção LGPD/GDPR."
+                    f"Registro {label} id={instance.pk}"
+                    f" (uuid={instance.uuid}) permanentemente"
+                    " removido por política de retenção LGPD/GDPR."
                 ),
                 model_name=label,
                 object_id=instance.pk,

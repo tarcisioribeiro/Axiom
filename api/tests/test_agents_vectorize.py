@@ -35,7 +35,9 @@ class SearchEmbeddingsTest(TestCase):
     @patch("agents.tools.rag_tools._is_postgres", return_value=False)
     @patch("agents.tools.rag_tools._python_search")
     @patch("agents.core.llm_client.LLMClient.embed")
-    def test_routes_to_python_search_on_sqlite(self, mock_embed, mock_python, mock_pg):
+    def test_routes_to_python_search_on_sqlite(
+        self, mock_embed, mock_python, mock_pg
+    ):
         mock_embed.return_value = [0.1, 0.2, 0.3]
         mock_python.return_value = [
             {
@@ -56,7 +58,9 @@ class SearchEmbeddingsTest(TestCase):
     @patch("agents.tools.rag_tools._is_postgres", return_value=True)
     @patch("agents.tools.rag_tools._pgvector_search")
     @patch("agents.core.llm_client.LLMClient.embed")
-    def test_routes_to_pgvector_on_postgres(self, mock_embed, mock_pg, mock_is_pg):
+    def test_routes_to_pgvector_on_postgres(
+        self, mock_embed, mock_pg, mock_is_pg
+    ):
         mock_embed.return_value = [0.1, 0.2]
         mock_pg.return_value = []
 
@@ -77,7 +81,8 @@ class SearchEmbeddingsTest(TestCase):
         mock_fallback.assert_called_once_with("hello", self.user, "finance", 5)
 
     def test_python_search_computes_cosine_similarity(self):
-        """_python_search ranks by cosine similarity using in-memory embeddings."""
+        """_python_search ranks by cosine similarity using in-memory
+        embeddings."""
         emb_high = [1.0, 0.0, 0.0]
         emb_low = [0.0, 1.0, 0.0]
         query_emb = [1.0, 0.01, 0.0]
@@ -168,7 +173,9 @@ class VectorizeExistingCommandTest(TestCase):
 
     @patch("agents.core.llm_client.LLMClient.is_available", return_value=True)
     @patch("agents.core.llm_client.LLMClient.embed")
-    @patch("agents.management.commands.vectorize_existing.Command._upsert_embedding")
+    @patch(
+        "agents.management.commands.vectorize_existing.Command._upsert_embedding"  # noqa: E501
+    )
     def test_finance_domain_processes_expenses_and_revenues(
         self, mock_upsert, mock_embed, mock_avail
     ):
@@ -179,14 +186,12 @@ class VectorizeExistingCommandTest(TestCase):
             patch("revenues.models.Revenue.objects") as mock_rev,
         ):
 
-            mock_exp.filter.return_value.values.return_value.count.return_value = 0
-            mock_exp.filter.return_value.values.return_value.iterator.return_value = (
-                iter([])
-            )
-            mock_rev.filter.return_value.values.return_value.count.return_value = 0
-            mock_rev.filter.return_value.values.return_value.iterator.return_value = (
-                iter([])
-            )
+            mock_exp_qs = mock_exp.filter.return_value.values.return_value
+            mock_exp_qs.count.return_value = 0
+            mock_exp_qs.iterator.return_value = iter([])
+            mock_rev_qs = mock_rev.filter.return_value.values.return_value
+            mock_rev_qs.count.return_value = 0
+            mock_rev_qs.iterator.return_value = iter([])
 
             out = StringIO()
             from django.core.management import call_command
@@ -248,7 +253,9 @@ class VectorizeExistingCommandTest(TestCase):
 
     @patch("agents.core.llm_client.LLMClient.is_available", return_value=True)
     @patch("agents.core.llm_client.LLMClient.embed", return_value=[])
-    def test_upsert_embedding_returns_false_when_embed_empty(self, mock_embed, _):
+    def test_upsert_embedding_returns_false_when_embed_empty(
+        self, mock_embed, _
+    ):
         from agents.management.commands.vectorize_existing import Command
 
         cmd = Command()
@@ -267,7 +274,9 @@ class VectorizeExistingCommandTest(TestCase):
         self.assertFalse(result)
 
     @patch("agents.core.llm_client.LLMClient.is_available", return_value=True)
-    @patch("agents.core.llm_client.LLMClient.embed", side_effect=Exception("boom"))
+    @patch(
+        "agents.core.llm_client.LLMClient.embed", side_effect=Exception("boom")
+    )
     def test_upsert_embedding_logs_error_and_returns_false_on_exception(
         self, mock_embed, _
     ):
@@ -313,7 +322,9 @@ class VectorizeExistingCommandTest(TestCase):
             options = {"reset": True, "batch_size": 50}
             cmd._process_domain(self.user, "finance", options)
 
-            mock_mgr.filter.assert_called_once_with(user=self.user, domain="finance")
+            mock_mgr.filter.assert_called_once_with(
+                user=self.user, domain="finance"
+            )
             mock_mgr.filter.return_value.delete.assert_called_once()
 
     def test_natural_text_formats_expense(self):

@@ -117,7 +117,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             {displayValue}
           </div>
           {description && (
-            <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+            <p className="mt-xs text-xs text-muted-foreground">{description}</p>
           )}
           {trend && (
             <div className="mt-sm flex items-center gap-xs">

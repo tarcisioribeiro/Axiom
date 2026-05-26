@@ -1,7 +1,8 @@
 import os
 
 DEFAULT_CONFIGS: list[dict] = [
-    # ─── LLM / Agentes ────────────────────────────────────────────────────────
+    # ─── LLM / Agentes
+    # ────────────────────────────────────────────────────────
     {
         "key": "LLM_PROVIDER",
         "category": "llm",
@@ -28,7 +29,9 @@ DEFAULT_CONFIGS: list[dict] = [
         "key": "OLLAMA_MODEL",
         "category": "llm",
         "label": "Modelo Ollama (Chat)",
-        "description": "Modelo para geração de texto (ex: mistral:7b-instruct).",
+        "description": (
+            "Modelo para geração de texto" " (ex: mistral:7b-instruct)."
+        ),
         "is_secret": False,
         "requires_restart": False,
         "is_editable": True,
@@ -105,7 +108,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "requires_restart": False,
         "is_editable": True,
     },
-    # ─── Email ────────────────────────────────────────────────────────────────
+    # ─── Email
+    # ────────────────────────────────────────────────────────────────
     {
         "key": "EMAIL_BACKEND",
         "category": "email",
@@ -184,14 +188,16 @@ DEFAULT_CONFIGS: list[dict] = [
         "requires_restart": False,
         "is_editable": True,
     },
-    # ─── Backup ───────────────────────────────────────────────────────────────
+    # ─── Backup
+    # ───────────────────────────────────────────────────────────────
     {
         "key": "BACKUP_CRON",
         "category": "backup",
         "label": "Agendamento (Cron)",
         "description": (
             "Expressão cron para o backup automático "
-            "(ex: '0 2 * * *' = 02h diário). Requer reinicialização do serviço."
+            "(ex: '0 2 * * *' = 02h diário)."
+            " Requer reinicialização do serviço."
         ),
         "is_secret": False,
         "requires_restart": True,
@@ -210,7 +216,9 @@ DEFAULT_CONFIGS: list[dict] = [
         "key": "KEEP_WEEKLY",
         "category": "backup",
         "label": "Backups Semanais Mantidos",
-        "description": "Quantidade de backups semanais a manter (um por semana ISO).",
+        "description": (
+            "Quantidade de backups semanais a manter" " (um por semana ISO)."
+        ),
         "is_secret": False,
         "requires_restart": False,
         "is_editable": True,
@@ -236,7 +244,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "requires_restart": False,
         "is_editable": True,
     },
-    # ─── Aplicação ────────────────────────────────────────────────────────────
+    # ─── Aplicação
+    # ────────────────────────────────────────────────────────────
     {
         "key": "DEBUG",
         "category": "app",
@@ -294,7 +303,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "requires_restart": True,
         "is_editable": True,
     },
-    # ─── Segurança ────────────────────────────────────────────────────────────
+    # ─── Segurança
+    # ────────────────────────────────────────────────────────────
     {
         "key": "SECRET_KEY",
         "category": "security",
@@ -320,7 +330,8 @@ DEFAULT_CONFIGS: list[dict] = [
         "requires_restart": True,
         "is_editable": True,
     },
-    # ─── Armazenamento ────────────────────────────────────────────────────────
+    # ─── Armazenamento
+    # ────────────────────────────────────────────────────────
     {
         "key": "MINIO_ENDPOINT",
         "category": "storage",
@@ -362,7 +373,8 @@ DEFAULT_CONFIGS: list[dict] = [
 
 def populate_default_configs() -> None:
     """
-    Cria entradas SystemConfig ausentes no banco, semeando valores do ambiente atual.
+    Cria entradas SystemConfig ausentes no banco, semeando valores do ambiente
+    atual.
     Nunca sobrescreve entradas já existentes.
     """
     from admin_panel.models import SystemConfig

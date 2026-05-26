@@ -13,7 +13,10 @@ SEX_OPTION = (("M", "Masculino"), ("F", "Feminino"))
 
 
 def compute_document_hash(document: str) -> str:
-    """Computes HMAC-SHA256 of CPF for uniqueness lookups without exposing the value."""
+    """
+    Computes HMAC-SHA256 of CPF for uniqueness lookups without exposing the
+    value.
+    """
     key = os.getenv("ENCRYPTION_KEY", "").encode()
     return hmac_lib.new(key, document.encode(), hashlib.sha256).hexdigest()
 
@@ -72,14 +75,18 @@ class Member(BaseModel):
     email_verification_sent_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Envio do Token de Verificação"
     )
-    sex = models.CharField(max_length=200, choices=SEX_OPTION, verbose_name="Sexo")
+    sex = models.CharField(
+        max_length=200, choices=SEX_OPTION, verbose_name="Sexo"
+    )
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name="Usuário do Sistema",
-        help_text="Vincular membro a um usuário do sistema para permitir login",
+        help_text=(
+            "Vincular membro a um usuário do sistema" " para permitir login"
+        ),
     )
     is_creditor = models.BooleanField(
         verbose_name="Credor", null=False, blank=False, default=True
@@ -101,7 +108,10 @@ class Member(BaseModel):
         blank=True,
     )
     emergency_contact = models.CharField(
-        max_length=200, verbose_name="Contato de Emergência", null=True, blank=True
+        max_length=200,
+        verbose_name="Contato de Emergência",
+        null=True,
+        blank=True,
     )
     monthly_income = models.DecimalField(
         verbose_name="Renda Mensal",

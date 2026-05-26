@@ -180,7 +180,9 @@ def _normalize(text: str) -> str:
 
 class PersonalAgent(BaseAgent):
     name = "personal"
-    description = "Assistente pessoal: rotinas, hábitos, metas, treino e nutrição"
+    description = (
+        "Assistente pessoal: rotinas, hábitos, metas, treino e nutrição"
+    )
     ollama_model = "llama3.1:8b"
     anthropic_model = "claude-sonnet-4-6"
     groq_model = "llama-3.3-70b-versatile"
@@ -214,12 +216,16 @@ class PersonalAgent(BaseAgent):
 
         if temporal:
             t_start, t_end = temporal
-            routine_summary = get_routine_summary(user, start=t_start, end=t_end)
+            routine_summary = get_routine_summary(
+                user, start=t_start, end=t_end
+            )
             missed = get_top_missed_routines(user, start=t_start, end=t_end)
             workout = get_workout_summary(user, start=t_start, end=t_end)
             nutrition = get_nutrition_summary(user, start=t_start, end=t_end)
             pending_today: list[dict[str, Any]] = []
-            period_label = f"{t_start.strftime('%d/%m')}–{t_end.strftime('%d/%m/%Y')}"
+            period_label = (
+                f"{t_start.strftime('%d/%m')}–{t_end.strftime('%d/%m/%Y')}"
+            )
         else:
             routine_summary = get_routine_summary(user, days=7)
             missed = get_top_missed_routines(user, days=7)
@@ -297,14 +303,17 @@ class PersonalAgent(BaseAgent):
 
         n = data["nutrition"]
         nutrition_block = (
-            f"  Refeições registradas: {n['total_logs']} em {n['days_analyzed']} dias"
+            f"  Refeições registradas: {n['total_logs']}"
+            f" em {n['days_analyzed']} dias"
             + (f" ({n['free_meals']} livre(s))" if n["free_meals"] else "")
         )
 
         plan = data["workout_plan"]
         plan_block = ""
         if plan.get("has_plan"):
-            days_str = ", ".join(f"{d['name']}" for d in plan.get("days", [])[:6])
+            days_str = ", ".join(
+                f"{d['name']}" for d in plan.get("days", [])[:6]
+            )
             plan_block = "\nPlano de treino atual: {} — {}\n".format(
                 safe_str(plan["plan_name"]), days_str
             )

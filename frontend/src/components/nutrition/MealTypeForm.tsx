@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import {
   CheckCircle2,
   Clock,
@@ -124,7 +125,7 @@ export function MealTypeForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-xl bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
+      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
           <UtensilsCrossed className="h-5 w-5 text-category-nutrition" />
         </div>

@@ -39,13 +39,17 @@ class ExchangeRate(BaseModel):
         max_digits=20,
         decimal_places=8,
         verbose_name="Taxa de compra (BRL)",
-        help_text="Quanto 1 unidade da moeda custa em BRL (taxa de compra PTAX)",
+        help_text=(
+            "Quanto 1 unidade da moeda custa em BRL (taxa de compra PTAX)"
+        ),
     )
     rate_sell = models.DecimalField(
         max_digits=20,
         decimal_places=8,
         verbose_name="Taxa de venda (BRL)",
-        help_text="Quanto 1 unidade da moeda custa em BRL (taxa de venda PTAX)",
+        help_text=(
+            "Quanto 1 unidade da moeda custa em BRL (taxa de venda PTAX)"
+        ),
     )
     reference_date = models.DateField(
         verbose_name="Data de referência",
@@ -69,18 +73,25 @@ class ExchangeRate(BaseModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.currency_from}/BRL {self.rate_sell} ({self.reference_date})"
+        return (
+            f"{self.currency_from}/BRL {self.rate_sell}"
+            f" ({self.reference_date})"
+        )
 
     @property
     def mid_rate(self) -> Decimal:
         """Taxa média entre compra e venda."""
-        return ((self.rate_buy + self.rate_sell) / 2).quantize(Decimal("0.00000001"))
+        return ((self.rate_buy + self.rate_sell) / 2).quantize(
+            Decimal("0.00000001")
+        )
 
     @classmethod
     def latest_rate(cls, currency_from: str) -> "ExchangeRate | None":
         """Retorna a taxa mais recente disponível para a moeda."""
         return (
-            cls.objects.filter(currency_from=currency_from.upper(), is_deleted=False)
+            cls.objects.filter(
+                currency_from=currency_from.upper(), is_deleted=False
+            )
             .order_by("-reference_date")
             .first()
         )

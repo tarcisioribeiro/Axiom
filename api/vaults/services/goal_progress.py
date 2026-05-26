@@ -22,7 +22,8 @@ def compute_progress(goal) -> dict:
     Computes financial goal progress based on the goal's category.
 
     For vault-based categories, aggregates vault balances.
-    For reduce_expenses, sums current-month expenses in the linked category/account.
+    For reduce_expenses, sums current-month expenses in the linked
+    category/account.
     For increase_revenue, sums current-month revenues in the linked account.
 
     Returns:

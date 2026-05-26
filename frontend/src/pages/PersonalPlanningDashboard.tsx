@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

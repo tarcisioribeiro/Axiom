@@ -32,6 +32,7 @@ import {
   Brain,
   Network,
   Library,
+  BookMarked,
   Scale,
 } from 'lucide-react';
 
@@ -191,7 +192,7 @@ export const navModules: NavModule[] = [
       {
         id: 'library-books',
         titleKey: 'nav.submodules.books',
-        icon: Library,
+        icon: BookMarked,
         items: [
           { titleKey: 'nav.items.books', href: '/library/books', icon: Library },
           { titleKey: 'nav.items.authors', href: '/library/authors', icon: UserPen },

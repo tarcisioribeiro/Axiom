@@ -232,6 +232,7 @@ export const usePasswordStrengthColors = () => {
  */
 export const useTaskCategoryColors = () => {
   const dark = useIsDarkTheme();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => getTaskCategoryColors(), [dark]);
 };
 

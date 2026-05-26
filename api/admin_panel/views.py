@@ -31,7 +31,8 @@ class AdminBaseView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
 
-# ─── .env helpers ──────────────────────────────────────────────────────────────
+# ─── .env helpers
+# ──────────────────────────────────────────────────────────────
 
 _ENV_FILE_PATH = "/app/axiom.env"
 _DOCKER_SOCKET = "/var/run/docker.sock"
@@ -66,7 +67,8 @@ def _update_dotenv(key: str, value: str) -> None:
 def _restart_via_docker_socket(
     container: str = _DOCKER_CONTAINER, delay: int = 3
 ) -> dict[str, Any]:
-    """Schedule a container restart via Docker socket, returning immediately."""
+    """Schedule a container restart via Docker socket,
+    returning immediately."""
     if not os.path.exists(_DOCKER_SOCKET):
         return {
             "success": False,
@@ -99,7 +101,8 @@ def _restart_via_docker_socket(
     }
 
 
-# ─── System Config ─────────────────────────────────────────────────────────────
+# ─── System Config
+# ─────────────────────────────────────────────────────────────
 
 
 class SystemConfigListView(AdminBaseView):
@@ -116,7 +119,7 @@ class SystemConfigDetailView(AdminBaseView):
 
     def patch(self, request: Request, key: str) -> Response:
         try:
-            config = SystemConfig.objects.get(key=key)  # type: ignore[attr-defined]
+            config = SystemConfig.objects.get(key=key)  # type: ignore[attr-defined]  # noqa: E501
         except SystemConfig.DoesNotExist:
             return Response(
                 {"error": "Configuração não encontrada."},
@@ -147,7 +150,8 @@ class SystemConfigDetailView(AdminBaseView):
         return Response(SystemConfigSerializer(config).data)
 
 
-# ─── Health ────────────────────────────────────────────────────────────────────
+# ─── Health
+# ────────────────────────────────────────────────────────────────────
 
 
 def _check_database() -> dict[str, Any]:
@@ -233,7 +237,8 @@ def _check_disk() -> dict[str, Any]:
 
 
 def _check_email() -> dict[str, Any]:
-    # DB values take precedence over env/settings (reflect what admin configured)
+    # DB values take precedence over env/settings (reflect what admin
+    # configured)
     backend: str = (
         _get_config_value("EMAIL_BACKEND")
         or getattr(settings, "EMAIL_BACKEND", "")
@@ -314,11 +319,13 @@ class AdminHealthView(AdminBaseView):
         )
 
 
-# ─── Integrations status ───────────────────────────────────────────────────────
+# ─── Integrations status
+# ───────────────────────────────────────────────────────
 
 
 class AdminIntegrationsView(AdminBaseView):
-    """GET /api/v1/admin/integrations/ — status em tempo real das integrações."""
+    """GET /api/v1/admin/integrations/ — status em tempo real
+    das integrações."""
 
     def get(self, request: Request) -> Response:
         provider = _get_config_value("LLM_PROVIDER") or getattr(
@@ -352,7 +359,9 @@ class AdminIntegrationsView(AdminBaseView):
                 "email": _check_email(),
                 "llm_provider": provider,
                 "ollama_model": _get_config_value("OLLAMA_MODEL")
-                or getattr(settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", "")),
+                or getattr(
+                    settings, "OLLAMA_MODEL", os.getenv("OLLAMA_MODEL", "")
+                ),
                 "anthropic_model": _get_config_value("ANTHROPIC_MODEL")
                 or os.getenv("ANTHROPIC_MODEL", ""),
             }
@@ -378,17 +387,24 @@ def _check_anthropic(api_key: str) -> dict[str, Any]:
         )
         with urllib.request.urlopen(req, timeout=8) as resp:  # nosec B310
             if resp.status == 200:
-                return {"status": "healthy", "message": "API Anthropic acessível"}
+                return {
+                    "status": "healthy",
+                    "message": "API Anthropic acessível",
+                }
         return {"status": "unhealthy", "message": f"Status HTTP {resp.status}"}
     except urllib.error.HTTPError as e:
         if e.code == 401:
-            return {"status": "unhealthy", "message": "Chave de API inválida (401)"}
+            return {
+                "status": "unhealthy",
+                "message": "Chave de API inválida (401)",
+            }
         return {"status": "unhealthy", "message": f"Erro HTTP {e.code}"}
     except Exception as e:
         return {"status": "unhealthy", "message": str(e)}
 
 
-# ─── Logs ──────────────────────────────────────────────────────────────────────
+# ─── Logs
+# ──────────────────────────────────────────────────────────────────────
 
 
 class AdminLogsView(AdminBaseView):
@@ -430,7 +446,8 @@ class AdminLogsView(AdminBaseView):
         )
 
 
-# ─── Email Test ────────────────────────────────────────────────────────────────
+# ─── Email Test
+# ────────────────────────────────────────────────────────────────
 
 
 class AdminEmailTestView(AdminBaseView):
@@ -445,7 +462,9 @@ class AdminEmailTestView(AdminBaseView):
             )
 
         # Usa as configs do banco (fallback para env)
-        host = _get_config_value("EMAIL_HOST") or getattr(settings, "EMAIL_HOST", "")
+        host = _get_config_value("EMAIL_HOST") or getattr(
+            settings, "EMAIL_HOST", ""
+        )
         _raw_port = _get_config_value("EMAIL_PORT") or getattr(
             settings, "EMAIL_PORT", "587"
         )
@@ -488,7 +507,9 @@ class AdminEmailTestView(AdminBaseView):
                 recipient_list=[to_email],
                 connection=connection,
             )
-            return Response({"message": f"Email enviado para {to_email} com sucesso."})
+            return Response(
+                {"message": f"Email enviado para {to_email} com sucesso."}
+            )
         except Exception as e:
             return Response(
                 {"error": f"Falha ao enviar email: {str(e)}"},
@@ -496,7 +517,8 @@ class AdminEmailTestView(AdminBaseView):
             )
 
 
-# ─── Restart All Deployments ───────────────────────────────────────────────────
+# ─── Restart All Deployments
+# ───────────────────────────────────────────────────
 
 # Deployments de aplicação reiniciados pelo painel. 404s são ignorados
 # automaticamente, então a mesma lista funciona em produção (api-blue/green)
@@ -513,7 +535,9 @@ def _restart_deployments() -> dict[str, Any]:
     if not os.path.exists(token_path):
         return {
             "success": False,
-            "message": "Fora do ambiente Kubernetes — reinício não disponível.",
+            "message": (
+                "Fora do ambiente Kubernetes" " — reinício não disponível."
+            ),
             "results": {},
         }
 
@@ -523,7 +547,9 @@ def _restart_deployments() -> dict[str, Any]:
         with open(ns_path) as f:
             namespace = f.read().strip()
 
-        kube_host = os.environ.get("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc")
+        kube_host = os.environ.get(
+            "KUBERNETES_SERVICE_HOST", "kubernetes.default.svc"
+        )
         kube_port = os.environ.get("KUBERNETES_SERVICE_PORT", "443")
         base_url = (
             f"https://{kube_host}:{kube_port}"
@@ -536,7 +562,9 @@ def _restart_deployments() -> dict[str, Any]:
                     "template": {
                         "metadata": {
                             "annotations": {
-                                "kubectl.kubernetes.io/restartedAt": now().isoformat()
+                                "kubectl.kubernetes.io/restartedAt": (
+                                    now().isoformat()
+                                )
                             }
                         }
                     }
@@ -592,7 +620,8 @@ def _restart_deployments() -> dict[str, Any]:
         return {
             "success": True,
             "message": (
-                f"{len(restarted)} deployment(s) reiniciado(s): {', '.join(restarted)}."
+                f"{len(restarted)} deployment(s) reiniciado(s):"
+                f" {', '.join(restarted)}."
             ),
             "results": results,
         }
@@ -630,7 +659,8 @@ class AdminRestartAllView(AdminBaseView):
         )
 
 
-# ─── Agents Status ─────────────────────────────────────────────────────────────
+# ─── Agents Status
+# ─────────────────────────────────────────────────────────────
 
 
 class AdminAgentsStatusView(AdminBaseView):
@@ -654,7 +684,9 @@ class AdminAgentsStatusView(AdminBaseView):
         )
 
         ollama_check = (
-            _check_ollama() if provider == "ollama" else {"status": "not_active"}
+            _check_ollama()
+            if provider == "ollama"
+            else {"status": "not_active"}
         )
 
         total_conversations = 0

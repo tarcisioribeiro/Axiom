@@ -4,7 +4,9 @@ from . import views
 
 urlpatterns = [
     path(
-        "payables/", views.PayableCreateListView.as_view(), name="payable-create-list"
+        "payables/",
+        views.PayableCreateListView.as_view(),
+        name="payable-create-list",
     ),
     path(
         "payables/<int:pk>/",

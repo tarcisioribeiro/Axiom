@@ -19,7 +19,10 @@ TEST_CONTENT_TYPE = "other"
 
 
 def _make_member(user, name="Test Member"):
-    """Creates a Member with a unique document_hash (required unique CharField)."""
+    """
+    Creates a Member with a unique document_hash (required unique
+    CharField).
+    """
     m = Member(
         name=name,
         user=user,
@@ -33,7 +36,10 @@ def _make_member(user, name="Test Member"):
 
 
 class BaseNotificationTestCase(APITestCase):
-    """Base class for notification tests — requires a Member linked to the user."""
+    """
+    Base class for notification tests — requires a Member linked to the
+    user.
+    """
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -44,7 +50,9 @@ class BaseNotificationTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
         self.member = _make_member(self.user)
 
@@ -71,11 +79,15 @@ class NotificationListViewTest(BaseNotificationTestCase):
         url = reverse("notification-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # The view auto-generates notifications; without related objects there are none
+        # The view auto-generates notifications; without related objects there
+        # are none
         self.assertIn("count", response.data)  # type: ignore
 
     def test_list_notifications_returns_own_notifications(self):
-        """Returns only notifications belonging to the requesting user's member."""
+        """
+        Returns only notifications belonging to the requesting user's
+        member.
+        """
         self._create_notification(title="My Notification")
         url = reverse("notification-list")
         response = self.client.get(url)
@@ -248,7 +260,9 @@ class BudgetNotificationCommandTest(BaseNotificationTestCase):
         return out.getvalue()
 
     def test_budget_warning_created_at_80_percent(self):
-        """Creates budget_warning notification when spending >= 80% of limit."""
+        """
+        Creates budget_warning notification when spending >= 80% of limit.
+        """
         self._run_command()
         self.assertTrue(
             Notification.objects.filter(
@@ -260,7 +274,10 @@ class BudgetNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_budget_exceeded_created_when_over_limit(self):
-        """Creates budget_exceeded notification when spending exceeds the limit."""
+        """
+        Creates budget_exceeded notification when spending exceeds the
+        limit.
+        """
         from expenses.models import Expense
 
         Expense.objects.create(
@@ -324,7 +341,9 @@ class BudgetNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_idempotent_does_not_duplicate(self):
-        """Running the command twice does not create duplicate notifications."""
+        """
+        Running the command twice does not create duplicate notifications.
+        """
         self._run_command()
         self._run_command()
         self.assertEqual(
@@ -392,7 +411,9 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
         return out.getvalue()
 
     def test_financial_goal_reached_notification_created(self):
-        """Creates financial_goal_reached when current_value >= target_value."""
+        """
+        Creates financial_goal_reached when current_value >= target_value.
+        """
         from decimal import Decimal
 
         self.vault.current_balance = Decimal("100000.00")
@@ -410,7 +431,10 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_financial_goal_approaching_created_within_30_days(self):
-        """Creates financial_goal_approaching when target_date <= 30 days away."""
+        """
+        Creates financial_goal_approaching when target_date <= 30 days
+        away.
+        """
         from datetime import timedelta
 
         self.goal.target_date = self.today + timedelta(days=15)
@@ -428,7 +452,10 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_no_approaching_notification_when_far_away(self):
-        """No approaching notification when target_date is more than 30 days away."""
+        """
+        No approaching notification when target_date is more than 30 days
+        away.
+        """
         from datetime import timedelta
 
         self.goal.target_date = self.today + timedelta(days=60)
@@ -446,7 +473,10 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_reached_takes_priority_over_approaching(self):
-        """When goal is reached and target_date is close, only reached is created."""
+        """
+        When goal is reached and target_date is close, only reached is
+        created.
+        """
         from datetime import timedelta
         from decimal import Decimal
 
@@ -495,7 +525,9 @@ class FinancialGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_idempotent_does_not_duplicate(self):
-        """Running the command twice does not create duplicate notifications."""
+        """
+        Running the command twice does not create duplicate notifications.
+        """
         from decimal import Decimal
 
         self.vault.current_balance = Decimal("100000.00")
@@ -615,7 +647,10 @@ class AgentInsightNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_no_agent_insight_below_80_percent(self):
-        """No agent_insight created when spending is below 80% of budget limit."""
+        """
+        No agent_insight created when spending is below 80% of budget
+        limit.
+        """
         from budgets.models import Budget
         from expenses.models import Expense
 
@@ -647,7 +682,10 @@ class AgentInsightNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_idempotent_does_not_duplicate(self):
-        """Running the command twice does not create duplicate agent_insight entries."""
+        """
+        Running the command twice does not create duplicate agent_insight
+        entries.
+        """
         self._run_command()
         self._run_command()
         self.assertEqual(
@@ -738,11 +776,16 @@ class ReadingGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_reading_goal_behind_notification_created_in_second_half(self):
-        """Creates reading_goal_behind in second half of year with < 50% progress."""
+        """
+        Creates reading_goal_behind in second half of year with < 50%
+        progress.
+        """
         import datetime as dt
         from unittest.mock import patch
 
-        mock_now = dt.datetime(self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc)
+        mock_now = dt.datetime(
+            self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc
+        )
         with patch("django.utils.timezone.now", return_value=mock_now):
             self._run_command()
         self.assertTrue(
@@ -755,11 +798,16 @@ class ReadingGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_no_behind_notification_in_first_half(self):
-        """No reading_goal_behind in the first half of year even with low progress."""
+        """
+        No reading_goal_behind in the first half of year even with low
+        progress.
+        """
         import datetime as dt
         from unittest.mock import patch
 
-        mock_now = dt.datetime(self.today.year, 3, 15, 8, 0, tzinfo=dt.timezone.utc)
+        mock_now = dt.datetime(
+            self.today.year, 3, 15, 8, 0, tzinfo=dt.timezone.utc
+        )
         with patch("django.utils.timezone.now", return_value=mock_now):
             self._run_command()
         self.assertFalse(
@@ -778,7 +826,9 @@ class ReadingGoalNotificationCommandTest(BaseNotificationTestCase):
 
         for i in range(5):
             self._create_read_book_with_reading(f"Half Book {i}")
-        mock_now = dt.datetime(self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc)
+        mock_now = dt.datetime(
+            self.today.year, 7, 15, 8, 0, tzinfo=dt.timezone.utc
+        )
         with patch("django.utils.timezone.now", return_value=mock_now):
             self._run_command()
         self.assertFalse(
@@ -791,7 +841,9 @@ class ReadingGoalNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_idempotent_does_not_duplicate(self):
-        """Running the command twice does not create duplicate notifications."""
+        """
+        Running the command twice does not create duplicate notifications.
+        """
         for i in range(10):
             self._create_read_book_with_reading(f"Idem Book {i}")
         self._run_command()
@@ -829,7 +881,10 @@ class ReconciliationPendingNotificationCommandTest(BaseNotificationTestCase):
         from decimal import Decimal
 
         from accounts.models import Account
-        from bank_reconciliation.models import BankStatementEntry, BankStatementImport
+        from bank_reconciliation.models import (
+            BankStatementEntry,
+            BankStatementImport,
+        )
 
         self.today = date.today()
         self.account = Account.objects.create(
@@ -873,7 +928,10 @@ class ReconciliationPendingNotificationCommandTest(BaseNotificationTestCase):
         return out.getvalue()
 
     def test_reconciliation_pending_notification_created(self):
-        """Creates reconciliation_pending for import with pending entries > 3 days."""
+        """
+        Creates reconciliation_pending for import with pending entries > 3
+        days.
+        """
         self._run_command()
         self.assertTrue(
             Notification.objects.filter(
@@ -947,7 +1005,9 @@ class ReconciliationPendingNotificationCommandTest(BaseNotificationTestCase):
         )
 
     def test_idempotent_does_not_duplicate(self):
-        """Running the command twice does not create duplicate notifications."""
+        """
+        Running the command twice does not create duplicate notifications.
+        """
         self._run_command()
         self._run_command()
         self.assertEqual(

@@ -1,5 +1,6 @@
 """
-Agente Intelectual — módulo Intelecto (biblioteca pessoal, cursos e habilidades).
+Agente Intelectual — módulo Intelecto
+(biblioteca pessoal, cursos e habilidades).
 Usa RAG (pgvector) para busca semântica em livros, resumos e destaques.
 """
 
@@ -271,9 +272,9 @@ class IntellectAgent(BaseAgent):
             result = []
             for b in books:
                 pages_read = (
-                    Reading.objects.filter(book_id=b["id"], is_deleted=False).aggregate(
-                        total=Sum("pages_read")
-                    )["total"]
+                    Reading.objects.filter(
+                        book_id=b["id"], is_deleted=False
+                    ).aggregate(total=Sum("pages_read"))["total"]
                     or 0
                 )
                 result.append(
@@ -351,7 +352,9 @@ class IntellectAgent(BaseAgent):
                 )
                 for c in data["chunks"]
             )
-            rag_section = f"Trechos encontrados via busca semântica:\n\n{chunk_block}"
+            rag_section = (
+                f"Trechos encontrados via busca semântica:\n\n{chunk_block}"
+            )
         else:
             rag_section = (
                 "Nenhum trecho indexado encontrado para esta pergunta. "
@@ -378,7 +381,11 @@ class IntellectAgent(BaseAgent):
             "\n".join(
                 "  - {} ({}) — {} | {} sessão(ões) registrada(s)".format(
                     safe_str(c["title"]),
-                    safe_str(c["platform"]) if c["platform"] else "s/plataforma",
+                    (
+                        safe_str(c["platform"])
+                        if c["platform"]
+                        else "s/plataforma"
+                    ),
                     safe_str(c["status"]),
                     c["sessions"],
                 )
@@ -407,7 +414,8 @@ class IntellectAgent(BaseAgent):
         return (
             "Você é um assistente especializado na biblioteca pessoal "
             "e jornada de aprendizado do usuário.\n"
-            "Use os trechos indexados para responder perguntas sobre livros lidos. "
+            "Use os trechos indexados para responder perguntas"
+            " sobre livros lidos. "
             f"Cite sempre a fonte quando usar informações de livros.\n\n"
             f"{rag_section}\n\n"
             f"Livros ({data['period_label']}):\n{books_block}\n\n"
@@ -415,6 +423,8 @@ class IntellectAgent(BaseAgent):
             f"Habilidades:\n{skills_block}\n\n"
             f"Pergunta: {ctx.query}\n\n"
             "Use markdown para organizar a resposta. "
-            "Para recomendações de livros, cite autor e por que seria relevante. "
-            "Para habilidades e cursos, sugira próximos passos de aprendizado."
+            "Para recomendações de livros, cite autor"
+            " e por que seria relevante. "
+            "Para habilidades e cursos, sugira"
+            " próximos passos de aprendizado."
         )

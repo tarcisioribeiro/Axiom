@@ -26,7 +26,11 @@ class Revenue(BaseModel):
         max_length=200, null=False, blank=False, verbose_name="Descrição"
     )
     value = models.DecimalField(
-        verbose_name="Valor", null=False, blank=False, max_digits=10, decimal_places=2
+        verbose_name="Valor",
+        null=False,
+        blank=False,
+        max_digits=10,
+        decimal_places=2,
     )
     date = models.DateField(verbose_name="Data", null=False, blank=False)
     horary = models.TimeField(verbose_name="Horário", null=False, blank=False)
@@ -49,7 +53,10 @@ class Revenue(BaseModel):
         max_length=200, verbose_name="Fonte da Receita", null=True, blank=True
     )
     tax_amount = models.DecimalField(
-        verbose_name="Valor de Impostos", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Valor de Impostos",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     net_amount = models.DecimalField(
         verbose_name="Valor Líquido",
@@ -71,7 +78,9 @@ class Revenue(BaseModel):
         null=True,
         blank=True,
     )
-    recurring = models.BooleanField(verbose_name="Receita Recorrente", default=False)
+    recurring = models.BooleanField(
+        verbose_name="Receita Recorrente", default=False
+    )
     frequency = models.CharField(
         max_length=20,
         choices=PAYMENT_FREQUENCY_CHOICES,
@@ -119,7 +128,9 @@ class Revenue(BaseModel):
     is_initial_balance = models.BooleanField(
         default=False,
         verbose_name="Saldo Inicial",
-        help_text="Receita gerada automaticamente a partir do saldo inicial da conta",
+        help_text=(
+            "Receita gerada automaticamente a partir do saldo inicial da conta"
+        ),
     )
     tags = models.ManyToManyField(
         "expenses.Tag",
@@ -161,7 +172,9 @@ class Revenue(BaseModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.description}, {self.category} - {self.date}, {self.horary}"
+        return (
+            f"{self.description}, {self.category} - {self.date}, {self.horary}"
+        )
 
 
 class FixedRevenue(BaseModel):
@@ -275,4 +288,6 @@ class FixedRevenueGenerationLog(BaseModel):
         verbose_name_plural = "Logs de Geração de Receitas Fixas"
 
     def __str__(self):
-        return f"Geração Receitas {self.month} - {self.total_generated} receitas"
+        return (
+            f"Geração Receitas {self.month} - {self.total_generated} receitas"
+        )

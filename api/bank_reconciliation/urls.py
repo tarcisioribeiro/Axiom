@@ -36,7 +36,7 @@ urlpatterns = [
         name="bank-reconciliation-entry-update",
     ),
     path(
-        "bank-reconciliation/imports/<int:import_pk>/entries/<int:entry_pk>/match/",
+        "bank-reconciliation/imports/<int:import_pk>/entries/<int:entry_pk>/match/",  # noqa: E501
         BankStatementEntryManualMatchView.as_view(),
         name="bank-reconciliation-entry-manual-match",
     ),

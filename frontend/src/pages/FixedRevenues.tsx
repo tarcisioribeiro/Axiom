@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Pencil,
@@ -106,6 +107,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -523,7 +525,7 @@ export default function FixedRevenues({ embedded = false }: { embedded?: boolean
                       const Icon = REVENUE_CATEGORY_ICONS[key];
                       return (
                         <SelectItem key={key} value={key}>
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-sm">
                             {Icon && (
                               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                             )}

@@ -47,7 +47,9 @@ class TestLLMClientChat(TestCase):
         from agents.core.llm_client import LLMClient
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {"message": {"content": "test response"}}
+        mock_response.json.return_value = {
+            "message": {"content": "test response"}
+        }
         mock_post.return_value = mock_response
 
         messages = [{"role": "user", "content": "Hello"}]
@@ -65,7 +67,9 @@ class TestLLMClientChat(TestCase):
         from agents.core.llm_client import LLMClient
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {"message": {"content": "test response"}}
+        mock_response.json.return_value = {
+            "message": {"content": "test response"}
+        }
         mock_post.return_value = mock_response
 
         messages = [{"role": "user", "content": "Hello"}]
@@ -76,7 +80,8 @@ class TestLLMClientChat(TestCase):
 
 
 class _SyncThread:
-    """Replaces threading.Thread in tests — runs target synchronously on start()."""
+    """Replaces threading.Thread in tests — runs target synchronously on
+    start()."""
 
     def __init__(self, target=None, daemon=False, **kwargs):
         self._target = target
@@ -86,7 +91,9 @@ class _SyncThread:
             self._target()
 
 
-def _make_mock_agent(tokens: list[str], sources: list[str] | None = None) -> MagicMock:
+def _make_mock_agent(
+    tokens: list[str], sources: list[str] | None = None
+) -> MagicMock:
     """Build a mock agent whose stream() yields the given tokens."""
     mock_agent = MagicMock()
     mock_agent.name = "MockAgent"
@@ -112,9 +119,13 @@ class TestAgentStreamView(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
-    def _post_stream(self, query: str = "test question") -> StreamingHttpResponse:
+    def _post_stream(
+        self, query: str = "test question"
+    ) -> StreamingHttpResponse:
         return self.client.post(
             "/api/v1/agents/stream/",
             {"query": query, "session_id": self._SESSION_ID},
@@ -147,7 +158,9 @@ class TestAgentStreamView(APITestCase):
         mock_memory: MagicMock,
         mock_conv: MagicMock,
     ) -> None:
-        mock_select.return_value = _make_mock_agent(["Hel", "lo"], sources=["src1"])
+        mock_select.return_value = _make_mock_agent(
+            ["Hel", "lo"], sources=["src1"]
+        )
         mock_memory.get.return_value = []
 
         response = self._post_stream()
@@ -258,8 +271,9 @@ class TestAgentStreamView(APITestCase):
         mock_memory.get.return_value = []
 
         response = self._post_stream()
-        # Django wraps streaming_content in a map object; wrap in a genexp so we
-        # get a closeable generator that simulates a client disconnect mid-stream.
+        # Django wraps streaming_content in a map object; wrap in a genexp
+        # so we get a closeable generator that simulates a client disconnect
+        # mid-stream.
         gen = (chunk for chunk in response.streaming_content)
         next(gen)  # consume first event
         try:
@@ -278,7 +292,9 @@ class TestAgentAskViewQueryId(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
     @patch("agents.views.AgentRouter.route")
     @patch("agents.views.ConversationMemory")
@@ -287,7 +303,9 @@ class TestAgentAskViewQueryId(APITestCase):
     ) -> None:
         from agents.core.base_agent import AgentResponse
 
-        mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
+        mock_route.return_value = AgentResponse(
+            content="answer", agent_name="finance"
+        )
         mock_memory.get.return_value = []
 
         session = "550e8400-e29b-41d4-a716-446655440001"
@@ -312,7 +330,9 @@ class TestAgentAskViewQueryId(APITestCase):
         from agents.core.base_agent import AgentResponse
         from agents.models import AgentConversation
 
-        mock_route.return_value = AgentResponse(content="answer", agent_name="finance")
+        mock_route.return_value = AgentResponse(
+            content="answer", agent_name="finance"
+        )
         mock_memory.get.return_value = []
 
         session = "550e8400-e29b-41d4-a716-446655440002"
@@ -361,12 +381,15 @@ class TestAgentRouterSemantic(TestCase):
         agent = AgentRouter.select(ctx)
 
         # Both 'intellect' and 'library' agents map to the library domain —
-        # either is a valid selection when semantic score is high for that domain.
+        # either is a valid selection when semantic score is high for that
+        # domain.
         self.assertIn(agent.name, {"library", "intellect"})
         mock_scores.assert_called_once_with([0.1] * 4, self.user.pk)
 
     @patch("agents.core.router.LLMClient")
-    def test_routing_uses_keywords_when_embed_fails(self, mock_llm: MagicMock) -> None:
+    def test_routing_uses_keywords_when_embed_fails(
+        self, mock_llm: MagicMock
+    ) -> None:
         from agents.core.base_agent import AgentContext
         from agents.core.router import AgentRouter
 
@@ -401,7 +424,9 @@ class TestAgentRouterSemantic(TestCase):
 class TestNewModularAgents(TestCase):
     """Testes básicos dos 4 novos agentes modulares."""
 
-    def _assert_model(self, agent_cls, provider: str, expected_model: str) -> None:
+    def _assert_model(
+        self, agent_cls, provider: str, expected_model: str
+    ) -> None:
         agent = agent_cls()
         with patch("agents.core.base_agent.cfg", return_value=provider):
             self.assertEqual(agent.get_model(), expected_model)
@@ -450,14 +475,18 @@ class TestNewModularAgents(TestCase):
         from agents.agents.personal_agent import PersonalAgent
 
         agent = PersonalAgent()
-        score = agent.can_handle("quais são minhas rotinas de treino e nutrição hoje?")
+        score = agent.can_handle(
+            "quais são minhas rotinas de treino e nutrição hoje?"
+        )
         self.assertGreater(score, 0.2)
 
     def test_financial_agent_can_handle_high_score(self) -> None:
         from agents.agents.financial_agent import FinancialAgent
 
         agent = FinancialAgent()
-        score = agent.can_handle("quanto gastei em despesas esse mês no cartão?")
+        score = agent.can_handle(
+            "quanto gastei em despesas esse mês no cartão?"
+        )
         self.assertGreater(score, 0.2)
 
     def test_security_agent_can_handle_high_score(self) -> None:
@@ -471,7 +500,9 @@ class TestNewModularAgents(TestCase):
         from agents.agents.intellect_agent import IntellectAgent
 
         agent = IntellectAgent()
-        score = agent.can_handle("quais livros li e quais cursos completei esse mês?")
+        score = agent.can_handle(
+            "quais livros li e quais cursos completei esse mês?"
+        )
         self.assertGreater(score, 0.2)
 
     def test_router_select_by_name_personal(self) -> None:

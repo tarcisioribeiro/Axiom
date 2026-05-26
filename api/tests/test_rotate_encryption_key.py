@@ -149,7 +149,8 @@ class RotateEncryptionKeyWithAccountDataTest(TestCase):
         old_key = self.old_key_str.encode()
         encrypted = _encrypt(account_number, old_key)
 
-        # Create account without triggering encryption logic (no save() override)
+        # Create account without triggering encryption logic (no save()
+        # override)
         account = Account.objects.create(
             account_name="Test Bank",
             institution_name="CEF",
@@ -220,7 +221,9 @@ class RotateEncryptionKeyWithMemberDataTest(TestCase):
             password="pass123",
         )
 
-    def _create_member_with_old_key(self, document: str, phone: str = "11999999999"):
+    def _create_member_with_old_key(
+        self, document: str, phone: str = "11999999999"
+    ):
         """Create a Member with _document encrypted using the old key,"""
         """bypassing save()."""
         from members.models import Member
@@ -229,7 +232,8 @@ class RotateEncryptionKeyWithMemberDataTest(TestCase):
         encrypted_doc = _encrypt(document, old_key)
         doc_hash = _hmac_sha256(document, self.old_key_str)
 
-        # Use update_or_create at DB level to bypass the save() encryption hook.
+        # Use update_or_create at DB level to bypass the save() encryption
+        # hook.
         # First create a valid member without document, then inject raw values.
         with patch.dict(os.environ, {"ENCRYPTION_KEY": self.old_key_str}):
             member = Member.objects.create(
@@ -283,7 +287,8 @@ class RotateEncryptionKeyWithMemberDataTest(TestCase):
             email="memberrotate2@test.com",
             password="pass123",
         )
-        # Create without _document first (save() skips decrypt when _document is falsy)
+        # Create without _document first (save() skips decrypt when _document
+        # is falsy)
         member = Member.objects.create(
             user=user2,
             name="Skip Member",
@@ -293,7 +298,9 @@ class RotateEncryptionKeyWithMemberDataTest(TestCase):
             created_by=self.user,
         )
         # Inject the wrong-key-encrypted value at DB level, bypassing save()
-        Member.objects.filter(pk=member.pk).update(_document=encrypted_with_wrong_key)
+        Member.objects.filter(pk=member.pk).update(
+            _document=encrypted_with_wrong_key
+        )
         member.refresh_from_db()
         original_document = member._document
 
@@ -361,7 +368,9 @@ class RotateEncryptionKeyVaultItemsTest(TestCase):
             owner=member,
             created_by=self.user,
         )
-        Password.objects.filter(pk=password.pk).update(_password=vault_encrypted)
+        Password.objects.filter(pk=password.pk).update(
+            _password=vault_encrypted
+        )
         password.refresh_from_db()
         original_password = password._password
 

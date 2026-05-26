@@ -76,7 +76,9 @@ class LeapYearEdgeCaseTest(InstanceGeneratorBaseTestCase):
         non_leap_feb = date(2025, 2, 28)
         self.assertFalse(self.task.should_appear_on_date(non_leap_feb))
 
-        instances = InstanceGenerator.generate_for_date(self.member, non_leap_feb)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, non_leap_feb
+        )
         self.assertEqual(len(instances), 0)
 
     def test_no_day_in_february_non_leap_year_matches(self):
@@ -97,7 +99,8 @@ class LeapYearEdgeCaseTest(InstanceGeneratorBaseTestCase):
         self.assertEqual(len(instances), 1)
 
     def test_instance_not_created_for_non_existent_date(self):
-        """No TaskInstance is ever created for a Feb date in a non-leap year."""
+        """No TaskInstance is ever created for a Feb date in a non-leap
+        year."""
         for day in range(1, 29):
             d = date(2025, 2, day)
             InstanceGenerator.generate_for_date(self.member, d)
@@ -144,9 +147,12 @@ class DSTTransitionTest(InstanceGeneratorBaseTestCase):
     def test_instance_created_at_dst_start(self):
         """Generator creates an instance even at the DST transition start."""
         target_date = date(2018, 11, 4)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
         self.assertEqual(len(instances), 1)
-        # Scheduled time is stored as-is; no DST offset is applied to naive times
+        # Scheduled time is stored as-is; no DST offset is applied to naive
+        # times
         self.assertEqual(instances[0].scheduled_time, time(0, 30))
 
     @freeze_time("2018-11-04 02:30:00")  # UTC — inside the historical DST gap
@@ -154,13 +160,16 @@ class DSTTransitionTest(InstanceGeneratorBaseTestCase):
         """An instance whose scheduled_time falls inside the skipped DST hour
         retains its original time value; no exception is raised."""
         target_date = date(2018, 11, 4)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].scheduled_time, time(0, 30))
 
     @freeze_time("2018-11-04 02:00:00")
     def test_no_duplicate_instances_across_dst_calls(self):
-        """Calling generate_for_date twice around DST does not create duplicates."""
+        """Calling generate_for_date twice around DST does not create
+        duplicates."""
         target_date = date(2018, 11, 4)
         InstanceGenerator.generate_for_date(self.member, target_date)
         InstanceGenerator.generate_for_date(self.member, target_date)
@@ -187,8 +196,12 @@ class DSTTransitionTest(InstanceGeneratorBaseTestCase):
             owner=self.member,
         )
         target_date = date(2018, 11, 4)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
-        interval_instances = [i for i in instances if i.template_id == interval_task.pk]
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
+        interval_instances = [
+            i for i in instances if i.template_id == interval_task.pk
+        ]
         self.assertEqual(len(interval_instances), 3)
         # Times should be 06:00, 10:00, 14:00
         scheduled_times = [i.scheduled_time for i in interval_instances]
@@ -207,7 +220,10 @@ class MidnightBoundaryTest(InstanceGeneratorBaseTestCase):
 
     @freeze_time("2026-03-19 02:59:00")  # UTC → 23:59 BRT (UTC-3)
     def test_instance_created_at_2359_boundary(self):
-        """Generator creates an instance with scheduled_time=23:59 at end of day."""
+        """
+        Generator creates an instance with scheduled_time=23:59 at end of
+        day.
+        """
         RoutineTask.objects.create(
             name="Late Night Task",
             category="health",
@@ -216,7 +232,9 @@ class MidnightBoundaryTest(InstanceGeneratorBaseTestCase):
             owner=self.member,
         )
         target_date = date(2026, 3, 19)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].scheduled_time, time(23, 59))
 
@@ -238,7 +256,9 @@ class MidnightBoundaryTest(InstanceGeneratorBaseTestCase):
             owner=self.member,
         )
         target_date = date(2026, 3, 19)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
         self.assertEqual(len(instances), 2)
         self.assertEqual(instances[0].scheduled_time, time(8, 0))
         self.assertEqual(instances[1].scheduled_time, time(23, 59))
@@ -295,7 +315,9 @@ class MidnightBoundaryTest(InstanceGeneratorBaseTestCase):
             owner=self.member,
         )
         target_date = date(2026, 3, 19)
-        instances = InstanceGenerator.generate_for_date(self.member, target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, target_date
+        )
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].scheduled_date, target_date)
 
@@ -344,12 +366,18 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
         self.assertEqual(second_instances[0].pk, first_pk)
         # Snapshot frozen at generation time
         self.assertEqual(second_instances[0].task_name, "Original Name")
-        self.assertEqual(second_instances[0].task_description, "Original description")
+        self.assertEqual(
+            second_instances[0].task_description, "Original description"
+        )
         self.assertEqual(second_instances[0].icon, "Heart")
 
     def test_completed_instance_not_touched_by_force_regenerate(self):
-        """Completed instances are preserved even with force_regenerate=True."""
-        instances = InstanceGenerator.generate_for_date(self.member, self.target_date)
+        """
+        Completed instances are preserved even with force_regenerate=True.
+        """
+        instances = InstanceGenerator.generate_for_date(
+            self.member, self.target_date
+        )
         instance = instances[0]
         instance.status = "completed"
         instance.save()
@@ -367,7 +395,9 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
 
     def test_pending_instance_refreshed_by_force_regenerate(self):
         """Pending instances ARE updated when force_regenerate=True."""
-        instances = InstanceGenerator.generate_for_date(self.member, self.target_date)
+        instances = InstanceGenerator.generate_for_date(
+            self.member, self.target_date
+        )
         instance = instances[0]
         self.assertEqual(instance.status, "pending")
 
@@ -381,8 +411,12 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
         self.assertEqual(instance.task_name, "Force Updated Name")
 
     def test_skipped_instance_not_touched_by_force_regenerate(self):
-        """Skipped instances (non-pending) are preserved by force_regenerate."""
-        instances = InstanceGenerator.generate_for_date(self.member, self.target_date)
+        """
+        Skipped instances (non-pending) are preserved by force_regenerate.
+        """
+        instances = InstanceGenerator.generate_for_date(
+            self.member, self.target_date
+        )
         instance = instances[0]
         instance.status = "skipped"
         instance.save()
@@ -398,7 +432,9 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
         self.assertEqual(instance.status, "skipped")
 
     def test_no_duplicate_rows_on_repeated_generate(self):
-        """Multiple calls to generate_for_date must not create duplicate rows."""
+        """
+        Multiple calls to generate_for_date must not create duplicate rows.
+        """
         for _ in range(3):
             InstanceGenerator.generate_for_date(self.member, self.target_date)
 
@@ -413,7 +449,9 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
     def test_inactive_template_produces_no_new_instances(self):
         """After deactivating the template, future dates yield no instances."""
         # First generation succeeds
-        first = InstanceGenerator.generate_for_date(self.member, self.target_date)
+        first = InstanceGenerator.generate_for_date(
+            self.member, self.target_date
+        )
         self.assertEqual(len(first), 1)
 
         # Deactivate
@@ -421,8 +459,12 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
         self.task.save()
 
         future_date = date(2026, 3, 20)
-        instances = InstanceGenerator.generate_for_date(self.member, future_date)
-        task_instances = [i for i in instances if i.template_id == self.task.pk]
+        instances = InstanceGenerator.generate_for_date(
+            self.member, future_date
+        )
+        task_instances = [
+            i for i in instances if i.template_id == self.task.pk
+        ]
         self.assertEqual(len(task_instances), 0)
 
     def test_deleted_template_produces_no_instances(self):
@@ -433,6 +475,10 @@ class TemplateChangeImmutabilityTest(InstanceGeneratorBaseTestCase):
         self.task.save()
 
         future_date = date(2026, 3, 25)
-        instances = InstanceGenerator.generate_for_date(self.member, future_date)
-        task_instances = [i for i in instances if i.template_id == self.task.pk]
+        instances = InstanceGenerator.generate_for_date(
+            self.member, future_date
+        )
+        task_instances = [
+            i for i in instances if i.template_id == self.task.pk
+        ]
         self.assertEqual(len(task_instances), 0)

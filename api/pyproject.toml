@@ -11,7 +11,7 @@ description = "Local flake8 plugins for Axiom API"
 DRF = "flake8_no_serializer_all:NoSerializerAllChecker"
 
 [tool.black]
-line-length = 88
+line-length = 79
 target-version = ['py311']
 include = '\.pyi?$'
 exclude = '''
@@ -33,29 +33,33 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
-line_length = 88
+line_length = 79
 skip = [".venv", "venv", "migrations", ".git"]
 known_django = ["django", "rest_framework"]
 known_first_party = [
     "app",
     "authentication",
     "accounts",
+    "admin_panel",
     "budgets",
     "credit_cards",
     "expenses",
+    "exchange_rates",
     "revenues",
     "loans",
     "members",
+    "notifications",
     "transfers",
     "dashboard",
     "security",
     "library",
     "personal_planning",
     "payables",
+    "receivables",
     "vaults",
-    "ai_assistant",
     "agents",
     "bank_reconciliation",
+    "webhooks",
 ]
 sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
@@ -155,8 +159,6 @@ ignore_missing_imports = true
 # Add type annotations incrementally going forward.
 [[tool.mypy.overrides]]
 module = [
-    "ai_assistant",
-    "ai_assistant.*",
     "agents",
     "agents.*",
     "budgets",
@@ -202,18 +204,3 @@ warn_return_any = false
 
 [tool.bandit]
 skips = ["B608"]
-
-[tool.flake8]
-max-line-length = 88
-extend-ignore = ["E203", "W503"]
-exclude = [
-    ".git",
-    "__pycache__",
-    "migrations",
-    ".venv",
-    "build",
-    "dist",
-]
-per-file-ignores = [
-    "__init__.py:F401",
-]

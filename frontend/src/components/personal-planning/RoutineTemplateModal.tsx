@@ -66,6 +66,7 @@ export function RoutineTemplateModal({
     if (open) {
       void loadTemplates();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const loadTemplates = async () => {

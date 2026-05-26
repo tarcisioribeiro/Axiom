@@ -16,7 +16,10 @@ from rest_framework.response import Response
 
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 from .throttles import LoginRateThrottle
 
@@ -136,7 +139,8 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         # Criar response
         response = Response(
-            {"message": "Token renovado com sucesso"}, status=status.HTTP_200_OK
+            {"message": "Token renovado com sucesso"},
+            status=status.HTTP_200_OK,
         )
 
         # Atualizar access token no cookie
@@ -186,7 +190,9 @@ class CookieTokenVerifyView(TokenRefreshView):
 
         try:
             AccessToken(access_token)  # type: ignore[arg-type]
-            return Response({"detail": "Token válido"}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Token válido"}, status=status.HTTP_200_OK
+            )
         except TokenError:
             return Response(
                 {"detail": "Token inválido ou expirado"},
@@ -198,7 +204,8 @@ class CookieTokenVerifyView(TokenRefreshView):
 @permission_classes([IsAuthenticated])
 def logout_view(request: Request) -> Response:
     """
-    View de logout que invalida o refresh token no servidor e remove os cookies.
+    View de logout que invalida o refresh token no servidor e remove os
+    cookies.
     """
     refresh_token = request.COOKIES.get("refresh_token")
     if refresh_token:

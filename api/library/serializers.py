@@ -188,7 +188,9 @@ class BookSerializer(serializers.ModelSerializer):
     language_display = serializers.CharField(
         source="get_language_display", read_only=True
     )
-    genre_display = serializers.CharField(source="get_genre_display", read_only=True)
+    genre_display = serializers.CharField(
+        source="get_genre_display", read_only=True
+    )
     literarytype_display = serializers.CharField(
         source="get_literarytype_display", read_only=True
     )
@@ -203,7 +205,9 @@ class BookSerializer(serializers.ModelSerializer):
         many=True, read_only=True
     )
     authors_names = serializers.SerializerMethodField()
-    publisher_name = serializers.CharField(source="publisher.name", read_only=True)
+    publisher_name = serializers.CharField(
+        source="publisher.name", read_only=True
+    )
     has_summary = serializers.SerializerMethodField()
     total_pages_read = serializers.SerializerMethodField()
     reading_progress = serializers.SerializerMethodField()
@@ -271,7 +275,9 @@ class BookSerializer(serializers.ModelSerializer):
         return obj.summaries.filter(deleted_at__isnull=True).exists()
 
     def get_total_pages_read(self, obj):
-        total = sum(r.pages_read for r in obj.readings.filter(deleted_at__isnull=True))
+        total = sum(
+            r.pages_read for r in obj.readings.filter(deleted_at__isnull=True)
+        )
         return total
 
     def get_reading_progress(self, obj):
@@ -281,7 +287,8 @@ class BookSerializer(serializers.ModelSerializer):
         return 0.0
 
     def _calc_avg_pages_per_day(self, readings_qs):
-        """Calcula média de páginas por dia baseado em dias distintos de leitura."""
+        """Calcula média de páginas por dia baseado em dias distintos
+        de leitura."""
         agg = readings_qs.aggregate(
             total_pages=Sum("pages_read"),
             distinct_days=Count("reading_date", distinct=True),
@@ -371,7 +378,9 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         if "publish_date" in data and data["publish_date"] == "":
             data = data.copy()
             data["publish_date"] = None
-        if "rating" in data and (data["rating"] == "" or data["rating"] is None):
+        if "rating" in data and (
+            data["rating"] == "" or data["rating"] is None
+        ):
             data = data.copy()
             data["rating"] = None
         return super().to_internal_value(data)
@@ -380,7 +389,9 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         title = data.get("title", getattr(self.instance, "title", None))
         owner = data.get("owner", getattr(self.instance, "owner", None))
         if title and owner:
-            qs = Book.objects.filter(title=title, owner=owner, deleted_at__isnull=True)
+            qs = Book.objects.filter(
+                title=title, owner=owner, deleted_at__isnull=True
+            )
             if self.instance:
                 qs = qs.exclude(pk=self.instance.pk)
             if qs.exists():
@@ -518,7 +529,8 @@ class ReadingCreateUpdateSerializer(serializers.ModelSerializer):
         """
         Atualiza o status do livro baseado nas leituras:
         - 'to_read' -> 'reading': quando a primeira leitura é cadastrada
-        - 'reading' -> 'read': quando total de páginas lidas >= páginas do livro
+        - 'reading' -> 'read': quando total de páginas lidas >=
+          páginas do livro
         """
         # Calcula o total de páginas lidas
         total_pages_read = sum(
@@ -685,7 +697,9 @@ class BookHighlightSerializer(serializers.ModelSerializer):
     highlight_type_display = serializers.CharField(
         source="get_highlight_type_display", read_only=True
     )
-    color_display = serializers.CharField(source="get_color_display", read_only=True)
+    color_display = serializers.CharField(
+        source="get_color_display", read_only=True
+    )
 
     class Meta:
         model = BookHighlight
@@ -746,7 +760,8 @@ class MarkAsReadSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {
                     "end_date": (
-                        "A data de fim deve ser igual ou posterior à data de início."
+                        "A data de fim deve ser igual ou posterior"
+                        " à data de início."
                     )
                 }
             )
@@ -768,7 +783,9 @@ class CourseSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(
         source="get_category_display", read_only=True
     )
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
     total_lessons = serializers.IntegerField(read_only=True)
     completed_lessons = serializers.IntegerField(read_only=True)
     progress_percentage = serializers.FloatField(read_only=True)
@@ -899,7 +916,9 @@ class CourseModuleSerializer(serializers.ModelSerializer):
         return obj.lessons.filter(deleted_at__isnull=True).count()
 
     def get_completed_lessons(self, obj):
-        return obj.lessons.filter(is_completed=True, deleted_at__isnull=True).count()
+        return obj.lessons.filter(
+            is_completed=True, deleted_at__isnull=True
+        ).count()
 
 
 class CourseModuleCreateUpdateSerializer(serializers.ModelSerializer):
@@ -974,7 +993,9 @@ class SkillSerializer(serializers.ModelSerializer):
     proficiency_display = serializers.CharField(
         source="get_proficiency_display", read_only=True
     )
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
     proficiency_level = serializers.SerializerMethodField()
 
     class Meta:
@@ -1013,8 +1034,12 @@ class SkillCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criação/atualização de habilidades."""
 
     def validate(self, data):
-        owner = data.get("owner") or (self.instance.owner if self.instance else None)
-        name = data.get("name") or (self.instance.name if self.instance else None)
+        owner = data.get("owner") or (
+            self.instance.owner if self.instance else None
+        )
+        name = data.get("name") or (
+            self.instance.name if self.instance else None
+        )
         if owner and name:
             qs = Skill.objects.filter(
                 name__iexact=name, owner=owner, deleted_at__isnull=True

@@ -10,7 +10,8 @@ from exchange_rates.models import CURRENCY_CHOICES, ExchangeRate
 
 
 class LatestRatesView(APIView):
-    """GET /api/v1/exchange-rates/ — cotações mais recentes de todas as moedas."""
+    """GET /api/v1/exchange-rates/ — cotações mais recentes de todas as
+    moedas."""
 
     permission_classes = (IsAuthenticated,)
 
@@ -53,7 +54,8 @@ class ConvertCurrencyView(APIView):
             amount = Decimal(str(amount_raw))
         except InvalidOperation:
             return Response(
-                {"detail": "amount inválido."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "amount inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         converted = ExchangeRate.convert(amount, from_currency, to_currency)

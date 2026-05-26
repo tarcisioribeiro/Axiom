@@ -9,7 +9,12 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from app.health import backup_health_check, health_check, live_check, ready_check
+from app.health import (
+    backup_health_check,
+    health_check,
+    live_check,
+    ready_check,
+)
 from app.views import PurgeDeletedView, current_date
 
 urlpatterns = [
@@ -20,7 +25,11 @@ urlpatterns = [
     path("health/", health_check, name="health-check"),
     path("ready/", ready_check, name="ready-check"),
     path("live/", live_check, name="live-check"),
-    path("api/v1/health/backup/", backup_health_check, name="backup-health-check"),
+    path(
+        "api/v1/health/backup/",
+        backup_health_check,
+        name="backup-health-check",
+    ),
     # App utilities
     path("api/v1/app/current-date/", current_date, name="current-date"),
     path(
@@ -76,8 +85,14 @@ if settings.DEBUG:
             name="swagger-ui",
         ),
         path(
-            "api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
+            "api/redoc/",
+            SpectacularRedocView.as_view(url_name="schema"),
+            name="redoc",
         ),
     ]
-    urlpatterns += static(settings.STATIC_URL or "", document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.STATIC_URL or "", document_root=settings.STATIC_ROOT
+    )
+    urlpatterns += static(
+        settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT
+    )

@@ -66,7 +66,11 @@ class ForecastAgent(BaseAgent):
             "expected_revenues": expected_revenues,
             "projection": projection,
             "days": days,
-            "sources": ["Contas bancárias", "Despesas fixas", "Histórico de receitas"],
+            "sources": [
+                "Contas bancárias",
+                "Despesas fixas",
+                "Histórico de receitas",
+            ],
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
@@ -90,7 +94,8 @@ class ForecastAgent(BaseAgent):
 
         revenue_lines = (
             "\n".join(
-                f"  - {safe_str(r['description'])}: ~R$ {r['avg_value']:.2f}/mês"
+                f"  - {safe_str(r['description'])}: "
+                f"~R$ {r['avg_value']:.2f}/mês"
                 for r in data["expected_revenues"][:5]
             )
             or "  (sem receitas recorrentes identificadas)"

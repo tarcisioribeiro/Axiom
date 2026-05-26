@@ -1,9 +1,12 @@
 """
-Security view tests — passwords, stored cards/accounts, archives, activity logs,
+Security view tests — passwords, stored cards/accounts, archives, activity
+logs,
 security dashboard, and vault views.
 
-The VaultLockedMixin falls back to app-key mode when no VaultConfig exists for the
-user, so tests that don't set up a VaultConfig will work without vault unlocking.
+The VaultLockedMixin falls back to app-key mode when no VaultConfig exists for
+the
+user, so tests that don't set up a VaultConfig will work without vault
+unlocking.
 """
 
 from django.contrib.auth.models import User
@@ -22,7 +25,10 @@ from members.models import Member
 
 
 class BaseSecurityTestCase(APITestCase):
-    """Superuser + JWT + Member linked to user (no VaultConfig → app-key mode)."""
+    """
+    Superuser + JWT + Member linked to user (no VaultConfig → app-key
+    mode).
+    """
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -33,7 +39,9 @@ class BaseSecurityTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Sec User",
             document_hash="s" * 64,
@@ -112,7 +120,9 @@ class PasswordViewTest(BaseSecurityTestCase):
 
     def test_generate_password(self):
         url = reverse("password-generate")
-        response = self.client.post(url, {"length": 16, "include_symbols": True})
+        response = self.client.post(
+            url, {"length": 16, "include_symbols": True}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_password_health_report(self):

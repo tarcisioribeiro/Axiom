@@ -97,7 +97,8 @@ MEDIA_TYPE = (("Dig", "Digital"), ("Phi", "Física"))
 
 
 def book_file_upload_to(instance, filename):
-    """Armazena em pasta exclusiva por pk, preservando o nome original do arquivo."""
+    """Armazena em pasta exclusiva por pk, preservando o nome original
+    do arquivo."""
     return f"library/books/{instance.pk}/{filename}"
 
 
@@ -197,7 +198,10 @@ class Author(BaseModel):
         null=True, blank=True, verbose_name="Ano de Nascimento"
     )
     birth_era = models.CharField(
-        max_length=2, choices=ERA_CHOICES, default="DC", verbose_name="Era (Nascimento)"
+        max_length=2,
+        choices=ERA_CHOICES,
+        default="DC",
+        verbose_name="Era (Nascimento)",
     )
     death_year = models.PositiveIntegerField(
         null=True, blank=True, verbose_name="Ano de Falecimento"
@@ -216,9 +220,14 @@ class Author(BaseModel):
         null=True,
         verbose_name="Nacionalidade",
     )
-    biography = models.TextField(null=True, blank=True, verbose_name="Biografia")
+    biography = models.TextField(
+        null=True, blank=True, verbose_name="Biografia"
+    )
     photo = models.ImageField(
-        upload_to="library/authors/", null=True, blank=True, verbose_name="Foto"
+        upload_to="library/authors/",
+        null=True,
+        blank=True,
+        verbose_name="Foto",
     )
     owner = models.ForeignKey(
         "members.Member",
@@ -250,7 +259,11 @@ class Publisher(BaseModel):
     )
     website = models.URLField(blank=True, null=True, verbose_name="Website")
     country = models.CharField(
-        max_length=100, choices=COUNTRIES, blank=True, null=True, verbose_name="País"
+        max_length=100,
+        choices=COUNTRIES,
+        blank=True,
+        null=True,
+        verbose_name="País",
     )
     founded_year = models.PositiveIntegerField(
         blank=True, null=True, verbose_name="Ano de fundação"
@@ -301,7 +314,11 @@ class Book(BaseModel):
         verbose_name="Idioma",
     )
     genre = models.CharField(
-        max_length=200, choices=GENRES, null=False, blank=False, verbose_name="Gênero"
+        max_length=200,
+        choices=GENRES,
+        null=False,
+        blank=False,
+        verbose_name="Gênero",
     )
     literarytype = models.CharField(
         max_length=200,
@@ -320,7 +337,11 @@ class Book(BaseModel):
         verbose_name="Sinopse",
     )
     edition = models.CharField(
-        max_length=50, null=False, blank=False, default="I", verbose_name="Edição"
+        max_length=50,
+        null=False,
+        blank=False,
+        default="I",
+        verbose_name="Edição",
     )
     media_type = models.CharField(
         verbose_name="Mídia", blank=True, null=True, choices=MEDIA_TYPE
@@ -420,7 +441,9 @@ class Summary(BaseModel):
     text = models.TextField(
         verbose_name="Texto", help_text="Resumo em formato Markdown"
     )
-    is_vectorized = models.BooleanField(default=False, verbose_name="Vetorizado")
+    is_vectorized = models.BooleanField(
+        default=False, verbose_name="Vetorizado"
+    )
     vectorization_date = models.DateTimeField(
         null=True, blank=True, verbose_name="Data de Vetorização"
     )
@@ -458,10 +481,16 @@ class Reading(BaseModel):
         related_name="readings",
     )
     reading_date = models.DateField(
-        null=False, blank=False, default=timezone.now, verbose_name="Data da Leitura"
+        null=False,
+        blank=False,
+        default=timezone.now,
+        verbose_name="Data da Leitura",
     )
     reading_time = models.PositiveIntegerField(
-        null=False, blank=False, default=30, verbose_name="Tempo de leitura (minutos)"
+        null=False,
+        blank=False,
+        default=30,
+        verbose_name="Tempo de leitura (minutos)",
     )
     pages_read = models.PositiveIntegerField(
         null=False,
@@ -513,7 +542,9 @@ class Reading(BaseModel):
             if self.pk:
                 previous_readings = previous_readings.exclude(pk=self.pk)
 
-            total_read_pages = sum(reading.pages_read for reading in previous_readings)
+            total_read_pages = sum(
+                reading.pages_read for reading in previous_readings
+            )
             remaining_pages = total_book_pages - total_read_pages
 
             if self.pages_read > remaining_pages:
@@ -548,7 +579,9 @@ class ReadingGoal(BaseModel):
         blank=True,
         verbose_name="Nome da Meta",
     )
-    books_goal = models.PositiveIntegerField(verbose_name="Meta de Livros", default=12)
+    books_goal = models.PositiveIntegerField(
+        verbose_name="Meta de Livros", default=12
+    )
     pages_goal = models.PositiveIntegerField(
         verbose_name="Meta de Páginas", default=0, blank=True
     )
@@ -569,7 +602,8 @@ class ReadingGoal(BaseModel):
 
     @property
     def books_read_this_year(self):
-        """Livros com read_status='read' e pelo menos uma sessão de leitura no ano."""
+        """Livros com read_status='read' e pelo menos uma sessão de leitura
+        no ano."""
         return (
             Book.objects.filter(
                 owner=self.owner,
@@ -598,14 +632,18 @@ class ReadingGoal(BaseModel):
         """Porcentagem de progresso em direção à meta."""
         if self.books_goal == 0:
             return 0.0
-        return round(min((self.books_read_this_year / self.books_goal) * 100, 100.0), 1)
+        return round(
+            min((self.books_read_this_year / self.books_goal) * 100, 100.0), 1
+        )
 
     @property
     def pages_progress_percentage(self):
         """Porcentagem de progresso em direção à meta de páginas."""
         if self.pages_goal == 0:
             return 0.0
-        return round(min((self.pages_read_this_year / self.pages_goal) * 100, 100.0), 1)
+        return round(
+            min((self.pages_read_this_year / self.pages_goal) * 100, 100.0), 1
+        )
 
 
 # ============================================================================
@@ -669,7 +707,9 @@ class LiteraryTypeGoal(BaseModel):
     def progress_percentage(self):
         if self.goal_count == 0:
             return 0.0
-        return round(min((self.books_read_this_year / self.goal_count) * 100, 100.0), 1)
+        return round(
+            min((self.books_read_this_year / self.goal_count) * 100, 100.0), 1
+        )
 
 
 # ============================================================================
@@ -751,7 +791,9 @@ class Course(BaseModel):
         default="technology",
         verbose_name="Categoria",
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
     url = models.URLField(null=True, blank=True, verbose_name="Link")
     estimated_hours = models.DecimalField(
         max_digits=6,
@@ -766,8 +808,12 @@ class Course(BaseModel):
         default="not_started",
         verbose_name="Status",
     )
-    start_date = models.DateField(null=True, blank=True, verbose_name="Data de início")
-    end_date = models.DateField(null=True, blank=True, verbose_name="Data de conclusão")
+    start_date = models.DateField(
+        null=True, blank=True, verbose_name="Data de início"
+    )
+    end_date = models.DateField(
+        null=True, blank=True, verbose_name="Data de conclusão"
+    )
     completion_certificate = models.FileField(
         upload_to="courses/certificates/",
         null=True,
@@ -904,7 +950,9 @@ class CourseSession(BaseModel):
         related_name="sessions",
         verbose_name="Curso",
     )
-    session_date = models.DateField(default=timezone.now, verbose_name="Data da Sessão")
+    session_date = models.DateField(
+        default=timezone.now, verbose_name="Data da Sessão"
+    )
     duration_minutes = models.PositiveIntegerField(
         verbose_name="Duração (minutos)", default=60
     )
@@ -922,7 +970,10 @@ class CourseSession(BaseModel):
         ordering = ["-session_date", "-created_at"]
 
     def __str__(self):
-        return f"{self.course.title} — {self.session_date} ({self.duration_minutes}min)"
+        return (
+            f"{self.course.title} — {self.session_date}"
+            f" ({self.duration_minutes}min)"
+        )
 
 
 # ============================================================================
@@ -1029,5 +1080,6 @@ class KnowledgeLink(BaseModel):
 
     def __str__(self):
         return (
-            f"{self.source_type}:{self.source_id} → {self.target_type}:{self.target_id}"
+            f"{self.source_type}:{self.source_id}"
+            f" → {self.target_type}:{self.target_id}"
         )

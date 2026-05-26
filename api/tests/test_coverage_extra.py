@@ -32,7 +32,9 @@ class BaseCoverageTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.account = Account.objects.create(
             account_name="CovBank",
             account_type="CA",
@@ -44,7 +46,9 @@ class BaseCoverageTestCase(APITestCase):
 
 class AccountProjectedBalanceViewTest(BaseCoverageTestCase):
     def _url(self):
-        return reverse("account-projected-balance", kwargs={"pk": self.account.pk})
+        return reverse(
+            "account-projected-balance", kwargs={"pk": self.account.pk}
+        )
 
     def test_missing_date_param_returns_400(self):
         response = self.client.get(self._url())
@@ -75,7 +79,9 @@ class BudgetSuggestViewTest(BaseCoverageTestCase):
 
     def test_no_expense_history_returns_422(self):
         response = self._post()
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertEqual(
+            response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
 
     def test_with_expense_history_returns_suggestions(self):
         recent = (timezone.now() - timedelta(days=30)).date()
@@ -106,7 +112,8 @@ class BudgetSuggestViewTest(BaseCoverageTestCase):
             created_by=self.user,
         )
         with patch(
-            "agents.core.llm_client.LLMClient.chat", side_effect=Exception("offline")
+            "agents.core.llm_client.LLMClient.chat",
+            side_effect=Exception("offline"),
         ):
             response = self._post(include_llm_reasoning=True)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
