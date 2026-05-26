@@ -28,17 +28,13 @@ import { useAuthStore } from './stores/auth-store';
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accounts = lazy(() => import('./pages/Accounts'));
-const Expenses = lazy(() => import('./pages/Expenses'));
-const FixedExpenses = lazy(() => import('./pages/FixedExpenses'));
-const FixedRevenues = lazy(() => import('./pages/FixedRevenues'));
 const CategorizationRules = lazy(() => import('./pages/CategorizationRules'));
-const Revenues = lazy(() => import('./pages/Revenues'));
-const CreditCards = lazy(() => import('./pages/CreditCards'));
-const CreditCardExpenses = lazy(() => import('./pages/CreditCardExpenses'));
+const Transactions = lazy(() => import('./pages/Transactions'));
+const RecurringItems = lazy(() => import('./pages/RecurringItems'));
+const PayablesReceivables = lazy(() => import('./pages/PayablesReceivables'));
+const CreditCardManagement = lazy(() => import('./pages/CreditCardManagement'));
 const Transfers = lazy(() => import('./pages/Transfers'));
 const Loans = lazy(() => import('./pages/Loans'));
-const Payables = lazy(() => import('./pages/Payables'));
-const Receivables = lazy(() => import('./pages/Receivables'));
 const Members = lazy(() => import('./pages/Members'));
 const MemberFinancialReport = lazy(() => import('./pages/MemberFinancialReport'));
 
@@ -65,9 +61,7 @@ const KnowledgeGraphPage = lazy(() => import('./pages/KnowledgeGraph'));
 const PersonalPlanningDashboard = lazy(
   () => import('./pages/PersonalPlanningDashboard')
 );
-const RoutineTasks = lazy(() => import('./pages/RoutineTasks'));
-const Goals = lazy(() => import('./pages/Goals'));
-const TodayTasks = lazy(() => import('./pages/TodayTasks'));
+const TasksAndGoals = lazy(() => import('./pages/TasksAndGoals'));
 
 // Vaults Module (Cofres e Metas)
 const Vaults = lazy(() => import('./pages/Vaults'));
@@ -89,9 +83,6 @@ const UserProfile = lazy(() => import('./pages/UserProfile'));
 const BankReconciliation = lazy(() => import('./pages/BankReconciliation'));
 const BankReconciliationDetail = lazy(() => import('./pages/BankReconciliationDetail'));
 const BankStatementImport = lazy(() => import('./pages/BankStatementImport'));
-
-// Credit Card Bills
-const CreditCardBills = lazy(() => import('./pages/CreditCardBills'));
 
 // Vault Simulator
 const VaultSimulator = lazy(() => import('./pages/VaultSimulator'));
@@ -202,28 +193,30 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/expenses"
+            path="/transactions"
             element={
               <PageWrapper>
-                <Expenses />
+                <Transactions />
+              </PageWrapper>
+            }
+          />
+          <Route path="/expenses" element={<Navigate to="/transactions" replace />} />
+          <Route path="/revenues" element={<Navigate to="/transactions" replace />} />
+          <Route
+            path="/recurring"
+            element={
+              <PageWrapper>
+                <RecurringItems />
               </PageWrapper>
             }
           />
           <Route
             path="/fixed-expenses"
-            element={
-              <PageWrapper>
-                <FixedExpenses />
-              </PageWrapper>
-            }
+            element={<Navigate to="/recurring" replace />}
           />
           <Route
             path="/fixed-revenues"
-            element={
-              <PageWrapper>
-                <FixedRevenues />
-              </PageWrapper>
-            }
+            element={<Navigate to="/recurring" replace />}
           />
           <Route
             path="/categorization-rules"
@@ -234,36 +227,20 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/revenues"
-            element={
-              <PageWrapper>
-                <Revenues />
-              </PageWrapper>
-            }
-          />
-          <Route
             path="/credit-cards"
             element={
               <PageWrapper>
-                <CreditCards />
+                <CreditCardManagement />
               </PageWrapper>
             }
           />
           <Route
             path="/credit-card-bills"
-            element={
-              <PageWrapper>
-                <CreditCardBills />
-              </PageWrapper>
-            }
+            element={<Navigate to="/credit-cards" replace />}
           />
           <Route
             path="/credit-card-expenses"
-            element={
-              <PageWrapper>
-                <CreditCardExpenses />
-              </PageWrapper>
-            }
+            element={<Navigate to="/credit-cards" replace />}
           />
           <Route
             path="/transfers"
@@ -282,21 +259,15 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/payables"
+            path="/bills"
             element={
               <PageWrapper>
-                <Payables />
+                <PayablesReceivables />
               </PageWrapper>
             }
           />
-          <Route
-            path="/receivables"
-            element={
-              <PageWrapper>
-                <Receivables />
-              </PageWrapper>
-            }
-          />
+          <Route path="/payables" element={<Navigate to="/bills" replace />} />
+          <Route path="/receivables" element={<Navigate to="/bills" replace />} />
           <Route
             path="/members"
             element={
@@ -470,32 +441,28 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/planning/routine-tasks"
+            path="/planning/tasks-goals"
             element={
               <PageWrapper>
-                <RoutineTasks />
+                <TasksAndGoals />
               </PageWrapper>
             }
+          />
+          <Route
+            path="/planning/routine-tasks"
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/goals"
-            element={
-              <PageWrapper>
-                <Goals />
-              </PageWrapper>
-            }
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/daily"
-            element={<Navigate to="/planning/today-tasks" replace />}
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/today-tasks"
-            element={
-              <PageWrapper>
-                <TodayTasks />
-              </PageWrapper>
-            }
+            element={<Navigate to="/planning/tasks-goals" replace />}
           />
           <Route
             path="/planning/daily-checklist"

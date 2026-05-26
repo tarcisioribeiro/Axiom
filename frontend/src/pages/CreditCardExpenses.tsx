@@ -8,7 +8,7 @@ import {
   DollarSign,
   Link2,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -61,7 +61,11 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-export default function CreditCardExpenses() {
+export default function CreditCardExpenses({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
   const { t } = useTranslation();
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
@@ -646,8 +650,14 @@ export default function CreditCardExpenses() {
     (c) => c.key !== 'due_date'
   );
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
         title={t('pages.creditCardExpenses.title')}
         icon={<ShoppingCart />}
@@ -1222,6 +1232,6 @@ export default function CreditCardExpenses() {
             })()}
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

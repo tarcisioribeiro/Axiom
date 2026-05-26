@@ -11,7 +11,7 @@ import {
   Banknote,
   Clock,
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -55,7 +55,7 @@ const STATUS_VARIANTS: Record<
   cancelled: 'outline',
 };
 
-export default function Payables() {
+export default function Payables({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
@@ -117,8 +117,14 @@ export default function Payables() {
 
   if (isLoading) return <LoadingState />;
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
         <Button onClick={handleCreate} className="gap-sm">
           <Plus className="h-4 w-4" />
@@ -437,6 +443,6 @@ export default function Payables() {
         isLoading={isLoadingInstallments}
         onClose={() => setInstallmentsPayable(null)}
       />
-    </PageContainer>
+    </Wrapper>
   );
 }
