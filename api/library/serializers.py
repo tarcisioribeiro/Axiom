@@ -797,6 +797,7 @@ class CourseSerializer(serializers.ModelSerializer):
             "invested_hours",
             "owner",
             "owner_name",
+            "completion_certificate",
             "created_at",
             "updated_at",
         ]
@@ -819,6 +820,7 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
             "status",
             "start_date",
             "end_date",
+            "completion_certificate",
             "owner",
         ]
 
