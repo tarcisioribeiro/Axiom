@@ -416,22 +416,6 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
-          <Route
-            path="/library/courses"
-            element={
-              <PageWrapper>
-                <Courses />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/library/skills"
-            element={
-              <PageWrapper>
-                <Skills />
-              </PageWrapper>
-            }
-          />
           {/* Personal Planning Module routes */}
           <Route
             path="/planning/dashboard"
