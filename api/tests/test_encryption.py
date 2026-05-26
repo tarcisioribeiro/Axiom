@@ -25,7 +25,9 @@ class FieldEncryptionTest(TestCase):
             with self.assertRaises(ValidationError) as context:
                 FieldEncryption.get_encryption_key()
 
-            self.assertIn("ENCRYPTION_KEY nao encontrada", str(context.exception))
+            self.assertIn(
+                "ENCRYPTION_KEY nao encontrada", str(context.exception)
+            )
 
     @patch.dict(os.environ)
     def test_get_encryption_key_success(self):

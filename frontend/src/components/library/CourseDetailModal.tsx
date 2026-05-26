@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Award,
@@ -598,7 +599,7 @@ export function CourseDetailModal({
           <DialogHeader>
             <div className="flex items-start justify-between gap-md">
               <div className="flex min-w-0 flex-1 items-center gap-md">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-category-intellect/20">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-intellect/20">
                   <GraduationCap className="h-5 w-5 text-category-intellect" />
                 </div>
                 <div className="min-w-0">

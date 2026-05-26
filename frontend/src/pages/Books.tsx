@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Library,
   Plus,
@@ -326,6 +327,7 @@ export default function Books() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

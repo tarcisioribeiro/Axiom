@@ -37,7 +37,9 @@ _TEST_FERNET_KEY = Fernet.generate_key().decode()
 class BaseTestCase(APITestCase):
     def setUp(self):
         # Ensure a valid ENCRYPTION_KEY is available for credit card encryption
-        self._enc_patcher = patch.dict(os.environ, {"ENCRYPTION_KEY": _TEST_FERNET_KEY})
+        self._enc_patcher = patch.dict(
+            os.environ, {"ENCRYPTION_KEY": _TEST_FERNET_KEY}
+        )
         self._enc_patcher.start()
 
         self.user = User.objects.create_user(
@@ -48,7 +50,9 @@ class BaseTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.account = Account.objects.create(
             account_name="Boost Account",
             institution_name="NUB",
@@ -103,7 +107,9 @@ class BaseTestCase(APITestCase):
             created_by=self.user,
         )
 
-    def _make_purchase(self, card, total_value=Decimal("300.00"), total_installments=3):
+    def _make_purchase(
+        self, card, total_value=Decimal("300.00"), total_installments=3
+    ):
         from credit_cards.models import CreditCardPurchase
 
         return CreditCardPurchase.objects.create(
@@ -143,7 +149,8 @@ class PayCreditCardBillViewTest(BaseTestCase):
     def setUp(self):
         super().setUp()
         self.card = self._make_credit_card("Pay Test Card")
-        # Create bill with total_amount=0; signal updates it when installment is added
+        # Create bill with total_amount=0; signal updates it when installment
+        # is added
         self.bill = self._make_bill(self.card, total_amount=Decimal("0.00"))
         self.purchase = self._make_purchase(
             self.card, total_value=Decimal("300.00"), total_installments=1
@@ -237,7 +244,9 @@ class PayCreditCardBillViewTest(BaseTestCase):
     def test_pay_bill_amount_exceeds_remaining(self):
         url = reverse("credit-card-bill-pay", args=[self.bill.pk])
         # Use an amount clearly larger than the total_amount
-        big_amount = str(Decimal(str(self.bill.total_amount)) + Decimal("100.00"))
+        big_amount = str(
+            Decimal(str(self.bill.total_amount)) + Decimal("100.00")
+        )
         response = self.client.post(
             url,
             {
@@ -272,7 +281,9 @@ class BillItemsViewTest(BaseTestCase):
         self.card = self._make_credit_card("Items Card")
         self.bill = self._make_bill(self.card)
         self.purchase = self._make_purchase(self.card)
-        self._make_installment(self.purchase, self.bill, value=Decimal("100.00"))
+        self._make_installment(
+            self.purchase, self.bill, value=Decimal("100.00")
+        )
 
     def test_get_bill_items(self):
         url = reverse("credit-card-bill-items", args=[self.bill.pk])
@@ -470,17 +481,22 @@ class CreditCardInstallmentUpdateViewTest(BaseTestCase):
         )
 
     def test_mark_installment_paid(self):
-        url = reverse("credit-card-installment-update", args=[self.installment.pk])
+        url = reverse(
+            "credit-card-installment-update", args=[self.installment.pk]
+        )
         response = self.client.patch(url, {"payed": True}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.installment.refresh_from_db()
         self.assertTrue(self.installment.payed)
 
     def test_update_installment_value(self):
-        url = reverse("credit-card-installment-update", args=[self.installment.pk])
+        url = reverse(
+            "credit-card-installment-update", args=[self.installment.pk]
+        )
         response = self.client.patch(url, {"value": "150.00"}, format="json")
         self.assertIn(
-            response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
+            response.status_code,
+            [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST],
         )
 
 
@@ -584,7 +600,10 @@ class BulkGenerateFixedExpensesTest(BaseTestCase):
             {
                 "month": "2026-02",
                 "expense_values": [
-                    {"fixed_expense_id": self.fixed_expense.id, "value": "1200.00"}
+                    {
+                        "fixed_expense_id": self.fixed_expense.id,
+                        "value": "1200.00",
+                    }
                 ],
             },
             format="json",
@@ -598,7 +617,10 @@ class BulkGenerateFixedExpensesTest(BaseTestCase):
             {
                 "month": "2026-03",
                 "expense_values": [
-                    {"fixed_expense_id": self.fixed_expense.id, "value": "1200.00"}
+                    {
+                        "fixed_expense_id": self.fixed_expense.id,
+                        "value": "1200.00",
+                    }
                 ],
             },
             format="json",
@@ -608,7 +630,10 @@ class BulkGenerateFixedExpensesTest(BaseTestCase):
             {
                 "month": "2026-03",
                 "expense_values": [
-                    {"fixed_expense_id": self.fixed_expense.id, "value": "1200.00"}
+                    {
+                        "fixed_expense_id": self.fixed_expense.id,
+                        "value": "1200.00",
+                    }
                 ],
             },
             format="json",
@@ -621,7 +646,9 @@ class BulkGenerateFixedExpensesTest(BaseTestCase):
             url,
             {
                 "month": "2026-04",
-                "expense_values": [{"fixed_expense_id": 99999, "value": "100.00"}],
+                "expense_values": [
+                    {"fixed_expense_id": 99999, "value": "100.00"}
+                ],
             },
             format="json",
         )
@@ -676,7 +703,10 @@ class BulkGenerateWithCreditCardTest(BaseTestCase):
             {
                 "month": "2026-05",
                 "expense_values": [
-                    {"fixed_expense_id": self.fixed_cc_expense.id, "value": "45.90"}
+                    {
+                        "fixed_expense_id": self.fixed_cc_expense.id,
+                        "value": "45.90",
+                    }
                 ],
             },
             format="json",
@@ -699,7 +729,9 @@ class LiteraryTypeGoalTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Lit Goal User",
             document_hash="g" * 64,
@@ -800,7 +832,9 @@ class BookReorderViewTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Reorder User",
             document_hash="r" * 64,
@@ -810,7 +844,9 @@ class BookReorderViewTest(APITestCase):
         )
         from library.models import Author, Book, Publisher
 
-        author = Author.objects.create(name="Reorder Author", owner=self.member)
+        author = Author.objects.create(
+            name="Reorder Author", owner=self.member
+        )
         publisher = Publisher.objects.create(
             name="Reorder Publisher", owner=self.member
         )
@@ -921,7 +957,9 @@ class PersonalPlanningAnalyticsTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Analytics User",
             document_hash="a" * 64,
@@ -957,7 +995,9 @@ class PersonalPlanningAnalyticsTest(APITestCase):
         )
         client2 = APIClient()
         refresh = RefreshToken.for_user(user2)
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client2.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("routine-template-list")
         response = client2.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1171,7 +1211,9 @@ class FinancialAlertsCreditCardTest(BaseTestCase):
             credit_card=card,
             year=str(today.year),
             month="Jan",
-            invoice_beginning_date=today.replace(day=1) if today.day > 1 else today,
+            invoice_beginning_date=(
+                today.replace(day=1) if today.day > 1 else today
+            ),
             invoice_ending_date=today,
             due_date=today,
             total_amount=Decimal("500.00"),
@@ -1231,7 +1273,9 @@ class FinancialAlertsBudgetTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Budget Alert User",
             document_hash="b" * 64,
@@ -1276,5 +1320,7 @@ class FinancialAlertsBudgetTest(APITestCase):
         url = reverse("financial-alerts")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        budget_alerts = [a for a in response.data if a.get("type") == "budget_limit"]
+        budget_alerts = [
+            a for a in response.data if a.get("type") == "budget_limit"
+        ]
         self.assertTrue(len(budget_alerts) >= 1)

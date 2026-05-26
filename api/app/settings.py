@@ -11,7 +11,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-_TESTING = "test" in sys.argv or (len(sys.argv) > 0 and "pytest" in sys.argv[0])
+_TESTING = "test" in sys.argv or (
+    len(sys.argv) > 0 and "pytest" in sys.argv[0]
+)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY and not _TESTING:
@@ -41,8 +43,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = (
 )
 SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", "False") == "True"
 
-# Trust X-Forwarded-Proto from the TLS-terminating reverse proxy (e.g. nginx).
-# Set SECURE_PROXY_SSL_HEADER=true when running behind an SSL-terminating proxy.
+# Trust X-Forwarded-Proto from the TLS-terminating reverse proxy
+# (e.g. nginx). Set SECURE_PROXY_SSL_HEADER=true when running
+# behind an SSL-terminating proxy.
 if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -52,8 +55,9 @@ if os.getenv("SECURE_PROXY_SSL_HEADER", "False") == "True":
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 # Number of trusted reverse proxies in front of the application.
-# Set to 0 for direct (no-proxy) connections; 1 for a single nginx/load-balancer.
-# Controls how X-Forwarded-For is parsed to prevent IP spoofing in audit logs.
+# Set to 0 for direct (no-proxy) connections; 1 for a single
+# nginx/load-balancer. Controls how X-Forwarded-For is parsed to
+# prevent IP spoofing in audit logs.
 NUM_PROXIES = int(os.getenv("NUM_PROXIES", "1"))
 
 INSTALLED_APPS = [
@@ -120,7 +124,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "authentication.middleware.JWTCookieMiddleware",  # JWT via cookies httpOnly
+    "authentication.middleware.JWTCookieMiddleware",  # JWT via cookies
     "app.middleware.AuditLoggingMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -160,7 +164,10 @@ DATABASES = {
 
 # Use SQLite for tests to avoid database connection issues
 if _TESTING:
-    DATABASES["default"] = {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
     # Disable MinIO storage during tests — use default local filesystem
     os.environ.pop("MINIO_ENDPOINT", None)
 
@@ -170,13 +177,13 @@ AUTH_PASSWORD_VALIDATORS = [
         + ("UserAttributeSimilarityValidator"),
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",  # noqa: E501
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",  # noqa: E501
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",  # noqa: E501
     },
 ]
 
@@ -245,7 +252,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",  # noqa: E501
     "PAGE_SIZE": 50,
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
@@ -254,12 +261,14 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "1000/minute",
-        "login": "30/minute",  # raised: NUM_PROXIES=1 collapses CI traffic to ingress
+        # raised: NUM_PROXIES=1 collapses CI traffic to ingress
+        "login": "30/minute",
         "register": "3/minute",
         "share_token": "10/minute",
         "export": "20/minute",
         "vault_unlock": "10/minute",
-        "agent": "30/minute",  # LLM calls are expensive — conservative per-user cap
+        # LLM calls are expensive — conservative per-user cap
+        "agent": "30/minute",
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -338,7 +347,8 @@ LOGGING = {
         },
         "verbose": {
             "format": (
-                "{levelname} {asctime} {module} " "{process:d} {thread:d} {message}"
+                "{levelname} {asctime} {module} "
+                "{process:d} {thread:d} {message}"
             ),
             "style": "{",
         },
@@ -351,7 +361,9 @@ LOGGING = {
         "console": {
             "level": "INFO",
             "class": "logging.StreamHandler",
-            "formatter": ("json" if os.getenv("LOG_FORMAT") == "json" else "verbose"),
+            "formatter": (
+                "json" if os.getenv("LOG_FORMAT") == "json" else "verbose"
+            ),
         },
         "audit_file": {
             "level": "INFO",
@@ -423,7 +435,9 @@ def _normalize_cors_origins(origins_str: str) -> list[str]:
 
 
 CORS_ALLOWED_ORIGINS = _normalize_cors_origins(
-    os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    os.getenv(
+        "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    )
 )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
@@ -459,7 +473,9 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Axiom <noreply@axiom.app>")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "Axiom <noreply@axiom.app>"
+)
 # Public URL used in email links (e.g. https://axiom.yourdomain.com)
 SITE_URL = os.getenv("SITE_URL", "")
 

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { FileText, Landmark, Percent, Power, TrendingUp, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';

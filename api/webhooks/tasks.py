@@ -12,7 +12,9 @@ def deliver_webhook(self: Any, delivery_id: int) -> dict:
     from webhooks.models import WebhookDelivery
 
     try:
-        delivery = WebhookDelivery.objects.select_related("webhook").get(pk=delivery_id)
+        delivery = WebhookDelivery.objects.select_related("webhook").get(
+            pk=delivery_id
+        )
     except WebhookDelivery.DoesNotExist:
         return {"error": "delivery not found"}
 

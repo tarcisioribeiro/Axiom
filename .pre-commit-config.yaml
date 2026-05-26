@@ -33,14 +33,14 @@ repos:
         exclude: ^api/.*/migrations/
         args: [--settings-path, api/]
 
-  # Linting — mirrors api/pyproject.toml [tool.flake8] (flake8 doesn't read pyproject.toml natively)
+  # Linting — config in api/.flake8
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
       - id: flake8
         files: ^api/
         exclude: ^api/.*/migrations/
-        args: [--max-line-length=88, "--extend-ignore=E203,W503"]
+        args: ["--config=api/.flake8"]
 
   # Type checking — runs in an isolated pre-commit virtualenv so no host-level
   # pip install is required.  The versions below must stay in sync with
@@ -58,10 +58,10 @@ repos:
           - mypy==1.19.1
           - django-stubs==5.2.9
           - djangorestframework-stubs==3.16.8
-          - Django==5.2.11
+          - Django==5.2.14
           - djangorestframework==3.16.1
-          - cryptography==46.0.5
-          - python-dotenv==1.1.1
+          - cryptography==46.0.7
+          - python-dotenv==1.2.2
           - rapidfuzz==3.14.3
           - pgvector==0.3.3
           - psycopg2-binary==2.9.10

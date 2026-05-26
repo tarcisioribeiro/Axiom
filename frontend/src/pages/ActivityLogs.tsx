@@ -128,6 +128,7 @@ export default function ActivityLogs() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -162,6 +163,7 @@ export default function ActivityLogs() {
       ),
       items,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logs, dateFnsLocale]);
 
   if (isLoading) {

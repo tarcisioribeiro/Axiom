@@ -9,11 +9,15 @@ from django.utils import timezone
 
 
 @receiver(post_save, sender="personal_planning.TaskInstance")
-def update_goal_progress_on_instance_complete(sender, instance, created, **kwargs):
+def update_goal_progress_on_instance_complete(
+    sender, instance, created, **kwargs
+):
     """
-    Verifica e atualiza o status de objetivos quando uma instancia de tarefa muda.
+    Verifica e atualiza o status de objetivos quando uma instancia de tarefa
+    muda.
 
-    Usa calculated_current_value (fonte de verdade) em vez de incrementos manuais,
+    Usa calculated_current_value (fonte de verdade) em vez de
+    incrementos manuais,
     evitando divergencias entre o campo armazenado e o valor real.
     """
     from personal_planning.models import Goal
@@ -28,7 +32,8 @@ def update_goal_progress_on_instance_complete(sender, instance, created, **kwarg
     ).select_related("owner", "related_task")
 
     for goal in goals:
-        # avoid_habit: nunca marcar como completo quando uma instância é completada
+        # avoid_habit: nunca marcar como completo quando uma instância é
+        # completada
         # (completar a tarefa quebra o objetivo)
         if goal.goal_type == "avoid_habit" and instance.status == "completed":
             continue
@@ -115,7 +120,9 @@ def award_xp_on_task_completion(sender, instance, created, **kwargs):
                     defaults={"created_by": instance.created_by},
                 )
                 if earned:
-                    profile.add_xp(reward, "badge_earned", f"Badge: {badge.name}")
+                    profile.add_xp(
+                        reward, "badge_earned", f"Badge: {badge.name}"
+                    )
     except Exception:
         pass
 
@@ -127,7 +134,11 @@ def award_xp_on_goal_completed(sender, instance, created, **kwargs):
         return
 
     try:
-        from personal_planning.models import Badge, GamificationProfile, UserBadge
+        from personal_planning.models import (
+            Badge,
+            GamificationProfile,
+            UserBadge,
+        )
 
         profile, _ = GamificationProfile.objects.get_or_create(
             member=instance.owner,
@@ -140,7 +151,10 @@ def award_xp_on_goal_completed(sender, instance, created, **kwargs):
         badge, _ = Badge.objects.get_or_create(
             slug=slug,
             defaults={
-                "name": f"Primeiro Objetivo ({instance.get_goal_type_display()})",
+                "name": (
+                    "Primeiro Objetivo"
+                    f" ({instance.get_goal_type_display()})"
+                ),
                 "description": "Concluiu o primeiro objetivo deste tipo",
                 "category": "goal",
                 "icon": "Target",
@@ -159,7 +173,9 @@ def award_xp_on_goal_completed(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="personal_planning.RoutineTask")
 def embed_routine_task(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = instance.name
 
@@ -169,7 +185,8 @@ def embed_routine_task(sender, instance, **kwargs):
             domain="planning",
             source_type="routine",
             content_fn=lambda i: (
-                f"Rotina '{i.name}': {i.description or ''}, frequência {i.periodicity}"
+                f"Rotina '{i.name}': {i.description or ''},"
+                f" frequência {i.periodicity}"
             ),
             source_title=source_title,
         )
@@ -179,7 +196,9 @@ def embed_routine_task(sender, instance, **kwargs):
 
 @receiver(post_save, sender="personal_planning.Goal")
 def embed_goal(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = instance.title
 
@@ -191,7 +210,8 @@ def embed_goal(sender, instance, **kwargs):
             domain="planning",
             source_type="goal",
             content_fn=lambda i: (
-                f"Meta '{i.title}': {i.description or ''}," f" progresso {progress}%"
+                f"Meta '{i.title}': {i.description or ''},"
+                f" progresso {progress}%"
             ),
             source_title=source_title,
         )

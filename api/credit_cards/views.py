@@ -53,7 +53,8 @@ class CreditCardCreateListView(BaseListCreateView):
     ordering = ["name"]
 
     def get_queryset(self):
-        # Usa defer() para excluir campo criptografado na listagem (performance)
+        # Usa defer() para excluir campo criptografado na listagem
+        # (performance)
         return (
             CreditCard.objects.filter(created_by=self.request.user)
             .select_related("associated_account")
@@ -61,7 +62,9 @@ class CreditCardCreateListView(BaseListCreateView):
         )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -85,9 +88,9 @@ class CreditCardRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = CreditCardSerializer
 
     def get_queryset(self):
-        return CreditCard.objects.filter(created_by=self.request.user).select_related(
-            "associated_account"
-        )
+        return CreditCard.objects.filter(
+            created_by=self.request.user
+        ).select_related("associated_account")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -104,7 +107,8 @@ class CreditCardBillCreateListView(BaseListCreateView):
     Attributes
     ----------
     queryset : QuerySet
-        QuerySet das faturas (exclui deletadas) com cartão e conta associada carregados
+        QuerySet das faturas (exclui deletadas) com cartão e conta
+        associada carregados
     serializer_class : class
         Serializer usado para validação e serialização
     ordering : list
@@ -133,7 +137,8 @@ class CreditCardBillRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     Attributes
     ----------
     queryset : QuerySet
-        QuerySet das faturas (exclui deletadas) com cartão e conta associada carregados
+        QuerySet das faturas (exclui deletadas) com cartão e conta
+        associada carregados
     serializer_class : class
         Serializer usado para validação e serialização
     """
@@ -183,10 +188,14 @@ class CreditCardPurchaseCreateListView(BaseListCreateView):
         return CreditCardPurchaseSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
-class CreditCardPurchaseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class CreditCardPurchaseRetrieveUpdateDestroyView(
+    BaseRetrieveUpdateDestroyView
+):
     """
     ViewSet para operações individuais em compras de cartão.
 
@@ -318,7 +327,8 @@ class PayCreditCardBillView(APIView):
             ).get(pk=pk)
         except CreditCardBill.DoesNotExist:
             return Response(
-                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         card = bill.credit_card
@@ -336,7 +346,9 @@ class PayCreditCardBillView(APIView):
         scheduled = serializer.validated_data.get("scheduled", False)
 
         # Verificar se a fatura já está paga
-        remaining = Decimal(str(bill.total_amount)) - Decimal(str(bill.paid_amount))
+        remaining = Decimal(str(bill.total_amount)) - Decimal(
+            str(bill.paid_amount)
+        )
         if remaining <= 0:
             return Response(
                 {"detail": "Esta fatura já foi totalmente paga"},
@@ -346,7 +358,9 @@ class PayCreditCardBillView(APIView):
         # 3. Criar despesa na conta associada
         from accounts.services import recalculate_account_balance
 
-        expense_description = f"Pagamento fatura {card.name} - {bill.month}/{bill.year}"
+        expense_description = (
+            f"Pagamento fatura {card.name} - {bill.month}/{bill.year}"
+        )
         if notes:
             expense_description += f" ({notes})"
 
@@ -381,9 +395,9 @@ class PayCreditCardBillView(APIView):
             if new_paid_amount >= total_amount:
                 bill.status = "paid"
                 bill.closed = True
-                CreditCardInstallment.objects.filter(bill=bill, payed=False).update(
-                    payed=True
-                )
+                CreditCardInstallment.objects.filter(
+                    bill=bill, payed=False
+                ).update(payed=True)
         else:
             new_paid_amount = Decimal(str(bill.paid_amount))
             total_amount = Decimal(str(bill.total_amount))
@@ -452,7 +466,8 @@ class BillItemsView(APIView):
             bill = CreditCardBill.objects.get(pk=pk)
         except CreditCardBill.DoesNotExist:
             return Response(
-                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         items = []
@@ -473,7 +488,9 @@ class BillItemsView(APIView):
                     "type": "installment",
                     "description": inst.purchase.description,
                     "value": float(inst.value),
-                    "date": inst.due_date.isoformat() if inst.due_date else None,
+                    "date": (
+                        inst.due_date.isoformat() if inst.due_date else None
+                    ),
                     "category": inst.purchase.category,
                     "installment_number": inst.installment_number,
                     "total_installments": inst.purchase.total_installments,
@@ -481,7 +498,9 @@ class BillItemsView(APIView):
                     "payed": inst.payed,
                     "member_id": inst.purchase.member_id,
                     "member_name": (
-                        inst.purchase.member.name if inst.purchase.member else None
+                        inst.purchase.member.name
+                        if inst.purchase.member
+                        else None
                     ),
                     "notes": inst.purchase.notes,
                     "purchase_date": (
@@ -539,10 +558,13 @@ class ReopenCreditCardBillView(APIView):
     def post(self, request, pk):
         # 1. Buscar a fatura
         try:
-            bill = CreditCardBill.objects.select_related("credit_card").get(pk=pk)
+            bill = CreditCardBill.objects.select_related("credit_card").get(
+                pk=pk
+            )
         except CreditCardBill.DoesNotExist:
             return Response(
-                {"detail": "Fatura não encontrada"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Fatura não encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         # 2. Verificar se a fatura pode ser reaberta

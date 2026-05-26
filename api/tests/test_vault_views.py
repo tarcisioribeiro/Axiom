@@ -31,7 +31,9 @@ class BaseVaultTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Vault User",
             document_hash="v" * 64,
@@ -76,7 +78,7 @@ class VaultCRUDViewTest(BaseVaultTestCase):
     def test_create_vault(self):
         resp = self._create_vault("Test Vault")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(resp.data["description"], "Test Vault")  # type: ignore
+        self.assertEqual(resp.data["description"], "Test Vault")  # type: ignore  # noqa: E501
 
     def test_retrieve_vault(self):
         resp = self._create_vault("Retrieve Test")
@@ -122,7 +124,9 @@ class VaultDepositWithdrawViewTest(BaseVaultTestCase):
     def test_withdraw(self):
         # Deposit first so there's balance to withdraw
         deposit_url = reverse("vault-deposit", args=[self.vault_pk])
-        self.client.post(deposit_url, {"amount": "1000.00", "description": "Seed"})
+        self.client.post(
+            deposit_url, {"amount": "1000.00", "description": "Seed"}
+        )
 
         url = reverse("vault-withdraw", args=[self.vault_pk])
         response = self.client.post(

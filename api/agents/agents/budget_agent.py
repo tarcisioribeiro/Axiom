@@ -70,7 +70,9 @@ class BudgetAgent(BaseAgent):
             period_label = (
                 f"{exp_start.strftime('%d/%m')}–{exp_end.strftime('%d/%m/%Y')}"
             )
-            month_label = calendar.month_abbr[target_month] + "/" + str(target_year)
+            month_label = (
+                calendar.month_abbr[target_month] + "/" + str(target_year)
+            )
         else:
             target_year = now.year
             target_month = now.month
@@ -132,7 +134,8 @@ class BudgetAgent(BaseAgent):
                 lines.append(
                     f"  {status_icon} {safe_str(b['category'])}: "
                     f"R$ {b['spent']:.2f} / R$ {b['limit']:.2f} "
-                    f"({b['percentage']:.0f}%) — sobram R$ {b['remaining']:.2f}"
+                    f"({b['percentage']:.0f}%) — sobram"
+                    f" R$ {b['remaining']:.2f}"
                 )
             budget_block = "\n".join(lines)
 
@@ -143,14 +146,16 @@ class BudgetAgent(BaseAgent):
                     excesso = p["projected"] - p["limit"]
                     proj_lines.append(
                         f"  ⚠️ {safe_str(p['category'])}: projeção"
-                        f" R$ {p['projected']:.2f} (excede em R$ {excesso:.2f})"
+                        f" R$ {p['projected']:.2f}"
+                        f" (excede em R$ {excesso:.2f})"
                     )
             projection_block = "\n".join(proj_lines) if proj_lines else ""
         else:
             projection_block = ""
 
         header = (
-            f"Mês: {data['month']}\n" f"Período das despesas: {data['period_label']}\n"
+            f"Mês: {data['month']}\n"
+            f"Período das despesas: {data['period_label']}\n"
             if data["is_historical"]
             else (
                 f"Mês: {data['month']}\n"

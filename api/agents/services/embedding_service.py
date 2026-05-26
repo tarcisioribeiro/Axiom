@@ -69,6 +69,10 @@ def delete_embedding_for_instance(source_id) -> None:
     try:
         from agents.models import AgentEmbedding
 
-        AgentEmbedding.objects.filter(source_id=source_id).update(is_deleted=True)
+        AgentEmbedding.objects.filter(source_id=source_id).update(
+            is_deleted=True
+        )
     except Exception:
-        logger.exception("Failed to mark embedding deleted for source_id %s", source_id)
+        logger.exception(
+            "Failed to mark embedding deleted for source_id %s", source_id
+        )

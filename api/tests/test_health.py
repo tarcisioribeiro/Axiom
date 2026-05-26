@@ -10,7 +10,8 @@ class HealthCheckViewTest(TestCase):
 
     def test_health_check_returns_200_when_all_healthy(self):
         url = reverse("health-check")
-        # Switch to in-memory cache so the set/get round-trip succeeds without Redis.
+        # Switch to in-memory cache so the set/get round-trip succeeds
+        # without Redis.
         locmem_caches = {
             "default": {
                 "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -30,7 +31,10 @@ class HealthCheckViewTest(TestCase):
         url = reverse("health-check")
         with patch(
             "app.health.check_storage",
-            return_value={"status": "not_configured", "message": "not configured"},
+            return_value={
+                "status": "not_configured",
+                "message": "not configured",
+            },
         ):
             with patch(
                 "django.db.backends.base.base.BaseDatabaseWrapper.cursor",
@@ -60,7 +64,9 @@ class HealthCheckViewTest(TestCase):
         with patch("app.health.check_storage", return_value=storage_result):
             response = self.client.get(url)
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.json()["checks"]["storage"]["status"], "unhealthy")
+        self.assertEqual(
+            response.json()["checks"]["storage"]["status"], "unhealthy"
+        )
 
 
 class CheckStorageTest(TestCase):
@@ -180,14 +186,18 @@ class BackupHealthCheckTest(TestCase):
 
     def test_returns_503_when_sentinel_unreadable(self):
         with patch("os.path.exists", return_value=True):
-            with patch("builtins.open", side_effect=OSError("permission denied")):
+            with patch(
+                "builtins.open", side_effect=OSError("permission denied")
+            ):
                 response = self.client.get(self.url)
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["status"], "error")
 
     def test_returns_503_when_sentinel_contains_invalid_data(self):
         with patch("os.path.exists", return_value=True):
-            with patch("builtins.open", mock_open(read_data="not-a-timestamp")):
+            with patch(
+                "builtins.open", mock_open(read_data="not-a-timestamp")
+            ):
                 response = self.client.get(self.url)
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json()["status"], "error")
@@ -289,7 +299,9 @@ class DiskSpaceThresholdTest(TestCase):
             with override_settings(DISK_SPACE_WARN_THRESHOLD=90):
                 with patch("shutil.disk_usage", return_value=mock_usage):
                     response = self.client.get(url)
-        self.assertEqual(response.json()["checks"]["disk_space"]["status"], "warning")
+        self.assertEqual(
+            response.json()["checks"]["disk_space"]["status"], "warning"
+        )
 
     def test_healthy_disk_when_above_threshold(self):
         """Default 10% threshold — 50% free is healthy."""
@@ -302,4 +314,6 @@ class DiskSpaceThresholdTest(TestCase):
             with override_settings(DISK_SPACE_WARN_THRESHOLD=10):
                 with patch("shutil.disk_usage", return_value=mock_usage):
                     response = self.client.get(url)
-        self.assertEqual(response.json()["checks"]["disk_space"]["status"], "healthy")
+        self.assertEqual(
+            response.json()["checks"]["disk_space"]["status"], "healthy"
+        )

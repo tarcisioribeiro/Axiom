@@ -19,9 +19,17 @@ urlpatterns = [
         name="admin-config-detail",
     ),
     path("health/", AdminHealthView.as_view(), name="admin-health"),
-    path("integrations/", AdminIntegrationsView.as_view(), name="admin-integrations"),
+    path(
+        "integrations/",
+        AdminIntegrationsView.as_view(),
+        name="admin-integrations",
+    ),
     path("logs/", AdminLogsView.as_view(), name="admin-logs"),
     path("email/test/", AdminEmailTestView.as_view(), name="admin-email-test"),
-    path("agents/status/", AdminAgentsStatusView.as_view(), name="admin-agents-status"),
+    path(
+        "agents/status/",
+        AdminAgentsStatusView.as_view(),
+        name="admin-agents-status",
+    ),
     path("restart/", AdminRestartAllView.as_view(), name="admin-restart-all"),
 ]

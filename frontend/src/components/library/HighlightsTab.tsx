@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { BookMarked, Download, Edit, Highlighter, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -226,6 +227,7 @@ export function HighlightsTab({ isCreateOpen, onCreateClose }: HighlightsTabProp
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

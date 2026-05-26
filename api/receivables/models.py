@@ -17,8 +17,10 @@ class Receivable(BaseModel):
 
     Exemplos: honorários a receber, serviços prestados, reembolsos pendentes.
 
-    Espelho do modelo Payable para o lado de receitas: ao registrar um Receivable
-    NÃO é criada uma despesa correspondente, pois ainda não houve saída de dinheiro.
+    Espelho do modelo Payable para o lado de receitas: ao registrar um
+    Receivable
+    NÃO é criada uma despesa correspondente, pois ainda não houve saída
+    de dinheiro.
     """
 
     description = models.CharField(
@@ -39,7 +41,9 @@ class Receivable(BaseModel):
         decimal_places=2,
         default=0,
     )
-    date = models.DateField(verbose_name="Data de Registro", null=False, blank=False)
+    date = models.DateField(
+        verbose_name="Data de Registro", null=False, blank=False
+    )
     due_date = models.DateField(
         verbose_name="Data de Vencimento", null=True, blank=True
     )
@@ -83,7 +87,8 @@ class Receivable(BaseModel):
                 raise ValidationError(
                     {
                         "received_value": (
-                            "O valor recebido não pode ser maior que o valor total."
+                            "O valor recebido não pode ser"
+                            " maior que o valor total."
                         )
                     }
                 )
@@ -99,7 +104,10 @@ class Receivable(BaseModel):
         return self.value - self.received_value
 
     def __str__(self):
-        return f"{self.description} - R$ {self.value} ({self.get_status_display()})"
+        return (
+            f"{self.description} - R$ {self.value}"
+            f" ({self.get_status_display()})"
+        )
 
 
 class ReceivableInstallment(BaseModel):
@@ -111,9 +119,15 @@ class ReceivableInstallment(BaseModel):
         related_name="installments",
         verbose_name="Valor a Receber",
     )
-    installment_number = models.PositiveIntegerField(verbose_name="Número da Parcela")
+    installment_number = models.PositiveIntegerField(
+        verbose_name="Número da Parcela"
+    )
     value = models.DecimalField(
-        max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Valor"
+        max_digits=10,
+        decimal_places=2,
+        null=False,
+        blank=False,
+        verbose_name="Valor",
     )
     due_date = models.DateField(verbose_name="Data de Vencimento")
     received = models.BooleanField(default=False, verbose_name="Recebido")
@@ -142,4 +156,7 @@ class ReceivableInstallment(BaseModel):
         ]
 
     def __str__(self):
-        return f"Parcela {self.installment_number} - {self.receivable.description}"
+        return (
+            f"Parcela {self.installment_number}"
+            f" - {self.receivable.description}"
+        )

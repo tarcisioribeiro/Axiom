@@ -25,7 +25,9 @@ def record_revenue_metric(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="revenues.Revenue")
 def embed_revenue(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = f"{instance.category} — {instance.date}"
 

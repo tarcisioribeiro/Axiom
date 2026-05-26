@@ -106,11 +106,13 @@ class CreditCardSerializer(serializers.ModelSerializer):
         # Criar a instância sem salvar
         instance = CreditCard(**validated_data)
 
-        # Definir o security_code via property (que criptografa e define _security_code)
+        # Definir o security_code via property (que criptografa e define
+        # _security_code)
         if security_code:
             instance.security_code = security_code
 
-        # Definir o card_number via property (que criptografa e define _card_number)
+        # Definir o card_number via property (que criptografa e define
+        # _card_number)
         if card_number:
             instance.card_number = card_number
 
@@ -152,7 +154,9 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
         read_only=True, help_text="Últimos 4 dígitos do cartão"
     )
     credit_card_flag = serializers.CharField(
-        source="credit_card.flag", read_only=True, help_text="Bandeira do cartão"
+        source="credit_card.flag",
+        read_only=True,
+        help_text="Bandeira do cartão",
     )
     credit_card_associated_account_name = serializers.CharField(
         source="credit_card.associated_account.account_name",
@@ -195,7 +199,8 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
             masked = obj.credit_card.card_number_masked
             # Verifica se o cartão tem número válido (não é apenas asteriscos)
             if masked and masked != "****" and len(masked) >= 4:
-                # Remove os asteriscos e pega apenas os últimos 4 dígitos numéricos
+                # Remove os asteriscos e pega apenas os últimos 4 dígitos
+                # numéricos
                 digits_only = "".join(c for c in masked if c.isdigit())
                 if len(digits_only) >= 4:
                     return digits_only[-4:]
@@ -224,7 +229,11 @@ class CreditCardBillsSerializer(serializers.ModelSerializer):
         # Calcular due_date automaticamente se não fornecido
         if not validated_data.get("due_date"):
             credit_card = validated_data.get("credit_card")
-            if credit_card and hasattr(credit_card, "due_day") and credit_card.due_day:
+            if (
+                credit_card
+                and hasattr(credit_card, "due_day")
+                and credit_card.due_day
+            ):
                 year_str = validated_data.get("year", str(date.today().year))
                 month_str = validated_data.get("month", "Jan")
                 month_map = {
@@ -274,16 +283,30 @@ class CreditCardInstallmentSerializer(serializers.ModelSerializer):
         max_digits=12, decimal_places=2, coerce_to_string=False
     )
     # Campos derivados da compra (read-only)
-    description = serializers.CharField(source="purchase.description", read_only=True)
-    category = serializers.CharField(source="purchase.category", read_only=True)
-    card_id = serializers.IntegerField(source="purchase.card_id", read_only=True)
-    card_name = serializers.CharField(source="purchase.card.name", read_only=True)
+    description = serializers.CharField(
+        source="purchase.description", read_only=True
+    )
+    category = serializers.CharField(
+        source="purchase.category", read_only=True
+    )
+    card_id = serializers.IntegerField(
+        source="purchase.card_id", read_only=True
+    )
+    card_name = serializers.CharField(
+        source="purchase.card.name", read_only=True
+    )
     total_installments = serializers.IntegerField(
         source="purchase.total_installments", read_only=True
     )
-    merchant = serializers.CharField(source="purchase.merchant", read_only=True)
-    member_id = serializers.IntegerField(source="purchase.member_id", read_only=True)
-    member_name = serializers.CharField(source="purchase.member.name", read_only=True)
+    merchant = serializers.CharField(
+        source="purchase.merchant", read_only=True
+    )
+    member_id = serializers.IntegerField(
+        source="purchase.member_id", read_only=True
+    )
+    member_name = serializers.CharField(
+        source="purchase.member.name", read_only=True
+    )
     purchase_date = serializers.DateField(
         source="purchase.purchase_date", read_only=True
     )
@@ -379,7 +402,8 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """
         Atualiza a parcela e as faturas afetadas.
-        Se a parcela for movida para uma fatura diferente, atualiza os totais e status.
+        Se a parcela for movida para uma fatura diferente, atualiza os totais e
+        status.
         """
         old_bill = instance.bill
         new_bill = validated_data.get("bill", old_bill)
@@ -392,7 +416,8 @@ class CreditCardInstallmentUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Se a fatura mudou, recalcular a fatura antiga (o signal só recalcula a nova)
+        # Se a fatura mudou, recalcular a fatura antiga (o signal só recalcula
+        # a nova)
         if bill_changed and old_bill:
             recalculate_bill_total(old_bill)
 
@@ -459,7 +484,9 @@ class CreditCardPurchaseSerializer(serializers.ModelSerializer):
     installment_value = serializers.DecimalField(
         max_digits=12, decimal_places=2, coerce_to_string=False, read_only=True
     )
-    installments = CreditCardInstallmentNestedSerializer(many=True, read_only=True)
+    installments = CreditCardInstallmentNestedSerializer(
+        many=True, read_only=True
+    )
     # Informações do cartão
     card_name = serializers.CharField(source="card.name", read_only=True)
     card_flag = serializers.CharField(source="card.flag", read_only=True)
@@ -529,7 +556,9 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
                 "Quantidade de parcelas deve ser pelo menos 1"
             )
         if value > 48:
-            raise serializers.ValidationError("Quantidade máxima de parcelas é 48")
+            raise serializers.ValidationError(
+                "Quantidade máxima de parcelas é 48"
+            )
         return value
 
     def validate_total_value(self, value):
@@ -571,7 +600,11 @@ class CreditCardPurchaseCreateSerializer(serializers.ModelSerializer):
             # Tentar encontrar fatura correspondente
             matching_bill = None
             for bill in bills:
-                if bill.invoice_beginning_date <= due_date <= bill.invoice_ending_date:
+                if (
+                    bill.invoice_beginning_date
+                    <= due_date
+                    <= bill.invoice_ending_date
+                ):
                     matching_bill = bill
                     break
 
@@ -635,9 +668,14 @@ class PayCreditCardBillSerializer(serializers.Serializer):
     """
 
     amount = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=True, help_text="Valor do pagamento"
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        help_text="Valor do pagamento",
     )
-    payment_date = serializers.DateField(required=True, help_text="Data do pagamento")
+    payment_date = serializers.DateField(
+        required=True, help_text="Data do pagamento"
+    )
     notes = serializers.CharField(
         max_length=500,
         required=False,
@@ -659,12 +697,15 @@ class PayCreditCardBillSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Validação customizada para verificar se o valor não excede o saldo restante.
+        Validação customizada para verificar se o valor não excede o saldo
+        restante.
         O contexto deve conter a fatura (bill) para esta validação.
         """
         bill = self.context.get("bill")
         if bill:
-            remaining = Decimal(str(bill.total_amount)) - Decimal(str(bill.paid_amount))
+            remaining = Decimal(str(bill.total_amount)) - Decimal(
+                str(bill.paid_amount)
+            )
             if attrs["amount"] > remaining:
                 raise serializers.ValidationError(
                     {

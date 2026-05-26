@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -140,9 +141,9 @@ export default function WorkoutPage() {
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
-  const [activePlanSelectedDay, setActivePlanSelectedDay] = useState<number | null>(
-    null
-  );
+  const [selectedDayByPlan, setSelectedDayByPlan] = useState<
+    Record<number, number | null>
+  >({});
   const [expandedInactivePlans, setExpandedInactivePlans] = useState<Set<number>>(
     new Set()
   );
@@ -184,8 +185,8 @@ export default function WorkoutPage() {
   const sessions = sessionsData ?? [];
   const allDaysList = allDays ?? [];
 
-  const activePlan = plans.find((p) => p.is_active) ?? null;
-  const inactivePlans = plans.filter((p) => p !== activePlan);
+  const activePlans = plans.filter((p) => p.is_active);
+  const inactivePlans = plans.filter((p) => !p.is_active);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -597,27 +598,27 @@ export default function WorkoutPage() {
           icon={<Dumbbell className="h-6 w-6 text-category-exercise" />}
         />
 
-        <Tabs defaultValue="sessions" className="w-full">
-          <TabsList className="mb-lg">
-            <TabsTrigger value="sessions" className="gap-xs">
+        <Tabs defaultValue="sessions" className="flex flex-1 flex-col">
+          <TabsList className="mb-lg w-full">
+            <TabsTrigger value="sessions" className="flex-1 gap-xs">
               <Zap className="h-4 w-4" />
               {t('pages.workoutPlans.tabSessions')}
             </TabsTrigger>
-            <TabsTrigger value="plans" className="gap-xs">
+            <TabsTrigger value="plans" className="flex-1 gap-xs">
               <ClipboardList className="h-4 w-4" />
               {t('pages.workoutPlans.tabPlans')}
             </TabsTrigger>
-            <TabsTrigger value="exercises" className="gap-xs">
+            <TabsTrigger value="exercises" className="flex-1 gap-xs">
               <Dumbbell className="h-4 w-4" />
               {t('pages.workoutPlans.tabExercises')}
             </TabsTrigger>
           </TabsList>
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
-          <TabsContent value="sessions">
+          <TabsContent value="sessions" className="mt-0 flex-1">
             <div className="mb-md flex justify-end">
               <Button onClick={() => setDialog({ type: 'new-session' })}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-sm h-4 w-4" />
                 {t('pages.workoutSessions.newSessionBtn')}
               </Button>
             </div>
@@ -641,10 +642,10 @@ export default function WorkoutPage() {
           </TabsContent>
 
           {/* ── Planos ──────────────────────────────────────────────────── */}
-          <TabsContent value="plans">
+          <TabsContent value="plans" className="mt-0 flex-1">
             <div className="mb-md flex justify-end">
               <Button onClick={() => setDialog({ type: 'new-plan' })}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-sm h-4 w-4" />
                 {t('pages.workoutPlans.newPlanBtn')}
               </Button>
             </div>
@@ -659,203 +660,213 @@ export default function WorkoutPage() {
               />
             ) : (
               <div className="space-y-xl">
-                {/* Plano ativo — hero card */}
-                {activePlan && (
-                  <div className="space-y-sm">
-                    <div className="overflow-hidden rounded-2xl shadow-sm ring-1 ring-category-exercise/30">
-                      {/* Gradient header */}
-                      <div className="relative overflow-hidden bg-gradient-to-br from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg">
-                        <Dumbbell className="absolute -right-6 -top-6 h-36 w-36 rotate-12 text-white/10" />
-                        <div className="relative flex items-start justify-between">
-                          <div className="min-w-0">
-                            <div className="mb-sm inline-flex items-center gap-xs rounded-full bg-white/20 px-sm py-1 text-xs font-bold uppercase tracking-widest text-white">
-                              <Zap className="h-3 w-3" />
-                              {t('pages.workoutPlans.activePlan')}
-                            </div>
-                            <h2 className="text-2xl font-bold text-white">
-                              {activePlan.name}
-                            </h2>
-                            {activePlan.description && (
-                              <p className="mt-1 text-sm text-white/70">
-                                {activePlan.description}
-                              </p>
-                            )}
-                            <div className="mt-sm flex flex-wrap gap-md text-sm text-white/80">
-                              <span className="flex items-center gap-xs">
-                                <ClipboardList className="h-3.5 w-3.5" />
-                                {activePlan.day_count} {t('pages.workoutPlans.days')}
-                              </span>
-                              <span className="flex items-center gap-xs">
-                                <Dumbbell className="h-3.5 w-3.5" />
-                                {activePlan.exercise_count}{' '}
-                                {t('pages.workoutPlans.exercises')}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="ml-md flex shrink-0 gap-xs">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setDialog({ type: 'edit-plan', plan: activePlan })
-                              }
-                              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePlan(activePlan)}
-                              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/20 hover:text-white"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Day cards */}
-                      <div className="bg-card p-md">
-                        <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          {t('pages.workoutPlans.days')}
-                        </p>
-                        <div className="flex gap-sm overflow-x-auto pb-1">
-                          {activePlan.days?.map((day) => (
-                            <button
-                              key={day.id}
-                              type="button"
-                              onClick={() =>
-                                setActivePlanSelectedDay(
-                                  activePlanSelectedDay === day.id ? null : day.id
-                                )
-                              }
-                              className={cn(
-                                'flex min-w-[130px] flex-col items-start rounded-lg border-2 p-sm text-left transition-all',
-                                activePlanSelectedDay === day.id
-                                  ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
-                                  : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  'mb-sm flex h-8 w-8 items-center justify-center rounded-lg',
-                                  activePlanSelectedDay === day.id
-                                    ? 'bg-category-exercise/20 text-category-exercise'
-                                    : 'bg-muted text-muted-foreground'
-                                )}
-                              >
-                                {getMuscleIcon(day.muscle_groups)}
+                {/* Planos ativos — hero cards */}
+                {activePlans.map((activePlan) => {
+                  const activePlanSelectedDay =
+                    selectedDayByPlan[activePlan.id] ?? null;
+                  const setActivePlanSelectedDay = (dayId: number | null) =>
+                    setSelectedDayByPlan((prev) => ({
+                      ...prev,
+                      [activePlan.id]: dayId,
+                    }));
+                  return (
+                    <div key={activePlan.id} className="space-y-sm">
+                      <div className="overflow-hidden rounded-2xl shadow-sm ring-1 ring-category-exercise/30">
+                        {/* Gradient header */}
+                        <div className="relative overflow-hidden bg-gradient-to-br from-category-exercise to-category-exercise/60 px-lg pb-md pt-lg">
+                          <Dumbbell className="absolute -right-6 -top-6 h-36 w-36 rotate-12 text-white/10" />
+                          <div className="relative flex items-start justify-between">
+                            <div className="min-w-0">
+                              <div className="mb-sm inline-flex items-center gap-xs rounded-full bg-white/20 px-sm py-xs text-xs font-bold uppercase tracking-widest text-white">
+                                <Zap className="h-3 w-3" />
+                                {t('pages.workoutPlans.activePlan')}
                               </div>
-                              <span
-                                className={cn(
-                                  'text-sm font-semibold leading-tight',
-                                  activePlanSelectedDay === day.id
-                                    ? 'text-category-exercise'
-                                    : 'text-foreground'
-                                )}
-                              >
-                                {day.name}
-                              </span>
-                              {day.muscle_groups && (
-                                <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
-                                  {day.muscle_groups}
+                              <h2 className="text-2xl font-bold text-white">
+                                {activePlan.name}
+                              </h2>
+                              {activePlan.description && (
+                                <p className="mt-xs text-sm text-white/70">
+                                  {activePlan.description}
+                                </p>
+                              )}
+                              <div className="mt-sm flex flex-wrap gap-md text-sm text-white/80">
+                                <span className="flex items-center gap-xs">
+                                  <ClipboardList className="h-3.5 w-3.5" />
+                                  {activePlan.day_count} {t('pages.workoutPlans.days')}
                                 </span>
-                              )}
-                              <span className="mt-sm text-xs text-muted-foreground">
-                                {day.exercise_count} {t('pages.workoutPlans.exercises')}
-                              </span>
-                            </button>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setDialog({ type: 'new-day', planId: activePlan.id })
-                            }
-                            className="flex min-w-[100px] flex-col items-center justify-center gap-sm rounded-lg border-2 border-dashed border-border p-sm text-center transition-colors hover:border-category-exercise/40 hover:bg-category-exercise/5"
-                          >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                              <Plus className="h-4 w-4 text-muted-foreground" />
+                                <span className="flex items-center gap-xs">
+                                  <Dumbbell className="h-3.5 w-3.5" />
+                                  {activePlan.exercise_count}{' '}
+                                  {t('pages.workoutPlans.exercises')}
+                                </span>
+                              </div>
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {t('pages.workoutPlans.newDayBtn')}
-                            </span>
-                          </button>
+                            <div className="ml-md flex shrink-0 gap-xs">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setDialog({ type: 'edit-plan', plan: activePlan })
+                                }
+                                className="rounded-lg p-xs text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePlan(activePlan)}
+                                className="rounded-lg p-xs text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Exercícios da divisão selecionada */}
-                        {activePlanSelectedDay !== null &&
-                          (() => {
-                            const day = activePlan.days?.find(
-                              (d) => d.id === activePlanSelectedDay
-                            );
-                            if (!day) return null;
-                            return (
-                              <div className="mt-md rounded-lg border border-category-exercise/25 bg-category-exercise/5 p-md">
-                                <div className="mb-sm flex items-center justify-between">
-                                  <div>
-                                    <p className="font-semibold text-foreground">
-                                      {day.name}
-                                    </p>
-                                    {day.muscle_groups && (
-                                      <p className="text-xs text-muted-foreground">
-                                        {day.muscle_groups}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-xs">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7"
-                                      onClick={() =>
-                                        setDialog({ type: 'edit-day', day })
-                                      }
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 text-destructive hover:text-destructive"
-                                      onClick={() => handleDeleteDay(day)}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                {day.exercises && day.exercises.length > 0 ? (
-                                  <ExerciseList
-                                    exercises={day.exercises}
-                                    onEdit={(ex) =>
-                                      setDialog({
-                                        type: 'edit-exercise',
-                                        exercise: ex,
-                                        day,
-                                      })
-                                    }
-                                    onDelete={handleDeleteExercise}
-                                  />
-                                ) : (
-                                  <p className="py-sm text-center text-xs text-muted-foreground">
-                                    {t('pages.workoutPlans.noExercises')}
-                                  </p>
+                        {/* Day cards */}
+                        <div className="bg-card p-md">
+                          <p className="mb-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {t('pages.workoutPlans.days')}
+                          </p>
+                          <div className="flex gap-sm overflow-x-auto pb-xs">
+                            {activePlan.days?.map((day) => (
+                              <button
+                                key={day.id}
+                                type="button"
+                                onClick={() =>
+                                  setActivePlanSelectedDay(
+                                    activePlanSelectedDay === day.id ? null : day.id
+                                  )
+                                }
+                                className={cn(
+                                  'flex min-w-[130px] flex-col items-start rounded-lg border-2 p-sm text-left transition-all',
+                                  activePlanSelectedDay === day.id
+                                    ? 'border-category-exercise bg-category-exercise/10 shadow-sm'
+                                    : 'border-border bg-background hover:border-category-exercise/40 hover:bg-category-exercise/5'
                                 )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setDialog({ type: 'add-exercise', day })
-                                  }
-                                  className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-sm text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                              >
+                                <div
+                                  className={cn(
+                                    'mb-sm flex h-8 w-8 items-center justify-center rounded-lg',
+                                    activePlanSelectedDay === day.id
+                                      ? 'bg-category-exercise/20 text-category-exercise'
+                                      : 'bg-muted text-muted-foreground'
+                                  )}
                                 >
-                                  <Plus className="h-3.5 w-3.5" />
-                                  {t('pages.workoutPlans.addExerciseBtn')}
-                                </button>
+                                  {getMuscleIcon(day.muscle_groups)}
+                                </div>
+                                <span
+                                  className={cn(
+                                    'text-sm font-semibold leading-tight',
+                                    activePlanSelectedDay === day.id
+                                      ? 'text-category-exercise'
+                                      : 'text-foreground'
+                                  )}
+                                >
+                                  {day.name}
+                                </span>
+                                {day.muscle_groups && (
+                                  <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                                    {day.muscle_groups}
+                                  </span>
+                                )}
+                                <span className="mt-sm text-xs text-muted-foreground">
+                                  {day.exercise_count}{' '}
+                                  {t('pages.workoutPlans.exercises')}
+                                </span>
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDialog({ type: 'new-day', planId: activePlan.id })
+                              }
+                              className="flex min-w-[100px] flex-col items-center justify-center gap-sm rounded-lg border-2 border-dashed border-border p-sm text-center transition-colors hover:border-category-exercise/40 hover:bg-category-exercise/5"
+                            >
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                                <Plus className="h-4 w-4 text-muted-foreground" />
                               </div>
-                            );
-                          })()}
+                              <span className="text-xs text-muted-foreground">
+                                {t('pages.workoutPlans.newDayBtn')}
+                              </span>
+                            </button>
+                          </div>
+
+                          {/* Exercícios da divisão selecionada */}
+                          {activePlanSelectedDay !== null &&
+                            (() => {
+                              const day = activePlan.days?.find(
+                                (d) => d.id === activePlanSelectedDay
+                              );
+                              if (!day) return null;
+                              return (
+                                <div className="mt-md rounded-lg border border-category-exercise/25 bg-category-exercise/5 p-md">
+                                  <div className="mb-sm flex items-center justify-between">
+                                    <div>
+                                      <p className="font-semibold text-foreground">
+                                        {day.name}
+                                      </p>
+                                      {day.muscle_groups && (
+                                        <p className="text-xs text-muted-foreground">
+                                          {day.muscle_groups}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-xs">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() =>
+                                          setDialog({ type: 'edit-day', day })
+                                        }
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-destructive hover:text-destructive"
+                                        onClick={() => handleDeleteDay(day)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  {day.exercises && day.exercises.length > 0 ? (
+                                    <ExerciseList
+                                      exercises={day.exercises}
+                                      onEdit={(ex) =>
+                                        setDialog({
+                                          type: 'edit-exercise',
+                                          exercise: ex,
+                                          day,
+                                        })
+                                      }
+                                      onDelete={handleDeleteExercise}
+                                    />
+                                  ) : (
+                                    <p className="py-sm text-center text-xs text-muted-foreground">
+                                      {t('pages.workoutPlans.noExercises')}
+                                    </p>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setDialog({ type: 'add-exercise', day })
+                                    }
+                                    className="mt-sm flex w-full items-center justify-center gap-sm rounded-lg border-2 border-dashed border-category-exercise/30 py-sm text-xs text-category-exercise transition-colors hover:border-category-exercise/60 hover:bg-category-exercise/5"
+                                  >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    {t('pages.workoutPlans.addExerciseBtn')}
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })}
 
                 {/* Outros planos */}
                 {inactivePlans.length > 0 && (
@@ -898,10 +909,10 @@ export default function WorkoutPage() {
           </TabsContent>
 
           {/* ── Exercícios (catálogo) ────────────────────────────────────── */}
-          <TabsContent value="exercises">
+          <TabsContent value="exercises" className="mt-0 flex-1">
             <div className="mb-md flex justify-end">
               <Button onClick={() => setDialog({ type: 'new-catalog-exercise' })}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-sm h-4 w-4" />
                 {t('pages.exercises.newBtn')}
               </Button>
             </div>
@@ -1150,7 +1161,7 @@ function ExerciseCatalogForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-xl bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
+      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
           <Dumbbell className="h-5 w-5 text-category-exercise" />
         </div>
@@ -1187,7 +1198,7 @@ function ExerciseCatalogForm({
                 type="button"
                 onClick={() => toggleChip(label)}
                 className={cn(
-                  'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                  'rounded-full border px-sm py-xs text-xs font-medium transition-all',
                   selectedChips.includes(label)
                     ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
                     : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
@@ -1233,7 +1244,7 @@ function ExerciseCatalogForm({
           disabled={isLoading}
           className="bg-category-exercise hover:bg-category-exercise/90"
         >
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isLoading && <Loader2 className="mr-sm h-4 w-4 animate-spin" />}
           {t('common.actions.save')}
         </Button>
       </div>
@@ -1408,7 +1419,7 @@ function InactivePlanRow({
             <div className="space-y-sm border-t border-border bg-background p-md">
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={onNewDay}>
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="mr-xs h-3 w-3" />
                   {t('pages.workoutPlans.newDayBtn')}
                 </Button>
               </div>

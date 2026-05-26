@@ -31,7 +31,9 @@ class BaseAuthTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Auth Test User",
             document_hash="a" * 64,
@@ -70,8 +72,13 @@ class PasswordResetRequestViewTest(APITestCase):
         self.assertIn("message", resp.data)
 
     @patch("django.core.mail.send_mail")
-    @patch("django.template.loader.render_to_string", return_value="<html>reset</html>")
-    def test_known_email_returns_200_and_sends_email(self, mock_render, mock_send):
+    @patch(
+        "django.template.loader.render_to_string",
+        return_value="<html>reset</html>",
+    )
+    def test_known_email_returns_200_and_sends_email(
+        self, mock_render, mock_send
+    ):
         resp = self.anon_client.post(
             self.URL, {"email": "reset@example.com"}, format="json"
         )
@@ -80,8 +87,13 @@ class PasswordResetRequestViewTest(APITestCase):
         mock_send.assert_called_once()
 
     @patch("django.core.mail.send_mail", side_effect=Exception("SMTP error"))
-    @patch("django.template.loader.render_to_string", return_value="<html>reset</html>")
-    def test_email_send_failure_still_returns_200(self, mock_render, mock_send):
+    @patch(
+        "django.template.loader.render_to_string",
+        return_value="<html>reset</html>",
+    )
+    def test_email_send_failure_still_returns_200(
+        self, mock_render, mock_send
+    ):
         resp = self.anon_client.post(
             self.URL, {"email": "reset@example.com"}, format="json"
         )
@@ -231,7 +243,9 @@ class EmailVerificationSendViewTest(BaseAuthTestCase):
         "django.template.loader.render_to_string",
         return_value="<html>verify</html>",
     )
-    def test_email_send_failure_still_returns_200(self, mock_render, mock_send):
+    def test_email_send_failure_still_returns_200(
+        self, mock_render, mock_send
+    ):
         resp = self.client.post(self.URL, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 

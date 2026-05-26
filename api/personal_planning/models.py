@@ -105,7 +105,9 @@ class RoutineTask(BaseModel):
     name = models.CharField(
         max_length=200, null=False, blank=False, verbose_name="Nome da Tarefa"
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descricao")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descricao"
+    )
     category = models.CharField(
         max_length=50,
         choices=TASK_CATEGORY_CHOICES,
@@ -147,20 +149,26 @@ class RoutineTask(BaseModel):
         blank=True,
         default=None,
         verbose_name="Dias da Semana Personalizados",
-        help_text="Array de dias da semana [0-6] para periodicidade personalizada",
+        help_text=(
+            "Array de dias da semana [0-6]" " para periodicidade personalizada"
+        ),
     )
     custom_month_days = models.JSONField(
         null=True,
         blank=True,
         default=None,
         verbose_name="Dias do Mês Personalizados",
-        help_text="Array de dias do mês [1-31] para periodicidade personalizada",
+        help_text=(
+            "Array de dias do mês [1-31]" " para periodicidade personalizada"
+        ),
     )
     times_per_week = models.PositiveIntegerField(
         null=True,
         blank=True,
         verbose_name="Vezes por Semana",
-        help_text="Quantas vezes por semana (para periodicidade personalizada)",
+        help_text=(
+            "Quantas vezes por semana" " (para periodicidade personalizada)"
+        ),
     )
     times_per_month = models.PositiveIntegerField(
         null=True,
@@ -204,7 +212,8 @@ class RoutineTask(BaseModel):
         blank=True,
         verbose_name="Horário de Encerramento",
         help_text=(
-            "Horário de encerramento (apenas para tarefas com uma ocorrência por dia)"
+            "Horário de encerramento (apenas para tarefas"
+            " com uma ocorrência por dia)"
         ),
     )
     daily_occurrences = models.PositiveIntegerField(
@@ -234,7 +243,10 @@ class RoutineTask(BaseModel):
     allowed_skips_per_month = models.PositiveIntegerField(
         default=0,
         verbose_name="Faltas Permitidas por Mês",
-        help_text="Quantas faltas por mes sem quebrar o streak (0 = sem tolerancia)",
+        help_text=(
+            "Quantas faltas por mes sem quebrar o streak"
+            " (0 = sem tolerancia)"
+        ),
     )
     linked_financial_goal = models.ForeignKey(
         "vaults.FinancialGoal",
@@ -279,13 +291,21 @@ class RoutineTask(BaseModel):
 
         if self.periodicity == "weekly" and self.weekday is None:
             raise ValidationError(
-                {"weekday": "Dia da semana e obrigatorio para tarefas semanais"}
+                {
+                    "weekday": (
+                        "Dia da semana e obrigatorio" " para tarefas semanais"
+                    )
+                }
             )
 
         if self.periodicity == "monthly":
             if self.day_of_month is None:
                 raise ValidationError(
-                    {"day_of_month": "Dia do mes e obrigatorio para tarefas mensais"}
+                    {
+                        "day_of_month": (
+                            "Dia do mes e obrigatorio" " para tarefas mensais"
+                        )
+                    }
                 )
             if self.day_of_month < 1 or self.day_of_month > 31:
                 raise ValidationError(
@@ -294,8 +314,12 @@ class RoutineTask(BaseModel):
 
         # Validação para periodicidade personalizada
         if self.periodicity == "custom":
-            has_weekdays = self.custom_weekdays and len(self.custom_weekdays) > 0
-            has_month_days = self.custom_month_days and len(self.custom_month_days) > 0
+            has_weekdays = (
+                self.custom_weekdays and len(self.custom_weekdays) > 0
+            )
+            has_month_days = (
+                self.custom_month_days and len(self.custom_month_days) > 0
+            )
             has_frequency = any(
                 [self.times_per_week, self.times_per_month, self.interval_days]
             )
@@ -313,7 +337,8 @@ class RoutineTask(BaseModel):
             # Validar valores dos dias da semana
             if self.custom_weekdays:
                 if not all(
-                    isinstance(d, int) and 0 <= d <= 6 for d in self.custom_weekdays
+                    isinstance(d, int) and 0 <= d <= 6
+                    for d in self.custom_weekdays
                 ):
                     raise ValidationError(
                         {
@@ -327,10 +352,15 @@ class RoutineTask(BaseModel):
             # Validar valores dos dias do mês
             if self.custom_month_days:
                 if not all(
-                    isinstance(d, int) and 1 <= d <= 31 for d in self.custom_month_days
+                    isinstance(d, int) and 1 <= d <= 31
+                    for d in self.custom_month_days
                 ):
                     raise ValidationError(
-                        {"custom_month_days": "Dias do mes devem estar entre 1 e 31"}
+                        {
+                            "custom_month_days": (
+                                "Dias do mes devem estar" " entre 1 e 31"
+                            )
+                        }
                     )
 
             # Validar intervalo de dias
@@ -371,7 +401,11 @@ class RoutineTask(BaseModel):
             time_pattern = re.compile(r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
             if not isinstance(self.scheduled_times, list):
                 raise ValidationError(
-                    {"scheduled_times": "Horários programados devem ser uma lista"}
+                    {
+                        "scheduled_times": (
+                            "Horários programados devem" " ser uma lista"
+                        )
+                    }
                 )
             for t in self.scheduled_times:
                 if not isinstance(t, str) or not time_pattern.match(t):
@@ -462,9 +496,14 @@ class Goal(BaseModel):
     """
 
     title = models.CharField(
-        max_length=200, null=False, blank=False, verbose_name="Titulo do Objetivo"
+        max_length=200,
+        null=False,
+        blank=False,
+        verbose_name="Titulo do Objetivo",
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descricao")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descricao"
+    )
     goal_type = models.CharField(
         max_length=30,
         choices=GOAL_TYPE_CHOICES,
@@ -487,11 +526,18 @@ class Goal(BaseModel):
         verbose_name="Meta",
         help_text="Ex: 15 dias, 100 vezes, etc",
     )
-    current_value = models.PositiveIntegerField(default=0, verbose_name="Valor Atual")
-    start_date = models.DateField(
-        null=False, blank=False, default=timezone.now, verbose_name="Data de Inicio"
+    current_value = models.PositiveIntegerField(
+        default=0, verbose_name="Valor Atual"
     )
-    end_date = models.DateField(null=True, blank=True, verbose_name="Data de Conclusao")
+    start_date = models.DateField(
+        null=False,
+        blank=False,
+        default=timezone.now,
+        verbose_name="Data de Inicio",
+    )
+    end_date = models.DateField(
+        null=True, blank=True, verbose_name="Data de Conclusao"
+    )
     status = models.CharField(
         max_length=20,
         choices=GOAL_STATUS_CHOICES,
@@ -517,7 +563,8 @@ class Goal(BaseModel):
     @property
     def calculated_current_value(self):
         """
-        Calcula o valor atual do progresso automaticamente baseado no tipo de objetivo
+        Calcula o valor atual do progresso automaticamente baseado no tipo de
+        objetivo
         e nas tarefas relacionadas completadas.
         """
         from datetime import timedelta
@@ -531,7 +578,9 @@ class Goal(BaseModel):
                 check_date = today
 
                 while check_date >= self.start_date:
-                    should_appear = self.related_task.should_appear_on_date(check_date)
+                    should_appear = self.related_task.should_appear_on_date(
+                        check_date
+                    )
                     if should_appear:
                         completed_instance = TaskInstance.objects.filter(
                             template=self.related_task,
@@ -551,14 +600,17 @@ class Goal(BaseModel):
                 return self.days_active
 
         # Para objetivos do tipo avoid_habit (evitar um hábito)
-        # Conta dias consecutivos desde start_date em que a tarefa NÃO foi completada
+        # Conta dias consecutivos desde start_date em que a tarefa NÃO foi
+        # completada
         if self.goal_type == "avoid_habit":
             if self.related_task:
                 consecutive_days = 0
                 check_date = today
 
                 while check_date >= self.start_date:
-                    should_appear = self.related_task.should_appear_on_date(check_date)
+                    should_appear = self.related_task.should_appear_on_date(
+                        check_date
+                    )
                     if should_appear:
                         completed_instance = TaskInstance.objects.filter(
                             template=self.related_task,
@@ -609,7 +661,10 @@ class Goal(BaseModel):
         if self.target_value == 0:
             return 0.0
         if self.goal_type in ("consecutive_days", "avoid_habit", "total_days"):
-            return min((self.calculated_current_value / self.target_value) * 100, 100.0)
+            return min(
+                (self.calculated_current_value / self.target_value) * 100,
+                100.0,
+            )
         return min((self.current_value / self.target_value) * 100, 100.0)
 
     @property
@@ -698,11 +753,15 @@ class TaskInstance(BaseModel):
 
     # Snapshot dos dados do template no momento da geração
     task_name = models.CharField(max_length=200, verbose_name="Nome da Tarefa")
-    task_description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    task_description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
     category = models.CharField(
         max_length=50, choices=TASK_CATEGORY_CHOICES, verbose_name="Categoria"
     )
-    icon = models.CharField(max_length=50, null=True, blank=True, verbose_name="Ícone")
+    icon = models.CharField(
+        max_length=50, null=True, blank=True, verbose_name="Ícone"
+    )
     priority = models.CharField(
         max_length=10,
         choices=PRIORITY_CHOICES,
@@ -736,11 +795,15 @@ class TaskInstance(BaseModel):
     quantity_completed = models.PositiveIntegerField(
         default=0, verbose_name="Quantidade Realizada"
     )
-    unit = models.CharField(max_length=50, default="vez", verbose_name="Unidade")
+    unit = models.CharField(
+        max_length=50, default="vez", verbose_name="Unidade"
+    )
 
     # Metadados de conclusão
     notes = models.TextField(null=True, blank=True, verbose_name="Observações")
-    started_at = models.DateTimeField(null=True, blank=True, verbose_name="Iniciada em")
+    started_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Iniciada em"
+    )
     completed_at = models.DateTimeField(
         null=True, blank=True, verbose_name="Concluída em"
     )
@@ -757,8 +820,11 @@ class TaskInstance(BaseModel):
         verbose_name = "Instância de Tarefa"
         verbose_name_plural = "Instâncias de Tarefas"
         ordering = ["scheduled_date", "scheduled_time", "occurrence_index"]
-        # Permite múltiplas instâncias por template+data, diferenciadas pelo índice
-        unique_together = [["template", "scheduled_date", "occurrence_index", "owner"]]
+        # Permite múltiplas instâncias por template+data, diferenciadas pelo
+        # índice
+        unique_together = [
+            ["template", "scheduled_date", "occurrence_index", "owner"]
+        ]
         indexes = [
             models.Index(fields=["owner", "scheduled_date"]),
             models.Index(fields=["template", "scheduled_date"]),
@@ -828,7 +894,8 @@ XP_EVENT_CHOICES = (
 
 
 class GamificationProfile(BaseModel):
-    """Perfil de gamificação de um membro — XP acumulado, nível e streak atual."""
+    """Perfil de gamificação de um membro —
+    XP acumulado, nível e streak atual."""
 
     member = models.OneToOneField(
         "members.Member",
@@ -837,7 +904,9 @@ class GamificationProfile(BaseModel):
         verbose_name="Membro",
     )
     total_xp = models.PositiveIntegerField(default=0, verbose_name="XP Total")
-    current_level = models.PositiveSmallIntegerField(default=1, verbose_name="Nível")
+    current_level = models.PositiveSmallIntegerField(
+        default=1, verbose_name="Nível"
+    )
     current_streak = models.PositiveIntegerField(
         default=0, verbose_name="Sequência atual (dias)"
     )
@@ -856,14 +925,18 @@ class GamificationProfile(BaseModel):
         verbose_name_plural = "Perfis de Gamificação"
 
     def __str__(self):
-        return f"{self.member} — Nível {self.current_level} ({self.total_xp} XP)"
+        return (
+            f"{self.member} — Nível {self.current_level} ({self.total_xp} XP)"
+        )
 
     @staticmethod
     def xp_for_level(level: int) -> int:
         """XP necessário para atingir o nível informado (curva quadrática)."""
         return 100 * (level**2)
 
-    def add_xp(self, amount: int, event: str, description: str = "") -> "XPTransaction":
+    def add_xp(
+        self, amount: int, event: str, description: str = ""
+    ) -> "XPTransaction":
         self.total_xp += amount
         new_level = self._calculate_level()
         leveled_up = new_level > self.current_level
@@ -947,7 +1020,11 @@ class GamificationProfile(BaseModel):
                             f"Completou {days} dias consecutivos de atividade"
                         ),
                         "category": "streak",
-                        "icon": "🔥" if days == 7 else ("💪" if days == 30 else "🌟"),
+                        "icon": (
+                            "🔥"
+                            if days == 7
+                            else ("💪" if days == 30 else "🌟")
+                        ),
                         "xp_reward": xp,
                         "created_by": self.created_by,
                     },
@@ -972,7 +1049,9 @@ class XPTransaction(BaseModel):
     event = models.CharField(
         max_length=50, choices=XP_EVENT_CHOICES, verbose_name="Evento"
     )
-    description = models.CharField(max_length=200, blank=True, verbose_name="Descrição")
+    description = models.CharField(
+        max_length=200, blank=True, verbose_name="Descrição"
+    )
     total_after = models.PositiveIntegerField(verbose_name="XP total após")
 
     class Meta:
@@ -994,8 +1073,12 @@ class Badge(BaseModel):
     category = models.CharField(
         max_length=20, choices=BADGE_CATEGORY_CHOICES, verbose_name="Categoria"
     )
-    icon = models.CharField(max_length=50, default="Medal", verbose_name="Ícone")
-    xp_reward = models.PositiveSmallIntegerField(default=0, verbose_name="XP bônus")
+    icon = models.CharField(
+        max_length=50, default="Medal", verbose_name="Ícone"
+    )
+    xp_reward = models.PositiveSmallIntegerField(
+        default=0, verbose_name="XP bônus"
+    )
 
     class Meta:
         verbose_name = "Badge"
@@ -1021,7 +1104,9 @@ class UserBadge(BaseModel):
         related_name="user_badges",
         verbose_name="Badge",
     )
-    earned_at = models.DateTimeField(auto_now_add=True, verbose_name="Conquistado em")
+    earned_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Conquistado em"
+    )
 
     class Meta:
         verbose_name = "Badge do Usuário"
@@ -1106,7 +1191,9 @@ class Exercise(BaseModel):
         verbose_name="Grupos Musculares",
         help_text="Ex: Peitoral / Tríceps",
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1130,7 +1217,9 @@ class WorkoutPlan(BaseModel):
     name = models.CharField(
         max_length=200, null=False, blank=False, verbose_name="Nome do Plano"
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
     is_active = models.BooleanField(default=True, verbose_name="Plano Ativo")
     owner = models.ForeignKey(
         "members.Member",
@@ -1150,7 +1239,8 @@ class WorkoutPlan(BaseModel):
 
 
 class WorkoutDay(BaseModel):
-    """Divisão de treino dentro de um plano (ex: Treino A — Costas/Ombro/Bíceps)."""
+    """Divisão de treino dentro de um plano
+    (ex: Treino A — Costas/Ombro/Bíceps)."""
 
     plan = models.ForeignKey(
         WorkoutPlan,
@@ -1173,7 +1263,9 @@ class WorkoutDay(BaseModel):
         help_text="Ex: Costas / Ombro / Bíceps",
     )
     order = models.PositiveIntegerField(
-        default=0, verbose_name="Ordem", help_text="Ordem de exibição dentro do plano"
+        default=0,
+        verbose_name="Ordem",
+        help_text="Ordem de exibição dentro do plano",
     )
     owner = models.ForeignKey(
         "members.Member",
@@ -1226,11 +1318,15 @@ class WorkoutExercise(BaseModel):
     sets = models.PositiveIntegerField(
         default=3, verbose_name="Séries", help_text="Número de séries"
     )
-    reps_min = models.PositiveIntegerField(default=8, verbose_name="Repetições Mínimas")
+    reps_min = models.PositiveIntegerField(
+        default=8, verbose_name="Repetições Mínimas"
+    )
     reps_max = models.PositiveIntegerField(
         default=12, verbose_name="Repetições Máximas"
     )
-    load = models.CharField(max_length=20, null=True, blank=True, verbose_name="Carga")
+    load = models.CharField(
+        max_length=20, null=True, blank=True, verbose_name="Carga"
+    )
     load_unit = models.CharField(
         max_length=10,
         choices=LOAD_UNIT_CHOICES,
@@ -1254,7 +1350,10 @@ class WorkoutExercise(BaseModel):
 
     def __str__(self):
         load_str = f" @ {self.load}{self.load_unit}" if self.load else ""
-        return f"{self.name} — {self.sets}x{self.reps_min}-{self.reps_max}{load_str}"
+        return (
+            f"{self.name} — {self.sets}x"
+            f"{self.reps_min}-{self.reps_max}{load_str}"
+        )
 
 
 class WorkoutSession(BaseModel):
@@ -1269,8 +1368,12 @@ class WorkoutSession(BaseModel):
         verbose_name="Divisão de Treino",
         help_text="Divisão executada (opcional — permite sessão avulsa)",
     )
-    date = models.DateField(null=False, blank=False, verbose_name="Data do Treino")
-    started_at = models.TimeField(null=True, blank=True, verbose_name="Hora de Início")
+    date = models.DateField(
+        null=False, blank=False, verbose_name="Data do Treino"
+    )
+    started_at = models.TimeField(
+        null=True, blank=True, verbose_name="Hora de Início"
+    )
     finished_at = models.TimeField(
         null=True, blank=True, verbose_name="Hora de Término"
     )
@@ -1324,14 +1427,22 @@ class WorkoutSessionExercise(BaseModel):
         blank=True,
         related_name="session_exercises",
         verbose_name="Exercício do Plano",
-        help_text="Referência ao exercício do plano (nullable para exercício avulso)",
+        help_text=(
+            "Referência ao exercício do plano"
+            " (nullable para exercício avulso)"
+        ),
     )
     exercise_name = models.CharField(
         max_length=200,
         verbose_name="Nome do Exercício",
-        help_text="Snapshot do nome — preservado mesmo se o exercício for alterado",
+        help_text=(
+            "Snapshot do nome — preservado mesmo"
+            " se o exercício for alterado"
+        ),
     )
-    sets_target = models.PositiveIntegerField(default=3, verbose_name="Séries Alvo")
+    sets_target = models.PositiveIntegerField(
+        default=3, verbose_name="Séries Alvo"
+    )
     reps_target_min = models.PositiveIntegerField(
         default=8, verbose_name="Repetições Alvo (mín.)"
     )
@@ -1374,7 +1485,10 @@ class WorkoutSessionSet(BaseModel):
         null=True,
         blank=True,
         verbose_name="Carga",
-        help_text="Peso utilizado (deixe em branco para exercícios com peso corporal)",
+        help_text=(
+            "Peso utilizado (deixe em branco para"
+            " exercícios com peso corporal)"
+        ),
     )
     load_unit = models.CharField(
         max_length=20,
@@ -1385,7 +1499,9 @@ class WorkoutSessionSet(BaseModel):
     reps_done = models.PositiveIntegerField(
         null=True, blank=True, verbose_name="Repetições Realizadas"
     )
-    completed = models.BooleanField(default=True, verbose_name="Série Concluída")
+    completed = models.BooleanField(
+        default=True, verbose_name="Série Concluída"
+    )
     notes = models.CharField(
         max_length=300, null=True, blank=True, verbose_name="Observações"
     )
@@ -1418,9 +1534,14 @@ class Food(BaseModel):
     """Alimento/ingrediente cadastrado pelo usuário."""
 
     name = models.CharField(
-        max_length=200, null=False, blank=False, verbose_name="Nome do Alimento"
+        max_length=200,
+        null=False,
+        blank=False,
+        verbose_name="Nome do Alimento",
     )
-    description = models.TextField(null=True, blank=True, verbose_name="Descrição")
+    description = models.TextField(
+        null=True, blank=True, verbose_name="Descrição"
+    )
     owner = models.ForeignKey(
         "members.Member",
         on_delete=models.PROTECT,
@@ -1443,7 +1564,10 @@ class MealType(BaseModel):
     """Tipo de refeição definido pelo usuário (ex: Café da Manhã, Almoço)."""
 
     name = models.CharField(
-        max_length=100, null=False, blank=False, verbose_name="Nome da Refeição"
+        max_length=100,
+        null=False,
+        blank=False,
+        verbose_name="Nome da Refeição",
     )
     suggested_time = models.TimeField(
         null=True,
@@ -1470,13 +1594,16 @@ class MealType(BaseModel):
 
     def __str__(self):
         time_str = (
-            f" ({self.suggested_time.strftime('%H:%M')})" if self.suggested_time else ""
+            f" ({self.suggested_time.strftime('%H:%M')})"
+            if self.suggested_time
+            else ""
         )
         return f"{self.name}{time_str}"
 
 
 class MenuOption(BaseModel):
-    """Opção de cardápio dentro de um tipo de refeição (ex: Opção 1, Opção 2)."""
+    """Opção de cardápio dentro de um tipo de refeição
+    (ex: Opção 1, Opção 2)."""
 
     meal_type = models.ForeignKey(
         MealType,
@@ -1562,7 +1689,9 @@ class MenuOptionIngredient(BaseModel):
         indexes = [models.Index(fields=["menu_option", "order"])]
 
     def __str__(self):
-        qty_str = f"{self.quantity} {self.unit}" if self.quantity else self.unit
+        qty_str = (
+            f"{self.quantity} {self.unit}" if self.quantity else self.unit
+        )
         opt_str = " (opcional)" if self.is_optional else ""
         return f"{self.food.name} — {qty_str}{opt_str}"
 

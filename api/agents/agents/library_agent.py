@@ -126,9 +126,15 @@ class LibraryAgent(BaseAgent):
             or "  (sem livros cadastrados neste período)"
         )
 
-        return f"""Você é um assistente especializado na biblioteca pessoal do usuário.
-Use os trechos indexados abaixo para responder. Cite o livro de origem quando possível.
-Se não encontrar resposta nos trechos, informe e sugira uma leitura relacionada.
+        _intro = (
+            "Você é um assistente especializado"
+            " na biblioteca pessoal do usuário."
+        )
+        return f"""{_intro}
+Use os trechos indexados abaixo para responder. Cite o livro de origem quando
+possível.
+Se não encontrar resposta nos trechos, informe e sugira uma leitura
+relacionada.
 
 {rag_section}
 

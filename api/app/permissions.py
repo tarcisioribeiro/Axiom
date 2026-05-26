@@ -16,7 +16,9 @@ class GlobalDefaultPermission(permissions.BasePermission):
 
         return bool(request.user.has_perm(model_permission_codename))
 
-    def _get_model_permission_codename(self, method: str, view: Any) -> Optional[str]:
+    def _get_model_permission_codename(
+        self, method: str, view: Any
+    ) -> Optional[str]:
         try:
             # Tentar obter o queryset - pode ser atributo ou método
             queryset = view.queryset

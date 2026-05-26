@@ -28,7 +28,9 @@ class BasePush2TestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Push2 User",
             document_hash="p" * 64,
@@ -183,7 +185,8 @@ class MemberFinancialReportWithDataTest(BasePush2TestCase):
 
 class AuthRegistrationTest(APITestCase):
     def test_register_user_success(self):
-        """Covers validate_cpf, validate_registration_data, register success."""
+        """Covers validate_cpf, validate_registration_data, register
+        success."""
         url = reverse("register-user")
         response = self.client.post(
             url,
@@ -240,10 +243,12 @@ class AuthRegistrationTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_user_missing_fields(self):
-        """Covers missing-required-fields path in validate_registration_data."""
+        """Covers missing-required-fields path in
+        validate_registration_data."""
         url = reverse("register-user")
         response = self.client.post(url, {})
-        # 429 is possible when rate-limiting fires before validation in this environment
+        # 429 is possible when rate-limiting fires before validation in
+        # this environment
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
@@ -262,7 +267,8 @@ class AuthRegistrationTest(APITestCase):
                 "phone": "11988887744",
             },
         )
-        # 429 is possible when rate-limiting fires before validation in this environment
+        # 429 is possible when rate-limiting fires before validation in
+        # this environment
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
@@ -281,7 +287,8 @@ class AuthRegistrationTest(APITestCase):
                 "phone": "11988887733",
             },
         )
-        # 429 is possible when rate-limiting fires before validation in this environment
+        # 429 is possible when rate-limiting fires before validation in
+        # this environment
         self.assertIn(
             response.status_code,
             [status.HTTP_400_BAD_REQUEST, status.HTTP_429_TOO_MANY_REQUESTS],
@@ -350,7 +357,9 @@ class AdminPurgeDeletedTest(BasePush2TestCase):
         stale_member.save()
 
         url = reverse("admin-purge-deleted")
-        response = self.client.post(url, {"days": 1, "dry_run": False}, format="json")
+        response = self.client.post(
+            url, {"days": 1, "dry_run": False}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data["dry_run"])  # type: ignore
         self.assertIn("purged", response.data)  # type: ignore

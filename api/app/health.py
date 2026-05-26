@@ -18,9 +18,14 @@ def check_storage() -> dict[str, str]:
     Uses a HEAD bucket request with a 2-second timeout.
     Returns not_configured when MINIO_ENDPOINT is not set.
     """
-    minio_endpoint = cfg("MINIO_ENDPOINT") or getattr(settings, "MINIO_ENDPOINT", "")
+    minio_endpoint = cfg("MINIO_ENDPOINT") or getattr(
+        settings, "MINIO_ENDPOINT", ""
+    )
     if not minio_endpoint:
-        return {"status": "not_configured", "message": "Storage not configured"}
+        return {
+            "status": "not_configured",
+            "message": "Storage not configured",
+        }
 
     try:
         import boto3
@@ -36,7 +41,9 @@ def check_storage() -> dict[str, str]:
         bucket_name = cfg("MINIO_BUCKET_NAME") or getattr(
             settings, "AWS_STORAGE_BUCKET_NAME", "axiom"
         )
-        verify = getattr(settings, "AWS_S3_VERIFY", os.getenv("MINIO_CA_BUNDLE", True))
+        verify = getattr(
+            settings, "AWS_S3_VERIFY", os.getenv("MINIO_CA_BUNDLE", True)
+        )
         client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
@@ -97,9 +104,9 @@ def health_check(request: HttpRequest) -> JsonResponse:
         health["status"] = "unhealthy"
     # Cache check (if Redis is configured)
     try:
-        if hasattr(settings, "CACHES") and settings.CACHES.get("default", {}).get(
-            "BACKEND"
-        ):
+        if hasattr(settings, "CACHES") and settings.CACHES.get(
+            "default", {}
+        ).get("BACKEND"):
             cache.set("health_check_key", "test_value", 30)
             cached_value = cache.get("health_check_key")
             if cached_value == "test_value":
@@ -170,7 +177,9 @@ def health_check(request: HttpRequest) -> JsonResponse:
         }
     # Determine overall status
     unhealthy_checks = [
-        check for check in health["checks"].values() if check["status"] == "unhealthy"
+        check
+        for check in health["checks"].values()
+        if check["status"] == "unhealthy"
     ]
     if unhealthy_checks:
         health["status"] = "unhealthy"
@@ -189,10 +198,16 @@ def ready_check(request: HttpRequest) -> JsonResponse:
         db_conn = connections["default"]
         with db_conn.cursor() as cursor:
             cursor.execute("SELECT 1")
-            return JsonResponse({"status": "ready", "timestamp": now().isoformat()})
+            return JsonResponse(
+                {"status": "ready", "timestamp": now().isoformat()}
+            )
     except Exception as e:
         return JsonResponse(
-            {"status": "not_ready", "error": str(e), "timestamp": now().isoformat()},
+            {
+                "status": "not_ready",
+                "error": str(e),
+                "timestamp": now().isoformat(),
+            },
             status=503,
         )
 
@@ -210,8 +225,10 @@ def backup_health_check(request: HttpRequest) -> JsonResponse:
     Backup staleness check.
 
     Reads the sentinel files written by api/scripts/backup.sh and returns:
-      200  {"status": "ok",    "last_backup": "<ISO8601>"}  — backup within window
-      503  {"status": "error", "message": "..."}             — stale, failed, or missing
+      200  {"status": "ok",    "last_backup": "<ISO8601>"}
+           — backup within window
+      503  {"status": "error", "message": "..."}
+           — stale, failed, or missing
 
     The staleness threshold defaults to 26 h (daily schedule + 2 h grace) and
     can be overridden via the BACKUP_MAX_AGE_HOURS Django setting.
@@ -240,7 +257,10 @@ def backup_health_check(request: HttpRequest) -> JsonResponse:
             last_ts = float(fh.read().strip())
     except (ValueError, OSError) as exc:
         return JsonResponse(
-            {"status": "error", "message": f"Cannot read backup sentinel: {exc}"},
+            {
+                "status": "error",
+                "message": f"Cannot read backup sentinel: {exc}",
+            },
             status=503,
         )
 
@@ -262,7 +282,9 @@ def backup_health_check(request: HttpRequest) -> JsonResponse:
         )
 
     age_seconds = time.time() - last_ts
-    last_backup_iso = datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat()
+    last_backup_iso = datetime.fromtimestamp(
+        last_ts, tz=timezone.utc
+    ).isoformat()
 
     if age_seconds > max_age_seconds:
         age_hours = age_seconds / 3600

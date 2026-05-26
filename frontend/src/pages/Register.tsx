@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';

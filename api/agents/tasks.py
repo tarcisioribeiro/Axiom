@@ -3,10 +3,14 @@ from celery import shared_task
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=600)
 def generate_weekly_insights_all_users(self) -> dict:
-    """Gera insights proativos via InsightAgent para todos os usuários ativos."""
+    """
+    Gera insights proativos via InsightAgent para todos os usuários ativos.
+    """
     from django.contrib.auth.models import User
 
-    user_ids = list(User.objects.filter(is_active=True).values_list("id", flat=True))
+    user_ids = list(
+        User.objects.filter(is_active=True).values_list("id", flat=True)
+    )
     for user_id in user_ids:
         generate_weekly_insight_for_user.delay(user_id)
     return {"dispatched": len(user_ids)}
@@ -26,7 +30,9 @@ def generate_weekly_insight_for_user(self, user_id: int) -> dict:
         user = User.objects.get(pk=user_id)
 
         week_start = timezone.now().date()
-        week_start = week_start.replace(day=week_start.day - week_start.weekday())
+        week_start = week_start.replace(
+            day=week_start.day - week_start.weekday()
+        )
         already_exists = Notification.objects.filter(
             owner__user=user,
             notification_type="agent_insight",

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   DndContext,
   DragOverlay,
@@ -162,12 +163,14 @@ export default function DailyChecklist() {
 
     void loadCurrentUserMember();
     void initializeDate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (ownerId > 0 && selectedDate) {
       void loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, ownerId]);
 
   useEffect(() => {

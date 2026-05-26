@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Building2, CalendarDays, Globe, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';

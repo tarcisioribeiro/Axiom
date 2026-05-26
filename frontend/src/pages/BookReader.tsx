@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import Epub, { type Book as EpubBook, type Rendition } from 'epubjs';
 import {
   BookOpen,
@@ -620,6 +621,7 @@ export default function BookReader({ bookIdProp, onClose }: BookReaderProps = {}
   useEffect(() => {
     if (!bookId) return;
     void loadAll(parseInt(bookId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
 
   const loadAll = async (id: number) => {

@@ -15,7 +15,17 @@ from celery import shared_task
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_CURRENCIES = ["USD", "EUR", "GBP", "ARS", "JPY", "CAD", "AUD", "MXN", "CHF"]
+SUPPORTED_CURRENCIES = [
+    "USD",
+    "EUR",
+    "GBP",
+    "ARS",
+    "JPY",
+    "CAD",
+    "AUD",
+    "MXN",
+    "CHF",
+]
 
 BCB_BASE = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata"
 
@@ -44,7 +54,9 @@ def _fetch_ptax_for_currency(currency: str, ref_date: date) -> dict | None:
             "rate_sell": Decimal(str(row["cotacaoVenda"])),
         }
     except Exception as exc:
-        logger.warning("PTAX fetch failed for %s on %s: %s", currency, ref_date, exc)
+        logger.warning(
+            "PTAX fetch failed for %s on %s: %s", currency, ref_date, exc
+        )
         return None
 
 

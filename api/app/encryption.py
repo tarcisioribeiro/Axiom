@@ -106,7 +106,8 @@ class FieldEncryption:
 
         Args:
             encrypted_data (str): Dados criptografados em string base64
-            use_cache (bool): Se True, usa cache para evitar multiplas decriptacoes
+            use_cache (bool): Se True, usa cache para evitar multiplas
+            decriptacoes
 
         Returns:
             str: Dados descriptografados
@@ -140,9 +141,12 @@ class FieldEncryption:
             raise
         except InvalidToken:
             logger.warning(
-                "Token invalido ao descriptografar - dados corrompidos ou chave errada"
+                "Token invalido ao descriptografar"
+                " - dados corrompidos ou chave errada"
             )
-            raise DecryptionError("Dados criptografados invalidos ou chave incorreta")
+            raise DecryptionError(
+                "Dados criptografados invalidos ou chave incorreta"
+            )
         except ValueError as e:
             logger.error(f"Chave de criptografia invalida: {e}")
             raise DecryptionError("Chave de criptografia invalida")
@@ -184,7 +188,8 @@ class FieldEncryption:
             str: Dados descriptografados
 
         Raises:
-            DecryptionError: Se a chave for incorreta ou os dados estiverem corrompidos
+            DecryptionError: Se a chave for incorreta ou os dados
+            estiverem corrompidos
         """
         if not encrypted_data:
             return encrypted_data
@@ -204,7 +209,9 @@ class FieldEncryption:
             fernet = Fernet(key)
             return fernet.encrypt(data)
         except (ValueError, TypeError) as e:
-            logger.error(f"Erro ao criptografar bytes com chave fornecida: {e}")
+            logger.error(
+                f"Erro ao criptografar bytes com chave fornecida: {e}"
+            )
             raise EncryptionError("Erro ao criptografar dados binários")
 
     @staticmethod
@@ -216,7 +223,9 @@ class FieldEncryption:
         except InvalidToken:
             raise DecryptionError("Chave incorreta ou dados corrompidos")
         except (ValueError, TypeError) as e:
-            logger.error(f"Erro ao descriptografar bytes com chave fornecida: {e}")
+            logger.error(
+                f"Erro ao descriptografar bytes com chave fornecida: {e}"
+            )
             raise DecryptionError("Erro ao descriptografar dados binários")
 
     @staticmethod
@@ -227,7 +236,9 @@ class FieldEncryption:
             fernet = Fernet(key)
             return fernet.decrypt(encrypted_data)
         except InvalidToken:
-            raise DecryptionError("Dados criptografados inválidos ou chave incorreta")
+            raise DecryptionError(
+                "Dados criptografados inválidos ou chave incorreta"
+            )
         except (ValueError, TypeError) as e:
             logger.error(f"Erro ao descriptografar bytes: {e}")
             raise DecryptionError("Erro ao descriptografar dados binários")
@@ -247,17 +258,18 @@ class EncryptedField:
     """
     Descriptor para campos criptografados seguindo a convenção de prefixo _.
 
-    Substitui o padrão getter/setter @property repetido em múltiplos modelos.
-    O campo de armazenamento Django (TextField com prefixo _) deve ser declarado
-    separadamente no modelo.
+    Substitui o padrão getter/setter @property repetido em múltiplos
+    modelos. O campo de armazenamento Django (TextField com prefixo _)
+    deve ser declarado separadamente no modelo.
 
     Parâmetros
     ----------
     storage_attr : str
-        Nome do campo Django que armazena o valor criptografado (ex: '_password').
+        Nome do campo Django que armazena o valor criptografado
+        (ex: '_password').
     validator : callable, opcional
-        Função que recebe o valor (pós-preprocessamento) e levanta ValidationError
-        se inválido.
+        Função que recebe o valor (pós-preprocessamento) e levanta
+        ValidationError se inválido.
     preprocessor : callable, opcional
         Função que transforma o valor antes de validar e criptografar
         (ex: normalização de número de cartão).
@@ -304,7 +316,9 @@ class EncryptedField:
 
     def __set__(self, obj: Any, value: Any) -> None:
         if value:
-            v: str = self.preprocessor(value) if self.preprocessor else str(value)
+            v: str = (
+                self.preprocessor(value) if self.preprocessor else str(value)
+            )
             if self.validator is not None:
                 self.validator(v)
             setattr(obj, self.storage_attr, FieldEncryption.encrypt_data(v))
@@ -314,26 +328,31 @@ class EncryptedField:
 
 class MaskedEncryptedField:
     """
-    Descriptor somente-leitura que retorna versão mascarada (****1234) de um
-    campo criptografado.
+    Descriptor somente-leitura que retorna versão mascarada (****1234)
+    de um campo criptografado.
 
     Parâmetros
     ----------
     storage_attr : str
         Nome do campo Django que armazena o valor criptografado.
     fallback : str, opcional
-        Valor retornado quando o campo está vazio ou há erro de decriptação.
-        Padrão: None. Use '****' para campos de cartão que nunca devem expor None.
+        Valor retornado quando o campo está vazio ou há erro de
+        decriptação. Padrão: None. Use '****' para campos de cartão
+        que nunca devem expor None.
 
     Exemplo de uso::
 
         class MyModel(models.Model):
             _card_number = models.TextField(null=True)
             card_number = EncryptedField('_card_number')
-            card_number_masked = MaskedEncryptedField('_card_number', fallback='****')
+            card_number_masked = MaskedEncryptedField(
+                '_card_number', fallback='****'
+            )
     """
 
-    def __init__(self, storage_attr: str, fallback: Optional[str] = None) -> None:
+    def __init__(
+        self, storage_attr: str, fallback: Optional[str] = None
+    ) -> None:
         self.storage_attr = storage_attr
         self.fallback = fallback
         self.public_name = ""
@@ -365,5 +384,6 @@ class MaskedEncryptedField:
 
     def __set__(self, obj: Any, value: Any) -> None:
         raise AttributeError(
-            f"'{type(obj).__name__}.{self.public_name}' is a read-only masked field"
+            f"'{type(obj).__name__}.{self.public_name}'"
+            " is a read-only masked field"
         )

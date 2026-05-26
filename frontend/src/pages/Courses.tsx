@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -82,7 +83,7 @@ function CourseCard({
       animate="visible"
       exit="exit"
       layout
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+      className="group flex cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
       onClick={() => onOpen(course)}
       role="button"
       tabIndex={0}
@@ -307,7 +308,7 @@ export default function Courses() {
           ].map(({ label, value, icon: Icon }) => (
             <div
               key={label}
-              className="flex items-center gap-md rounded-xl border border-border bg-card p-md"
+              className="flex items-center gap-md rounded-lg border border-border bg-card p-md"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Icon className="h-5 w-5 text-primary" />

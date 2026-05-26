@@ -182,7 +182,7 @@
     "submodules": {
       "registrations": "Registrations",
       "records": "Records",
-      "books": "Works",
+      "books": "Collection",
       "intellect": "Learning"
     },
     "items": {
@@ -4441,7 +4441,7 @@
       "active": "Active",
       "inactive": "Inactive",
       "activePlan": "Active Plan",
-      "otherPlans": "Other Plans",
+      "otherPlans": "Inactive Plans",
       "newDayBtn": "New Split",
       "newDayTitle": "New Split",
       "editDayTitle": "Edit Split",

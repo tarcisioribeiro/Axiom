@@ -50,8 +50,12 @@ urlpatterns = [
         name="library-dashboard-stats",
     ),
     # Authors
-    path("authors/", AuthorListCreateView.as_view(), name="author-list-create"),
-    path("authors/<int:pk>/", AuthorDetailView.as_view(), name="author-detail"),
+    path(
+        "authors/", AuthorListCreateView.as_view(), name="author-list-create"
+    ),
+    path(
+        "authors/<int:pk>/", AuthorDetailView.as_view(), name="author-detail"
+    ),
     path(
         "authors/<int:pk>/photo/",
         AuthorPhotoStreamView.as_view(),
@@ -59,10 +63,14 @@ urlpatterns = [
     ),
     # Publishers
     path(
-        "publishers/", PublisherListCreateView.as_view(), name="publisher-list-create"
+        "publishers/",
+        PublisherListCreateView.as_view(),
+        name="publisher-list-create",
     ),
     path(
-        "publishers/<int:pk>/", PublisherDetailView.as_view(), name="publisher-detail"
+        "publishers/<int:pk>/",
+        PublisherDetailView.as_view(),
+        name="publisher-detail",
     ),
     # Books
     path("books/", BookListCreateView.as_view(), name="book-list-create"),
@@ -84,18 +92,36 @@ urlpatterns = [
         name="book-mark-as-read",
     ),
     # Reading Queue
-    path("reading-queue/", BookReadingQueueView.as_view(), name="reading-queue"),
+    path(
+        "reading-queue/", BookReadingQueueView.as_view(), name="reading-queue"
+    ),
     path(
         "reading-queue/reorder/",
         BookReorderView.as_view(),
         name="reading-queue-reorder",
     ),
     # Summaries
-    path("summaries/", SummaryListCreateView.as_view(), name="summary-list-create"),
-    path("summaries/<int:pk>/", SummaryDetailView.as_view(), name="summary-detail"),
+    path(
+        "summaries/",
+        SummaryListCreateView.as_view(),
+        name="summary-list-create",
+    ),
+    path(
+        "summaries/<int:pk>/",
+        SummaryDetailView.as_view(),
+        name="summary-detail",
+    ),
     # Readings
-    path("readings/", ReadingListCreateView.as_view(), name="reading-list-create"),
-    path("readings/<int:pk>/", ReadingDetailView.as_view(), name="reading-detail"),
+    path(
+        "readings/",
+        ReadingListCreateView.as_view(),
+        name="reading-list-create",
+    ),
+    path(
+        "readings/<int:pk>/",
+        ReadingDetailView.as_view(),
+        name="reading-detail",
+    ),
     # Reading Goals
     path(
         "reading-goals/",
@@ -135,7 +161,9 @@ urlpatterns = [
         name="highlight-detail",
     ),
     # Courses
-    path("courses/", CourseListCreateView.as_view(), name="course-list-create"),
+    path(
+        "courses/", CourseListCreateView.as_view(), name="course-list-create"
+    ),
     path(
         "courses/<int:pk>/",
         CourseRetrieveUpdateDestroyView.as_view(),

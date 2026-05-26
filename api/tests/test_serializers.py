@@ -42,7 +42,7 @@ class AccountSerializerTest(TestCase):
         """Testa serialização de Account"""
         serializer = AccountSerializer(self.account)
 
-        self.assertEqual(serializer.data["account_name"], "NUB")  # type: ignore
+        self.assertEqual(serializer.data["account_name"], "NUB")  # type: ignore  # noqa: E501
         self.assertEqual(serializer.data["account_type"], "CC")  # type: ignore
         self.assertTrue(serializer.data["is_active"])  # type: ignore
 
@@ -63,7 +63,10 @@ class AccountSerializerTest(TestCase):
         self.assertEqual(account.account_type, "CS")  # type: ignore
 
     def test_deserialize_invalid_data(self):
-        """Testa deserialização com dados inválidos (campo obrigatório ausente)"""
+        """
+        Testa deserialização com dados inválidos (campo obrigatório
+        ausente)
+        """
         data = {
             "account_name": "SIC",
             "account_type": "CC",
@@ -122,10 +125,10 @@ class ExpenseSerializerTest(TestCase):
         serializer = ExpenseSerializer(self.expense)
 
         self.assertEqual(
-            serializer.data["description"], "Compra supermercado"  # type: ignore
+            serializer.data["description"], "Compra supermercado"  # type: ignore  # noqa: E501
         )
         self.assertEqual(serializer.data["value"], "150.50")  # type: ignore
-        self.assertEqual(serializer.data["category"], "supermarket")  # type: ignore
+        self.assertEqual(serializer.data["category"], "supermarket")  # type: ignore  # noqa: E501
 
     def test_deserialize_valid_data(self):
         """Testa deserialização com dados válidos"""
@@ -133,7 +136,7 @@ class ExpenseSerializerTest(TestCase):
         self.assertTrue(serializer.is_valid())
 
         expense = serializer.save()
-        self.assertEqual(expense.description, "Compra supermercado")  # type: ignore
+        self.assertEqual(expense.description, "Compra supermercado")  # type: ignore  # noqa: E501
         self.assertEqual(expense.value, Decimal("150.50"))  # type: ignore
 
     def test_deserialize_invalid_category(self):
@@ -191,7 +194,9 @@ class CreditCardSerializerTest(TestCase):
     @patch.dict(os.environ, {"ENCRYPTION_KEY": "test_key"})
     def test_deserialize_valid_data(self):
         """Testa deserialização com dados válidos"""
-        with patch("app.encryption.FieldEncryption.encrypt_data") as mock_encrypt:
+        with patch(
+            "app.encryption.FieldEncryption.encrypt_data"
+        ) as mock_encrypt:
             mock_encrypt.return_value = "encrypted_cvv"
 
             serializer = CreditCardSerializer(data=self.credit_card_data)
@@ -226,7 +231,9 @@ class CreditCardSerializerTest(TestCase):
 
     def test_security_code_write_only(self):
         """Testa que o security_code é write-only"""
-        with patch("app.encryption.FieldEncryption.encrypt_data") as mock_encrypt:
+        with patch(
+            "app.encryption.FieldEncryption.encrypt_data"
+        ) as mock_encrypt:
             mock_encrypt.return_value = "encrypted_cvv"
 
             # security_code deve ser definido antes de save()
@@ -312,7 +319,8 @@ class MemberSerializerTest(TestCase):
         invalid_data["email"] = "email_inválido"
 
         serializer = MemberSerializer(data=invalid_data)
-        # email é CharField no modelo, MemberSerializer não valida formato de email
+        # email é CharField no modelo, MemberSerializer não valida formato de
+        # email
         self.assertTrue(serializer.is_valid())
 
     def test_validate_sex_choice(self):
@@ -337,8 +345,8 @@ class MemberSerializerTest(TestCase):
         serializer = MemberSerializer(member)
 
         self.assertEqual(serializer.data["name"], "João Silva")  # type: ignore
-        self.assertEqual(serializer.data["document"], "12345678901")  # type: ignore
-        self.assertEqual(serializer.data["email"], "joao@test.com")  # type: ignore
+        self.assertEqual(serializer.data["document"], "12345678901")  # type: ignore  # noqa: E501
+        self.assertEqual(serializer.data["email"], "joao@test.com")  # type: ignore  # noqa: E501
 
 
 class SerializerValidationTest(TestCase):

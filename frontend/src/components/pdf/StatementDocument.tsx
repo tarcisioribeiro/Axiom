@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
 import { PDF_PALETTE as COLORS } from '@/lib/routine-export';

@@ -9,9 +9,14 @@ from accounts.models import Account
 class AccountSerializer(serializers.ModelSerializer):
     account_number_masked = serializers.ReadOnlyField()
     balance = serializers.DecimalField(
-        max_digits=15, decimal_places=2, source="current_balance", required=False
+        max_digits=15,
+        decimal_places=2,
+        source="current_balance",
+        required=False,
     )
-    institution = serializers.CharField(source="institution_name", required=True)
+    institution = serializers.CharField(
+        source="institution_name", required=True
+    )
     account_number = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
@@ -62,15 +67,21 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance: Account = super().create(validated_data)  # type: ignore[assignment]
+        instance: Account = super().create(  # type: ignore[assignment]
+            validated_data
+        )
         if account_number:
             instance.account_number = account_number
             instance.save()
         return instance
 
-    def update(self, instance: Account, validated_data: dict[str, Any]) -> Account:
+    def update(
+        self, instance: Account, validated_data: dict[str, Any]
+    ) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().update(instance, validated_data)  # type: ignore[assignment]
+        instance = super().update(  # type: ignore[assignment]
+            instance, validated_data
+        )
         if account_number:
             instance.account_number = account_number
             instance.save()

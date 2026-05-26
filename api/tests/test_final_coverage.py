@@ -1,5 +1,6 @@
 """
-Final coverage push — member permissions, financial report, and remaining areas.
+Final coverage push — member permissions, financial report, and remaining
+areas.
 """
 
 from datetime import date
@@ -26,7 +27,9 @@ class BaseFinalTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Final User",
             document_hash="f" * 64,
@@ -54,7 +57,11 @@ class MemberPermissionsViewTest(BaseFinalTestCase):
         response = self.client.get(url)
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_403_FORBIDDEN,
+                status.HTTP_404_NOT_FOUND,
+            ],
         )
 
     def test_get_available_permissions(self):
@@ -67,7 +74,9 @@ class MemberPermissionsViewTest(BaseFinalTestCase):
 
     def test_user_permissions(self):
         # Need non-superuser for this endpoint
-        regular_user = User.objects.create_user("permtest", "perm@test.com", "pass123")
+        regular_user = User.objects.create_user(
+            "permtest", "perm@test.com", "pass123"
+        )
         Member.objects.create(
             name="Perm User",
             document_hash="q" * 64,
@@ -166,7 +175,9 @@ class CreditCardPurchaseDetailViewTest(BaseFinalTestCase):
             created_by=self.user,
         )
         self.card._security_code = FieldEncryption.encrypt_data("123")
-        self.card._card_number = FieldEncryption.encrypt_data("4111111111111111")
+        self.card._card_number = FieldEncryption.encrypt_data(
+            "4111111111111111"
+        )
         self.card.save()
 
     def test_list_credit_card_purchases(self):

@@ -5,7 +5,9 @@ from revenues.models import FixedRevenue, Revenue
 
 
 class RevenueSerializer(serializers.ModelSerializer):
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     current_balance = serializers.DecimalField(
         source="account.current_balance",
         max_digits=15,
@@ -18,7 +20,9 @@ class RevenueSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
         source="tags",
-        queryset=__import__("expenses.models", fromlist=["Tag"]).Tag.objects.all(),
+        queryset=__import__(
+            "expenses.models", fromlist=["Tag"]
+        ).Tag.objects.all(),
     )
 
     class Meta:
@@ -54,7 +58,9 @@ class RevenueSerializer(serializers.ModelSerializer):
 
 
 class FixedRevenueSerializer(serializers.ModelSerializer):
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     member_name = serializers.CharField(
         source="member.name", read_only=True, allow_null=True
     )

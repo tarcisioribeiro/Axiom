@@ -2,9 +2,12 @@
 Cliente LLM com suporte a Ollama (local), Groq (cloud) e Anthropic.
 
 Melhorias implementadas:
-- Anthropic client reutilizado via singleton thread-safe (evita TCP+TLS por request)
-- Circuit breaker para Ollama: após THRESHOLD falhas, fast-fail para fallback cloud
-- Cache de embeddings no Redis (TTL 5min) para evitar embed duplicado da mesma query
+- Anthropic client reutilizado via singleton thread-safe
+  (evita TCP+TLS por request)
+- Circuit breaker para Ollama: após THRESHOLD falhas, fast-fail para fallback
+cloud
+- Cache de embeddings no Redis (TTL 5min) para evitar
+  embed duplicado da mesma query
 - Estimativa de tokens via contagem de chars (1 token ≈ 4 chars para português)
 - max_tokens configurável via env LLM_MAX_TOKENS (padrão: 2048)
 - embed() retorna [] em caso de falha silenciosa (não propaga para o pipeline)
@@ -32,7 +35,8 @@ _FALLBACK_ERROR: dict[str, str] = {
     "en": "Sorry, I'm unable to process your request at this time.",
 }
 
-# ── Anthropic singleton ────────────────────────────────────────────────────────
+# ── Anthropic singleton
+# ────────────────────────────────────────────────────────
 _anthropic_client: Any = None
 _anthropic_lock = threading.Lock()
 
@@ -49,7 +53,8 @@ def _get_anthropic_client() -> Any:
     return _anthropic_client
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Helpers
+# ───────────────────────────────────────────────────────────────────
 
 
 def _error_message(language: str = "pt-BR") -> str:
@@ -66,7 +71,8 @@ def _count_tokens_in(messages: list[dict[str, str]]) -> int:
     return sum(_estimate_tokens(m.get("content", "")) for m in messages)
 
 
-# ── LLMClient ─────────────────────────────────────────────────────────────────
+# ── LLMClient
+# ─────────────────────────────────────────────────────────────────
 
 
 class LLMClient:
@@ -133,7 +139,8 @@ class LLMClient:
             # Fast-fail Ollama quando circuit breaker está aberto
             if provider == "ollama" and cls._should_skip_ollama():
                 logger.info(
-                    "Ollama circuit breaker aberto — pulando para próximo provider"
+                    "Ollama circuit breaker aberto"
+                    " — pulando para próximo provider"
                 )
                 continue
 
@@ -148,7 +155,12 @@ class LLMClient:
                 tokens_out = _estimate_tokens(result)
                 if record_llm_request is not None:
                     record_llm_request(
-                        provider, agent_name, "success", duration, tokens_in, tokens_out
+                        provider,
+                        agent_name,
+                        "success",
+                        duration,
+                        tokens_in,
+                        tokens_out,
                     )
                 if provider == "ollama":
                     from agents.core.circuit_breaker import ollama_circuit
@@ -159,7 +171,9 @@ class LLMClient:
                 duration = time.monotonic() - t0
                 if record_llm_request is not None:
                     record_llm_request(provider, agent_name, "error", duration)
-                logger.warning("LLM provider '%s' falhou (chat): %s", provider, exc)
+                logger.warning(
+                    "LLM provider '%s' falhou (chat): %s", provider, exc
+                )
                 if provider == "ollama":
                     from agents.core.circuit_breaker import ollama_circuit
 
@@ -198,7 +212,9 @@ class LLMClient:
 
         for i, provider in enumerate(providers):
             if provider == "ollama" and cls._should_skip_ollama():
-                logger.info("Ollama circuit breaker aberto — próximo provider (stream)")
+                logger.info(
+                    "Ollama circuit breaker aberto — próximo provider (stream)"
+                )
                 continue
 
             if i > 0 and record_llm_fallback is not None:
@@ -214,7 +230,9 @@ class LLMClient:
                         provider, agent_name, "error", time.monotonic() - t0
                     )
                 logger.warning(
-                    "LLM provider '%s' falhou ao iniciar stream: %s", provider, exc
+                    "LLM provider '%s' falhou ao iniciar stream: %s",
+                    provider,
+                    exc,
                 )
                 if provider == "ollama":
                     from agents.core.circuit_breaker import ollama_circuit
@@ -232,7 +250,12 @@ class LLMClient:
             tokens_in = _count_tokens_in(messages)
             if record_llm_request is not None:
                 record_llm_request(
-                    provider, agent_name, "success", time.monotonic() - t0, tokens_in, 0
+                    provider,
+                    agent_name,
+                    "success",
+                    time.monotonic() - t0,
+                    tokens_in,
+                    0,
                 )
             if provider == "ollama":
                 from agents.core.circuit_breaker import ollama_circuit
@@ -267,7 +290,8 @@ class LLMClient:
         query dentro de uma janela de tempo (routing + RAG na mesma request).
         """
         cache_key = (
-            f"embed:{hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()}"
+            "embed:"
+            + hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
         )
         try:
             from django.core.cache import cache as django_cache
@@ -297,7 +321,8 @@ class LLMClient:
             logger.error("LLM embedding falhou: %s", exc)
             return []
 
-    # ── Ollama ────────────────────────────────────────────────────────────────
+    # ── Ollama
+    # ────────────────────────────────────────────────────────────────
 
     @classmethod
     def _ollama_chat(
@@ -310,7 +335,11 @@ class LLMClient:
         try:
             resp = requests.post(
                 f"{ollama_url}/api/chat",
-                json={"model": effective_model, "messages": messages, "stream": False},
+                json={
+                    "model": effective_model,
+                    "messages": messages,
+                    "stream": False,
+                },
                 timeout=timeout_chat,
             )
             resp.raise_for_status()
@@ -320,7 +349,8 @@ class LLMClient:
             if exc.response is not None and exc.response.status_code == 404:
                 if effective_model != ollama_model:
                     logger.warning(
-                        "Ollama: modelo '%s' não encontrado, usando fallback '%s'",
+                        "Ollama: modelo '%s' não encontrado,"
+                        " usando fallback '%s'",
                         effective_model,
                         ollama_model,
                     )
@@ -338,7 +368,11 @@ class LLMClient:
         try:
             resp = requests.post(
                 f"{ollama_url}/api/chat",
-                json={"model": effective_model, "messages": messages, "stream": True},
+                json={
+                    "model": effective_model,
+                    "messages": messages,
+                    "stream": True,
+                },
                 timeout=timeout_chat,
                 stream=True,
             )
@@ -347,7 +381,8 @@ class LLMClient:
             if exc.response is not None and exc.response.status_code == 404:
                 if effective_model != ollama_model:
                     logger.warning(
-                        "Ollama: modelo '%s' não encontrado, usando fallback '%s'",
+                        "Ollama: modelo '%s' não encontrado,"
+                        " usando fallback '%s'",
                         effective_model,
                         ollama_model,
                     )
@@ -361,7 +396,8 @@ class LLMClient:
                 if token:
                     yield token
 
-    # ── Groq (OpenAI-compatible) ───────────────────────────────────────────────
+    # ── Groq (OpenAI-compatible)
+    # ───────────────────────────────────────────────
 
     @classmethod
     def _groq_chat(
@@ -377,7 +413,11 @@ class LLMClient:
                 "Authorization": f"Bearer {groq_api_key}",
                 "Content-Type": "application/json",
             },
-            json={"model": effective_model, "messages": messages, "stream": False},
+            json={
+                "model": effective_model,
+                "messages": messages,
+                "stream": False,
+            },
             timeout=timeout_chat,
         )
         resp.raise_for_status()
@@ -398,7 +438,11 @@ class LLMClient:
                 "Authorization": f"Bearer {groq_api_key}",
                 "Content-Type": "application/json",
             },
-            json={"model": effective_model, "messages": messages, "stream": True},
+            json={
+                "model": effective_model,
+                "messages": messages,
+                "stream": True,
+            },
             timeout=timeout_chat,
             stream=True,
         )
@@ -421,7 +465,8 @@ class LLMClient:
             except (json.JSONDecodeError, IndexError, KeyError):
                 continue
 
-    # ── Anthropic ─────────────────────────────────────────────────────────────
+    # ── Anthropic
+    # ─────────────────────────────────────────────────────────────
 
     @classmethod
     def _anthropic_chat(
@@ -435,7 +480,9 @@ class LLMClient:
             if msg["role"] == "system":
                 system_text = msg["content"]
             else:
-                chat_messages.append({"role": msg["role"], "content": msg["content"]})
+                chat_messages.append(
+                    {"role": msg["role"], "content": msg["content"]}
+                )
 
         effective_model: str = (
             model
@@ -462,7 +509,9 @@ class LLMClient:
             if msg["role"] == "system":
                 system_text = msg["content"]
             else:
-                chat_messages.append({"role": msg["role"], "content": msg["content"]})
+                chat_messages.append(
+                    {"role": msg["role"], "content": msg["content"]}
+                )
 
         effective_model: str = (
             model
@@ -479,7 +528,8 @@ class LLMClient:
                 if hasattr(event, "delta") and hasattr(event.delta, "text"):
                     yield event.delta.text
 
-    # ── Embeddings ─────────────────────────────────────────────────────────────
+    # ── Embeddings
+    # ─────────────────────────────────────────────────────────────
 
     @classmethod
     def _ollama_embed(cls, text: str) -> list[float]:
@@ -495,14 +545,17 @@ class LLMClient:
         data: dict[str, Any] = resp.json()
         return list(data["embedding"])
 
-    # ── Status ─────────────────────────────────────────────────────────────────
+    # ── Status
+    # ─────────────────────────────────────────────────────────────────
 
     @classmethod
     def is_available(cls) -> bool:
         try:
             provider = _cfg("LLM_PROVIDER", "ollama")
             if provider == "anthropic":
-                return bool(_cfg("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
+                return bool(
+                    _cfg("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+                )
             if provider == "groq":
                 return bool(_cfg("GROQ_API_KEY"))
             ollama_url = _cfg("OLLAMA_BASE_URL", "http://ollama:11434")

@@ -18,7 +18,8 @@ from notifications.serializers import (
 
 def _generate_notifications(member):
     """
-    Gera notificações para o membro, consultando tarefas, payables, loans e bills.
+    Gera notificações para o membro, consultando tarefas, payables, loans e
+    bills.
     Usa get_or_create para evitar duplicatas (unique_together).
     Limpa notificações de itens já resolvidos.
     """
@@ -63,7 +64,8 @@ def _generate_notifications(member):
             defaults={
                 "title": f"Tarefa atrasada: {task.task_name}",
                 "message": (
-                    f"Programada para" f' {task.scheduled_date.strftime("%d/%m/%Y")}'
+                    f"Programada para"
+                    f' {task.scheduled_date.strftime("%d/%m/%Y")}'
                 ),
                 "due_date": task.scheduled_date,
                 "created_by": member.user,
@@ -79,7 +81,9 @@ def _generate_notifications(member):
             owner=member,
             status__in=["pending", "in_progress"],
         ).values_list("id", flat=True)
-    ).update(is_deleted=True, deleted_at=timezone.now())
+    ).update(
+        is_deleted=True, deleted_at=timezone.now()
+    )
 
     # --- Payable ---
     from payables.models import Payable
@@ -118,7 +122,9 @@ def _generate_notifications(member):
             object_id=payable.id,
             defaults={
                 "title": f"Valor a pagar atrasado: {payable.description}",
-                "message": f'Venceu em {payable.due_date.strftime("%d/%m/%Y")}',
+                "message": (
+                    "Venceu em " + payable.due_date.strftime("%d/%m/%Y")
+                ),
                 "due_date": payable.due_date,
                 "created_by": member.user,
             },
@@ -154,7 +160,9 @@ def _generate_notifications(member):
             content_type="loan",
             object_id=loan.id,
             defaults={
-                "title": f"Empréstimo próximo do vencimento: {loan.description}",
+                "title": (
+                    "Empréstimo próximo do vencimento: " + loan.description
+                ),
                 "message": f'Vence em {loan.due_date.strftime("%d/%m/%Y")}',
                 "due_date": loan.due_date,
                 "created_by": member.user,
@@ -211,7 +219,9 @@ def _generate_notifications(member):
             content_type="bill",
             object_id=bill.id,
             defaults={
-                "title": f"Fatura próxima do vencimento: {bill.credit_card.name}",
+                "title": (
+                    "Fatura próxima do vencimento: " + bill.credit_card.name
+                ),
                 "message": f'Vence em {bill.due_date.strftime("%d/%m/%Y")}',
                 "due_date": bill.due_date,
                 "created_by": member.user,
@@ -259,7 +269,9 @@ class NotificationListView(generics.ListAPIView):
     queryset = Notification.objects.all()
 
     def get_queryset(self):
-        member = Member.objects.select_related("user").get(user=self.request.user)
+        member = Member.objects.select_related("user").get(
+            user=self.request.user
+        )
         _generate_notifications(member)
         return Notification.objects.filter(
             owner=member,
@@ -276,7 +288,9 @@ class NotificationUpdateView(generics.UpdateAPIView):
     http_method_names = ["patch"]
 
     def get_queryset(self):
-        member = Member.objects.select_related("user").get(user=self.request.user)
+        member = Member.objects.select_related("user").get(
+            user=self.request.user
+        )
         return Notification.objects.filter(
             owner=member,
         ).select_related("owner")

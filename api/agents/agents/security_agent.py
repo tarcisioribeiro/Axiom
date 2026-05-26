@@ -109,7 +109,12 @@ _KW_ARCHIVE = [
 ]
 
 _ALL_KW = (
-    _KW_PASSWORD + _KW_VAULT + _KW_SECURITY + _KW_ACTIVITY + _KW_CARD + _KW_ARCHIVE
+    _KW_PASSWORD
+    + _KW_VAULT
+    + _KW_SECURITY
+    + _KW_ACTIVITY
+    + _KW_CARD
+    + _KW_ARCHIVE
 )
 
 
@@ -165,7 +170,8 @@ class SecurityAgent(BaseAgent):
             f"  Contas armazenadas: {ov['stored_accounts']}\n"
             f"  Arquivos seguros: {ov['archives']}\n"
             f"  Senhas sem atualização há +180 dias: {ov['old_passwords']}\n"
-            f"  Senhas atualizadas nos últimos 30 dias: {ov['recently_updated']}"
+            f"  Senhas atualizadas nos últimos 30 dias:"
+            f" {ov['recently_updated']}"
         )
 
         cats = data["password_categories"]
@@ -192,22 +198,24 @@ class SecurityAgent(BaseAgent):
         )
 
         security_notes = (
-            "  ⚠️ Atenção: {} senha(s) sem atualização há mais de 180 dias.".format(
-                ov["old_passwords"]
-            )
+            "  ⚠️ Atenção: {} senha(s) sem atualização"
+            " há mais de 180 dias.".format(ov["old_passwords"])
             if ov["old_passwords"] > 0
             else "  ✓ Nenhuma senha com idade crítica detectada."
         )
 
         return (
-            "IMPORTANTE: Este agente trabalha APENAS com metadados de segurança. "
-            "Nunca revelar senhas, PINs, números de cartão ou dados criptografados.\n\n"
+            "IMPORTANTE: Este agente trabalha APENAS com"
+            " metadados de segurança. "
+            "Nunca revelar senhas, PINs, números de cartão"
+            " ou dados criptografados.\n\n"
             f"Visão geral do cofre:\n{overview_block}\n\n"
             f"Alertas de segurança:\n{security_notes}\n\n"
             f"Senhas por categoria:\n{cats_block}\n\n"
             f"Atividade recente:\n{activity_block}\n\n"
             f"Pergunta: {ctx.query}\n\n"
-            "Responda com foco em: análise do estado de segurança, boas práticas, "
+            "Responda com foco em: análise do estado"
+            " de segurança, boas práticas, "
             "recomendações de atualização e orientações sobre o cofre. "
             "Use markdown para destacar alertas e recomendações. "
             "NUNCA sugira revelar ou copiar senhas reais."

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,7 +15,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -106,7 +107,7 @@ function AgentSelectorCard({
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(agentKey)}
       className={cn(
-        'flex w-full flex-col gap-3 rounded-xl border-2 bg-card p-md text-left transition-all duration-200',
+        'flex w-full flex-col gap-3 rounded-lg border-2 bg-card p-md text-left transition-all duration-200',
         selected
           ? cn('border-2', cardClass, 'shadow-medium')
           : 'border-border hover:border-muted-foreground/40'
@@ -416,7 +417,7 @@ export default function Agents() {
     staleTime: 0,
   });
 
-  const messages = historyData?.results ?? [];
+  const messages = useMemo(() => historyData?.results ?? [], [historyData?.results]);
 
   useEffect(() => {
     scrollToBottom();

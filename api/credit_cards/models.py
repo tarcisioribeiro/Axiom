@@ -115,7 +115,11 @@ class CreditCard(BaseModel):
         blank=True,
     )
     annual_fee = models.DecimalField(
-        verbose_name="Anuidade", max_digits=10, decimal_places=2, null=True, blank=True
+        verbose_name="Anuidade",
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
     owner = models.ForeignKey(
         "members.Member",
@@ -179,7 +183,9 @@ class CreditCardBill(BaseModel):
         blank=False,
         verbose_name="Cartão",
     )
-    year = models.CharField(verbose_name="Ano", blank=False, null=False, choices=YEARS)
+    year = models.CharField(
+        verbose_name="Ano", blank=False, null=False, choices=YEARS
+    )
     month = models.CharField(
         verbose_name="Mês", blank=False, null=False, choices=MONTHS
     )
@@ -191,25 +197,40 @@ class CreditCardBill(BaseModel):
     )
     closed = models.BooleanField(verbose_name="Fechada")
     total_amount = models.DecimalField(
-        verbose_name="Valor Total", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Valor Total",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     minimum_payment = models.DecimalField(
-        verbose_name="Pagamento Mínimo", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Pagamento Mínimo",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     due_date = models.DateField(
         verbose_name="Data de Vencimento", null=True, blank=True
     )
     paid_amount = models.DecimalField(
-        verbose_name="Valor Pago", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Valor Pago",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     payment_date = models.DateField(
         verbose_name="Data do Pagamento", null=True, blank=True
     )
     interest_charged = models.DecimalField(
-        verbose_name="Juros Cobrados", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Juros Cobrados",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     late_fee = models.DecimalField(
-        verbose_name="Multa por Atraso", max_digits=10, decimal_places=2, default=0.00
+        verbose_name="Multa por Atraso",
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
     )
     status = models.CharField(
         max_length=20,
@@ -361,7 +382,8 @@ class CreditCardInstallment(BaseModel):
     def __str__(self):
         return (
             f"{self.purchase.description}"
-            f" - Parcela {self.installment_number}/{self.purchase.total_installments}"
+            f" - Parcela {self.installment_number}"
+            f"/{self.purchase.total_installments}"
         )
 
     @property

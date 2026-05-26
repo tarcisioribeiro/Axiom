@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { BookOpen, CalendarDays, Clock, FileText, Hash, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';

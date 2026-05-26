@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { format, parseISO, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -230,10 +231,12 @@ export default function DailyReflections() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reflections, moodFilter, startDate, endDate]);
 
   const loadData = async () => {
