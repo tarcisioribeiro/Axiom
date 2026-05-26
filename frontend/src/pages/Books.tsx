@@ -1,5 +1,5 @@
 import {
-  BookOpen,
+  Library,
   Plus,
   Star,
   Edit,
@@ -512,7 +512,7 @@ export default function Books() {
 
   return (
     <PageContainer>
-      <PageHeader title={t('pages.books.title')} icon={<BookOpen />}>
+      <PageHeader title={t('pages.books.title')} icon={<Library />}>
         <div className="flex items-center gap-sm">
           <div className="flex items-center rounded-md border">
             <Button
@@ -603,7 +603,7 @@ export default function Books() {
 
       {filteredBooks.length === 0 ? (
         <EmptyState
-          icon={<BookOpen className="h-12 w-12 text-muted-foreground" />}
+          icon={<Library className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm ? t('pages.books.emptySearch') : t('pages.books.emptyState')
           }

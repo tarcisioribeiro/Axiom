@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type z } from 'zod';
 
@@ -221,7 +221,11 @@ function GoalCard({
   );
 }
 
-export default function Goals() {
+interface GoalsProps {
+  embedded?: boolean;
+}
+
+export default function Goals({ embedded = false }: GoalsProps) {
   const { t } = useTranslation();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<RoutineTask[]>([]);
@@ -414,8 +418,14 @@ export default function Goals() {
     onRestart: (g: Goal) => void handleRestart(g),
   };
 
+  const Wrapper = embedded
+    ? ({ children }: { children: React.ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
         title={t('pages.goals.title')}
         icon={<Trophy />}
@@ -551,6 +561,6 @@ export default function Goals() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }
