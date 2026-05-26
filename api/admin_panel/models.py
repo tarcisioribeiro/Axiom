@@ -34,7 +34,9 @@ class SystemConfig(models.Model):
         default=False, verbose_name="Requer reinicialização"
     )
     is_editable = models.BooleanField(default=True, verbose_name="Editável")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    updated_at = models.DateTimeField(
+        auto_now=True, verbose_name="Atualizado em"
+    )
     updated_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';

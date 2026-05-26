@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Plus, Pencil, Trash2, Calendar, TrendingDown } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,7 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

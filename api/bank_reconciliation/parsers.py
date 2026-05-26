@@ -35,7 +35,8 @@ def _parse_amount(raw: str) -> Decimal:
 
 def parse_ofx(content: str) -> list:
     """
-    Parse OFX 1.x SGML format (used by Brazilian banks like Bradesco, Itaú, Nubank).
+    Parse OFX 1.x SGML format (used by Brazilian banks like
+    Bradesco, Itaú, Nubank).
     Returns list of transaction dicts.
     """
     transactions = []
@@ -46,7 +47,9 @@ def parse_ofx(content: str) -> list:
 
         def extract(tag):
             m = re.search(
-                r"<" + tag + r">(.*?)(?:<|\Z)", block, re.IGNORECASE | re.DOTALL
+                r"<" + tag + r">(.*?)(?:<|\Z)",
+                block,
+                re.IGNORECASE | re.DOTALL,
             )
             return m.group(1).strip() if m else ""
 
@@ -69,7 +72,13 @@ def parse_ofx(content: str) -> list:
         except InvalidOperation:
             continue
 
-        if amount < 0 or trntype in ("debit", "atm", "pos", "check", "payment"):
+        if amount < 0 or trntype in (
+            "debit",
+            "atm",
+            "pos",
+            "check",
+            "payment",
+        ):
             transaction_type = "debit"
         else:
             transaction_type = "credit"
@@ -97,12 +106,16 @@ def parse_csv(content: str) -> list:
     if first_line.count(";") < first_line.count(","):
         separator = ","
 
-    lines = [line.strip() for line in content.strip().split("\n") if line.strip()]
+    lines = [
+        line.strip() for line in content.strip().split("\n") if line.strip()
+    ]
     if not lines:
         return []
 
     # Parse header
-    header = [col.strip().strip('"').lower() for col in lines[0].split(separator)]
+    header = [
+        col.strip().strip('"').lower() for col in lines[0].split(separator)
+    ]
 
     # Auto-detect column indices
     date_idx = None
@@ -116,7 +129,10 @@ def parse_csv(content: str) -> list:
         if any(kw in col for kw in ("valor", "amount", "value", "vlr")):
             if amount_idx is None:
                 amount_idx = i
-        if any(kw in col for kw in ("descri", "memo", "hist", "estabelec", "comercio")):
+        if any(
+            kw in col
+            for kw in ("descri", "memo", "hist", "estabelec", "comercio")
+        ):
             if desc_idx is None:
                 desc_idx = i
 
@@ -191,7 +207,9 @@ def parse_cnab240(content: str) -> list:
         if record_type != "3":
             continue
 
-        segment = line[13:14]  # col 14 — segmento (E = lançamentos, J = outros)
+        segment = line[
+            13:14
+        ]  # col 14 — segmento (E = lançamentos, J = outros)
         if segment not in ("E", "A"):
             continue
 
@@ -239,7 +257,8 @@ def parse_cnab240(content: str) -> list:
 def parse_cnab400(content: str) -> list:
     """Parse CNAB 400 — padrão de 400 caracteres por linha.
 
-    Compatível com Bradesco, Banco do Brasil, Itaú e Santander (remessa/retorno).
+    Compatível com Bradesco, Banco do Brasil, Itaú e Santander
+    (remessa/retorno).
     Trata apenas registros de detalhe (tipo 1).
     """
     transactions = []
@@ -276,8 +295,11 @@ def parse_cnab400(content: str) -> list:
             # Débito (D) ou crédito (C): col 142
             credit_debit = line[141:142].strip().upper()
 
-            # Descrição: cols 63-72 (nosso número/descrição) + 173-212 (histórico)
-            description = (line[62:72].strip() + " " + line[172:212].strip()).strip()
+            # Descrição: cols 63-72 (nosso número/descrição) + 173-212
+            # (histórico)
+            description = (
+                line[62:72].strip() + " " + line[172:212].strip()
+            ).strip()
             if not description:
                 description = "Lançamento CNAB 400"
 
@@ -307,7 +329,9 @@ def parse_statement(file_content: bytes, file_format: str) -> list:
     try:
         content = file_content.decode("latin-1", errors="replace")
     except Exception as exc:
-        raise ValueError(f"Não foi possível decodificar o arquivo: {exc}") from exc
+        raise ValueError(
+            f"Não foi possível decodificar o arquivo: {exc}"
+        ) from exc
 
     if file_format == "ofx":
         transactions = parse_ofx(content)

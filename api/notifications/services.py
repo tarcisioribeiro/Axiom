@@ -27,7 +27,9 @@ def _get_channel(member, notification_type: str) -> str:
 
 
 def _send_email_notification(notification: Notification) -> None:
-    """Sends a single-notification email for the given Notification instance."""
+    """
+    Sends a single-notification email for the given Notification instance.
+    """
     user = notification.owner.user
     recipient_email = user.email if user is not None else ""
     if not recipient_email:

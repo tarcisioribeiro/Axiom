@@ -34,8 +34,12 @@ class ChangeLog(models.Model):
         verbose_name="Ação",
     )
     changes = models.JSONField(default=dict, verbose_name="Mudanças")
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
-    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP")
+    timestamp = models.DateTimeField(
+        auto_now_add=True, verbose_name="Data/Hora"
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True, blank=True, verbose_name="IP"
+    )
 
     class Meta:
         ordering = ["-timestamp"]
@@ -52,7 +56,8 @@ class ChangeLog(models.Model):
 
 
 class AuditableMixin:
-    """Mixin for DRF generic views to record create/update/delete in ChangeLog."""
+    """Mixin for DRF generic views to record create/update/delete
+    in ChangeLog."""
 
     request: "Request"
 
@@ -77,7 +82,11 @@ class AuditableMixin:
                 if str(old_val) != str(new_val):
                     changes[field] = [str(old_val), str(new_val)]
         ChangeLog.objects.create(
-            user=(self.request.user if self.request.user.is_authenticated else None),
+            user=(
+                self.request.user
+                if self.request.user.is_authenticated
+                else None
+            ),
             content_type=ct,
             object_id=str(getattr(instance, "uuid", instance.pk)),
             action=action,

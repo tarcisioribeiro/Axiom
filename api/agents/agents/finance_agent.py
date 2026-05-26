@@ -63,7 +63,9 @@ class FinanceAgent(BaseAgent):
         if ctx.metadata.get("date_from"):
             try:
                 start = date.fromisoformat(ctx.metadata["date_from"])
-                end = date.fromisoformat(ctx.metadata.get("date_to", now.isoformat()))
+                end = date.fromisoformat(
+                    ctx.metadata.get("date_to", now.isoformat())
+                )
             except ValueError:
                 start, end = month_start, now
         else:
@@ -89,15 +91,18 @@ class FinanceAgent(BaseAgent):
             "period_start": start.strftime("%d/%m/%Y"),
             "period_end": end.strftime("%d/%m/%Y"),
             "sources": [
-                f"Despesas {start.strftime('%d/%m')}–{end.strftime('%d/%m/%Y')}"
+                f"Despesas {start.strftime('%d/%m')}"
+                f"–{end.strftime('%d/%m/%Y')}"
             ],
         }
 
     def build_prompt(self, ctx: AgentContext, data: dict[str, Any]) -> str:
-        # safe_str sanitiza merchant names e categorias contra indirect injection
+        # safe_str sanitiza merchant names e categorias contra indirect
+        # injection
         expense_lines = (
             "\n".join(
-                f"  - {safe_str(r['category'])}: R$ {float(r['total'] or 0):.2f}"
+                f"  - {safe_str(r['category'])}: "
+                f"R$ {float(r['total'] or 0):.2f}"
                 f" ({r['count']} lançamentos)"
                 for r in data["expenses"][:8]
             )
@@ -106,7 +111,8 @@ class FinanceAgent(BaseAgent):
 
         revenue_lines = (
             "\n".join(
-                f"  - {safe_str(r['category'])}: R$ {float(r['total'] or 0):.2f}"
+                f"  - {safe_str(r['category'])}: "
+                f"R$ {float(r['total'] or 0):.2f}"
                 for r in data["revenues"][:5]
             )
             or "  (sem receitas no período)"
@@ -114,7 +120,8 @@ class FinanceAgent(BaseAgent):
 
         merchant_lines = (
             "\n".join(
-                f"  - {safe_str(r['merchant'])}: R$ {float(r['total'] or 0):.2f}"
+                f"  - {safe_str(r['merchant'])}: "
+                f"R$ {float(r['total'] or 0):.2f}"
                 f" ({r['count']}x)"
                 for r in data["merchants"]
             )
@@ -136,7 +143,8 @@ class FinanceAgent(BaseAgent):
             or "  (sem histórico)"
         )
 
-        return f"""Período analisado: {data['period_start']} a {data['period_end']}
+        _period = f"{data['period_start']} a {data['period_end']}"
+        return f"""Período analisado: {_period}
 
 **Total despesas:** R$ {data['total_expenses']:.2f}
 **Total receitas:** R$ {data['total_revenues']:.2f}
@@ -156,4 +164,5 @@ Tendência mensal (últimos 3 meses):
 
 Pergunta: {ctx.query}
 
-Responda de forma direta e estruturada. Use **negrito** para valores importantes."""
+Responda de forma direta e estruturada. Use **negrito** para valores
+importantes."""

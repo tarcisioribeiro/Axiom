@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dumbbell, Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -109,7 +110,7 @@ export default function ExercisesPage() {
 
         <div className="mb-md flex justify-end">
           <Button onClick={() => setDialog({ type: 'new' })}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-sm h-4 w-4" />
             {t('pages.exercises.newBtn')}
           </Button>
         </div>

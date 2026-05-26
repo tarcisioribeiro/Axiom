@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, Edit, LayoutGrid, Plus, Radar, Search, Trash2 } from 'lucide-react';
@@ -72,7 +73,7 @@ function SkillCard({
       animate="visible"
       exit="exit"
       layout
-      className="group flex flex-col gap-sm rounded-xl border border-border bg-card p-md shadow-sm transition-shadow hover:shadow-md"
+      className="group flex flex-col gap-sm rounded-lg border border-border bg-card p-md shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-sm">
         <div className="flex min-w-0 flex-1 items-center gap-sm">
@@ -256,7 +257,7 @@ export default function Skills() {
           ].map(({ label, value, color }) => (
             <div
               key={label}
-              className="flex items-center gap-md rounded-xl border border-border bg-card p-md"
+              className="flex items-center gap-md rounded-lg border border-border bg-card p-md"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Brain className="h-5 w-5 text-primary" />

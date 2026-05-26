@@ -21,7 +21,13 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationPreference)
 class NotificationPreferenceAdmin(admin.ModelAdmin):
-    list_display = ("id", "owner", "notification_type", "channel", "created_at")
+    list_display = (
+        "id",
+        "owner",
+        "notification_type",
+        "channel",
+        "created_at",
+    )
     list_filter = ("notification_type", "channel")
     search_fields = ("owner__name",)
     ordering = ("owner", "notification_type")

@@ -66,7 +66,9 @@ class MemberAnonymizeTest(TestCase):
 
     def test_anonymize_sets_unique_document_hash(self):
         self.member.anonymize()
-        self.assertEqual(self.member.document_hash, f"PURGED-{self.member.uuid}")
+        self.assertEqual(
+            self.member.document_hash, f"PURGED-{self.member.uuid}"
+        )
 
     def test_anonymize_clears_phone(self):
         self.member.anonymize()
@@ -171,7 +173,9 @@ class PurgeDeletedRecordsCommandTest(TestCase):
         m = _make_member("drec1", days_deleted=100)
         record_uuid = m.uuid
         self._run_purge()
-        self.assertTrue(DeletionRecord.objects.filter(record_uuid=record_uuid).exists())
+        self.assertTrue(
+            DeletionRecord.objects.filter(record_uuid=record_uuid).exists()
+        )
 
     def test_deletion_record_fields(self):
         m = _make_member("drec2", days_deleted=100)
@@ -191,7 +195,9 @@ class PurgeDeletedRecordsCommandTest(TestCase):
     def test_no_deletion_record_for_retained_row(self):
         m = _make_member("drec3", days_deleted=10)
         self._run_purge(days=90)
-        self.assertFalse(DeletionRecord.objects.filter(record_uuid=m.uuid).exists())
+        self.assertFalse(
+            DeletionRecord.objects.filter(record_uuid=m.uuid).exists()
+        )
 
     # --- compliance logger ---
 
@@ -210,10 +216,16 @@ class PurgeDeletedRecordsCommandTest(TestCase):
             self._run_purge()
         # Find the record for this member's UUID
         record = next(
-            (r for r in log_ctx.records if getattr(r, "uuid", "") == str(m.uuid)),
+            (
+                r
+                for r in log_ctx.records
+                if getattr(r, "uuid", "") == str(m.uuid)
+            ),
             None,
         )
-        self.assertIsNotNone(record, "No compliance log record found for member UUID")
+        self.assertIsNotNone(
+            record, "No compliance log record found for member UUID"
+        )
         self.assertEqual(record.getMessage(), "record_purged")
         self.assertEqual(getattr(record, "event", None), "record_purged")
         self.assertEqual(getattr(record, "model", None), "members.Member")
@@ -230,7 +242,9 @@ class PurgeDeletedRecordsCommandTest(TestCase):
     def test_dry_run_creates_no_deletion_records(self):
         m = _make_member("dry2", days_deleted=100)
         self._run_purge(dry_run=True)
-        self.assertFalse(DeletionRecord.objects.filter(record_uuid=m.uuid).exists())
+        self.assertFalse(
+            DeletionRecord.objects.filter(record_uuid=m.uuid).exists()
+        )
 
     def test_dry_run_creates_no_activity_logs(self):
         _make_member("dry3", days_deleted=100)

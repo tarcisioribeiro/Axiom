@@ -22,7 +22,9 @@ def _cache_key(*parts: Any) -> str:
     return "agents:" + ":".join(str(p) for p in parts)
 
 
-def get_expense_summary(user: User, start: date, end: date) -> list[dict[str, Any]]:
+def get_expense_summary(
+    user: User, start: date, end: date
+) -> list[dict[str, Any]]:
     key = _cache_key("expense_summary", user.pk, start, end)
     cached = cache.get(key)
     if cached is not None:
@@ -45,7 +47,9 @@ def get_expense_summary(user: User, start: date, end: date) -> list[dict[str, An
     return result
 
 
-def get_revenue_summary(user: User, start: date, end: date) -> list[dict[str, Any]]:
+def get_revenue_summary(
+    user: User, start: date, end: date
+) -> list[dict[str, Any]]:
     key = _cache_key("revenue_summary", user.pk, start, end)
     cached = cache.get(key)
     if cached is not None:

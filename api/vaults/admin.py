@@ -17,7 +17,13 @@ class VaultAdmin(admin.ModelAdmin):
     )
     list_filter = ("is_active", "account", "is_deleted")
     search_fields = ("description", "account__account_name")
-    readonly_fields = ("uuid", "created_at", "updated_at", "created_by", "updated_by")
+    readonly_fields = (
+        "uuid",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+    )
     ordering = ("-created_at",)
 
 
@@ -34,7 +40,13 @@ class VaultTransactionAdmin(admin.ModelAdmin):
     )
     list_filter = ("transaction_type", "vault", "is_deleted")
     search_fields = ("vault__description", "description")
-    readonly_fields = ("uuid", "created_at", "updated_at", "created_by", "updated_by")
+    readonly_fields = (
+        "uuid",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "updated_by",
+    )
     ordering = ("-created_at",)
 
 

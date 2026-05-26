@@ -26,7 +26,9 @@ class BaseVaultConfigTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Vault Config User",
             document_hash="v" * 64,
@@ -43,7 +45,9 @@ class BaseVaultConfigTestCase(APITestCase):
 
 class VaultStatusViewTest(BaseVaultConfigTestCase):
     def test_vault_status_not_configured(self):
-        """GET /vault/status/ returns is_configured=False when no VaultConfig."""
+        """
+        GET /vault/status/ returns is_configured=False when no VaultConfig.
+        """
         url = reverse("vault-status")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -53,7 +57,10 @@ class VaultStatusViewTest(BaseVaultConfigTestCase):
         self.assertFalse(response.data["is_unlocked"])
 
     def test_vault_status_no_member(self):
-        """GET /vault/status/ returns is_configured=False when user has no Member."""
+        """
+        GET /vault/status/ returns is_configured=False when user has no
+        Member.
+        """
         user2 = User.objects.create_user(
             username="nomembervc",
             email="nomembervc@test.com",
@@ -61,7 +68,9 @@ class VaultStatusViewTest(BaseVaultConfigTestCase):
         )
         client2 = APIClient()
         refresh = RefreshToken.for_user(user2)
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client2.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("vault-status")
         response = client2.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -120,7 +129,9 @@ class VaultSetupViewTest(BaseVaultConfigTestCase):
         )
         client2 = APIClient()
         refresh = RefreshToken.for_user(user2)
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client2.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("vault-setup")
         response = client2.post(
             url,
@@ -157,7 +168,9 @@ class VaultUnlockViewTest(BaseVaultConfigTestCase):
     def test_vault_unlock_success(self):
         """Correct master password unlocks the vault."""
         url = reverse("vault-unlock")
-        response = self.client.post(url, {"master_password": self.MASTER_PASSWORD})
+        response = self.client.post(
+            url, {"master_password": self.MASTER_PASSWORD}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("message", response.data)
         self.assertIn("expires_in", response.data)
@@ -165,7 +178,9 @@ class VaultUnlockViewTest(BaseVaultConfigTestCase):
     def test_vault_unlock_wrong_password(self):
         """Wrong master password returns 400."""
         url = reverse("vault-unlock")
-        response = self.client.post(url, {"master_password": "WrongPassword1!"})
+        response = self.client.post(
+            url, {"master_password": "WrongPassword1!"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
@@ -185,7 +200,9 @@ class VaultUnlockViewTest(BaseVaultConfigTestCase):
         )
         client2 = APIClient()
         refresh = RefreshToken.for_user(user2)
-        client2.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client2.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("vault-unlock")
         response = client2.post(url, {"master_password": "anypassword"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -200,7 +217,9 @@ class VaultUnlockViewTest(BaseVaultConfigTestCase):
         )
         client_nm = APIClient()
         refresh = RefreshToken.for_user(user_nm)
-        client_nm.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client_nm.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("vault-unlock")
         response = client_nm.post(url, {"master_password": "anypassword"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -334,7 +353,9 @@ class VaultChangePasswordWithConfigTest(BaseVaultConfigTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_vault_change_password_no_member(self):
-        """Change password with a user that has no Member profile returns 400."""
+        """
+        Change password with a user that has no Member profile returns 400.
+        """
         user_nm = User.objects.create_user(
             username="changepwnomember",
             email="changepwnomember@test.com",
@@ -342,7 +363,9 @@ class VaultChangePasswordWithConfigTest(BaseVaultConfigTestCase):
         )
         client_nm = APIClient()
         refresh = RefreshToken.for_user(user_nm)
-        client_nm.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        client_nm.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         url = reverse("vault-change-password")
         response = client_nm.post(
             url,
@@ -378,7 +401,9 @@ class VaultSetupReEncryptTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="ReEncrypt User",
             document_hash="r" * 64,
@@ -392,7 +417,8 @@ class VaultSetupReEncryptTest(APITestCase):
         Vault setup re-encrypts existing Password items.
         Covers _re_encrypt_all_items() lines 90-98 in vault_config.py.
         """
-        # Without vault config, VaultLockedMixin passes through → create password
+        # Without vault config, VaultLockedMixin passes through → create
+        # password
         pwd_url = reverse("password-list-create")
         pwd_resp = self.client.post(
             pwd_url,
@@ -421,8 +447,9 @@ class VaultSetupReEncryptTest(APITestCase):
 
     def test_vault_locked_mixin_with_unlocked_vault(self):
         """
-        After vault setup + unlock, accessing password-list-create (VaultLockedMixin)
-        covers vault_config.py line 208 (set_vault_key called when vault is unlocked).
+        After vault setup + unlock, accessing password-list-create
+        (VaultLockedMixin) covers vault_config.py line 208
+        (set_vault_key called when vault is unlocked).
         """
         # Setup vault
         self.client.post(

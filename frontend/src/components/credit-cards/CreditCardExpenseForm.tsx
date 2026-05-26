@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   CalendarDays,
   Clock,
@@ -135,6 +136,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
       const billId = getCurrentBill(firstCard.id);
       if (billId) setValue('bill', billId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expense, creditCards.length]);
 
   useEffect(() => {
@@ -144,6 +146,7 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
       const billId = getCurrentBill(watchedCard);
       setValue('bill', billId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedCard]);
 
   useEffect(() => {

@@ -22,7 +22,8 @@ from .services import recount_import_stats, run_matching
 
 
 class BankStatementImportCreateView(APIView):
-    """POST /api/v1/bank-reconciliation/imports/ — upload and parse a statement file."""
+    """POST /api/v1/bank-reconciliation/imports/
+    — upload and parse a statement file."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = BankStatementImport.objects.all()
@@ -55,7 +56,12 @@ class BankStatementImportCreateView(APIView):
                 file_format = "cnab240"
             else:
                 return Response(
-                    {"detail": "Formato inválido. Use OFX, CSV, CNAB 240 ou CNAB 400."},
+                    {
+                        "detail": (
+                            "Formato inválido. Use OFX, CSV,"
+                            " CNAB 240 ou CNAB 400."
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -129,7 +135,8 @@ class BankStatementImportCreateView(APIView):
 
 
 class BankStatementImportListView(generics.ListAPIView):
-    """GET /api/v1/bank-reconciliation/imports/ — list all imports for current user."""
+    """GET /api/v1/bank-reconciliation/imports/
+    — list all imports for current user."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     serializer_class = BankStatementImportListSerializer
@@ -141,7 +148,8 @@ class BankStatementImportListView(generics.ListAPIView):
 
 
 class BankStatementImportDetailView(generics.RetrieveAPIView):
-    """GET /api/v1/bank-reconciliation/imports/<pk>/ — import detail with entries."""
+    """GET /api/v1/bank-reconciliation/imports/<pk>/
+    — import detail with entries."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     serializer_class = BankStatementImportSerializer
@@ -153,14 +161,17 @@ class BankStatementImportDetailView(generics.RetrieveAPIView):
 
 
 class BankStatementMatchView(APIView):
-    """POST /api/v1/bank-reconciliation/imports/<pk>/match/ — run auto-matching."""
+    """POST /api/v1/bank-reconciliation/imports/<pk>/match/
+    — run auto-matching."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = BankStatementImport.objects.all()
 
     def post(self, request, pk):
         try:
-            stmt_import = BankStatementImport.objects.get(pk=pk, owner=request.user)
+            stmt_import = BankStatementImport.objects.get(
+                pk=pk, owner=request.user
+            )
         except BankStatementImport.DoesNotExist:
             return Response(
                 {"detail": "Importação não encontrada."},
@@ -175,7 +186,8 @@ class BankStatementMatchView(APIView):
 
 
 class BankStatementEntryManualMatchView(APIView):
-    """PATCH /api/v1/bank-reconciliation/imports/<import_pk>/entries/<entry_pk>/match/
+    """PATCH /api/v1/bank-reconciliation/imports/
+    <import_pk>/entries/<entry_pk>/match/
 
     Manually link a statement entry to an existing Expense or Revenue.
     Sets match_confidence='manual' and status='matched'.
@@ -210,13 +222,19 @@ class BankStatementEntryManualMatchView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        matched_expense_id = serializer.validated_data.get("matched_expense_id")
-        matched_revenue_id = serializer.validated_data.get("matched_revenue_id")
+        matched_expense_id = serializer.validated_data.get(
+            "matched_expense_id"
+        )
+        matched_revenue_id = serializer.validated_data.get(
+            "matched_revenue_id"
+        )
 
         if matched_expense_id:
             try:
                 expense = Expense.objects.get(
-                    pk=matched_expense_id, created_by=request.user, is_deleted=False
+                    pk=matched_expense_id,
+                    created_by=request.user,
+                    is_deleted=False,
                 )
             except Expense.DoesNotExist:
                 return Response(
@@ -228,7 +246,9 @@ class BankStatementEntryManualMatchView(APIView):
         else:
             try:
                 revenue = Revenue.objects.get(
-                    pk=matched_revenue_id, created_by=request.user, is_deleted=False
+                    pk=matched_revenue_id,
+                    created_by=request.user,
+                    is_deleted=False,
                 )
             except Revenue.DoesNotExist:
                 return Response(
@@ -254,7 +274,8 @@ class BankStatementEntryManualMatchView(APIView):
 
 
 class BankStatementEntryUpdateView(generics.UpdateAPIView):
-    """PATCH /api/v1/bank-reconciliation/entries/<pk>/ — update entry status."""
+    """PATCH /api/v1/bank-reconciliation/entries/<pk>/
+    — update entry status."""
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     serializer_class = BankStatementEntryUpdateSerializer

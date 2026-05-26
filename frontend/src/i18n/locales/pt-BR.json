@@ -182,7 +182,7 @@
     "submodules": {
       "registrations": "Cadastros",
       "records": "Registros",
-      "books": "Obras",
+      "books": "Acervo",
       "intellect": "Aprendizado"
     },
     "items": {
@@ -4511,7 +4511,7 @@
       "active": "Ativo",
       "inactive": "Inativo",
       "activePlan": "Plano Ativo",
-      "otherPlans": "Outros Planos",
+      "otherPlans": "Planos Inativos",
       "newDayBtn": "Nova Divisão",
       "newDayTitle": "Nova Divisão",
       "editDayTitle": "Editar Divisão",

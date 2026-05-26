@@ -3,7 +3,8 @@ Circuit breaker para o Ollama local.
 
 Após THRESHOLD falhas consecutivas, o circuito abre e requisições ao Ollama
 são rejeitadas imediatamente (fast-fail), forçando o fallback para providers
-cloud (Groq, Anthropic). O circuito tenta fechar após RECOVERY_TIMEOUT segundos.
+cloud (Groq, Anthropic). O circuito tenta fechar após
+RECOVERY_TIMEOUT segundos.
 """
 
 import logging
@@ -41,14 +42,17 @@ class OllamaCircuitBreaker:
             if self._failures >= self.THRESHOLD and not self._opened_at:
                 self._opened_at = time.monotonic()
                 logger.warning(
-                    "Ollama circuit breaker ABERTO após %d falhas consecutivas",
+                    "Ollama circuit breaker ABERTO"
+                    " após %d falhas consecutivas",
                     self._failures,
                 )
 
     def record_success(self) -> None:
         with self._lock:
             if self._opened_at:
-                logger.info("Ollama circuit breaker FECHADO — conexão restaurada")
+                logger.info(
+                    "Ollama circuit breaker FECHADO — conexão restaurada"
+                )
             self._failures = 0
             self._opened_at = 0.0
 
@@ -58,5 +62,6 @@ class OllamaCircuitBreaker:
             self._opened_at = 0.0
 
 
-# Singleton de processo — compartilhado entre todos os workers do mesmo processo
+# Singleton de processo — compartilhado entre todos os workers do mesmo
+# processo
 ollama_circuit = OllamaCircuitBreaker()

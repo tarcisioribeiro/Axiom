@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Copy, Loader2, Share2, Trash2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';

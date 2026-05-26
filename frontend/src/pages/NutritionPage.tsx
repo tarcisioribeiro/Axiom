@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -528,24 +529,24 @@ export default function NutritionPage() {
           icon={<UtensilsCrossed className="h-6 w-6 text-category-nutrition" />}
         />
 
-        <Tabs defaultValue="log" className="w-full">
-          <TabsList className="mb-lg">
-            <TabsTrigger value="log" className="gap-xs">
+        <Tabs defaultValue="log" className="flex flex-1 flex-col">
+          <TabsList className="mb-lg w-full">
+            <TabsTrigger value="log" className="flex-1 gap-xs">
               <CalendarDays className="h-4 w-4" />
               {t('pages.nutritionFoods.tabLog')}
             </TabsTrigger>
-            <TabsTrigger value="meal-types" className="gap-xs">
+            <TabsTrigger value="meal-types" className="flex-1 gap-xs">
               <UtensilsCrossed className="h-4 w-4" />
               {t('pages.nutritionFoods.tabMealTypes')}
             </TabsTrigger>
-            <TabsTrigger value="foods" className="gap-xs">
+            <TabsTrigger value="foods" className="flex-1 gap-xs">
               <Salad className="h-4 w-4" />
               {t('pages.nutritionFoods.tabFoods')}
             </TabsTrigger>
           </TabsList>
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
-          <TabsContent value="log">
+          <TabsContent value="log" className="mt-0 flex-1">
             {/* Header card com aderência */}
             <div className="mb-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="flex items-center justify-between gap-md px-lg py-md">
@@ -553,7 +554,7 @@ export default function NutritionPage() {
                   <p className="text-sm font-medium capitalize text-muted-foreground">
                     {todayLabel}
                   </p>
-                  <div className="mt-1 flex items-baseline gap-xs">
+                  <div className="mt-xs flex items-baseline gap-xs">
                     <span className="text-4xl font-bold tabular-nums text-category-nutrition">
                       {todayLogs.length}
                     </span>
@@ -561,7 +562,7 @@ export default function NutritionPage() {
                       / {activeMealTypes.length}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-xs text-sm text-muted-foreground">
                     {t('pages.nutritionLog.mealsLogged', {
                       logged: todayLogs.length,
                       total: activeMealTypes.length,
@@ -613,7 +614,7 @@ export default function NutritionPage() {
                   onClick={() => setDialog({ type: 'new-log' })}
                   className="w-full sm:w-auto"
                 >
-                  <Plus className="mr-1.5 h-4 w-4" />
+                  <Plus className="mr-xs h-4 w-4" />
                   {t('pages.nutritionLog.newLogBtn')}
                 </Button>
               </div>
@@ -642,10 +643,10 @@ export default function NutritionPage() {
           </TabsContent>
 
           {/* ── Plano Alimentar ──────────────────────────────────────────── */}
-          <TabsContent value="meal-types">
+          <TabsContent value="meal-types" className="mt-0 flex-1">
             <div className="mb-md flex justify-end">
               <Button onClick={() => setDialog({ type: 'new-meal-type' })}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-sm h-4 w-4" />
                 {t('pages.nutritionMealTypes.newMealTypeBtn')}
               </Button>
             </div>
@@ -695,7 +696,7 @@ export default function NutritionPage() {
           </TabsContent>
 
           {/* ── Alimentos ────────────────────────────────────────────────── */}
-          <TabsContent value="foods">
+          <TabsContent value="foods" className="mt-0 flex-1">
             <div className="mb-md flex items-center gap-sm">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -704,11 +705,11 @@ export default function NutritionPage() {
                   placeholder={t('pages.nutritionFoods.searchPlaceholder')}
                   value={foodSearch}
                   onChange={(e) => setFoodSearch(e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background py-sm pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <Button onClick={() => setDialog({ type: 'new-food' })}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-sm h-4 w-4" />
                 {t('pages.nutritionFoods.newFoodBtn')}
               </Button>
             </div>
@@ -959,7 +960,7 @@ function MealTypeCard({
             <div className="border-t border-border bg-card p-md">
               <div className="mb-sm flex justify-end">
                 <Button variant="outline" size="sm" onClick={onNewOption}>
-                  <Plus className="mr-1 h-3 w-3" />
+                  <Plus className="mr-xs h-3 w-3" />
                   {t('pages.nutritionMealTypes.newOptionBtn')}
                 </Button>
               </div>
@@ -1006,7 +1007,7 @@ function MealTypeCard({
                         <div className="grid gap-xs p-sm sm:grid-cols-2">
                           {opt.ingredients.map((ing) => (
                             <div key={ing.id} className="flex items-start gap-xs">
-                              <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
+                              <div className="mt-xs h-1.5 w-1.5 shrink-0 rounded-full bg-category-nutrition/50" />
                               <span className="text-xs text-muted-foreground">
                                 <span className="font-medium text-foreground">
                                   {ing.food_name}
@@ -1082,7 +1083,7 @@ function MealTimeline({
         return (
           <div key={mt.id} className="flex gap-sm">
             {/* Timeline spine */}
-            <div className="flex shrink-0 flex-col items-center pt-4">
+            <div className="flex shrink-0 flex-col items-center pt-md">
               <div
                 className={cn(
                   'h-3 w-3 rounded-full border-2 transition-colors',
@@ -1096,7 +1097,7 @@ function MealTimeline({
                 )}
               />
               {idx < mealTypes.length - 1 && (
-                <div className="mt-1 w-0.5 flex-1 bg-border" />
+                <div className="mt-xs w-0.5 flex-1 bg-border" />
               )}
             </div>
 

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import i18next from 'i18next';
 
 // Translations - English (API) to Portuguese (UI)

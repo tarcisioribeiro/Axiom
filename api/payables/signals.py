@@ -13,7 +13,9 @@ def nullify_expenses_on_payable_delete(sender, instance, **kwargs):
     """
     from expenses.models import Expense
 
-    Expense.objects.filter(related_payable=instance).update(related_payable=None)
+    Expense.objects.filter(related_payable=instance).update(
+        related_payable=None
+    )
 
 
 def update_payable_paid_value(payable):

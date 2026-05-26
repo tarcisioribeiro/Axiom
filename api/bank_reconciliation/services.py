@@ -77,7 +77,11 @@ def run_matching(statement_import: BankStatementImport) -> int:
                 entry.matched_expense = None
             entry.match_confidence = best_confidence
             entry.save(
-                update_fields=["matched_expense", "matched_revenue", "match_confidence"]
+                update_fields=[
+                    "matched_expense",
+                    "matched_revenue",
+                    "match_confidence",
+                ]
             )
             matched += 1
 

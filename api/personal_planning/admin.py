@@ -21,14 +21,28 @@ from personal_planning.models import (
 
 @admin.register(RoutineTask)
 class RoutineTaskAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "category", "periodicity", "is_active", "owner")
+    list_display = (
+        "id",
+        "name",
+        "category",
+        "periodicity",
+        "is_active",
+        "owner",
+    )
     list_filter = ("category", "periodicity", "is_active")
     search_fields = ("name", "description")
 
 
 @admin.register(TaskInstance)
 class TaskInstanceAdmin(admin.ModelAdmin):
-    list_display = ("id", "task_name", "category", "scheduled_date", "status", "owner")
+    list_display = (
+        "id",
+        "task_name",
+        "category",
+        "scheduled_date",
+        "status",
+        "owner",
+    )
     list_filter = ("status", "category", "scheduled_date")
     search_fields = ("task_name", "notes")
     date_hierarchy = "scheduled_date"
@@ -87,7 +101,14 @@ class WorkoutExerciseAdmin(admin.ModelAdmin):
 
 @admin.register(WorkoutSession)
 class WorkoutSessionAdmin(admin.ModelAdmin):
-    list_display = ("id", "workout_day", "date", "started_at", "finished_at", "owner")
+    list_display = (
+        "id",
+        "workout_day",
+        "date",
+        "started_at",
+        "finished_at",
+        "owner",
+    )
     list_filter = ("date", "workout_day")
     search_fields = ("notes",)
     date_hierarchy = "date"
@@ -122,7 +143,14 @@ class FoodAdmin(admin.ModelAdmin):
 
 @admin.register(MealType)
 class MealTypeAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "suggested_time", "order", "is_active", "owner")
+    list_display = (
+        "id",
+        "name",
+        "suggested_time",
+        "order",
+        "is_active",
+        "owner",
+    )
     list_filter = ("is_active",)
     search_fields = ("name",)
 
@@ -136,7 +164,14 @@ class MenuOptionAdmin(admin.ModelAdmin):
 
 @admin.register(MenuOptionIngredient)
 class MenuOptionIngredientAdmin(admin.ModelAdmin):
-    list_display = ("id", "food", "menu_option", "quantity", "unit", "is_optional")
+    list_display = (
+        "id",
+        "food",
+        "menu_option",
+        "quantity",
+        "unit",
+        "is_optional",
+    )
     list_filter = ("unit", "is_optional")
     search_fields = ("food__name",)
 

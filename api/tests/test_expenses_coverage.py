@@ -1,6 +1,6 @@
 """
-Tests for expenses/services.py: bulk_generate_fixed_expenses and get_or_create_bill.
-Drives coverage of the service layer business logic.
+Tests for expenses/services.py: bulk_generate_fixed_expenses and
+get_or_create_bill. Drives coverage of the service layer business logic.
 """
 
 from decimal import Decimal
@@ -28,7 +28,9 @@ class BaseExpenseServiceTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Expense Svc User",
             document_hash="e" * 64,
@@ -51,7 +53,8 @@ class BaseExpenseServiceTestCase(APITestCase):
 
 
 class BulkGenerateFixedExpensesAccountTest(BaseExpenseServiceTestCase):
-    """Exercises expenses/services.py bulk_generate_fixed_expenses (account path)."""
+    """Exercises expenses/services.py bulk_generate_fixed_expenses
+    (account path)."""
 
     def setUp(self):
         super().setUp()
@@ -88,7 +91,8 @@ class BulkGenerateFixedExpensesAccountTest(BaseExpenseServiceTestCase):
         self.assertEqual(response.data["month"], month_str)  # type: ignore
 
     def test_bulk_generate_idempotent(self):
-        """Second generate for same month is a no-op (already-exists branch)."""
+        """Second generate for same month is a no-op (already-exists
+        branch)."""
         today = timezone.now()
         month_str = today.strftime("%Y-%m")
         url = reverse("fixed-expense-generate")
@@ -111,7 +115,9 @@ class BulkGenerateFixedExpensesAccountTest(BaseExpenseServiceTestCase):
             url,
             {
                 "month": timezone.now().strftime("%Y-%m"),
-                "expense_values": [{"fixed_expense_id": 99999, "value": "100.00"}],
+                "expense_values": [
+                    {"fixed_expense_id": 99999, "value": "100.00"}
+                ],
             },
             format="json",
         )
@@ -140,7 +146,9 @@ class BulkGenerateFixedExpensesCreditCardTest(BaseExpenseServiceTestCase):
                 "name": "Test CC",
                 "on_card_name": "TEST USER",
                 "flag": "MSC",
-                "validation_date": (date.today() + timedelta(days=365)).isoformat(),
+                "validation_date": (
+                    date.today() + timedelta(days=365)
+                ).isoformat(),
                 "security_code": "123",
                 "credit_limit": "10000.00",
                 "max_limit": "15000.00",
@@ -192,7 +200,10 @@ class BulkGenerateFixedExpensesCreditCardTest(BaseExpenseServiceTestCase):
         payload = {
             "month": month_str,
             "expense_values": [
-                {"fixed_expense_id": self.fixed_expense_cc.pk, "value": "50.00"}
+                {
+                    "fixed_expense_id": self.fixed_expense_cc.pk,
+                    "value": "50.00",
+                }
             ],
         }
         self.client.post(url, payload, format="json")

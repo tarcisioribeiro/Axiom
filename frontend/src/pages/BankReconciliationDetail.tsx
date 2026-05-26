@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   ArrowLeft,
   ArrowLeftRight,
@@ -128,6 +129,7 @@ export default function BankReconciliationDetail() {
 
   useEffect(() => {
     if (importId) void loadImport(Number(importId));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [importId]);
 
   // Debounced candidate search

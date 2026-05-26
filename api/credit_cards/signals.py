@@ -10,7 +10,8 @@ from .utils import recalculate_bill_total
 @receiver(post_delete, sender=CreditCardInstallment)
 def update_bill_totals_installment(sender, instance, **kwargs):
     """
-    Signal para atualizar automaticamente o total da fatura e o pagamento mínimo
+    Signal para atualizar automaticamente o total da fatura e o pagamento
+    mínimo
     quando uma parcela de cartão é criada, atualizada ou deletada.
 
     Regras:
@@ -27,8 +28,10 @@ def update_bill_totals_installment(sender, instance, **kwargs):
 @receiver(post_save, sender=CreditCardBill)
 def ensure_bill_defaults(sender, instance, created, **kwargs):
     """
-    Signal para garantir que faturas recém-criadas tenham valores padrão corretos.
-    Este signal serve como garantia adicional caso o serializer seja contornado.
+    Signal para garantir que faturas recém-criadas tenham valores padrão
+    corretos.
+    Este signal serve como garantia adicional caso o serializer seja
+    contornado.
     """
     if created:
         needs_update = False
@@ -51,7 +54,9 @@ def ensure_bill_defaults(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender="credit_cards.CreditCardPurchase")
 def embed_credit_card_purchase(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = f"{instance.category} — {instance.purchase_date}"
 

@@ -105,7 +105,7 @@ fi
 # Etapa 2 — Para serviços da aplicação
 # ---------------------------------------------------------------------------
 info "[2/6] Parando serviços da aplicação (DB e MinIO permanecem ativos)..."
-APP_SERVICES="api celery-worker celery-beat"
+APP_SERVICES="api worker queue"
 
 if [[ "$DRY_RUN" == "false" ]]; then
     # Para apenas os serviços que existem

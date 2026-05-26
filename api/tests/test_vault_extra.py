@@ -28,7 +28,9 @@ class BaseVaultExtraTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="VaultExtra User",
             document_hash="w" * 64,
@@ -58,7 +60,9 @@ class BaseVaultExtraTestCase(APITestCase):
         self.vault_pk = resp.data["id"]  # type: ignore
         # Deposit to get a transaction
         deposit_url = reverse("vault-deposit", args=[self.vault_pk])
-        self.client.post(deposit_url, {"amount": "5000.00", "description": "Init"})
+        self.client.post(
+            deposit_url, {"amount": "5000.00", "description": "Init"}
+        )
 
 
 class FinancialGoalVaultOperationsTest(BaseVaultExtraTestCase):
@@ -76,7 +80,9 @@ class FinancialGoalVaultOperationsTest(BaseVaultExtraTestCase):
 
     def test_add_vaults_to_goal(self):
         url = reverse("financial-goal-add-vaults", args=[self.goal.pk])
-        response = self.client.post(url, {"vault_ids": [self.vault_pk]}, format="json")
+        response = self.client.post(
+            url, {"vault_ids": [self.vault_pk]}, format="json"
+        )
         self.assertIn(
             response.status_code,
             [
@@ -89,10 +95,14 @@ class FinancialGoalVaultOperationsTest(BaseVaultExtraTestCase):
     def test_remove_vaults_from_goal(self):
         # Add first, then remove
         add_url = reverse("financial-goal-add-vaults", args=[self.goal.pk])
-        self.client.post(add_url, {"vault_ids": [self.vault_pk]}, format="json")
+        self.client.post(
+            add_url, {"vault_ids": [self.vault_pk]}, format="json"
+        )
 
         url = reverse("financial-goal-remove-vaults", args=[self.goal.pk])
-        response = self.client.post(url, {"vault_ids": [self.vault_pk]}, format="json")
+        response = self.client.post(
+            url, {"vault_ids": [self.vault_pk]}, format="json"
+        )
         self.assertIn(
             response.status_code,
             [
@@ -105,7 +115,9 @@ class FinancialGoalVaultOperationsTest(BaseVaultExtraTestCase):
     def test_financial_goal_check_completion_with_vaults(self):
         # Link vault to goal first
         add_url = reverse("financial-goal-add-vaults", args=[self.goal.pk])
-        self.client.post(add_url, {"vault_ids": [self.vault_pk]}, format="json")
+        self.client.post(
+            add_url, {"vault_ids": [self.vault_pk]}, format="json"
+        )
 
         url = reverse("financial-goal-check-completion", args=[self.goal.pk])
         response = self.client.post(url)
@@ -199,7 +211,9 @@ class VaultTransactionDeleteTest(BaseVaultExtraTestCase):
     def test_vault_setup(self):
         url = reverse("vault-setup")
         response = self.client.post(
-            url, {"password": "test123", "confirm_password": "test123"}, format="json"
+            url,
+            {"password": "test123", "confirm_password": "test123"},
+            format="json",
         )
         self.assertIn(
             response.status_code,

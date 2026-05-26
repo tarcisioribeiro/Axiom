@@ -1,5 +1,6 @@
 """
-Flake8 plugin that flags `fields = "__all__"` inside DRF ModelSerializer Meta classes.
+Flake8 plugin that flags `fields = "__all__"` inside DRF ModelSerializer
+Meta classes.
 
 Error code: DRF001
 """
@@ -7,7 +8,10 @@ Error code: DRF001
 import ast
 from typing import Generator, Tuple, Type
 
-MSG = 'DRF001 Use explicit field list instead of fields = "__all__" in serializers'
+MSG = (
+    'DRF001 Use explicit field list instead of fields = "__all__"'
+    " in serializers"
+)
 
 
 def _is_serializer_class(class_node: ast.ClassDef) -> bool:
@@ -21,7 +25,8 @@ def _is_serializer_class(class_node: ast.ClassDef) -> bool:
 
 
 class NoSerializerAllChecker:
-    """Flake8 AST checker that disallows fields = \"__all__\" in serializers."""
+    """Flake8 AST checker that disallows fields = \"__all__\" in
+    serializers."""
 
     name = "flake8_no_serializer_all"
     version = "1.0.0"
@@ -31,7 +36,9 @@ class NoSerializerAllChecker:
 
     def run(
         self,
-    ) -> Generator[Tuple[int, int, str, Type["NoSerializerAllChecker"]], None, None]:
+    ) -> Generator[
+        Tuple[int, int, str, Type["NoSerializerAllChecker"]], None, None
+    ]:
         for node in ast.walk(self.tree):
             if not isinstance(node, ast.ClassDef):
                 continue

@@ -39,7 +39,9 @@ class Payable(BaseModel):
         decimal_places=2,
         default=0,
     )
-    date = models.DateField(verbose_name="Data de Registro", null=False, blank=False)
+    date = models.DateField(
+        verbose_name="Data de Registro", null=False, blank=False
+    )
     due_date = models.DateField(
         verbose_name="Data de Vencimento", null=True, blank=True
     )
@@ -89,7 +91,12 @@ class Payable(BaseModel):
         if self.paid_value and self.value:
             if self.paid_value > self.value:
                 raise ValidationError(
-                    {"paid_value": "O valor pago não pode ser maior que o valor total."}
+                    {
+                        "paid_value": (
+                            "O valor pago não pode ser"
+                            " maior que o valor total."
+                        )
+                    }
                 )
 
     def save(self, *args, **kwargs):
@@ -110,7 +117,10 @@ class Payable(BaseModel):
         return self.value - self.paid_value
 
     def __str__(self):
-        return f"{self.description} - R$ {self.value} ({self.get_status_display()})"
+        return (
+            f"{self.description} - R$ {self.value}"
+            f" ({self.get_status_display()})"
+        )
 
 
 class PayableInstallment(BaseModel):
@@ -127,9 +137,15 @@ class PayableInstallment(BaseModel):
         related_name="installments",
         verbose_name="Valor a Pagar",
     )
-    installment_number = models.PositiveIntegerField(verbose_name="Número da Parcela")
+    installment_number = models.PositiveIntegerField(
+        verbose_name="Número da Parcela"
+    )
     value = models.DecimalField(
-        max_digits=10, decimal_places=2, null=False, blank=False, verbose_name="Valor"
+        max_digits=10,
+        decimal_places=2,
+        null=False,
+        blank=False,
+        verbose_name="Valor",
     )
     due_date = models.DateField(verbose_name="Data de Vencimento")
     payed = models.BooleanField(default=False, verbose_name="Pago")
@@ -158,4 +174,6 @@ class PayableInstallment(BaseModel):
         ]
 
     def __str__(self):
-        return f"Parcela {self.installment_number} - {self.payable.description}"
+        return (
+            f"Parcela {self.installment_number} - {self.payable.description}"
+        )

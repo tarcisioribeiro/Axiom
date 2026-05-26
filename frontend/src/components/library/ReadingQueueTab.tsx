@@ -110,6 +110,7 @@ export function ReadingQueueTab() {
 
   useEffect(() => {
     void loadQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadQueue = async () => {

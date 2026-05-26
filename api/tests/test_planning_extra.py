@@ -1,5 +1,6 @@
 """
-Additional personal_planning view tests — daily reflections, goal recalculate/reset,
+Additional personal_planning view tests — daily reflections, goal
+recalculate/reset,
 task instance status update, bulk update, and credit card views coverage.
 """
 
@@ -27,7 +28,9 @@ class BasePlanningTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Plan User",
             document_hash="p" * 64,
@@ -210,7 +213,11 @@ class RoutineTemplateImportViewTest(BasePlanningTestCase):
         response = self.client.post(url, {"template_ids": []}, format="json")
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_201_CREATED,
+                status.HTTP_400_BAD_REQUEST,
+            ],
         )
 
 
@@ -229,7 +236,9 @@ class CreditCardAdditionalViewTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.account = Account.objects.create(
             account_name="CC Account",
             institution_name="NUB",
@@ -323,7 +332,9 @@ class BudgetAdditionalViewTest(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
     def test_budget_status(self):
         url = reverse("budget-status")
@@ -367,7 +378,9 @@ class RoutineTaskLinkedBookTest(BasePlanningTestCase):
         super().setUp()
         from library.models import Author, Book, Publisher
 
-        self.author = Author.objects.create(name="Author Test", owner=self.member)
+        self.author = Author.objects.create(
+            name="Author Test", owner=self.member
+        )
         self.publisher = Publisher.objects.create(
             name="Publisher Test", owner=self.member
         )

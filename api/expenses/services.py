@@ -102,14 +102,18 @@ def bulk_generate_fixed_expenses(month, expense_values, user):
 
         last_day = monthrange(year_int, month_int)[1]
         try:
-            expense_date = datetime(year_int, month_int, fixed_exp.due_day).date()
+            expense_date = datetime(
+                year_int, month_int, fixed_exp.due_day
+            ).date()
         except ValueError:
             expense_date = datetime(
                 year_int, month_int, min(fixed_exp.due_day, last_day)
             ).date()
 
         if fixed_exp.credit_card:
-            bill, _ = get_or_create_bill(fixed_exp.credit_card, year, month_num, user)
+            bill, _ = get_or_create_bill(
+                fixed_exp.credit_card, year, month_num, user
+            )
 
             already_exists = CreditCardInstallment.objects.filter(
                 purchase__description=fixed_exp.description,
@@ -180,7 +184,9 @@ def bulk_generate_fixed_expenses(month, expense_values, user):
         fixed_exp.save()
 
     # Update or create generation log
-    existing_log = FixedExpenseGenerationLog.objects.filter(month=month).first()
+    existing_log = FixedExpenseGenerationLog.objects.filter(
+        month=month
+    ).first()
     if existing_log:
         updated_ids = list(
             set((existing_log.fixed_expense_ids or []) + fixed_expense_ids)
@@ -253,7 +259,9 @@ def get_fixed_expenses_stats():
 
     difference = float(current_total) - float(previous_total)
     percentage_change = (
-        round((difference / float(previous_total)) * 100, 2) if previous_total else 0
+        round((difference / float(previous_total)) * 100, 2)
+        if previous_total
+        else 0
     )
 
     return {

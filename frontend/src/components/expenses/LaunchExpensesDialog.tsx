@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -71,6 +72,7 @@ export const LaunchExpensesDialog = ({
       // Initialize all expenses as selected
       setSelectedExpenseIds(new Set(fixedExpenses.map((exp) => exp.id)));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, fixedExpenses]);
 
   const toggleExpenseSelection = (expenseId: number) => {

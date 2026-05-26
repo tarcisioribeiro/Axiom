@@ -32,7 +32,9 @@ class BaseTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="File Test User",
             document_hash="f" * 63 + "1",
@@ -45,7 +47,9 @@ class BaseTestCase(APITestCase):
         self.publisher = Publisher.objects.create(
             name="Test Publisher File", owner=self.member
         )
-        self.author = Author.objects.create(name="Test Author File", owner=self.member)
+        self.author = Author.objects.create(
+            name="Test Author File", owner=self.member
+        )
         self.book = Book.objects.create(
             title="Digital Book",
             pages=100,
@@ -108,7 +112,9 @@ class BookFileViewNotFoundTest(BaseTestCase):
         file = SimpleUploadedFile(
             "book.docx", b"content", content_type="application/octet-stream"
         )
-        response = self.client.patch(url, {"book_file": file}, format="multipart")
+        response = self.client.patch(
+            url, {"book_file": file}, format="multipart"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_nonexistent_book_returns_404(self):
@@ -148,7 +154,9 @@ class LibraryXForwardedForTest(BaseTestCase):
     def test_list_books_with_x_forwarded_for(self):
         """Covers get_client_ip X-Forwarded-For branch (line 66)."""
         url = reverse("book-list-create")
-        response = self.client.get(url, HTTP_X_FORWARDED_FOR="10.0.0.1, 10.0.0.2")
+        response = self.client.get(
+            url, HTTP_X_FORWARDED_FOR="10.0.0.1, 10.0.0.2"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -227,7 +235,11 @@ class ComputeProgressWithDBTest(APITestCase):
         )
 
     def _make_db_goal(
-        self, category, target, linked_expense_category=None, linked_account=None
+        self,
+        category,
+        target,
+        linked_expense_category=None,
+        linked_account=None,
     ):
         goal = MagicMock()
         goal.category = category
@@ -261,7 +273,9 @@ class ComputeProgressWithDBTest(APITestCase):
             created_by=self.user,
         )
         goal = self._make_db_goal(
-            "reduce_expenses", 1000, linked_expense_category="bills and services"
+            "reduce_expenses",
+            1000,
+            linked_expense_category="bills and services",
         )
         result = compute_progress(goal)
         self.assertEqual(result["data_source"], "expenses")
@@ -281,7 +295,9 @@ class ComputeProgressWithDBTest(APITestCase):
             payed=True,
             created_by=self.user,
         )
-        goal = self._make_db_goal("reduce_expenses", 1000, linked_account=self.account)
+        goal = self._make_db_goal(
+            "reduce_expenses", 1000, linked_account=self.account
+        )
         result = compute_progress(goal)
         self.assertEqual(result["data_source"], "expenses")
         self.assertEqual(result["current_value"], Decimal("200.00"))
@@ -308,7 +324,9 @@ class ComputeProgressWithDBTest(APITestCase):
             received=True,
             created_by=self.user,
         )
-        goal = self._make_db_goal("increase_revenue", 5000, linked_account=self.account)
+        goal = self._make_db_goal(
+            "increase_revenue", 5000, linked_account=self.account
+        )
         result = compute_progress(goal)
         self.assertEqual(result["data_source"], "revenues")
         self.assertEqual(result["current_value"], Decimal("3000.00"))
