@@ -1807,6 +1807,7 @@ cleanup:registry:
   image: python:3.12-slim
   stage: cleanup
   interruptible: false
+  allow_failure: true
   needs:
     - job: build:api
       optional: true
@@ -1818,7 +1819,6 @@ cleanup:registry:
     - if: $CI_COMMIT_BRANCH == "main"
       when: on_success
     - when: manual
-      allow_failure: true
   script:
     - |
       python3 - <<'PYEOF'
@@ -1836,7 +1836,7 @@ cleanup:registry:
 
       TRANSIENT = (429, 500, 502, 503, 504)
 
-      def fetch(url, method="GET", max_retries=4):
+      def fetch(url, method="GET", max_retries=7):
           for attempt in range(max_retries):
               try:
                   req = urllib.request.Request(
@@ -1846,14 +1846,14 @@ cleanup:registry:
                       return r.read(), r.status
               except urllib.error.HTTPError as e:
                   if e.code in TRANSIENT and attempt < max_retries - 1:
-                      wait = 2 ** (attempt + 1)
-                      print(f"  HTTP {e.code} — aguardando {wait}s (tentativa {attempt+1}/{max_retries-1})...")
+                      wait = min(2 ** (attempt + 1), 60)
+                      print(f"  HTTP {e.code} — aguardando {wait}s (tentativa {attempt+1}/{max_retries})...")
                       time.sleep(wait)
                       continue
                   raise
               except OSError as e:
                   if attempt < max_retries - 1:
-                      wait = 2 ** (attempt + 1)
+                      wait = min(2 ** (attempt + 1), 60)
                       print(f"  Erro de rede ({e}) — aguardando {wait}s...")
                       time.sleep(wait)
                       continue
