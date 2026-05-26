@@ -67,12 +67,12 @@ def check_storage() -> dict[str, str]:
         }
     except EndpointConnectionError:
         return {
-            "status": "unhealthy",
+            "status": "degraded",
             "message": "Storage endpoint unreachable",
             "message_key": "storage_unreachable",
         }
     except Exception as e:
-        return {"status": "unhealthy", "message": f"Storage error: {str(e)}"}
+        return {"status": "degraded", "message": f"Storage error: {str(e)}"}
 
 
 def health_check(request: HttpRequest) -> JsonResponse:
@@ -116,7 +116,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
                 }
             else:
                 health["checks"]["cache"] = {
-                    "status": "unhealthy",
+                    "status": "degraded",
                     "message": "Cache test failed",
                 }
         else:
@@ -126,7 +126,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
             }
     except Exception as e:
         health["checks"]["cache"] = {
-            "status": "unhealthy",
+            "status": "degraded",
             "message": f"Cache error: {str(e)}",
         }
     # Environment variables check
@@ -148,11 +148,9 @@ def health_check(request: HttpRequest) -> JsonResponse:
             "status": "healthy",
             "message": "All required environment variables are set",
         }
-    # Storage (MinIO/S3) check
+    # Storage (MinIO) check — non-critical: degraded state does not cause 503
     storage_result = check_storage()
     health["checks"]["storage"] = storage_result
-    if storage_result["status"] == "unhealthy":
-        health["status"] = "unhealthy"
     # Disk space check (optional)
     try:
         import shutil
