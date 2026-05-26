@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { Loader2, Shield, Users, Check, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -36,6 +37,7 @@ export default function Permissions() {
 
   useEffect(() => {
     void loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadInitialData = async () => {

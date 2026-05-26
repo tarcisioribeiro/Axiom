@@ -10,8 +10,16 @@ urlpatterns = [
         name="vault-simulate",
     ),
     # Cofres CRUD
-    path("vaults/", views.VaultListCreateView.as_view(), name="vault-list-create"),
-    path("vaults/<int:pk>/", views.VaultDetailView.as_view(), name="vault-detail"),
+    path(
+        "vaults/",
+        views.VaultListCreateView.as_view(),
+        name="vault-list-create",
+    ),
+    path(
+        "vaults/<int:pk>/",
+        views.VaultDetailView.as_view(),
+        name="vault-detail",
+    ),
     # Operações de cofre
     path(
         "vaults/<int:pk>/deposit/",

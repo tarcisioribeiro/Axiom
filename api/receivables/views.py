@@ -21,12 +21,14 @@ class ReceivableCreateListView(BaseListCreateView):
     serializer_class = ReceivableSerializer
 
     def get_queryset(self):
-        return Receivable.objects.filter(created_by=self.request.user).select_related(
-            "member"
-        )
+        return Receivable.objects.filter(
+            created_by=self.request.user
+        ).select_related("member")
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class ReceivableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -34,9 +36,9 @@ class ReceivableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = ReceivableSerializer
 
     def get_queryset(self):
-        return Receivable.objects.filter(created_by=self.request.user).select_related(
-            "member"
-        )
+        return Receivable.objects.filter(
+            created_by=self.request.user
+        ).select_related("member")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -51,7 +53,9 @@ class ReceivableInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not receivable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         installments = ReceivableInstallment.objects.filter(
             receivable=receivable
         ).order_by("installment_number")
@@ -63,7 +67,9 @@ class ReceivableInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not receivable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         installment_number = request.data.get("installment_number")
         if not installment_number:
             return Response(
@@ -76,7 +82,8 @@ class ReceivableInstallmentListView(APIView):
             )
         except ReceivableInstallment.DoesNotExist:
             return Response(
-                {"detail": "Installment not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Installment not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
         serializer = ReceivableInstallmentSerializer(
             installment, data=request.data, partial=True
@@ -101,7 +108,9 @@ class ReceivableReceiptView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not receivable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         value = request.data.get("value")
         account_id = request.data.get("account")
@@ -119,7 +128,8 @@ class ReceivableReceiptView(APIView):
             account = Account.objects.get(pk=account_id, is_deleted=False)
         except Account.DoesNotExist:
             return Response(
-                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Account not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         received = not scheduled

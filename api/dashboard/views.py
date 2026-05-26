@@ -15,7 +15,16 @@ from typing import Any, Optional
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Count, DecimalField, F, OuterRef, Q, Subquery, Sum, Value
+from django.db.models import (
+    Count,
+    DecimalField,
+    F,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
@@ -24,7 +33,11 @@ from rest_framework.views import APIView
 
 from accounts.models import Account
 from budgets.models import Budget
-from credit_cards.models import CreditCard, CreditCardBill, CreditCardInstallment
+from credit_cards.models import (
+    CreditCard,
+    CreditCardBill,
+    CreditCardInstallment,
+)
 from expenses.models import Expense, FixedExpense
 from loans.models import Loan
 from members.models import Member
@@ -134,7 +147,8 @@ class AccountBalancesView(APIView):
             .values("total")
         )
 
-        # Query unica com annotate (evita N+1) — apenas contas do usuário autenticado
+        # Query unica com annotate (evita N+1) — apenas contas do usuário
+        # autenticado
         accounts = (
             Account.objects.filter(
                 created_by=request.user,
@@ -207,7 +221,8 @@ class DashboardStatsView(APIView):
     Retorna estatísticas agregadas para o Dashboard em uma única requisição.
 
     Usa aggregations do Django ORM (SUM, COUNT) que são executadas no banco
-    de dados, muito mais rápido que buscar todos os registros e calcular no cliente.
+    de dados, muito mais rápido que buscar todos os registros e calcular
+    no cliente.
 
     Performance:
     - ANTES: 6 requisições (accounts, expenses, revenues, credit_cards, etc)
@@ -277,7 +292,9 @@ class DashboardStatsView(APIView):
 
         # Construir response com valores padrão se None
         stats = {
-            "total_balance": float(accounts_agg["total_balance"] or Decimal("0.00")),
+            "total_balance": float(
+                accounts_agg["total_balance"] or Decimal("0.00")
+            ),
             "total_expenses": float(expenses_agg["total"] or Decimal("0.00")),
             "total_revenues": float(revenues_agg["total"] or Decimal("0.00")),
             "total_credit_limit": float(total_credit_limit),
@@ -338,7 +355,9 @@ class CreditCardExpensesByCategoryView(APIView):
         aggregation = (
             queryset.values("purchase__category")
             .annotate(
-                total=Coalesce(Sum("value"), Value(0), output_field=DecimalField()),
+                total=Coalesce(
+                    Sum("value"), Value(0), output_field=DecimalField()
+                ),
                 count=Count("id"),
             )
             .order_by("-total")
@@ -392,9 +411,7 @@ class BalanceForecastView(APIView):
         # Saldo atual total das contas do usuário
         current_balance = Account.objects.filter(
             created_by=request.user,
-        ).aggregate(
-            total=Sum("current_balance")
-        )["total"] or Decimal("0.00")
+        ).aggregate(total=Sum("current_balance"))["total"] or Decimal("0.00")
 
         # Despesas pendentes (não pagas, excluindo transferências) do usuário
         pending_expenses = Expense.objects.filter(
@@ -403,14 +420,16 @@ class BalanceForecastView(APIView):
             related_transfer__isnull=True,
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
-        # Receitas pendentes (não recebidas, excluindo transferências) do usuário
+        # Receitas pendentes (não recebidas, excluindo transferências) do
+        # usuário
         pending_revenues = Revenue.objects.filter(
             created_by=request.user,
             received=False,
             related_transfer__isnull=True,
         ).aggregate(total=Sum("value"))["total"] or Decimal("0.00")
 
-        # Faturas de cartão não pagas dos cartões do usuário (total - valor pago)
+        # Faturas de cartão não pagas dos cartões do usuário
+        # (total - valor pago)
         open_bills = CreditCardBill.objects.filter(
             credit_card__created_by=request.user,
         ).exclude(status="paid")
@@ -455,12 +474,19 @@ class BalanceForecastView(APIView):
         pending_payables = Payable.objects.filter(
             created_by=request.user,
             status__in=["active", "overdue"],
-        ).aggregate(total=Sum("value") - Sum("paid_value"))["total"] or Decimal("0.00")
+        ).aggregate(total=Sum("value") - Sum("paid_value"))[
+            "total"
+        ] or Decimal(
+            "0.00"
+        )
 
         # Calcular totais
         total_income = pending_revenues + loans_to_receive
         total_outcome = (
-            pending_expenses + pending_card_bills + loans_to_pay + pending_payables
+            pending_expenses
+            + pending_card_bills
+            + loans_to_pay
+            + pending_payables
         )
         net_change = total_income - total_outcome
         forecast_balance = current_balance + net_change
@@ -539,9 +565,9 @@ class MonthlyStatementView(APIView):
             date__month=month,
         )
 
-        total_expenses = expenses_qs.aggregate(total=Sum("value"))["total"] or Decimal(
-            "0.00"
-        )
+        total_expenses = expenses_qs.aggregate(total=Sum("value"))[
+            "total"
+        ] or Decimal("0.00")
         total_revenues = revenues_qs.aggregate(total=Sum("net_amount"))[
             "total"
         ] or Decimal("0.00")
@@ -561,14 +587,20 @@ class MonthlyStatementView(APIView):
         return Response(
             {
                 "period": f"{year:04d}-{month:02d}",
-                "total_revenues": str(total_revenues.quantize(Decimal("0.01"))),
-                "total_expenses": str(total_expenses.quantize(Decimal("0.01"))),
+                "total_revenues": str(
+                    total_revenues.quantize(Decimal("0.01"))
+                ),
+                "total_expenses": str(
+                    total_expenses.quantize(Decimal("0.01"))
+                ),
                 "balance": str(balance.quantize(Decimal("0.01"))),
                 "revenues_by_category": [
                     {
                         "category": item["category"],
                         "total": str(
-                            (item["total"] or Decimal("0.00")).quantize(Decimal("0.01"))
+                            (item["total"] or Decimal("0.00")).quantize(
+                                Decimal("0.01")
+                            )
                         ),
                         "count": item["count"],
                     }
@@ -578,7 +610,9 @@ class MonthlyStatementView(APIView):
                     {
                         "category": item["category"],
                         "total": str(
-                            (item["total"] or Decimal("0.00")).quantize(Decimal("0.01"))
+                            (item["total"] or Decimal("0.00")).quantize(
+                                Decimal("0.01")
+                            )
                         ),
                         "count": item["count"],
                     }
@@ -640,7 +674,9 @@ class CashFlowForecastView(APIView):
         if days not in self.VALID_DAYS:
             days = 30
 
-        cache_key = get_cache_key(f"cash_flow_forecast:days:{days}", request.user.id)
+        cache_key = get_cache_key(
+            f"cash_flow_forecast:days:{days}", request.user.id
+        )
         cached = cache.get(cache_key)
         if cached is not None:
             return Response(cached)
@@ -651,9 +687,7 @@ class CashFlowForecastView(APIView):
         # Saldo atual total das contas do usuário
         current_balance = Account.objects.filter(
             created_by=request.user,
-        ).aggregate(
-            total=Sum("current_balance")
-        )["total"] or Decimal("0.00")
+        ).aggregate(total=Sum("current_balance"))["total"] or Decimal("0.00")
 
         # Despesas pendentes no periodo (excluindo transferencias) do usuário
         scheduled_expenses = (
@@ -783,7 +817,9 @@ class CashFlowForecastView(APIView):
             months_in_range.append(month_iter)
             # Avanca para o proximo mes
             if month_iter.month == 12:
-                month_iter = month_iter.replace(year=month_iter.year + 1, month=1)
+                month_iter = month_iter.replace(
+                    year=month_iter.year + 1, month=1
+                )
             else:
                 month_iter = month_iter.replace(month=month_iter.month + 1)
 
@@ -794,7 +830,10 @@ class CashFlowForecastView(APIView):
                 month_key = f"{year:04d}-{month:02d}"
 
                 # Ja foi marcado como gerado pelo template
-                if fe.last_generated_month and fe.last_generated_month >= month_key:
+                if (
+                    fe.last_generated_month
+                    and fe.last_generated_month >= month_key
+                ):
                     continue
 
                 # Ja existe lancamento avulso gerado para este mes
@@ -1001,7 +1040,8 @@ class FinancialAlertsView(APIView):
                         "type": "budget_limit",
                         "severity": severity,
                         "message": (
-                            f"Orçamento de {label} atingiu {percentage}% do limite"
+                            f"Orçamento de {label} atingiu"
+                            f" {percentage}% do limite"
                         ),
                         "link": "/budgets",
                         "metadata": {
@@ -1031,10 +1071,15 @@ class FinancialAlertsView(APIView):
                 continue
             days_left = (bill.due_date - today).days
             name = bill.credit_card.name
-            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            days_str = (
+                f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            )
             if days_left < 0:
                 severity = "danger"
-                msg = f"Fatura do cartão {name} está vencida" f" (venceu há {days_str})"
+                msg = (
+                    f"Fatura do cartão {name} está vencida"
+                    f" (venceu há {days_str})"
+                )
             elif days_left == 0:
                 severity = "danger"
                 msg = f"Fatura do cartão {name} vence hoje"
@@ -1082,8 +1127,10 @@ class FinancialAlertsView(APIView):
                     "type": "low_balance",
                     "severity": severity,
                     "message": (
-                        f"Saldo da conta {account.account_name} está abaixo do mínimo"
-                        f" (R$ {float(current):,.2f} / mín R$ {float(minimum):,.2f})"
+                        f"Saldo da conta {account.account_name}"
+                        f" está abaixo do mínimo"
+                        f" (R$ {float(current):,.2f}"
+                        f" / mín R$ {float(minimum):,.2f})"
                     ),
                     "link": "/accounts",
                     "metadata": {
@@ -1111,7 +1158,9 @@ class FinancialAlertsView(APIView):
             if payable.due_date is None:
                 continue
             days_left = (payable.due_date - today).days
-            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            days_str = (
+                f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            )
             desc = payable.description
             if days_left < 0:
                 severity = "danger"
@@ -1157,7 +1206,9 @@ class FinancialAlertsView(APIView):
             status__in=["active", "in_progress", "pending", "overdue"],
         )
         if member:
-            loans_qs = loans_qs.filter(Q(creditor=member) | Q(benefited=member))
+            loans_qs = loans_qs.filter(
+                Q(creditor=member) | Q(benefited=member)
+            )
         else:
             loans_qs = loans_qs.none()
         loans = loans_qs
@@ -1166,11 +1217,16 @@ class FinancialAlertsView(APIView):
             if loan.due_date is None:
                 continue
             days_left = (loan.due_date - today).days
-            days_str = f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            days_str = (
+                f"{abs(days_left)} dia{'s' if abs(days_left) != 1 else ''}"
+            )
             desc = loan.description
             if days_left < 0:
                 severity = "danger"
-                msg = f"Empréstimo '{desc}' está vencido" f" (venceu há {days_str})"
+                msg = (
+                    f"Empréstimo '{desc}' está vencido"
+                    f" (venceu há {days_str})"
+                )
             elif days_left == 0:
                 severity = "danger"
                 msg = f"Empréstimo '{desc}' vence hoje"
@@ -1227,7 +1283,9 @@ class AnomalyDetectionView(APIView):
             .values("category")
             .annotate(total=Sum("value"))
         )
-        current_map = {row["category"]: float(row["total"]) for row in current_spending}
+        current_map = {
+            row["category"]: float(row["total"]) for row in current_spending
+        }
 
         anomalies = []
         for category, current_amount in current_map.items():
@@ -1236,7 +1294,9 @@ class AnomalyDetectionView(APIView):
             for offset in range(1, 7):
                 d = today.replace(day=1)
                 total_months = d.month - offset
-                year = d.year + total_months // 12 if total_months < 0 else d.year
+                year = (
+                    d.year + total_months // 12 if total_months < 0 else d.year
+                )
                 month = (
                     total_months % 12 + 1
                     if total_months < 0
@@ -1361,11 +1421,19 @@ class LGPDExportView(APIView):
             return result
 
         modules = {
-            "expenses": Expense.objects.filter(created_by=user, is_deleted=False),
-            "revenues": Revenue.objects.filter(created_by=user, is_deleted=False),
+            "expenses": Expense.objects.filter(
+                created_by=user, is_deleted=False
+            ),
+            "revenues": Revenue.objects.filter(
+                created_by=user, is_deleted=False
+            ),
             "loans": Loan.objects.filter(created_by=user, is_deleted=False),
-            "payables": Payable.objects.filter(created_by=user, is_deleted=False),
-            "accounts": Account.objects.filter(created_by=user, is_deleted=False),
+            "payables": Payable.objects.filter(
+                created_by=user, is_deleted=False
+            ),
+            "accounts": Account.objects.filter(
+                created_by=user, is_deleted=False
+            ),
         }
 
         buf = io.BytesIO()
@@ -1373,7 +1441,8 @@ class LGPDExportView(APIView):
             for name, qs in modules.items():
                 data = serialize_qs(qs)
                 zf.writestr(
-                    f"{name}.json", json.dumps(data, ensure_ascii=False, indent=2)
+                    f"{name}.json",
+                    json.dumps(data, ensure_ascii=False, indent=2),
                 )
 
         buf.seek(0)
@@ -1400,7 +1469,9 @@ class IRReportView(APIView):
         try:
             year_int = int(year)
         except ValueError:
-            return Response({"detail": "year must be a valid integer."}, status=400)
+            return Response(
+                {"detail": "year must be a valid integer."}, status=400
+            )
 
         user = request.user
 
@@ -1510,7 +1581,9 @@ class AuditLogView(APIView):
             {
                 "id": entry.id,
                 "action": entry.action,
-                "object_type": entry.content_type.model if entry.content_type else None,
+                "object_type": (
+                    entry.content_type.model if entry.content_type else None
+                ),
                 "object_id": entry.object_id,
                 "changes": entry.changes,
                 "timestamp": entry.timestamp.isoformat(),
@@ -1528,9 +1601,12 @@ class FinancialHealthScoreView(APIView):
     Retorna score de saúde financeira de 0-100 com breakdown por dimensão.
 
     Dimensões (25 pontos cada):
-    - Liquidez:      total_saldo / (média_despesas_mensais_últimos_3m × 3) — ideal ≥ 1×
-    - Endividamento: 1 - (empréstimos_ativos / receita_anual) — ideal: dívidas < receita
-    - Poupança:      (receitas_recebidas - despesas_pagas) / receitas_recebidas × 100
+    - Liquidez:      total_saldo / (média_despesas_mensais_últimos_3m × 3)
+                     — ideal ≥ 1×
+    - Endividamento: 1 - (empréstimos_ativos / receita_anual)
+                     — ideal: dívidas < receita
+    - Poupança:      (receitas_recebidas - despesas_pagas)
+                     / receitas_recebidas × 100
     - Adimplência:   1 - (compromissos_vencidos / total_compromissos)
     """
 
@@ -1547,7 +1623,9 @@ class FinancialHealthScoreView(APIView):
             created_by=user, is_deleted=False
         ).aggregate(
             total=Coalesce(
-                Sum("current_balance"), Value(Decimal("0")), output_field=DecimalField()
+                Sum("current_balance"),
+                Value(Decimal("0")),
+                output_field=DecimalField(),
             )
         )[
             "total"
@@ -1611,7 +1689,8 @@ class FinancialHealthScoreView(APIView):
         ]
         if annual_revenue > 0:
             debt_ratio = float(active_loans_total / annual_revenue)
-            # Score: 25 pts se dívida = 0; 0 pts se dívida ≥ 100% da receita anual
+            # Score: 25 pts se dívida = 0; 0 pts se dívida ≥ 100%
+            # da receita anual
             debt_score = min(25.0, max(0.0, (1 - min(debt_ratio, 1)) * 25))
         else:
             debt_score = 25.0 if active_loans_total == 0 else 0.0
@@ -1632,7 +1711,9 @@ class FinancialHealthScoreView(APIView):
             "total"
         ]
         if annual_revenue > 0:
-            savings_rate = float((annual_revenue - annual_expenses) / annual_revenue)
+            savings_rate = float(
+                (annual_revenue - annual_expenses) / annual_revenue
+            )
             # Score: 25 pts se taxa ≥ 20%; 0 pts se negativa
             savings_score = min(25.0, max(0.0, (savings_rate / 0.20) * 25))
         else:
@@ -1697,7 +1778,9 @@ class FinancialHealthScoreView(APIView):
                             else None
                         ),
                         "label": "Liquidez",
-                        "description": "Saldo disponível vs. despesas mensais médias",
+                        "description": (
+                            "Saldo disponível vs. despesas mensais médias"
+                        ),
                     },
                     "debt": {
                         "score": round(debt_score, 1),
@@ -1711,7 +1794,9 @@ class FinancialHealthScoreView(APIView):
                         "max": 25,
                         "rate": round(savings_rate * 100, 1),
                         "label": "Poupança",
-                        "description": "Percentual da receita que sobra após despesas",
+                        "description": (
+                            "Percentual da receita que sobra após despesas"
+                        ),
                     },
                     "compliance": {
                         "score": round(compliance_score, 1),
@@ -1720,7 +1805,9 @@ class FinancialHealthScoreView(APIView):
                         "total_commitments": total_commitments,
                         "on_time_rate": round(on_time_rate * 100, 1),
                         "label": "Adimplência",
-                        "description": "Compromissos em dia vs. total de compromissos",
+                        "description": (
+                            "Compromissos em dia vs. total de compromissos"
+                        ),
                     },
                 },
             }

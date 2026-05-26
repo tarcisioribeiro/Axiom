@@ -7,7 +7,10 @@ from django.utils import timezone
 
 
 class Command(BaseCommand):
-    help = "Indexa resumos, notas de leitura e destaques da biblioteca no pgvector."
+    help = (
+        "Indexa resumos, notas de leitura e destaques"
+        " da biblioteca no pgvector."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -37,7 +40,8 @@ class Command(BaseCommand):
 
         if not LLMClient.is_available():
             raise CommandError(
-                "LLM não disponível. Verifique OLLAMA_BASE_URL ou ANTHROPIC_API_KEY."
+                "LLM não disponível. Verifique"
+                " OLLAMA_BASE_URL ou ANTHROPIC_API_KEY."
             )
 
         dry_run = options["dry_run"]
@@ -53,7 +57,9 @@ class Command(BaseCommand):
             self.stdout.write(f"\nProcessando usuário: {user.username}")
 
             # Indexa Summary.text (resumos em Markdown)
-            indexed, skipped = self._index_summaries(user, force, dry_run, chunk_size)
+            indexed, skipped = self._index_summaries(
+                user, force, dry_run, chunk_size
+            )
             total_indexed += indexed
             total_skipped += skipped
 
@@ -65,14 +71,17 @@ class Command(BaseCommand):
             total_skipped += skipped
 
             # Indexa BookHighlight.text (destaques)
-            indexed, skipped = self._index_highlights(user, force, dry_run, chunk_size)
+            indexed, skipped = self._index_highlights(
+                user, force, dry_run, chunk_size
+            )
             total_indexed += indexed
             total_skipped += skipped
 
         action = "[DRY-RUN] Seriam indexados" if dry_run else "Indexados"
         self.stdout.write(
             self.style.SUCCESS(
-                f"\n{action}: {total_indexed} chunks | Pulados: {total_skipped}"
+                f"\n{action}: {total_indexed} chunks"
+                f" | Pulados: {total_skipped}"
             )
         )
 
@@ -121,7 +130,9 @@ class Command(BaseCommand):
         embedding = LLMClient.embed(content)
         if not embedding:
             self.stdout.write(
-                self.style.WARNING(f"  Falha no embedding para: {source_title[:60]}")
+                self.style.WARNING(
+                    f"  Falha no embedding para: {source_title[:60]}"
+                )
             )
             return False
 
@@ -235,7 +246,9 @@ class Command(BaseCommand):
                     user=user,
                     source_type="reading_note",
                     source_id=chunk_id,
-                    source_title=f"{reading.book.title} ({reading.reading_date})",
+                    source_title=(
+                        f"{reading.book.title}" f" ({reading.reading_date})"
+                    ),
                     content=chunk,
                     dry_run=dry_run,
                 )

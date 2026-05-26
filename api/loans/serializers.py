@@ -32,9 +32,15 @@ class LoanInstallmentSerializer(serializers.ModelSerializer):
 
 class LoanSerializer(serializers.ModelSerializer):
     # Campos relacionados (nomes em vez de apenas IDs)
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
-    benefited_name = serializers.CharField(source="benefited.name", read_only=True)
-    creditor_name = serializers.CharField(source="creditor.name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
+    benefited_name = serializers.CharField(
+        source="benefited.name", read_only=True
+    )
+    creditor_name = serializers.CharField(
+        source="creditor.name", read_only=True
+    )
     guarantor_name = serializers.CharField(
         source="guarantor.name", read_only=True, allow_null=True
     )

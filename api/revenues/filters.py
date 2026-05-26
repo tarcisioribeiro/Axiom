@@ -24,12 +24,16 @@ class RevenueFilter(filters.FilterSet):
     min_value = filters.NumberFilter(
         field_name="value",
         lookup_expr="gte",
-        help_text="Filter revenues with value greater than or equal to this amount",
+        help_text=(
+            "Filter revenues with value greater than or equal to this amount"
+        ),
     )
     max_value = filters.NumberFilter(
         field_name="value",
         lookup_expr="lte",
-        help_text="Filter revenues with value less than or equal to this amount",
+        help_text=(
+            "Filter revenues with value less than or equal to this amount"
+        ),
     )
 
     # Category filter
@@ -48,7 +52,9 @@ class RevenueFilter(filters.FilterSet):
     )
 
     # Receipt status
-    received = filters.BooleanFilter(help_text="Filter by received status (true/false)")
+    received = filters.BooleanFilter(
+        help_text="Filter by received status (true/false)"
+    )
 
     # Search in description
     search = filters.CharFilter(

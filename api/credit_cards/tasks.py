@@ -3,7 +3,10 @@ from celery import shared_task
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=300)
 def close_overdue_bills(self) -> dict:
-    """Fecha automaticamente faturas vencidas (equivalente ao management command)."""
+    """
+    Fecha automaticamente faturas vencidas (equivalente ao management
+    command).
+    """
     try:
         from django.utils import timezone
 

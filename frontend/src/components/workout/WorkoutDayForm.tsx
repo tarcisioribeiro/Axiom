@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import { Activity, Dumbbell, Flame, Layers, Loader2, Target, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -109,7 +110,7 @@ export function WorkoutDayForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-xl bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
+      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
           <Layers className="h-5 w-5 text-category-exercise" />
         </div>

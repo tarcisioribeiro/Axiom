@@ -5,7 +5,9 @@ from django.dispatch import receiver
 
 @receiver(post_save, sender="budgets.Budget")
 def embed_budget(sender, instance, **kwargs):
-    from agents.services.embedding_service import generate_embedding_for_instance
+    from agents.services.embedding_service import (
+        generate_embedding_for_instance,
+    )
 
     source_title = f"{instance.category} {instance.month:02d}/{instance.year}"
 

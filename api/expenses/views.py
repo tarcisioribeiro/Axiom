@@ -11,7 +11,11 @@ from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
-from app.export_utils import build_csv_response, build_pdf_response, format_decimal
+from app.export_utils import (
+    build_csv_response,
+    build_pdf_response,
+    format_decimal,
+)
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from expenses.filters import ExpenseFilter
@@ -34,7 +38,10 @@ from expenses.serializers import (
     FixedExpenseSerializer,
     TagSerializer,
 )
-from expenses.services import bulk_generate_fixed_expenses, get_fixed_expenses_stats
+from expenses.services import (
+    bulk_generate_fixed_expenses,
+    get_fixed_expenses_stats,
+)
 
 
 class ExpenseCreateListView(BaseListCreateView):
@@ -110,7 +117,9 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         data = dict(serializer.data)
@@ -121,11 +130,15 @@ class ExpenseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
 
 class FixedExpenseListCreateView(BaseListCreateView):
-    queryset = FixedExpense.objects.all()  # Required for GlobalDefaultPermission
+    queryset = (
+        FixedExpense.objects.all()
+    )  # Required for GlobalDefaultPermission
 
     def get_queryset(self):
         return (
-            FixedExpense.objects.select_related("account", "member", "credit_card")
+            FixedExpense.objects.select_related(
+                "account", "member", "credit_card"
+            )
             .annotate(total_generated=Count("generated_expenses"))
             .order_by("due_day", "description")
         )
@@ -136,11 +149,15 @@ class FixedExpenseListCreateView(BaseListCreateView):
         return FixedExpenseSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class FixedExpenseDetailView(BaseRetrieveUpdateDestroyView):
-    queryset = FixedExpense.objects.select_related("account", "member", "credit_card")
+    queryset = FixedExpense.objects.select_related(
+        "account", "member", "credit_card"
+    )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -161,7 +178,9 @@ class BulkGenerateFixedExpensesView(APIView):
         IsAuthenticated,
         GlobalDefaultPermission,
     )
-    queryset = FixedExpense.objects.none()  # Required for GlobalDefaultPermission
+    queryset = (
+        FixedExpense.objects.none()
+    )  # Required for GlobalDefaultPermission
 
     def post(self, request):
         serializer = BulkGenerateRequestSerializer(data=request.data)
@@ -224,7 +243,8 @@ class BulkMarkPaidView(APIView):
                     recalculate_account_balance(account_id)
 
         return Response(
-            {"success": True, "updated_count": updated}, status=status.HTTP_200_OK
+            {"success": True, "updated_count": updated},
+            status=status.HTTP_200_OK,
         )
 
 
@@ -233,7 +253,9 @@ class FixedExpensesStatsView(APIView):
         IsAuthenticated,
         GlobalDefaultPermission,
     )
-    queryset = FixedExpense.objects.none()  # Required for GlobalDefaultPermission
+    queryset = (
+        FixedExpense.objects.none()
+    )  # Required for GlobalDefaultPermission
 
     def get(self, request):
         return Response(get_fixed_expenses_stats(), status=status.HTTP_200_OK)
@@ -244,9 +266,9 @@ class CategorizationRuleListCreateView(BaseListCreateView):
     serializer_class = CategorizationRuleSerializer
 
     def get_queryset(self):
-        return CategorizationRule.objects.filter(owner=self.request.user).order_by(
-            "created_at"
-        )
+        return CategorizationRule.objects.filter(
+            owner=self.request.user
+        ).order_by("created_at")
 
     def perform_create(self, serializer):
         serializer.save(
@@ -256,7 +278,9 @@ class CategorizationRuleListCreateView(BaseListCreateView):
         )
 
 
-class CategorizationRuleRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class CategorizationRuleRetrieveUpdateDestroyView(
+    BaseRetrieveUpdateDestroyView
+):
     queryset = CategorizationRule.objects.all()
     serializer_class = CategorizationRuleSerializer
 
@@ -280,8 +304,9 @@ class ApplyCategorizationRulesView(APIView):
     POST /api/v1/categorization-rules/apply/
 
     Despesas elegíveis: auto_categorized=True ou category='others'.
-    Usa bulk_update para evitar N+1 queries e fuzzy matching para maior cobertura.
-    Retorna o número de despesas atualizadas, o total processado e score por match.
+    Usa bulk_update para evitar N+1 queries e fuzzy matching para maior
+    cobertura. Retorna o número de despesas atualizadas, o total processado
+    e score por match.
     """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
@@ -323,12 +348,18 @@ class ApplyCategorizationRulesView(APIView):
                     expense.auto_categorized = True
                     to_update.append(expense)
                     match_details.append(
-                        {"expense_id": expense.id, "rule_id": rule.id, "score": score}
+                        {
+                            "expense_id": expense.id,
+                            "rule_id": rule.id,
+                            "score": score,
+                        }
                     )
                     break
 
         if to_update:
-            Expense.objects.bulk_update(to_update, ["category", "auto_categorized"])
+            Expense.objects.bulk_update(
+                to_update, ["category", "auto_categorized"]
+            )
 
         return Response(
             {
@@ -407,7 +438,9 @@ class ExportExpensesView(APIView):
                 f"De {date_from[8:10]}/{date_from[5:7]}/{date_from[:4]}"
             )
         if date_to:
-            period_parts.append(f"até {date_to[8:10]}/{date_to[5:7]}/{date_to[:4]}")
+            period_parts.append(
+                f"até {date_to[8:10]}/{date_to[5:7]}/{date_to[:4]}"
+            )
         period = " ".join(period_parts) if period_parts else "Todo o período"
 
         user_name = ""
@@ -444,7 +477,9 @@ class ExportExpensesView(APIView):
                     status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 )
 
-            total = qs.aggregate(total=Sum("value"))["total"] or Decimal("0.00")
+            total = qs.aggregate(total=Sum("value"))["total"] or Decimal(
+                "0.00"
+            )
 
             rows = [
                 [
@@ -485,7 +520,9 @@ class ExportExpensesView(APIView):
                     exp.merchant or "",
                 ]
 
-        return build_csv_response(rows=_csv_rows(), headers=headers, filename=filename)
+        return build_csv_response(
+            rows=_csv_rows(), headers=headers, filename=filename
+        )
 
 
 class TagListCreateView(BaseListCreateView):
@@ -523,8 +560,12 @@ class ExpenseSplitListCreateView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not expense:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        splits = ExpenseSplit.objects.filter(expense=expense).select_related("member")
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        splits = ExpenseSplit.objects.filter(expense=expense).select_related(
+            "member"
+        )
         serializer = ExpenseSplitSerializer(splits, many=True)
         return Response(serializer.data)
 
@@ -533,7 +574,9 @@ class ExpenseSplitListCreateView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not expense:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         from decimal import Decimal
 

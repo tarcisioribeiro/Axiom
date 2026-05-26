@@ -4,7 +4,8 @@ Classe base e tipos de dados para todos os agentes.
 Mudanças principais:
 - run() e stream() injetam ctx.history como turns estruturados (user/assistant)
   em vez de serializar o histórico como texto dentro do prompt. Isso preserva
-  o formato nativo de multi-turn dos LLMs e é compatível com todos os providers.
+  o formato nativo de multi-turn dos LLMs e é compatível com todos os
+  providers.
 - build_context_safely() executa build_context() com timeout configurável para
   evitar que queries lentas no banco bloqueiem o worker WSGI indefinidamente.
 - safe_str() sanitiza strings de dados externos (merchant names, categorias)
@@ -111,7 +112,9 @@ class BaseAgent(ABC):
                 try:
                     from app.metrics import record_agent_context_build
 
-                    record_agent_context_build(self.name, time.monotonic() - t0)
+                    record_agent_context_build(
+                        self.name, time.monotonic() - t0
+                    )
                 except Exception:
                     pass
                 return result
@@ -131,7 +134,10 @@ class BaseAgent(ABC):
                 logger.error(
                     "build_context falhou para agente '%s': %s", self.name, exc
                 )
-        return {"system_prompt": get_system_prompt(ctx.language), "sources": []}
+        return {
+            "system_prompt": get_system_prompt(ctx.language),
+            "sources": [],
+        }
 
     def _build_messages(
         self,
@@ -143,10 +149,12 @@ class BaseAgent(ABC):
         Monta a lista de mensagens para o LLM com histórico como turns reais.
 
         Estrutura:
-            [system] → [history_user] → [history_assistant] → ... → [user: prompt]
+            [system] → [history_user] → [history_assistant] → ...
+            → [user: prompt]
 
         Normaliza roles legados ("agent") para "assistant" para compatibilidade
-        com providers OpenAI-compatible (Groq) que rejeitam roles desconhecidas.
+        com providers OpenAI-compatible (Groq) que rejeitam
+        roles desconhecidas.
         """
         from agents.core.summarizer import maybe_compress_history
 
@@ -158,7 +166,9 @@ class BaseAgent(ABC):
         compressed = maybe_compress_history(ctx.history)
         for turn in compressed:
             raw_role = turn.get("role", "user")
-            role = "assistant" if raw_role in ("agent", "assistant") else "user"
+            role = (
+                "assistant" if raw_role in ("agent", "assistant") else "user"
+            )
             messages.append({"role": role, "content": turn["content"]})
 
         messages.append({"role": "user", "content": current_prompt})

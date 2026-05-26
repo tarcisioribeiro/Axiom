@@ -7,7 +7,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    throttle_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -71,7 +75,9 @@ def validate_registration_data(data: dict) -> tuple[bool, list[str]]:
         if len(username) < 3 or len(username) > 30:
             errors.append("Username deve ter entre 3 e 30 caracteres")
         if not re.match(r"^[a-zA-Z0-9_]+$", username):
-            errors.append("Username deve conter apenas letras, numeros e underscore")
+            errors.append(
+                "Username deve conter apenas letras, numeros e underscore"
+            )
 
     # Validar senha usando validators do Django
     if password:
@@ -249,7 +255,9 @@ def create_user_with_member(request: Request) -> Response:
     if username_exists or document_exists:
         # Log interno para auditoria (nao exposto ao usuario)
         if username_exists:
-            logger.warning(f"Tentativa de registro com username duplicado: {username}")
+            logger.warning(
+                f"Tentativa de registro com username duplicado: {username}"
+            )
         if document_exists:
             logger.warning("Tentativa de registro com documento duplicado")
         return Response(
@@ -265,7 +273,9 @@ def create_user_with_member(request: Request) -> Response:
                 password=password,
                 email=email or "",
                 first_name=name.split()[0] if name else "",
-                last_name=(" ".join(name.split()[1:]) if len(name.split()) > 1 else ""),
+                last_name=(
+                    " ".join(name.split()[1:]) if len(name.split()) > 1 else ""
+                ),
                 is_superuser=False,
                 is_staff=False,
                 is_active=True,
@@ -279,7 +289,8 @@ def create_user_with_member(request: Request) -> Response:
                 user.groups.add(members_group)
             except Group.DoesNotExist:
                 logger.warning(
-                    "Group 'members' not found during registration of user '%s'. "
+                    "Group 'members' not found during"
+                    " registration of user '%s'. "
                     "Run 'python manage.py setup_permissions' to create it.",
                     username,
                 )
@@ -317,7 +328,9 @@ def create_user_with_member(request: Request) -> Response:
                     ]
                 )
                 try:
-                    _verification_url = f"{cfg('SITE_URL')}/verify-email?token={_token}"
+                    _verification_url = (
+                        f"{cfg('SITE_URL')}/verify-email?token={_token}"
+                    )
                     _html_message = render_to_string(
                         "email/email_verification.html",
                         {
@@ -426,13 +439,17 @@ class PasswordResetRequestView(APIView):
             send_mail(
                 subject="Redefinição de senha — Axiom",
                 message=f"Acesse o link para redefinir sua senha: {reset_url}",
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"),
+                from_email=getattr(
+                    settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"
+                ),
                 recipient_list=[user.email],
                 html_message=html_message,
                 fail_silently=True,
             )
         except Exception:
-            logger.warning("Falha ao enviar e-mail de reset de senha para %s", email)
+            logger.warning(
+                "Falha ao enviar e-mail de reset de senha para %s", email
+            )
 
         return Response(
             {
@@ -582,14 +599,17 @@ class EmailVerificationSendView(APIView):
             send_mail(
                 subject="Confirme seu e-mail — Axiom",
                 message=f"Confirme seu e-mail em: {verification_url}",
-                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"),
+                from_email=getattr(
+                    settings, "DEFAULT_FROM_EMAIL", "noreply@axiom.app"
+                ),
                 recipient_list=[email],
                 html_message=html_message,
                 fail_silently=True,
             )
         except Exception:
             logger.warning(
-                "Falha ao enviar e-mail de verificação para user %s", request.user.id
+                "Falha ao enviar e-mail de verificação para user %s",
+                request.user.id,
             )
 
         return Response(
@@ -649,7 +669,12 @@ class EmailVerificationConfirmView(APIView):
         elapsed = timezone.now() - sent_at
         if elapsed.total_seconds() > 172800:  # 48 horas
             return Response(
-                {"error": "Token expirado. Solicite um novo e-mail de verificação."},
+                {
+                    "error": (
+                        "Token expirado. Solicite um novo"
+                        " e-mail de verificação."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -730,7 +755,8 @@ class TwoFactorSetupView(APIView):
     """
     GET /api/v1/users/2fa/setup/
 
-    Gera (ou retorna existente pendente) um secret TOTP e retorna QR code em base64.
+    Gera (ou retorna existente pendente) um secret TOTP
+    e retorna QR code em base64.
     Só funciona se 2FA ainda não estiver ativo para o usuário.
     """
 
@@ -806,7 +832,12 @@ class TwoFactorActivateView(APIView):
             device = user.totp_device  # type: ignore[attr-defined]
         except TOTPDevice.DoesNotExist:
             return Response(
-                {"error": "Nenhum setup de 2FA pendente. Acesse /2fa/setup/ primeiro."},
+                {
+                    "error": (
+                        "Nenhum setup de 2FA pendente."
+                        " Acesse /2fa/setup/ primeiro."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -826,7 +857,9 @@ class TwoFactorActivateView(APIView):
         device.is_active = True
         device.backup_codes = hashed_codes
         device.activated_at = timezone.now()
-        device.save(update_fields=["is_active", "backup_codes", "activated_at"])
+        device.save(
+            update_fields=["is_active", "backup_codes", "activated_at"]
+        )
 
         return Response(
             {
@@ -949,7 +982,8 @@ class TwoFactorDisableView(APIView):
 
         TOTPDevice.objects.filter(user=user).delete()
         return Response(
-            {"message": "2FA desativado com sucesso."}, status=status.HTTP_200_OK
+            {"message": "2FA desativado com sucesso."},
+            status=status.HTTP_200_OK,
         )
 
 

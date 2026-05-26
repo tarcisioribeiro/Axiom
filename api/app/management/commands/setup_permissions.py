@@ -20,12 +20,18 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(self.style.SUCCESS('Created "members" group'))
         else:
-            self.stdout.write(self.style.WARNING('Group "members" already exists'))
+            self.stdout.write(
+                self.style.WARNING('Group "members" already exists')
+            )
 
         # Define all the models that members should have full access to
         app_models = {
             "accounts": ["account"],
-            "expenses": ["expense", "fixedexpense", "fixedexpensegenerationlog"],
+            "expenses": [
+                "expense",
+                "fixedexpense",
+                "fixedexpensegenerationlog",
+            ],
             "revenues": ["revenue"],
             "credit_cards": [
                 "creditcard",
@@ -112,7 +118,8 @@ class Command(BaseCommand):
                 except ContentType.DoesNotExist:
                     self.stdout.write(
                         self.style.ERROR(
-                            f"✗ ContentType not found: " f"{app_label}.{model_name}"
+                            f"✗ ContentType not found: "
+                            f"{app_label}.{model_name}"
                         )
                     )
 
@@ -149,7 +156,9 @@ class Command(BaseCommand):
 
         if users_added == 0:
             self.stdout.write(
-                self.style.SUCCESS('✓ All users are already in the "members" group')
+                self.style.SUCCESS(
+                    '✓ All users are already in the "members" group'
+                )
             )
         else:
             self.stdout.write(

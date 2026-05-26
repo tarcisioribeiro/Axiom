@@ -14,14 +14,18 @@ from django.http import HttpResponse, StreamingHttpResponse
 
 from reportlab.lib import colors  # type: ignore
 from reportlab.lib.pagesizes import A4, landscape  # type: ignore
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet  # type: ignore
+from reportlab.lib.styles import (  # type: ignore
+    ParagraphStyle,
+    getSampleStyleSheet,
+)
 from reportlab.lib.units import mm  # type: ignore
 from reportlab.platypus import Paragraph  # type: ignore
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle
 
 
 class _Echo:
-    """Pseudo-buffer whose write() returns the value so csv.writer can stream."""
+    """Pseudo-buffer whose write() returns the value so csv.writer
+    can stream."""
 
     def write(self, value: str) -> str:
         return value
@@ -33,7 +37,8 @@ def build_csv_response(
     filename: str,
 ) -> StreamingHttpResponse:
     """
-    Build a StreamingHttpResponse with CSV content, UTF-8 BOM for Excel compatibility.
+    Build a StreamingHttpResponse with CSV content, UTF-8 BOM for
+    Excel compatibility.
 
     Accepts any iterable for ``rows`` — including generators — so callers can
     pass a queryset iterator without loading all records into memory at once.
@@ -97,7 +102,8 @@ def build_pdf_response(
     meta : dict
         Extra metadata shown in the header:
         - ``user_name``: authenticated user's display name
-        - ``period``: human-readable period string (e.g. "01/01/2026 – 31/01/2026")
+        - ``period``: human-readable period string
+          (e.g. "01/01/2026 – 31/01/2026")
         - ``total``: formatted total amount
     filename : str
         Suggested download filename (without extension; .pdf appended).
@@ -160,7 +166,9 @@ def build_pdf_response(
     )
 
     def _cell(text: Any, style: ParagraphStyle) -> Paragraph:
-        return Paragraph(str(text) if not isinstance(text, str) else text, style)
+        return Paragraph(
+            str(text) if not isinstance(text, str) else text, style
+        )
 
     story: List[Any] = []
 
@@ -199,7 +207,13 @@ def build_pdf_response(
         last = row_count - 1
         totals_styles = [
             ("BACKGROUND", (0, last), (-1, last), colors.HexColor("#e8f4fd")),
-            ("LINEABOVE", (0, last), (-1, last), 1, colors.HexColor("#4a90d9")),
+            (
+                "LINEABOVE",
+                (0, last),
+                (-1, last),
+                1,
+                colors.HexColor("#4a90d9"),
+            ),
         ]
 
     tbl.setStyle(

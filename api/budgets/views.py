@@ -30,12 +30,14 @@ class BudgetListCreateView(BaseListCreateView):
 
     def get_queryset(self) -> QuerySet[Budget]:
         user = cast(User, self.request.user)
-        return Budget.objects.filter(created_by=user, is_deleted=False).select_related(
-            "member"
-        )
+        return Budget.objects.filter(
+            created_by=user, is_deleted=False
+        ).select_related("member")
 
     def perform_create(self, serializer: Any) -> None:
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class BudgetDetailView(BaseRetrieveUpdateDestroyView):
@@ -43,9 +45,9 @@ class BudgetDetailView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self) -> QuerySet[Budget]:
         user = cast(User, self.request.user)
-        return Budget.objects.filter(created_by=user, is_deleted=False).select_related(
-            "member"
-        )
+        return Budget.objects.filter(
+            created_by=user, is_deleted=False
+        ).select_related("member")
 
     def perform_update(self, serializer: Any) -> None:
         serializer.save(updated_by=self.request.user)
@@ -84,7 +86,9 @@ class BudgetStatusView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        budgets = Budget.objects.filter(month=month, year=year).select_related("member")
+        budgets = Budget.objects.filter(month=month, year=year).select_related(
+            "member"
+        )
 
         # Aggregate actual expenses by category for the given month/year
         expense_totals = (
@@ -98,7 +102,8 @@ class BudgetStatusView(APIView):
         )
         expense_map: dict = {e["category"]: e["total"] for e in expense_totals}
 
-        # Include credit card bill interest/fees in "bills and services" category
+        # Include credit card bill interest/fees in "bills and services"
+        # category
         bill_charges = CreditCardBill.objects.filter(
             payment_date__month=month,
             payment_date__year=year,
@@ -112,17 +117,23 @@ class BudgetStatusView(APIView):
             bill_charges["total_late_fee"] or Decimal("0")
         )
         if extra_charges > 0:
-            existing = expense_map.get(BILLS_AND_SERVICES_CATEGORY, Decimal("0"))
+            existing = expense_map.get(
+                BILLS_AND_SERVICES_CATEGORY, Decimal("0")
+            )
             expense_map[BILLS_AND_SERVICES_CATEGORY] = existing + extra_charges
 
         result = []
         for budget in budgets:
             actual_spent = expense_map.get(budget.category, Decimal("0.00"))
             rollover = (
-                budget.rollover_amount if budget.rollover_enabled else Decimal("0")
+                budget.rollover_amount
+                if budget.rollover_enabled
+                else Decimal("0")
             )
             limit = budget.limit_amount + rollover
-            percentage = float(actual_spent / limit * 100) if limit > 0 else 0.0
+            percentage = (
+                float(actual_spent / limit * 100) if limit > 0 else 0.0
+            )
 
             if percentage >= 100:
                 budget_status = "exceeded"
@@ -142,7 +153,9 @@ class BudgetStatusView(APIView):
                     "percentage": round(percentage, 2),
                     "status": budget_status,
                     "member": budget.member_id,
-                    "member_name": budget.member.name if budget.member else None,
+                    "member_name": (
+                        budget.member.name if budget.member else None
+                    ),
                     "month": budget.month,
                     "year": budget.year,
                 }
@@ -218,7 +231,8 @@ class BudgetHistoryView(APIView):
             .annotate(total=Sum("value"))
         )
         expense_map = {
-            (e["date__month"], e["date__year"]): e["total"] for e in expense_totals
+            (e["date__month"], e["date__year"]): e["total"]
+            for e in expense_totals
         }
 
         result = []
@@ -251,7 +265,8 @@ class BudgetSuggestView(APIView):
     para sugerir limites de orçamento por categoria.
 
     Body (opcional): { "include_llm_reasoning": true }
-    Response: lista de sugestões por categoria com valor sugerido e justificativa.
+    Response: lista de sugestões por categoria com valor sugerido e
+    justificativa.
     """
 
     permission_classes = (IsAuthenticated,)
@@ -314,13 +329,18 @@ class BudgetSuggestView(APIView):
                 for s in suggestions_base
             )
             prompt = (
-                "Você é um assistente financeiro pessoal. Com base nos dados abaixo,"
-                " forneça em 1 frase curta (máx. 20 palavras) a justificativa para cada"
-                " sugestão de orçamento. Responda em JSON: lista de objetos com"
+                "Você é um assistente financeiro pessoal."
+                " Com base nos dados abaixo,"
+                " forneça em 1 frase curta (máx. 20 palavras)"
+                " a justificativa para cada"
+                " sugestão de orçamento. Responda em JSON:"
+                " lista de objetos com"
                 ' {"category": str, "reasoning": str}.\n\n'
                 f"Dados dos últimos 3 meses:\n{lines}"
             )
-            llm_response = LLMClient.chat([{"role": "user", "content": prompt}])
+            llm_response = LLMClient.chat(
+                [{"role": "user", "content": prompt}]
+            )
 
             import json as _json
 

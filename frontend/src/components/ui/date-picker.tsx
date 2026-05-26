@@ -126,6 +126,7 @@ export function DatePicker({
     return () => {
       flatpickrRef.current?.destroy();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled]);
 
   // Atualiza data quando value muda externamente

@@ -118,8 +118,10 @@ def update_loan_status(loan):
 
     Regras:
     - 'paid': payed_value >= value (totalmente pago)
-    - 'overdue': payed_value < value AND due_date exists AND today > due_date (atrasado)
-    - 'active': payed_value < value AND (no due_date OR today <= due_date) (ativo)
+    - 'overdue': payed_value < value AND due_date exists
+      AND today > due_date (atrasado)
+    - 'active': payed_value < value AND (no due_date
+      OR today <= due_date) (ativo)
 
     Parameters
     ----------
@@ -173,9 +175,12 @@ def update_loan_on_expense_save(sender, instance, created, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
-        # Recalcular payed_value baseado em todas as despesas/receitas vinculadas
+        # Recalcular payed_value baseado em todas as despesas/receitas
+        # vinculadas
         update_loan_payed_value(loan)
 
         # Atualizar status
@@ -211,10 +216,14 @@ def update_loan_on_expense_delete(sender, instance, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
-        # Recalcular payed_value baseado em todas as despesas/receitas vinculadas
-        # (a despesa atual ainda não foi deletada do banco, mas será após este signal)
+        # Recalcular payed_value baseado em todas as despesas/receitas
+        # vinculadas
+        # (a despesa atual ainda não foi deletada do banco, mas será após este
+        # signal)
         update_loan_payed_value(loan)
 
         # Atualizar status
@@ -246,7 +255,9 @@ def recalculate_loan_after_expense_delete(sender, instance, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
         # Recalcular payed_value (agora a despesa já foi deletada)
         update_loan_payed_value(loan)
@@ -286,9 +297,12 @@ def update_loan_on_revenue_save(sender, instance, created, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
-        # Recalcular payed_value baseado em todas as despesas/receitas vinculadas
+        # Recalcular payed_value baseado em todas as despesas/receitas
+        # vinculadas
         update_loan_payed_value(loan)
 
         # Atualizar status
@@ -324,9 +338,12 @@ def update_loan_on_revenue_delete(sender, instance, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
-        # Recalcular payed_value baseado em todas as despesas/receitas vinculadas
+        # Recalcular payed_value baseado em todas as despesas/receitas
+        # vinculadas
         update_loan_payed_value(loan)
 
         # Atualizar status
@@ -358,7 +375,9 @@ def recalculate_loan_after_revenue_delete(sender, instance, **kwargs):
     from loans.models import Loan
 
     try:
-        loan = Loan.objects.select_for_update().get(pk=instance.related_loan.pk)
+        loan = Loan.objects.select_for_update().get(
+            pk=instance.related_loan.pk
+        )
 
         # Recalcular payed_value (agora a receita já foi deletada)
         update_loan_payed_value(loan)

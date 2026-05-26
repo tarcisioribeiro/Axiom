@@ -65,7 +65,9 @@ def _pgvector_search(
 def _python_search(
     query_embedding: list[float], user: User, domain: str, top_k: int
 ) -> list[dict[str, Any]]:
-    """Busca por similaridade de cosseno em Python — usado em testes (SQLite)."""
+    """
+    Busca por similaridade de cosseno em Python — usado em testes (SQLite).
+    """
     from agents.models import AgentEmbedding
 
     docs = AgentEmbedding.objects.filter(
@@ -97,7 +99,9 @@ def _python_search(
 def _fallback_keyword_search(
     query: str, user: User, domain: str, top_k: int
 ) -> list[dict[str, Any]]:
-    """Busca por palavras-chave quando o LLM de embeddings está indisponível."""
+    """
+    Busca por palavras-chave quando o LLM de embeddings está indisponível.
+    """
     from django.db.models import Q
 
     from agents.models import AgentEmbedding
@@ -111,7 +115,9 @@ def _fallback_keyword_search(
         q_filter |= Q(content__icontains=word)
 
     docs = (
-        AgentEmbedding.objects.filter(user=user, domain=domain, is_deleted=False)
+        AgentEmbedding.objects.filter(
+            user=user, domain=domain, is_deleted=False
+        )
         .filter(q_filter)
         .values("content", "source_title", "source_type")[:top_k]
     )

@@ -3,7 +3,10 @@ from celery import shared_task
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def generate_notifications_for_member(self, member_id: int) -> dict:
-    """Gera notificações para um único membro (task individual para retry granular)."""
+    """
+    Gera notificações para um único membro (task individual para retry
+    granular).
+    """
     try:
         from members.models import Member
         from notifications.views import _generate_notifications
@@ -17,7 +20,9 @@ def generate_notifications_for_member(self, member_id: int) -> dict:
 
 @shared_task
 def generate_all_notifications() -> dict:
-    """Dispara generate_notifications_for_member para todos os membros ativos."""
+    """
+    Dispara generate_notifications_for_member para todos os membros ativos.
+    """
     from members.models import Member
 
     member_ids = list(

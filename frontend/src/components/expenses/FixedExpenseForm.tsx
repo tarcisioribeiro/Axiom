@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import { CalendarDays, CreditCard, Store, Tag, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';

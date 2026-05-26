@@ -27,7 +27,9 @@ class BasePlanningImprovementsTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Imp User",
             document_hash="i" * 64,
@@ -134,7 +136,9 @@ class RoutineTaskPriorityTest(BasePlanningImprovementsTestCase):
             "allowed_skips_per_month": 2,
             "owner": self.member.id,
         }
-        response = self.client.post("/api/v1/personal-planning/routine-tasks/", data)
+        response = self.client.post(
+            "/api/v1/personal-planning/routine-tasks/", data
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_routine_task_default_priority_is_medium(self):
@@ -173,9 +177,13 @@ class TaskInstancePrioritySnapshotTest(BasePlanningImprovementsTestCase):
             priority="high",
             owner=self.member,
         )
-        from personal_planning.services.instance_generator import InstanceGenerator
+        from personal_planning.services.instance_generator import (
+            InstanceGenerator,
+        )
 
-        instances = InstanceGenerator.generate_for_date(self.member, now().date())
+        instances = InstanceGenerator.generate_for_date(
+            self.member, now().date()
+        )
         task_instances = [i for i in instances if i.template_id == task.id]
         self.assertTrue(len(task_instances) > 0)
         self.assertEqual(task_instances[0].priority, "high")
@@ -285,7 +293,9 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_restart_sets_progress_to_zero(self):
-        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
         self.goal.refresh_from_db()
         self.assertEqual(self.goal.current_value, 0)
         self.assertEqual(self.goal.days_active, 0)
@@ -293,14 +303,18 @@ class GoalRestartViewTest(BasePlanningImprovementsTestCase):
     def test_restart_sets_status_active(self):
         self.goal.status = "failed"
         self.goal.save()
-        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
         self.goal.refresh_from_db()
         self.assertEqual(self.goal.status, "active")
 
     def test_restart_clears_end_date(self):
         self.goal.end_date = now().date()
         self.goal.save()
-        self.client.post(f"/api/v1/personal-planning/goals/{self.goal.id}/restart/")
+        self.client.post(
+            f"/api/v1/personal-planning/goals/{self.goal.id}/restart/"
+        )
         self.goal.refresh_from_db()
         self.assertIsNone(self.goal.end_date)
 
@@ -352,11 +366,15 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
             start_date=now().date() - timedelta(days=15),
             owner=self.member,
         )
+        self.failure_url = (
+            f"/api/v1/personal-planning/goals/"
+            f"{self.goal.id}/register-failure/"
+        )
 
     def test_register_failure_returns_200(self):
         failure_date = (now().date() - timedelta(days=5)).isoformat()
         response = self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": failure_date},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -364,7 +382,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
     def test_register_failure_sets_start_date(self):
         failure_date = now().date() - timedelta(days=5)
         self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": failure_date.isoformat()},
         )
         self.goal.refresh_from_db()
@@ -375,7 +393,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         self.goal.save()
         failure_date = (now().date() - timedelta(days=3)).isoformat()
         self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": failure_date},
         )
         self.goal.refresh_from_db()
@@ -384,21 +402,21 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
     def test_register_failure_rejects_future_date(self):
         future_date = (now().date() + timedelta(days=1)).isoformat()
         response = self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": future_date},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_failure_requires_failure_date(self):
         response = self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_register_failure_rejects_invalid_date_format(self):
         response = self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": "31/12/2025"},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -409,7 +427,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
         self.goal.save()
         failure_date = (now().date() - timedelta(days=2)).isoformat()
         self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": failure_date},
         )
         self.goal.refresh_from_db()
@@ -419,7 +437,7 @@ class GoalRegisterFailureViewTest(BasePlanningImprovementsTestCase):
     def test_register_failure_requires_authentication(self):
         self.client.credentials()
         response = self.client.post(
-            f"/api/v1/personal-planning/goals/{self.goal.id}/register-failure/",
+            self.failure_url,
             {"failure_date": now().date().isoformat()},
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
   CalendarDays,
   CheckCircle2,
@@ -112,7 +113,7 @@ export function MealLogForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header */}
-      <div className="flex items-center gap-md rounded-xl bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
+      <div className="flex items-center gap-md rounded-lg bg-category-nutrition/10 px-md py-sm ring-1 ring-category-nutrition/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-nutrition/20">
           <CheckCircle2 className="h-5 w-5 text-category-nutrition" />
         </div>

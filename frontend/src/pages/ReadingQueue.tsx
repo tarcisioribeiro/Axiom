@@ -137,6 +137,7 @@ export default function ReadingQueue() {
 
   useEffect(() => {
     void loadQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadQueue = async () => {

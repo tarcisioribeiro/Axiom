@@ -2,11 +2,12 @@
 Integration tests for auto-embedding via signal handlers.
 
 Strategy:
-- The service silences all exceptions, so AgentEmbedding table absence in SQLite
-  is not a problem for signals tests. We mock the two external calls instead:
-  LLMClient.embed and AgentEmbedding.objects.update_or_create / filter.
-- captureOnCommitCallbacks(execute=True) fires on_commit callbacks synchronously
-  inside the test transaction so we can assert on mock calls.
+- The service silences all exceptions, so AgentEmbedding table absence in
+  SQLite is not a problem for signals tests. We mock the two external calls
+  instead: LLMClient.embed and AgentEmbedding.objects.update_or_create /
+  filter.
+- captureOnCommitCallbacks(execute=True) fires on_commit callbacks
+  synchronously inside the test transaction so we can assert on mock calls.
 """
 
 from decimal import Decimal
@@ -30,7 +31,9 @@ class EmbeddingServiceDirectTest(TestCase):
     @patch("agents.models.AgentEmbedding.objects.update_or_create")
     @patch("agents.core.llm_client.LLMClient.embed")
     def test_generate_creates_embedding(self, mock_embed, mock_upsert):
-        from agents.services.embedding_service import generate_embedding_for_instance
+        from agents.services.embedding_service import (
+            generate_embedding_for_instance,
+        )
 
         mock_embed.return_value = [0.1] * 768
         mock_upsert.return_value = (MagicMock(), True)
@@ -49,7 +52,9 @@ class EmbeddingServiceDirectTest(TestCase):
             source_title="food and drink — 2026-04-30",
         )
 
-        mock_embed.assert_called_once_with("Despesa de R$ 50.00 em food and drink")
+        mock_embed.assert_called_once_with(
+            "Despesa de R$ 50.00 em food and drink"
+        )
         mock_upsert.assert_called_once()
         _, kwargs = mock_upsert.call_args
         self.assertEqual(kwargs["defaults"]["domain"], "finance")
@@ -58,7 +63,9 @@ class EmbeddingServiceDirectTest(TestCase):
     @patch("agents.models.AgentEmbedding.objects.filter")
     @patch("agents.core.llm_client.LLMClient.embed")
     def test_soft_delete_calls_delete_embedding(self, mock_embed, mock_filter):
-        from agents.services.embedding_service import generate_embedding_for_instance
+        from agents.services.embedding_service import (
+            generate_embedding_for_instance,
+        )
 
         mock_qs = MagicMock()
         mock_filter.return_value = mock_qs
@@ -81,7 +88,9 @@ class EmbeddingServiceDirectTest(TestCase):
 
     @patch("agents.core.llm_client.LLMClient.embed")
     def test_no_user_skips_silently(self, mock_embed):
-        from agents.services.embedding_service import generate_embedding_for_instance
+        from agents.services.embedding_service import (
+            generate_embedding_for_instance,
+        )
 
         instance = MagicMock()
         instance.is_deleted = False
@@ -99,7 +108,9 @@ class EmbeddingServiceDirectTest(TestCase):
     @patch("agents.models.AgentEmbedding.objects.update_or_create")
     @patch("agents.core.llm_client.LLMClient.embed")
     def test_empty_embed_result_skips_upsert(self, mock_embed, mock_upsert):
-        from agents.services.embedding_service import generate_embedding_for_instance
+        from agents.services.embedding_service import (
+            generate_embedding_for_instance,
+        )
 
         mock_embed.return_value = []
 
@@ -120,7 +131,9 @@ class EmbeddingServiceDirectTest(TestCase):
     @patch("agents.models.AgentEmbedding.objects.update_or_create")
     @patch("agents.core.llm_client.LLMClient.embed")
     def test_exception_in_embed_is_silenced(self, mock_embed, mock_upsert):
-        from agents.services.embedding_service import generate_embedding_for_instance
+        from agents.services.embedding_service import (
+            generate_embedding_for_instance,
+        )
 
         mock_embed.side_effect = RuntimeError("Ollama down")
 

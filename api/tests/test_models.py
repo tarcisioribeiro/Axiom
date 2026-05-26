@@ -46,7 +46,8 @@ class AccountModelTest(TestCase):
     def test_unique_account_name(self):
         """Testa que o nome da conta não tem constraint de unicidade"""
         Account.objects.create(**self.account_data)
-        # account_name não tem unique=True no modelo, portanto duplicatas são permitidas
+        # account_name não tem unique=True no modelo, portanto duplicatas são
+        # permitidas
         Account.objects.create(**self.account_data)
         self.assertEqual(Account.objects.filter(account_name="NUB").count(), 2)
 
@@ -90,7 +91,10 @@ class ExpenseModelTest(TestCase):
         self.assertEqual(str(expense), expected_str)
 
     def test_expense_negative_value(self):
-        """Testa que o modelo Expense não valida valores negativos (sem constraint)"""
+        """
+        Testa que o modelo Expense não valida valores negativos (sem
+        constraint)
+        """
         self.expense_data["value"] = Decimal("-50.00")
         expense = Expense(**self.expense_data)
         # Expense model não tem validação de valor negativo — full_clean aceita
@@ -121,11 +125,15 @@ class CreditCardModelTest(TestCase):
             "associated_account": self.account,
         }
 
-    @patch.dict(os.environ, {"ENCRYPTION_KEY": os.getenv("ENCRYPTION_KEY", "")})
+    @patch.dict(
+        os.environ, {"ENCRYPTION_KEY": os.getenv("ENCRYPTION_KEY", "")}
+    )
     def test_create_credit_card_success(self):
         """Testa criação de cartão de crédito"""
         # Mock da criptografia para teste
-        with patch("app.encryption.FieldEncryption.encrypt_data") as mock_encrypt:
+        with patch(
+            "app.encryption.FieldEncryption.encrypt_data"
+        ) as mock_encrypt:
             mock_encrypt.return_value = "encrypted_cvv"
 
             # security_code deve ser definido antes de save()
@@ -140,12 +148,16 @@ class CreditCardModelTest(TestCase):
 
     def test_credit_card_validation_date_past(self):
         """Testa validação de data de validade no passado"""
-        self.credit_card_data["validation_date"] = date.today() - timedelta(days=1)
+        self.credit_card_data["validation_date"] = date.today() - timedelta(
+            days=1
+        )
         card = CreditCard(**self.credit_card_data)
         with self.assertRaises(ValidationError):
             card.clean()
 
-    @patch.dict(os.environ, {"ENCRYPTION_KEY": os.getenv("ENCRYPTION_KEY", "")})
+    @patch.dict(
+        os.environ, {"ENCRYPTION_KEY": os.getenv("ENCRYPTION_KEY", "")}
+    )
     def test_security_code_validation(self):
         """Testa validação do CVV"""
         card = CreditCard(**self.credit_card_data)

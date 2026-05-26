@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -118,6 +119,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         setValue('member', firstCard.owner);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purchase, creditCards.length]);
 
   // Atualizar membro quando cartão muda
@@ -130,6 +132,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         setValue('member', selectedCard.owner);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedCard]);
 
   // Carregar dados da compra em edição

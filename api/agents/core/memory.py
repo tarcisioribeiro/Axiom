@@ -2,11 +2,14 @@
 Gerenciamento de memória conversacional por usuário/sessão via Redis.
 
 Correções aplicadas:
-- Role "agent" → "assistant" para compatibilidade com OpenAI-compatible APIs (Groq)
+- Role "agent" → "assistant" para compatibilidade com
+  OpenAI-compatible APIs (Groq)
 - TTL renovado a cada acesso (touch) para manter sessões ativas corretamente
-- Append com get-then-set permanece (Redis não tem list append atômico com TTL),
+- Append com get-then-set permanece (Redis não tem list append
+  atômico com TTL),
   mas a janela garante que perdas em race conditions sejam somente 1 turno
-- format_for_prompt mantido como fallback legado (não utilizado pelo BaseAgent novo)
+- format_for_prompt mantido como fallback legado (não utilizado
+  pelo BaseAgent novo)
 """
 
 import json
@@ -43,11 +46,14 @@ class ConversationMemory:
             return []
 
     @classmethod
-    def append(cls, user_id: int, session_id: str, query: str, answer: str) -> None:
+    def append(
+        cls, user_id: int, session_id: str, query: str, answer: str
+    ) -> None:
         """
         Adiciona um turno ao histórico.
 
-        Role 'assistant' (não 'agent') para compatibilidade com todos os providers
+        Role 'assistant' (não 'agent') para compatibilidade com
+        todos os providers
         OpenAI-compatible (Groq, OpenAI, Anthropic via Messages API).
         """
         key = cls._key(user_id, session_id)

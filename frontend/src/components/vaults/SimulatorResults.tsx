@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {

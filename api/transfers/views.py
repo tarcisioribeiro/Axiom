@@ -47,9 +47,9 @@ class TransferCreateListView(BaseListCreateView):
     serializer_class = TransferSerializer
 
     def get_queryset(self):
-        return Transfer.objects.filter(created_by=self.request.user).select_related(
-            "origin_account", "destiny_account"
-        )
+        return Transfer.objects.filter(
+            created_by=self.request.user
+        ).select_related("origin_account", "destiny_account")
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -82,9 +82,9 @@ class TransferRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = TransferSerializer
 
     def get_queryset(self):
-        return Transfer.objects.filter(created_by=self.request.user).select_related(
-            "origin_account", "destiny_account"
-        )
+        return Transfer.objects.filter(
+            created_by=self.request.user
+        ).select_related("origin_account", "destiny_account")
 
     def perform_update(self, serializer):
         with transaction.atomic():
@@ -115,11 +115,15 @@ class FixedTransferListCreateView(BaseListCreateView):
         return FixedTransferSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class FixedTransferDetailView(BaseRetrieveUpdateDestroyView):
-    queryset = FixedTransfer.objects.select_related("origin_account", "destiny_account")
+    queryset = FixedTransfer.objects.select_related(
+        "origin_account", "destiny_account"
+    )
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -149,4 +153,6 @@ class BulkGenerateFixedTransfersView(APIView):
         )
 
         response_serializer = BulkGenerateTransfersResponseSerializer(result)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            response_serializer.data, status=status.HTTP_201_CREATED
+        )

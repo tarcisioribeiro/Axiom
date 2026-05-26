@@ -2,7 +2,8 @@
 Compressão de contexto financeiro antes de enviar ao LLM.
 
 Reduz o número de linhas injetadas no prompt priorizando:
-1. Itens cuja categoria/descrição é mencionada na query (relevantes para a pergunta)
+1. Itens cuja categoria/descrição é mencionada na query
+   (relevantes para a pergunta)
 2. Itens com maior valor absoluto (mais impactantes financeiramente)
 3. Truncamento por MAX_ROWS para cada coleção
 
@@ -71,11 +72,15 @@ def compress(
             for b in budgets
             if b.get("percentage", 0) >= 80 and not b.get("overbudget")
         ]
-        rest = [b for b in budgets if b not in overbudget and b not in critical]
+        rest = [
+            b for b in budgets if b not in overbudget and b not in critical
+        ]
         result["budgets"] = (overbudget + critical + rest)[:max_rows]
 
     # Despesas fixas futuras: limitar a 5 mais próximas
-    if "fixed_upcoming" in result and isinstance(result["fixed_upcoming"], list):
+    if "fixed_upcoming" in result and isinstance(
+        result["fixed_upcoming"], list
+    ):
         result["fixed_upcoming"] = result["fixed_upcoming"][:5]
 
     # Projections: limitar a 5

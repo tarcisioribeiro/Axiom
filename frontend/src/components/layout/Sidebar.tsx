@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, X, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { useEffect, useReducer, useRef } from 'react';

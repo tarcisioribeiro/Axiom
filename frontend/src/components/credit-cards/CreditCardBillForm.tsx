@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -119,6 +120,7 @@ export const CreditCardBillForm: React.FC<CreditCardBillFormProps> = ({
     } else if (creditCards.length > 0) {
       setValue('credit_card', creditCards[0].id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bill, creditCards, setValue, reset]);
 
   const handleFormSubmit = async (data: CreditCardBillFormData) => {

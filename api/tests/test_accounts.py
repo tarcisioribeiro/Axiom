@@ -22,7 +22,8 @@ from revenues.models import Revenue
 
 
 def _make_account(name="TestAcc", balance=Decimal("0.00")):
-    """Create an Account bypassing the post_save signal (no initial revenue)."""
+    """Create an Account bypassing the post_save signal
+    (no initial revenue)."""
     return Account.objects.create(
         account_name=name,
         institution_name="NUB",

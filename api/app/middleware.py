@@ -59,14 +59,17 @@ class AuditLoggingMiddleware(MiddlewareMixin):
     ]
 
     def process_request(self, request: HttpRequest) -> None:
-        """Store request start time and body for performance tracking and logging"""
+        """Store request start time and body for performance tracking
+        and logging"""
         request._audit_start_time = now()  # type: ignore[attr-defined]
 
         # Store request body for later use in logging
         # This is necessary because request.body can only be read once
         if request.method in ["POST", "PUT", "PATCH"]:
             try:
-                request._cached_body = request.body  # type: ignore[attr-defined]
+                request._cached_body = (  # type: ignore[attr-defined]
+                    request.body
+                )
             except Exception:
                 request._cached_body = None  # type: ignore[attr-defined]
 
@@ -81,11 +84,15 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         if any(request.path.startswith(path) for path in self.EXCLUDED_PATHS):
             return response
 
-        # Log modification requests, errors, and GET requests to sensitive paths
+        # Log modification requests, errors, and GET requests to
+        # sensitive paths
         if (
             request.method in ["POST", "PUT", "PATCH", "DELETE"]
             or response.status_code >= 400
-            or (request.method == "GET" and self._is_sensitive_path(request.path))
+            or (
+                request.method == "GET"
+                and self._is_sensitive_path(request.path)
+            )
         ):
             self._log_request(request, response)
 
@@ -95,7 +102,9 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         """Check if the request path matches a sensitive endpoint."""
         return any(path.startswith(p) for p in self.SENSITIVE_PATHS)
 
-    def _log_request(self, request: HttpRequest, response: HttpResponse) -> None:
+    def _log_request(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> None:
         """Create audit log entry"""
 
         try:
@@ -162,7 +171,8 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         return {"authenticated": False}
 
     def _get_client_ip(self, request: HttpRequest) -> str:
-        """Get client IP address, respecting NUM_PROXIES to prevent spoofing."""
+        """Get client IP address, respecting NUM_PROXIES to prevent
+        spoofing."""
         return _get_trusted_client_ip(request)
 
     def _get_safe_request_data(self, request: HttpRequest) -> dict:
@@ -198,7 +208,10 @@ class AuditLoggingMiddleware(MiddlewareMixin):
         if isinstance(data, dict):
             sanitized = {}
             for key, value in data.items():
-                if any(sensitive in key.lower() for sensitive in self.SENSITIVE_FIELDS):
+                if any(
+                    sensitive in key.lower()
+                    for sensitive in self.SENSITIVE_FIELDS
+                ):
                     sanitized[key] = "[REDACTED]"
                 else:
                     sanitized[key] = self._sanitize_data(value)
@@ -236,16 +249,19 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
             # Referrer policy
             response["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-            # HSTS is handled by Django's SecurityMiddleware via SECURE_HSTS_SECONDS.
+            # HSTS is handled by Django's SecurityMiddleware via
+            # SECURE_HSTS_SECONDS.
             # Content Security Policy (CSP)
-            # A per-request nonce is generated in process_request and stored as
-            # request._csp_nonce. Django admin templates can reference it via
-            # {{ request._csp_nonce }} to whitelist specific <style> or <script>
-            # blocks without resorting to 'unsafe-inline'.
-            # Note: 'unsafe-inline' is intentionally absent from style-src.
-            # React inline style={} props are JavaScript DOM operations (not HTML
-            # attributes) and are not blocked by style-src. Framer Motion v11+
-            # uses WAAPI and does not inject <style> tags for standard animations.
+            # A per-request nonce is generated in process_request and
+            # stored as request._csp_nonce. Django admin templates can
+            # reference it via {{ request._csp_nonce }} to whitelist
+            # specific <style> or <script> blocks without resorting to
+            # 'unsafe-inline'.
+            # Note: 'unsafe-inline' is intentionally absent from
+            # style-src. React inline style={} props are JavaScript DOM
+            # operations (not HTML attributes) and are not blocked by
+            # style-src. Framer Motion v11+ uses WAAPI and does not
+            # inject <style> tags for standard animations.
             nonce = getattr(request, "_csp_nonce", "")
             nonce_src = f"'nonce-{nonce}'" if nonce else ""
             _cors_cfg = cfg("CORS_ALLOWED_ORIGINS")
@@ -254,7 +270,9 @@ class SecurityHeadersMiddleware(MiddlewareMixin):
                     o.strip() for o in _cors_cfg.split(",") if o.strip()
                 )
             else:
-                cors_origins = " ".join(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
+                cors_origins = " ".join(
+                    getattr(settings, "CORS_ALLOWED_ORIGINS", [])
+                )
             connect_src = f"'self' http://localhost:* {cors_origins}".strip()
             response["Content-Security-Policy"] = (
                 "default-src 'self'; "
@@ -305,7 +323,9 @@ class DecryptionCacheMiddleware(MiddlewareMixin):
         clear_decryption_cache()
         return response
 
-    def process_exception(self, request: HttpRequest, exception: Exception) -> None:
+    def process_exception(
+        self, request: HttpRequest, exception: Exception
+    ) -> None:
         """Limpa o cache mesmo em caso de excecao."""
         from app.encryption import clear_decryption_cache
 

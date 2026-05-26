@@ -17,7 +17,8 @@ Usage:
     # Restore vault from snapshot saved by --reset:
     docker-compose exec api python manage.py vault_recovery \
         --username tarcisio \
-        --restore-snapshot /app/media/vault_snapshots/vault_reset_tarcisio_20260224.json
+        --restore-snapshot \
+        /app/media/vault_snapshots/vault_reset_tarcisio_20260224.json
 
     # Force-restore even if DB already has a newer VaultConfig:
     docker-compose exec api python manage.py vault_recovery \
@@ -26,9 +27,11 @@ Usage:
         /app/media/vault_snapshots/vault_reset_tarcisio_20260224.json \
         --force-restore
 
-NOTE: After restoring a SQL backup that includes VaultConfig, you do NOT need to
-run --restore-snapshot. Just start the containers and unlock the vault via the UI
-or API (POST /api/v1/security/vault/unlock/) with the original master password.
+NOTE: After restoring a SQL backup that includes VaultConfig, you do
+NOT need to run --restore-snapshot. Just start the containers and
+unlock the vault via the UI or API
+(POST /api/v1/security/vault/unlock/) with the original master
+password.
 --restore-snapshot is only needed when the SQL backup was taken AFTER running
 --reset --confirm (which deletes VaultConfig from the database).
 """
@@ -60,8 +63,9 @@ class Command(BaseCommand):
             "--test-password",
             metavar="MASTER_PASSWORD",
             help=(
-                "Test whether the given master password can unlock the vault "
-                "(derives the key and attempts to decrypt the vault_key in DB)."
+                "Test whether the given master password can unlock"
+                " the vault (derives the key and attempts to decrypt"
+                " the vault_key in DB)."
             ),
         )
         parser.add_argument(
@@ -86,7 +90,8 @@ class Command(BaseCommand):
                 "Path to a snapshot JSON file (created by --reset) "
                 "to restore VaultConfig and undelete vault items. "
                 "Only use this when VaultConfig is missing from the DB. "
-                "If restoring from a full SQL backup, just unlock via the API instead."
+                "If restoring from a full SQL backup, just unlock"
+                " via the API instead."
             ),
         )
         parser.add_argument(
@@ -94,9 +99,10 @@ class Command(BaseCommand):
             action="store_true",
             default=False,
             help=(
-                "Allow --restore-snapshot to overwrite an existing VaultConfig "
-                "in the database. Without this flag, the command aborts if a "
-                "VaultConfig already exists (to avoid corrupting a good restore)."
+                "Allow --restore-snapshot to overwrite an existing"
+                " VaultConfig in the database. Without this flag,"
+                " the command aborts if a VaultConfig already exists"
+                " (to avoid corrupting a good restore)."
             ),
         )
 
@@ -125,12 +131,22 @@ class Command(BaseCommand):
         try:
             member = Member.objects.get(user=user)
         except Member.DoesNotExist:
-            raise CommandError(f"No active Member record found for user '{username}'.")
+            raise CommandError(
+                f"No active Member record found for user '{username}'."
+            )
 
-        models = (Password, StoredCreditCard, StoredBankAccount, Archive, VaultConfig)
+        models = (
+            Password,
+            StoredCreditCard,
+            StoredBankAccount,
+            Archive,
+            VaultConfig,
+        )
 
         if snapshot_file:
-            self._restore_snapshot(snapshot_file, member, user, force_restore, *models)
+            self._restore_snapshot(
+                snapshot_file, member, user, force_restore, *models
+            )
             return
 
         self._diagnose(username, user, member, test_password, *models)
@@ -161,16 +177,20 @@ class Command(BaseCommand):
         VaultConfig: type[Any],
     ) -> None:
         self.stdout.write(
-            f"\n=== Vault Diagnostics for '{username}'" f" (user_id={user.id}) ===\n"
+            f"\n=== Vault Diagnostics for '{username}'"
+            f" (user_id={user.id}) ===\n"
         )
         self.stdout.write(f"Member      : {member.name} (id={member.id})")
 
         try:
             vault_config = VaultConfig.objects.get(owner=member)
         except VaultConfig.DoesNotExist:
-            self.stdout.write(self.style.WARNING("VaultConfig : NOT CONFIGURED"))
             self.stdout.write(
-                "\nThe vault is not configured — " "the user can run setup freely.\n"
+                self.style.WARNING("VaultConfig : NOT CONFIGURED")
+            )
+            self.stdout.write(
+                "\nThe vault is not configured — "
+                "the user can run setup freely.\n"
             )
             return
 
@@ -217,7 +237,9 @@ class Command(BaseCommand):
             self.stdout.write("\nPassword test:")
             if not salt_ok:
                 self.stdout.write(
-                    self.style.ERROR("  SKIPPED — salt is corrupt, cannot derive key.")
+                    self.style.ERROR(
+                        "  SKIPPED — salt is corrupt, cannot derive key."
+                    )
                 )
             else:
                 self._test_password(vault_config, test_password)
@@ -234,8 +256,10 @@ class Command(BaseCommand):
                 self.style.WARNING(
                     f"\n[INFO] {_BACKUP_KEY_ENV} is set.\n"
                     "  A previous encryption key is available as a fallback.\n"
-                    "  If any app-level encrypted field fails to decrypt (e.g.\n"
-                    "  CredentialShareToken, Account, CreditCard, Member), run:\n"
+                    "  If any app-level encrypted field fails to"
+                    " decrypt (e.g.\n"
+                    "  CredentialShareToken, Account, CreditCard,"
+                    " Member), run:\n"
                     "    python manage.py rotate_encryption_key \\\n"
                     f"      --old-key ${{BACKUP_ENCRYPTION_KEY_PREVIOUS}} \\\n"
                     "      --new-key ${ENCRYPTION_KEY}\n"
@@ -252,13 +276,19 @@ class Command(BaseCommand):
         if not salt_ok or not vault_config.encrypted_vault_key:
             self.stdout.write(
                 self.style.WARNING(
-                    "\n[!] VaultConfig appears corrupt (bad salt or missing key).\n"
+                    "\n[!] VaultConfig appears corrupt"
+                    " (bad salt or missing key).\n"
                     "Recovery options:\n"
-                    "  A. Restore from a SQL backup that has a valid VaultConfig,\n"
-                    "     then unlock the vault via the API with the master password.\n"
-                    "  B. Force-reset (--reset --confirm): saves a snapshot first,\n"
-                    "     then soft-deletes vault items and removes VaultConfig.\n"
-                    "     Restore later with --restore-snapshot <file>.\n"
+                    "  A. Restore from a SQL backup that has a valid"
+                    " VaultConfig,\n"
+                    "     then unlock the vault via the API with the"
+                    " master password.\n"
+                    "  B. Force-reset (--reset --confirm): saves a"
+                    " snapshot first,\n"
+                    "     then soft-deletes vault items and removes"
+                    " VaultConfig.\n"
+                    "     Restore later with --restore-snapshot"
+                    " <file>.\n"
                 )
             )
 
@@ -277,7 +307,8 @@ class Command(BaseCommand):
                 self.style.SUCCESS(
                     "  PASS — master password is correct. "
                     "The vault can be unlocked via the API.\n"
-                    "  POST /api/v1/security/vault/unlock/ with your master password.\n"
+                    "  POST /api/v1/security/vault/unlock/"
+                    " with your master password.\n"
                 )
             )
         except DecryptionError:
@@ -285,16 +316,21 @@ class Command(BaseCommand):
                 self.style.ERROR(
                     "  FAIL — master password is INCORRECT.\n"
                     "  Possible causes:\n"
-                    "  1. The SQL backup or --restore-snapshot loaded a VaultConfig\n"
-                    "     that was created with a different master password.\n"
+                    "  1. The SQL backup or --restore-snapshot"
+                    " loaded a VaultConfig\n"
+                    "     that was created with a different master"
+                    " password.\n"
                     "  2. The master password was changed via"
                     " 'change-master-password'\n"
                     "     and you are entering the old one.\n"
-                    "  3. Typo, extra spaces, or encoding difference in the password.\n"
+                    "  3. Typo, extra spaces, or encoding difference"
+                    " in the password.\n"
                 )
             )
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"  ERROR — unexpected failure: {e}"))
+            self.stdout.write(
+                self.style.ERROR(f"  ERROR — unexpected failure: {e}")
+            )
 
     # ------------------------------------------------------------------ #
     # Snapshot                                                             #
@@ -320,10 +356,14 @@ class Command(BaseCommand):
             Password.objects.filter(owner=member).values_list("id", flat=True)
         )
         card_ids = list(
-            StoredCreditCard.objects.filter(owner=member).values_list("id", flat=True)
+            StoredCreditCard.objects.filter(owner=member).values_list(
+                "id", flat=True
+            )
         )
         acc_ids = list(
-            StoredBankAccount.objects.filter(owner=member).values_list("id", flat=True)
+            StoredBankAccount.objects.filter(owner=member).values_list(
+                "id", flat=True
+            )
         )
         arch_ids = list(
             Archive.objects.filter(owner=member).values_list("id", flat=True)
@@ -402,7 +442,9 @@ class Command(BaseCommand):
                 "Aborting reset to prevent unrecoverable data loss."
             )
 
-        self.stdout.write(self.style.SUCCESS(f"\n[SNAPSHOT] Saved to: {snapshot_path}"))
+        self.stdout.write(
+            self.style.SUCCESS(f"\n[SNAPSHOT] Saved to: {snapshot_path}")
+        )
 
         self.stdout.write(
             self.style.ERROR(
@@ -420,12 +462,12 @@ class Command(BaseCommand):
             deleted_pws = Password.objects.filter(owner=member).update(
                 is_deleted=True, deleted_at=now
             )
-            deleted_cards = StoredCreditCard.objects.filter(owner=member).update(
-                is_deleted=True, deleted_at=now
-            )
-            deleted_accs = StoredBankAccount.objects.filter(owner=member).update(
-                is_deleted=True, deleted_at=now
-            )
+            deleted_cards = StoredCreditCard.objects.filter(
+                owner=member
+            ).update(is_deleted=True, deleted_at=now)
+            deleted_accs = StoredBankAccount.objects.filter(
+                owner=member
+            ).update(is_deleted=True, deleted_at=now)
             deleted_archs = Archive.objects.filter(owner=member).update(
                 is_deleted=True, deleted_at=now
             )
@@ -482,8 +524,12 @@ class Command(BaseCommand):
         vc_data = snapshot["vault_config"]
         item_ids = snapshot["soft_deleted_item_ids"]
 
-        self.stdout.write(f"\n=== Vault Restore for '{snapshot['username']}' ===\n")
-        self.stdout.write(f"Snapshot created : {snapshot['snapshot_created_at']}")
+        self.stdout.write(
+            f"\n=== Vault Restore for '{snapshot['username']}' ===\n"
+        )
+        self.stdout.write(
+            f"Snapshot created : {snapshot['snapshot_created_at']}"
+        )
         self.stdout.write(
             f"VaultConfig (original id={vc_data['id']},"
             f" created={vc_data['created_at'][:19]})"
@@ -502,16 +548,21 @@ class Command(BaseCommand):
                     "\n[ABORTED] VaultConfig already exists in the database.\n"
                     f"  DB VaultConfig updated_at  : {existing_updated}\n"
                     f"  Snapshot VaultConfig updated_at: {snapshot_updated}\n"
-                    "\nIf you restored from a full SQL backup, the VaultConfig is\n"
-                    "already present — you do NOT need --restore-snapshot.\n"
-                    "Just unlock the vault via the API with your master password:\n"
+                    "\nIf you restored from a full SQL backup, the"
+                    " VaultConfig is\n"
+                    "already present — you do NOT need"
+                    " --restore-snapshot.\n"
+                    "Just unlock the vault via the API with your"
+                    " master password:\n"
                     "  POST /api/v1/security/vault/unlock/\n"
                     "\nTo verify the password works first, run:\n"
                     f"  python manage.py vault_recovery"
                     f" --username {snapshot['username']}"
                     ' --test-password "<sua_senha_mestre>"\n'
-                    "\nIf you are SURE you want to overwrite the existing VaultConfig\n"
-                    "with the snapshot data, re-run with --force-restore.\n"
+                    "\nIf you are SURE you want to overwrite the"
+                    " existing VaultConfig\n"
+                    "with the snapshot data, re-run with"
+                    " --force-restore.\n"
                     "WARNING: this may make vault items unreadable if the key "
                     "versions do not match.\n"
                 )
@@ -524,7 +575,9 @@ class Command(BaseCommand):
         with transaction.atomic():
             if existing_vc:
                 existing_vc.salt = vc_data["salt"]
-                existing_vc.encrypted_vault_key = vc_data["encrypted_vault_key"]
+                existing_vc.encrypted_vault_key = vc_data[
+                    "encrypted_vault_key"
+                ]
                 existing_vc.save(update_fields=["salt", "encrypted_vault_key"])
                 self.stdout.write(
                     self.style.WARNING(
@@ -564,7 +617,8 @@ class Command(BaseCommand):
                 "\nUnlock the vault with the ORIGINAL master password:\n"
                 "  POST /api/v1/security/vault/unlock/\n"
                 "\nOr verify the password first:\n"
-                f"  python manage.py vault_recovery --username {snapshot['username']}"
+                f"  python manage.py vault_recovery"
+                f" --username {snapshot['username']}"
                 ' --test-password "<sua_senha_mestre>"\n'
             )
         )

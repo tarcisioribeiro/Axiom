@@ -37,7 +37,9 @@ class BaseAPITestCase(APITestCase):
         self.access_token = str(refresh.access_token)
 
         # Configura autenticação
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.access_token}"
+        )
 
         # Cria conta de teste
         self.account = Account.objects.create(
@@ -158,7 +160,7 @@ class ExpenseViewTest(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)  # type: ignore
         self.assertEqual(
-            response.data["results"][0]["description"], "Compra teste"  # type: ignore
+            response.data["results"][0]["description"], "Compra teste"  # type: ignore  # noqa: E501
         )
 
     def test_create_expense_success(self):
@@ -177,7 +179,7 @@ class ExpenseViewTest(BaseAPITestCase):
         response = self.client.post(url, data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["description"], "Nova despesa")  # type: ignore
+        self.assertEqual(response.data["description"], "Nova despesa")  # type: ignore  # noqa: E501
         self.assertEqual(response.data["value"], "250.75")  # type: ignore
 
     def test_create_expense_invalid_data(self):
@@ -233,7 +235,7 @@ class ExpenseViewTest(BaseAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Verifica se está ordenado por data (mais recente primeiro)
-        dates = [item["date"] for item in response.data["results"]]  # type: ignore
+        dates = [item["date"] for item in response.data["results"]]  # type: ignore  # noqa: E501
         self.assertEqual(dates, sorted(dates, reverse=True))
 
 
@@ -322,7 +324,9 @@ class CreditCardViewTest(BaseAPITestCase):
             "name": "Cartão Teste",
             "on_card_name": "JOHN DOE",
             "flag": "MSC",
-            "validation_date": (date.today() + timedelta(days=365)).isoformat(),
+            "validation_date": (
+                date.today() + timedelta(days=365)
+            ).isoformat(),
             "security_code": "123",  # CVV será criptografado
             "credit_limit": "5000.00",
             "max_limit": "10000.00",
@@ -330,7 +334,9 @@ class CreditCardViewTest(BaseAPITestCase):
         }
 
         # Mock da criptografia para teste
-        with self.patch("app.encryption.FieldEncryption.encrypt_data") as mock_encrypt:
+        with self.patch(
+            "app.encryption.FieldEncryption.encrypt_data"
+        ) as mock_encrypt:
             mock_encrypt.return_value = "encrypted_cvv"
 
             response = self.client.post(url, data)
@@ -514,21 +520,21 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         response = self.client.get(self.URL)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["period_days"], 30)  # type: ignore
-        self.assertEqual(len(response.data["daily_breakdown"]), 31)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 31)  # type: ignore  # noqa: E501
 
     def test_60_days(self):
         """days=60 retorna 61 pontos"""
         response = self.client.get(self.URL, {"days": 60})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["period_days"], 60)  # type: ignore
-        self.assertEqual(len(response.data["daily_breakdown"]), 61)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 61)  # type: ignore  # noqa: E501
 
     def test_90_days(self):
         """days=90 retorna 91 pontos"""
         response = self.client.get(self.URL, {"days": 90})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["period_days"], 90)  # type: ignore
-        self.assertEqual(len(response.data["daily_breakdown"]), 91)  # type: ignore
+        self.assertEqual(len(response.data["daily_breakdown"]), 91)  # type: ignore  # noqa: E501
 
     def test_invalid_days_defaults_to_30(self):
         """days invalido (ex.: 999) deve usar 30 como default"""
@@ -564,7 +570,9 @@ class CashFlowForecastViewTest(BaseAPITestCase):
 
     def test_pending_revenue_increases_balance(self):
         """Receita pendente no dia N deve aumentar o saldo daquele dia"""
-        self._make_revenue(delta_days=2, value=Decimal("300.00"), received=False)
+        self._make_revenue(
+            delta_days=2, value=Decimal("300.00"), received=False
+        )
         # Usa update() para contornar signals que recalculam o saldo
         Account.objects.filter(pk=self.account.pk).update(
             current_balance=Decimal("500.00")
@@ -671,7 +679,9 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         self.assertAlmostEqual(day_5["expenses"], 800.00, places=2)
 
     def test_unpaid_credit_card_bill_included_in_projection(self):
-        """Fatura de cartao nao paga com vencimento no periodo deve aparecer."""
+        """
+        Fatura de cartao nao paga com vencimento no periodo deve aparecer.
+        """
         Account.objects.filter(pk=self.account.pk).update(
             current_balance=Decimal("2000.00")
         )
@@ -727,7 +737,10 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         self.assertAlmostEqual(breakdown[5]["balance"], 1600.00, places=2)
 
     def test_credit_card_bill_without_due_date_excluded(self):
-        """Fatura sem data de vencimento e cartao sem due_day nao entra na projecao."""
+        """
+        Fatura sem data de vencimento e cartao sem due_day nao entra na
+        projecao.
+        """
         Account.objects.filter(pk=self.account.pk).update(
             current_balance=Decimal("2000.00")
         )
@@ -747,7 +760,9 @@ class CashFlowForecastViewTest(BaseAPITestCase):
             updated_by=self.user,
         )
         card_no_due_day._security_code = FieldEncryption.encrypt_data("123")
-        card_no_due_day._card_number = FieldEncryption.encrypt_data("4111111111111111")
+        card_no_due_day._card_number = FieldEncryption.encrypt_data(
+            "4111111111111111"
+        )
         card_no_due_day.save()
         CreditCardBill.objects.create(
             credit_card=card_no_due_day,
@@ -770,7 +785,9 @@ class CashFlowForecastViewTest(BaseAPITestCase):
         self.assertAlmostEqual(total_expenses, 0.00, places=2)
 
     def test_credit_card_bill_outside_window_excluded(self):
-        """Fatura com vencimento fora da janela de projecao nao deve aparecer"""
+        """
+        Fatura com vencimento fora da janela de projecao nao deve aparecer
+        """
         Account.objects.filter(pk=self.account.pk).update(
             current_balance=Decimal("2000.00")
         )

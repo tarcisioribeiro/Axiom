@@ -40,13 +40,17 @@ def maybe_compress_history(
             f"{m['role'].upper()}: {m['content'][:200]}" for m in to_summarize
         )
         summary_prompt = (
-            "Resuma em 2 frases objetivas as informações financeiras mais relevantes "
+            "Resuma em 2 frases objetivas as informações"
+            " financeiras mais relevantes "
             f"desta conversa anterior: {conv_text}"
         )
         summary = LLMClient.complete(summary_prompt)
 
         return [
-            {"role": "system", "content": f"[Resumo da conversa anterior: {summary}]"},
+            {
+                "role": "system",
+                "content": f"[Resumo da conversa anterior: {summary}]",
+            },
             *recent,
         ]
     except Exception as exc:

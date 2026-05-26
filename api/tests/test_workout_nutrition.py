@@ -33,7 +33,9 @@ class BaseWorkoutNutritionTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="WN User",
             document_hash="w" * 64,
@@ -64,7 +66,9 @@ class WorkoutPlanViewTest(BaseWorkoutNutritionTestCase):
         self.assertEqual(response.data["name"], "Plano A")
 
     def test_retrieve_workout_plan(self):
-        plan = WorkoutPlan.objects.create(name="Retrieve Me", owner=self.member)
+        plan = WorkoutPlan.objects.create(
+            name="Retrieve Me", owner=self.member
+        )
         url = reverse("workout-plan-detail", kwargs={"pk": plan.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -91,7 +95,9 @@ class WorkoutPlanViewTest(BaseWorkoutNutritionTestCase):
 class WorkoutDayViewTest(BaseWorkoutNutritionTestCase):
     def setUp(self):
         super().setUp()
-        self.plan = WorkoutPlan.objects.create(name="Test Plan", owner=self.member)
+        self.plan = WorkoutPlan.objects.create(
+            name="Test Plan", owner=self.member
+        )
 
     def _day_data(self):
         return {
@@ -111,7 +117,9 @@ class WorkoutDayViewTest(BaseWorkoutNutritionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_retrieve_workout_day(self):
-        day = WorkoutDay.objects.create(name="Day X", plan=self.plan, owner=self.member)
+        day = WorkoutDay.objects.create(
+            name="Day X", plan=self.plan, owner=self.member
+        )
         url = reverse("workout-day-detail", kwargs={"pk": day.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -393,13 +401,17 @@ class MealTypeViewTest(BaseWorkoutNutritionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_meal_type(self):
-        mt = MealType.objects.create(name="Old Type", order=3, owner=self.member)
+        mt = MealType.objects.create(
+            name="Old Type", order=3, owner=self.member
+        )
         url = reverse("meal-type-detail", kwargs={"pk": mt.pk})
         response = self.client.patch(url, {"name": "New Type"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_meal_type(self):
-        mt = MealType.objects.create(name="Del Type", order=4, owner=self.member)
+        mt = MealType.objects.create(
+            name="Del Type", order=4, owner=self.member
+        )
         url = reverse("meal-type-detail", kwargs={"pk": mt.pk})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -436,7 +448,10 @@ class MenuOptionViewTest(BaseWorkoutNutritionTestCase):
 
     def test_retrieve_menu_option(self):
         opt = MenuOption.objects.create(
-            name="Option A", meal_type=self.meal_type, order=1, owner=self.member
+            name="Option A",
+            meal_type=self.meal_type,
+            order=1,
+            owner=self.member,
         )
         url = reverse("menu-option-detail", kwargs={"pk": opt.pk})
         response = self.client.get(url)
@@ -444,7 +459,10 @@ class MenuOptionViewTest(BaseWorkoutNutritionTestCase):
 
     def test_delete_menu_option(self):
         opt = MenuOption.objects.create(
-            name="Del Opt", meal_type=self.meal_type, order=2, owner=self.member
+            name="Del Opt",
+            meal_type=self.meal_type,
+            order=2,
+            owner=self.member,
         )
         url = reverse("menu-option-detail", kwargs={"pk": opt.pk})
         response = self.client.delete(url)
@@ -457,7 +475,10 @@ class MenuOptionViewTest(BaseWorkoutNutritionTestCase):
 
     def test_create_menu_option_ingredient(self):
         opt = MenuOption.objects.create(
-            name="Prato 2", meal_type=self.meal_type, order=3, owner=self.member
+            name="Prato 2",
+            meal_type=self.meal_type,
+            order=3,
+            owner=self.member,
         )
         url = reverse("menu-option-ingredient-list-create")
         data = {
@@ -472,10 +493,17 @@ class MenuOptionViewTest(BaseWorkoutNutritionTestCase):
 
     def test_delete_menu_option_ingredient(self):
         opt = MenuOption.objects.create(
-            name="Prato 3", meal_type=self.meal_type, order=4, owner=self.member
+            name="Prato 3",
+            meal_type=self.meal_type,
+            order=4,
+            owner=self.member,
         )
         ing = MenuOptionIngredient.objects.create(
-            menu_option=opt, food=self.food, unit="ml", order=1, owner=self.member
+            menu_option=opt,
+            food=self.food,
+            unit="ml",
+            order=1,
+            owner=self.member,
         )
         url = reverse("menu-option-ingredient-detail", kwargs={"pk": ing.pk})
         response = self.client.delete(url)

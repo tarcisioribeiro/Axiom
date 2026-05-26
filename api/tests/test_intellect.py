@@ -1,5 +1,6 @@
 """
-Tests for the Intelecto module — courses, modules, lessons, sessions and skills.
+Tests for the Intelecto module — courses, modules, lessons, sessions and
+skills.
 """
 
 from datetime import date
@@ -24,7 +25,9 @@ class BaseIntellectTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Intellect User",
             document_hash="i" * 64,
@@ -490,10 +493,14 @@ class SkillProficiencyLevelTest(BaseIntellectTestCase):
             ("expert", 5),
         ]
         for idx, (proficiency, expected_level) in enumerate(levels):
-            skill = self._make_skill(name=f"Skill{idx}", proficiency=proficiency)
+            skill = self._make_skill(
+                name=f"Skill{idx}", proficiency=proficiency
+            )
             url = reverse("skill-detail", args=[skill.pk])
             response = self.client.get(url)
-            self.assertEqual(response.data["proficiency_level"], expected_level)
+            self.assertEqual(
+                response.data["proficiency_level"], expected_level
+            )
 
 
 # ---------------------------------------------------------------------------

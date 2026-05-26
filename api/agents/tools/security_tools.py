@@ -20,11 +20,16 @@ def get_security_overview(user: User) -> dict[str, Any]:
             StoredCreditCard,
         )
 
-        owner_filter: dict[str, Any] = {"owner__user": user, "is_deleted": False}
+        owner_filter: dict[str, Any] = {
+            "owner__user": user,
+            "is_deleted": False,
+        }
 
         password_count = Password.objects.filter(**owner_filter).count()
         card_count = StoredCreditCard.objects.filter(**owner_filter).count()
-        account_count = StoredBankAccount.objects.filter(**owner_filter).count()
+        account_count = StoredBankAccount.objects.filter(
+            **owner_filter
+        ).count()
         archive_count = Archive.objects.filter(**owner_filter).count()
 
         # Senhas sem atualização há mais de 180 dias
@@ -68,9 +73,13 @@ def get_recent_activity(user: User, limit: int = 15) -> list[dict[str, Any]]:
         logs = list(
             ActivityLog.objects.filter(user=user)
             .order_by("-created_at")
-            .values("action", "model_name", "description", "ip_address", "created_at")[
-                :limit
-            ]
+            .values(
+                "action",
+                "model_name",
+                "description",
+                "ip_address",
+                "created_at",
+            )[:limit]
         )
         return [
             {
@@ -91,7 +100,9 @@ def get_recent_activity(user: User, limit: int = 15) -> list[dict[str, Any]]:
 
 
 def get_password_categories(user: User) -> list[dict[str, Any]]:
-    """Distribuição de senhas por categoria (contagens apenas, sem conteúdo)."""
+    """
+    Distribuição de senhas por categoria (contagens apenas, sem conteúdo).
+    """
     try:
         from django.db.models import Count
 

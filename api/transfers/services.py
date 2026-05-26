@@ -3,7 +3,11 @@ from datetime import datetime
 
 from django.utils import timezone
 
-from transfers.models import FixedTransfer, FixedTransferGenerationLog, Transfer
+from transfers.models import (
+    FixedTransfer,
+    FixedTransferGenerationLog,
+    Transfer,
+)
 
 
 def bulk_generate_fixed_transfers(month, user):
@@ -64,7 +68,9 @@ def bulk_generate_fixed_transfers(month, user):
         ft.last_generated_month = month
         ft.save()
 
-    existing_log = FixedTransferGenerationLog.objects.filter(month=month).first()
+    existing_log = FixedTransferGenerationLog.objects.filter(
+        month=month
+    ).first()
     if existing_log:
         updated_ids = list(
             set((existing_log.fixed_transfer_ids or []) + fixed_transfer_ids)

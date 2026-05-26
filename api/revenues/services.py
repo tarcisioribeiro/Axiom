@@ -38,7 +38,9 @@ def bulk_generate_fixed_revenues(month, revenue_values, user):
         fixed_revenue_ids.append(fixed_rev.id)
 
         try:
-            revenue_date = datetime(year_int, month_int, fixed_rev.due_day).date()
+            revenue_date = datetime(
+                year_int, month_int, fixed_rev.due_day
+            ).date()
         except ValueError:
             revenue_date = datetime(
                 year_int, month_int, min(fixed_rev.due_day, last_day)
@@ -71,7 +73,9 @@ def bulk_generate_fixed_revenues(month, revenue_values, user):
         fixed_rev.last_generated_month = month
         fixed_rev.save()
 
-    existing_log = FixedRevenueGenerationLog.objects.filter(month=month).first()
+    existing_log = FixedRevenueGenerationLog.objects.filter(
+        month=month
+    ).first()
     if existing_log:
         updated_ids = list(
             set((existing_log.fixed_revenue_ids or []) + fixed_revenue_ids)
@@ -136,7 +140,9 @@ def get_fixed_revenues_stats():
         date__lte=prev_end,
         is_deleted=False,
     )
-    previous_total = previous_revenues.aggregate(Sum("value"))["value__sum"] or 0
+    previous_total = (
+        previous_revenues.aggregate(Sum("value"))["value__sum"] or 0
+    )
 
     generated_current = FixedRevenue.objects.filter(
         last_generated_month=current_month, is_deleted=False

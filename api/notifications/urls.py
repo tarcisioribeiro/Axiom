@@ -10,16 +10,26 @@ from notifications.views import (
 )
 
 urlpatterns = [
-    path("notifications/", NotificationListView.as_view(), name="notification-list"),
+    path(
+        "notifications/",
+        NotificationListView.as_view(),
+        name="notification-list",
+    ),
     path(
         "notifications/<int:pk>/",
         NotificationUpdateView.as_view(),
         name="notification-update",
     ),
     path(
-        "notifications/mark-all-read/", mark_all_read, name="notification-mark-all-read"
+        "notifications/mark-all-read/",
+        mark_all_read,
+        name="notification-mark-all-read",
     ),
-    path("notifications/summary/", notification_summary, name="notification-summary"),
+    path(
+        "notifications/summary/",
+        notification_summary,
+        name="notification-summary",
+    ),
     path(
         "notification-preferences/",
         NotificationPreferenceListCreateView.as_view(),

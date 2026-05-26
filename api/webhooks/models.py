@@ -38,7 +38,9 @@ class Webhook(BaseModel):
     secret = models.CharField(
         max_length=128,
         verbose_name="Secret",
-        help_text="Assina o payload via HMAC-SHA256 (header X-Axiom-Signature)",
+        help_text=(
+            "Assina o payload via HMAC-SHA256 (header X-Axiom-Signature)"
+        ),
     )
     events = models.JSONField(
         default=list,
@@ -65,7 +67,9 @@ class Webhook(BaseModel):
 
     def sign_payload(self, body: bytes) -> str:
         """Retorna assinatura HMAC-SHA256 do payload."""
-        return hmac.new(self.secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+        return hmac.new(
+            self.secret.encode("utf-8"), body, hashlib.sha256
+        ).hexdigest()
 
 
 class WebhookDelivery(BaseModel):

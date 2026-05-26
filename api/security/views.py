@@ -104,7 +104,8 @@ class PasswordListCreateView(VaultLockedMixin, BaseListCreateView):
     queryset = Password.objects.all()
 
     def get_queryset(self):
-        # Usa defer() para excluir campo criptografado na listagem (performance)
+        # Usa defer() para excluir campo criptografado na listagem
+        # (performance)
         return (
             Password.objects.filter(owner__user=self.request.user)
             .select_related("owner")
@@ -138,9 +139,9 @@ class PasswordDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
     queryset = Password.objects.all()
 
     def get_queryset(self):
-        return Password.objects.filter(owner__user=self.request.user).select_related(
-            "owner"
-        )
+        return Password.objects.filter(
+            owner__user=self.request.user
+        ).select_related("owner")
 
     def get_serializer_class(self):
         if self.request.method in ["PUT", "PATCH"]:
@@ -216,7 +217,8 @@ class StoredCreditCardListCreateView(VaultLockedMixin, BaseListCreateView):
     queryset = StoredCreditCard.objects.all()
 
     def get_queryset(self):
-        # Usa defer() para excluir campos criptografados na listagem (performance)
+        # Usa defer() para excluir campos criptografados na listagem
+        # (performance)
         return (
             StoredCreditCard.objects.filter(owner__user=self.request.user)
             .select_related("owner", "finance_card")
@@ -243,7 +245,9 @@ class StoredCreditCardListCreateView(VaultLockedMixin, BaseListCreateView):
         )
 
 
-class StoredCreditCardDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
+class StoredCreditCardDetailView(
+    VaultLockedMixin, BaseRetrieveUpdateDestroyView
+):
     """Recupera, atualiza ou deleta um cartão."""
 
     queryset = StoredCreditCard.objects.all()
@@ -324,7 +328,8 @@ class StoredBankAccountListCreateView(VaultLockedMixin, BaseListCreateView):
     queryset = StoredBankAccount.objects.all()
 
     def get_queryset(self):
-        # Usa defer() para excluir campos criptografados na listagem (performance)
+        # Usa defer() para excluir campos criptografados na listagem
+        # (performance)
         return (
             StoredBankAccount.objects.filter(owner__user=self.request.user)
             .select_related("owner", "finance_account")
@@ -351,7 +356,9 @@ class StoredBankAccountListCreateView(VaultLockedMixin, BaseListCreateView):
         )
 
 
-class StoredBankAccountDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
+class StoredBankAccountDetailView(
+    VaultLockedMixin, BaseRetrieveUpdateDestroyView
+):
     """Recupera, atualiza ou deleta uma conta bancária."""
 
     queryset = StoredBankAccount.objects.all()
@@ -433,9 +440,12 @@ class ArchiveListCreateView(VaultLockedMixin, BaseListCreateView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        # Usa defer() para excluir campo criptografado na listagem (performance)
+        # Usa defer() para excluir campo criptografado na listagem
+        # (performance)
         return (
-            Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
+            Archive.objects.filter(
+                owner__user=self.request.user, is_deleted=False
+            )
             .select_related("owner")
             .defer("_encrypted_text")
         )
@@ -451,12 +461,16 @@ class ArchiveListCreateView(VaultLockedMixin, BaseListCreateView):
                 created_by=self.request.user, updated_by=self.request.user
             )
         except PermissionError:
-            logger.error("Permissão negada ao salvar arquivo em /app/media/security/")
+            logger.error(
+                "Permissão negada ao salvar arquivo em /app/media/security/"
+            )
             raise serializers.ValidationError(
                 {
                     "encrypted_file": (
-                        "Erro de permissão ao salvar o arquivo no servidor. "
-                        "O diretório de armazenamento não possui permissão de escrita. "
+                        "Erro de permissão ao salvar o arquivo"
+                        " no servidor. "
+                        "O diretório de armazenamento não"
+                        " possui permissão de escrita. "
                         "Contate o administrador do sistema."
                     )
                 }
@@ -508,8 +522,10 @@ class ArchiveDetailView(VaultLockedMixin, BaseRetrieveUpdateDestroyView):
             raise serializers.ValidationError(
                 {
                     "encrypted_file": (
-                        "Erro de permissão ao salvar o arquivo no servidor. "
-                        "O diretório de armazenamento não possui permissão de escrita. "
+                        "Erro de permissão ao salvar o arquivo"
+                        " no servidor. "
+                        "O diretório de armazenamento não"
+                        " possui permissão de escrita. "
                         "Contate o administrador do sistema."
                     )
                 }
@@ -558,7 +574,9 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
     queryset = Archive.objects.all()
 
     def get_queryset(self):
-        return Archive.objects.filter(owner__user=self.request.user, is_deleted=False)
+        return Archive.objects.filter(
+            owner__user=self.request.user, is_deleted=False
+        )
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -589,7 +607,8 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             return Response(response_data)
 
         try:
-            # Usa VaultEncryptedField via propriedade text_content, que já aplica
+            # Usa VaultEncryptedField via propriedade text_content, que já
+            # aplica
             # a vault_key do contexto de thread (set por VaultLockedMixin).
             decrypted = instance.text_content
             if decrypted is None:
@@ -601,7 +620,9 @@ class ArchiveRevealView(VaultLockedMixin, generics.RetrieveAPIView):
             else:
                 response_data["text_content"] = decrypted
         except Exception as e:
-            logger.error(f"Erro ao descriptografar arquivo {instance.id}: {str(e)}")
+            logger.error(
+                f"Erro ao descriptografar arquivo {instance.id}: {str(e)}"
+            )
             response_data["error"] = (
                 "Não foi possível descriptografar o conteúdo. "
                 "Verifique se a chave de criptografia está correta."
@@ -615,7 +636,8 @@ class ArchiveDownloadView(APIView):
     """Faz download do arquivo criptografado."""
 
     permission_classes = [IsAuthenticated]
-    # Note: GlobalDefaultPermission removed because APIView doesn't have queryset
+    # Note: GlobalDefaultPermission removed because APIView doesn't have
+    # queryset
     # Security is handled by filtering on owner__user in the query below
 
     def get(self, request, pk):
@@ -626,7 +648,8 @@ class ArchiveDownloadView(APIView):
             )
         except Archive.DoesNotExist:
             return Response(
-                {"detail": "Arquivo não encontrado"}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Arquivo não encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if not archive.encrypted_file:
@@ -637,7 +660,9 @@ class ArchiveDownloadView(APIView):
 
         import os
 
-        filename = archive.file_name or archive.encrypted_file.name.split("/")[-1]
+        filename = (
+            archive.file_name or archive.encrypted_file.name.split("/")[-1]
+        )
 
         # Log da atividade
         log_activity(
@@ -651,12 +676,16 @@ class ArchiveDownloadView(APIView):
         )
 
         # Return a presigned URL so the browser downloads directly from MinIO,
-        # avoiding the Django proxy stream which requires the internal TLS connection.
-        # Falls back to proxy streaming only for local filesystem (dev without MinIO).
+        # avoiding the Django proxy stream which requires the internal TLS
+        # connection.
+        # Falls back to proxy streaming only for local filesystem (dev without
+        # MinIO).
         url = archive.encrypted_file.storage.url(
             archive.encrypted_file.name,
             parameters={
-                "ResponseContentDisposition": f'attachment; filename="{filename}"'
+                "ResponseContentDisposition": (
+                    f'attachment; filename="{filename}"'
+                )
             },
         )
         if url.startswith("http://") or url.startswith("https://"):
@@ -675,7 +704,9 @@ class ArchiveDownloadView(APIView):
             )
 
         _, ext = os.path.splitext(filename.lower())
-        content_type = ALLOWED_UPLOAD_TYPES.get(ext, "application/octet-stream")
+        content_type = ALLOWED_UPLOAD_TYPES.get(
+            ext, "application/octet-stream"
+        )
 
         response = FileResponse(
             file,
@@ -722,7 +753,11 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
         "total_stored_accounts": 2,
         "total_archives": 5,
         "passwords_by_category": [
-            {"category": "social", "category_display": "Redes Sociais", "count": 5},
+            {
+                "category": "social",
+                "category_display": "Redes Sociais",
+                "count": 5,
+            },
             {"category": "email", "category_display": "E-mail", "count": 3}
         ],
         "recent_activity": [
@@ -827,7 +862,9 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             )
 
         # Análise de força de senhas
-        password_strength_distribution = self._calculate_password_strength(passwords_qs)
+        password_strength_distribution = self._calculate_password_strength(
+            passwords_qs
+        )
 
         # Atividades por tipo de ação
         security_models = [
@@ -837,7 +874,9 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
             "Archive",
         ]
         activities_by_action = list(
-            ActivityLog.objects.filter(user=user, model_name__in=security_models)
+            ActivityLog.objects.filter(
+                user=user, model_name__in=security_models
+            )
             .values("action")
             .annotate(count=Count("id"))
             .order_by("-count")
@@ -845,7 +884,9 @@ class SecurityDashboardStatsView(VaultLockedMixin, APIView):
 
         action_dict = dict(ACTION_TYPES)
         for item in activities_by_action:
-            item["action_display"] = action_dict.get(item["action"], item["action"])
+            item["action_display"] = action_dict.get(
+                item["action"], item["action"]
+            )
 
         # Timeline de atividades (últimos 6 meses)
         six_months_ago = timezone.now() - timedelta(days=180)
@@ -1003,13 +1044,16 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         cutoff = timezone.now() - timedelta(days=OUTDATED_DAYS_THRESHOLD)
         category_dict = dict(PASSWORD_CATEGORIES)
 
-        # Analyse each password — decrypted value used only in memory, never logged.
+        # Analyse each password — decrypted value used only in memory, never
+        # logged.
         hash_to_ids: dict[str, list[int]] = {}
         per_password: list[dict] = []
 
         for pw in passwords:
             decrypted = pw.password  # VaultEncryptedField property
-            strength = get_password_strength(decrypted) if decrypted else "weak"
+            strength = (
+                get_password_strength(decrypted) if decrypted else "weak"
+            )
             is_outdated = pw.last_password_change < cutoff
 
             if decrypted:
@@ -1026,8 +1070,12 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
                     "title": pw.title,
                     "username": pw.username,
                     "category": pw.category,
-                    "category_display": category_dict.get(pw.category, pw.category),
-                    "last_password_change": pw.last_password_change.isoformat(),
+                    "category_display": category_dict.get(
+                        pw.category, pw.category
+                    ),
+                    "last_password_change": (
+                        pw.last_password_change.isoformat()
+                    ),
                     "strength": strength,
                     "is_outdated": is_outdated,
                     "_hash": pw_hash,
@@ -1035,7 +1083,9 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
             )
 
         # Determine duplicate groups (only hashes shared by ≥2 passwords)
-        duplicate_hashes = {h for h, ids in hash_to_ids.items() if len(ids) > 1}
+        duplicate_hashes = {
+            h for h, ids in hash_to_ids.items() if len(ids) > 1
+        }
         # Assign stable group numbers for the response
         dup_group_map: dict[str, int] = {
             h: i + 1 for i, h in enumerate(sorted(duplicate_hashes))
@@ -1100,7 +1150,9 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         # Analyse stored credit cards
         card_issues: list[dict] = []
         today = timezone.now().date()
-        cards_qs = StoredCreditCard.objects.filter(owner=member, is_deleted=False).only(
+        cards_qs = StoredCreditCard.objects.filter(
+            owner=member, is_deleted=False
+        ).only(
             "id", "uuid", "name", "expiration_month", "expiration_year", "flag"
         )
         for card in cards_qs:
@@ -1126,7 +1178,12 @@ class VaultHealthReportView(VaultLockedMixin, APIView):
         accounts_qs = StoredBankAccount.objects.filter(
             owner=member, is_deleted=False
         ).only(
-            "id", "uuid", "name", "institution_name", "_password", "_digital_password"
+            "id",
+            "uuid",
+            "name",
+            "institution_name",
+            "_password",
+            "_digital_password",
         )
         for acc in accounts_qs:
             acc_issue_list: list[str] = []
@@ -1338,7 +1395,9 @@ class PasswordImportPreviewView(VaultLockedMixin, APIView):
             )
 
         existing = set(
-            Password.objects.filter(owner=member).values_list("title", "username")
+            Password.objects.filter(owner=member).values_list(
+                "title", "username"
+            )
         )
 
         tagged_entries = []
@@ -1418,7 +1477,9 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
             )
 
         existing = set(
-            Password.objects.filter(owner=member).values_list("title", "username")
+            Password.objects.filter(owner=member).values_list(
+                "title", "username"
+            )
         )
 
         imported = 0
@@ -1449,7 +1510,9 @@ class PasswordImportConfirmView(VaultLockedMixin, APIView):
                     created_by=request.user,
                     updated_by=request.user,
                 )
-                pw.password = password_text  # VaultEncryptedField setter encrypts
+                pw.password = (
+                    password_text  # VaultEncryptedField setter encrypts
+                )
                 pw.save()
 
                 # Track within-batch duplicates
@@ -1595,7 +1658,10 @@ class PasswordGenerateView(APIView):
         # Fisher-Yates shuffle using secrets
         for i in range(len(password_list) - 1, 0, -1):
             j = secrets.randbelow(i + 1)
-            password_list[i], password_list[j] = password_list[j], password_list[i]
+            password_list[i], password_list[j] = (
+                password_list[j],
+                password_list[i],
+            )
 
         generated_password = "".join(password_list)
         strength = get_password_strength(generated_password)
@@ -1627,13 +1693,17 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
     queryset = Password.objects.all()
 
     def get(self, request, pk):
-        password_obj = get_object_or_404(Password, pk=pk, owner__user=request.user)
+        password_obj = get_object_or_404(
+            Password, pk=pk, owner__user=request.user
+        )
         tokens = CredentialShareToken.objects.filter(password=password_obj)
         serializer = CredentialShareTokenSerializer(tokens, many=True)
         return Response(serializer.data)
 
     def post(self, request, pk):
-        password_obj = get_object_or_404(Password, pk=pk, owner__user=request.user)
+        password_obj = get_object_or_404(
+            Password, pk=pk, owner__user=request.user
+        )
 
         # Decrypt with vault key (already set by VaultLockedMixin)
         plaintext = password_obj.password
@@ -1653,7 +1723,9 @@ class ShareTokenListCreateView(VaultLockedMixin, APIView):
         # This key is NEVER stored server-side — it is returned to the caller
         # once and must be embedded in the share URL fragment (#key=...) so
         # that only someone who has the full URL can decrypt the snapshot.
-        token_key = FieldEncryption.generate_key()  # base64-encoded 32-byte key
+        token_key = (
+            FieldEncryption.generate_key()
+        )  # base64-encoded 32-byte key
         token_key_bytes = token_key.encode()
         encrypted_snapshot = FieldEncryption.encrypt_with_key(
             plaintext, token_key_bytes
@@ -1746,9 +1818,9 @@ class RedeemShareTokenView(APIView):
             )
 
         try:
-            token_obj = CredentialShareToken.objects.select_related("password").get(
-                token=token
-            )
+            token_obj = CredentialShareToken.objects.select_related(
+                "password"
+            ).get(token=token)
         except CredentialShareToken.DoesNotExist:
             return Response(
                 {"error": "Token inválido."}, status=status.HTTP_404_NOT_FOUND
@@ -1799,7 +1871,8 @@ class RedeemShareTokenView(APIView):
             )
         except Exception:
             logger.error(
-                "Unexpected error decrypting share token snapshot (token_id=%s)",
+                "Unexpected error decrypting share token"
+                " snapshot (token_id=%s)",
                 token_obj.id,
             )
             return Response(
@@ -1807,7 +1880,8 @@ class RedeemShareTokenView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        # Update usage tracking before returning (prevents race condition double-use)
+        # Update usage tracking before returning (prevents race condition
+        # double-use)
         token_obj.use_count += 1
         token_obj.used_at = timezone.now()
         token_obj.save(update_fields=["use_count", "used_at"])
@@ -1815,7 +1889,10 @@ class RedeemShareTokenView(APIView):
         ActivityLog.log_action(
             user=None,
             action="shared_reveal",
-            description=f"Acesso via link compartilhado: {token_obj.password.title}",
+            description=(
+                f"Acesso via link compartilhado:"
+                f" {token_obj.password.title}"
+            ),
             description_key="credential_share.access",
             description_params={"name": token_obj.password.title},
             model_name="CredentialShareToken",
@@ -1851,16 +1928,21 @@ class VaultExportZipView(VaultLockedMixin, APIView):
     - passwords.csv
     - stored_cards.csv
     - stored_accounts.csv
-    - archives/<id>_<filename>  — arquivos reais lidos do storage (MinIO ou local)
-    - archives/<id>_<title>.txt — conteúdo de texto descriptografado (quando aplicável)
+    - archives/<id>_<filename>
+      — arquivos reais lidos do storage (MinIO ou local)
+    - archives/<id>_<title>.txt
+      — conteúdo de texto descriptografado (quando aplicável)
 
     Requer cofre desbloqueado (VaultLockedMixin).
     Funciona tanto com MinIO (Docker/K8s) quanto com filesystem local (testes).
     """
 
-    # GlobalDefaultPermission is omitted — it requires a queryset/model to derive
-    # Django model permissions, but this view aggregates several models and scopes
-    # results to request.user. IsAuthenticated + VaultLockedMixin are sufficient.
+    # GlobalDefaultPermission is omitted — it requires a queryset/model to
+    # derive
+    # Django model permissions, but this view aggregates several models and
+    # scopes
+    # results to request.user. IsAuthenticated + VaultLockedMixin are
+    # sufficient.
     permission_classes = [IsAuthenticated]
 
     @staticmethod
@@ -1889,11 +1971,15 @@ class VaultExportZipView(VaultLockedMixin, APIView):
 
         buffer = io.BytesIO()
 
-        with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        with zipfile.ZipFile(
+            buffer, mode="w", compression=zipfile.ZIP_DEFLATED
+        ) as zf:
             # ------------------------------------------------------------------
             # passwords.csv
             # ------------------------------------------------------------------
-            passwords = Password.objects.filter(owner=member, is_deleted=False).only(
+            passwords = Password.objects.filter(
+                owner=member, is_deleted=False
+            ).only(
                 "id",
                 "title",
                 "username",
@@ -1941,7 +2027,9 @@ class VaultExportZipView(VaultLockedMixin, APIView):
             # ------------------------------------------------------------------
             # stored_cards.csv
             # ------------------------------------------------------------------
-            cards = StoredCreditCard.objects.filter(owner=member, is_deleted=False)
+            cards = StoredCreditCard.objects.filter(
+                owner=member, is_deleted=False
+            )
             cards_buf = io.StringIO()
             cards_writer = csv.writer(cards_buf)
             cards_writer.writerow(
@@ -1984,7 +2072,9 @@ class VaultExportZipView(VaultLockedMixin, APIView):
             # ------------------------------------------------------------------
             # stored_accounts.csv
             # ------------------------------------------------------------------
-            accounts = StoredBankAccount.objects.filter(owner=member, is_deleted=False)
+            accounts = StoredBankAccount.objects.filter(
+                owner=member, is_deleted=False
+            )
             acc_buf = io.StringIO()
             acc_writer = csv.writer(acc_buf)
             acc_writer.writerow(
@@ -2033,7 +2123,8 @@ class VaultExportZipView(VaultLockedMixin, APIView):
             # ------------------------------------------------------------------
             # archives/ — arquivos reais e conteúdo de texto descriptografado
             # Usa archive.encrypted_file.open("rb") — a abstração de storage do
-            # Django funciona tanto com MinIO (Docker/K8s) quanto com filesystem
+            # Django funciona tanto com MinIO (Docker/K8s) quanto com
+            # filesystem
             # local (testes), sem nenhuma diferença no código.
             # ------------------------------------------------------------------
             archives = Archive.objects.filter(owner=member, is_deleted=False)
@@ -2044,7 +2135,8 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                 if arch.has_file_content():
                     # Arquivo armazenado no storage (MinIO ou local)
                     original_name = (
-                        arch.file_name or arch.encrypted_file.name.split("/")[-1]
+                        arch.file_name
+                        or arch.encrypted_file.name.split("/")[-1]
                     )
                     safe_filename = self._safe_name(original_name)
                     zip_path = f"{prefix}/{safe_filename}"
@@ -2056,11 +2148,13 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                         # abortar o export inteiro
                         zf.writestr(
                             f"{prefix}/ERRO_{safe_filename}.txt",
-                            f"Não foi possível recuperar o arquivo: {original_name}\n",
+                            f"Não foi possível recuperar"
+                            f" o arquivo: {original_name}\n",
                         )
 
                 if arch.has_text_content():
-                    # Conteúdo de texto descriptografado pelo VaultEncryptedField
+                    # Conteúdo de texto descriptografado pelo
+                    # VaultEncryptedField
                     zip_path = f"{prefix}/{safe_title}.txt"
                     try:
                         text = arch.text_content or ""
@@ -2068,7 +2162,8 @@ class VaultExportZipView(VaultLockedMixin, APIView):
                     except Exception:
                         zf.writestr(
                             f"{prefix}/ERRO_{safe_title}.txt",
-                            "Não foi possível descriptografar o conteúdo de texto.\n",
+                            "Não foi possível descriptografar"
+                            " o conteúdo de texto.\n",
                         )
 
         buffer.seek(0)

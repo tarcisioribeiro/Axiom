@@ -36,7 +36,8 @@ logger = logging.getLogger("axiom")
 def _get_or_create_notification(
     member, notification_type, content_type, object_id, defaults
 ):
-    """Wrapper that returns (notification, created) and only dispatches when created."""
+    """Wrapper that returns (notification, created)
+    and only dispatches when created."""
     notification, created = Notification.objects.get_or_create(
         owner=member,
         notification_type=notification_type,
@@ -49,15 +50,20 @@ def _get_or_create_notification(
 
 class Command(BaseCommand):
     help = (
-        "Generate and dispatch due/overdue notifications for all active members. "
-        "Only newly-created notifications are dispatched via email to avoid duplicates."
+        "Generate and dispatch due/overdue notifications"
+        " for all active members. "
+        "Only newly-created notifications are dispatched"
+        " via email to avoid duplicates."
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="Print what would be dispatched without sending emails or saving.",
+            help=(
+                "Print what would be dispatched"
+                " without sending emails or saving."
+            ),
         )
         parser.add_argument(
             "--member-id",
@@ -72,7 +78,9 @@ class Command(BaseCommand):
         today = timezone.now().date()
         soon = today + timedelta(days=3)
 
-        members_qs = Member.objects.filter(is_deleted=False).select_related("user")
+        members_qs = Member.objects.filter(is_deleted=False).select_related(
+            "user"
+        )
         if member_id:
             members_qs = members_qs.filter(pk=member_id)
 
@@ -85,12 +93,15 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(
                 self.style.WARNING(
-                    f"[dry-run] Would have dispatched {total_dispatched} notifications."
+                    f"[dry-run] Would have dispatched"
+                    f" {total_dispatched} notifications."
                 )
             )
         else:
             self.stdout.write(
-                self.style.SUCCESS(f"Dispatched {total_dispatched} notifications.")
+                self.style.SUCCESS(
+                    f"Dispatched {total_dispatched} notifications."
+                )
             )
 
     def _process_member(self, member, today, soon, dry_run: bool) -> int:
@@ -123,7 +134,8 @@ class Command(BaseCommand):
                 lambda t: {
                     "title": f"Tarefa atrasada: {t.task_name}",
                     "message": (
-                        f'Programada para {t.scheduled_date.strftime("%d/%m/%Y")}'
+                        f"Programada para"
+                        f' {t.scheduled_date.strftime("%d/%m/%Y")}'
                     ),
                     "due_date": t.scheduled_date,
                 },
@@ -132,7 +144,12 @@ class Command(BaseCommand):
         for queryset, ntype, make_defaults in task_pairs:
             for obj in queryset:
                 dispatched += self._maybe_dispatch(
-                    member, ntype, "task_instance", obj.id, make_defaults(obj), dry_run
+                    member,
+                    ntype,
+                    "task_instance",
+                    obj.id,
+                    make_defaults(obj),
+                    dry_run,
                 )
 
         # --- Payable ---
@@ -141,7 +158,9 @@ class Command(BaseCommand):
         payable_pairs = [
             (
                 Payable.objects.filter(
-                    member=member, due_date__range=[today, soon], status="active"
+                    member=member,
+                    due_date__range=[today, soon],
+                    status="active",
                 ),
                 "payable_due_soon",
                 lambda p: {
@@ -152,7 +171,9 @@ class Command(BaseCommand):
             ),
             (
                 Payable.objects.filter(
-                    member=member, due_date__lt=today, status__in=["active", "overdue"]
+                    member=member,
+                    due_date__lt=today,
+                    status__in=["active", "overdue"],
                 ),
                 "payable_overdue",
                 lambda p: {
@@ -162,22 +183,34 @@ class Command(BaseCommand):
                 },
             ),
         ]
-        for queryset, ntype, make_defaults in payable_pairs:  # type: ignore[assignment]
+        for queryset, ntype, make_defaults in payable_pairs:  # type: ignore[assignment]  # noqa: E501
             for obj in queryset:
                 dispatched += self._maybe_dispatch(
-                    member, ntype, "payable", obj.id, make_defaults(obj), dry_run
+                    member,
+                    ntype,
+                    "payable",
+                    obj.id,
+                    make_defaults(obj),
+                    dry_run,
                 )
 
         # --- Loan ---
         from loans.models import Loan
 
-        member_loans = Loan.objects.filter(Q(benefited=member) | Q(creditor=member))
+        member_loans = Loan.objects.filter(
+            Q(benefited=member) | Q(creditor=member)
+        )
         loan_pairs = [
             (
-                member_loans.filter(due_date__range=[today, soon], status="active"),
+                member_loans.filter(
+                    due_date__range=[today, soon], status="active"
+                ),
                 "loan_due_soon",
                 lambda ln: {
-                    "title": f"Empréstimo próximo do vencimento: {ln.description}",
+                    "title": (
+                        f"Empréstimo próximo do vencimento:"
+                        f" {ln.description}"
+                    ),
                     "message": f'Vence em {ln.due_date.strftime("%d/%m/%Y")}',
                     "due_date": ln.due_date,
                 },
@@ -194,7 +227,7 @@ class Command(BaseCommand):
                 },
             ),
         ]
-        for queryset, ntype, make_defaults in loan_pairs:  # type: ignore[assignment]
+        for queryset, ntype, make_defaults in loan_pairs:  # type: ignore[assignment]  # noqa: E501
             for obj in queryset:
                 dispatched += self._maybe_dispatch(
                     member, ntype, "loan", obj.id, make_defaults(obj), dry_run
@@ -207,17 +240,23 @@ class Command(BaseCommand):
         bill_pairs = [
             (
                 member_bills.filter(
-                    due_date__range=[today, soon], status__in=["open", "closed"]
+                    due_date__range=[today, soon],
+                    status__in=["open", "closed"],
                 ),
                 "bill_due_soon",
                 lambda b: {
-                    "title": f"Fatura próxima do vencimento: {b.credit_card.name}",
+                    "title": (
+                        f"Fatura próxima do vencimento:"
+                        f" {b.credit_card.name}"
+                    ),
                     "message": f'Vence em {b.due_date.strftime("%d/%m/%Y")}',
                     "due_date": b.due_date,
                 },
             ),
             (
-                member_bills.filter(due_date__lt=today, status__in=["open", "closed"]),
+                member_bills.filter(
+                    due_date__lt=today, status__in=["open", "closed"]
+                ),
                 "bill_overdue",
                 lambda b: {
                     "title": f"Fatura atrasada: {b.credit_card.name}",
@@ -226,7 +265,7 @@ class Command(BaseCommand):
                 },
             ),
         ]
-        for queryset, ntype, make_defaults in bill_pairs:  # type: ignore[assignment]
+        for queryset, ntype, make_defaults in bill_pairs:  # type: ignore[assignment]  # noqa: E501
             for obj in queryset:
                 dispatched += self._maybe_dispatch(
                     member, ntype, "bill", obj.id, make_defaults(obj), dry_run
@@ -236,16 +275,24 @@ class Command(BaseCommand):
         dispatched += self._process_member_budgets(member, today, dry_run)
 
         # --- FinancialGoal ---
-        dispatched += self._process_member_financial_goals(member, today, dry_run)
+        dispatched += self._process_member_financial_goals(
+            member, today, dry_run
+        )
 
         # --- Agent Insights ---
-        dispatched += self._process_member_agent_insights(member, today, dry_run)
+        dispatched += self._process_member_agent_insights(
+            member, today, dry_run
+        )
 
         # --- ReadingGoal ---
-        dispatched += self._process_member_reading_goals(member, today, dry_run)
+        dispatched += self._process_member_reading_goals(
+            member, today, dry_run
+        )
 
         # --- BankReconciliation ---
-        dispatched += self._process_member_reconciliations(member, today, dry_run)
+        dispatched += self._process_member_reconciliations(
+            member, today, dry_run
+        )
 
         return dispatched
 
@@ -294,10 +341,13 @@ class Command(BaseCommand):
                     "budget",
                     budget.id,
                     {
-                        "title": f"Orçamento estourado: {budget.category}",
+                        "title": (
+                            f"Orçamento estourado:" f" {budget.category}"
+                        ),
                         "message": (
                             f"{pct:.0f}% do limite utilizado"
-                            f" (R$ {float(spent):.2f} / R$ {effective_limit:.2f})"
+                            f" (R$ {float(spent):.2f}"
+                            f" / R$ {effective_limit:.2f})"
                         ),
                         "due_date": month_end,
                     },
@@ -310,10 +360,13 @@ class Command(BaseCommand):
                     "budget",
                     budget.id,
                     {
-                        "title": f"Alerta de orçamento: {budget.category}",
+                        "title": (
+                            f"Alerta de orçamento:" f" {budget.category}"
+                        ),
                         "message": (
                             f"{pct:.0f}% do limite utilizado"
-                            f" (R$ {float(spent):.2f} / R$ {effective_limit:.2f})"
+                            f" (R$ {float(spent):.2f}"
+                            f" / R$ {effective_limit:.2f})"
                         ),
                         "due_date": month_end,
                     },
@@ -322,7 +375,9 @@ class Command(BaseCommand):
 
         return dispatched
 
-    def _process_member_financial_goals(self, member, today, dry_run: bool) -> int:
+    def _process_member_financial_goals(
+        self, member, today, dry_run: bool
+    ) -> int:
         from vaults.models import FinancialGoal
 
         dispatched = 0
@@ -343,7 +398,9 @@ class Command(BaseCommand):
                     "financial_goal",
                     goal.id,
                     {
-                        "title": f"Meta financeira atingida: {goal.description}",
+                        "title": (
+                            f"Meta financeira atingida:" f" {goal.description}"
+                        ),
                         "message": (
                             f"Parabéns! Você atingiu sua meta de"
                             f" R$ {float(goal.target_value):.2f}."
@@ -352,7 +409,9 @@ class Command(BaseCommand):
                     },
                     dry_run,
                 )
-            elif goal.target_date and goal.target_date <= approaching_threshold:
+            elif (
+                goal.target_date and goal.target_date <= approaching_threshold
+            ):
                 dispatched += self._maybe_dispatch(
                     member,
                     "financial_goal_approaching",
@@ -360,10 +419,12 @@ class Command(BaseCommand):
                     goal.id,
                     {
                         "title": (
-                            f"Meta financeira próxima do prazo: {goal.description}"
+                            f"Meta financeira próxima do prazo:"
+                            f" {goal.description}"
                         ),
                         "message": (
-                            f'Prazo em {goal.target_date.strftime("%d/%m/%Y")}.'
+                            "Prazo em"
+                            f' {goal.target_date.strftime("%d/%m/%Y")}.'
                             f" Progresso: R$ {float(goal.current_value):.2f}"
                             f" / R$ {float(goal.target_value):.2f}."
                         ),
@@ -374,7 +435,9 @@ class Command(BaseCommand):
 
         return dispatched
 
-    def _process_member_agent_insights(self, member, today, dry_run: bool) -> int:
+    def _process_member_agent_insights(
+        self, member, today, dry_run: bool
+    ) -> int:
         """Generate agent_insight notifications from budget detection logic.
 
         Uses get_budget_status() from the InsightAgent's tool layer to detect
@@ -417,7 +480,10 @@ class Command(BaseCommand):
                     "budget",
                     budget_id,
                     {
-                        "title": f"Insight: orçamento estourado em {b['category']}",
+                        "title": (
+                            f"Insight: orçamento estourado"
+                            f" em {b['category']}"
+                        ),
                         "message": (
                             f"{b['percentage']:.0f}% do limite utilizado"
                             f" (R$ {b['spent']:.2f} / R$ {b['limit']:.2f},"
@@ -435,7 +501,10 @@ class Command(BaseCommand):
                     "budget",
                     budget_id,
                     {
-                        "title": f"Insight: orçamento crítico em {b['category']}",
+                        "title": (
+                            f"Insight: orçamento crítico"
+                            f" em {b['category']}"
+                        ),
                         "message": (
                             f"{b['percentage']:.0f}% do limite utilizado"
                             f" (R$ {b['spent']:.2f} / R$ {b['limit']:.2f})."
@@ -449,7 +518,9 @@ class Command(BaseCommand):
 
         return dispatched
 
-    def _process_member_reading_goals(self, member, today, dry_run: bool) -> int:
+    def _process_member_reading_goals(
+        self, member, today, dry_run: bool
+    ) -> int:
         from library.models import ReadingGoal
 
         dispatched = 0
@@ -490,8 +561,10 @@ class Command(BaseCommand):
                     {
                         "title": f"Meta de leitura atrasada: {goal_name}",
                         "message": (
-                            f"Você completou {pct:.0f}% da meta. Acelere o ritmo"
-                            f" para atingir {goal.books_goal} livros até o fim do ano."
+                            f"Você completou {pct:.0f}% da meta."
+                            " Acelere o ritmo"
+                            f" para atingir {goal.books_goal}"
+                            " livros até o fim do ano."
                         ),
                         "due_date": None,
                     },
@@ -500,7 +573,9 @@ class Command(BaseCommand):
 
         return dispatched
 
-    def _process_member_reconciliations(self, member, today, dry_run: bool) -> int:
+    def _process_member_reconciliations(
+        self, member, today, dry_run: bool
+    ) -> int:
         from bank_reconciliation.models import BankStatementImport
 
         dispatched = 0
@@ -529,8 +604,13 @@ class Command(BaseCommand):
                 "bank_statement_import",
                 stmt_import.id,
                 {
-                    "title": f"Extrato pendente: {stmt_import.original_filename}",
-                    "message": (f"{pending_count} {entry_word} há mais de 3 dias."),
+                    "title": (
+                        f"Extrato pendente:"
+                        f" {stmt_import.original_filename}"
+                    ),
+                    "message": (
+                        f"{pending_count} {entry_word} há mais de 3 dias."
+                    ),
                     "due_date": None,
                 },
                 dry_run,

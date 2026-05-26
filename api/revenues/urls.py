@@ -9,7 +9,9 @@ urlpatterns = [
         name="revenue-export",
     ),
     path(
-        "revenues/", views.RevenueCreateListView.as_view(), name="revenue-create-list"
+        "revenues/",
+        views.RevenueCreateListView.as_view(),
+        name="revenue-create-list",
     ),
     path(
         "revenues/<int:pk>/",

@@ -1,5 +1,6 @@
 """
-Tests for members views, authentication views, and dashboard additional coverage.
+Tests for members views, authentication views, and dashboard additional
+coverage.
 """
 
 from datetime import date
@@ -26,7 +27,9 @@ class BaseAuthTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Member Test",
             document_hash="m" * 64,
@@ -107,7 +110,9 @@ class AuthenticationViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_token_refresh(self):
-        user = User.objects.create_user("tokentest", "token@test.com", "pass123!")
+        user = User.objects.create_user(
+            "tokentest", "token@test.com", "pass123!"
+        )
         refresh = RefreshToken.for_user(user)
         url = reverse("token_refresh")
         response = self.client.post(url, {"refresh": str(refresh)})
@@ -128,7 +133,9 @@ class AuthenticationViewTest(APITestCase):
         self.assertEqual(access_cookie["samesite"], "Strict")
 
     def test_token_refresh_sets_samesite_strict_on_access_token_cookie(self):
-        User.objects.create_user("refreshsite", "refreshsite@test.com", "pass!")
+        User.objects.create_user(
+            "refreshsite", "refreshsite@test.com", "pass!"
+        )
         # Perform login to obtain the refresh_token cookie
         login_url = reverse("token_obtain_pair")
         login_response = self.client.post(
@@ -143,7 +150,9 @@ class AuthenticationViewTest(APITestCase):
         response = self.client.post(refresh_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         access_cookie = response.cookies.get("access_token")
-        self.assertIsNotNone(access_cookie, "access_token cookie not set on refresh")
+        self.assertIsNotNone(
+            access_cookie, "access_token cookie not set on refresh"
+        )
         self.assertEqual(access_cookie["samesite"], "Strict")
 
 
@@ -171,7 +180,11 @@ class MemberViewTest(BaseAuthTestCase):
         )
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_201_CREATED,
+                status.HTTP_400_BAD_REQUEST,
+            ],
         )
 
     def test_retrieve_member(self):
@@ -188,7 +201,10 @@ class MemberViewTest(BaseAuthTestCase):
         )
 
     def test_update_member_with_document(self):
-        """Covers serializer validate_document with instance and update document."""
+        """
+        Covers serializer validate_document with instance and update
+        document.
+        """
         url = reverse("member-detail-view", args=[self.member.pk])
         response = self.client.patch(url, {"document": "529.982.247-25"})
         self.assertIn(
@@ -411,7 +427,11 @@ class AccountViewTest(BaseAuthTestCase):
         )
         self.assertIn(
             response.status_code,
-            [status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            [
+                status.HTTP_200_OK,
+                status.HTTP_201_CREATED,
+                status.HTTP_400_BAD_REQUEST,
+            ],
         )
 
     def test_retrieve_account(self):

@@ -22,7 +22,8 @@ def create_initial_revenue_on_account_creation(
     sender: Type[Any], instance: Any, created: bool, **kwargs: Any
 ) -> None:
     """
-    Cria automaticamente uma receita quando uma conta é criada com saldo inicial.
+    Cria automaticamente uma receita quando uma conta é criada
+    com saldo inicial.
 
     Quando uma conta é criada com current_balance > 0, este signal cria
     automaticamente uma receita correspondente para registrar o saldo inicial.
@@ -63,10 +64,14 @@ def create_initial_revenue_on_account_creation(
             member=instance.owner,
             created_by=instance.created_by,
             updated_by=instance.updated_by,
-            notes="Receita criada automaticamente a partir do saldo inicial da conta.",
+            notes=(
+                "Receita criada automaticamente a partir do saldo inicial"
+                " da conta."
+            ),
         )
     elif instance.current_balance < Decimal("0.00"):
-        # Saldo inicial negativo: registrar como despesa (uso de cheque especial)
+        # Saldo inicial negativo: registrar como despesa
+        # (uso de cheque especial)
         Expense.objects.create(
             description="Saldo inicial negativo (cheque especial)",
             value=abs(instance.current_balance),

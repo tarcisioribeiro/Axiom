@@ -37,7 +37,9 @@ class PayableSerializer(serializers.ModelSerializer):
         source="member.name", read_only=True, allow_null=True
     )
     remaining_value = serializers.SerializerMethodField()
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
     category_display = serializers.CharField(
         source="get_category_display", read_only=True
     )

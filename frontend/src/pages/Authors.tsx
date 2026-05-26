@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Edit,
@@ -184,6 +185,7 @@ export default function Authors() {
 
   useEffect(() => {
     void loadAuthors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAuthors = async () => {
