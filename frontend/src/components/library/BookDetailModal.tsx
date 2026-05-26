@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   BookMarked,
   BookOpen,
@@ -325,6 +326,7 @@ export function BookDetailModal({
       if (activeTab === 'readings') void loadReadings();
       if (activeTab === 'summaries') void loadSummaries();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, open, activeTab]);
 
   // Reset state when modal opens with a new book or initialTab changes

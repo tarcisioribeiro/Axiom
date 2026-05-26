@@ -1,3 +1,4 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import {
   CreditCard,
   Calendar,

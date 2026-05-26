@@ -9,7 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
-from app.export_utils import build_csv_response, build_pdf_response, format_decimal
+from app.export_utils import (
+    build_csv_response,
+    build_pdf_response,
+    format_decimal,
+)
 from app.permissions import GlobalDefaultPermission
 from app.throttles import ExportRateThrottle
 from revenues.filters import RevenueFilter
@@ -21,7 +25,10 @@ from revenues.serializers import (
     FixedRevenueSerializer,
     RevenueSerializer,
 )
-from revenues.services import bulk_generate_fixed_revenues, get_fixed_revenues_stats
+from revenues.services import (
+    bulk_generate_fixed_revenues,
+    get_fixed_revenues_stats,
+)
 
 # Build a lookup dict for category display names
 REVENUES_CATEGORY_LABELS = dict(REVENUES_CATEGORIES)
@@ -52,9 +59,9 @@ class RevenueCreateListView(BaseListCreateView):
     ordering = ["-date", "-id"]
 
     def get_queryset(self):
-        return Revenue.objects.filter(created_by=self.request.user).select_related(
-            "account"
-        )
+        return Revenue.objects.filter(
+            created_by=self.request.user
+        ).select_related("account")
 
     def perform_create(self, serializer):
         from django.db import transaction
@@ -91,9 +98,9 @@ class RevenueRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = RevenueSerializer
 
     def get_queryset(self):
-        return Revenue.objects.filter(created_by=self.request.user).select_related(
-            "account"
-        )
+        return Revenue.objects.filter(
+            created_by=self.request.user
+        ).select_related("account")
 
     def perform_update(self, serializer):
         from django.db import transaction
@@ -133,7 +140,9 @@ class FixedRevenueListCreateView(BaseListCreateView):
         return FixedRevenueSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class FixedRevenueDetailView(BaseRetrieveUpdateDestroyView):
@@ -168,7 +177,9 @@ class BulkGenerateFixedRevenuesView(APIView):
         )
 
         response_serializer = BulkGenerateRevenuesResponseSerializer(result)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            response_serializer.data, status=status.HTTP_201_CREATED
+        )
 
 
 class FixedRevenuesStatsView(APIView):
@@ -244,10 +255,14 @@ class ExportRevenuesView(APIView):
                 f"De {date_from[8:10]}/{date_from[5:7]}/{date_from[:4]}"
             )
         if date_to:
-            period_parts.append(f"até {date_to[8:10]}/{date_to[5:7]}/{date_to[:4]}")
+            period_parts.append(
+                f"até {date_to[8:10]}/{date_to[5:7]}/{date_to[:4]}"
+            )
         period = " ".join(period_parts) if period_parts else "Todo o período"
 
-        total = sum(r.net_amount for r in qs) if qs.exists() else Decimal("0.00")
+        total = (
+            sum(r.net_amount for r in qs) if qs.exists() else Decimal("0.00")
+        )
 
         user_name = ""
         if hasattr(request.user, "get_full_name"):
@@ -290,7 +305,9 @@ class ExportRevenuesView(APIView):
                 "",
                 "",
                 format_decimal(
-                    sum(Decimal(str(r.value)) for r in qs) if qs.exists() else 0
+                    sum(Decimal(str(r.value)) for r in qs)
+                    if qs.exists()
+                    else 0
                 ),
                 format_decimal(total),
                 "",
@@ -310,4 +327,6 @@ class ExportRevenuesView(APIView):
             )
 
         # Default: CSV
-        return build_csv_response(rows=rows, headers=headers, filename=filename)
+        return build_csv_response(
+            rows=rows, headers=headers, filename=filename
+        )

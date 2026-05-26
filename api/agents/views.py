@@ -4,7 +4,8 @@ Views do módulo de agentes.
 Melhorias de segurança:
 - Padrões de prompt injection ampliados para cobrir português (BR)
 - session_id validado como UUID para evitar colisão de namespace no Redis
-- Dados do usuário não expostos em mensagens de erro (evita information leakage)
+- Dados do usuário não expostos em mensagens de erro
+  (evita information leakage)
 
 Melhorias de performance:
 - Persistência (Redis + PostgreSQL) executada em daemon thread após retornar a
@@ -44,27 +45,36 @@ from app.throttles import AgentRateThrottle
 
 logger = logging.getLogger(__name__)
 
-# ── Segurança: Prompt injection patterns ──────────────────────────────────────
+# ── Segurança: Prompt injection patterns
+# ──────────────────────────────────────
 
 _INJECTION_PATTERNS = [
     # Inglês
     re.compile(r"ignore\s+(?:previous|all|prior)\s+instructions?", re.I),
     re.compile(r"system\s*prompt", re.I),
-    re.compile(r"you\s+are\s+now\s+(?:a\s+)?(?:dan|jailbreak|evil|unrestricted)", re.I),
-    re.compile(r"disregard\s+(?:your|all|the)\s+(?:previous|system|prior)", re.I),
+    re.compile(
+        r"you\s+are\s+now\s+(?:a\s+)?(?:dan|jailbreak|evil|unrestricted)", re.I
+    ),
+    re.compile(
+        r"disregard\s+(?:your|all|the)\s+(?:previous|system|prior)", re.I
+    ),
     re.compile(r"act\s+as\s+if\s+you\s+(?:have\s+no|are\s+not)", re.I),
     re.compile(r"new\s+objective\s+is", re.I),
     re.compile(r"forget\s+(?:all|your|previous|everything)", re.I),
     # Português
     re.compile(r"ignore\s+(?:todas?\s+as?\s+)?instru[çc][õo]es?", re.I),
     re.compile(
-        r"aja\s+como\s+(?:se\s+voc[êe]\s+(?:n[ãa]o|fosse)|um\s+assistente\s+sem)", re.I
+        r"aja\s+como\s+(?:se\s+voc[êe]\s+(?:n[ãa]o|fosse)|um\s+assistente\s+sem)",  # noqa: E501
+        re.I,
     ),
     re.compile(r"seu\s+novo\s+objetivo\s+[eé]", re.I),
-    re.compile(r"esqueça\s+(?:tudo|as\s+instru[çc][õo]es|o\s+que\s+foi\s+dito)", re.I),
+    re.compile(
+        r"esqueça\s+(?:tudo|as\s+instru[çc][õo]es|o\s+que\s+foi\s+dito)", re.I
+    ),
     re.compile(r"modo?\s+(?:dan|jailbreak|irrestrito|sem\s+filtros?)", re.I),
     re.compile(
-        r"desconsidere\s+(?:as?\s+)?(?:regras?|instru[çc][õo]es?|diretrizes?)", re.I
+        r"desconsidere\s+(?:as?\s+)?(?:regras?|instru[çc][õo]es?|diretrizes?)",
+        re.I,
     ),
     re.compile(r"voc[êe]\s+(?:agora\s+[eé]|n[ãa]o\s+tem\s+mais)", re.I),
     re.compile(r"finja\s+que\s+(?:voc[êe]\s+[eé]|n[ãa]o\s+tem)", re.I),
@@ -74,7 +84,10 @@ _MAX_QUERY_LEN = 2000
 
 
 def _validate_session_id(session_id: str) -> bool:
-    """Valida que session_id é UUID válido — evita colisão de namespace no Redis."""
+    """
+    Valida que session_id é UUID válido — evita colisão de namespace no
+    Redis.
+    """
     try:
         uuid.UUID(session_id)
         return True
@@ -83,7 +96,10 @@ def _validate_session_id(session_id: str) -> bool:
 
 
 def _sanitize_query(query: str) -> tuple[bool, str]:
-    """Return (is_safe, cleaned_query). Strips control chars; rejects injection."""
+    """
+    Return (is_safe, cleaned_query). Strips control chars; rejects
+    injection.
+    """
     cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", query).strip()
     if len(cleaned) > _MAX_QUERY_LEN:
         cleaned = cleaned[:_MAX_QUERY_LEN]
@@ -104,7 +120,8 @@ def _persist_conversation_async(
     """
     Persiste conversa no Redis e PostgreSQL em daemon thread.
 
-    Executa após a resposta ser enviada ao cliente, reduzindo latência percebida.
+    Executa após a resposta ser enviada ao cliente, reduzindo latência
+    percebida.
     Fecha conexões DB ao final para evitar connection leak.
     """
 
@@ -139,7 +156,9 @@ def _persist_conversation_async(
             )
         except Exception:
             logger.exception(
-                "Falha ao persistir conversa (user=%s session=%s)", user_id, session_id
+                "Falha ao persistir conversa (user=%s session=%s)",
+                user_id,
+                session_id,
             )
         finally:
             close_old_connections()
@@ -148,7 +167,8 @@ def _persist_conversation_async(
     t.start()
 
 
-# ── Views ─────────────────────────────────────────────────────────────────────
+# ── Views
+# ─────────────────────────────────────────────────────────────────────
 
 
 class AgentAskView(APIView):
@@ -160,7 +180,9 @@ class AgentAskView(APIView):
     def post(self, request: Request) -> Response:
         serializer = AgentAskSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = cast(User, request.user)
         data = serializer.validated_data
@@ -195,16 +217,22 @@ class AgentAskView(APIView):
             language=data.get("language", "pt-BR"),
             metadata={
                 "date_from": (
-                    data.get("date_from").isoformat() if data.get("date_from") else None
+                    data.get("date_from").isoformat()
+                    if data.get("date_from")
+                    else None
                 ),
                 "date_to": (
-                    data.get("date_to").isoformat() if data.get("date_to") else None
+                    data.get("date_to").isoformat()
+                    if data.get("date_to")
+                    else None
                 ),
                 "forecast_days": data.get("forecast_days", 30),
             },
         )
 
-        agent_response = AgentRouter.route(ctx, agent_override=data.get("agent_name"))
+        agent_response = AgentRouter.route(
+            ctx, agent_override=data.get("agent_name")
+        )
 
         # Persistência assíncrona — não bloqueia o retorno da resposta
         _persist_conversation_async(
@@ -320,7 +348,9 @@ class AgentStreamView(APIView):
     def post(self, request: Request) -> Response | StreamingHttpResponse:
         serializer = AgentAskSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = cast(User, request.user)
         data = serializer.validated_data
@@ -348,10 +378,14 @@ class AgentStreamView(APIView):
             language=data.get("language", "pt-BR"),
             metadata={
                 "date_from": (
-                    data.get("date_from").isoformat() if data.get("date_from") else None
+                    data.get("date_from").isoformat()
+                    if data.get("date_from")
+                    else None
                 ),
                 "date_to": (
-                    data.get("date_to").isoformat() if data.get("date_to") else None
+                    data.get("date_to").isoformat()
+                    if data.get("date_to")
+                    else None
                 ),
                 "forecast_days": data.get("forecast_days", 30),
             },
@@ -380,7 +414,12 @@ class AgentStreamView(APIView):
 
                 # Persistência assíncrona após stream completo
                 _persist_conversation_async(
-                    user.pk, session_id, query, full_content, agent.name, query_id
+                    user.pk,
+                    session_id,
+                    query,
+                    full_content,
+                    agent.name,
+                    query_id,
                 )
                 persisted = True
                 print(persisted)

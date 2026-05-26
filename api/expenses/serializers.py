@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from expenses.models import CategorizationRule, Expense, ExpenseSplit, FixedExpense, Tag
+from expenses.models import (
+    CategorizationRule,
+    Expense,
+    ExpenseSplit,
+    FixedExpense,
+    Tag,
+)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -30,11 +36,19 @@ class ExpenseSplitSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "uuid", "percentage", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "percentage",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     current_balance = serializers.DecimalField(
         source="account.current_balance",
         max_digits=15,
@@ -98,7 +112,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
             self._budget_warning = None
             return attrs
 
-        category = attrs.get("category", getattr(self.instance, "category", None))
+        category = attrs.get(
+            "category", getattr(self.instance, "category", None)
+        )
         value = attrs.get("value", getattr(self.instance, "value", None))
         date = attrs.get("date", getattr(self.instance, "date", None))
 

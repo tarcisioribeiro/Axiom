@@ -217,7 +217,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         try {
           const isAuthenticated = await authService.isAuthenticated();
 
-          if (isAuthenticated && user && !user.first_name) {
+          if (isAuthenticated && user && !user.is_superuser) {
             user = await enrichUserWithMemberData(user, '[AuthStore] loadUserData:');
             authService.saveUserData(user);
           }

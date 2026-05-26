@@ -32,7 +32,9 @@ class ExportExpensesStreamingTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
         Member.objects.create(
             name="Export Stream User",
@@ -71,7 +73,8 @@ class ExportExpensesStreamingTestCase(APITestCase):
     # ------------------------------------------------------------------
 
     def test_csv_export_returns_streaming_response(self):
-        """CSV export must return StreamingHttpResponse, not a plain HttpResponse."""
+        """CSV export must return StreamingHttpResponse, not a plain
+        HttpResponse."""
         self._create_expenses(5)
         url = reverse("expense-export")
         response = self.client.get(url, {"export_format": "csv"})
@@ -81,7 +84,8 @@ class ExportExpensesStreamingTestCase(APITestCase):
         self.assertIn("text/csv", response["Content-Type"])
 
     def test_csv_export_over_1000_records(self):
-        """CSV export with >1 000 records streams all rows without memory blow-up."""
+        """CSV export with >1 000 records streams all rows without memory
+        blow-up."""
         RECORD_COUNT = 1_200
         self._create_expenses(RECORD_COUNT)
 
@@ -118,12 +122,15 @@ class ExportExpensesStreamingTestCase(APITestCase):
         url = reverse("expense-export")
         response = self.client.get(url, {"export_format": "pdf"})
 
-        self.assertEqual(response.status_code, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        self.assertEqual(
+            response.status_code, status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        )
         self.assertIn("detail", response.data)
         self.assertIn("10000", response.data["detail"])
 
     def test_pdf_export_succeeds_within_limit(self):
-        """PDF export with a small dataset must return 200 with application/pdf."""
+        """PDF export with a small dataset must return 200 with
+        application/pdf."""
         self._create_expenses(3)
 
         url = reverse("expense-export")

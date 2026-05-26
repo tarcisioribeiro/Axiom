@@ -40,10 +40,14 @@ class BasePreferenceTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = _make_member(self.user)
 
-    def _create_preference(self, notification_type="loan_overdue", channel="email"):
+    def _create_preference(
+        self, notification_type="loan_overdue", channel="email"
+    ):
         return NotificationPreference.objects.create(
             owner=self.member,
             notification_type=notification_type,
@@ -162,7 +166,9 @@ class NotificationPreferenceDetailTest(BasePreferenceTestCase):
             channel="email",
             created_by=other_user,
         )
-        url = reverse("notification-preference-detail", kwargs={"pk": other_pref.pk})
+        url = reverse(
+            "notification-preference-detail", kwargs={"pk": other_pref.pk}
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 

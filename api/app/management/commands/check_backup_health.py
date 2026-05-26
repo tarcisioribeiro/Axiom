@@ -28,7 +28,8 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = (
-        "Exit non-zero if no successful database backup exists within the last N hours."
+        "Exit non-zero if no successful database backup exists"
+        " within the last N hours."
     )
 
     def add_arguments(self, parser: Any) -> None:
@@ -37,14 +38,18 @@ class Command(BaseCommand):
             type=float,
             default=26.0,
             help=(
-                "Maximum acceptable age of the last successful backup in hours "
-                "(default: 26, giving a 2-hour window past the daily schedule)."
+                "Maximum acceptable age of the last successful backup"
+                " in hours (default: 26, giving a 2-hour window"
+                " past the daily schedule)."
             ),
         )
         parser.add_argument(
             "--backup-dir",
             default=os.environ.get("BACKUP_DIR", "/backups"),
-            help="Directory where backup files are stored (default: /backups).",
+            help=(
+                "Directory where backup files are stored"
+                " (default: /backups)."
+            ),
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
@@ -54,7 +59,7 @@ class Command(BaseCommand):
         sentinel = os.path.join(backup_dir, ".last_successful_backup")
         status_file = os.path.join(backup_dir, ".last_backup_status")
 
-        # ── Check sentinel file ────────────────────────────────────────────────
+        # ── Check sentinel file ──────────────────────────────────────────
         if not os.path.exists(sentinel):
             self._fail(
                 f"Sentinel file not found: {sentinel}\n"
@@ -72,7 +77,7 @@ class Command(BaseCommand):
         age_seconds = time.time() - last_ts
         age_hours = age_seconds / 3600
 
-        # ── Check status file for non-success state ────────────────────────────
+        # ── Check status file for non-success state ──────────────────────
         last_status = ""
         if os.path.exists(status_file):
             try:
@@ -88,7 +93,7 @@ class Command(BaseCommand):
                 "The backup script ran but did not complete successfully."
             )
 
-        # ── Check age ─────────────────────────────────────────────────────────
+        # ── Check age ────────────────────────────────────────────────────
         if age_seconds > max_age_seconds:
             self._fail(
                 f"Last successful backup was {age_hours:.1f}h ago "

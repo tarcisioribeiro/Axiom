@@ -5,16 +5,22 @@ from datetime import date, timedelta
 def parse_temporal_intent(query: str, now: date) -> tuple[date, date] | None:
     """
     Return (start, end) date range inferred from temporal phrases in the query.
-    Returns None when no expression is found — callers fall back to their default.
+    Returns None when no expression is found — callers fall back to their
+    default.
     """
     q = query.lower()
     month_start = now.replace(day=1)
 
-    if any(p in q for p in ["mês passado", "mes passado", "último mês", "ultimo mes"]):
+    if any(
+        p in q
+        for p in ["mês passado", "mes passado", "último mês", "ultimo mes"]
+    ):
         last_month_end = month_start - timedelta(days=1)
         return last_month_end.replace(day=1), last_month_end
 
-    if any(p in q for p in ["semana passada", "última semana", "ultima semana"]):
+    if any(
+        p in q for p in ["semana passada", "última semana", "ultima semana"]
+    ):
         # Monday–Sunday of last week
         last_week_sun = now - timedelta(days=now.weekday() + 1)
         return last_week_sun - timedelta(days=6), last_week_sun

@@ -115,7 +115,10 @@ llm_stream_sessions_total = Counter(
 agent_routing_decisions_total = Counter(
     "axiom_agent_routing_decisions_total",
     "Decisões de roteamento por agente selecionado e método",
-    ["agent_name", "routing_method"],  # routing_method: keyword | semantic | fallback
+    [
+        "agent_name",
+        "routing_method",
+    ],  # routing_method: keyword | semantic | fallback
 )
 
 agent_routing_score = Histogram(
@@ -208,14 +211,18 @@ def record_llm_request(
     tokens_in: int = 0,
     tokens_out: int = 0,
 ) -> None:
-    llm_requests_total.labels(provider=provider, agent=agent, status=status).inc()
-    llm_request_duration_seconds.labels(provider=provider, agent=agent).observe(
-        duration_s
-    )
+    llm_requests_total.labels(
+        provider=provider, agent=agent, status=status
+    ).inc()
+    llm_request_duration_seconds.labels(
+        provider=provider, agent=agent
+    ).observe(duration_s)
     if tokens_in:
         llm_tokens_total.labels(provider=provider, type="input").inc(tokens_in)
     if tokens_out:
-        llm_tokens_total.labels(provider=provider, type="output").inc(tokens_out)
+        llm_tokens_total.labels(provider=provider, type="output").inc(
+            tokens_out
+        )
 
 
 def record_llm_fallback(from_provider: str, to_provider: str) -> None:
@@ -228,7 +235,9 @@ def record_llm_stream_session(agent: str) -> None:
     llm_stream_sessions_total.labels(agent=agent).inc()
 
 
-def record_agent_routing(agent_name: str, routing_method: str, score: float) -> None:
+def record_agent_routing(
+    agent_name: str, routing_method: str, score: float
+) -> None:
     agent_routing_decisions_total.labels(
         agent_name=agent_name, routing_method=routing_method
     ).inc()

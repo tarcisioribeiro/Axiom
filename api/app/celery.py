@@ -40,7 +40,8 @@ app.conf.beat_schedule = {
         "task": "credit_cards.tasks.close_overdue_bills",
         "schedule": crontab(hour=2, minute=0),
     },
-    # Busca cotações PTAX do BCB em dias úteis às 14h (após fechamento PTAX das 13h).
+    # Busca cotações PTAX do BCB em dias úteis às 14h
+    # (após fechamento PTAX das 13h).
     "fetch-ptax-rates-weekdays": {
         "task": "exchange_rates.fetch_ptax_rates",
         "schedule": crontab(hour=14, minute=0, day_of_week="1-5"),

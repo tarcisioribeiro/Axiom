@@ -230,7 +230,8 @@ class RoutineTemplateListView(APIView):
 
 
 class RoutineTemplateImportView(APIView):
-    """Importa um template de rotina criando RoutineTasks para o usuário autenticado."""
+    """Importa um template de rotina criando RoutineTasks
+    para o usuário autenticado."""
 
     permission_classes = (IsAuthenticated,)
     queryset = RoutineTask.objects.none()
@@ -307,7 +308,8 @@ class RoutineTemplateImportView(APIView):
                 "create",
                 "RoutineTask",
                 task.id,
-                f"Importou tarefa do template '{template['name']}': {task.name}",
+                f"Importou tarefa do template"
+                f" '{template['name']}': {task.name}",
                 description_key="routine_task.import_template",
                 description_params={
                     "task_name": task.name,
@@ -416,15 +418,22 @@ class GoalRecalculateView(APIView):
             )
         except Goal.DoesNotExist:
             return Response(
-                {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Objetivo não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        if goal.goal_type not in ("consecutive_days", "total_days", "avoid_habit"):
+        if goal.goal_type not in (
+            "consecutive_days",
+            "total_days",
+            "avoid_habit",
+        ):
             return Response(
                 {
                     "detail": (
-                        "Recálculo automático só está disponível para objetivos "
-                        "de dias consecutivos, total de dias ou evitar hábito."
+                        "Recálculo automático só está"
+                        " disponível para objetivos"
+                        " de dias consecutivos,"
+                        " total de dias ou evitar hábito."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
@@ -472,7 +481,8 @@ class GoalRestartView(APIView):
             )
         except Goal.DoesNotExist:
             return Response(
-                {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Objetivo não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         goal.current_value = 0
@@ -519,7 +529,8 @@ class GoalRegisterFailureView(APIView):
             )
         except Goal.DoesNotExist:
             return Response(
-                {"detail": "Objetivo não encontrado."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Objetivo não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         failure_date_str = request.data.get("failure_date")
@@ -669,11 +680,15 @@ class PersonalPlanningDashboardStatsView(APIView):
         today = timezone.now().date()
 
         # Querysets filtrados
-        tasks_qs = RoutineTask.objects.filter(owner__user=user, deleted_at__isnull=True)
+        tasks_qs = RoutineTask.objects.filter(
+            owner__user=user, deleted_at__isnull=True
+        )
         instances_qs = TaskInstance.objects.filter(
             owner__user=user, deleted_at__isnull=True
         )
-        goals_qs = Goal.objects.filter(owner__user=user, deleted_at__isnull=True)
+        goals_qs = Goal.objects.filter(
+            owner__user=user, deleted_at__isnull=True
+        )
 
         # Contadores gerais
         total_tasks = tasks_qs.count()
@@ -684,7 +699,9 @@ class PersonalPlanningDashboardStatsView(APIView):
 
         # Taxa de cumprimento dos ultimos 7 dias
         seven_days_ago = today - timedelta(days=7)
-        recent_instances = instances_qs.filter(scheduled_date__gte=seven_days_ago)
+        recent_instances = instances_qs.filter(
+            scheduled_date__gte=seven_days_ago
+        )
         total_recent = recent_instances.count()
         completed_recent = recent_instances.filter(status="completed").count()
         completion_rate_7d = (
@@ -695,11 +712,15 @@ class PersonalPlanningDashboardStatsView(APIView):
 
         # Taxa de cumprimento dos ultimos 30 dias
         thirty_days_ago = today - timedelta(days=30)
-        month_instances = instances_qs.filter(scheduled_date__gte=thirty_days_ago)
+        month_instances = instances_qs.filter(
+            scheduled_date__gte=thirty_days_ago
+        )
         total_month = month_instances.count()
         completed_month = month_instances.filter(status="completed").count()
         completion_rate_30d = (
-            round((completed_month / total_month) * 100, 1) if total_month > 0 else 0.0
+            round((completed_month / total_month) * 100, 1)
+            if total_month > 0
+            else 0.0
         )
 
         # Tarefas por categoria (Top 5)
@@ -762,14 +783,16 @@ class PersonalPlanningDashboardStatsView(APIView):
         # Tarefas de hoje
         instances_today = instances_qs.filter(scheduled_date=today)
         total_tasks_today = instances_today.count()
-        completed_tasks_today = instances_today.filter(status="completed").count()
+        completed_tasks_today = instances_today.filter(
+            status="completed"
+        ).count()
 
         # Tarefas rotineiras ativas (usar o serializer)
         from personal_planning.serializers import RoutineTaskSerializer
 
-        active_routine_tasks_qs = tasks_qs.filter(is_active=True).prefetch_related(
-            "instances"
-        )
+        active_routine_tasks_qs = tasks_qs.filter(
+            is_active=True
+        ).prefetch_related("instances")
         active_routine_tasks_data = RoutineTaskSerializer(
             active_routine_tasks_qs, many=True
         ).data
@@ -778,7 +801,9 @@ class PersonalPlanningDashboardStatsView(APIView):
         from personal_planning.serializers import DailyReflectionSerializer
 
         recent_reflections_qs = (
-            DailyReflection.objects.filter(owner__user=user, deleted_at__isnull=True)
+            DailyReflection.objects.filter(
+                owner__user=user, deleted_at__isnull=True
+            )
             .select_related("owner")
             .order_by("-date")[:5]
         )
@@ -825,7 +850,9 @@ class PersonalPlanningDashboardStatsView(APIView):
         for _ in range(max_lookback_days):
             # Buscar instâncias do dia
             day_instances = TaskInstance.objects.filter(
-                owner__user=user, scheduled_date=check_date, deleted_at__isnull=True
+                owner__user=user,
+                scheduled_date=check_date,
+                deleted_at__isnull=True,
             )
 
             total_instances = day_instances.count()
@@ -917,7 +944,8 @@ class PersonalPlanningDashboardStatsView(APIView):
 
 
 class TaskInstanceListCreateView(BaseListCreateView):
-    """Lista todas as instancias de tarefas ou cria uma nova (tarefa avulsa)."""
+    """Lista todas as instancias de tarefas ou cria uma nova
+    (tarefa avulsa)."""
 
     def get_queryset(self):
         qs = TaskInstance.objects.filter(
@@ -943,7 +971,9 @@ class TaskInstanceListCreateView(BaseListCreateView):
         if template_id:
             qs = qs.filter(template_id=template_id)
 
-        return qs.order_by("scheduled_date", "scheduled_time", "occurrence_index")
+        return qs.order_by(
+            "scheduled_date", "scheduled_time", "occurrence_index"
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -987,7 +1017,10 @@ class TaskInstanceDetailView(BaseRetrieveUpdateDestroyView):
             instance.id,
             f"Atualizou instancia: {instance.task_name} - {instance.status}",
             description_key="task_instance.update",
-            description_params={"name": instance.task_name, "status": instance.status},
+            description_params={
+                "name": instance.task_name,
+                "status": instance.status,
+            },
         )
 
     def perform_destroy(self, instance):
@@ -1013,14 +1046,17 @@ class InstancesForDateView(APIView):
 
     Query params:
     - date: Data no formato YYYY-MM-DD (obrigatório)
-    - sync: Se 'true', sincroniza instâncias pendentes com dados atuais do template
+    - sync: Se 'true', sincroniza instâncias pendentes com dados atuais do
+    template
     """
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         date_param = request.query_params.get("date")
-        sync_param = request.query_params.get("sync", "false").lower() == "true"
+        sync_param = (
+            request.query_params.get("sync", "false").lower() == "true"
+        )
 
         if not date_param:
             return Response(
@@ -1040,12 +1076,15 @@ class InstancesForDateView(APIView):
         member = Member.objects.filter(user=request.user).first()
         if not member:
             return Response(
-                {"error": "Membro nao encontrado"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Membro nao encontrado"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         # Gerar instancias (lazy generation)
         # Se sync=true, atualiza instâncias pendentes com dados do template
-        from personal_planning.services.instance_generator import InstanceGenerator
+        from personal_planning.services.instance_generator import (
+            InstanceGenerator,
+        )
 
         instances = InstanceGenerator.generate_for_date(
             member, target_date, force_regenerate=sync_param
@@ -1093,12 +1132,15 @@ class TaskInstanceStatusUpdateView(APIView):
             )
         except TaskInstance.DoesNotExist:
             return Response(
-                {"error": "Instancia nao encontrada"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Instancia nao encontrada"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = TaskInstanceStatusUpdateSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
         new_status = serializer.validated_data["status"]
         notes = serializer.validated_data.get("notes")
@@ -1117,7 +1159,10 @@ class TaskInstanceStatusUpdateView(APIView):
             instance.id,
             f"Atualizou status: {instance.task_name} -> {new_status}",
             description_key="task_instance.update_status",
-            description_params={"name": instance.task_name, "status": new_status},
+            description_params={
+                "name": instance.task_name,
+                "status": new_status,
+            },
         )
 
         return Response(TaskInstanceSerializer(instance).data)
@@ -1130,7 +1175,8 @@ class RoutineTaskHeatmapView(APIView):
     Retorna dados de consistencia diaria para o heatmap de habitos.
 
     Query params:
-    - task_id: (opcional) ID da tarefa para filtrar. Se omitido, retorna dados globais.
+    - task_id: (opcional) ID da tarefa para filtrar.
+      Se omitido, retorna dados globais.
     - year:    (opcional) Ano a exibir. Default: ano atual.
     """
 
@@ -1155,7 +1201,8 @@ class RoutineTaskHeatmapView(APIView):
         member = Member.objects.filter(user=request.user).first()
         if not member:
             return Response(
-                {"error": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if task_id:
@@ -1352,9 +1399,13 @@ class PersonalPlanningAnalyticsView(APIView):
             )
 
         weekends = [
-            d for d in by_weekday if d["weekday"] in (5, 6) and d["rate"] is not None
+            d
+            for d in by_weekday
+            if d["weekday"] in (5, 6) and d["rate"] is not None
         ]
-        weekdays = [d for d in by_weekday if d["weekday"] < 5 and d["rate"] is not None]
+        weekdays = [
+            d for d in by_weekday if d["weekday"] < 5 and d["rate"] is not None
+        ]
 
         if weekends and weekdays:
             avg_weekend = sum(d["rate"] for d in weekends) / len(weekends)
@@ -1427,13 +1478,18 @@ class TaskInstanceBulkUpdateView(APIView):
 
             if not instance_id or not new_status:
                 errors.append(
-                    {"id": instance_id, "error": "id e status sao obrigatorios"}
+                    {
+                        "id": instance_id,
+                        "error": "id e status sao obrigatorios",
+                    }
                 )
                 continue
 
             try:
                 instance = TaskInstance.objects.get(
-                    pk=instance_id, owner__user=request.user, deleted_at__isnull=True
+                    pk=instance_id,
+                    owner__user=request.user,
+                    deleted_at__isnull=True,
                 )
                 instance.status = new_status
                 if notes is not None:
@@ -1442,12 +1498,16 @@ class TaskInstanceBulkUpdateView(APIView):
                 instance.save()
                 updated_instances.append(instance)
             except TaskInstance.DoesNotExist:
-                errors.append({"id": instance_id, "error": "Instancia nao encontrada"})
+                errors.append(
+                    {"id": instance_id, "error": "Instancia nao encontrada"}
+                )
 
         return Response(
             {
                 "updated_count": len(updated_instances),
-                "updated": TaskInstanceSerializer(updated_instances, many=True).data,
+                "updated": TaskInstanceSerializer(
+                    updated_instances, many=True
+                ).data,
                 "errors": errors,
             }
         )
@@ -1459,10 +1519,13 @@ class GamificationProfileView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        member = Member.objects.filter(user=request.user, is_deleted=False).first()
+        member = Member.objects.filter(
+            user=request.user, is_deleted=False
+        ).first()
         if not member:
             return Response(
-                {"detail": "Membro não encontrado."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         profile, _ = GamificationProfile.objects.get_or_create(
@@ -1477,11 +1540,17 @@ class GamificationProfileView(APIView):
         )
         recent_xp = profile.xp_transactions.order_by("-created_at")[:10]
 
-        xp_next_level = GamificationProfile.xp_for_level(profile.current_level + 1)
-        xp_current_level = GamificationProfile.xp_for_level(profile.current_level)
+        xp_next_level = GamificationProfile.xp_for_level(
+            profile.current_level + 1
+        )
+        xp_current_level = GamificationProfile.xp_for_level(
+            profile.current_level
+        )
         xp_in_level = profile.total_xp - xp_current_level
         xp_needed = xp_next_level - xp_current_level
-        progress_pct = round((xp_in_level / xp_needed * 100) if xp_needed > 0 else 0, 1)
+        progress_pct = round(
+            (xp_in_level / xp_needed * 100) if xp_needed > 0 else 0, 1
+        )
 
         return Response(
             {
@@ -1548,7 +1617,9 @@ class WorkoutPlanListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return WorkoutPlan.objects.filter(owner=member, deleted_at__isnull=True)
+        return WorkoutPlan.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
 
 
 class WorkoutPlanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -1557,7 +1628,9 @@ class WorkoutPlanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return WorkoutPlan.objects.filter(owner=member, deleted_at__isnull=True)
+        return WorkoutPlan.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
 
 
 class WorkoutDayListCreateView(BaseListCreateView):
@@ -1589,7 +1662,9 @@ class WorkoutExerciseListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = WorkoutExercise.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = WorkoutExercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
         workout_day_id = self.request.query_params.get("workout_day")
         if workout_day_id:
             qs = qs.filter(workout_day_id=workout_day_id)
@@ -1602,7 +1677,9 @@ class WorkoutExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return WorkoutExercise.objects.filter(owner=member, deleted_at__isnull=True)
+        return WorkoutExercise.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
 
 
 class WorkoutSessionListCreateView(BaseListCreateView):
@@ -1611,7 +1688,9 @@ class WorkoutSessionListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = WorkoutSession.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = WorkoutSession.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
         workout_day_id = self.request.query_params.get("workout_day")
         if workout_day_id:
             qs = qs.filter(workout_day_id=workout_day_id)
@@ -1630,7 +1709,9 @@ class WorkoutSessionRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return WorkoutSession.objects.filter(owner=member, deleted_at__isnull=True)
+        return WorkoutSession.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
 
 
 class WorkoutSessionExerciseListCreateView(BaseListCreateView):
@@ -1648,7 +1729,9 @@ class WorkoutSessionExerciseListCreateView(BaseListCreateView):
         return qs
 
 
-class WorkoutSessionExerciseRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class WorkoutSessionExerciseRetrieveUpdateDestroyView(
+    BaseRetrieveUpdateDestroyView
+):
     serializer_class = WorkoutSessionExerciseSerializer
     create_serializer_class = WorkoutSessionExerciseCreateUpdateSerializer
 
@@ -1665,20 +1748,26 @@ class WorkoutSessionSetListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = WorkoutSessionSet.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = WorkoutSessionSet.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
         session_exercise_id = self.request.query_params.get("session_exercise")
         if session_exercise_id:
             qs = qs.filter(session_exercise_id=session_exercise_id)
         return qs
 
 
-class WorkoutSessionSetRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class WorkoutSessionSetRetrieveUpdateDestroyView(
+    BaseRetrieveUpdateDestroyView
+):
     serializer_class = WorkoutSessionSetSerializer
     create_serializer_class = WorkoutSessionSetCreateUpdateSerializer
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        return WorkoutSessionSet.objects.filter(owner=member, deleted_at__isnull=True)
+        return WorkoutSessionSet.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
 
 
 # ============================================================================
@@ -1758,14 +1847,18 @@ class MenuOptionIngredientListCreateView(BaseListCreateView):
 
     def get_queryset(self):
         member = Member.objects.get(user=self.request.user)
-        qs = MenuOptionIngredient.objects.filter(owner=member, deleted_at__isnull=True)
+        qs = MenuOptionIngredient.objects.filter(
+            owner=member, deleted_at__isnull=True
+        )
         menu_option_id = self.request.query_params.get("menu_option")
         if menu_option_id:
             qs = qs.filter(menu_option_id=menu_option_id)
         return qs
 
 
-class MenuOptionIngredientRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
+class MenuOptionIngredientRetrieveUpdateDestroyView(
+    BaseRetrieveUpdateDestroyView
+):
     serializer_class = MenuOptionIngredientSerializer
     create_serializer_class = MenuOptionIngredientCreateUpdateSerializer
 

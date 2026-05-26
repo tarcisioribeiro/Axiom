@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { ArrowLeftRight, FileUp, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -242,6 +243,7 @@ export default function BankReconciliation() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {

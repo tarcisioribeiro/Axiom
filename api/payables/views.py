@@ -8,7 +8,10 @@ from rest_framework.views import APIView
 from app.base_views import BaseListCreateView, BaseRetrieveUpdateDestroyView
 from app.permissions import GlobalDefaultPermission
 from payables.models import Payable, PayableInstallment
-from payables.serializers import PayableInstallmentSerializer, PayableSerializer
+from payables.serializers import (
+    PayableInstallmentSerializer,
+    PayableSerializer,
+)
 
 
 class PayableCreateListView(BaseListCreateView):
@@ -16,12 +19,14 @@ class PayableCreateListView(BaseListCreateView):
     serializer_class = PayableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(created_by=self.request.user).select_related(
-            "member"
-        )
+        return Payable.objects.filter(
+            created_by=self.request.user
+        ).select_related("member")
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -29,9 +34,9 @@ class PayableRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = PayableSerializer
 
     def get_queryset(self):
-        return Payable.objects.filter(created_by=self.request.user).select_related(
-            "member"
-        )
+        return Payable.objects.filter(
+            created_by=self.request.user
+        ).select_related("member")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -46,10 +51,12 @@ class PayableInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not payable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        installments = PayableInstallment.objects.filter(payable=payable).order_by(
-            "installment_number"
-        )
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        installments = PayableInstallment.objects.filter(
+            payable=payable
+        ).order_by("installment_number")
         serializer = PayableInstallmentSerializer(installments, many=True)
         return Response(serializer.data)
 
@@ -58,7 +65,9 @@ class PayableInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not payable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         installment_number = request.data.get("installment_number")
         if not installment_number:
             return Response(
@@ -71,7 +80,8 @@ class PayableInstallmentListView(APIView):
             )
         except PayableInstallment.DoesNotExist:
             return Response(
-                {"detail": "Installment not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Installment not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
         serializer = PayableInstallmentSerializer(
             installment, data=request.data, partial=True
@@ -96,7 +106,9 @@ class PayablePaymentView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not payable:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         value = request.data.get("value")
         account_id = request.data.get("account")
@@ -114,7 +126,8 @@ class PayablePaymentView(APIView):
             account = Account.objects.get(pk=account_id, is_deleted=False)
         except Account.DoesNotExist:
             return Response(
-                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Account not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         payed = not scheduled

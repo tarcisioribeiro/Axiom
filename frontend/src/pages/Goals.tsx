@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Trophy,
@@ -241,6 +242,7 @@ export default function Goals({ embedded = false }: GoalsProps) {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {

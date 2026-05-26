@@ -27,7 +27,9 @@ class BaseFinalPushTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Push User",
             document_hash="u" * 64,
@@ -61,14 +63,17 @@ class VaultLockedSecurityViewTest(BaseFinalPushTestCase):
         )
 
     def test_password_list_locked_returns_423(self):
-        """With VaultConfig configured but no key in cache → vault is locked."""
+        """
+        With VaultConfig configured but no key in cache → vault is locked.
+        """
         url = reverse("password-list-create")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_423_LOCKED)
 
     def test_password_share_token_list_locked_returns_423(self):
         """Share-token endpoint also requires vault to be unlocked."""
-        # Use a placeholder pk; the vault-lock check fires before any DB lookup.
+        # Use a placeholder pk; the vault-lock check fires before any DB
+        # lookup.
         url = reverse("password-share-token-list-create", args=[99999])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_423_LOCKED)
@@ -82,7 +87,9 @@ class VaultLockedSecurityViewTest(BaseFinalPushTestCase):
 class MemberPermissionsViewTest(BaseFinalPushTestCase):
     def test_member_permissions_update(self):
         url = reverse("member-permissions-update", args=[self.member.pk])
-        response = self.client.put(url, {"permission_codenames": []}, format="json")
+        response = self.client.put(
+            url, {"permission_codenames": []}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("message", response.data)  # type: ignore
         self.assertIn("permissions", response.data)  # type: ignore
@@ -171,14 +178,14 @@ class NotificationOperationsViewTest(BaseFinalPushTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("unread_count", response.data)  # type: ignore
-        self.assertIsInstance(response.data["unread_count"], int)  # type: ignore
+        self.assertIsInstance(response.data["unread_count"], int)  # type: ignore  # noqa: E501
 
     def test_mark_all_notifications_read(self):
         url = reverse("notification-mark-all-read")
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("marked_read", response.data)  # type: ignore
-        self.assertIsInstance(response.data["marked_read"], int)  # type: ignore
+        self.assertIsInstance(response.data["marked_read"], int)  # type: ignore  # noqa: E501
 
 
 # ---------------------------------------------------------------------------

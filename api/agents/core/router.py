@@ -181,7 +181,8 @@ def _build_registry() -> list[BaseAgent]:
         FinancialAgent(),
         SecurityAgent(),
         IntellectAgent(),
-        # Agentes legados (preservados para compatibilidade e roteamento automático)
+        # Agentes legados (preservados para compatibilidade e roteamento
+        # automático)
         FinanceAgent(),
         BudgetAgent(),
         ForecastAgent(),
@@ -233,8 +234,11 @@ def _cosine_sim(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
-def _pg_all_domains_avg(embedding: list[float], user_pk: int) -> dict[str, float]:
-    """Uma única query SQL retornando média de similaridade top-3 por domínio."""
+def _pg_all_domains_avg(
+    embedding: list[float], user_pk: int
+) -> dict[str, float]:
+    """Uma única query SQL retornando média de similaridade
+    top-3 por domínio."""
     from django.db import connection
 
     emb_str = "[" + ",".join(f"{x:.6f}" for x in embedding) + "]"
@@ -260,15 +264,17 @@ def _pg_all_domains_avg(embedding: list[float], user_pk: int) -> dict[str, float
         return {row[0]: float(row[1]) for row in cursor.fetchall()}
 
 
-def _py_all_domains_avg(embedding: list[float], user_pk: int) -> dict[str, float]:
+def _py_all_domains_avg(
+    embedding: list[float], user_pk: int
+) -> dict[str, float]:
     """Fallback Python para SQLite (ambiente de testes)."""
     import json
 
     from agents.models import AgentEmbedding
 
-    docs = AgentEmbedding.objects.filter(user_id=user_pk, is_deleted=False).values(
-        "embedding", "domain"
-    )
+    docs = AgentEmbedding.objects.filter(
+        user_id=user_pk, is_deleted=False
+    ).values("embedding", "domain")
 
     by_domain: dict[str, list[float]] = {}
     for doc in docs:
@@ -293,12 +299,14 @@ def _py_all_domains_avg(embedding: list[float], user_pk: int) -> dict[str, float
 def semantic_domain_scores(
     query_embedding: list[float], user_pk: int
 ) -> dict[str, float]:
-    """Retorna similaridade média dos top-3 embeddings por domínio (1 query SQL)."""
+    """Retorna similaridade média dos top-3 embeddings
+    por domínio (1 query SQL)."""
     fn = _pg_all_domains_avg if _is_postgres() else _py_all_domains_avg
     return fn(query_embedding, user_pk)
 
 
-# ── SemanticRouter com exemplares pré-computados ──────────────────────────────
+# ── SemanticRouter com exemplares pré-computados
+# ──────────────────────────────
 
 
 class SemanticRouter:
@@ -327,7 +335,9 @@ class SemanticRouter:
     def _ensure_ready(self) -> None:
         if self._ready:
             return
-        logger.info("SemanticRouter: pré-computando embeddings de exemplares...")
+        logger.info(
+            "SemanticRouter: pré-computando embeddings de exemplares..."
+        )
         computed: dict[str, list[list[float]]] = {}
         for agent_name, queries in _AGENT_EXEMPLARS.items():
             embs = []
@@ -348,16 +358,20 @@ class SemanticRouter:
             logger.info("SemanticRouter: pronto (%d agentes)", len(computed))
         else:
             logger.warning(
-                "SemanticRouter: nenhum embedding gerado — Ollama indisponível?"
+                "SemanticRouter: nenhum embedding gerado"
+                " — Ollama indisponível?"
             )
 
     def score(self, query_embedding: list[float]) -> dict[str, float]:
-        """Retorna max cosine similarity entre query e exemplares por agente."""
+        """Retorna max cosine similarity entre query
+        e exemplares por agente."""
         self._ensure_ready()
         if not self._embeddings:
             return {}
         return {
-            agent_name: max(_cosine_sim(query_embedding, ex) for ex in exemplars)
+            agent_name: max(
+                _cosine_sim(query_embedding, ex) for ex in exemplars
+            )
             for agent_name, exemplars in self._embeddings.items()
         }
 
@@ -365,13 +379,15 @@ class SemanticRouter:
         return self._ready
 
 
-# ── AgentRouter principal ──────────────────────────────────────────────────────
+# ── AgentRouter principal
+# ──────────────────────────────────────────────────────
 
 
 class AgentRouter:
     @staticmethod
     def select_by_name(name: str) -> BaseAgent | None:
-        """Instancia agente diretamente pelo nome, sem roteamento automático."""
+        """Instancia agente diretamente pelo nome,
+        sem roteamento automático."""
         name_map = _build_name_map()
         cls = name_map.get(name)
         if cls is None:
@@ -383,7 +399,9 @@ class AgentRouter:
         return cls()
 
     @staticmethod
-    def select(ctx: AgentContext, agent_override: str | None = None) -> BaseAgent:
+    def select(
+        ctx: AgentContext, agent_override: str | None = None
+    ) -> BaseAgent:
         from app.config import cfg
 
         # Override direto: bypassa roteamento automático
@@ -392,7 +410,8 @@ class AgentRouter:
             if agent is not None:
                 return agent
             logger.warning(
-                "AgentRouter: override '%s' inválido, usando roteamento automático",
+                "AgentRouter: override '%s' inválido,"
+                " usando roteamento automático",
                 agent_override,
             )
 
@@ -404,7 +423,9 @@ class AgentRouter:
         }
 
         # Roteamento semântico (opcional via config)
-        semantic_enabled = cfg("LLM_SEMANTIC_ROUTING_ENABLED", "true").lower() == "true"
+        semantic_enabled = (
+            cfg("LLM_SEMANTIC_ROUTING_ENABLED", "true").lower() == "true"
+        )
         if semantic_enabled:
             query_embedding = LLMClient.embed(ctx.query)
             if query_embedding:
@@ -416,16 +437,22 @@ class AgentRouter:
                         ex_score = exemplar_scores.get(agent.name, 0.0)
                         score_map[agent] += 0.30 * ex_score
 
-                    # Bônus 2: pgvector com histórico real do usuário (1 query SQL)
-                    domain_sims = semantic_domain_scores(query_embedding, ctx.user_id)
+                    # Bônus 2: pgvector com histórico real do usuário (1 query
+                    # SQL)
+                    domain_sims = semantic_domain_scores(
+                        query_embedding, ctx.user_id
+                    )
                     for agent in registry:
                         domain = _AGENT_TO_DOMAIN.get(agent.name)
                         if domain:
-                            score_map[agent] += 0.15 * domain_sims.get(domain, 0.0)
+                            score_map[agent] += 0.15 * domain_sims.get(
+                                domain, 0.0
+                            )
 
                 except Exception:
                     logger.warning(
-                        "AgentRouter: scoring semântico falhou, usando apenas keyword",
+                        "AgentRouter: scoring semântico falhou,"
+                        " usando apenas keyword",
                         exc_info=True,
                     )
 
@@ -437,7 +464,8 @@ class AgentRouter:
 
             best_agent = InsightAgent()
             logger.info(
-                "AgentRouter: score baixo (%.2f) → fallback InsightAgent", best_score
+                "AgentRouter: score baixo (%.2f) → fallback InsightAgent",
+                best_score,
             )
         else:
             logger.info(
@@ -459,5 +487,7 @@ class AgentRouter:
         return best_agent
 
     @staticmethod
-    def route(ctx: AgentContext, agent_override: str | None = None) -> AgentResponse:
+    def route(
+        ctx: AgentContext, agent_override: str | None = None
+    ) -> AgentResponse:
         return AgentRouter.select(ctx, agent_override=agent_override).run(ctx)

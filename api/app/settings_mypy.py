@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third-party — available in mypy additional_dependencies (djangorestframework)
+    # Third-party — available in mypy additional_dependencies
+    # (djangorestframework)
     "rest_framework",
     # First-party apps (local to api/)
     "app",

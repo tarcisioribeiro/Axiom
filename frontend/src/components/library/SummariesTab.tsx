@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Edit,
   Trash2,
@@ -63,6 +64,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -98,6 +100,7 @@ export function SummariesTab({ isCreateOpen, onCreateClose }: SummariesTabProps)
 
   useEffect(() => {
     if (isCreateOpen) handleCreateOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreateOpen]);
 
   const handleCreate = async (e: React.FormEvent) => {

@@ -40,11 +40,15 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
     priority_display = serializers.CharField(
         source="get_priority_display", read_only=True
     )
-    unit_display = serializers.CharField(source="get_unit_display", read_only=True)
+    unit_display = serializers.CharField(
+        source="get_unit_display", read_only=True
+    )
     completion_rate = serializers.SerializerMethodField()
     total_completions = serializers.SerializerMethodField()
     linked_financial_goal_description = serializers.CharField(
-        source="linked_financial_goal.description", read_only=True, default=None
+        source="linked_financial_goal.description",
+        read_only=True,
+        default=None,
     )
     linked_book_title = serializers.CharField(
         source="linked_book.title", read_only=True, default=None
@@ -115,7 +119,9 @@ class RoutineTaskSerializer(serializers.ModelSerializer):
 
     def get_total_completions(self, obj):
         """Conta total de vezes que a tarefa foi cumprida."""
-        return obj.instances.filter(status="completed", deleted_at__isnull=True).count()
+        return obj.instances.filter(
+            status="completed", deleted_at__isnull=True
+        ).count()
 
 
 class RoutineTaskCreateUpdateSerializer(serializers.ModelSerializer):
@@ -172,7 +178,9 @@ class GoalSerializer(serializers.ModelSerializer):
     goal_type_display = serializers.CharField(
         source="get_goal_type_display", read_only=True
     )
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
     related_task_name = serializers.CharField(
         source="related_task.name", read_only=True
     )
@@ -245,7 +253,9 @@ class DailyReflectionSerializer(serializers.ModelSerializer):
     """Serializer para visualizacao de reflexoes diarias."""
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
-    mood_display = serializers.CharField(source="get_mood_display", read_only=True)
+    mood_display = serializers.CharField(
+        source="get_mood_display", read_only=True
+    )
 
     class Meta:
         model = DailyReflection
@@ -281,11 +291,15 @@ class TaskInstanceSerializer(serializers.ModelSerializer):
     """Serializer para visualizacao de instancias de tarefas."""
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
-    template_name = serializers.CharField(source="template.name", read_only=True)
+    template_name = serializers.CharField(
+        source="template.name", read_only=True
+    )
     category_display = serializers.CharField(
         source="get_category_display", read_only=True
     )
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_display = serializers.CharField(
+        source="get_status_display", read_only=True
+    )
     time_display = serializers.ReadOnlyField()
     is_overdue = serializers.ReadOnlyField()
 
@@ -599,7 +613,9 @@ class WorkoutSessionExerciseSerializer(serializers.ModelSerializer):
         read_only_fields = ["uuid", "created_at", "updated_at"]
 
 
-class WorkoutSessionExerciseCreateUpdateSerializer(serializers.ModelSerializer):
+class WorkoutSessionExerciseCreateUpdateSerializer(
+    serializers.ModelSerializer
+):
     class Meta:
         model = WorkoutSessionExercise
         fields = [
@@ -623,7 +639,9 @@ class WorkoutSessionSerializer(serializers.ModelSerializer):
         source="workout_day.muscle_groups", read_only=True, default=None
     )
     duration_minutes = serializers.IntegerField(read_only=True)
-    session_exercises = WorkoutSessionExerciseSerializer(many=True, read_only=True)
+    session_exercises = WorkoutSessionExerciseSerializer(
+        many=True, read_only=True
+    )
 
     class Meta:
         model = WorkoutSession
@@ -688,7 +706,9 @@ class FoodCreateUpdateSerializer(serializers.ModelSerializer):
 
 class MenuOptionIngredientSerializer(serializers.ModelSerializer):
     food_name = serializers.CharField(source="food.name", read_only=True)
-    unit_display = serializers.CharField(source="get_unit_display", read_only=True)
+    unit_display = serializers.CharField(
+        source="get_unit_display", read_only=True
+    )
 
     class Meta:
         model = MenuOptionIngredient
@@ -775,11 +795,20 @@ class MealTypeSerializer(serializers.ModelSerializer):
 class MealTypeCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MealType
-        fields = ["id", "name", "suggested_time", "order", "is_active", "owner"]
+        fields = [
+            "id",
+            "name",
+            "suggested_time",
+            "order",
+            "is_active",
+            "owner",
+        ]
 
 
 class MealLogSerializer(serializers.ModelSerializer):
-    meal_type_name = serializers.CharField(source="meal_type.name", read_only=True)
+    meal_type_name = serializers.CharField(
+        source="meal_type.name", read_only=True
+    )
     meal_type_suggested_time = serializers.TimeField(
         source="meal_type.suggested_time", read_only=True
     )

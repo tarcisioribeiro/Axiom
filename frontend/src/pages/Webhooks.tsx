@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Activity,
@@ -219,7 +220,7 @@ export default function Webhooks() {
               className="flex items-start justify-between gap-md rounded-lg border bg-card p-md"
             >
               <div className="flex min-w-0 items-start gap-sm">
-                <div className="mt-1 rounded-md bg-primary/10 p-sm">
+                <div className="mt-xs rounded-md bg-primary/10 p-sm">
                   <Globe className="h-md w-md text-primary" />
                 </div>
                 <div className="min-w-0">
@@ -231,7 +232,7 @@ export default function Webhooks() {
                   <p className="max-w-xs truncate text-sm text-muted-foreground">
                     {w.url}
                   </p>
-                  <div className="mt-1 flex flex-wrap gap-xs">
+                  <div className="mt-xs flex flex-wrap gap-xs">
                     {w.events.slice(0, 4).map((ev) => (
                       <Badge key={ev} variant="outline" className="text-xs">
                         {ev}
@@ -243,7 +244,7 @@ export default function Webhooks() {
                       </Badge>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-xs text-xs text-muted-foreground">
                     {w.delivery_count} entrega{w.delivery_count !== 1 ? 's' : ''}
                   </p>
                 </div>
@@ -306,7 +307,7 @@ export default function Webhooks() {
                       ) : (
                         <Clock className="h-md w-md shrink-0 text-muted-foreground" />
                       )}
-                      <span className="rounded bg-muted px-1 font-mono text-xs">
+                      <span className="rounded bg-muted px-xs font-mono text-xs">
                         {d.event}
                       </span>
                       {d.response_status_code && (

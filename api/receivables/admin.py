@@ -19,4 +19,10 @@ class ReceivableAdmin(admin.ModelAdmin):
 
 @admin.register(ReceivableInstallment)
 class ReceivableInstallmentAdmin(admin.ModelAdmin):
-    list_display = ["receivable", "installment_number", "value", "due_date", "received"]
+    list_display = [
+        "receivable",
+        "installment_number",
+        "value",
+        "due_date",
+        "received",
+    ]

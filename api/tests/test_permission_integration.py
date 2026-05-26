@@ -1,8 +1,10 @@
 """
 Integration tests for GlobalDefaultPermission using non-superuser accounts.
 
-These tests exercise the full HTTP stack (URL routing → view → permission check)
-to verify that GlobalDefaultPermission correctly enforces Django model permissions
+These tests exercise the full HTTP stack
+(URL routing → view → permission check)
+to verify that GlobalDefaultPermission correctly enforces Django model
+permissions
 for regular (non-superuser) users.  They complement the unit tests in
 test_permissions.py, which use mock objects and bypass URL routing.
 
@@ -52,7 +54,9 @@ class PermissionDeniedTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
 
     def _add_perm(self, model_class, codename):
         """Grant a Django model permission to self.user.
@@ -86,7 +90,9 @@ class AccountPermissionIntegrationTest(PermissionDeniedTestCase):
             is_active=True,
             created_by=self.user,
         )
-        self.detail_url = reverse("account-detail-view", args=[self.account.pk])
+        self.detail_url = reverse(
+            "account-detail-view", args=[self.account.pk]
+        )
 
     def _account_payload(self):
         return {
@@ -132,12 +138,16 @@ class AccountPermissionIntegrationTest(PermissionDeniedTestCase):
     # --- UPDATE ---
 
     def test_update_without_permission_returns_403(self):
-        response = self.client.patch(self.detail_url, {"account_name": "Renamed"})
+        response = self.client.patch(
+            self.detail_url, {"account_name": "Renamed"}
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_with_change_permission_returns_200(self):
         self._add_perm(Account, "change_account")
-        response = self.client.patch(self.detail_url, {"account_name": "Renamed"})
+        response = self.client.patch(
+            self.detail_url, {"account_name": "Renamed"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # --- DELETE ---
@@ -182,7 +192,9 @@ class ExpensePermissionIntegrationTest(PermissionDeniedTestCase):
             payed=False,
             created_by=self.user,
         )
-        self.detail_url = reverse("expense-detail-view", args=[self.expense.pk])
+        self.detail_url = reverse(
+            "expense-detail-view", args=[self.expense.pk]
+        )
 
     def _expense_payload(self):
         return {
@@ -231,12 +243,16 @@ class ExpensePermissionIntegrationTest(PermissionDeniedTestCase):
     # --- UPDATE ---
 
     def test_update_without_permission_returns_403(self):
-        response = self.client.patch(self.detail_url, {"description": "Updated"})
+        response = self.client.patch(
+            self.detail_url, {"description": "Updated"}
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_with_change_permission_returns_200(self):
         self._add_perm(Expense, "change_expense")
-        response = self.client.patch(self.detail_url, {"description": "Updated"})
+        response = self.client.patch(
+            self.detail_url, {"description": "Updated"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     # --- DELETE ---
@@ -257,7 +273,8 @@ class ExpensePermissionIntegrationTest(PermissionDeniedTestCase):
 
 
 class PasswordPermissionIntegrationTest(PermissionDeniedTestCase):
-    """Full-stack permission tests for the /api/v1/security/passwords/ endpoints.
+    """Full-stack permission tests for the
+    /api/v1/security/passwords/ endpoints.
 
     The VaultLockedMixin falls back to app-key mode when no VaultConfig exists,
     so tests operate without vault unlocking.  The Member object is required
@@ -274,17 +291,21 @@ class PasswordPermissionIntegrationTest(PermissionDeniedTestCase):
             sex="M",
             user=self.user,
         )
-        # Password owned by the test user's member (get_queryset filters by owner__user)
+        # Password owned by the test user's member (get_queryset filters by
+        # owner__user)
         self.password_obj = Password.objects.create(
             title="Test Password",
             site="https://example.com",
             username="user@example.com",
-            _password="placeholder",  # raw encrypted field — not accessed in list
+            # raw encrypted field — not accessed in list
+            _password="placeholder",
             category="other",
             owner=self.member,
             created_by=self.user,
         )
-        self.detail_url = reverse("password-detail", args=[self.password_obj.pk])
+        self.detail_url = reverse(
+            "password-detail", args=[self.password_obj.pk]
+        )
 
     def _password_payload(self):
         return {

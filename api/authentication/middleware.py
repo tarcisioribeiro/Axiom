@@ -19,7 +19,9 @@ class JWTCookieMiddleware:
     adiciona o token ao header no formato 'Bearer <token>'.
     """
 
-    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+    def __init__(
+        self, get_response: Callable[[HttpRequest], HttpResponse]
+    ) -> None:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:

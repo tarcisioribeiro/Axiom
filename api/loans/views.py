@@ -18,12 +18,14 @@ class LoanCreateListView(BaseListCreateView):
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(created_by=self.request.user).select_related(
-            "account", "benefited", "creditor", "guarantor"
-        )
+        return Loan.objects.filter(
+            created_by=self.request.user
+        ).select_related("account", "benefited", "creditor", "guarantor")
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user, updated_by=self.request.user)
+        serializer.save(
+            created_by=self.request.user, updated_by=self.request.user
+        )
 
 
 class LoanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
@@ -31,9 +33,9 @@ class LoanRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = LoanSerializer
 
     def get_queryset(self):
-        return Loan.objects.filter(created_by=self.request.user).select_related(
-            "account", "benefited", "creditor", "guarantor"
-        )
+        return Loan.objects.filter(
+            created_by=self.request.user
+        ).select_related("account", "benefited", "creditor", "guarantor")
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
@@ -48,7 +50,9 @@ class LoanInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not loan:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         installments = LoanInstallment.objects.filter(loan=loan).order_by(
             "installment_number"
         )
@@ -60,7 +64,9 @@ class LoanInstallmentListView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not loan:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
         installment_number = request.data.get("installment_number")
         if not installment_number:
             return Response(
@@ -73,7 +79,8 @@ class LoanInstallmentListView(APIView):
             )
         except LoanInstallment.DoesNotExist:
             return Response(
-                {"detail": "Installment not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Installment not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
         serializer = LoanInstallmentSerializer(
             installment, data=request.data, partial=True
@@ -94,7 +101,9 @@ class LoanPaymentView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not loan:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         value = request.data.get("value")
         account_id = request.data.get("account")
@@ -114,7 +123,8 @@ class LoanPaymentView(APIView):
             account = Account.objects.get(pk=account_id, is_deleted=False)
         except Account.DoesNotExist:
             return Response(
-                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Account not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         with transaction.atomic():
@@ -146,7 +156,10 @@ class LoanPaymentView(APIView):
 
 
 class LoanReceiptView(APIView):
-    """Registra o recebimento de valor em um empréstimo onde o usuário é credor."""
+    """
+    Registra o recebimento de valor em um empréstimo onde o usuário é
+    credor.
+    """
 
     permission_classes = (IsAuthenticated, GlobalDefaultPermission)
     queryset = Loan.objects.none()
@@ -160,7 +173,9 @@ class LoanReceiptView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not loan:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         value = request.data.get("value")
         account_id = request.data.get("account")
@@ -178,7 +193,8 @@ class LoanReceiptView(APIView):
             account = Account.objects.get(pk=account_id, is_deleted=False)
         except Account.DoesNotExist:
             return Response(
-                {"detail": "Account not found."}, status=status.HTTP_404_NOT_FOUND
+                {"detail": "Account not found."},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         received = not scheduled
@@ -221,7 +237,9 @@ class LoanAmortizationView(APIView):
             pk=pk, created_by=request.user, is_deleted=False
         ).first()
         if not loan:
-            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         method = request.query_params.get("method", "price").lower()
         if method not in ("price", "sac"):
@@ -239,12 +257,14 @@ class LoanAmortizationView(APIView):
 
         if method == "price":
             if rate == 0:
-                payment = (pv / n).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            else:
-                r = rate
-                payment = (pv * r * (1 + r) ** n / ((1 + r) ** n - 1)).quantize(
+                payment = (pv / n).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
+            else:
+                r = rate
+                payment = (
+                    pv * r * (1 + r) ** n / ((1 + r) ** n - 1)
+                ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             balance = pv
             for i in range(1, n + 1):
                 interest = (balance * rate).quantize(
@@ -268,7 +288,9 @@ class LoanAmortizationView(APIView):
                     }
                 )
         else:  # SAC
-            principal = (pv / n).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            principal = (pv / n).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
             balance = pv
             for i in range(1, n + 1):
                 interest = (balance * rate).quantize(

@@ -9,8 +9,16 @@ from webhooks.views import (
 )
 
 urlpatterns = [
-    path("webhooks/", WebhookListCreateView.as_view(), name="webhook-list-create"),
-    path("webhooks/events/", WebhookEventChoicesView.as_view(), name="webhook-events"),
+    path(
+        "webhooks/",
+        WebhookListCreateView.as_view(),
+        name="webhook-list-create",
+    ),
+    path(
+        "webhooks/events/",
+        WebhookEventChoicesView.as_view(),
+        name="webhook-events",
+    ),
     path(
         "webhooks/<int:pk>/",
         WebhookRetrieveUpdateDestroyView.as_view(),
@@ -21,5 +29,9 @@ urlpatterns = [
         WebhookDeliveryListView.as_view(),
         name="webhook-deliveries",
     ),
-    path("webhooks/<int:pk>/test/", WebhookTestView.as_view(), name="webhook-test"),
+    path(
+        "webhooks/<int:pk>/test/",
+        WebhookTestView.as_view(),
+        name="webhook-test",
+    ),
 ]

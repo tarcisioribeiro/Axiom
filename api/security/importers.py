@@ -8,13 +8,16 @@ Supported formats:
   lastpass_csv    — LastPass CSV export
   onepassword_csv — 1Password CSV export
   dashlane_csv    — Dashlane CSV export
-  keepass_xml     — KeePass XML export (kdbx4 unencrypted XML or KeePass 1.x XML)
+  keepass_xml     — KeePass XML export (kdbx4 unencrypted XML
+                    or KeePass 1.x XML)
 """
 
 import csv
 import io
 import json
-import xml.etree.ElementTree as ET  # nosec B405 — parsing trusted in-memory uploads
+import xml.etree.ElementTree as ET  # nosec B405 — parsing trusted in-memory
+
+# uploads
 
 SUPPORTED_FORMATS = (
     "bitwarden_json",
@@ -88,7 +91,9 @@ def parse_lastpass_csv(content: bytes) -> list[dict]:
         try:
             text = content.decode("latin-1")
         except UnicodeDecodeError as e:
-            raise ImportParseError(f"Não foi possível decodificar o arquivo: {e}")
+            raise ImportParseError(
+                f"Não foi possível decodificar o arquivo: {e}"
+            )
 
     reader = csv.DictReader(io.StringIO(text))
 
@@ -136,7 +141,8 @@ def parse_onepassword_csv(content: bytes) -> list[dict]:
     """
     Parse a 1Password CSV export file.
 
-    Expected columns (1Password 7+): Title, Username, Password, URL, Notes, Type
+    Expected columns (1Password 7+): Title, Username, Password, URL, Notes,
+    Type
     Also handles the older format: title, username, password, url, notes
     """
     try:
@@ -145,7 +151,9 @@ def parse_onepassword_csv(content: bytes) -> list[dict]:
         try:
             text = content.decode("latin-1")
         except UnicodeDecodeError as e:
-            raise ImportParseError(f"Não foi possível decodificar o arquivo: {e}")
+            raise ImportParseError(
+                f"Não foi possível decodificar o arquivo: {e}"
+            )
 
     reader = csv.DictReader(io.StringIO(text))
 
@@ -207,7 +215,9 @@ def parse_dashlane_csv(content: bytes) -> list[dict]:
         try:
             text = content.decode("latin-1")
         except UnicodeDecodeError as e:
-            raise ImportParseError(f"Não foi possível decodificar o arquivo: {e}")
+            raise ImportParseError(
+                f"Não foi possível decodificar o arquivo: {e}"
+            )
 
     reader = csv.DictReader(io.StringIO(text))
 
@@ -222,7 +232,12 @@ def parse_dashlane_csv(content: bytes) -> list[dict]:
 
     for row in rows:
         item_type = (row.get("type", "") or "").strip().lower()
-        if item_type and item_type not in ("password", "login", "credentials", ""):
+        if item_type and item_type not in (
+            "password",
+            "login",
+            "credentials",
+            "",
+        ):
             continue
 
         name = (row.get("name", "") or "").strip()
@@ -291,7 +306,9 @@ def parse_keepass_xml(content: bytes) -> list[dict]:
         try:
             text = content.decode("latin-1")
         except UnicodeDecodeError as e:
-            raise ImportParseError(f"Não foi possível decodificar o arquivo: {e}")
+            raise ImportParseError(
+                f"Não foi possível decodificar o arquivo: {e}"
+            )
 
     try:
         root = ET.fromstring(text)  # nosec B314

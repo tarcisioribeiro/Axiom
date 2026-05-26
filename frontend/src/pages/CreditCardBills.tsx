@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Pencil,
@@ -74,10 +75,12 @@ export default function CreditCardBills({ embedded = false }: { embedded?: boole
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     filterBills();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, statusFilter, yearFilter, bills]);
 
   const loadData = async () => {

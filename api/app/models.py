@@ -36,8 +36,12 @@ class BaseModel(models.Model):
     uuid = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True, verbose_name="UUID"
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Criado em"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, verbose_name="Atualizado em"
+    )
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -55,7 +59,9 @@ class BaseModel(models.Model):
         verbose_name="Atualizado por",
     )
     is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
-    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Excluído em")
+    deleted_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Excluído em"
+    )
     deleted_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -106,5 +112,6 @@ BILL_STATUS_CHOICES = (
     ("overdue", "Em atraso"),
 )
 
-# Import ChangeLog so Django's migration framework detects it under the 'app' label
+# Import ChangeLog so Django's migration framework detects it
+# under the 'app' label
 from app.audit import ChangeLog  # noqa: E402, F401

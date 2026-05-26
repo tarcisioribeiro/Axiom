@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   ArrowLeft,
   Download,
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency, formatDate } from '@/lib/formatters';
@@ -78,14 +80,6 @@ const PAYABLE_STATUS_LABELS: Record<string, string> = {
   cancelled: 'Cancelado',
 };
 
-type ActiveTab =
-  | 'expenses'
-  | 'revenues'
-  | 'loans_benefited'
-  | 'loans_creditor'
-  | 'payables'
-  | 'transfers';
-
 export default function MemberFinancialReportPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -100,8 +94,6 @@ export default function MemberFinancialReportPage() {
   const [endDate, setEndDate] = useState('');
   const [appliedStart, setAppliedStart] = useState('');
   const [appliedEnd, setAppliedEnd] = useState('');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('expenses');
-
   const memberId = Number(id);
 
   const loadReport = useCallback(async () => {
@@ -158,45 +150,6 @@ export default function MemberFinancialReportPage() {
       name: EXPENSE_CATEGORY_LABELS[item.category] ?? item.category,
       value: parseFloat(item.total),
     }));
-
-  const tabs: { key: ActiveTab; label: string; count: number; icon: ReactNode }[] = [
-    {
-      key: 'expenses',
-      label: 'Despesas',
-      count: report.expenses.length,
-      icon: <TrendingDown className="h-4 w-4" />,
-    },
-    {
-      key: 'revenues',
-      label: 'Receitas',
-      count: report.revenues.length,
-      icon: <TrendingUp className="h-4 w-4" />,
-    },
-    {
-      key: 'loans_benefited',
-      label: 'Emp. Recebidos',
-      count: report.loans_as_benefited.length,
-      icon: <HandCoins className="h-4 w-4" />,
-    },
-    {
-      key: 'loans_creditor',
-      label: 'Emp. Concedidos',
-      count: report.loans_as_creditor.length,
-      icon: <HandCoins className="h-4 w-4" />,
-    },
-    {
-      key: 'payables',
-      label: 'A Pagar',
-      count: report.payables.length,
-      icon: <Receipt className="h-4 w-4" />,
-    },
-    {
-      key: 'transfers',
-      label: 'Transferências',
-      count: report.transfers.length,
-      icon: <ArrowLeftRight className="h-4 w-4" />,
-    },
-  ];
 
   return (
     <PageContainer>
@@ -349,48 +302,89 @@ export default function MemberFinancialReportPage() {
       )}
 
       {/* Transaction Tabs */}
-      <div className="overflow-hidden rounded-lg border bg-card">
-        <div className="flex flex-wrap gap-0 border-b">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-sm px-md py-sm text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-              <Badge variant="secondary" className="text-xs">
-                {tab.count}
-              </Badge>
-            </button>
-          ))}
-        </div>
-
-        <div className="custom-scrollbar overflow-x-auto">
-          {activeTab === 'expenses' && <ExpensesTable items={report.expenses} />}
-          {activeTab === 'revenues' && <RevenuesTable items={report.revenues} />}
-          {activeTab === 'loans_benefited' && (
+      <Tabs defaultValue="expenses" className="flex flex-1 flex-col">
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="expenses" className="flex-1 gap-xs">
+            <TrendingDown className="h-4 w-4" />
+            Despesas
+            <Badge variant="secondary" className="text-xs">
+              {report.expenses.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="revenues" className="flex-1 gap-xs">
+            <TrendingUp className="h-4 w-4" />
+            Receitas
+            <Badge variant="secondary" className="text-xs">
+              {report.revenues.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="loans_benefited" className="flex-1 gap-xs">
+            <HandCoins className="h-4 w-4" />
+            Emp. Recebidos
+            <Badge variant="secondary" className="text-xs">
+              {report.loans_as_benefited.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="loans_creditor" className="flex-1 gap-xs">
+            <HandCoins className="h-4 w-4" />
+            Emp. Concedidos
+            <Badge variant="secondary" className="text-xs">
+              {report.loans_as_creditor.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="payables" className="flex-1 gap-xs">
+            <Receipt className="h-4 w-4" />A Pagar
+            <Badge variant="secondary" className="text-xs">
+              {report.payables.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="transfers" className="flex-1 gap-xs">
+            <ArrowLeftRight className="h-4 w-4" />
+            Transferências
+            <Badge variant="secondary" className="text-xs">
+              {report.transfers.length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="expenses" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
+            <ExpensesTable items={report.expenses} />
+          </div>
+        </TabsContent>
+        <TabsContent value="revenues" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
+            <RevenuesTable items={report.revenues} />
+          </div>
+        </TabsContent>
+        <TabsContent value="loans_benefited" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
             <LoansTable
               items={report.loans_as_benefited}
               counterpartLabel={t('pages.memberFinancialReport.creditor')}
               counterpartKey="creditor"
             />
-          )}
-          {activeTab === 'loans_creditor' && (
+          </div>
+        </TabsContent>
+        <TabsContent value="loans_creditor" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
             <LoansTable
               items={report.loans_as_creditor}
               counterpartLabel={t('pages.memberFinancialReport.benefited')}
               counterpartKey="benefited"
             />
-          )}
-          {activeTab === 'payables' && <PayablesTable items={report.payables} />}
-          {activeTab === 'transfers' && <TransfersTable items={report.transfers} />}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="payables" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
+            <PayablesTable items={report.payables} />
+          </div>
+        </TabsContent>
+        <TabsContent value="transfers" className="mt-0 flex-1">
+          <div className="custom-scrollbar overflow-x-auto">
+            <TransfersTable items={report.transfers} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

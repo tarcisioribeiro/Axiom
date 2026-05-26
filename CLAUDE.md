@@ -49,7 +49,7 @@ Axiom/
 
 **Authentication**: JWT tokens stored in HttpOnly cookies. `authentication/middleware.py:JWTCookieMiddleware` extracts cookies → Authorization header. Access token: 15min, refresh: 1h. **2FA**: TOTP-based via `pyotp`. `TOTPDevice` model (one per user) stores the HMAC secret; backup codes are stored as SHA-256 hashes (plaintext never saved). Setup flow: `setup/` → `activate/` → `verify/` on subsequent logins. Email verification and password reset also handled in `authentication/` via token-based flows.
 
-**Async Tasks** (`Celery`): Worker container is `mindledger-celery-worker` (`celery -A app worker --concurrency=2`). Beat scheduler is `mindledger-celery-beat` using `DatabaseScheduler` (schedules stored in DB via `django_celery_beat`). In tests, `CELERY_TASK_ALWAYS_EAGER=True` so tasks run synchronously without Redis.
+**Async Tasks** (`Celery`): Worker container is `axiom-worker` (`celery -A app worker --concurrency=2`). Beat scheduler is `axiom-queue` using `DatabaseScheduler` (schedules stored in DB via `django_celery_beat`). In tests, `CELERY_TASK_ALWAYS_EAGER=True` so tasks run synchronously without Redis.
 
 **API Versioning**: All endpoints under `/api/v1/`. API docs at `/api/docs/` (Swagger) and `/api/redoc/`.
 
@@ -101,7 +101,7 @@ Axiom/
 ```bash
 docker compose up -d                                    # Start all services
 docker compose logs -f api                              # View API logs
-docker compose logs -f celery-worker                    # View Celery worker logs
+docker compose logs -f worker                           # View Celery worker logs
 docker compose exec api python manage.py <command>      # Run management commands
 docker compose up -d --build                            # Rebuild after dependency changes
 ```

@@ -6,7 +6,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    parser_classes,
+    permission_classes,
+)
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -165,7 +169,8 @@ def get_member_permissions(request, pk):
 
     except Member.DoesNotExist:
         return Response(
-            {"error": "Membro não encontrado"}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Membro não encontrado"},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -204,9 +209,13 @@ def update_member_permissions(request, pk):
         # Validar dados de entrada
         serializer = MemberPermissionsSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
 
-        permission_codenames = serializer.validated_data["permission_codenames"]
+        permission_codenames = serializer.validated_data[
+            "permission_codenames"
+        ]
 
         # Limpar permissões atuais
         member.user.user_permissions.clear()
@@ -219,7 +228,12 @@ def update_member_permissions(request, pk):
                 permissions_to_add.append(permission)
             except Permission.DoesNotExist:
                 return Response(
-                    {"error": f'Permissão com codename "{codename}" não encontrada'},
+                    {
+                        "error": (
+                            f"Permissão com codename"
+                            f' "{codename}" não encontrada'
+                        )
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -234,7 +248,8 @@ def update_member_permissions(request, pk):
 
     except Member.DoesNotExist:
         return Response(
-            {"error": "Membro não encontrado"}, status=status.HTTP_404_NOT_FOUND
+            {"error": "Membro não encontrado"},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -269,7 +284,9 @@ def get_available_permissions(request):
             content_types = ContentType.objects.filter(app_label=app_name)
 
             # Obter todas as permissões deste app
-            permissions = Permission.objects.filter(content_type__in=content_types)
+            permissions = Permission.objects.filter(
+                content_type__in=content_types
+            )
 
             permissions_by_app[app_name] = [
                 {
@@ -302,7 +319,9 @@ class MemberFinancialReportView(APIView):
     queryset = Member.objects.all()
 
     def get(self, request, pk):
-        member = get_object_or_404(Member, pk=pk, user=request.user, is_deleted=False)
+        member = get_object_or_404(
+            Member, pk=pk, user=request.user, is_deleted=False
+        )
 
         start_date = request.query_params.get("start_date")
         end_date = request.query_params.get("end_date")
@@ -390,9 +409,9 @@ class MemberFinancialReportView(APIView):
                 "status": p.status,
                 "category": p.category,
             }
-            for p in Payable.objects.filter(member=member, **date_filter).order_by(
-                "-date"
-            )
+            for p in Payable.objects.filter(
+                member=member, **date_filter
+            ).order_by("-date")
         ]
 
         transfers = [
@@ -404,15 +423,19 @@ class MemberFinancialReportView(APIView):
                 "category": t.category,
                 "transfered": t.transfered,
             }
-            for t in Transfer.objects.filter(member=member, **date_filter).order_by(
-                "-date"
-            )
+            for t in Transfer.objects.filter(
+                member=member, **date_filter
+            ).order_by("-date")
         ]
 
         total_expenses = sum(Decimal(e["value"]) for e in expenses)
         total_revenues = sum(Decimal(r["value"]) for r in revenues)
-        total_loans_benefited = sum(Decimal(lo["value"]) for lo in loans_as_benefited)
-        total_loans_creditor = sum(Decimal(lo["value"]) for lo in loans_as_creditor)
+        total_loans_benefited = sum(
+            Decimal(lo["value"]) for lo in loans_as_benefited
+        )
+        total_loans_creditor = sum(
+            Decimal(lo["value"]) for lo in loans_as_creditor
+        )
         total_payables = sum(Decimal(p["value"]) for p in payables)
         total_transfers = sum(Decimal(t["value"]) for t in transfers)
         net_balance = total_revenues - total_expenses - total_payables
@@ -420,9 +443,9 @@ class MemberFinancialReportView(APIView):
         category_totals: dict = {}
         for e in expenses:
             cat = e["category"]
-            category_totals[cat] = category_totals.get(cat, Decimal("0")) + Decimal(
-                e["value"]
-            )
+            category_totals[cat] = category_totals.get(
+                cat, Decimal("0")
+            ) + Decimal(e["value"])
         expenses_by_category = [
             {"category": cat, "total": str(val)}
             for cat, val in sorted(
@@ -503,9 +526,15 @@ class MemberFinancialReportView(APIView):
 
         writer.writerow(["RESUMO"])
         writer.writerow(["Tipo", "Valor"])
-        writer.writerow(["Receitas", format_decimal(summary["total_revenues"])])
-        writer.writerow(["Despesas", format_decimal(summary["total_expenses"])])
-        writer.writerow(["Valores a Pagar", format_decimal(summary["total_payables"])])
+        writer.writerow(
+            ["Receitas", format_decimal(summary["total_revenues"])]
+        )
+        writer.writerow(
+            ["Despesas", format_decimal(summary["total_expenses"])]
+        )
+        writer.writerow(
+            ["Valores a Pagar", format_decimal(summary["total_payables"])]
+        )
         writer.writerow(
             [
                 "Empréstimos Recebidos",
@@ -518,13 +547,25 @@ class MemberFinancialReportView(APIView):
                 format_decimal(summary["total_loans_creditor"]),
             ]
         )
-        writer.writerow(["Transferências", format_decimal(summary["total_transfers"])])
-        writer.writerow(["Saldo Líquido", format_decimal(summary["net_balance"])])
+        writer.writerow(
+            ["Transferências", format_decimal(summary["total_transfers"])]
+        )
+        writer.writerow(
+            ["Saldo Líquido", format_decimal(summary["net_balance"])]
+        )
         writer.writerow([])
 
         writer.writerow(["DESPESAS"])
         writer.writerow(
-            ["ID", "Descrição", "Valor", "Data", "Categoria", "Estabelecimento", "Pago"]
+            [
+                "ID",
+                "Descrição",
+                "Valor",
+                "Data",
+                "Categoria",
+                "Estabelecimento",
+                "Pago",
+            ]
         )
         for e in expenses:
             writer.writerow(
@@ -542,7 +583,15 @@ class MemberFinancialReportView(APIView):
 
         writer.writerow(["RECEITAS"])
         writer.writerow(
-            ["ID", "Descrição", "Valor", "Data", "Categoria", "Fonte", "Recebido"]
+            [
+                "ID",
+                "Descrição",
+                "Valor",
+                "Data",
+                "Categoria",
+                "Fonte",
+                "Recebido",
+            ]
         )
         for r in revenues:
             writer.writerow(
@@ -560,7 +609,15 @@ class MemberFinancialReportView(APIView):
 
         writer.writerow(["EMPRÉSTIMOS RECEBIDOS (Como Beneficiado)"])
         writer.writerow(
-            ["ID", "Descrição", "Valor", "Valor Pago", "Data", "Status", "Credor"]
+            [
+                "ID",
+                "Descrição",
+                "Valor",
+                "Valor Pago",
+                "Data",
+                "Status",
+                "Credor",
+            ]
         )
         for lo in loans_as_benefited:
             writer.writerow(
@@ -578,7 +635,15 @@ class MemberFinancialReportView(APIView):
 
         writer.writerow(["EMPRÉSTIMOS CONCEDIDOS (Como Credor)"])
         writer.writerow(
-            ["ID", "Descrição", "Valor", "Valor Pago", "Data", "Status", "Beneficiado"]
+            [
+                "ID",
+                "Descrição",
+                "Valor",
+                "Valor Pago",
+                "Data",
+                "Status",
+                "Beneficiado",
+            ]
         )
         for lo in loans_as_creditor:
             writer.writerow(

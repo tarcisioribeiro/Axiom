@@ -6,7 +6,10 @@ from django.db import models
 from django.utils import timezone
 
 from app.models import BaseModel
-from security.vault_crypto import VaultEncryptedField, VaultMaskedEncryptedField
+from security.vault_crypto import (
+    VaultEncryptedField,
+    VaultMaskedEncryptedField,
+)
 
 # ============================================================================
 # PASSWORD MODEL
@@ -32,7 +35,9 @@ class Password(BaseModel):
     """
 
     title = models.CharField(max_length=200, verbose_name="Título")
-    site = models.URLField(max_length=500, verbose_name="Site", blank=True, null=True)
+    site = models.URLField(
+        max_length=500, verbose_name="Site", blank=True, null=True
+    )
     username = models.CharField(max_length=200, verbose_name="Usuário/Email")
     _password = models.TextField(verbose_name="Senha (Criptografada)")
     category = models.CharField(
@@ -102,15 +107,23 @@ class StoredCreditCard(BaseModel):
     """Armazenamento seguro de credenciais de cartões de crédito."""
 
     name = models.CharField(max_length=200, verbose_name="Nome do Cartão")
-    _card_number = models.TextField(verbose_name="Número do Cartão (Criptografado)")
+    _card_number = models.TextField(
+        verbose_name="Número do Cartão (Criptografado)"
+    )
     _security_code = models.TextField(verbose_name="CVV (Criptografado)")
     expiration_month = models.IntegerField(verbose_name="Mês de Validade")
     expiration_year = models.IntegerField(verbose_name="Ano de Validade")
-    cardholder_name = models.CharField(max_length=200, verbose_name="Nome do Titular")
-    flag = models.CharField(max_length=50, choices=FLAGS, verbose_name="Bandeira")
+    cardholder_name = models.CharField(
+        max_length=200, verbose_name="Nome do Titular"
+    )
+    flag = models.CharField(
+        max_length=50, choices=FLAGS, verbose_name="Bandeira"
+    )
     notes = models.TextField(blank=True, null=True, verbose_name="Observações")
     owner = models.ForeignKey(
-        "members.Member", on_delete=models.PROTECT, related_name="stored_credit_cards"
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="stored_credit_cards",
     )
     finance_card = models.ForeignKey(
         "credit_cards.CreditCard",
@@ -162,7 +175,9 @@ class StoredBankAccount(BaseModel):
         max_length=200, verbose_name="Instituição Financeira"
     )
     account_type = models.CharField(max_length=50, choices=ACCOUNT_TYPES)
-    _account_number = models.TextField(verbose_name="Número da Conta (Criptografado)")
+    _account_number = models.TextField(
+        verbose_name="Número da Conta (Criptografado)"
+    )
     agency = models.CharField(max_length=10, blank=True, null=True)
     _password = models.TextField(
         verbose_name="Senha Bancária (Criptografada)", blank=True, null=True
@@ -172,7 +187,9 @@ class StoredBankAccount(BaseModel):
     )
     notes = models.TextField(blank=True, null=True)
     owner = models.ForeignKey(
-        "members.Member", on_delete=models.PROTECT, related_name="stored_bank_accounts"
+        "members.Member",
+        on_delete=models.PROTECT,
+        related_name="stored_bank_accounts",
     )
     finance_account = models.ForeignKey(
         "accounts.Account",
@@ -249,7 +266,9 @@ class Archive(BaseModel):
     is_file_encrypted = models.BooleanField(
         default=False,
         verbose_name="Arquivo Criptografado",
-        help_text="Indica se o arquivo foi criptografado com a vault_key do usuário",
+        help_text=(
+            "Indica se o arquivo foi criptografado com a vault_key do usuário"
+        ),
     )
     owner = models.ForeignKey(
         "members.Member", on_delete=models.PROTECT, related_name="archives"
@@ -296,8 +315,10 @@ class VaultConfig(models.Model):
     """
     Configuração do cofre de segurança por usuário.
 
-    Armazena o salt e a vault_key cifrada com a derived_key (PBKDF2 da senha mestre).
-    A senha mestre NUNCA é armazenada — apenas usada para derivar a chave temporária.
+    Armazena o salt e a vault_key cifrada com a derived_key
+    (PBKDF2 da senha mestre).
+    A senha mestre NUNCA é armazenada — apenas usada para derivar
+    a chave temporária.
     A vault_key em texto plano fica apenas no Redis com TTL de 1 hora.
     """
 
@@ -313,8 +334,12 @@ class VaultConfig(models.Model):
     encrypted_vault_key = models.TextField(
         verbose_name="Chave do Cofre (cifrada com senha mestre)"
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Criado em"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, verbose_name="Atualizado em"
+    )
 
     class Meta:
         verbose_name = "Configuração do Cofre"
@@ -331,7 +356,8 @@ class VaultConfig(models.Model):
 
 class CredentialShareToken(models.Model):
     """
-    Token temporário para compartilhar uma credencial com outro membro do sistema.
+    Token temporário para compartilhar uma credencial com outro
+    membro do sistema.
 
     Ao criar o token, a senha é decifrada com a vault_key e re-cifrada com a
     app key (snapshot). Assim o resgate não requer cofre desbloqueado.
@@ -354,7 +380,9 @@ class CredentialShareToken(models.Model):
         verbose_name="Senha (snapshot criptografado)"
     )
     expires_at = models.DateTimeField(verbose_name="Expira em")
-    used_at = models.DateTimeField(null=True, blank=True, verbose_name="Último uso em")
+    used_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Último uso em"
+    )
     use_count = models.IntegerField(default=0, verbose_name="Usos realizados")
     max_uses = models.IntegerField(default=1, verbose_name="Máximo de usos")
     is_revoked = models.BooleanField(default=False, verbose_name="Revogado")
@@ -362,7 +390,9 @@ class CredentialShareToken(models.Model):
         default=list,
         blank=True,
         verbose_name="IPs Permitidos",
-        help_text="Lista de IPs autorizados a usar este token. Vazia = qualquer IP.",
+        help_text=(
+            "Lista de IPs autorizados a usar este token. Vazia = qualquer IP."
+        ),
     )
     created_by = models.ForeignKey(
         "auth.User",
@@ -372,7 +402,9 @@ class CredentialShareToken(models.Model):
         related_name="created_share_tokens",
         verbose_name="Criado por",
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Criado em"
+    )
 
     @property
     def is_expired(self):
@@ -384,7 +416,11 @@ class CredentialShareToken(models.Model):
 
     @property
     def is_valid(self):
-        return not self.is_revoked and not self.is_expired and not self.is_exhausted
+        return (
+            not self.is_revoked
+            and not self.is_expired
+            and not self.is_exhausted
+        )
 
     class Meta:
         verbose_name = "Token de Compartilhamento"
@@ -420,7 +456,9 @@ class ActivityLog(models.Model):
     Não herda de BaseModel pois logs não devem ser editados ou excluídos.
     """
 
-    action = models.CharField(max_length=100, choices=ACTION_TYPES, verbose_name="Ação")
+    action = models.CharField(
+        max_length=100, choices=ACTION_TYPES, verbose_name="Ação"
+    )
     model_name = models.CharField(
         max_length=100,
         blank=True,
@@ -441,7 +479,8 @@ class ActivityLog(models.Model):
         help_text="UUID público do objeto afetado (correlaciona com a API)",
     )
     description = models.TextField(
-        verbose_name="Descrição", help_text="Descrição detalhada da ação realizada"
+        verbose_name="Descrição",
+        help_text="Descrição detalhada da ação realizada",
     )
     description_key = models.CharField(
         max_length=100,
@@ -454,7 +493,9 @@ class ActivityLog(models.Model):
         blank=True,
         null=True,
         verbose_name="Parâmetros da descrição",
-        help_text="Parâmetros dinâmicos para interpolação da chave de descrição",
+        help_text=(
+            "Parâmetros dinâmicos para interpolação da chave de descrição"
+        ),
     )
     ip_address = models.GenericIPAddressField(
         blank=True,
@@ -477,7 +518,9 @@ class ActivityLog(models.Model):
         related_name="activity_logs",
         verbose_name="Usuário",
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data/Hora")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Data/Hora"
+    )
 
     class Meta:
         verbose_name = "Log de Atividade"
@@ -489,12 +532,14 @@ class ActivityLog(models.Model):
             models.Index(fields=["model_name", "object_id"]),
             models.Index(fields=["object_uuid"]),
         ]
-        # Logs não podem ser editados ou excluídos (usar permissões default do Django)
+        # Logs não podem ser editados ou excluídos
+        # (usar permissões default do Django)
 
     def __str__(self):
         user_str = self.user.username if self.user else "Anônimo"
         return (
-            f"{user_str} - {self.action} - {self.created_at.strftime('%d/%m/%Y %H:%M')}"
+            f"{user_str} - {self.action}"
+            f" - {self.created_at.strftime('%d/%m/%Y %H:%M')}"
         )
 
     @classmethod

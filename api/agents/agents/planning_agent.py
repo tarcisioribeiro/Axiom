@@ -69,7 +69,8 @@ class PlanningAgent(BaseAgent):
             missed = get_top_missed_routines(user, start=t_start, end=t_end)
             pending_today: list[dict[str, Any]] = []
             sources_label = (
-                f"Rotinas {t_start.strftime('%d/%m')}–{t_end.strftime('%d/%m/%Y')}"
+                f"Rotinas {t_start.strftime('%d/%m')}"
+                f"–{t_end.strftime('%d/%m/%Y')}"
             )
         else:
             summary = get_routine_summary(user, days=7)
@@ -93,7 +94,8 @@ class PlanningAgent(BaseAgent):
         s = data["summary"]
         summary_block = (
             f"Período: {s['start']} a {s['end']}\n"
-            f"  Completadas: {s['completed']}/{s['total']} ({s['completion_rate']}%)\n"
+            f"  Completadas: {s['completed']}/{s['total']}"
+            f" ({s['completion_rate']}%)\n"
             f"  Puladas: {s['skipped']} | Pendentes: {s['pending']}"
         )
 

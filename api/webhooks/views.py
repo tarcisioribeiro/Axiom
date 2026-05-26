@@ -30,7 +30,9 @@ class WebhookRetrieveUpdateDestroyView(BaseRetrieveUpdateDestroyView):
     serializer_class = WebhookSerializer
 
     def get_queryset(self) -> QuerySet[Webhook]:
-        return Webhook.objects.filter(created_by=self.request.user, is_deleted=False)
+        return Webhook.objects.filter(
+            created_by=self.request.user, is_deleted=False
+        )
 
 
 class WebhookDeliveryListView(APIView):
@@ -62,7 +64,9 @@ class WebhookEventChoicesView(APIView):
     def get(self, request: Request) -> Response:
         from webhooks.models import WEBHOOK_EVENT_CHOICES
 
-        return Response([{"value": v, "label": l} for v, l in WEBHOOK_EVENT_CHOICES])
+        return Response(
+            [{"value": v, "label": l} for v, l in WEBHOOK_EVENT_CHOICES]
+        )
 
 
 class WebhookTestView(APIView):
@@ -96,4 +100,6 @@ class WebhookTestView(APIView):
             created_by=request.user,
         )
         deliver_webhook.delay(delivery.pk)
-        return Response({"detail": "Teste enfileirado.", "delivery_id": delivery.pk})
+        return Response(
+            {"detail": "Teste enfileirado.", "delivery_id": delivery.pk}
+        )

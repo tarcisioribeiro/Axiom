@@ -26,7 +26,9 @@ class BudgetSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        category = attrs.get("category", getattr(self.instance, "category", None))
+        category = attrs.get(
+            "category", getattr(self.instance, "category", None)
+        )
         month = attrs.get("month", getattr(self.instance, "month", None))
         year = attrs.get("year", getattr(self.instance, "year", None))
         member = attrs.get("member", getattr(self.instance, "member", None))

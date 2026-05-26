@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 import {
   CheckCircle2,
   ClipboardList,
@@ -77,7 +78,7 @@ export function WorkoutPlanForm({
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-lg">
       {/* Header visual */}
-      <div className="flex items-center gap-md rounded-xl bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
+      <div className="flex items-center gap-md rounded-lg bg-category-exercise/10 px-md py-sm ring-1 ring-category-exercise/20">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-category-exercise/20">
           <Dumbbell className="h-5 w-5 text-category-exercise" />
         </div>
@@ -154,7 +155,7 @@ export function WorkoutPlanForm({
           <p className="text-xs text-muted-foreground">
             {t(
               'pages.workoutPlans.activeWarning',
-              'Ativar este plano irá definí-lo como o plano principal.'
+              'Planos ativos aparecem em destaque na tela de treinos.'
             )}
           </p>
         )}

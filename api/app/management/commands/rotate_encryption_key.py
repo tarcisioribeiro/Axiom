@@ -19,10 +19,12 @@ After a successful rotation:
     2. Move the old key to BACKUP_ENCRYPTION_KEY_PREVIOUS in .env.
     3. Rebuild: docker compose up --build -d
 
-Note on vault items (security.Password, StoredCreditCard, StoredBankAccount, Archive):
-    These fields use per-user vault-key encryption.  The app key is only used as a
-    fallback when a vault has never been configured.  Records encrypted with vault_key
-    are automatically skipped ("skipped" counter) and do NOT need re-encryption here.
+Note on vault items (security.Password, StoredCreditCard,
+StoredBankAccount, Archive):
+    These fields use per-user vault-key encryption.  The app key is
+    only used as a fallback when a vault has never been configured.
+    Records encrypted with vault_key are automatically skipped
+    ("skipped" counter) and do NOT need re-encryption here.
 """
 
 import hashlib
@@ -51,13 +53,16 @@ def _encrypt(data: str, key: bytes) -> str:
 
 def _hmac_sha256(document: str, key_str: str) -> str:
     """Recomputes HMAC-SHA256 of document using the given key string."""
-    return hmac_lib.new(key_str.encode(), document.encode(), hashlib.sha256).hexdigest()
+    return hmac_lib.new(
+        key_str.encode(), document.encode(), hashlib.sha256
+    ).hexdigest()
 
 
 class Command(BaseCommand):
     help = (
-        "Rotate ENCRYPTION_KEY: decrypt all app-level encrypted fields with the old "
-        "key and re-encrypt them with the new key. Runs inside a single transaction."
+        "Rotate ENCRYPTION_KEY: decrypt all app-level encrypted fields"
+        " with the old key and re-encrypt them with the new key."
+        " Runs inside a single transaction."
     )
 
     def add_arguments(self, parser: Any) -> None:
@@ -65,8 +70,10 @@ class Command(BaseCommand):
             "--old-key",
             default=None,
             metavar="FERNET_KEY",
-            help="Current Fernet key (44-char base64). Must match the key used "
-            "when the data was originally encrypted.",
+            help=(
+                "Current Fernet key (44-char base64). Must match"
+                " the key used when the data was originally encrypted."
+            ),
         )
         parser.add_argument(
             "--new-key",
@@ -107,11 +114,15 @@ class Command(BaseCommand):
             raise CommandError(f"--new-key is not a valid Fernet key: {e}")
 
         if old_key == new_key:
-            raise CommandError("--old-key and --new-key are identical; nothing to do.")
+            raise CommandError(
+                "--old-key and --new-key are identical; nothing to do."
+            )
 
         if dry_run:
             self.stdout.write(
-                self.style.WARNING("\n[DRY-RUN] No writes will be committed.\n")
+                self.style.WARNING(
+                    "\n[DRY-RUN] No writes will be committed.\n"
+                )
             )
 
         totals = {"rotated": 0, "skipped": 0, "empty": 0}
@@ -143,7 +154,9 @@ class Command(BaseCommand):
                 self.style.WARNING(
                     "\nNext steps:\n"
                     f"  1. Set ENCRYPTION_KEY={new_key_str} in .env\n"
-                    f"  2. Set BACKUP_ENCRYPTION_KEY_PREVIOUS={old_key_str} in .env\n"
+                    "  2. Set"
+                    f" BACKUP_ENCRYPTION_KEY_PREVIOUS={old_key_str}"
+                    " in .env\n"
                     "  3. Rebuild: docker compose up --build -d\n"
                 )
             )
@@ -153,7 +166,11 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------ #
 
     def _rotate_accounts(
-        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+        self,
+        old_key: bytes,
+        new_key: bytes,
+        dry_run: bool,
+        totals: dict[str, int],
     ) -> None:
         from accounts.models import Account
 
@@ -168,7 +185,11 @@ class Command(BaseCommand):
         )
 
     def _rotate_credit_cards(
-        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+        self,
+        old_key: bytes,
+        new_key: bytes,
+        dry_run: bool,
+        totals: dict[str, int],
     ) -> None:
         from credit_cards.models import CreditCard
 
@@ -191,7 +212,8 @@ class Command(BaseCommand):
         dry_run: bool,
         totals: dict[str, int],
     ) -> None:
-        """Rotate Member._document and recompute document_hash with the new HMAC key."""
+        """Rotate Member._document and recompute document_hash with
+        the new HMAC key."""
         from members.models import Member
 
         qs = (
@@ -200,7 +222,9 @@ class Command(BaseCommand):
             .only("id", "_document", "document_hash")
         )
         count = qs.count()
-        self.stdout.write(f"\nmembers.Member: {count} records with encrypted document")
+        self.stdout.write(
+            f"\nmembers.Member: {count} records with encrypted document"
+        )
 
         to_update = []
         for obj in qs.iterator(chunk_size=200):
@@ -238,7 +262,11 @@ class Command(BaseCommand):
             self.stdout.write("  No records needed updating")
 
     def _rotate_share_tokens(
-        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+        self,
+        old_key: bytes,
+        new_key: bytes,
+        dry_run: bool,
+        totals: dict[str, int],
     ) -> None:
         from security.models import CredentialShareToken
 
@@ -253,7 +281,11 @@ class Command(BaseCommand):
         )
 
     def _rotate_vault_items(
-        self, old_key: bytes, new_key: bytes, dry_run: bool, totals: dict[str, int]
+        self,
+        old_key: bytes,
+        new_key: bytes,
+        dry_run: bool,
+        totals: dict[str, int],
     ) -> None:
         """
         Rotate vault model fields that fall back to app-key encryption.
@@ -367,9 +399,13 @@ class Command(BaseCommand):
                 to_update.append(obj)
 
         if to_update and not dry_run:
-            model_class.objects.bulk_update(to_update, field_names, batch_size=200)
+            model_class.objects.bulk_update(
+                to_update, field_names, batch_size=200
+            )
             self.stdout.write(f"  Updated {len(to_update)} records")
         elif dry_run:
-            self.stdout.write(f"  [DRY-RUN] Would update {len(to_update)} records")
+            self.stdout.write(
+                f"  [DRY-RUN] Would update {len(to_update)} records"
+            )
         else:
             self.stdout.write("  No records needed updating")

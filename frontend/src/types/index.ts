@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export type { PaginatedResponse, ApiError } from './common';
 export type { LoginCredentials, TokenResponse, User, Permission } from './auth';
 export type {

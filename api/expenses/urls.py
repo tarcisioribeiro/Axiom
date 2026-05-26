@@ -10,7 +10,9 @@ urlpatterns = [
         name="expense-export",
     ),
     path(
-        "expenses/", views.ExpenseCreateListView.as_view(), name="expense-create-list"
+        "expenses/",
+        views.ExpenseCreateListView.as_view(),
+        name="expense-create-list",
     ),
     path(
         "expenses/<int:pk>/",

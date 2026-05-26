@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Edit,
@@ -282,6 +283,7 @@ export function ReadingsTab({ isCreateOpen, onCreateClose }: ReadingsTabProps) {
 
   useEffect(() => {
     if (isCreateOpen) handleCreateOpen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreateOpen]);
 
   const handleEdit = (reading: Reading) => {

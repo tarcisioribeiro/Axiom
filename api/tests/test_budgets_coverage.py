@@ -27,7 +27,9 @@ class BaseBudgetTestCase(APITestCase):
         )
         self.client = APIClient()
         refresh = RefreshToken.for_user(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
         self.member = Member.objects.create(
             name="Budget User",
             document_hash="b" * 64,
@@ -106,7 +108,8 @@ class BudgetCRUDTest(BaseBudgetTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_budget(self):
-        """DELETE /budgets/<pk>/ soft-deletes the budget via perform_destroy."""
+        """DELETE /budgets/<pk>/ soft-deletes the budget via
+        perform_destroy."""
         from budgets.models import Budget
 
         budget = Budget.objects.create(
@@ -163,7 +166,8 @@ class BudgetStatusViewTest(BaseBudgetTestCase):
             payed=True,
             created_by=self.user,
         )
-        # Budget for health (warning status — add expense between 80-100% of limit)
+        # Budget for health (warning status — add expense between
+        # 80-100% of limit)
         Budget.objects.create(
             category="health and care",
             limit_amount=Decimal("200.00"),
@@ -196,7 +200,9 @@ class BudgetStatusViewTest(BaseBudgetTestCase):
     def test_budget_status_with_month_year_params(self):
         """GET /budgets/status/?month=X&year=Y filters by month/year."""
         url = reverse("budget-status")
-        response = self.client.get(url, {"month": self.month, "year": self.year})
+        response = self.client.get(
+            url, {"month": self.month, "year": self.year}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsInstance(response.data, list)
 
@@ -289,16 +295,22 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
         )
 
     def test_history_returns_months_list(self):
-        """GET /budgets/history/?category=food+and+drink returns N data points."""
+        """GET /budgets/history/?category=food+and+drink returns N data
+        points."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": 6})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 6}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
 
     def test_history_contains_correct_fields(self):
-        """Each history item has month, year, limit_amount, actual_spent, percentage."""
+        """Each history item has month, year, limit_amount, actual_spent,
+        percentage."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": 3})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 3}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         item = response.data[-1]  # most recent month
         self.assertIn("month", item)
@@ -309,7 +321,9 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
     def test_history_current_month_has_expense(self):
         """The current month entry shows the paid expense total."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": 1})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 1}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         item = response.data[0]
@@ -329,21 +343,27 @@ class BudgetHistoryViewTest(BaseBudgetTestCase):
     def test_history_invalid_months_returns_400(self):
         """GET /budgets/history/?months=abc returns 400."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": "abc"})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": "abc"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
     def test_history_months_clamped_to_max(self):
         """months > 24 is clamped to 24."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": 100})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 100}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 24)
 
     def test_history_null_limit_when_no_budget(self):
         """Months without a budget have limit_amount=null."""
         url = reverse("budget-history")
-        response = self.client.get(url, {"category": "food and drink", "months": 3})
+        response = self.client.get(
+            url, {"category": "food and drink", "months": 3}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # First two months should have no budget (only current month has one)
         older_months = [
@@ -400,5 +420,7 @@ class AccountSerializerCoverageTest(BaseBudgetTestCase):
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
         pk = create_resp.data["id"]
         update_url = reverse("account-detail-view", args=[pk])
-        response = self.client.patch(update_url, {"account_number": "987654321"})
+        response = self.client.patch(
+            update_url, {"account_number": "987654321"}
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
