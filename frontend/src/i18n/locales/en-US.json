@@ -182,22 +182,25 @@
     "submodules": {
       "registrations": "Registrations",
       "records": "Records",
-      "books": "Books",
+      "books": "Works",
       "intellect": "Learning"
     },
     "items": {
       "accounts": "Accounts",
       "creditCards": "Credit Cards",
-      "bills": "Bills",
+      "creditCardBills": "Bills",
       "fixedExpenses": "Fixed Expenses",
       "fixedRevenues": "Fixed Revenues",
+      "recurring": "Recurring",
       "categorizationRules": "Categorization Rules",
       "budgets": "Budgets",
       "payables": "Payables",
+      "bills": "Payables & Receivables",
       "financialGoals": "Financial Goals",
       "members": "Beneficiaries/Creditors",
       "expenses": "Expenses",
       "revenues": "Revenues",
+      "transactions": "Transactions",
       "creditCardExpenses": "Card Expenses",
       "transfers": "Transfers",
       "loans": "Loans",
@@ -209,7 +212,7 @@
       "passwordGenerator": "Password Generator",
       "passwordImport": "Import Passwords",
       "archives": "Archives",
-      "books": "Books",
+      "books": "Works",
       "authors": "Authors",
       "publishers": "Publishers",
       "summaries": "Summaries",
@@ -217,6 +220,7 @@
       "readingQueue": "Reading Queue",
       "highlights": "Highlights",
       "todayTasks": "Today's Tasks",
+      "tasksGoals": "Tasks & Goals",
       "dailyChecklist": "Daily Checklist",
       "routineTasks": "Routine Tasks",
       "goals": "Goals",
@@ -263,6 +267,7 @@
     "dashboard": "Dashboard",
     "planningDashboard": "Personal Planning",
     "todayTasks": "Today's Tasks",
+    "tasksGoals": "Tasks & Goals",
     "dailyChecklist": "Daily Checklist",
     "routineTasks": "Routine Tasks",
     "goals": "Goals",
@@ -270,6 +275,9 @@
     "accounts": "Accounts",
     "creditCards": "Credit Cards",
     "creditCardBills": "Bills",
+    "transactions": "Transactions",
+    "recurring": "Recurring",
+    "bills": "Payables & Receivables",
     "fixedExpenses": "Fixed Expenses",
     "fixedRevenues": "Fixed Revenues",
     "categorizationRules": "Categorization Rules",
@@ -289,7 +297,7 @@
     "storedAccounts": "Stored Accounts",
     "archives": "Archives",
     "libraryDashboard": "Intellect",
-    "books": "Books",
+    "books": "Works",
     "authors": "Authors",
     "publishers": "Publishers",
     "summaries": "Summaries",
@@ -460,7 +468,7 @@
         "transfer": "Transfer",
         "cards": "Cards",
         "passwords": "Passwords",
-        "books": "Books"
+        "books": "Works"
       },
       "infoCards": {
         "financeTitle": "Organized Finances",
@@ -2339,7 +2347,7 @@
     "libraryDashboard": {
       "title": "Intellect Dashboard",
       "overview": "Overview",
-      "books": "Books",
+      "books": "Works",
       "authors": "Authors",
       "publishers": "Publishers",
       "pagesRead": "Pages Read",
@@ -2499,7 +2507,7 @@
       "noContentDistribution": "Read books or complete courses to see the distribution"
     },
     "books": {
-      "title": "Reading List",
+      "title": "Works",
       "newBtn": "New Book",
       "editTitle": "Edit Book",
       "newTitle": "New Book",
@@ -2959,7 +2967,8 @@
       "tabs": {
         "overview": "Overview",
         "modules": "Modules",
-        "sessions": "Sessions"
+        "sessions": "Sessions",
+        "certificate": "Certificate"
       },
       "stats": {
         "progress": "Progress",
@@ -3018,6 +3027,8 @@
         "title": "Modules",
         "newBtn": "New Module",
         "emptyState": "No modules registered.",
+        "emptyTitle": "No modules yet",
+        "emptyHint": "Create a module first. Inside each module, you can add lessons and track your progress.",
         "newTitle": "New Module",
         "editTitle": "Edit Module",
         "saved": "Module saved",
@@ -3061,6 +3072,15 @@
         "notesLabel": "Notes",
         "notesPlaceholder": "What did you study in this session?",
         "totalHours": "Total: {{hours}}h"
+      },
+      "certificate": {
+        "fileLabel": "Completion Certificate",
+        "emptyTitle": "No certificate attached",
+        "emptyHint": "Click to upload your completion certificate (PDF, JPG, PNG).",
+        "uploaded": "Certificate uploaded",
+        "removed": "Certificate removed",
+        "uploadError": "Error uploading certificate",
+        "replace": "Click to replace the certificate"
       }
     },
     "skills": {

@@ -10,7 +10,7 @@ import {
   RotateCcw,
   TrendingDown,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
@@ -147,7 +147,7 @@ function sortBills(bills: CreditCardBill[]): CreditCardBill[] {
   });
 }
 
-export default function CreditCards() {
+export default function CreditCards({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -499,12 +499,18 @@ export default function CreditCards() {
     return `**** ${digitsOnly.slice(-4)}`;
   };
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   if (isLoading) {
     return <LoadingState />;
   }
 
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
         title={t('pages.creditCards.title')}
         icon={<CreditCardIcon />}
@@ -930,6 +936,6 @@ export default function CreditCards() {
           )}
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

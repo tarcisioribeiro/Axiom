@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
@@ -42,7 +42,11 @@ import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
 
-export default function Revenues() {
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function Revenues({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
@@ -118,8 +122,10 @@ export default function Revenues() {
       }));
   }, [revenues]);
 
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
         <div className="flex items-center gap-sm">
           <Button
@@ -346,6 +352,6 @@ export default function Revenues() {
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

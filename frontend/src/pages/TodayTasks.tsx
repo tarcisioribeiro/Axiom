@@ -1,5 +1,5 @@
 import { CheckCircle2, Moon, Sun, Sunset } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -14,7 +14,15 @@ import { cn } from '@/lib/utils';
 type ViewMode = 'list' | 'kanban';
 const VIEW_MODE_KEY = 'todayTasks.viewMode';
 
-export default function TodayTasks() {
+interface TodayTasksProps {
+  embedded?: boolean;
+}
+
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function TodayTasks({ embedded = false }: TodayTasksProps) {
   const { t, i18n } = useTranslation();
 
   const [viewMode, setViewMode] = useState<ViewMode>(
@@ -51,6 +59,8 @@ export default function TodayTasks() {
   }, [hour, t]);
 
   if (isLoading) return <LoadingState />;
+
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   const todayTasksCount = viewMode === 'kanban' ? cards.length : todayTasks.length;
   const doneCount =
@@ -130,7 +140,7 @@ export default function TodayTasks() {
   const GreetIcon = greeting.Icon;
 
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />}>
         {viewToggle}
       </PageHeader>
@@ -193,6 +203,6 @@ export default function TodayTasks() {
           onSave={() => void handleKanbanSave()}
         />
       )}
-    </PageContainer>
+    </Wrapper>
   );
 }
