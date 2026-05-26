@@ -30,6 +30,8 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { BookDetailModal } from '@/components/library/BookDetailModal';
 import { BookForm } from '@/components/library/BookForm';
+import { HighlightsTab } from '@/components/library/HighlightsTab';
+import { ReadingQueueTab } from '@/components/library/ReadingQueueTab';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +63,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { authorsService } from '@/services/authors-service';
@@ -307,6 +310,8 @@ export default function Books() {
   const [filterGenre, setFilterGenre] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [activeTab, setActiveTab] = useState<'books' | 'reading-queue' | 'highlights'>('books');
+  const [isHighlightCreateOpen, setIsHighlightCreateOpen] = useState(false);
 
   // Form dialog (create / edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -510,42 +515,74 @@ export default function Books() {
 
   const handleFilterChange = () => setCurrentPage(1);
 
-  if (isLoading) return <LoadingState />;
-
   return (
     <PageContainer>
       <PageHeader title={t('pages.books.title')} icon={<Library />}>
-        <div className="flex items-center gap-sm">
-          <div className="flex items-center rounded-md border">
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="icon"
-              className="h-8 w-8 rounded-r-none border-r"
-              onClick={() => setViewMode('table')}
-              title={t('pages.books.listView')}
-              aria-label={t('pages.books.listView')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-              size="icon"
-              className="h-8 w-8 rounded-l-none"
-              onClick={() => setViewMode('grid')}
-              title={t('pages.books.gridView')}
-              aria-label={t('pages.books.gridView')}
-            >
-              <LayoutGrid className="h-4 w-4" />
+        {activeTab === 'books' && (
+          <div className="flex items-center gap-sm">
+            <div className="flex items-center rounded-md border">
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8 rounded-r-none border-r"
+                onClick={() => setViewMode('table')}
+                title={t('pages.books.listView')}
+                aria-label={t('pages.books.listView')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8 rounded-l-none"
+                onClick={() => setViewMode('grid')}
+                title={t('pages.books.gridView')}
+                aria-label={t('pages.books.gridView')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button onClick={handleCreate}>
+              <Plus className="mr-sm h-4 w-4" />
+              {t('pages.books.newBtn')}
             </Button>
           </div>
-          <Button onClick={handleCreate}>
+        )}
+        {activeTab === 'highlights' && (
+          <Button onClick={() => setIsHighlightCreateOpen(true)}>
             <Plus className="mr-sm h-4 w-4" />
-            {t('pages.books.newBtn')}
+            {t('pages.highlights.newBtn')}
           </Button>
-        </div>
+        )}
       </PageHeader>
 
-      <FilterBar
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) =>
+          setActiveTab(v as 'books' | 'reading-queue' | 'highlights')
+        }
+      >
+        <TabsList className="mb-lg w-full">
+          <TabsTrigger value="books" className="flex-1 gap-xs">
+            <Library className="h-4 w-4" />
+            {t('nav.items.books')}
+          </TabsTrigger>
+          <TabsTrigger value="reading-queue" className="flex-1 gap-xs">
+            <BookMarked className="h-4 w-4" />
+            {t('nav.items.readingQueue')}
+          </TabsTrigger>
+          <TabsTrigger value="highlights" className="flex-1 gap-xs">
+            <Highlighter className="h-4 w-4" />
+            {t('nav.items.highlights')}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="books" className="mt-0">
+          {isLoading ? (
+            <LoadingState />
+          ) : (
+            <>
+              <FilterBar
         hasActiveFilters={!!(searchTerm || filterStatus || filterGenre)}
         onClear={() => {
           setSearchTerm('');
@@ -856,7 +893,22 @@ export default function Books() {
             </Button>
           </div>
         </div>
-      )}
+          )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="reading-queue" className="mt-0">
+          <ReadingQueueTab />
+        </TabsContent>
+
+        <TabsContent value="highlights" className="mt-0">
+          <HighlightsTab
+            isCreateOpen={isHighlightCreateOpen}
+            onCreateClose={() => setIsHighlightCreateOpen(false)}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Book detail modal */}
       <BookDetailModal
