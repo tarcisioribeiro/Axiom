@@ -664,57 +664,43 @@ class ArchiveDownloadView(APIView):
             archive.file_name or archive.encrypted_file.name.split("/")[-1]
         )
 
-        # Log da atividade
-        log_activity(
-            request,
-            "download",
-            "Archive",
-            archive.id,
-            f"Fez download do arquivo: {archive.title}",
-            description_key="archive.download",
-            description_params={"name": archive.title},
-        )
-
-        # Return a presigned URL so the browser downloads directly from MinIO,
-        # avoiding the Django proxy stream which requires the internal TLS
-        # connection.
-        # Falls back to proxy streaming only for local filesystem (dev without
-        # MinIO).
-        url = archive.encrypted_file.storage.url(
-            archive.encrypted_file.name,
-            parameters={
-                "ResponseContentDisposition": (
-                    f'attachment; filename="{filename}"'
-                )
-            },
-        )
-        if url.startswith("http://") or url.startswith("https://"):
-            return Response({"url": url, "filename": filename})
-
         from django.http import FileResponse
 
         from security.serializers import ALLOWED_UPLOAD_TYPES
 
-        try:
-            file = archive.encrypted_file.open("rb")
-        except Exception:
-            return Response(
-                {"detail": "Arquivo não encontrado no sistema de arquivos"},
-                status=status.HTTP_404_NOT_FOUND,
+        if request.query_params.get("stream"):
+            # Proxy stream — browser navigated directly to this URL.
+            log_activity(
+                request,
+                "download",
+                "Archive",
+                archive.id,
+                f"Fez download do arquivo: {archive.title}",
+                description_key="archive.download",
+                description_params={"name": archive.title},
+            )
+            try:
+                file = archive.encrypted_file.open("rb")
+            except Exception:
+                return Response(
+                    {"detail": "Arquivo não encontrado."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            _, ext = os.path.splitext(filename.lower())
+            content_type = ALLOWED_UPLOAD_TYPES.get(
+                ext, "application/octet-stream"
+            )
+            return FileResponse(
+                file,
+                as_attachment=True,
+                filename=filename,
+                content_type=content_type,
             )
 
-        _, ext = os.path.splitext(filename.lower())
-        content_type = ALLOWED_UPLOAD_TYPES.get(
-            ext, "application/octet-stream"
-        )
-
-        response = FileResponse(
-            file,
-            as_attachment=True,
-            filename=filename,
-            content_type=content_type,
-        )
-        return response
+        # Return the stream URL so the frontend can trigger a browser download
+        # without depending on MinIO being publicly accessible.
+        stream_url = f"/api/v1/security/archives/{pk}/download/?stream=1"
+        return Response({"url": stream_url, "filename": filename})
 
 
 # ============================================================================

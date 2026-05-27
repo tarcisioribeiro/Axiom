@@ -8,6 +8,12 @@ class MemberSerializer(serializers.ModelSerializer):
     # Declare explicitly so DRF treats it as writable (descriptor, not a DB
     # field)
     document = serializers.CharField(required=True)
+    profile_photo = serializers.SerializerMethodField()
+
+    def get_profile_photo(self, obj):
+        if not obj.profile_photo:
+            return None
+        return f"/api/v1/members/{obj.pk}/photo/"
 
     class Meta:
         model = Member

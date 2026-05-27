@@ -15,7 +15,7 @@ from django.db.models import (
     Q,
     Sum,
 )
-from django.http import FileResponse, HttpResponseRedirect
+from django.http import FileResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -432,9 +432,9 @@ class BookFileView(APIView):
                 {"detail": "Este livro não possui arquivo anexado."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        url = book.book_file.url
+        stream_url = f"/api/v1/library/books/{book.pk}/file/stream/?download=1"
         return Response(
-            {"url": url, "name": book.book_file.name.split("/")[-1]}
+            {"url": stream_url, "name": book.book_file.name.split("/")[-1]}
         )
 
     def patch(self, request, pk):
@@ -567,8 +567,12 @@ class BookFileStreamView(APIView):
                 {"detail": "Arquivo não encontrado no sistema de arquivos."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        is_download = request.query_params.get("download", "0") == "1"
+        disposition = "attachment" if is_download else "inline"
         response = FileResponse(file_obj, content_type=content_type)
-        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        response["Content-Disposition"] = (
+            f'{disposition}; filename="{filename}"'
+        )
         return response
 
 
@@ -599,9 +603,6 @@ class BookCoverStreamView(APIView):
                 {"detail": "Este livro não possui capa."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        url = book.cover.url
-        if url.startswith("http://") or url.startswith("https://"):
-            return HttpResponseRedirect(url)
         filename = book.cover.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
         mime_map = {
@@ -651,9 +652,6 @@ class AuthorPhotoStreamView(APIView):
                 {"detail": "Este autor não possui foto."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        url = author.photo.url
-        if url.startswith("http://") or url.startswith("https://"):
-            return HttpResponseRedirect(url)
         filename = author.photo.name.split("/")[-1]
         ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
         mime_map = {
