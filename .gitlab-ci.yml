@@ -679,11 +679,17 @@ deploy:staging:
         -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
       if [ -n "$POSTGRES_POD" ]; then
         echo "Sincronizando senha do PostgreSQL com o Secret atual..."
-        kubectl -n axiom-staging exec "$POSTGRES_POD" -- \
-          runuser -u postgres -- \
-          psql -c "ALTER USER \"${STAGING_DB_USER}\" WITH PASSWORD '${STAGING_DB_PASSWORD}';" \
-          && echo "Senha sincronizada com sucesso." \
-          || echo "AVISO: não foi possível sincronizar a senha do PostgreSQL — verifique se o pod está Running."
+        # Aguarda o container estar Ready antes de tentar exec — evita race condition
+        # onde o pod existe mas o container ainda está reiniciando (container not found).
+        if kubectl -n axiom-staging wait pod "$POSTGRES_POD" \
+            --for=condition=Ready --timeout=60s 2>/dev/null; then
+          kubectl -n axiom-staging exec "$POSTGRES_POD" -c postgres -- \
+            su postgres -c "psql -c \"ALTER USER \\\"${STAGING_DB_USER}\\\" WITH PASSWORD '${STAGING_DB_PASSWORD}';\"" \
+            && echo "Senha sincronizada com sucesso." \
+            || echo "AVISO: não foi possível sincronizar a senha do PostgreSQL — verifique as credenciais."
+        else
+          echo "AVISO: pod do PostgreSQL não ficou Ready em 60s — pulando sincronização de senha."
+        fi
       else
         echo "Pod do PostgreSQL não encontrado — pulando sincronização de senha."
       fi
@@ -702,8 +708,13 @@ deploy:staging:
     # deploys anteriores — o pod template do Ollama não muda entre ciclos, então
     # kubectl apply não incrementa a generation nem reseta a condição por conta própria.
     - kubectl -n axiom-staging rollout restart deployment/ollama
-    # Aguarda o servidor Ollama subir (modelos são puxados em background).
-    - kubectl -n axiom-staging rollout status deployment/ollama --timeout=600s
+    # Não bloqueia o deploy no Ollama: no VPS com recursos limitados o rollout pode
+    # ultrapassar 600s facilmente (terminate old pod + pull image + start server).
+    # A API tem circuit breaker para Ollama — se não estiver pronto, as funcionalidades
+    # de IA degradam graciosamente mas a aplicação continua funcionando.
+    - |
+      kubectl -n axiom-staging rollout status deployment/ollama --timeout=600s \
+        || echo "AVISO: rollout do Ollama não completou em 600s — deploy segue. LLM pode estar temporariamente indisponível."
     # Apply deployment specs with the real image tag substituted in-place so
     # kubectl apply creates exactly one rollout revision per deploy cycle.
     # Using sed to replace the placeholder 0.0.0 tag avoids a spurious revision
