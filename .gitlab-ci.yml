@@ -74,6 +74,11 @@ workflow:
     paths:
       - .npm/
   before_script:
+    # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
+    # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
+    # which is blocked on some CI runner networks.
+    - git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
 .docker_base:
@@ -88,7 +93,13 @@ workflow:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    # Retry up to 5 times to handle transient 502/503 responses from the
+    # GitLab Container Registry (reverse-proxy blip, cold registry start).
+    - |
+      for i in 1 2 3 4 5; do
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" && break
+        [ $i -lt 5 ] && { echo "Registry login attempt $i/5 failed, retrying in 20s..."; sleep 20; } || exit 1
+      done
 
 # ------------------------------------------------------------------------------
 # Shared rule: skip this job on main — develop already validated it.
@@ -387,7 +398,13 @@ typecheck:frontend:
     # the daemon itself also resolves external hostnames via Google DNS.
     DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    # Retry up to 5 times to handle transient 502/503 responses from the
+    # GitLab Container Registry (reverse-proxy blip, cold registry start).
+    - |
+      for i in 1 2 3 4 5; do
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" && break
+        [ $i -lt 5 ] && { echo "Registry login attempt $i/5 failed, retrying in 20s..."; sleep 20; } || exit 1
+      done
     - apk add --no-cache curl
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
