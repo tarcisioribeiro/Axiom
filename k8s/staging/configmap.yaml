@@ -20,8 +20,8 @@ data:
   CORS_ALLOWED_ORIGINS: "http://localhost:39101,https://axiom-staging.tjtux.duckdns.org"
 
   # MinIO object storage (own staging instance)
+  # No MINIO_EXTERNAL_ENDPOINT — all files are served via Django proxy stream.
   MINIO_ENDPOINT: "minio-service:9000"
-  MINIO_EXTERNAL_ENDPOINT: "axiom-staging.tjtux.duckdns.org:9000"
   MINIO_BUCKET_NAME: "axiom-staging"
   MINIO_USE_SSL: "false"
 

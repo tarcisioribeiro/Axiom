@@ -25,8 +25,8 @@ variables:
   DOCKER_BUILDKIT: "1"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
-  API_IMAGE: "$CI_REGISTRY_IMAGE/api"
-  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  API_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-api"
+  FRONTEND_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-frontend"
   # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
   CI_COVERAGE_THRESHOLD: "80"
   # SBOM / supply-chain tooling — pin exact versions for reproducibility.
@@ -74,6 +74,13 @@ workflow:
     paths:
       - .npm/
   before_script:
+    # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
+    # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
+    # which is blocked on some CI runner networks.
+    # node:20-alpine ships without git — install it before git config runs.
+    - apk add --no-cache git
+    - git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
 .docker_base:
@@ -88,7 +95,7 @@ workflow:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
 
 # ------------------------------------------------------------------------------
 # Shared rule: skip this job on main — develop already validated it.
@@ -176,8 +183,10 @@ lint:commits:
   variables:
     GIT_DEPTH: 0
   script:
-    # commitlint.config.js lives at the repo root; npx resolves it from the
-    # parent of the frontend/ working directory set by .node_base before_script.
+    # commitlint.config.cjs lives in frontend/ alongside its node_modules so that
+    # @commitlint/config-conventional resolves correctly. before_script (from
+    # .node_base) already cd's into frontend/, so npx finds the config here.
+    # .cjs extension is required because frontend/package.json has "type":"module".
     - npx commitlint --from "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --to "$CI_COMMIT_SHA"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -387,7 +396,7 @@ typecheck:frontend:
     # the daemon itself also resolves external hostnames via Google DNS.
     DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
     - apk add --no-cache curl
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -571,8 +580,8 @@ build:frontend:
   stage: scan
   interruptible: false
   variables:
-    TRIVY_USERNAME: "$CI_REGISTRY_USER"
-    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_USERNAME: "$GHCR_USERNAME"
+    TRIVY_PASSWORD: "$GHCR_TOKEN"
     TRIVY_NO_PROGRESS: "true"
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -653,6 +662,12 @@ deploy:staging:
         --from-literal=MINIO_ROOT_USER="$STAGING_MINIO_ROOT_USER"
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
+        --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
     # Sincroniza a senha do PostgreSQL com o Secret atual.
     # O Postgres só lê POSTGRES_PASSWORD na inicialização do PVC; após isso a
@@ -1342,6 +1357,12 @@ deploy:production:
         --from-literal=MINIO_ROOT_USER="$PRODUCTION_MINIO_ROOT_USER" \
         --from-literal=MINIO_ROOT_PASSWORD="$PRODUCTION_MINIO_ROOT_PASSWORD" \
         --from-literal=SENTRY_DSN="${PRODUCTION_SENTRY_DSN:-}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
     # ── 2. Apply base manifests (idempotent — safe on every run) ─────────────────
     - kubectl apply -f k8s/base/namespace.yaml
