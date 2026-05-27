@@ -25,12 +25,12 @@ spec:
       serviceAccountName: sa-frontend
       automountServiceAccountToken: false
       imagePullSecrets:
-        - name: gitlab-registry-secret
+        - name: ghcr-pull-secret
       containers:
         - name: frontend
           # Image tag is pinned to the build digest on every deploy by CI/CD.
           # See deploy:staging job in .gitlab-ci.yml.
-          image: registry.gitlab.com/tarcisioribeiro/axiom/frontend:0.0.0
+          image: ghcr.io/owner/axiom-frontend:0.0.0
           ports:
             - containerPort: 80
               name: http

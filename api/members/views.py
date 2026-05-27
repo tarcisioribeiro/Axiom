@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.http import HttpResponse
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import (
@@ -301,6 +301,40 @@ def get_available_permissions(request):
             permissions_by_app[app_name] = []
 
     return Response(permissions_by_app)
+
+
+class MemberPhotoStreamView(APIView):
+    """Proxy da foto de perfil do membro via Django."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        member = get_object_or_404(Member, pk=pk, is_deleted=False)
+        if not member.profile_photo:
+            return Response(
+                {"detail": "Este membro não possui foto de perfil."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        try:
+            file_obj = member.profile_photo.open("rb")
+        except Exception:
+            return Response(
+                {"detail": "Foto não encontrada no sistema de arquivos."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        filename = member.profile_photo.name.split("/")[-1]
+        ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+        mime_map = {
+            "jpg": "image/jpeg",
+            "jpeg": "image/jpeg",
+            "png": "image/png",
+            "webp": "image/webp",
+            "gif": "image/gif",
+        }
+        content_type = mime_map.get(ext, "image/jpeg")
+        response = FileResponse(file_obj, content_type=content_type)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
 
 
 class MemberFinancialReportView(APIView):
