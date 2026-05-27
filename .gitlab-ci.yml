@@ -25,8 +25,8 @@ variables:
   DOCKER_BUILDKIT: "1"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
-  API_IMAGE: "$CI_REGISTRY_IMAGE/api"
-  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  API_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-api"
+  FRONTEND_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-frontend"
   # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
   CI_COVERAGE_THRESHOLD: "80"
   # SBOM / supply-chain tooling — pin exact versions for reproducibility.
@@ -74,6 +74,13 @@ workflow:
     paths:
       - .npm/
   before_script:
+    # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
+    # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
+    # which is blocked on some CI runner networks.
+    # node:20-alpine ships without git — install it before git config runs.
+    - apk add --no-cache git
+    - git config --global url."https://github.com/".insteadOf "git@github.com:"
+    - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
 
 .docker_base:
@@ -88,7 +95,7 @@ workflow:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
 
 # ------------------------------------------------------------------------------
 # Shared rule: skip this job on main — develop already validated it.
@@ -176,8 +183,10 @@ lint:commits:
   variables:
     GIT_DEPTH: 0
   script:
-    # commitlint.config.js lives at the repo root; npx resolves it from the
-    # parent of the frontend/ working directory set by .node_base before_script.
+    # commitlint.config.cjs lives in frontend/ alongside its node_modules so that
+    # @commitlint/config-conventional resolves correctly. before_script (from
+    # .node_base) already cd's into frontend/, so npx finds the config here.
+    # .cjs extension is required because frontend/package.json has "type":"module".
     - npx commitlint --from "$CI_MERGE_REQUEST_DIFF_BASE_SHA" --to "$CI_COMMIT_SHA"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -387,7 +396,7 @@ typecheck:frontend:
     # the daemon itself also resolves external hostnames via Google DNS.
     DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
     - apk add --no-cache curl
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -571,8 +580,8 @@ build:frontend:
   stage: scan
   interruptible: false
   variables:
-    TRIVY_USERNAME: "$CI_REGISTRY_USER"
-    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_USERNAME: "$GHCR_USERNAME"
+    TRIVY_PASSWORD: "$GHCR_TOKEN"
     TRIVY_NO_PROGRESS: "true"
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -653,6 +662,12 @@ deploy:staging:
         --from-literal=MINIO_ROOT_USER="$STAGING_MINIO_ROOT_USER"
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
+        --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
     # Sincroniza a senha do PostgreSQL com o Secret atual.
     # O Postgres só lê POSTGRES_PASSWORD na inicialização do PVC; após isso a
@@ -1343,6 +1358,12 @@ deploy:production:
         --from-literal=MINIO_ROOT_PASSWORD="$PRODUCTION_MINIO_ROOT_PASSWORD" \
         --from-literal=SENTRY_DSN="${PRODUCTION_SENTRY_DSN:-}" \
         --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
+        --dry-run=client -o yaml | kubectl apply -f -
     # ── 2. Apply base manifests (idempotent — safe on every run) ─────────────────
     - kubectl apply -f k8s/base/namespace.yaml
     - kubectl apply -f k8s/base/configmap.yaml
@@ -1807,6 +1828,7 @@ cleanup:registry:
   image: python:3.12-slim
   stage: cleanup
   interruptible: false
+  allow_failure: true
   needs:
     - job: build:api
       optional: true
@@ -1818,7 +1840,6 @@ cleanup:registry:
     - if: $CI_COMMIT_BRANCH == "main"
       when: on_success
     - when: manual
-      allow_failure: true
   script:
     - |
       python3 - <<'PYEOF'
@@ -1836,7 +1857,7 @@ cleanup:registry:
 
       TRANSIENT = (429, 500, 502, 503, 504)
 
-      def fetch(url, method="GET", max_retries=4):
+      def fetch(url, method="GET", max_retries=7):
           for attempt in range(max_retries):
               try:
                   req = urllib.request.Request(
@@ -1846,14 +1867,14 @@ cleanup:registry:
                       return r.read(), r.status
               except urllib.error.HTTPError as e:
                   if e.code in TRANSIENT and attempt < max_retries - 1:
-                      wait = 2 ** (attempt + 1)
-                      print(f"  HTTP {e.code} — aguardando {wait}s (tentativa {attempt+1}/{max_retries-1})...")
+                      wait = min(2 ** (attempt + 1), 60)
+                      print(f"  HTTP {e.code} — aguardando {wait}s (tentativa {attempt+1}/{max_retries})...")
                       time.sleep(wait)
                       continue
                   raise
               except OSError as e:
                   if attempt < max_retries - 1:
-                      wait = 2 ** (attempt + 1)
+                      wait = min(2 ** (attempt + 1), 60)
                       print(f"  Erro de rede ({e}) — aguardando {wait}s...")
                       time.sleep(wait)
                       continue
@@ -1882,43 +1903,49 @@ cleanup:registry:
 
       # ── Container Registry ────────────────────────────────────────────────────
       print("=== Container Registry ===")
-      for repo in api_get(f"/projects/{PROJECT}/registry/repositories"):
-          repo_id, repo_name = repo["id"], repo["name"]
-          tags = api_get(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags")
+      try:
+          for repo in api_get(f"/projects/{PROJECT}/registry/repositories"):
+              repo_id, repo_name = repo["id"], repo["name"]
+              tags = api_get(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags")
 
-          detailed = []
-          for t in tags:
-              url = f"{API}/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}"
-              body, _ = fetch(url)
-              detailed.append(json.loads(body))
+              detailed = []
+              for t in tags:
+                  url = f"{API}/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}"
+                  body, _ = fetch(url)
+                  detailed.append(json.loads(body))
 
-          sha_sorted = sorted(
-              [t for t in detailed if t["name"] not in NAMED],
-              key=lambda t: t.get("created_at", ""),
-              reverse=True
-          )
-          named_count = sum(1 for t in detailed if t["name"] in NAMED)
-          to_delete   = sha_sorted[KEEP_N:]
-          print(f"{repo_name}: {len(tags)} tags → mantendo {len(sha_sorted[:KEEP_N]) + named_count}, deletando {len(to_delete)}")
-          for t in to_delete:
-              status = api_delete(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}")
-              print(f"  DELETE {t['name']} ({t.get('created_at','?')[:19]}) → HTTP {status}")
-              time.sleep(0.1)
+              sha_sorted = sorted(
+                  [t for t in detailed if t["name"] not in NAMED],
+                  key=lambda t: t.get("created_at", ""),
+                  reverse=True
+              )
+              named_count = sum(1 for t in detailed if t["name"] in NAMED)
+              to_delete   = sha_sorted[KEEP_N:]
+              print(f"{repo_name}: {len(tags)} tags → mantendo {len(sha_sorted[:KEEP_N]) + named_count}, deletando {len(to_delete)}")
+              for t in to_delete:
+                  status = api_delete(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}")
+                  print(f"  DELETE {t['name']} ({t.get('created_at','?')[:19]}) → HTTP {status}")
+                  time.sleep(0.1)
+      except (urllib.error.HTTPError, OSError) as exc:
+          print(f"AVISO: Container Registry indisponível após retries ({exc}) — pulando limpeza de tags.")
 
       # ── Package Registry (SBOM) ───────────────────────────────────────────────
       print("\n=== Package Registry (sbom) ===")
-      packages = api_get(f"/projects/{PROJECT}/packages?package_type=generic")
-      sbom = sorted(
-          [p for p in packages if p["name"] == "sbom"],
-          key=lambda p: p.get("created_at", ""),
-          reverse=True
-      )
-      to_delete = sbom[KEEP_N:]
-      print(f"sbom: {len(sbom)} versões → mantendo {min(len(sbom), KEEP_N)}, deletando {len(to_delete)}")
-      for p in to_delete:
-          status = api_delete(f"/projects/{PROJECT}/packages/{p['id']}")
-          print(f"  DELETE sbom/{p['version']} → HTTP {status}")
-          time.sleep(0.1)
+      try:
+          packages = api_get(f"/projects/{PROJECT}/packages?package_type=generic")
+          sbom = sorted(
+              [p for p in packages if p["name"] == "sbom"],
+              key=lambda p: p.get("created_at", ""),
+              reverse=True
+          )
+          to_delete = sbom[KEEP_N:]
+          print(f"sbom: {len(sbom)} versões → mantendo {min(len(sbom), KEEP_N)}, deletando {len(to_delete)}")
+          for p in to_delete:
+              status = api_delete(f"/projects/{PROJECT}/packages/{p['id']}")
+              print(f"  DELETE sbom/{p['version']} → HTTP {status}")
+              time.sleep(0.1)
+      except (urllib.error.HTTPError, OSError) as exc:
+          print(f"AVISO: Package Registry indisponível após retries ({exc}) — pulando limpeza de SBOMs.")
 
       print("\nLimpeza do registry concluída.")
       PYEOF

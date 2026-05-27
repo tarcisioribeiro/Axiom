@@ -64,12 +64,12 @@ spec:
       # RBAC restringe o acesso a patch no deployment "ollama" apenas.
       automountServiceAccountToken: true
       imagePullSecrets:
-        - name: gitlab-registry-secret
+        - name: ghcr-pull-secret
       containers:
         - name: api
           # Image tag is pinned to the build digest on every deploy by CI/CD.
           # See blue-green-switch.sh and deploy:production in .gitlab-ci.yml.
-          image: registry.gitlab.com/tarcisioribeiro/axiom/api:0.0.0
+          image: ghcr.io/owner/axiom-api:0.0.0
           ports:
             - containerPort: 39100
               name: http

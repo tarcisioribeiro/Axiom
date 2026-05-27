@@ -395,7 +395,7 @@ test(expenses): add missing edge-case coverage
 pre-commit install --hook-type commit-msg
 ```
 
-Config is at `commitlint.config.js` (project root). Packages are in `frontend/devDependencies`.
+Config is at `frontend/commitlint.config.cjs` (alongside its packages). Packages are in `frontend/devDependencies`.
 
 ## Dependency Management
 
