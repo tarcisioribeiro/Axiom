@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .views import MemberPhotoStreamView
 
 urlpatterns = [
     path(
@@ -17,6 +18,11 @@ urlpatterns = [
         "members/me/photo/",
         views.manage_profile_photo,
         name="member-profile-photo",
+    ),
+    path(
+        "members/<int:pk>/photo/",
+        MemberPhotoStreamView.as_view(),
+        name="member-photo-stream",
     ),
     path(
         "members/<int:pk>/",
