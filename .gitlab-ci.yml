@@ -25,8 +25,8 @@ variables:
   DOCKER_BUILDKIT: "1"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip_cache"
   npm_config_cache: "$CI_PROJECT_DIR/.npm"
-  API_IMAGE: "$CI_REGISTRY_IMAGE/api"
-  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  API_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-api"
+  FRONTEND_IMAGE: "ghcr.io/$GHCR_USERNAME/axiom-frontend"
   # Raise this value over time as the test suite grows (set in GitLab → Settings → CI/CD → Variables to override).
   CI_COVERAGE_THRESHOLD: "80"
   # SBOM / supply-chain tooling — pin exact versions for reproducibility.
@@ -95,13 +95,7 @@ workflow:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
-    # Retry up to 5 times to handle transient 502/503 responses from the
-    # GitLab Container Registry (reverse-proxy blip, cold registry start).
-    - |
-      for i in 1 2 3 4 5; do
-        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" && break
-        [ $i -lt 5 ] && { echo "Registry login attempt $i/5 failed, retrying in 20s..."; sleep 20; } || exit 1
-      done
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
 
 # ------------------------------------------------------------------------------
 # Shared rule: skip this job on main — develop already validated it.
@@ -400,13 +394,7 @@ typecheck:frontend:
     # the daemon itself also resolves external hostnames via Google DNS.
     DOCKER_DAEMON_OPTS: "--dns=8.8.8.8 --dns=8.8.4.4"
   before_script:
-    # Retry up to 5 times to handle transient 502/503 responses from the
-    # GitLab Container Registry (reverse-proxy blip, cold registry start).
-    - |
-      for i in 1 2 3 4 5; do
-        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY" && break
-        [ $i -lt 5 ] && { echo "Registry login attempt $i/5 failed, retrying in 20s..."; sleep 20; } || exit 1
-      done
+    - docker login ghcr.io -u "$GHCR_USERNAME" -p "$GHCR_TOKEN"
     - apk add --no-cache curl
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -590,8 +578,8 @@ build:frontend:
   stage: scan
   interruptible: false
   variables:
-    TRIVY_USERNAME: "$CI_REGISTRY_USER"
-    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_USERNAME: "$GHCR_USERNAME"
+    TRIVY_PASSWORD: "$GHCR_TOKEN"
     TRIVY_NO_PROGRESS: "true"
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
@@ -672,6 +660,12 @@ deploy:staging:
         --from-literal=MINIO_ROOT_USER="$STAGING_MINIO_ROOT_USER"
         --from-literal=MINIO_ROOT_PASSWORD="$STAGING_MINIO_ROOT_PASSWORD"
         --from-literal=SENTRY_DSN="${STAGING_SENTRY_DSN:-}"
+        --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom-staging create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
     # Sincroniza a senha do PostgreSQL com o Secret atual.
     # O Postgres só lê POSTGRES_PASSWORD na inicialização do PVC; após isso a
@@ -1361,6 +1355,12 @@ deploy:production:
         --from-literal=MINIO_ROOT_USER="$PRODUCTION_MINIO_ROOT_USER" \
         --from-literal=MINIO_ROOT_PASSWORD="$PRODUCTION_MINIO_ROOT_PASSWORD" \
         --from-literal=SENTRY_DSN="${PRODUCTION_SENTRY_DSN:-}" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl -n axiom create secret docker-registry ghcr-pull-secret \
+        --docker-server=ghcr.io \
+        --docker-username="$GHCR_USERNAME" \
+        --docker-password="$GHCR_TOKEN" \
         --dry-run=client -o yaml | kubectl apply -f -
     # ── 2. Apply base manifests (idempotent — safe on every run) ─────────────────
     - kubectl apply -f k8s/base/namespace.yaml
