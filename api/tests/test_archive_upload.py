@@ -225,8 +225,14 @@ class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
         archive_id = self._create_archive_with_file(
             "report.pdf", b"%PDF-1.4" + b"\x00" * 20
         )
-        url = reverse("archive-download", kwargs={"pk": archive_id})
-        response = self.client.get(url)
+        # First call returns JSON with stream URL; second streams the file.
+        info_url = reverse("archive-download", kwargs={"pk": archive_id})
+        info_response = self.client.get(info_url)
+        self.assertEqual(info_response.status_code, status.HTTP_200_OK)
+        self.assertIn("url", info_response.data)
+
+        stream_url = info_url + "?stream=1"
+        response = self.client.get(stream_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("application/pdf", response.get("Content-Type", ""))
         self.assertIn("attachment", response.get("Content-Disposition", ""))
@@ -235,8 +241,11 @@ class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
         archive_id = self._create_archive_with_file(
             "photo.png", b"\x89PNG\r\n\x1a\n" + b"\x00" * 20
         )
-        url = reverse("archive-download", kwargs={"pk": archive_id})
-        response = self.client.get(url)
+        stream_url = (
+            reverse("archive-download", kwargs={"pk": archive_id})
+            + "?stream=1"
+        )
+        response = self.client.get(stream_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("image/png", response.get("Content-Type", ""))
         self.assertIn("attachment", response.get("Content-Disposition", ""))
@@ -257,11 +266,14 @@ class ArchiveDownloadContentTypeTest(BaseSecurityTestCase):
         archive.file_name = "file.bin"
         archive.save()
 
-        url = reverse("archive-download", kwargs={"pk": archive.id})
+        stream_url = (
+            reverse("archive-download", kwargs={"pk": archive.id})
+            + "?stream=1"
+        )
         # The file won't exist in storage, so we just verify the
         # content-type logic by checking that the view handles the
         # missing file gracefully
-        response = self.client.get(url)
+        response = self.client.get(stream_url)
         # Either 404 (file not on disk) or 200 with octet-stream
         self.assertIn(
             response.status_code,
