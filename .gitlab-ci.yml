@@ -77,6 +77,8 @@ workflow:
     # Redirect SSH GitHub URLs to HTTPS so transitive git deps (e.g. aframe →
     # three-bmfont-text) are fetched over port 443 instead of SSH port 22,
     # which is blocked on some CI runner networks.
+    # node:20-alpine ships without git — install it before git config runs.
+    - apk add --no-cache git
     - git config --global url."https://github.com/".insteadOf "git@github.com:"
     - git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
     - cd frontend && npm ci --prefer-offline --legacy-peer-deps
