@@ -1882,43 +1882,49 @@ cleanup:registry:
 
       # ── Container Registry ────────────────────────────────────────────────────
       print("=== Container Registry ===")
-      for repo in api_get(f"/projects/{PROJECT}/registry/repositories"):
-          repo_id, repo_name = repo["id"], repo["name"]
-          tags = api_get(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags")
+      try:
+          for repo in api_get(f"/projects/{PROJECT}/registry/repositories"):
+              repo_id, repo_name = repo["id"], repo["name"]
+              tags = api_get(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags")
 
-          detailed = []
-          for t in tags:
-              url = f"{API}/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}"
-              body, _ = fetch(url)
-              detailed.append(json.loads(body))
+              detailed = []
+              for t in tags:
+                  url = f"{API}/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}"
+                  body, _ = fetch(url)
+                  detailed.append(json.loads(body))
 
-          sha_sorted = sorted(
-              [t for t in detailed if t["name"] not in NAMED],
-              key=lambda t: t.get("created_at", ""),
-              reverse=True
-          )
-          named_count = sum(1 for t in detailed if t["name"] in NAMED)
-          to_delete   = sha_sorted[KEEP_N:]
-          print(f"{repo_name}: {len(tags)} tags → mantendo {len(sha_sorted[:KEEP_N]) + named_count}, deletando {len(to_delete)}")
-          for t in to_delete:
-              status = api_delete(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}")
-              print(f"  DELETE {t['name']} ({t.get('created_at','?')[:19]}) → HTTP {status}")
-              time.sleep(0.1)
+              sha_sorted = sorted(
+                  [t for t in detailed if t["name"] not in NAMED],
+                  key=lambda t: t.get("created_at", ""),
+                  reverse=True
+              )
+              named_count = sum(1 for t in detailed if t["name"] in NAMED)
+              to_delete   = sha_sorted[KEEP_N:]
+              print(f"{repo_name}: {len(tags)} tags → mantendo {len(sha_sorted[:KEEP_N]) + named_count}, deletando {len(to_delete)}")
+              for t in to_delete:
+                  status = api_delete(f"/projects/{PROJECT}/registry/repositories/{repo_id}/tags/{t['name']}")
+                  print(f"  DELETE {t['name']} ({t.get('created_at','?')[:19]}) → HTTP {status}")
+                  time.sleep(0.1)
+      except (urllib.error.HTTPError, OSError) as exc:
+          print(f"AVISO: Container Registry indisponível após retries ({exc}) — pulando limpeza de tags.")
 
       # ── Package Registry (SBOM) ───────────────────────────────────────────────
       print("\n=== Package Registry (sbom) ===")
-      packages = api_get(f"/projects/{PROJECT}/packages?package_type=generic")
-      sbom = sorted(
-          [p for p in packages if p["name"] == "sbom"],
-          key=lambda p: p.get("created_at", ""),
-          reverse=True
-      )
-      to_delete = sbom[KEEP_N:]
-      print(f"sbom: {len(sbom)} versões → mantendo {min(len(sbom), KEEP_N)}, deletando {len(to_delete)}")
-      for p in to_delete:
-          status = api_delete(f"/projects/{PROJECT}/packages/{p['id']}")
-          print(f"  DELETE sbom/{p['version']} → HTTP {status}")
-          time.sleep(0.1)
+      try:
+          packages = api_get(f"/projects/{PROJECT}/packages?package_type=generic")
+          sbom = sorted(
+              [p for p in packages if p["name"] == "sbom"],
+              key=lambda p: p.get("created_at", ""),
+              reverse=True
+          )
+          to_delete = sbom[KEEP_N:]
+          print(f"sbom: {len(sbom)} versões → mantendo {min(len(sbom), KEEP_N)}, deletando {len(to_delete)}")
+          for p in to_delete:
+              status = api_delete(f"/projects/{PROJECT}/packages/{p['id']}")
+              print(f"  DELETE sbom/{p['version']} → HTTP {status}")
+              time.sleep(0.1)
+      except (urllib.error.HTTPError, OSError) as exc:
+          print(f"AVISO: Package Registry indisponível após retries ({exc}) — pulando limpeza de SBOMs.")
 
       print("\nLimpeza do registry concluída.")
       PYEOF
