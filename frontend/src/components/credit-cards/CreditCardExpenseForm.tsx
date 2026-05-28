@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import {
   EXPENSE_CATEGORIES_CANONICAL,
   TRANSLATIONS,
@@ -355,10 +356,9 @@ export const CreditCardExpenseForm: React.FC<CreditCardExpenseFormProps> = ({
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
             </Label>
-            <Input
-              id="horary"
-              type="time"
-              {...register('horary', { required: true })}
+            <TimePicker
+              value={watch('horary')}
+              onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
           </div>
