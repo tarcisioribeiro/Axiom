@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
+import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { formatCurrency } from '@/lib/formatters';
@@ -380,10 +381,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.expenses.form.horaryLabel')}
             </Label>
-            <Input
-              id="horary"
-              type="time"
-              {...register('horary')}
+            <TimePicker
+              value={watch('horary')}
+              onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
             {errors.horary && (

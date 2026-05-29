@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import { translate } from '@/config/constants';
 import { TASK_CATEGORY_ICONS, PRIORITY_ICONS, PERIODICITY_ICONS } from '@/config/icons';
 import { logger } from '@/lib/logger';
@@ -609,11 +610,9 @@ export function RoutineTaskForm({
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 {t('pages.routineTasks.form.defaultTimeLabel')}
               </Label>
-              <Input
-                id="default_time"
-                type="time"
-                value={watch('default_time') || ''}
-                onChange={(e) => setValue('default_time', e.target.value || null)}
+              <TimePicker
+                value={watch('default_time') ?? undefined}
+                onChange={(t) => setValue('default_time', t ?? null)}
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
@@ -682,11 +681,9 @@ export function RoutineTaskForm({
                   <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                   {t('pages.routineTasks.form.closingTimeLabel')}
                 </Label>
-                <Input
-                  id="closing_time"
-                  type="time"
-                  value={watch('closing_time') || ''}
-                  onChange={(e) => setValue('closing_time', e.target.value || null)}
+                <TimePicker
+                  value={watch('closing_time') ?? undefined}
+                  onChange={(t) => setValue('closing_time', t ?? null)}
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">

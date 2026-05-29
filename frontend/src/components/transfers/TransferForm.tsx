@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
+import { TimePicker } from '@/components/ui/time-picker';
 import { TRANSLATIONS } from '@/config/constants';
 import { formatCurrency } from '@/lib/formatters';
 import { getAccountBalanceInfo } from '@/lib/helpers';
@@ -377,9 +378,9 @@ export const TransferForm: React.FC<TransferFormProps> = ({
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.transfers.form.timeLabel')}
             </Label>
-            <Input
-              type="time"
-              {...register('horary', { required: true })}
+            <TimePicker
+              value={watch('horary')}
+              onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
           </div>

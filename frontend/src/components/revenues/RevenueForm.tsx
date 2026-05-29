@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { StatusToggle } from '@/components/ui/status-toggle';
+import { TimePicker } from '@/components/ui/time-picker';
 import {
   REVENUE_CATEGORIES_CANONICAL,
   TRANSLATIONS,
@@ -234,9 +235,9 @@ export const RevenueForm: React.FC<RevenueFormProps> = ({
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               {t('pages.revenues.form.horaryLabel')}
             </Label>
-            <Input
-              type="time"
-              {...register('horary', { required: true })}
+            <TimePicker
+              value={watch('horary')}
+              onChange={(t) => setValue('horary', t ?? '')}
               disabled={isLoading}
             />
           </div>
