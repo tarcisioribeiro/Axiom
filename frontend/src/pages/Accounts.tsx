@@ -69,7 +69,7 @@ export default function Accounts() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
+  const { showDelete } = useAlertDialog();
   const queryClient = useQueryClient();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -218,14 +218,8 @@ export default function Accounts() {
   };
 
   const handleDelete = async (id: number) => {
-    const confirmed = await showConfirm({
-      title: t('pages.accounts.deleteTitle'),
-      description: t('pages.accounts.deleteDesc'),
-      confirmText: t('common.actions.delete'),
-      cancelText: t('common.actions.cancel'),
-      variant: 'destructive',
-    });
-
+    const account = accounts?.find((a) => a.id === id);
+    const confirmed = await showDelete(String(account?.account_name ?? ''));
     if (!confirmed) return;
     deleteMutation.mutate(id);
   };

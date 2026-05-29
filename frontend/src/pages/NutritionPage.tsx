@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Edit,
@@ -33,6 +34,7 @@ import { MealTypeForm } from '@/components/nutrition/MealTypeForm';
 import { MenuOptionForm } from '@/components/nutrition/MenuOptionForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -156,13 +158,16 @@ function getMealPeriodTheme(time?: string | null): MealPeriodTheme {
 }
 
 export default function NutritionPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
   const [dialog, setDialog] = useState<DialogMode>(null);
   const [expandedMealTypes, setExpandedMealTypes] = useState<Set<number>>(new Set());
   const [foodSearch, setFoodSearch] = useState('');
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
 
   const { data: member } = useQuery({
     queryKey: ['current-member'],
@@ -193,13 +198,18 @@ export default function NutritionPage() {
   const mealTypes = mealTypesData ?? [];
   const logs = logsData ?? [];
 
-  const today = new Date().toISOString().slice(0, 10);
-  const todayLogs = logs.filter((l) => l.date === today);
+  const selectedLogs = logs.filter((l) => l.date === selectedDate);
   const activeMealTypes = mealTypes.filter((mt) => mt.is_active);
   const adherencePct =
     activeMealTypes.length > 0
-      ? Math.round((todayLogs.length / activeMealTypes.length) * 100)
+      ? Math.round((selectedLogs.length / activeMealTypes.length) * 100)
       : 0;
+
+  const navigateDay = (delta: number) => {
+    const d = new Date(selectedDate + 'T12:00:00');
+    d.setDate(d.getDate() + delta);
+    setSelectedDate(d.toISOString().slice(0, 10));
+  };
 
   const filteredFoods = foods.filter((f) =>
     f.name.toLowerCase().includes(foodSearch.toLowerCase())
@@ -508,11 +518,10 @@ export default function NutritionPage() {
     }
   };
 
-  const todayLabel = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const selectedDateLabel = new Date(selectedDate + 'T12:00:00').toLocaleDateString(
+    i18n.language === 'pt-BR' ? 'pt-BR' : 'en-US',
+    { weekday: 'long', day: 'numeric', month: 'long' }
+  );
 
   // SVG circular progress constants
   const RADIUS = 30;
@@ -547,16 +556,51 @@ export default function NutritionPage() {
 
           {/* ── Diário ───────────────────────────────────────────────────── */}
           <TabsContent value="log" className="mt-0 flex-1">
+            {/* Navegação de data */}
+            <div className="mb-md flex items-center gap-sm">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigateDay(-1)}
+                title={t('pages.nutritionLog.prevDay')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1">
+                <DatePicker
+                  value={selectedDate}
+                  onChange={(v) =>
+                    setSelectedDate(
+                      v
+                        ? v.toISOString().slice(0, 10)
+                        : new Date().toISOString().slice(0, 10)
+                    )
+                  }
+                  placeholder={t('pages.nutritionLog.selectDate')}
+                  maxDate={new Date().toISOString().slice(0, 10)}
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigateDay(1)}
+                disabled={selectedDate >= new Date().toISOString().slice(0, 10)}
+                title={t('pages.nutritionLog.nextDay')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
             {/* Header card com aderência */}
             <div className="mb-lg overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
               <div className="flex items-center justify-between gap-md px-lg py-md">
                 <div className="min-w-0">
                   <p className="text-sm font-medium capitalize text-muted-foreground">
-                    {todayLabel}
+                    {selectedDateLabel}
                   </p>
                   <div className="mt-xs flex items-baseline gap-xs">
                     <span className="text-4xl font-bold tabular-nums text-category-nutrition">
-                      {todayLogs.length}
+                      {selectedLogs.length}
                     </span>
                     <span className="text-xl text-muted-foreground">
                       / {activeMealTypes.length}
@@ -564,7 +608,7 @@ export default function NutritionPage() {
                   </div>
                   <p className="mt-xs text-sm text-muted-foreground">
                     {t('pages.nutritionLog.mealsLogged', {
-                      logged: todayLogs.length,
+                      logged: selectedLogs.length,
                       total: activeMealTypes.length,
                     })}
                   </p>
@@ -625,7 +669,7 @@ export default function NutritionPage() {
             ) : (
               <MealTimeline
                 mealTypes={activeMealTypes}
-                logs={todayLogs}
+                logs={selectedLogs}
                 onEdit={(log) => setDialog({ type: 'edit-log', log })}
                 onDelete={async (log) => {
                   const ok = await showConfirm({
@@ -825,6 +869,7 @@ export default function NutritionPage() {
                 prefillMealTypeId={
                   dialog.type === 'new-log' ? dialog.prefillMealType : undefined
                 }
+                prefillDate={dialog.type === 'new-log' ? selectedDate : undefined}
                 mealTypes={mealTypes}
                 ownerId={ownerId}
                 onSubmit={async (data) => {
