@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { MealType, MealTypeFormData } from '@/types/nutrition';
@@ -159,7 +160,11 @@ export function MealTypeForm({
       {/* Horário */}
       <FormSection title={t('pages.nutritionMealTypes.suggestedTime')} icon={Clock}>
         <div className="flex items-center gap-md">
-          <Input type="time" {...register('suggested_time')} className="w-36" />
+          <TimePicker
+            value={watch('suggested_time') || undefined}
+            onChange={(t) => setValue('suggested_time', t ?? '')}
+            className="w-36"
+          />
           {suggestedTime && (
             <div
               className={cn(
