@@ -12,6 +12,7 @@ import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -21,7 +22,6 @@ import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import { TRANSLATIONS, translate } from '@/config/constants';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -176,26 +176,12 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-xs">
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {t('pages.revenues.dateFrom')}
-          </span>
-          <DatePicker
-            value={startDate}
-            onChange={setStartDate}
-            placeholder={t('pages.revenues.dateFrom')}
-            clearable
-          />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {t('pages.revenues.dateTo')}
-          </span>
-          <DatePicker
-            value={endDate}
-            onChange={setEndDate}
-            placeholder={t('pages.revenues.dateTo')}
-            clearable
-          />
-        </div>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+        />
       </FilterBar>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
@@ -288,6 +274,59 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.revenues.emptyState'),
         }}
+        mobileCard={(revenue) => (
+          <div className="px-md py-3">
+            <div className="flex items-start justify-between gap-sm">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{revenue.description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {formatDate(revenue.date)} ·{' '}
+                  {translateCategory(revenue.category, 'revenue')}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="numeric text-sm font-semibold text-success">
+                  {formatCurrency(parseFloat(revenue.value))}
+                </p>
+                <span
+                  className={`mt-0.5 inline-block rounded px-xs py-0.5 text-[10px] font-medium ${
+                    revenue.received
+                      ? 'bg-success/10 text-success'
+                      : 'bg-warning/10 text-warning'
+                  }`}
+                >
+                  {revenue.received
+                    ? t('pages.revenues.stats.received')
+                    : t('common.status.pending')}
+                </span>
+              </div>
+            </div>
+            <div className="mt-sm flex items-center justify-end gap-xs">
+              {revenue.received && (
+                <ReceiptButton
+                  source={{ type: 'revenue', data: revenue }}
+                  memberName={getMemberDisplayName(revenue.member_name, user)}
+                />
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(revenue)}
+                aria-label={t('common.actions.edit')}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(revenue.id)}
+                aria-label={t('common.actions.delete')}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+        )}
         actions={(revenue) => (
           <div className="flex items-center justify-end gap-sm">
             {revenue.received && (

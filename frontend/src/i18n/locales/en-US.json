@@ -22,6 +22,10 @@
       "download": "Download",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
+      "filters": {
+        "fromDate": "From: DD/MM/YYYY",
+        "toDate": "To: DD/MM/YYYY"
+      },
       "yes": "Yes",
       "no": "No",
       "seeMore": "See more",
@@ -43,6 +47,7 @@
       "actionDenied": "Action not allowed",
       "confirmDeleteTitle": "Confirm deletion",
       "confirmDeleteDesc": "This action cannot be undone.",
+      "confirmDeleteNamedDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "copied": "Copied!",
       "copiedDesc": "{{label}} copied to clipboard.",
       "revealError": "Error revealing data",
@@ -253,6 +258,8 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "userSettings": "Account settings",
+    "userMenu": "User menu",
+    "sectionModules": "Modules",
     "adminPanel": "Admin Panel",
     "superuser": "Superuser",
     "adminNav": {
@@ -324,6 +331,8 @@
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
       "passwordPlaceholder": "Enter your password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "submit": "Sign in",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
@@ -371,6 +380,7 @@
     "twoFactor": {
       "title": "Two-step verification",
       "description": "Enter the code from your authenticator app.",
+      "step": "Step 2 of 2",
       "codeLabel": "Verification code",
       "backupHint": "You can also use a backup code.",
       "submit": "Verify",
@@ -1874,6 +1884,15 @@
           "overdue_other": "· {{count}} overdue"
         }
       },
+      "anomalies": {
+        "title": "Anomalous Spending",
+        "subtitle": "Categories with spending above historical average",
+        "emptyState": "No anomalies detected.",
+        "currentAmount": "Current Amount",
+        "average": "Average",
+        "zScore": "Z-Score",
+        "aboveAverage": "above average"
+      },
       "greetingMorning": "Good morning",
       "greetingAfternoon": "Good afternoon",
       "greetingEvening": "Good evening",
@@ -1949,7 +1968,8 @@
         "deductible": "Deductible Expenses",
         "loans": "Loans",
         "errorDesc": "Could not generate the IR report."
-      }
+      },
+      "monthComposition": "Month overview"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",

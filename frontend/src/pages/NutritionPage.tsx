@@ -570,7 +570,11 @@ export default function NutritionPage() {
                 <DatePicker
                   value={selectedDate}
                   onChange={(v) =>
-                    setSelectedDate(v ?? new Date().toISOString().slice(0, 10))
+                    setSelectedDate(
+                      v
+                        ? v.toISOString().slice(0, 10)
+                        : new Date().toISOString().slice(0, 10)
+                    )
                   }
                   placeholder={t('pages.nutritionLog.selectDate')}
                   maxDate={new Date().toISOString().slice(0, 10)}
