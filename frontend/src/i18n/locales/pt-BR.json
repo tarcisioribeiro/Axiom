@@ -22,6 +22,10 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "filters": {
+        "fromDate": "De: DD/MM/AAAA",
+        "toDate": "Até: DD/MM/AAAA"
+      },
       "yes": "Sim",
       "no": "Não",
       "seeMore": "Ver mais",
@@ -43,6 +47,7 @@
       "actionDenied": "Ação não permitida",
       "confirmDeleteTitle": "Confirmar exclusão",
       "confirmDeleteDesc": "Esta ação não pode ser desfeita.",
+      "confirmDeleteNamedDesc": "Tem certeza que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
       "copied": "Copiado!",
       "copiedDesc": "{{label}} copiado para a área de transferência.",
       "revealError": "Erro ao revelar dados",
@@ -253,6 +258,8 @@
     "expandSidebar": "Expandir menu lateral",
     "collapseSidebar": "Recolher menu lateral",
     "userSettings": "Configurações da conta",
+    "userMenu": "Menu do usuário",
+    "sectionModules": "Módulos",
     "adminPanel": "Painel Administrativo",
     "superuser": "Superusuário",
     "adminNav": {
@@ -324,6 +331,8 @@
       "usernamePlaceholder": "Digite seu usuário",
       "password": "Senha",
       "passwordPlaceholder": "Digite sua senha",
+      "showPassword": "Mostrar senha",
+      "hidePassword": "Ocultar senha",
       "submit": "Entrar",
       "loading": "Entrando...",
       "noAccount": "Não tem uma conta?",
@@ -371,6 +380,7 @@
     "twoFactor": {
       "title": "Verificação em duas etapas",
       "description": "Digite o código do seu aplicativo autenticador.",
+      "step": "Etapa 2 de 2",
       "codeLabel": "Código de verificação",
       "backupHint": "Você também pode usar um código de backup.",
       "submit": "Verificar",
@@ -1929,7 +1939,8 @@
         "emptyState": "Nenhuma anomalia detectada.",
         "currentAmount": "Gasto Atual",
         "average": "Média",
-        "zScore": "Z-Score"
+        "zScore": "Z-Score",
+        "aboveAverage": "acima da média"
       },
       "reconciliation": {
         "title": "Reconciliação de Saldo",
@@ -2013,7 +2024,8 @@
         "deductible": "Despesas Dedutíveis",
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
-      }
+      },
+      "monthComposition": "Composição do mês"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -3278,7 +3290,20 @@
       "insightWeekendDrop": "Sua consistência cai {{diff}}% nos fins de semana ({{weekendRate}}% vs {{weekdayRate}}% nos dias úteis).",
       "insightWeekendBetter": "Você é mais consistente nos fins de semana ({{weekendRate}}% vs {{weekdayRate}}% nos dias úteis).",
       "insightOverallExcellent": "Excelente! Sua taxa média de cumprimento nos últimos 90 dias é {{rate}}%.",
-      "insightOverallLow": "Sua taxa média de cumprimento é {{rate}}%. Tente reduzir o número de tarefas para focar no essencial."
+      "insightOverallLow": "Sua taxa média de cumprimento é {{rate}}%. Tente reduzir o número de tarefas para focar no essencial.",
+      "workoutsTitle": "Treinos — últimos 30 dias",
+      "sessions30d": "Sessões (30d)",
+      "thisWeek": "Esta semana",
+      "totalTime30d": "Tempo total (30d)",
+      "activeWorkoutPlan": "Plano ativo",
+      "planExercises": "exercícios",
+      "nutritionTitle": "Nutrição — esta semana",
+      "mealsToday": "Refeições hoje",
+      "activeMealTypes": "Tipos ativos",
+      "workoutsByDayTitle": "Treinos por dia da semana — últimos 30 dias",
+      "noWorkoutsRegistered": "Nenhum treino registrado",
+      "sessionCount_one": "{{count}} sessão",
+      "sessionCount_other": "{{count}} sessões"
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
@@ -4064,9 +4089,16 @@
       "title": "Preferências de Notificação",
       "subtitle": "Escolha como deseja receber cada tipo de alerta: somente no app, por e-mail ou ambos.",
       "emailNote": "Para receber e-mails, certifique-se de que um endereço de e-mail válido esteja cadastrado na sua conta.",
-      "savedSuccess": "Preferência salva com sucesso.",
+      "savedSuccess": "Preferências salvas com sucesso.",
+      "savedSuccessDesc": "Suas configurações de notificação foram atualizadas.",
+      "saveBtn": "Salvar configurações",
+      "testBtn": "Testar notificação",
+      "testSuccess": "Notificação de teste enviada",
+      "testSuccessDesc": "Esta é uma notificação de teste do Axiom. Suas configurações estão funcionando!",
+      "noChanges": "Sem alterações",
+      "noChangesDesc": "Nenhuma configuração foi alterada.",
       "loadError": "Erro ao carregar preferências",
-      "saveError": "Erro ao salvar preferência",
+      "saveError": "Erro ao salvar preferências",
       "channelInApp": "Somente no App",
       "channelEmail": "Somente E-mail",
       "channelBoth": "App e E-mail",
@@ -4529,6 +4561,7 @@
       "dayNamePlaceholder": "Ex: Treino A",
       "muscleGroups": "Grupos Musculares",
       "muscleGroupsPlaceholder": "Ex: Costas / Ombro / Bíceps",
+      "muscleGroupsHint": "Selecione os grupos acima ou digite manualmente.",
       "order": "Ordem",
       "exercisesSection": "Exercícios",
       "addExercise": "Adicionar Exercício",
@@ -4558,7 +4591,33 @@
       "noExercises": "Nenhum exercício nesta divisão",
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Erro ao carregar planos",
-      "saveError": "Erro ao salvar"
+      "saveError": "Erro ao salvar",
+      "muscleChips": {
+        "chest": "Peito",
+        "back": "Costas",
+        "shoulders": "Ombros",
+        "biceps": "Bíceps",
+        "triceps": "Tríceps",
+        "abs": "Abdômen",
+        "quads": "Quadríceps",
+        "hamstrings": "Posteriores",
+        "glutes": "Glúteos",
+        "calves": "Panturrilha",
+        "forearms": "Antebraços",
+        "lowerBack": "Lombar",
+        "traps": "Trapézio",
+        "adductors": "Adutores",
+        "abductors": "Abdutores",
+        "core": "Core",
+        "push": "Empurrar",
+        "pull": "Puxar",
+        "cardio": "Cardio",
+        "hiit": "HIIT",
+        "running": "Corrida",
+        "cycling": "Ciclismo",
+        "swimming": "Natação",
+        "fullBody": "Full Body"
+      }
     },
     "exercises": {
       "title": "Exercícios",
@@ -4753,7 +4812,11 @@
       "registerMeal": "Registrar",
       "loadError": "Erro ao carregar registros",
       "saveError": "Erro ao salvar",
-      "deleteError": "Erro ao excluir"
+      "deleteError": "Erro ao excluir",
+      "prevDay": "Dia anterior",
+      "nextDay": "Próximo dia",
+      "selectDate": "Selecionar data",
+      "adherenceDay": "Adesão do dia"
     },
     "knowledgeGraph": {
       "title": "Grafo de Conhecimento",

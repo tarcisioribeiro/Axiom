@@ -12,6 +12,7 @@ import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { ExportModal } from '@/components/common/ExportModal';
 import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -21,7 +22,6 @@ import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -178,26 +178,12 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
             <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-xs">
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {t('pages.expenses.dateFrom')}
-          </span>
-          <DatePicker
-            value={startDate}
-            onChange={setStartDate}
-            placeholder={t('pages.expenses.dateFrom')}
-            clearable
-          />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {t('pages.expenses.dateTo')}
-          </span>
-          <DatePicker
-            value={endDate}
-            onChange={setEndDate}
-            placeholder={t('pages.expenses.dateTo')}
-            clearable
-          />
-        </div>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
+        />
       </FilterBar>
 
       <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
@@ -290,6 +276,57 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.expenses.emptyState'),
         }}
+        mobileCard={(expense) => (
+          <div className="px-md py-3">
+            <div className="flex items-start justify-between gap-sm">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{expense.description}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {formatDate(expense.date)} ·{' '}
+                  {translateCategory(expense.category, 'expense')}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="numeric text-sm font-semibold text-destructive">
+                  {formatCurrency(parseFloat(expense.value))}
+                </p>
+                <span
+                  className={`mt-0.5 inline-block rounded px-xs py-0.5 text-[10px] font-medium ${
+                    expense.payed
+                      ? 'bg-success/10 text-success'
+                      : 'bg-warning/10 text-warning'
+                  }`}
+                >
+                  {expense.payed ? t('common.status.paid') : t('common.status.pending')}
+                </span>
+              </div>
+            </div>
+            <div className="mt-sm flex items-center justify-end gap-xs">
+              {expense.payed && (
+                <ReceiptButton
+                  source={{ type: 'expense', data: expense }}
+                  memberName={getMemberDisplayName(expense.member_name, user)}
+                />
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEdit(expense)}
+                aria-label={t('common.actions.edit')}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDelete(expense.id)}
+                aria-label={t('common.actions.delete')}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+        )}
         actions={(expense) => (
           <div className="flex items-center justify-end gap-sm">
             {expense.payed && (

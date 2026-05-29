@@ -744,22 +744,17 @@ export default function Dashboard() {
                         <p className="font-semibold">
                           {formatCurrency(anomaly.current_amount)}
                         </p>
-                        <div className="flex items-center gap-sm">
-                          <span className="rounded bg-destructive/10 px-sm py-0.5 text-xs font-bold text-destructive">
-                            +
-                            {anomaly.average > 0
-                              ? (
-                                  ((anomaly.current_amount - anomaly.average) /
-                                    anomaly.average) *
-                                  100
-                                ).toFixed(0)
-                              : '0'}
-                            %
-                          </span>
-                          <Badge variant="outline" className="text-xs">
-                            z={anomaly.z_score.toFixed(1)}
-                          </Badge>
-                        </div>
+                        <span className="rounded bg-destructive/10 px-sm py-0.5 text-xs font-bold text-destructive">
+                          +
+                          {anomaly.average > 0
+                            ? (
+                                ((anomaly.current_amount - anomaly.average) /
+                                  anomaly.average) *
+                                100
+                              ).toFixed(0)
+                            : '0'}
+                          % {t('pages.dashboard.anomalies.aboveAverage')}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1272,7 +1267,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-3 py-sm">
           <div className="h-px flex-1 bg-border" />
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Composição do mês
+            {t('pages.dashboard.monthComposition')}
           </span>
           <div className="h-px flex-1 bg-border" />
         </div>
@@ -1453,7 +1448,7 @@ export default function Dashboard() {
                         item.status === 'exceeded'
                           ? 'bg-destructive'
                           : item.status === 'warning'
-                            ? 'bg-yellow-500'
+                            ? 'bg-warning'
                             : 'bg-success';
                       return (
                         <div key={item.id} className="space-y-xs">
@@ -1472,7 +1467,7 @@ export default function Dashboard() {
                                   item.status === 'exceeded'
                                     ? 'bg-destructive/10 text-destructive'
                                     : item.status === 'warning'
-                                      ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                      ? 'bg-warning/10 text-warning'
                                       : 'bg-success/10 text-success'
                                 )}
                               >
