@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-service
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: ollama
+    environment: staging
+spec:
+  selector:
+    app: ollama
+  ports:
+    - name: http
+      protocol: TCP
+      port: 11434
+      targetPort: 11434
+  type: ClusterIP

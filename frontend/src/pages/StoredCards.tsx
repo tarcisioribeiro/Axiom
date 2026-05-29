@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Pencil,
@@ -9,10 +10,13 @@ import {
   CreditCard as CreditCardIcon,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { StoredCardForm } from '@/components/security/StoredCardForm';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +28,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { creditCardsService } from '@/services/credit-cards-service';
 import { membersService } from '@/services/members-service';
 import { storedCardsService } from '@/services/stored-cards-service';
@@ -38,6 +41,41 @@ import type {
   Member,
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
+
+type FlagConfig = { bg: string; badge: string };
+
+const FLAG_CONFIG: Record<string, FlagConfig> = {
+  VSA: {
+    bg: 'border-2 border-info/30 bg-gradient-to-br from-info/20 to-info/5',
+    badge: 'border-info/30 bg-info/10 text-info',
+  },
+  MSC: {
+    bg: 'border-2 border-destructive/30 bg-gradient-to-br from-destructive/20 to-destructive/5',
+    badge: 'border-destructive/30 bg-destructive/10 text-destructive',
+  },
+  ELO: {
+    bg: 'border-2 border-warning/30 bg-gradient-to-br from-warning/20 to-warning/5',
+    badge: 'border-warning/30 bg-warning/10 text-warning',
+  },
+  EXP: {
+    bg: 'border-2 border-success/30 bg-gradient-to-br from-success/20 to-success/5',
+    badge: 'border-success/30 bg-success/10 text-success',
+  },
+  HCD: {
+    bg: 'border-2 border-destructive/30 bg-gradient-to-br from-destructive/20 to-destructive/5',
+    badge: 'border-destructive/30 bg-destructive/10 text-destructive',
+  },
+  DIN: {
+    bg: 'border-2 border-accent/30 bg-gradient-to-br from-accent/20 to-accent/5',
+    badge: 'border-accent/30 bg-accent/10 text-accent',
+  },
+  OTHER: {
+    bg: 'border-2 border-primary/30 bg-gradient-to-br from-primary/20 to-primary/5',
+    badge: 'border-primary/30 bg-primary/10 text-primary',
+  },
+};
+
+const DEFAULT_FLAG: FlagConfig = FLAG_CONFIG.OTHER;
 
 export default function StoredCards() {
   const [cards, setCards] = useState<StoredCreditCard[]>([]);
@@ -54,9 +92,11 @@ export default function StoredCards() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -72,7 +112,7 @@ export default function StoredCards() {
       setCurrentUserMember(memberData);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -93,11 +133,10 @@ export default function StoredCards() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir cartão',
-      description:
-        'Tem certeza que deseja excluir este cartão armazenado? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.storedCards.deleteTitle'),
+      description: t('pages.storedCards.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -106,13 +145,13 @@ export default function StoredCards() {
     try {
       await storedCardsService.delete(id);
       toast({
-        title: 'Cartão excluído',
-        description: 'O cartão foi excluído com sucesso.',
+        title: t('pages.storedCards.deleted'),
+        description: t('pages.storedCards.deletedDesc'),
       });
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -121,7 +160,6 @@ export default function StoredCards() {
 
   const handleReveal = async (id: number) => {
     if (revealedData.has(id)) {
-      // Ocultar dados
       const newMap = new Map(revealedData);
       newMap.delete(id);
       setRevealedData(newMap);
@@ -135,12 +173,12 @@ export default function StoredCards() {
       newMap.set(id, { number: data.card_number, cvv: data.security_code });
       setRevealedData(newMap);
       toast({
-        title: 'Dados revelados',
-        description: 'Os dados do cartão foram descriptografados com sucesso.',
+        title: t('pages.storedCards.revealed'),
+        description: t('pages.storedCards.revealedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao revelar dados',
+        title: t('common.messages.revealError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -150,10 +188,10 @@ export default function StoredCards() {
   };
 
   const handleCopy = async (text: string, label: string) => {
-    await navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     toast({
-      title: 'Copiado!',
-      description: `${label} copiado para a área de transferência.`,
+      title: t('common.messages.copied'),
+      description: t('common.messages.copiedDesc', { label }),
     });
   };
 
@@ -161,28 +199,26 @@ export default function StoredCards() {
     try {
       setIsSubmitting(true);
       if (selectedCard) {
-        // Remove campos vazios (não atualizar dados sensíveis vazios)
         const updateData: Partial<StoredCreditCardFormData> = { ...data };
         if (!updateData.card_number) delete updateData.card_number;
         if (!updateData.security_code) delete updateData.security_code;
-
         await storedCardsService.update(selectedCard.id, updateData);
         toast({
-          title: 'Cartão atualizado',
-          description: 'O cartão foi atualizado com sucesso.',
+          title: t('pages.storedCards.updated'),
+          description: t('pages.storedCards.updatedDesc'),
         });
       } else {
         await storedCardsService.create(data);
         toast({
-          title: 'Cartão criado',
-          description: 'O cartão foi criado com sucesso.',
+          title: t('pages.storedCards.created'),
+          description: t('pages.storedCards.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -198,185 +234,203 @@ export default function StoredCards() {
       card.last_four_digits?.includes(searchTerm)
   );
 
-  const getFinanceCardName = (id?: number) => {
-    if (!id) return 'Nenhum';
-    const card = creditCards.find((c) => c.id === id);
-    return card ? card.name : 'N/A';
-  };
-
-  const columns: Column<StoredCreditCard>[] = [
-    {
-      key: 'name',
-      label: 'Nome',
-      render: (card) => (
-        <div className="flex items-center gap-2">
-          <CreditCardIcon className="h-4 w-4" />
-          <span className="font-medium">{card.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'cardholder',
-      label: 'Titular',
-      render: (card) => <span className="text-sm">{card.cardholder_name}</span>,
-    },
-    {
-      key: 'number',
-      label: 'Número',
-      render: (card) => {
-        const revealed = revealedData.get(card.id);
-        if (revealed) {
-          return (
-            <div className="flex items-center gap-2 font-mono text-sm">
-              <span>{revealed.number}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleCopy(revealed.number, 'Número do cartão')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <span className="font-mono text-sm">
-            **** **** **** {card.last_four_digits || '****'}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'cvv',
-      label: 'CVV',
-      align: 'center',
-      render: (card) => {
-        const revealed = revealedData.get(card.id);
-        if (revealed) {
-          return (
-            <div className="flex items-center justify-center gap-2 font-mono text-sm">
-              <span>{revealed.cvv}</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleCopy(revealed.cvv, 'CVV')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            </div>
-          );
-        }
-        return <span>***</span>;
-      },
-    },
-    {
-      key: 'flag',
-      label: 'Bandeira',
-      render: (card) => <Badge>{translate('cardBrands', card.flag)}</Badge>,
-    },
-    {
-      key: 'expiration',
-      label: 'Validade',
-      align: 'center',
-      render: (card) => (
-        <span className="text-sm">
-          {String(card.expiration_month).padStart(2, '0')}/{card.expiration_year}
-        </span>
-      ),
-    },
-    {
-      key: 'finance_card',
-      label: 'Cartão Financeiro',
-      render: (card) => (
-        <Badge variant="outline" className="text-xs">
-          {getFinanceCardName(card.finance_card ?? undefined)}
-        </Badge>
-      ),
-    },
-  ];
-
   return (
     <VaultGuard>
       <PageContainer>
-        <PageHeader
-          title="Cartões Armazenados"
-          icon={<CreditCardIcon />}
-          action={{
-            label: 'Novo Cartão',
-            icon: <Plus className="h-4 w-4" />,
-            onClick: handleCreate,
-          }}
-        />
+        <PageHeader title={t('pages.storedCards.title')} icon={<CreditCardIcon />}>
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.storedCards.newBtn')}
+          </Button>
+        </PageHeader>
 
-        <div className="flex gap-4">
-          <Input
-            placeholder="Buscar cartões..."
+        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+          <SearchInput
+            placeholder={t('pages.storedCards.searchPlaceholder')}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
+            onValueChange={setSearchTerm}
+            className="w-52 sm:w-64"
           />
-        </div>
+        </FilterBar>
 
-        <DataTable
-          data={filteredCards}
-          columns={columns}
-          keyExtractor={(card) => card.id}
-          isLoading={isLoading}
-          emptyState={{
-            message: 'Nenhum cartão armazenado encontrado.',
-          }}
-          actions={(card) => (
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleReveal(card.id)}
-                disabled={revealingId === card.id}
-              >
-                {revealingId === card.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : revealedData.has(card.id) ? (
-                  <>
-                    <EyeOff className="mr-1 h-3 w-3" />
-                    Ocultar
-                  </>
-                ) : (
-                  <>
-                    <Eye className="mr-1 h-3 w-3" />
-                    Revelar
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(card)}
-                aria-label="Editar"
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(card.id)}
-                aria-label="Excluir"
-              >
-                <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-              </Button>
-            </div>
-          )}
-        />
+        {!isLoading && filteredCards.length === 0 ? (
+          <EmptyState
+            icon={<CreditCardIcon className="h-12 w-12 text-muted-foreground" />}
+            message={
+              searchTerm
+                ? t('pages.storedCards.emptySearch')
+                : t('pages.storedCards.emptySearch')
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-lg sm:grid-cols-2 xl:grid-cols-3">
+            {filteredCards.map((card) => {
+              const flagCfg = FLAG_CONFIG[card.flag] ?? DEFAULT_FLAG;
+              const revealed = revealedData.get(card.id);
+
+              return (
+                <div key={card.id} className="flex flex-col gap-sm">
+                  {/* Card face */}
+                  <div
+                    className={cn(
+                      'relative overflow-hidden rounded-2xl p-5',
+                      flagCfg.bg
+                    )}
+                  >
+                    {/* Decorative background circles */}
+                    <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-foreground/[0.04]" />
+                    <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-foreground/[0.03]" />
+
+                    {/* Top row: chip + brand */}
+                    <div className="relative flex items-start justify-between">
+                      <div className="h-8 w-10 rounded-md border border-warning/60 bg-gradient-to-br from-warning/40 to-warning/20" />
+                      <Badge variant="outline" className={flagCfg.badge}>
+                        {card.flag_display}
+                      </Badge>
+                    </div>
+
+                    {/* Card number */}
+                    <div className="relative mt-lg flex items-center gap-sm">
+                      <span className="font-mono text-base tracking-widest">
+                        {revealed
+                          ? revealed.number
+                          : `**** **** **** ${card.last_four_digits || '****'}`}
+                      </span>
+                      {revealed && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                          onClick={() =>
+                            handleCopy(
+                              revealed.number,
+                              t('pages.storedCards.cardNumberLabel')
+                            )
+                          }
+                          aria-label={t('common.actions.copy')}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Bottom row: holder + expiry/cvv */}
+                    <div className="relative mt-md flex items-end justify-between gap-sm">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                          {t('pages.storedCards.columns.holder')}
+                        </p>
+                        <p className="truncate text-sm font-semibold uppercase tracking-wide">
+                          {card.cardholder_name}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[10px] font-medium uppercase tracking-widest opacity-50">
+                          {t('pages.storedCards.columns.expiry')}
+                        </p>
+                        <p className="font-mono text-sm font-semibold">
+                          {String(card.expiration_month).padStart(2, '0')}/
+                          {card.expiration_year}
+                        </p>
+                        {revealed && (
+                          <div className="mt-0.5 flex items-center justify-end gap-xs">
+                            <span className="font-mono text-xs opacity-70">
+                              CVV: {revealed.cvv}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-5 w-5 p-0 opacity-60 hover:opacity-100"
+                              onClick={() => handleCopy(revealed.cvv, 'CVV')}
+                              aria-label={t('common.actions.copy')}
+                            >
+                              <Copy className="h-2.5 w-2.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action bar */}
+                  <div className="flex items-center justify-between gap-sm px-xs">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{card.name}</p>
+                      {card.finance_card_name && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {card.finance_card_name}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleReveal(card.id)}
+                        disabled={revealingId === card.id}
+                        title={
+                          revealed
+                            ? t('common.actions.hide')
+                            : t('common.actions.reveal')
+                        }
+                        aria-label={
+                          revealed
+                            ? t('common.actions.hide')
+                            : t('common.actions.reveal')
+                        }
+                      >
+                        {revealingId === card.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : revealed ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEdit(card)}
+                        title={t('common.actions.edit')}
+                        aria-label={t('common.actions.edit')}
+                      >
+                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleDelete(card.id)}
+                        title={t('common.actions.delete')}
+                        aria-label={t('common.actions.delete')}
+                      >
+                        <Trash2
+                          className="h-3.5 w-3.5 text-destructive"
+                          aria-hidden="true"
+                        />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {selectedCard ? 'Editar' : 'Novo'} Cartão Armazenado
+                {selectedCard
+                  ? t('pages.storedCards.editTitle')
+                  : t('pages.storedCards.newTitle')}
               </DialogTitle>
               <DialogDescription>
                 {selectedCard
-                  ? 'Atualize as informações do cartão armazenado'
-                  : 'Adicione um novo cartão ao cofre seguro'}
+                  ? t('pages.storedCards.editDesc')
+                  : t('pages.storedCards.newDesc')}
               </DialogDescription>
             </DialogHeader>
             <StoredCardForm

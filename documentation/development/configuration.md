@@ -1,6 +1,6 @@
 # Configuração do Ambiente
 
-Este guia detalha todas as configurações necessárias para executar o MindLedger.
+Este guia detalha todas as configurações necessárias para executar o Axiom.
 
 ## Índice
 
@@ -9,12 +9,11 @@ Este guia detalha todas as configurações necessárias para executar o MindLedg
 - [Gerando Chaves de Segurança](#gerando-chaves-de-segurança)
 - [Configuração de Portas](#configuração-de-portas)
 - [Configuração de Logging](#configuração-de-logging)
-- [Configuração do AI Assistant](#configuração-do-ai-assistant)
 - [Configuração Avançada](#configuração-avançada)
 
 ## Visão Geral
 
-O MindLedger utiliza variáveis de ambiente para configuração. Existem dois níveis:
+O Axiom utiliza variáveis de ambiente para configuração. Existem dois níveis:
 
 1. **Raiz do projeto** (`.env`): Configurações compartilhadas (backend, banco de dados, portas)
 2. **Frontend** (`frontend/.env`): Configurações específicas do frontend
@@ -31,13 +30,13 @@ Este arquivo contém todas as configurações críticas do sistema.
 # ============================================
 
 # Usuário do banco de dados PostgreSQL
-DB_USER=mindledger_user
+DB_USER=axiom_user
 
 # Senha do banco de dados (use uma senha forte!)
 DB_PASSWORD=sua_senha_segura_aqui
 
 # Nome do banco de dados
-DB_NAME=mindledger_db
+DB_NAME=axiom_db
 
 # Host do banco de dados
 # Use "db" para Docker, "localhost" para instalação local
@@ -53,7 +52,7 @@ DB_PORT=5432
 
 # Superuser criado automaticamente pelo entrypoint.sh
 DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_EMAIL=admin@mindledger.com
+DJANGO_SUPERUSER_EMAIL=admin@axiom.com
 DJANGO_SUPERUSER_PASSWORD=admin123
 
 # ⚠️ IMPORTANTE: Mude estas credenciais em produção!
@@ -78,14 +77,18 @@ ENCRYPTION_KEY=exemplo-mude-isso-ZXhhbXBsZS1tdWRlLWlzc28=
 # Se mudar, todos os dados criptografados serão IRRECUPERÁVEIS!
 
 # ============================================
-# GROQ API CONFIGURATION
+# MINIO CONFIGURATION
 # ============================================
 
-# Chave da API Groq para AI Assistant
-# Obtenha gratuitamente em: https://console.groq.com/keys
-GROQ_API_KEY=gsk_exemplo_mude_isso
+# Credenciais root do MinIO (armazenamento de objetos)
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=sua_senha_minio_segura
 
-# Opcional: Se não configurar, o AI Assistant não funcionará
+# ============================================
+# REDIS CONFIGURATION (senha)
+# ============================================
+
+REDIS_PASSWORD=sua_senha_redis_segura
 
 # ============================================
 # APPLICATION PORTS
@@ -145,7 +148,7 @@ VITE_API_BASE_URL=http://localhost:39100
 VITE_API_BASE_URL=http://localhost:39100
 
 # Para produção, use a URL pública:
-# VITE_API_BASE_URL=https://api.mindledger.com
+# VITE_API_BASE_URL=https://api.axiom.com
 ```
 
 ## Gerando Chaves de Segurança
@@ -204,41 +207,18 @@ docker-compose run --rm api python -c "from cryptography.fernet import Fernet; p
 xKz9jR3mN8qL5wV2hY7tG4bF6cX8nM0pQ1wE3rT5yU9iO=
 ```
 
-### GROQ_API_KEY (AI Assistant)
-
-A chave da API Groq é necessária para o módulo de AI Assistant funcionar.
-
-**Obter chave gratuita:**
-
-1. Acesse https://console.groq.com
-2. Crie uma conta (gratuita)
-3. Vá em "API Keys"
-4. Clique em "Create API Key"
-5. Copie a chave gerada
-
-**Exemplo de chave:**
-
-```
-gsk_1234567890abcdefghijklmnopqrstuvwxyzABCDEF
-```
-
-**Limites do tier gratuito (Groq):**
-- 6.000 requests por minuto
-- 30.000 requests por dia
-- Totalmente suficiente para uso pessoal e desenvolvimento
-
-**Nota**: Os embeddings são gerados **localmente** usando sentence-transformers, então não há custo adicional de API para essa parte.
-
 ## Configuração de Portas
 
-O MindLedger usa as seguintes portas por padrão:
+O Axiom usa as seguintes portas por padrão:
 
 | Serviço | Porta Padrão | Variável | Customizável |
 |---------|--------------|----------|--------------|
 | Frontend | 39101 | `FRONTEND_PORT` | ✅ Sim |
 | Backend API | 39100 | `API_PORT` | ✅ Sim |
 | PostgreSQL | 39102 | `DB_PORT` | ✅ Sim |
-| Redis | 6379 | `REDIS_PORT` | ✅ Sim |
+| Redis | 39103 | `REDIS_PORT` | ✅ Sim |
+| MinIO API | 39105 | — | — |
+| MinIO Console | 39106 | — | — |
 
 ### Mudando Portas
 
@@ -248,7 +228,7 @@ Edite o `.env`:
 # Exemplo: mudando para portas alternativas
 API_PORT=8000
 FRONTEND_PORT=3000
-DB_PORT=5435
+DB_PORT=39102
 REDIS_PORT=6380
 ```
 
@@ -274,7 +254,7 @@ netstat -ano | findstr :39100
 
 ## Configuração de Logging
 
-O MindLedger suporta dois formatos de logging:
+O Axiom suporta dois formatos de logging:
 
 ### JSON (Estruturado)
 
@@ -344,72 +324,6 @@ docker-compose logs --tail=100
 docker-compose logs -f api
 ```
 
-## Configuração do AI Assistant
-
-O AI Assistant usa uma arquitetura RAG (Retrieval Augmented Generation) com embeddings locais.
-
-### Componentes
-
-1. **Embeddings**: Gerados localmente com sentence-transformers (`all-MiniLM-L6-v2`)
-2. **Armazenamento**: PostgreSQL com pgvector
-3. **Cache**: Redis para resultados de busca
-4. **LLM**: Groq API (`llama-3.3-70b-versatile`)
-
-### Configuração Básica
-
-```bash
-# .env
-GROQ_API_KEY=sua_chave_aqui
-REDIS_URL=redis://redis:6379/0
-```
-
-### Configuração Avançada
-
-Edite `api/ai_assistant/config.py`:
-
-```python
-# Modelo de embeddings (local)
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"  # 384 dimensões, rápido
-
-# Modelo de LLM (Groq)
-LLM_MODEL = "llama-3.3-70b-versatile"
-
-# Número de resultados para contexto
-TOP_K_RESULTS = 5
-
-# Cache TTL (segundos)
-CACHE_TTL = 3600  # 1 hora
-
-# Tamanho máximo do contexto
-MAX_CONTEXT_LENGTH = 4096
-```
-
-### Testando o AI Assistant
-
-```bash
-# Docker
-docker-compose exec api python manage.py shell
-
-# No shell Python
-from ai_assistant.services.rag_service import RAGService
-
-rag = RAGService()
-response = rag.ask("Quais são minhas despesas deste mês?")
-print(response)
-```
-
-### Monitoramento
-
-```bash
-# Verificar logs do AI Assistant
-docker-compose logs -f api | grep "ai_assistant"
-
-# Verificar cache Redis
-docker-compose exec redis redis-cli
-> KEYS *
-> GET ai:embedding:*
-```
-
 ## Configuração Avançada
 
 ### CORS (Cross-Origin Resource Sharing)
@@ -422,7 +336,7 @@ Para permitir requisições do frontend:
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",      # Vite dev server
     "http://localhost:39101",     # Frontend Docker
-    "https://mindledger.com",    # Produção
+    "https://axiom.com",    # Produção
 ]
 
 CORS_ALLOW_CREDENTIALS = True  # Necessário para cookies HttpOnly
@@ -478,8 +392,8 @@ GROQ_API_KEY=chave_de_producao
 AUTH_COOKIE_SECURE=True
 
 # Domínios permitidos
-ALLOWED_HOSTS=mindledger.com,www.mindledger.com
-CORS_ALLOWED_ORIGINS=https://mindledger.com
+ALLOWED_HOSTS=axiom.com,www.axiom.com
+CORS_ALLOWED_ORIGINS=https://axiom.com
 
 # Banco robusto
 DB_HOST=banco-producao.rds.amazonaws.com
@@ -489,7 +403,7 @@ DB_PORT=5432
 ```python
 # api/app/settings.py (produção)
 
-ALLOWED_HOSTS = ['mindledger.com', 'www.mindledger.com']
+ALLOWED_HOSTS = ['axiom.com', 'www.axiom.com']
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

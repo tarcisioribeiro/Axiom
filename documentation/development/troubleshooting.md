@@ -1,6 +1,6 @@
 # Solução de Problemas
 
-Este guia ajuda a diagnosticar e resolver problemas comuns no MindLedger.
+Este guia ajuda a diagnosticar e resolver problemas comuns no Axiom.
 
 ## Índice
 
@@ -93,7 +93,7 @@ netstat -ano | findstr :39100
    # .env
    API_PORT=8000  # Em vez de 39100
    FRONTEND_PORT=3000
-   DB_PORT=5435
+   DB_PORT=39102
    ```
 
 3. **Parar todos os containers e tentar novamente**
@@ -114,8 +114,8 @@ docker-compose ps
 **Diagnóstico:**
 ```bash
 # Ver health check logs
-docker inspect mindledger-api | grep -A 10 "Health"
-docker inspect mindledger-db | grep -A 10 "Health"
+docker inspect axiom-api | grep -A 10 "Health"
+docker inspect axiom-db | grep -A 10 "Health"
 ```
 
 **Soluções:**
@@ -136,7 +136,7 @@ docker inspect mindledger-db | grep -A 10 "Health"
 3. **Testar health check manualmente**
    ```bash
    # Database
-   docker-compose exec db pg_isready -U mindledger_user -d mindledger_db
+   docker-compose exec db pg_isready -U axiom_user -d axiom_db
 
    # API
    curl http://localhost:39100/health/
@@ -222,22 +222,22 @@ docker-compose logs db
 2. **Verificar credenciais no .env**
    ```bash
    # .env
-   DB_USER=mindledger_user
+   DB_USER=axiom_user
    DB_PASSWORD=sua_senha
-   DB_NAME=mindledger_db
+   DB_NAME=axiom_db
    DB_HOST=db  # "db" para Docker, "localhost" para local
    ```
 
 3. **Testar conexão manualmente**
    ```bash
-   docker-compose exec db psql -U mindledger_user -d mindledger_db
+   docker-compose exec db psql -U axiom_user -d axiom_db
    # Se funcionar, problema é na config do Django
    ```
 
 4. **Recriar banco de dados**
    ```bash
    docker-compose down
-   docker volume rm mindledger_postgres_data
+   docker volume rm axiom_postgres_data
    docker-compose up -d
    ```
 
@@ -267,7 +267,7 @@ django.db.utils.ProgrammingError: type "vector" does not exist
 **Solução:**
 ```bash
 # Acessar PostgreSQL
-docker-compose exec db psql -U mindledger_user -d mindledger_db
+docker-compose exec db psql -U axiom_user -d axiom_db
 
 # No psql, instalar extensão
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -288,17 +288,17 @@ database is locked
 
 ```bash
 # Verificar conexões ativas
-docker-compose exec db psql -U mindledger_user -d mindledger_db -c "
+docker-compose exec db psql -U axiom_user -d axiom_db -c "
   SELECT pid, usename, application_name, state
   FROM pg_stat_activity
-  WHERE datname = 'mindledger_db';
+  WHERE datname = 'axiom_db';
 "
 
 # Matar conexões ociosas (⚠️ cuidado em produção!)
-docker-compose exec db psql -U mindledger_user -d mindledger_db -c "
+docker-compose exec db psql -U axiom_user -d axiom_db -c "
   SELECT pg_terminate_backend(pid)
   FROM pg_stat_activity
-  WHERE datname = 'mindledger_db' AND pid <> pg_backend_pid();
+  WHERE datname = 'axiom_db' AND pid <> pg_backend_pid();
 "
 ```
 
@@ -307,8 +307,8 @@ docker-compose exec db psql -U mindledger_user -d mindledger_db -c "
 **Diagnóstico:**
 ```bash
 # Habilitar log de queries lentas
-docker-compose exec db psql -U mindledger_user -d mindledger_db -c "
-  ALTER DATABASE mindledger_db SET log_min_duration_statement = 1000;
+docker-compose exec db psql -U axiom_user -d axiom_db -c "
+  ALTER DATABASE axiom_db SET log_min_duration_statement = 1000;
 "
 
 # Ver queries lentas nos logs
@@ -558,7 +558,7 @@ cryptography.fernet.InvalidToken
 3. **Resetar dados (⚠️ perde tudo criptografado)**
    ```bash
    # Opção nuclear: dropar tabelas afetadas
-   docker-compose exec db psql -U mindledger_user -d mindledger_db
+   docker-compose exec db psql -U axiom_user -d axiom_db
    ```
    ```sql
    TRUNCATE credit_cards_creditcard CASCADE;
@@ -736,7 +736,7 @@ cat .env | grep REDIS_URL
 docker-compose logs -f api | grep "ai_assistant"
 
 # Verificar uso de CPU/memória
-docker stats mindledger-api
+docker stats axiom-api
 ```
 
 **Soluções:**
@@ -826,7 +826,7 @@ ls -lh dist/assets/*.js
 
 **Diagnóstico:**
 ```bash
-docker stats mindledger-api
+docker stats axiom-api
 # Ver MEMORY coluna
 ```
 
@@ -976,7 +976,7 @@ docker-compose logs -f api
 docker-compose logs -f db
 
 # Terminal 3: Stats de recursos
-watch -n 1 'docker stats --no-stream mindledger-api mindledger-db'
+watch -n 1 'docker stats --no-stream axiom-api axiom-db'
 ```
 
 ## Quando Pedir Ajuda

@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: minio
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: minio
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minio
+        app.kubernetes.io/name: axiom
+        app.kubernetes.io/component: minio
+    spec:
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2024-11-07T00-52-20Z
+          command:
+            - minio
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          ports:
+            - containerPort: 9000
+              name: api
+            - containerPort: 9001
+              name: console
+          env:
+            - name: TZ
+              value: "America/Sao_Paulo"
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_PASSWORD
+            # MinIO auto-enables TLS when public.crt / private.key are present
+            # in MINIO_CERTS_DIR. The cert-manager Certificate mounts them via subPath.
+            - name: MINIO_CERTS_DIR
+              value: "/root/.minio/certs"
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+            - name: minio-tls
+              mountPath: /root/.minio/certs/public.crt
+              subPath: tls.crt
+              readOnly: true
+            - name: minio-tls
+              mountPath: /root/.minio/certs/private.key
+              subPath: tls.key
+              readOnly: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+              scheme: HTTPS
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+              scheme: HTTPS
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: minio-data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+        - name: minio-tls
+          secret:
+            secretName: minio-tls
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+---
+# Job de inicialização — cria o bucket axiom na primeira execução.
+# Re-executar é seguro (--ignore-existing).
+# Rodar manualmente após aplicar o deployment:
+#   kubectl apply -f k8s/minio/init-job.yaml -n axiom
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: minio
+spec:
+  template:
+    metadata:
+      labels:
+        app: minio-init
+        app.kubernetes.io/name: axiom
+        app.kubernetes.io/component: minio
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
+      initContainers:
+        - name: wait-for-minio
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z minio-service 9000; do
+                echo "Waiting for MinIO..."
+                sleep 2
+              done
+              echo "MinIO is ready!"
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              mc --insecure alias set myminio https://minio-service:9000 \
+                "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+              mc --insecure mb --ignore-existing myminio/axiom
+              echo "Bucket created (or already exists)"
+              echo 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPENPUlNDb25maWd1cmF0aW9uPgogIDxDT1JTUnVsZT4KICAgIDxBbGxvd2VkT3JpZ2luPmh0dHBzOi8vYXhpb20udGp0dXguZHVja2Rucy5vcmc8L0FsbG93ZWRPcmlnaW4+CiAgICA8QWxsb3dlZE1ldGhvZD5HRVQ8L0FsbG93ZWRNZXRob2Q+CiAgICA8QWxsb3dlZE1ldGhvZD5IRUFEPC9BbGxvd2VkTWV0aG9kPgogICAgPEFsbG93ZWRIZWFkZXI+KjwvQWxsb3dlZEhlYWRlcj4KICAgIDxFeHBvc2VIZWFkZXI+Q29udGVudC1EaXNwb3NpdGlvbjwvRXhwb3NlSGVhZGVyPgogICAgPEV4cG9zZUhlYWRlcj5Db250ZW50LUxlbmd0aDwvRXhwb3NlSGVhZGVyPgogICAgPE1heEFnZVNlY29uZHM+MzYwMDwvTWF4QWdlU2Vjb25kcz4KICA8L0NPUlNSdWxlPgo8L0NPUlNDb25maWd1cmF0aW9uPgo=' | base64 -d | mc --insecure cors set myminio/axiom -
+              echo "CORS configured for axiom bucket"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: ollama
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  # Recreate evita dois pods tentando escrever no PVC ao mesmo tempo.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+        app.kubernetes.io/name: axiom
+        app.kubernetes.io/component: ollama
+    spec:
+      serviceAccountName: sa-ollama
+      automountServiceAccountToken: false
+      containers:
+        - name: ollama
+          # Atualize a tag para uma versão específica antes de ir para produção.
+          image: ollama/ollama:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ollama serve &
+              OLLAMA_PID=$!
+              # Pull de modelos em background — não bloqueia a readiness probe.
+              (
+                until curl -sf http://localhost:11434/api/tags >/dev/null 2>&1; do
+                  sleep 2
+                done
+                ollama pull mistral:7b-instruct
+                ollama pull nomic-embed-text
+              ) &
+              wait $OLLAMA_PID
+          ports:
+            - containerPort: 11434
+              name: http
+          env:
+            - name: OLLAMA_MODELS
+              value: /root/.ollama
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "1000m"
+            limits:
+              memory: "8Gi"
+              cpu: "4000m"
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: ollama-models-pvc

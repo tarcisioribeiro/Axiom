@@ -15,9 +15,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requirePermission,
 }) => {
-  const { isAuthenticated, isInitializing, hasPermission } = useAuthStore();
+  const { isAuthenticated, isInitializing, isAdmin, hasPermission } = useAuthStore();
 
-  // Mostra loading enquanto verifica autenticação
   if (isInitializing) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -26,10 +25,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // Só redireciona após verificação completa
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Superusuários só acessam o painel admin
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   if (requirePermission) {
     const { appName, action } = requirePermission;

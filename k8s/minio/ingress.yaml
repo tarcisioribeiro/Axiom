@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ingress
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: minio
+  annotations:
+    # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    # MinIO usa TLS internamente com cert auto-assinado — nginx faz proxy HTTPS para o backend.
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # Desabilita verificação do cert interno (CA auto-assinada, não confiável pelo nginx).
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
+    # Preserva o Host header original para que a validação SigV4 das URLs presignadas passe.
+    # Sem isso, o nginx envia Host: minio-service:9000, que não bate com o host assinado.
+    nginx.ingress.kubernetes.io/upstream-vhost: "minio.tjtux.duckdns.org"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: minio.tjtux.duckdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-service
+                port:
+                  number: 9000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-console-ingress
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: minio
+  annotations:
+    # NPM faz SSL termination com wildcard *.tjtux.duckdns.org — sem TLS no ingress.
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
+    nginx.ingress.kubernetes.io/upstream-vhost: "minio-console.tjtux.duckdns.org"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: minio-console.tjtux.duckdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-service
+                port:
+                  number: 9001

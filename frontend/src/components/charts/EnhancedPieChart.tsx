@@ -54,24 +54,26 @@ export const EnhancedPieChart = ({
     if (!payload) return null;
 
     return (
-      <ul className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1.5 px-2">
+      <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 px-sm">
         {payload.map((entry, index) => {
           const value = Number(entry.payload[dataKey] || 0);
-          const percent = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
+          const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
 
           return (
-            <li key={`legend-${index}`} className="flex items-center gap-1.5 text-xs">
+            <li key={`legend-${index}`} className="flex items-center gap-sm text-xs">
               <span
-                className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                className="h-3 w-3 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}
               />
               <span
-                className={`truncate text-foreground/80 ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[100px]'}`}
+                className={`truncate text-foreground/70 ${dims.isMobile ? 'max-w-[70px]' : 'max-w-[110px]'}`}
                 title={entry.value}
               >
                 {truncateLabel(entry.value, dims.truncateXAxisLabel)}
               </span>
-              <span className="font-medium">{percent}%</span>
+              <span className="font-semibold tabular-nums text-foreground">
+                {percent}%
+              </span>
             </li>
           );
         })}
@@ -81,18 +83,18 @@ export const EnhancedPieChart = ({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+      <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <Pie
           data={data}
           cx="50%"
           cy="45%"
-          innerRadius="0%"
+          innerRadius="52%"
           outerRadius={dims.pieOuterRadius}
-          paddingAngle={2}
+          paddingAngle={3}
           dataKey={dataKey}
           nameKey={nameKey}
           animationBegin={0}
-          animationDuration={600}
+          animationDuration={700}
           animationEasing="ease-out"
         >
           {data.map((entry, index) => {
@@ -105,15 +107,21 @@ export const EnhancedPieChart = ({
                 key={`cell-${index}`}
                 fill={fillColor}
                 stroke="hsl(var(--background))"
-                strokeWidth={2}
-                className="transition-opacity duration-200 hover:opacity-80"
-                style={{ cursor: 'pointer' }}
+                strokeWidth={3}
+                className="transition-opacity duration-200 hover:opacity-75"
+                style={{
+                  cursor: 'pointer',
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))',
+                }}
               />
             );
           })}
         </Pie>
 
-        <Tooltip content={<EnhancedTooltip formatter={formatter} />} />
+        <Tooltip
+          content={<EnhancedTooltip formatter={formatter} />}
+          wrapperStyle={{ outline: 'none' }}
+        />
 
         <Legend content={renderLegend} verticalAlign="bottom" align="center" />
       </PieChart>

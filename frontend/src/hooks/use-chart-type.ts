@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { ChartType } from '@/lib/chart-types';
+import { logger } from '@/lib/logger';
 
 // Re-exporta o tipo para compatibilidade
 export type { ChartType };
@@ -31,7 +32,7 @@ export const useChartType = (chartId: string, defaultType: ChartType = 'pie') =>
         return stored;
       }
     } catch (error) {
-      console.warn('Erro ao ler preferência de gráfico do localStorage:', error);
+      logger.warn('Erro ao ler preferência de gráfico do localStorage:', error);
     }
     return defaultType;
   });
@@ -42,7 +43,7 @@ export const useChartType = (chartId: string, defaultType: ChartType = 'pie') =>
       try {
         localStorage.setItem(storageKey, next);
       } catch (error) {
-        console.warn('Erro ao salvar preferência de gráfico no localStorage:', error);
+        logger.warn('Erro ao salvar preferência de gráfico no localStorage:', error);
       }
       return next;
     });

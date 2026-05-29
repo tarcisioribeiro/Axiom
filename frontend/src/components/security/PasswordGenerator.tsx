@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordsService } from '@/services/passwords-service';
 import { getErrorMessage } from '@/utils/error-utils';
 
@@ -89,7 +89,7 @@ export function PasswordGenerator({
 
   const handleCopy = async () => {
     if (!generatedPassword) return;
-    await navigator.clipboard.writeText(generatedPassword);
+    await copyToClipboard(generatedPassword);
     setCopied(true);
     toast({
       title: 'Copiado!',
@@ -110,9 +110,9 @@ export function PasswordGenerator({
     : null;
 
   return (
-    <div className={cn('space-y-4', compact && 'space-y-3')}>
+    <div className={cn('space-y-md', compact && 'space-y-3')}>
       {/* Length */}
-      <div className="space-y-2">
+      <div className="space-y-sm">
         <Label htmlFor="gen-length">Comprimento: {length}</Label>
         <div className="flex items-center gap-3">
           <input
@@ -142,7 +142,7 @@ export function PasswordGenerator({
           compact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'
         )}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="gen-upper"
             checked={uppercase}
@@ -152,7 +152,7 @@ export function PasswordGenerator({
             Maiúsculas (A-Z)
           </Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="gen-lower"
             checked={lowercase}
@@ -162,7 +162,7 @@ export function PasswordGenerator({
             Minúsculas (a-z)
           </Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="gen-numbers"
             checked={numbers}
@@ -172,7 +172,7 @@ export function PasswordGenerator({
             Números (0-9)
           </Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="gen-special"
             checked={specialCharacters}
@@ -182,7 +182,7 @@ export function PasswordGenerator({
             Especiais (!@#$...)
           </Label>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-sm">
           <Checkbox
             id="gen-ambiguous"
             checked={excludeAmbiguous}
@@ -198,12 +198,12 @@ export function PasswordGenerator({
       <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
         {isGenerating ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-sm h-4 w-4 animate-spin" />
             Gerando...
           </>
         ) : (
           <>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="mr-sm h-4 w-4" />
             Gerar Senha
           </>
         )}
@@ -212,7 +212,7 @@ export function PasswordGenerator({
       {/* Result */}
       {generatedPassword && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+          <div className="flex items-center gap-sm rounded-lg bg-muted p-3">
             <code className="flex-1 select-all break-all font-mono text-sm">
               {generatedPassword}
             </code>
@@ -227,7 +227,7 @@ export function PasswordGenerator({
 
           {/* Strength Bar */}
           {strengthInfo && (
-            <div className="space-y-1">
+            <div className="space-y-xs">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Força da senha</span>
                 <Badge variant={strengthInfo.badgeVariant}>{strengthInfo.label}</Badge>

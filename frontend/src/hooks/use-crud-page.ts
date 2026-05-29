@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
+import { ToastAction, type ToastActionElement } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -11,8 +11,8 @@ import { getErrorMessage } from '@/lib/utils';
 export interface CrudService<T, CreateData, UpdateData = CreateData> {
   getAll: () => Promise<T[]>;
   create: (data: CreateData) => Promise<T>;
-  update: (id: number, data: UpdateData) => Promise<T>;
-  delete: (id: number) => Promise<void>;
+  update: (id: string | number, data: UpdateData) => Promise<T>;
+  delete: (id: string | number) => Promise<void>;
 }
 
 /**
@@ -31,8 +31,6 @@ export interface UseCrudPageOptions<T> {
     deleteSuccess?: string;
     deleteError?: string;
     saveError?: string;
-    deleteConfirmTitle?: string;
-    deleteConfirmDescription?: string;
   };
   /** Callback apos criar/atualizar/deletar com sucesso */
   onSuccess?: (action: 'create' | 'update' | 'delete', item?: T) => void;
@@ -57,7 +55,7 @@ export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
   /** Abre dialog para editar item existente */
   handleEdit: (item: T) => void;
   /** Deleta item com confirmacao */
-  handleDelete: (id: number) => Promise<void>;
+  handleDelete: (id: string | number) => void;
   /** Submete formulario (cria ou atualiza) */
   handleSubmit: (data: CreateData | UpdateData) => Promise<void>;
   /** Fecha dialog */
@@ -96,7 +94,7 @@ export interface UseCrudPageReturn<T, CreateData, UpdateData = CreateData> {
  * ```
  */
 export function useCrudPage<
-  T extends { id: number },
+  T extends { id: string | number },
   CreateData,
   UpdateData = CreateData,
 >(
@@ -117,24 +115,24 @@ export function useCrudPage<
   const [selectedItem, setSelectedItem] = useState<T | undefined>();
 
   const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
 
-  // Mensagens padrao
-  const defaultMessages = {
-    loadError: messages.loadError ?? `Erro ao carregar ${resourceNamePlural}`,
-    createSuccess:
-      messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
-    updateSuccess:
-      messages.updateSuccess ?? `${capitalize(resourceName)} atualizado(a) com sucesso`,
-    deleteSuccess:
-      messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a) com sucesso`,
-    deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
-    saveError: messages.saveError ?? `Erro ao salvar ${resourceName}`,
-    deleteConfirmTitle: messages.deleteConfirmTitle ?? `Excluir ${resourceName}`,
-    deleteConfirmDescription:
-      messages.deleteConfirmDescription ??
-      `Tem certeza que deseja excluir este(a) ${resourceName}? Esta acao nao pode ser desfeita.`,
-  };
+  // Mensagens padrao — memoizadas para evitar re-criação a cada render
+  const defaultMessages = useMemo(
+    () => ({
+      loadError: messages.loadError ?? `Erro ao carregar ${resourceNamePlural}`,
+      createSuccess:
+        messages.createSuccess ?? `${capitalize(resourceName)} criado(a) com sucesso`,
+      updateSuccess:
+        messages.updateSuccess ??
+        `${capitalize(resourceName)} atualizado(a) com sucesso`,
+      deleteSuccess:
+        messages.deleteSuccess ?? `${capitalize(resourceName)} excluido(a). Desfazer?`,
+      deleteError: messages.deleteError ?? `Erro ao excluir ${resourceName}`,
+      saveError: messages.saveError ?? `Erro ao salvar ${resourceName}`,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [resourceName, resourceNamePlural]
+  );
 
   // Carrega dados
   const loadData = useCallback(async () => {
@@ -176,71 +174,114 @@ export function useCrudPage<
     setSelectedItem(undefined);
   }, []);
 
-  // Deleta com confirmacao
+  // Deleta com janela de desfazer (undo toast) — sem dialog de confirmacao bloqueante
   const handleDelete = useCallback(
-    async (id: number) => {
-      const confirmed = await showConfirm({
-        title: defaultMessages.deleteConfirmTitle,
-        description: defaultMessages.deleteConfirmDescription,
-        confirmText: 'Excluir',
-        cancelText: 'Cancelar',
-        variant: 'destructive',
+    (id: string | number) => {
+      const itemIndex = items.findIndex((item) => item.id === id);
+      const deletedItem = items[itemIndex];
+      if (!deletedItem) return;
+
+      // Optimistic remove
+      setItems((prev) => prev.filter((item) => item.id !== id));
+
+      let undone = false;
+      // Ref-like object so the closure captures the container (const) rather than the value (let)
+      const timer = { handle: undefined as ReturnType<typeof setTimeout> | undefined };
+
+      const handleUndo = () => {
+        undone = true;
+        clearTimeout(timer.handle);
+        setItems((prev) => {
+          const restored = [...prev];
+          restored.splice(Math.min(itemIndex, restored.length), 0, deletedItem);
+          return restored;
+        });
+      };
+
+      toast({
+        title: defaultMessages.deleteSuccess,
+        action: React.createElement(
+          ToastAction,
+          { altText: 'Desfazer exclusão', onClick: handleUndo },
+          'Desfazer'
+        ) as unknown as ToastActionElement,
       });
 
-      if (!confirmed) return;
-
-      try {
-        await service.delete(id);
-        toast({
-          title: defaultMessages.deleteSuccess,
-          variant: 'default',
-        });
-        onSuccess?.('delete');
-        await loadData();
-      } catch (error: unknown) {
-        toast({
-          title: defaultMessages.deleteError,
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
+      timer.handle = setTimeout(() => {
+        if (undone) return;
+        void service
+          .delete(id)
+          .then(() => {
+            onSuccess?.('delete');
+          })
+          .catch((error: unknown) => {
+            setItems((prev) => {
+              const restored = [...prev];
+              restored.splice(Math.min(itemIndex, restored.length), 0, deletedItem);
+              return restored;
+            });
+            toast({
+              title: defaultMessages.deleteError,
+              description: getErrorMessage(error),
+              variant: 'destructive',
+            });
+          });
+      }, 5000);
     },
-    [service, toast, showConfirm, loadData, onSuccess, defaultMessages]
+    [items, service, toast, onSuccess, defaultMessages]
   );
 
   // Submete formulario
   const handleSubmit = useCallback(
     async (data: CreateData | UpdateData) => {
-      try {
-        setIsSubmitting(true);
-        let result: T;
-
-        if (selectedItem) {
-          result = await service.update(selectedItem.id, data as UpdateData);
-          toast({
-            title: defaultMessages.updateSuccess,
-            variant: 'default',
-          });
-          onSuccess?.('update', result);
-        } else {
-          result = await service.create(data as CreateData);
-          toast({
-            title: defaultMessages.createSuccess,
-            variant: 'default',
-          });
-          onSuccess?.('create', result);
-        }
-
+      if (selectedItem) {
+        // OPTIMISTIC UPDATE: aplica mudanca imediatamente, reverte em erro
+        const originalItem = selectedItem;
+        const optimisticItem = { ...selectedItem, ...(data as object) };
+        setItems((prev) =>
+          prev.map((item) => (item.id === selectedItem.id ? optimisticItem : item))
+        );
         closeDialog();
-        await loadData();
-      } catch (error: unknown) {
-        toast({
-          title: defaultMessages.saveError,
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      } finally {
-        setIsSubmitting(false);
+
+        try {
+          setIsSubmitting(true);
+          const result = await service.update(selectedItem.id, data as UpdateData);
+          setItems((prev) =>
+            prev.map((item) => (item.id === selectedItem.id ? result : item))
+          );
+          toast({ title: defaultMessages.updateSuccess });
+          onSuccess?.('update', result);
+        } catch (error: unknown) {
+          // Reverte para estado original
+          setItems((prev) =>
+            prev.map((item) => (item.id === selectedItem.id ? originalItem : item))
+          );
+          toast({
+            title: defaultMessages.saveError,
+            description: getErrorMessage(error),
+            variant: 'destructive',
+          });
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        // CREATE: fecha dialog apos sucesso e recarrega
+        try {
+          setIsSubmitting(true);
+          const result = await service.create(data as CreateData);
+          toast({ title: defaultMessages.createSuccess });
+          onSuccess?.('create', result);
+          closeDialog();
+          await loadData();
+        } catch (error: unknown) {
+          toast({
+            title: defaultMessages.saveError,
+            description: getErrorMessage(error),
+            variant: 'destructive',
+          });
+        } finally {
+          setIsSubmitting(false);
+        }
       }
     },
     [selectedItem, service, toast, closeDialog, loadData, onSuccess, defaultMessages]

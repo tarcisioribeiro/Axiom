@@ -1,14 +1,26 @@
-import { Plus, Pencil, Trash2, Filter, TrendingDown, ChevronDown } from 'lucide-react';
-import { useState, useEffect } from 'react';
+/* eslint-disable max-lines */
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingDown,
+  Download,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { DataTable } from '@/components/common/DataTable';
+import { ExportModal } from '@/components/common/ExportModal';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
 import { ReceiptButton } from '@/components/receipts';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -17,8 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -26,399 +36,274 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { translate, TRANSLATIONS } from '@/config/constants';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDateTime } from '@/lib/formatters';
-import { sumByProperty } from '@/lib/helpers';
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { useExpensesPage } from '@/hooks/use-expenses-page';
+import { formatCurrency } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { accountsService } from '@/services/accounts-service';
-import { expensesService } from '@/services/expenses-service';
-import { loansService } from '@/services/loans-service';
-import { payablesService } from '@/services/payables-service';
 import { useAuthStore } from '@/stores/auth-store';
-import type { Expense, ExpenseFormData, Account, Loan, Payable } from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
 
-export default function Expenses() {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [payables, setPayables] = useState<Payable[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
-  const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function Expenses({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
-
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  useEffect(() => {
-    filterExpenses();
-  }, [
-    searchTerm,
-    categoryFilter,
-    statusFilter,
-    startDate,
-    endDate,
-    selectedAccounts,
+  const {
     expenses,
-  ]);
+    accounts,
+    loans,
+    payables,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedExpense,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    clearFilters,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+    handleExport,
+    totalExpenses,
+    hasActiveFilters,
+    columns,
+    prefillExpenseData,
+  } = useExpensesPage();
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [expensesData, accountsData, loansData, payablesData] = await Promise.all([
-        expensesService.getAll(),
-        accountsService.getAll(),
-        loansService.getAll(),
-        payablesService.getAll(),
-      ]);
-      setExpenses(expensesData);
-      setFilteredExpenses(expensesData);
-      setAccounts(accountsData);
-      setLoans(Array.isArray(loansData) ? loansData : []);
-      setPayables(Array.isArray(payablesData) ? payablesData : []);
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao carregar dados',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const BREAKDOWN_COLORS = [
+    'bg-primary',
+    'bg-success',
+    'bg-warning',
+    'bg-info',
+    'bg-accent',
+    'bg-destructive',
+  ] as const;
 
-  const filterExpenses = () => {
-    let filtered = [...expenses];
-    if (searchTerm) {
-      filtered = filtered.filter((e) =>
-        e.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter((e) => e.category === categoryFilter);
-    }
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((e) => (statusFilter === 'paid' ? e.payed : !e.payed));
-    }
-    if (startDate) {
-      filtered = filtered.filter((e) => new Date(e.date) >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter((e) => new Date(e.date) <= endDate);
-    }
-    if (selectedAccounts.length > 0) {
-      filtered = filtered.filter((e) => selectedAccounts.includes(e.account));
-    }
-    setFilteredExpenses(filtered);
-  };
-
-  const toggleAccount = (accountId: number) => {
-    setSelectedAccounts((prev) =>
-      prev.includes(accountId)
-        ? prev.filter((id) => id !== accountId)
-        : [...prev, accountId]
+  const { paidCount, paidAmount, pendingCount, pendingAmount } = useMemo(() => {
+    const filtered = expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
     );
-  };
+    const paid = filtered.filter((e) => e.payed);
+    const pending = filtered.filter((e) => !e.payed);
+    return {
+      paidCount: paid.length,
+      paidAmount: paid.reduce((s, e) => s + parseFloat(e.value), 0),
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((s, e) => s + parseFloat(e.value), 0),
+    };
+  }, [expenses]);
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCategoryFilter('all');
-    setStatusFilter('all');
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setSelectedAccounts([]);
-  };
-
-  const handleSubmit = async (data: ExpenseFormData) => {
-    try {
-      setIsSubmitting(true);
-      if (selectedExpense) {
-        await expensesService.update(selectedExpense.id, data);
-        toast({
-          title: 'Despesa atualizada',
-          description: 'A despesa foi atualizada com sucesso.',
-        });
-      } else {
-        await expensesService.create(data);
-        toast({
-          title: 'Despesa criada',
-          description: 'A despesa foi criada com sucesso.',
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao salvar',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const e of expenses.filter(
+      (e) => !e.related_transfer && !e.is_transfer_generated && !e.is_initial_balance
+    )) {
+      groups[e.category] = (groups[e.category] ?? 0) + parseFloat(e.value);
     }
-  };
+    const total = Object.values(groups).reduce((s, v) => s + v, 0);
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: total > 0 ? (amount / total) * 100 : 0,
+      }));
+  }, [expenses]);
 
-  const handleCreate = () => {
-    if (accounts.length === 0) {
-      toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos uma conta cadastrada antes de criar uma despesa.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setSelectedExpense(undefined);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    const confirmed = await showConfirm({
-      title: 'Excluir despesa',
-      description:
-        'Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
-      variant: 'destructive',
-    });
-    if (!confirmed) return;
-    try {
-      await expensesService.delete(id);
-      toast({
-        title: 'Despesa excluída',
-        description: 'A despesa foi excluída com sucesso.',
-      });
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao excluir',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const totalExpenses = sumByProperty(
-    filteredExpenses.map((e) => ({ value: parseFloat(e.value) })),
-    'value'
-  );
-
-  const handleEdit = (expense: Expense) => {
-    setSelectedExpense(expense);
-    setIsDialogOpen(true);
-  };
-
-  // Definir colunas da tabela
-  const columns: Column<Expense>[] = [
-    {
-      key: 'description',
-      label: 'Descrição',
-      render: (expense) => <div className="font-medium">{expense.description}</div>,
-    },
-    {
-      key: 'value',
-      label: 'Valor',
-      align: 'right',
-      render: (expense) => (
-        <span className="font-semibold text-destructive">
-          {formatCurrency(expense.value)}
-        </span>
-      ),
-    },
-    {
-      key: 'account_name',
-      label: 'Conta',
-      render: (expense) => (
-        <Badge variant="outline" className="font-medium">
-          {expense.account_name || 'N/A'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'category',
-      label: 'Categoria',
-      render: (expense) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', expense.category)}
-        </Badge>
-      ),
-    },
-    {
-      key: 'payed',
-      label: 'Status',
-      render: (expense) => (
-        <Badge variant={expense.payed ? 'success' : 'destructive'}>
-          {expense.payed ? 'Pago' : 'Pendente'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'date',
-      label: 'Data',
-      render: (expense) => (
-        <div>
-          <div className="text-sm">{formatDateTime(expense.date, expense.horary)}</div>
-          {expense.member_name && (
-            <div className="text-xs">Membro: {expense.member_name}</div>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Despesas"
-        icon={<TrendingDown />}
-        action={{
-          label: 'Nova Despesa',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+    <Wrapper>
+      <PageHeader title={t('pages.expenses.title')} icon={<TrendingDown />}>
+        <div className="flex items-center gap-sm">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-sm"
+          >
+            <Download className="h-4 w-4" />
+            {t('common.actions.export')}
+          </Button>
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.expenses.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
-      <div className="space-y-4 rounded-lg border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
-          </div>
-          {(searchTerm ||
-            categoryFilter !== 'all' ||
-            statusFilter !== 'all' ||
-            startDate ||
-            endDate ||
-            selectedAccounts.length > 0) && (
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar Filtros
-            </Button>
-          )}
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Input
-            placeholder="Buscar por descrição..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <SearchInput
+          placeholder={t('pages.expenses.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44 flex-none"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger
+            className="w-40"
+            aria-label={t('pages.expenses.allCategories')}
+          >
+            <SelectValue placeholder={t('pages.expenses.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-36" aria-label={t('pages.expenses.allStatus')}>
+            <SelectValue placeholder={t('pages.expenses.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.expenses.allStatus')}</SelectItem>
+            <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-xs">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.expenses.dateFrom')}
+          </span>
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder={t('pages.expenses.dateFrom')}
+            clearable
           />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas Categorias</SelectItem>
-              {Object.entries(TRANSLATIONS.expenseCategories).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="space-y-1">
-            <span className="text-sm">Data Inicial</span>
-            <DatePicker
-              value={startDate}
-              onChange={setStartDate}
-              placeholder="De..."
-              clearable
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm">Data Final</span>
-            <DatePicker
-              value={endDate}
-              onChange={setEndDate}
-              placeholder="Até..."
-              clearable
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm">Contas</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {selectedAccounts.length === 0
-                    ? 'Todas as Contas'
-                    : `${selectedAccounts.length} conta(s) selecionada(s)`}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-2">
-                <div className="max-h-60 space-y-2 overflow-y-auto">
-                  {accounts.map((account) => (
-                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                    <div
-                      key={account.id}
-                      className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"
-                      onClick={() => toggleAccount(account.id)}
-                    >
-                      <Checkbox
-                        checked={selectedAccounts.includes(account.id)}
-                        onCheckedChange={() => toggleAccount(account.id)}
-                      />
-                      <span className="text-sm">{account.account_name}</span>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <div className="flex items-center justify-between border-t pt-2">
-          <span className="text-sm">
-            {filteredExpenses.length} despesa(s) encontrada(s)
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.expenses.dateTo')}
           </span>
-          <span className="text-lg font-bold text-destructive">
-            Total: {formatCurrency(totalExpenses)}
-          </span>
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder={t('pages.expenses.dateTo')}
+            clearable
+          />
         </div>
+      </FilterBar>
+
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.expenses.stats.totalAmount')}
+            </p>
+            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+              <TrendingDown className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {formatCurrency(totalExpenses)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.expenses.stats.entriesCount', { count: expenses.length })}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.expenses.stats.paid')}</p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">{paidCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(paidAmount)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.expenses.stats.pending')}</p>
+            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(pendingAmount)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Por categoria
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <DataTable
-        data={filteredExpenses}
+        data={expenses}
         columns={columns}
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma despesa encontrada.',
+          icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.expenses.emptyState'),
         }}
         actions={(expense) => (
-          <div className="flex items-center justify-end gap-2">
-            <ReceiptButton
-              source={{ type: 'expense', data: expense }}
-              memberName={getMemberDisplayName(expense.member_name, user)}
-            />
+          <div className="flex items-center justify-end gap-sm">
+            {expense.payed && (
+              <ReceiptButton
+                source={{ type: 'expense', data: expense }}
+                memberName={getMemberDisplayName(expense.member_name, user)}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(expense)}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -426,7 +311,8 @@ export default function Expenses() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(expense.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -434,20 +320,33 @@ export default function Expenses() {
         )}
       />
 
+      <ExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        title={t('pages.expenses.exportTitle')}
+        description={t('pages.expenses.exportDesc')}
+        onExport={handleExport}
+        initialDateFrom={startDate}
+        initialDateTo={endDate}
+      />
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedExpense ? 'Editar Despesa' : 'Nova Despesa'}
+              {selectedExpense
+                ? t('pages.expenses.editTitle')
+                : t('pages.expenses.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedExpense
-                ? 'Atualize as informações da despesa'
-                : 'Adicione uma nova despesa ao sistema'}
+                ? t('pages.expenses.editDesc')
+                : t('pages.expenses.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <ExpenseForm
             expense={selectedExpense}
+            prefillData={!selectedExpense ? prefillExpenseData : undefined}
             accounts={accounts}
             loans={loans}
             payables={payables}
@@ -457,6 +356,6 @@ export default function Expenses() {
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

@@ -1,105 +1,208 @@
-import { CheckCircle2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { CheckCircle2, Moon, Sun, Sunset } from 'lucide-react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { formatLocalDate } from '@/lib/utils';
-import { appService } from '@/services/app-service';
-import { taskInstancesService } from '@/services/task-instances-service';
-import type { TaskInstance } from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
+import { TodayKanbanView } from '@/components/today-tasks/TodayKanbanView';
+import { TodayListView } from '@/components/today-tasks/TodayListView';
+import { CircularProgress } from '@/components/ui/circular-progress';
+import { useTodayTasks } from '@/hooks/use-today-tasks';
+import { cn } from '@/lib/utils';
 
-export default function TodayTasks() {
-  const [tasks, setTasks] = useState<TaskInstance[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+type ViewMode = 'list' | 'kanban';
+const VIEW_MODE_KEY = 'todayTasks.viewMode';
 
-  useEffect(() => {
-    void loadData();
-  }, []);
+interface TodayTasksProps {
+  embedded?: boolean;
+}
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      // Get current date from server
-      let today: string;
-      try {
-        today = await appService.getCurrentDate();
-      } catch {
-        today = formatLocalDate(new Date());
-      }
-      // Get instances for today
-      const response = await taskInstancesService.getForDate(today);
-      setTasks(response.instances);
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao carregar tarefas',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function TodayTasks({ embedded = false }: TodayTasksProps) {
+  const { t, i18n } = useTranslation();
+
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => (localStorage.getItem(VIEW_MODE_KEY) as ViewMode) || 'kanban'
+  );
+
+  const {
+    isLoading,
+    selectedDate,
+    setSelectedDate,
+    todayTasks,
+    updatingTaskId,
+    cards,
+    setCards,
+    reflection,
+    setReflection,
+    mood,
+    setMood,
+    summary,
+    isSaving,
+    isSyncing,
+    handleToggleTaskComplete,
+    handleKanbanSave,
+    handleSync,
+    loadListData,
+  } = useTodayTasks(viewMode);
+
+  const hour = new Date().getHours();
+  const greeting = useMemo(() => {
+    if (hour < 12) return { label: t('pages.todayTasks.greetingMorning'), Icon: Sun };
+    if (hour < 18)
+      return { label: t('pages.todayTasks.greetingAfternoon'), Icon: Sunset };
+    return { label: t('pages.todayTasks.greetingEvening'), Icon: Moon };
+  }, [hour, t]);
+
+  if (isLoading) return <LoadingState />;
+
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
+
+  const todayTasksCount = viewMode === 'kanban' ? cards.length : todayTasks.length;
+  const doneCount =
+    viewMode === 'kanban'
+      ? cards.filter((c) => c.status === 'done').length
+      : todayTasks.filter((item) => item.status === 'completed').length;
+  const dayRate = todayTasksCount > 0 ? (doneCount / todayTasksCount) * 100 : 0;
+  const dayRingColor =
+    dayRate >= 80
+      ? 'hsl(var(--chart-2))'
+      : dayRate >= 40
+        ? 'hsl(var(--warning))'
+        : 'hsl(var(--primary))';
+
+  const changeViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-success';
-      case 'in_progress':
-        return 'bg-warning';
-      case 'skipped':
-        return 'bg-muted';
-      default:
-        return 'bg-secondary';
-    }
-  };
+  const dateLabel = selectedDate
+    ? new Date(selectedDate + 'T00:00:00').toLocaleDateString(i18n.language, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    : '';
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  const viewToggle = (
+    <div className="flex items-center rounded-md border p-0.5">
+      {(['list', 'kanban'] as ViewMode[]).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          onClick={() => changeViewMode(mode)}
+          title={t(`pages.todayTasks.${mode}Mode`)}
+          className={cn(
+            'rounded px-sm py-xs transition-colors',
+            viewMode === mode
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {mode === 'list' ? (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
+            </svg>
+          ) : (
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const GreetIcon = greeting.Icon;
 
   return (
-    <PageContainer>
-      <PageHeader title="Tarefas de Hoje" icon={<CheckCircle2 />} />
+    <Wrapper>
+      <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />}>
+        {viewToggle}
+      </PageHeader>
 
-      {tasks.length === 0 ? (
-        <EmptyState
-          icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
-          message="Nenhuma tarefa programada para hoje."
-        />
-      ) : (
-        <div className="space-y-4">
-          {tasks.map((task) => (
-            <div
-              key={task.id}
-              className="flex items-center gap-4 rounded-lg border p-4"
-            >
-              <CheckCircle2
-                className={`h-6 w-6 ${
-                  task.status === 'completed' ? 'text-success' : 'text-muted'
-                }`}
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">{task.task_name}</h3>
-                  <Badge className={getStatusColor(task.status)}>
-                    {task.status_display}
-                  </Badge>
-                </div>
-                {task.time_display && (
-                  <p className="text-sm">Horário: {task.time_display}</p>
-                )}
-                {task.notes && <p className="text-sm">{task.notes}</p>}
-              </div>
-            </div>
-          ))}
+      <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
+        <CircularProgress
+          value={dayRate}
+          size={72}
+          strokeWidth={6}
+          color={dayRingColor}
+        >
+          <span className="text-sm font-bold">{doneCount}</span>
+        </CircularProgress>
+        <div className="flex-1">
+          <div className="flex items-center gap-sm">
+            <GreetIcon className="h-5 w-5 text-muted-foreground" />
+            <span className="text-lg font-semibold">{greeting.label}</span>
+          </div>
+          <p className="mt-0.5 capitalize text-muted-foreground">{dateLabel}</p>
         </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold">
+            {doneCount}
+            <span className="text-base font-normal text-muted-foreground">
+              /{todayTasksCount}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('pages.todayTasks.tasksLabel')}
+          </p>
+        </div>
+      </div>
+
+      {viewMode === 'list' && (
+        <TodayListView
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          tasks={todayTasks}
+          updatingTaskId={updatingTaskId}
+          isLoading={isLoading}
+          onToggleComplete={handleToggleTaskComplete}
+          onSync={() => void loadListData(true)}
+        />
       )}
-    </PageContainer>
+
+      {viewMode === 'kanban' && (
+        <TodayKanbanView
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          cards={cards}
+          onCardsChange={setCards}
+          reflection={reflection}
+          onReflectionChange={setReflection}
+          mood={mood}
+          onMoodChange={setMood}
+          summary={summary}
+          isSyncing={isSyncing}
+          isSaving={isSaving}
+          onSync={() => void handleSync()}
+          onSave={() => void handleKanbanSave()}
+        />
+      )}
+    </Wrapper>
   );
 }

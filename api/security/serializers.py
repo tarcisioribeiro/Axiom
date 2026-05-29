@@ -1,7 +1,16 @@
+import os
+
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-from security.activity_logs.models import ActivityLog
-from security.models import Archive, Password, StoredBankAccount, StoredCreditCard
+from security.models import (
+    ActivityLog,
+    Archive,
+    CredentialShareToken,
+    Password,
+    StoredBankAccount,
+    StoredCreditCard,
+)
 
 # ============================================================================
 # PASSWORD SERIALIZERS
@@ -33,11 +42,18 @@ class PasswordSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "last_password_change", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "last_password_change",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer para criação/atualização de senhas (aceita senha em texto)."""
+    """
+    Serializer para criação/atualização de senhas (aceita senha em texto).
+    """
 
     password = serializers.CharField(
         write_only=True, required=True, style={"input_type": "password"}
@@ -99,7 +115,9 @@ class StoredCreditCardSerializer(serializers.ModelSerializer):
     """Serializer para visualização de cartões (número mascarado)."""
 
     owner_name = serializers.CharField(source="owner.name", read_only=True)
-    flag_display = serializers.CharField(source="get_flag_display", read_only=True)
+    flag_display = serializers.CharField(
+        source="get_flag_display", read_only=True
+    )
     card_number_masked = serializers.CharField(read_only=True)
     finance_card_name = serializers.CharField(
         source="finance_card.name", read_only=True, allow_null=True
@@ -125,14 +143,24 @@ class StoredCreditCardSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "card_number_masked", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "card_number_masked",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer para criação/atualização de cartões (aceita dados sensíveis)."""
+    """
+    Serializer para criação/atualização de cartões (aceita dados
+    sensíveis).
+    """
 
     card_number = serializers.CharField(write_only=True, required=True)
-    security_code = serializers.CharField(write_only=True, required=True, max_length=4)
+    security_code = serializers.CharField(
+        write_only=True, required=True, max_length=4
+    )
 
     class Meta:
         model = StoredCreditCard
@@ -150,12 +178,34 @@ class StoredCreditCardCreateUpdateSerializer(serializers.ModelSerializer):
             "finance_card",
         ]
 
+    def validate_card_number(self, value):
+        from security.models import (
+            _normalize_card_number,
+            _validate_card_number,
+        )
+
+        normalized = _normalize_card_number(value)
+        try:
+            _validate_card_number(normalized)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+        return value
+
+    def validate_security_code(self, value):
+        from security.models import _validate_cvv
+
+        try:
+            _validate_cvv(str(value).strip())
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+        return value
+
     def create(self, validated_data):
         card_number = validated_data.pop("card_number")
         security_code = validated_data.pop("security_code")
 
         instance = StoredCreditCard(**validated_data)
-        instance.card_number = card_number  # Property setter criptografa
+        instance.card_number = card_number
         instance.security_code = security_code
         instance.save()
         return instance
@@ -230,14 +280,21 @@ class StoredBankAccountSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["uuid", "account_number_masked", "created_at", "updated_at"]
+        read_only_fields = [
+            "uuid",
+            "account_number_masked",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class StoredBankAccountCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer para criação/atualização de contas bancárias."""
 
     account_number = serializers.CharField(write_only=True, required=True)
-    password = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    password = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
     digital_password = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
@@ -313,6 +370,76 @@ class StoredBankAccountRevealSerializer(serializers.Serializer):
 
 
 # ============================================================================
+# ARCHIVE UPLOAD VALIDATION
+# ============================================================================
+
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+# Whitelist: extension → safe MIME type for serving
+ALLOWED_UPLOAD_TYPES = {
+    ".pdf": "application/pdf",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".txt": "text/plain; charset=utf-8",
+    ".zip": "application/zip",
+    ".doc": "application/msword",
+    ".docx": (
+        "application/vnd.openxmlformats-officedocument"
+        ".wordprocessingml.document"
+    ),
+}
+
+# Magic byte signatures: extension → list of (bytes, offset) tuples
+_MAGIC_SIGNATURES: dict[str, list[tuple[bytes, int]]] = {
+    ".pdf": [(b"%PDF", 0)],
+    ".jpg": [(b"\xff\xd8\xff", 0)],
+    ".jpeg": [(b"\xff\xd8\xff", 0)],
+    ".png": [(b"\x89PNG\r\n\x1a\n", 0)],
+    ".gif": [(b"GIF87a", 0), (b"GIF89a", 0)],
+    ".webp": [(b"RIFF", 0)],
+    ".zip": [(b"PK\x03\x04", 0), (b"PK\x05\x06", 0)],
+    ".docx": [(b"PK\x03\x04", 0)],
+    ".doc": [(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", 0)],
+    # .txt has no reliable magic bytes — extension check only
+}
+
+
+def validate_uploaded_file(value):
+    """Validates file size, extension whitelist, and magic bytes."""
+    if value.size > MAX_UPLOAD_SIZE:
+        limit_mb = MAX_UPLOAD_SIZE // (1024 * 1024)
+        raise serializers.ValidationError(
+            f"O arquivo excede o limite de {limit_mb} MB."
+        )
+
+    _, ext = os.path.splitext(value.name.lower())
+    if ext not in ALLOWED_UPLOAD_TYPES:
+        allowed = ", ".join(sorted(ALLOWED_UPLOAD_TYPES.keys()))
+        raise serializers.ValidationError(
+            f"Tipo de arquivo não permitido. Extensões aceitas: {allowed}"
+        )
+
+    signatures = _MAGIC_SIGNATURES.get(ext)
+    if signatures:
+        max_read = max(offset + len(sig) for sig, offset in signatures)
+        value.seek(0)
+        header = value.read(max_read)
+        value.seek(0)
+        if not any(
+            header[offset : offset + len(sig)] == sig
+            for sig, offset in signatures
+        ):
+            raise serializers.ValidationError(
+                "O conteúdo do arquivo não corresponde à extensão informada."
+            )
+
+    return value
+
+
+# ============================================================================
 # ARCHIVE SERIALIZERS
 # ============================================================================
 
@@ -329,6 +456,11 @@ class ArchiveSerializer(serializers.ModelSerializer):
     )
     has_text = serializers.SerializerMethodField()
     has_file = serializers.SerializerMethodField()
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        default=list,
+    )
 
     class Meta:
         model = Archive
@@ -344,6 +476,7 @@ class ArchiveSerializer(serializers.ModelSerializer):
             "file_size",
             "notes",
             "tags",
+            "is_file_encrypted",
             "has_text",
             "has_file",
             "encrypted_file",
@@ -356,6 +489,7 @@ class ArchiveSerializer(serializers.ModelSerializer):
             "uuid",
             "file_name",
             "file_size",
+            "is_file_encrypted",
             "created_at",
             "updated_at",
         ]
@@ -374,6 +508,20 @@ class ArchiveCreateUpdateSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True
     )
     encrypted_file = serializers.FileField(required=False, allow_null=True)
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        default=list,
+    )
+
+    def validate_tags(self, value):
+        """Normaliza tags para minúsculas sem espaços duplicados."""
+        return [tag.strip().lower() for tag in value if tag.strip()]
+
+    def validate_encrypted_file(self, value):
+        if value is None:
+            return value
+        return validate_uploaded_file(value)
 
     class Meta:
         model = Archive
@@ -436,9 +584,131 @@ class ArchiveRevealSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(read_only=True)
-    text_content = serializers.CharField(read_only=True, allow_null=True, default=None)
-    error = serializers.CharField(read_only=True, allow_null=True, default=None)
-    error_type = serializers.CharField(read_only=True, allow_null=True, default=None)
+    text_content = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
+    error = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
+    error_type = serializers.CharField(
+        read_only=True, allow_null=True, default=None
+    )
+
+
+# ============================================================================
+# CREDENTIAL SHARE TOKEN SERIALIZERS
+# ============================================================================
+
+
+class CreateShareTokenSerializer(serializers.Serializer):
+    """Serializer para criação de tokens de compartilhamento."""
+
+    ttl_hours = serializers.IntegerField(
+        min_value=1,
+        max_value=168,  # 7 days max
+        default=24,
+        help_text="Tempo de vida em horas (1-168)",
+    )
+    max_uses = serializers.IntegerField(
+        min_value=1,
+        max_value=5,
+        default=1,
+        help_text="Número máximo de usos (1-5)",
+    )
+    allowed_ips = serializers.ListField(
+        child=serializers.IPAddressField(),
+        required=False,
+        default=list,
+        help_text=(
+            "IPs autorizados a resgatar este token." " Vazio = qualquer IP."
+        ),
+    )
+
+
+class CredentialShareTokenSerializer(serializers.ModelSerializer):
+    """Serializer para visualização de tokens de compartilhamento."""
+
+    is_token_valid = serializers.BooleanField(
+        source="is_valid", read_only=True
+    )
+    is_expired = serializers.BooleanField(read_only=True)
+    is_exhausted = serializers.BooleanField(read_only=True)
+    password_title = serializers.CharField(
+        source="password.title", read_only=True
+    )
+
+    class Meta:
+        model = CredentialShareToken
+        fields = [
+            "id",
+            "token",
+            "password",
+            "password_title",
+            "expires_at",
+            "used_at",
+            "use_count",
+            "max_uses",
+            "allowed_ips",
+            "is_revoked",
+            "is_token_valid",
+            "is_expired",
+            "is_exhausted",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
+class CredentialShareTokenCreateResponseSerializer(
+    serializers.ModelSerializer
+):
+    """
+    Serializer para a resposta de criação de token.
+
+    Inclui token_key (chave Fernet base64) que é gerada server-side mas
+    NÃO armazenada no banco — deve ser preservada pelo cliente e embutida
+    no fragment (#key=...) do link de compartilhamento.
+    """
+
+    is_token_valid = serializers.BooleanField(
+        source="is_valid", read_only=True
+    )
+    is_expired = serializers.BooleanField(read_only=True)
+    is_exhausted = serializers.BooleanField(read_only=True)
+    password_title = serializers.CharField(
+        source="password.title", read_only=True
+    )
+    token_key = serializers.SerializerMethodField(
+        help_text="Chave Fernet (base64) para decriptação do snapshot. "
+        "Exibida apenas na criação — não fica armazenada no servidor."
+    )
+
+    def __init__(self, *args, token_key: str = "", **kwargs):
+        super().__init__(*args, **kwargs)
+        self._token_key = token_key
+
+    def get_token_key(self, obj) -> str:  # noqa: ARG002
+        return self._token_key
+
+    class Meta:
+        model = CredentialShareToken
+        fields = [
+            "id",
+            "token",
+            "token_key",
+            "password",
+            "password_title",
+            "expires_at",
+            "used_at",
+            "use_count",
+            "max_uses",
+            "allowed_ips",
+            "is_revoked",
+            "is_token_valid",
+            "is_expired",
+            "is_exhausted",
+            "created_at",
+        ]
+        read_only_fields = fields
 
 
 # ============================================================================
@@ -452,7 +722,9 @@ class ActivityLogSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         source="user.username", read_only=True, allow_null=True
     )
-    action_display = serializers.CharField(source="get_action_display", read_only=True)
+    action_display = serializers.CharField(
+        source="get_action_display", read_only=True
+    )
 
     class Meta:
         model = ActivityLog
@@ -462,7 +734,10 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "action_display",
             "model_name",
             "object_id",
+            "object_uuid",
             "description",
+            "description_key",
+            "description_params",
             "ip_address",
             "user_agent",
             "user",

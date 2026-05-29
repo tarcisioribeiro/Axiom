@@ -1,6 +1,6 @@
 # Documentação de Desenvolvimento
 
-Bem-vindo à documentação de desenvolvimento do MindLedger! Esta seção contém guias completos para configurar, desenvolver e contribuir para o projeto.
+Bem-vindo à documentação de desenvolvimento do Axiom! Esta seção contém guias completos para configurar, desenvolver e contribuir para o projeto.
 
 ## Conteúdo
 
@@ -18,7 +18,6 @@ Configuração detalhada do ambiente:
 - Geração de chaves de segurança
 - Configuração de portas e serviços
 - Configuração de logging
-- Configuração do AI Assistant
 
 ### 3. [Workflow de Desenvolvimento](./development_workflow.md)
 Comandos e práticas do dia a dia:
@@ -37,7 +36,37 @@ Padrões e boas práticas para contribuir:
 - Process de Pull Request
 - Code review
 
-### 5. [Solução de Problemas](./troubleshooting.md)
+### 5. [Deploy e CI/CD](./deploy.md)
+Configuração completa do pipeline GitLab e infraestrutura Kubernetes:
+- Variáveis CI/CD obrigatórias e como gerar cada uma
+- Configuração do Container Registry (GitLab.com e self-hosted)
+- Provisionamento do cluster k3s
+- Checklist antes do primeiro push
+
+### 6. [Rollback](./rollback.md)
+Procedimentos de reversão em caso de falha:
+- Rollback de deploy no Kubernetes
+- Rollback de migrations Django
+- Restauração de backup do banco de dados
+
+### 7. [Infraestrutura DNS](./dns_infrastructure.md)
+Configuração de DNS dinâmico e TLS:
+- DuckDNS: domínios de staging e produção
+- cert-manager + Let's Encrypt
+- Ingress nginx: roteamento por path
+- Verificação de certificados e renovação
+
+### 8. [Referência kubectl](./kubectl_reference.md)
+Referência completa de comandos kubectl para operar o cluster k3s:
+- Comandos por componente: PostgreSQL, Redis, API, Frontend, MinIO
+- Port-forwarding para acesso local a cada serviço
+- Como extrair senhas e secrets do cluster
+- Backup: disparar manualmente, acompanhar logs, restaurar
+- Blue-green: identificar slot ativo, fazer switch manual
+- Rollback de staging e produção
+- Troubleshooting e diagnóstico
+
+### 9. [Solução de Problemas](./troubleshooting.md)
 Diagnóstico e resolução de problemas comuns:
 - Problemas com Docker
 - Erros de banco de dados
@@ -45,7 +74,16 @@ Diagnóstico e resolução de problemas comuns:
 - Problemas de autenticação
 - Erros de criptografia
 - Problemas de CORS
-- Troubleshooting do AI Assistant
+
+### 10. [Funcionalidades Pendentes](./pending_features.md)
+Funcionalidades com infraestrutura parcial que precisam de implementação ou configuração:
+- Notificações por email (configuração SMTP)
+- Reset de senha
+- Confirmação de email no cadastro
+- Export ZIP do módulo Security
+- Import de extrato bancário (fluxo frontend)
+- Vault Health Report (página frontend)
+- 2FA / Autenticação de dois fatores
 
 ## Início Rápido
 
@@ -60,7 +98,7 @@ Se você está começando agora, siga esta sequência:
 ## Arquitetura do Projeto
 
 ```
-MindLedger/
+Axiom/
 ├── api/                    # Backend Django REST Framework
 │   ├── accounts/          # Contas bancárias
 │   ├── authentication/    # Autenticação JWT
@@ -71,7 +109,6 @@ MindLedger/
 │   ├── transfers/         # Transferências
 │   ├── security/          # Senhas
 │   ├── library/           # Biblioteca de livros
-│   ├── ai_assistant/      # Assistente de IA (RAG)
 │   └── app/               # Configurações centrais
 ├── frontend/              # Frontend React + TypeScript
 │   ├── src/
@@ -94,9 +131,6 @@ MindLedger/
 - **Redis 7** - Cache semântico
 - **JWT** - Autenticação via cookies HttpOnly
 - **Fernet** - Criptografia de dados sensíveis
-- **Groq API** - LLM para geração de texto
-- **sentence-transformers** - Embeddings locais
-
 ### Frontend
 - **React 19** - Biblioteca UI
 - **TypeScript 5.9** - Tipagem estática
@@ -122,24 +156,25 @@ MindLedger/
 | Frontend | 39101 | `FRONTEND_PORT` |
 | Backend API | 39100 | `API_PORT` |
 | PostgreSQL | 39102 | `DB_PORT` |
-| Redis | 6379 | `REDIS_PORT` |
+| Redis | 39103 | `REDIS_PORT` |
+| MinIO API | 39105 | — |
+| MinIO Console | 39106 | — |
 
 ## Links Úteis
 
-- **Repositório**: [GitHub MindLedger](https://github.com/seu-usuario/MindLedger)
 - **Frontend**: http://localhost:39101
 - **Backend API**: http://localhost:39100
 - **Django Admin**: http://localhost:39100/admin
-- **API Docs**: http://localhost:39100/api/v1/
-- **Groq Console**: https://console.groq.com
+- **API Docs (Swagger)**: http://localhost:39100/api/docs/
+- **MinIO Console**: http://localhost:39106
 
 ## Suporte
 
 Se você encontrar problemas não cobertos nesta documentação:
 
 1. Verifique a [Solução de Problemas](./troubleshooting.md)
-2. Consulte os logs: `docker-compose logs -f`
-3. Abra uma issue no GitHub com detalhes do erro
+2. Consulte os logs: `docker compose logs -f`
+3. Abra uma issue no GitLab com detalhes do erro
 4. Entre em contato com a equipe de desenvolvimento
 
 ## Contribuindo para a Documentação
@@ -152,5 +187,7 @@ Esta documentação também é código! Se você encontrar erros, informações 
 
 ---
 
+[Voltar ao índice da documentação](../README.md)
+
 **Última atualização**: Janeiro 2026
-**Mantenedor**: Equipe MindLedger
+**Mantenedor**: Equipe Axiom

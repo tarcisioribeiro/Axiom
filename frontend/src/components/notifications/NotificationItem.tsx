@@ -4,6 +4,8 @@ import {
   Receipt,
   HandCoins,
   CreditCard,
+  PiggyBank,
+  Target,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -18,6 +20,10 @@ const iconMap: Record<string, React.ElementType> = {
   loan_overdue: HandCoins,
   bill_due_soon: CreditCard,
   bill_overdue: CreditCard,
+  budget_warning: PiggyBank,
+  budget_exceeded: PiggyBank,
+  financial_goal_reached: Target,
+  financial_goal_approaching: Target,
 };
 
 const colorMap: Record<string, string> = {
@@ -29,6 +35,10 @@ const colorMap: Record<string, string> = {
   loan_overdue: 'text-destructive',
   bill_due_soon: 'text-warning',
   bill_overdue: 'text-destructive',
+  budget_warning: 'text-warning',
+  budget_exceeded: 'text-destructive',
+  financial_goal_reached: 'text-primary',
+  financial_goal_approaching: 'text-warning',
 };
 
 interface NotificationItemProps {
@@ -46,7 +56,7 @@ export function NotificationItem({
   return (
     <button
       className={cn(
-        'flex w-full items-start gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent',
+        'flex w-full items-start gap-3 rounded-md px-md py-3 text-left transition-colors hover:bg-accent',
         !notification.is_read && 'bg-accent/50'
       )}
       onClick={() => {
@@ -59,21 +69,18 @@ export function NotificationItem({
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-2">
+        <div className="flex items-center gap-sm">
           <p
-            className={cn(
-              'text-sm leading-snug',
-              !notification.is_read && 'font-semibold'
-            )}
+            className={cn('truncate text-sm', !notification.is_read && 'font-semibold')}
           >
             {notification.title}
           </p>
           {!notification.is_read && (
-            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+            <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
           )}
         </div>
         {notification.message && (
-          <p className="mt-1 text-xs leading-relaxed text-foreground/60">
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
             {notification.message}
           </p>
         )}

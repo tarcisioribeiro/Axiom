@@ -1,0 +1,186 @@
+# nginx-ingress Controller — Kind (local development)
+# -------------------------------------------------------
+# Install the ingress controller before applying this file:
+#
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+#   kubectl wait --namespace ingress-nginx \
+#     --for=condition=ready pod \
+#     --selector=app.kubernetes.io/component=controller \
+#     --timeout=90s
+#
+# Kind cluster config (kind.yaml) must include port mappings so the
+# ingress controller can reach the host:
+#
+#   nodes:
+#     - role: control-plane
+#       kubeadmConfigPatches:
+#         - |
+#           kind: InitConfiguration
+#           nodeRegistration:
+#             kubeletExtraArgs:
+#               node-labels: "ingress-ready=true"
+#       extraPortMappings:
+#         - containerPort: 80
+#           hostPort: 80
+#           protocol: TCP
+#         - containerPort: 443
+#           hostPort: 443
+#           protocol: TCP
+#
+# TLS / cert-manager (production clusters)
+# -----------------------------------------
+# Install cert-manager before applying the ClusterIssuer resources:
+#
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+#   kubectl wait --namespace cert-manager \
+#     --for=condition=ready pod --all \
+#     --timeout=120s
+#
+# Then update the `email` field in both ClusterIssuers below and replace
+# every occurrence of "${AXIOM_DOMAIN}" with your real domain.
+#
+# Workflow:
+#   1. Apply with letsencrypt-staging to verify HTTP-01 challenges work.
+#   2. Switch cert-manager.io/cluster-issuer annotation to letsencrypt-prod.
+#   3. Delete the staging secret so cert-manager re-issues a real cert:
+#        kubectl delete secret axiom-tls -n axiom
+#
+# Local development (no TLS)
+# ---------------------------
+# Comment out the `tls` block and the cert-manager.io/cluster-issuer
+# annotation, then set ssl-redirect to "false". Access the app at
+# http://localhost after mapping the host in /etc/hosts if needed.
+---
+# cert-manager ClusterIssuer — Let's Encrypt Staging (safe for testing)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: tarcisio.ribeiro.1840@hotmail.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+# cert-manager ClusterIssuer — Let's Encrypt Production
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: tarcisio.ribeiro.1840@hotmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: nginx
+---
+# Ingress — routes external traffic to the frontend and API services.
+#
+# Path priority (evaluated top-to-bottom by nginx):
+#   /api/**    → api-service:39100   (Django REST API)
+#   /admin/**  → api-service:39100   (Django admin)
+#   /static/** → api-service:39100   (collected static files)
+#   /media/**  → api-service:39100   (user-uploaded media)
+#   /live/**   → api-service:39100   (liveness probe — always 200)
+#   /health/** → api-service:39100   (health check — 200/503)
+#   /ready/**  → api-service:39100   (readiness probe — 200/503)
+#   /**        → frontend-service:80 (React SPA — catch-all, must be last)
+#
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: axiom-ingress
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # NPM faz SSL termination — ingress não precisa redirecionar
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - axiom.tjtux.duckdns.org
+      secretName: axiom-tls
+  rules:
+    - host: axiom.tjtux.duckdns.org
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /live
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /ready
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          # Catch-all: React SPA — must remain last
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

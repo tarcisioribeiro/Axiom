@@ -23,3 +23,16 @@ export const EXPENSE_CATEGORIES_CANONICAL = [
   { key: 'transport', label: 'Transporte' },
   { key: 'travels', label: 'Viagens' },
 ] as const;
+
+export const REVENUE_CATEGORIES_CANONICAL = [
+  { key: 'deposit', label: 'Depósito' },
+  { key: 'award', label: 'Prêmio' },
+  { key: 'salary', label: 'Salário' },
+  { key: 'ticket', label: 'Vale' },
+  { key: 'income', label: 'Rendimentos' },
+  { key: 'refund', label: 'Reembolso' },
+  { key: 'cashback', label: 'Cashback' },
+  { key: 'transfer', label: 'Transferência Recebida' },
+  { key: 'received_loan', label: 'Empréstimo Recebido' },
+  { key: 'loan_devolution', label: 'Devolução de Empréstimo' },
+] as const;

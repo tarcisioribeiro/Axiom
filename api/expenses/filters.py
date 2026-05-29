@@ -25,13 +25,16 @@ class ExpenseFilter(filters.FilterSet):
         field_name="value",
         lookup_expr="gte",
         help_text=(
-            "Filter expenses with value greater than or " "equal to this amount"
+            "Filter expenses with value greater than or "
+            "equal to this amount"
         ),
     )
     max_value = filters.NumberFilter(
         field_name="value",
         lookup_expr="lte",
-        help_text=("Filter expenses with value less than or " "equal to this amount"),
+        help_text=(
+            "Filter expenses with value less than or " "equal to this amount"
+        ),
     )
 
     # Category filter
@@ -43,6 +46,11 @@ class ExpenseFilter(filters.FilterSet):
     account = filters.NumberFilter(
         field_name="account__id", help_text="Filter by account ID"
     )
+    accounts = filters.BaseInFilter(
+        field_name="account__id",
+        lookup_expr="in",
+        help_text="Filter by multiple account IDs (comma-separated: 1,2,3)",
+    )
     account_name = filters.ChoiceFilter(
         field_name="account__name",
         choices=[],  # Will be populated in __init__
@@ -50,7 +58,9 @@ class ExpenseFilter(filters.FilterSet):
     )
 
     # Payment status
-    payed = filters.BooleanFilter(help_text="Filter by payment status (true/false)")
+    payed = filters.BooleanFilter(
+        help_text="Filter by payment status (true/false)"
+    )
 
     # Search in description
     search = filters.CharFilter(

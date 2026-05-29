@@ -1,12 +1,16 @@
+/* eslint-disable max-lines */
 import { Plus, Edit, Trash2, Building2, Globe, Calendar, BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { PublisherForm } from '@/components/library/PublisherForm';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,6 +32,33 @@ import { publishersService } from '@/services/publishers-service';
 import type { Publisher, PublisherFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
+function PublisherInitials({ name }: { name: string }) {
+  const words = name.trim().split(/\s+/);
+  const initials =
+    words.length >= 2
+      ? (words[0].charAt(0) + words[1].charAt(0)).toUpperCase()
+      : name.slice(0, 2).toUpperCase();
+
+  const colors = [
+    'from-blue-500 to-indigo-600',
+    'from-emerald-500 to-teal-600',
+    'from-violet-500 to-purple-600',
+    'from-orange-500 to-amber-600',
+    'from-rose-500 to-pink-600',
+    'from-cyan-500 to-sky-600',
+  ];
+  const colorIndex =
+    name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
+
+  return (
+    <div
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${colors[colorIndex]}`}
+    >
+      <span className="select-none text-sm font-bold text-white">{initials}</span>
+    </div>
+  );
+}
+
 export default function Publishers() {
   const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,9 +68,11 @@ export default function Publishers() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void loadPublishers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadPublishers = async () => {
@@ -49,7 +82,7 @@ export default function Publishers() {
       setPublishers(data);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar editoras',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -70,11 +103,10 @@ export default function Publishers() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await showConfirm({
-      title: 'Excluir editora',
-      description:
-        'Tem certeza que deseja excluir esta editora? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.publishers.deleteTitle'),
+      description: t('pages.publishers.deleteDesc'),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
 
@@ -83,13 +115,13 @@ export default function Publishers() {
     try {
       await publishersService.delete(id);
       toast({
-        title: 'Editora excluída',
-        description: 'A editora foi excluída com sucesso.',
+        title: t('pages.publishers.deleted'),
+        description: t('pages.publishers.deletedDesc'),
       });
       void loadPublishers();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir editora',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -102,21 +134,21 @@ export default function Publishers() {
       if (selectedPublisher) {
         await publishersService.update(selectedPublisher.id, data);
         toast({
-          title: 'Editora atualizada',
-          description: 'A editora foi atualizada com sucesso.',
+          title: t('pages.publishers.updated'),
+          description: t('pages.publishers.updatedDesc'),
         });
       } else {
         await publishersService.create(data);
         toast({
-          title: 'Editora criada',
-          description: 'A editora foi criada com sucesso.',
+          title: t('pages.publishers.created'),
+          description: t('pages.publishers.createdDesc'),
         });
       }
       setIsDialogOpen(false);
       void loadPublishers();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -137,92 +169,110 @@ export default function Publishers() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Editoras"
-        icon={<Building2 />}
-        action={{
-          label: 'Nova Editora',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+      <PageHeader title={t('pages.publishers.title')} icon={<Building2 />}>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.publishers.newBtn')}
+        </Button>
+      </PageHeader>
 
-      <div className="flex items-center gap-4">
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput
-          placeholder="Buscar editoras..."
+          placeholder={t('pages.publishers.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
-          className="flex-1"
+          className="w-52 sm:w-64"
         />
-      </div>
+      </FilterBar>
 
       {filteredPublishers.length === 0 ? (
         <EmptyState
           icon={<Building2 className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhuma editora encontrada para a pesquisa atual.'
-              : 'Nenhuma editora cadastrada. Clique em "Nova Editora" para começar.'
+              ? t('pages.publishers.emptySearch')
+              : t('pages.publishers.emptyState')
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
           {filteredPublishers.map((publisher) => (
-            <Card key={publisher.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{publisher.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {publisher.country_display}
-                    </CardDescription>
+            <Card key={publisher.id} className="flex flex-col">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-sm">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <PublisherInitials name={publisher.name} />
+                    <div className="min-w-0">
+                      <CardTitle className="text-base leading-tight">
+                        {publisher.name}
+                      </CardTitle>
+                      <CardDescription className="mt-0.5">
+                        {publisher.country
+                          ? t('pages.publishers.countries.' + publisher.country, {
+                              defaultValue: publisher.country_display,
+                            })
+                          : publisher.country_display}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-xs">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8"
                       onClick={() => handleEdit(publisher)}
-                      aria-label="Editar"
+                      aria-label={t('common.actions.edit')}
+                      title={t('common.actions.edit')}
                     >
-                      <Edit className="h-4 w-4" aria-hidden="true" />
+                      <Edit className="h-3.5 w-3.5" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDelete(publisher.id)}
-                      aria-label="Excluir"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => void handleDelete(publisher.id)}
+                      aria-label={t('common.actions.delete')}
+                      title={t('common.actions.delete')}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+
+              <CardContent className="flex flex-1 flex-col gap-3">
                 {publisher.founded_year && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm">Fundada em {publisher.founded_year}</span>
+                  <div className="flex items-center gap-sm">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {t('pages.publishers.foundedYear', {
+                        year: publisher.founded_year,
+                      })}
+                    </Badge>
                   </div>
                 )}
                 {publisher.website && (
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
+                  <div className="flex items-center gap-sm">
+                    <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <a
                       href={publisher.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="truncate text-sm text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {publisher.website.replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                 )}
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  <span className="text-sm">
-                    {publisher.books_count}{' '}
-                    {publisher.books_count === 1 ? 'livro' : 'livros'}
-                  </span>
+                <div className="mt-auto pt-sm">
+                  <Badge
+                    variant="secondary"
+                    className="flex w-fit items-center gap-sm text-xs"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    {t('pages.publishers.booksCount', { count: publisher.books_count })}
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -233,11 +283,15 @@ export default function Publishers() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedPublisher ? 'Editar' : 'Nova'} Editora</DialogTitle>
+            <DialogTitle>
+              {selectedPublisher
+                ? t('pages.publishers.editTitle')
+                : t('pages.publishers.newTitle')}
+            </DialogTitle>
             <DialogDescription>
               {selectedPublisher
-                ? 'Atualize as informações da editora'
-                : 'Adicione uma nova editora à sua biblioteca'}
+                ? t('pages.publishers.editDesc')
+                : t('pages.publishers.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <PublisherForm

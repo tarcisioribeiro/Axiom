@@ -1,18 +1,6 @@
 import type { Variants } from 'framer-motion';
 
-// Durações padrão vibrantes
-const DURATION = {
-  fast: 0.3,
-  normal: 0.4,
-  slow: 0.6,
-};
-
-// Easing vibrantes com bounce
-const EASING = {
-  bounce: [0.34, 1.56, 0.64, 1] as const, // Overshoot bounce
-  smooth: [0.25, 0.46, 0.45, 0.94] as const,
-  snappy: [0.4, 0, 0.2, 1] as const,
-};
+import { DURATION, EASING } from './transitions';
 
 // Page transitions - apenas fade para evitar movimento do menu lateral
 export const pageVariants: Variants = {
@@ -53,21 +41,21 @@ export const itemVariants: Variants = {
 
 // Card animations
 export const cardVariants: Variants = {
-  initial: { opacity: 0, scale: 0.9, y: 30 },
+  initial: { opacity: 0, scale: 0.95, y: 12 },
   animate: {
     opacity: 1,
     scale: 1,
     y: 0,
     transition: {
-      duration: DURATION.slow,
+      duration: DURATION.normal,
       ease: EASING.bounce,
     },
   },
   hover: {
     scale: 1.05,
     y: -5,
-    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-    transition: { duration: 0.3, ease: EASING.snappy },
+    boxShadow: 'var(--shadow-card-hover)',
+    transition: { duration: DURATION.normal, ease: EASING.snappy },
   },
   tap: { scale: 0.98 },
 };

@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza criptografia simétrica **Fernet** (baseada em AES-128) para proteger dados sensíveis em repouso no banco de dados. Este documento explica como o sistema funciona, como usar e quais precauções tomar.
+O Axiom utiliza criptografia simétrica **Fernet** (baseada em AES-128) para proteger dados sensíveis em repouso no banco de dados. Este documento explica como o sistema funciona, como usar e quais precauções tomar.
 
 ## Fernet: O Que É?
 
@@ -22,11 +22,11 @@ O MindLedger utiliza criptografia simétrica **Fernet** (baseada em AES-128) par
 "xN8fK9pL2mQ4rT6wY8zA1bC3dE5fG7hJ9kM0nP2qR4s="
 ```
 
-## Implementação no MindLedger
+## Implementação no Axiom
 
 ### Módulo de Criptografia
 
-**Arquivo**: `/home/tarcisio/Development/MindLedger/api/app/encryption.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/api/app/encryption.py`
 
 ```python
 import os
@@ -379,7 +379,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
         return instance
 ```
 
-## Campos Criptografados no MindLedger
+## Campos Criptografados no Axiom
 
 ### Módulo Financeiro
 

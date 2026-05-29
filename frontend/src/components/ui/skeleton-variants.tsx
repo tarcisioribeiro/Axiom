@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 export function SkeletonCard({ className }: { className?: string }) {
   return (
     <Card className={cn('overflow-hidden', className)}>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-sm">
         <div className="flex items-center justify-between">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-8 w-8 rounded-full" />
@@ -32,7 +32,7 @@ export function SkeletonTableRow({ columns = 5 }: { columns?: number }) {
   return (
     <tr className="border-b">
       {Array.from({ length: columns }).map((_, i) => (
-        <td key={i} className="p-4">
+        <td key={i} className="p-md">
           <Skeleton className="h-4 w-full max-w-[120px]" />
         </td>
       ))}
@@ -54,11 +54,11 @@ export function SkeletonTable({
 }) {
   return (
     <div className={cn('w-full overflow-auto', className)}>
-      <table className="w-full">
+      <table className="w-full" role="presentation">
         <thead>
           <tr className="border-b bg-muted/50">
             {Array.from({ length: columns }).map((_, i) => (
-              <th key={i} className="p-4 text-left">
+              <th key={i} className="p-md text-left" aria-hidden="true">
                 <Skeleton className="h-4 w-20" />
               </th>
             ))}
@@ -79,9 +79,9 @@ export function SkeletonTable({
  */
 export function SkeletonListItem({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-4 border-b p-4', className)}>
+    <div className={cn('flex items-center gap-md border-b p-md', className)}>
       <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
-      <div className="flex-1 space-y-2">
+      <div className="flex-1 space-y-sm">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
@@ -115,15 +115,15 @@ export function SkeletonList({
 export function SkeletonStat({ className }: { className?: string }) {
   return (
     <Card className={className}>
-      <CardContent className="p-6">
+      <CardContent className="p-lg">
         <div className="flex items-center justify-between">
-          <div className="space-y-2">
+          <div className="space-y-sm">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-32" />
           </div>
           <Skeleton className="h-12 w-12 rounded-full" />
         </div>
-        <Skeleton className="mt-4 h-3 w-20" />
+        <Skeleton className="mt-md h-3 w-20" />
       </CardContent>
     </Card>
   );
@@ -140,7 +140,7 @@ export function SkeletonStatsGrid({
   className?: string;
 }) {
   return (
-    <div className={cn('grid gap-4 md:grid-cols-2 lg:grid-cols-4', className)}>
+    <div className={cn('grid gap-md md:grid-cols-2 lg:grid-cols-4', className)}>
       {Array.from({ length: items }).map((_, i) => (
         <SkeletonStat key={i} />
       ))}
@@ -176,9 +176,14 @@ export function SkeletonChart({
  */
 export function SkeletonDashboard() {
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Carregando dashboard">
+    <div
+      className="space-y-lg"
+      role="status"
+      aria-busy="true"
+      aria-label="Carregando dashboard"
+    >
       <SkeletonStatsGrid items={4} />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-lg md:grid-cols-2">
         <SkeletonChart height={300} />
         <SkeletonChart height={300} />
       </div>
@@ -198,9 +203,9 @@ export function SkeletonForm({
   className?: string;
 }) {
   return (
-    <div className={cn('space-y-6', className)} aria-busy="true">
+    <div className={cn('space-y-lg', className)} aria-busy="true">
       {Array.from({ length: fields }).map((_, i) => (
-        <div key={i} className="space-y-2">
+        <div key={i} className="space-y-sm">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-10 w-full" />
         </div>

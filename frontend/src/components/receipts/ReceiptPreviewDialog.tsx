@@ -1,5 +1,6 @@
 import { FileText, Image, Loader2 } from 'lucide-react';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +33,7 @@ export function ReceiptPreviewDialog({
   data,
 }: ReceiptPreviewDialogProps) {
   // Ref for the hidden full-size receipt (used for export)
+  const { t } = useTranslation();
   const captureRef = useRef<HTMLDivElement>(null);
   const { isGenerating, error, generateReceipt, clearError } = useReceiptGenerator();
 
@@ -60,11 +62,11 @@ export function ReceiptPreviewDialog({
         className="custom-scrollbar max-h-[90vh] overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>Comprovante de {data.typeLabel}</DialogTitle>
+          <DialogTitle>{t('receipt.title', { typeLabel: data.typeLabel })}</DialogTitle>
         </DialogHeader>
 
         {/* Receipt Preview (scaled for display) */}
-        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-4">
+        <div className="custom-scrollbar flex justify-center overflow-auto rounded-lg bg-muted p-md">
           <div className="origin-top scale-[0.65] transform">
             <ReceiptTemplate data={data} />
           </div>
@@ -91,7 +93,7 @@ export function ReceiptPreviewDialog({
         )}
 
         {/* Export Buttons */}
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
+        <DialogFooter className="flex-col gap-sm sm:flex-row">
           <Button
             variant="outline"
             onClick={() => handleExport('png')}
@@ -99,11 +101,11 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
             ) : (
-              <Image className="mr-2 h-4 w-4" />
+              <Image className="mr-sm h-4 w-4" />
             )}
-            Exportar PNG
+            {t('receipt.button.exportPng')}
           </Button>
           <Button
             onClick={() => handleExport('pdf')}
@@ -111,11 +113,11 @@ export function ReceiptPreviewDialog({
             className="w-full sm:w-auto"
           >
             {isGenerating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
             ) : (
-              <FileText className="mr-2 h-4 w-4" />
+              <FileText className="mr-sm h-4 w-4" />
             )}
-            Exportar PDF
+            {t('receipt.button.exportPdf')}
           </Button>
         </DialogFooter>
       </DialogContent>

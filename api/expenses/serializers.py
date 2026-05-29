@@ -1,10 +1,54 @@
 from rest_framework import serializers
 
-from expenses.models import Expense, FixedExpense
+from expenses.models import (
+    CategorizationRule,
+    Expense,
+    ExpenseSplit,
+    FixedExpense,
+    Tag,
+)
+
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ["id", "uuid", "name", "color", "created_at", "updated_at"]
+        read_only_fields = ["id", "uuid", "created_at", "updated_at"]
+
+
+class ExpenseSplitSerializer(serializers.ModelSerializer):
+    member_name = serializers.CharField(
+        source="member.name", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = ExpenseSplit
+        fields = [
+            "id",
+            "uuid",
+            "expense",
+            "member",
+            "member_name",
+            "description",
+            "percentage",
+            "value",
+            "payed",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "percentage",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     current_balance = serializers.DecimalField(
         source="account.current_balance",
         max_digits=15,
@@ -14,10 +58,86 @@ class ExpenseSerializer(serializers.ModelSerializer):
     payable_description = serializers.CharField(
         source="related_payable.description", read_only=True, allow_null=True
     )
+    tags = TagSerializer(many=True, read_only=True)
+    tag_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+        source="tags",
+    )
 
     class Meta:
         model = Expense
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "value",
+            "date",
+            "horary",
+            "category",
+            "account",
+            "account_name",
+            "current_balance",
+            "payed",
+            "merchant",
+            "location",
+            "payment_method",
+            "receipt",
+            "member",
+            "notes",
+            "recurring",
+            "frequency",
+            "related_transfer",
+            "fixed_expense_template",
+            "related_loan",
+            "related_bill_payment",
+            "related_payable",
+            "payable_description",
+            "auto_categorized",
+            "is_initial_balance",
+            "currency_code",
+            "tags",
+            "tag_ids",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate(self, attrs):
+        from budgets.services import validate_budget_limit
+
+        payed = attrs.get("payed", getattr(self.instance, "payed", False))
+        if not payed:
+            self._budget_warning = None
+            return attrs
+
+        category = attrs.get(
+            "category", getattr(self.instance, "category", None)
+        )
+        value = attrs.get("value", getattr(self.instance, "value", None))
+        date = attrs.get("date", getattr(self.instance, "date", None))
+
+        if not all([category, value, date]):
+            self._budget_warning = None
+            return attrs
+
+        request = self.context.get("request")
+        if not request:
+            self._budget_warning = None
+            return attrs
+
+        exclude_id = self.instance.pk if self.instance else None
+
+        self._budget_warning = validate_budget_limit(
+            category=category,
+            value=value,
+            month=date.month,
+            year=date.year,
+            user=request.user,
+            exclude_expense_id=exclude_id,
+        )
+        return attrs
 
 
 # Fixed Expense Serializers
@@ -37,7 +157,29 @@ class FixedExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FixedExpense
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "description",
+            "default_value",
+            "category",
+            "account",
+            "account_name",
+            "credit_card",
+            "credit_card_name",
+            "due_day",
+            "merchant",
+            "payment_method",
+            "notes",
+            "member",
+            "member_name",
+            "is_active",
+            "allow_value_edit",
+            "last_generated_month",
+            "total_generated",
+            "created_at",
+            "updated_at",
+        ]
 
     def get_account_name(self, obj):
         """
@@ -179,3 +321,28 @@ class BulkMarkPaidSerializer(serializers.Serializer):
     expense_ids = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
+
+
+class CategorizationRuleSerializer(serializers.ModelSerializer):
+    """Serializer para regras de categorização automática"""
+
+    class Meta:
+        model = CategorizationRule
+        fields = [
+            "id",
+            "uuid",
+            "merchant_contains",
+            "category",
+            "is_active",
+            "priority",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uuid",
+            "owner",
+            "created_at",
+            "updated_at",
+        ]

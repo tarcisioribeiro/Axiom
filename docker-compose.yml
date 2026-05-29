@@ -1,23 +1,25 @@
 # =============================================================================
-# MindLedger - Docker Compose
+# Axiom - Docker Compose
 # =============================================================================
 # Serviços:
 # - db: PostgreSQL para armazenamento de dados
-# - redis: Cache para sessões
-# - ollama: Servidor de IA local (LLM)
+# - redis: Cache para sessões + broker Celery
 # - minio: Object storage para arquivos
 # - api: Django REST Framework backend
+# - celery-worker: Worker Celery para tasks assíncronas
+# - celery-beat: Scheduler Celery para tasks periódicas
 # - frontend: React frontend
+# - db-backup: Scheduled daily pg_dump → encrypt → MinIO upload
 # =============================================================================
 
 services:
   # PostgreSQL Database
   db:
-    image: postgres:16-alpine
-    container_name: mindledger-db
+    image: pgvector/pgvector:pg16
+    container_name: axiom-db
     environment:
       TZ: America/Sao_Paulo
-      POSTGRES_DB: ${DB_NAME:-mindledger_db}
+      POSTGRES_DB: ${DB_NAME:-axiom_db}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
@@ -28,79 +30,71 @@ services:
       - "${DB_PORT:-39102}:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-mindledger_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-axiom_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "1.0"
+        reservations:
+          memory: 512m
+          cpus: "0.5"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     networks:
       - network
 
   # Redis for caching
   redis:
     image: redis:7-alpine
-    container_name: mindledger-redis
+    container_name: axiom-redis
     environment:
       TZ: America/Sao_Paulo
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
     ports:
       - "${REDIS_PORT:-39103}:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - network
-
-  # Ollama - Local LLM Server
-  ollama:
-    image: ollama/ollama:latest
-    container_name: mindledger-ollama
-    environment:
-      TZ: America/Sao_Paulo
-      OLLAMA_HOST: 0.0.0.0
-    ports:
-      - "${OLLAMA_PORT:-39104}:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-      - ./docker/ollama/init-models.sh:/init-models.sh:ro
-    entrypoint: ["/bin/bash", "-c", "/init-models.sh & ollama serve"]
-    restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 8g
-          cpus: '3'
+          memory: 512m
+          cpus: "0.5"
         reservations:
-          memory: 4g
-          cpus: '1'
-          # GPU support - uncomment the following lines if you have NVIDIA GPU
-          # devices:
-          #   - driver: nvidia
-          #     count: 1
-          #     capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
+          memory: 128m
+          cpus: "0.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     networks:
       - network
 
   # MinIO Object Storage
   minio:
-    image: minio/minio:latest
-    container_name: mindledger-minio
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z@sha256:a929054ae025fa7997857cd0e2a2e3029238e31ad89877326dc032f4c1a14259
+    container_name: axiom-minio
     command: server /data --console-address ":9001"
     environment:
       TZ: America/Sao_Paulo
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
     ports:
       - "${MINIO_PORT:-39105}:9000"
       - "${MINIO_CONSOLE_PORT:-39106}:9001"
@@ -108,18 +102,33 @@ services:
       - minio_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test:
+        - "CMD-SHELL"
+        - "if [ \"$MINIO_USE_SSL\" = 'true' ]; then curl -fk https://localhost:9000/minio/health/live; else curl -f http://localhost:9000/minio/health/live; fi"
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+          cpus: "1.0"
+        reservations:
+          memory: 256m
+          cpus: "0.25"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     networks:
       - network
 
   # MinIO Bucket Initialization (one-shot)
   minio-init:
-    image: minio/mc:latest
-    container_name: mindledger-minio-init
+    image: minio/mc:RELEASE.2025-02-15T10-36-16Z@sha256:9ae9ed28d04f7c36ee6b84c36b2c0168f1be28350d54344c3e5088a631f4c603
+    container_name: axiom-minio-init
     depends_on:
       minio:
         condition: service_healthy
@@ -127,14 +136,25 @@ services:
       TZ: America/Sao_Paulo
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-mindledger}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-axiom}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
     entrypoint: >
       /bin/sh -c "
-      mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
-      mc mb --ignore-existing myminio/$$MINIO_BUCKET_NAME;
+      if [ \"$$MINIO_USE_SSL\" = 'true' ]; then
+        SCHEME=https; INSECURE='--insecure';
+      else
+        SCHEME=http; INSECURE='';
+      fi;
+      mc $$INSECURE alias set myminio $$SCHEME://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      mc $$INSECURE mb --ignore-existing myminio/$$MINIO_BUCKET_NAME;
       echo 'Bucket created successfully';
       "
     restart: "no"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - network
 
@@ -144,7 +164,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
       target: production
-    container_name: mindledger-api
+    container_name: axiom-api
     ports:
       - "${API_PORT:-39100}:${API_PORT:-39100}"
     env_file:
@@ -156,8 +176,7 @@ services:
       - LOG_FORMAT=${LOG_FORMAT:-json}
       - PYTHONUNBUFFERED=1
       - DJANGO_SETTINGS_MODULE=app.settings
-      - REDIS_URL=redis://redis:6379/0
-      - OLLAMA_HOST=${OLLAMA_HOST:-http://ollama:11434}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - MINIO_ENDPOINT=minio:9000
       - MINIO_EXTERNAL_ENDPOINT=${MINIO_EXTERNAL_ENDPOINT:-localhost:39105}
     entrypoint: ["/app/entrypoint.sh"]
@@ -166,14 +185,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
       minio:
         condition: service_healthy
     volumes:
       - ./api/media:/app/media
-      - ./api/logs:/app/logs
+      - logs_data:/app/logs  # Volume nomeado evita problemas de permissão de owner (UID 1000)
       - staticfiles_data:/app/staticfiles  # Volume nomeado evita problemas de permissão
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket para restart via painel admin
+      - ./.env:/app/axiom.env  # Bind mount para reescrita de variáveis pelo painel admin
     restart: unless-stopped
     healthcheck:
       test:
@@ -185,6 +204,212 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: "1.0"
+        reservations:
+          memory: 512m
+          cpus: "0.25"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - network
+
+  # Database Backup — daily pg_dump + AES-256 encryption + MinIO upload
+  # Schedule is controlled by BACKUP_CRON (default: 02:00 BRT daily).
+  # Run a manual backup:  docker compose exec db-backup /scripts/backup.sh
+  # Run verification:     docker compose exec db-backup /scripts/verify-backup.sh
+  # Check health:         docker compose exec api python manage.py check_backup_health
+  db-backup:
+    build:
+      context: ./docker/backup
+      dockerfile: Dockerfile
+    container_name: axiom-db-backup
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      TZ: America/Sao_Paulo
+      # PostgreSQL connection — point to the compose db service
+      PGHOST: db
+      PGPORT: "5432"
+      DB_NAME: ${DB_NAME:-axiom_db}
+      DB_USER: ${DB_USER}
+      PGPASSWORD: ${DB_PASSWORD}
+      # MinIO — reuse same instance used by the API
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${BACKUP_MINIO_BUCKET:-axiom-backups}
+      MC_BIN: /usr/local/bin/mc
+      # Backup encryption — rotate via rekey-backups.sh (see api/scripts/).
+      # Increment BACKUP_KEY_VERSION (v1 → v2, …) when rotating keys and keep
+      # old keys as BACKUP_ENCRYPTION_KEY_v1 etc. for decrypting old backups.
+      BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY}
+      BACKUP_KEY_VERSION: ${BACKUP_KEY_VERSION:-v1}
+      # Historical keys for verify-backup.sh / rekey-backups.sh (add as needed):
+      # BACKUP_ENCRYPTION_KEY_v1: ${BACKUP_ENCRYPTION_KEY_V1}
+      # Cron schedule (default: 02:00 BRT daily)
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      # GFS retention policy
+      KEEP_DAILY: ${KEEP_DAILY:-7}
+      KEEP_WEEKLY: ${KEEP_WEEKLY:-4}
+      KEEP_MONTHLY: ${KEEP_MONTHLY:-3}
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups
+      - ./api/scripts:/scripts:ro
+      - ./api/media:/app/media:ro
+    restart: unless-stopped
+    healthcheck:
+      # Verify crond is alive. Backup staleness is monitored separately
+      # via `python manage.py check_backup_health`.
+      test: ["CMD-SHELL", "pgrep crond || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - network
+
+  # Ollama — LLM local para o módulo de Agentes
+  # Para iniciar os modelos após subir:
+  #   docker compose exec ollama ollama pull mistral:7b-instruct
+  #   docker compose exec ollama ollama pull nomic-embed-text
+  #   docker compose exec ollama ollama pull qwen2.5:7b
+  #   docker compose exec ollama ollama pull qwen2.5:14b
+  #   docker compose exec ollama ollama pull llama3.1:8b
+  ollama:
+    image: ollama/ollama:0.22.0
+    container_name: axiom-ollama
+    ports:
+      - "${OLLAMA_PORT:-39107}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      TZ: America/Sao_Paulo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+          cpus: "2.0"
+        reservations:
+          memory: 4g
+          cpus: "1.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - network
+
+  # Celery Worker — processa tasks assíncronas (notificações, rendimentos, etc.)
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: production
+    container_name: axiom-worker
+    command: celery -A app worker --loglevel=info --concurrency=2 -Q celery
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Sao_Paulo
+      - DB_HOST=db
+      - DB_PORT=5432
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - MINIO_ENDPOINT=minio:9000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app inspect ping --timeout=5 2>/dev/null | grep -q 'pong' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+        reservations:
+          memory: 128m
+          cpus: "0.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - network
+
+  # Celery Beat — agendador de tasks periódicas (cron substituído)
+  queue:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      target: production
+    container_name: axiom-queue
+    command: >
+      celery -A app beat --loglevel=info
+      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Sao_Paulo
+      - DB_HOST=db
+      - DB_PORT=5432
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q 'celery' /proc/1/status || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.25"
+        reservations:
+          memory: 64m
+          cpus: "0.05"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
     networks:
       - network
 
@@ -196,13 +421,15 @@ services:
       args:
         - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:39100}
         - VITE_API_PORT=${API_PORT:-39100}
-    container_name: mindledger-frontend
+        - VITE_APP_ENV=${VITE_APP_ENV:-development}
+    container_name: axiom-frontend
     environment:
       TZ: America/Sao_Paulo
     ports:
       - "${FRONTEND_PORT:-39101}:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:80 || exit 1"]
@@ -210,6 +437,19 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: "0.5"
+        reservations:
+          memory: 64m
+          cpus: "0.1"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
     networks:
       - network
 
@@ -218,11 +458,13 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  ollama_data:
-    driver: local
   staticfiles_data:
     driver: local
+  logs_data:
+    driver: local
   minio_data:
+    driver: local
+  ollama_data:
     driver: local
 
 networks:

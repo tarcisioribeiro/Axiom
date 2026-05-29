@@ -4,6 +4,16 @@ import type { Expense, ExpenseFormData } from '@/types';
 import { apiClient } from './api-client';
 import { BaseService } from './base-service';
 
+export interface ExpenseExportParams {
+  export_format: 'csv' | 'pdf';
+  date_from?: string;
+  date_to?: string;
+  category?: string;
+  payed?: string;
+  search?: string;
+  account?: number[];
+}
+
 /**
  * Servico para gerenciamento de despesas.
  *
@@ -39,6 +49,40 @@ class ExpensesService extends BaseService<Expense, ExpenseFormData> {
       expense_ids: expenseIds,
     });
   }
+
+  /**
+   * Exporta despesas filtradas como CSV ou PDF e aciona o download no browser.
+   *
+   * @param params - Filtros e formato de exportação
+   */
+  async exportExpenses(params: ExpenseExportParams): Promise<void> {
+    const { account, ...rest } = params;
+    // axios serializes repeated keys as array when value is array
+    const queryParams: Record<string, unknown> = { ...rest };
+    if (account && account.length > 0) {
+      queryParams['account'] = account;
+    }
+
+    const blob = await apiClient.getBlob(
+      API_CONFIG.ENDPOINTS.EXPENSES_EXPORT,
+      queryParams
+    );
+
+    const date = new Date().toISOString().split('T')[0];
+    const filename = `despesas_${date}.${params.export_format}`;
+    triggerDownload(blob, filename);
+  }
 }
 
 export const expensesService = new ExpensesService();
+
+function triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

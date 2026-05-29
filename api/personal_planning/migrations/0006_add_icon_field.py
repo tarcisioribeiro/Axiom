@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('personal_planning', '0005_remove_daily_task_record'),
+        ("personal_planning", "0005_remove_daily_task_record"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='routinetask',
-            name='icon',
-            field=models.CharField(blank=True, help_text='Nome do ícone do Lucide (ex: Heart, BookOpen, Dumbbell)', max_length=50, null=True, verbose_name='Ícone'),
+            model_name="routinetask",
+            name="icon",
+            field=models.CharField(
+                blank=True,
+                help_text="Nome do ícone do Lucide (ex: Heart, BookOpen, Dumbbell)",
+                max_length=50,
+                null=True,
+                verbose_name="Ícone",
+            ),
         ),
         migrations.AddField(
-            model_name='taskinstance',
-            name='icon',
-            field=models.CharField(blank=True, max_length=50, null=True, verbose_name='Ícone'),
+            model_name="taskinstance",
+            name="icon",
+            field=models.CharField(
+                blank=True, max_length=50, null=True, verbose_name="Ícone"
+            ),
         ),
     ]

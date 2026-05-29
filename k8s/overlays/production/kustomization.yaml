@@ -1,0 +1,23 @@
+# =============================================================================
+# Axiom — Kustomize production overlay
+# =============================================================================
+#
+# This overlay extends the base k8s/ configuration for production.
+# It is equivalent to k8s/kustomization.yaml but placed here to keep
+# the overlay structure symmetric with staging.
+#
+# CI deploy command for production:
+#
+#   cd k8s/overlays/production
+#   kustomize edit set image \
+#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
+#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
+#   kustomize build . | kubectl apply -f -
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: axiom
+
+resources:
+  - ../../kustomization.yaml

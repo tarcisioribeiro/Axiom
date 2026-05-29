@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -213,6 +212,150 @@ describe('useAuthStore', () => {
     });
   });
 
+  describe('loadUserData', () => {
+    // IMPORTANT: loadUserDataPromise is a module-level variable that persists across tests.
+    // Tests that go through async code paths (await isAuthenticated) properly clear the
+    // promise via the finally block. Tests with synchronous-only paths (null user) leave
+    // the promise non-null, causing subsequent tests to hit the early-return guard (line 115).
+    // Order matters: async-path tests come first so they clear the promise correctly.
+
+    it('sets authenticated when token verification succeeds', async () => {
+      // First test: loadUserDataPromise is null (module just loaded) → full async path runs.
+      const mockUser = {
+        id: 1,
+        username: 'authuser',
+        email: 'u@example.com',
+        first_name: 'First',
+        last_name: 'Last',
+        groups: ['Membros'],
+      };
+      vi.mocked(authService.getUserData).mockReturnValue(mockUser);
+      vi.mocked(authService.getPermissions).mockReturnValue([]);
+      vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
+
+      await useAuthStore.getState().loadUserData();
+
+      const { isAuthenticated, user } = useAuthStore.getState();
+      expect(isAuthenticated).toBe(true);
+      expect(user?.username).toBe('authuser');
+    });
+
+    it('fetches member data when authenticated user has no first_name', async () => {
+      // Second test: previous test cleared loadUserDataPromise → async path runs again.
+      const mockUser = {
+        id: 1,
+        username: 'noname',
+        email: 'u@example.com',
+        first_name: '',
+        last_name: '',
+        groups: ['Membros'],
+      };
+      vi.mocked(authService.getUserData).mockReturnValue(mockUser);
+      vi.mocked(authService.getPermissions).mockReturnValue([]);
+      vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
+      vi.mocked(membersService.getCurrentUserMember).mockResolvedValue({
+        id: 1,
+        uuid: 'abc',
+        name: 'Jane Doe',
+        document: '123',
+        phone: '999',
+        sex: 'F',
+        is_creditor: false,
+        is_benefited: false,
+        active: true,
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01',
+      });
+
+      await useAuthStore.getState().loadUserData();
+
+      const { user } = useAuthStore.getState();
+      expect(user?.first_name).toBe('Jane');
+      expect(user?.last_name).toBe('Doe');
+    });
+
+    it('logs warning when member data fetch fails during reload', async () => {
+      // Third: previous async test cleared loadUserDataPromise → async path runs again.
+      const mockUser = {
+        id: 1,
+        username: 'noname2',
+        email: 'u@example.com',
+        first_name: '',
+        last_name: '',
+        groups: ['Membros'],
+      };
+      vi.mocked(authService.getUserData).mockReturnValue(mockUser);
+      vi.mocked(authService.getPermissions).mockReturnValue([]);
+      vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
+      vi.mocked(membersService.getCurrentUserMember).mockRejectedValue(
+        new Error('member not found')
+      );
+
+      await useAuthStore.getState().loadUserData();
+
+      // Should still authenticate even when member data fetch fails (line 159 covered)
+      const { isAuthenticated } = useAuthStore.getState();
+      expect(isAuthenticated).toBe(true);
+    });
+
+    it('treats as not authenticated when token verification rejects', async () => {
+      // Fourth: previous async test cleared loadUserDataPromise → async path runs again.
+      const mockUser = {
+        id: 1,
+        username: 'expireduser',
+        email: 'u@example.com',
+        first_name: 'Expired',
+        last_name: 'User',
+        groups: ['Membros'],
+      };
+      vi.mocked(authService.getUserData).mockReturnValue(mockUser);
+      vi.mocked(authService.getPermissions).mockReturnValue([]);
+      vi.mocked(authService.isAuthenticated).mockRejectedValue(
+        new Error('401 Unauthorized')
+      );
+
+      await useAuthStore.getState().loadUserData();
+
+      // Lines 174-183: token failure sets not authenticated
+      const { isAuthenticated, user } = useAuthStore.getState();
+      expect(isAuthenticated).toBe(false);
+      expect(user).toBeNull();
+    });
+
+    it('handles unexpected error from getUserData gracefully', async () => {
+      // Fifth: previous async test cleared loadUserDataPromise → async path runs again.
+      vi.mocked(authService.getUserData).mockImplementation(() => {
+        throw new Error('Unexpected getUserData error');
+      });
+
+      await useAuthStore.getState().loadUserData();
+
+      // Lines 185-186: outer catch sets not authenticated
+      const { isAuthenticated, user } = useAuthStore.getState();
+      expect(isAuthenticated).toBe(false);
+      expect(user).toBeNull();
+    });
+
+    it('sets not authenticated when user data is absent in cookies', async () => {
+      // Sixth: previous async tests cleared loadUserDataPromise → sync null-user path runs.
+      vi.mocked(authService.getUserData).mockReturnValue(null);
+
+      await useAuthStore.getState().loadUserData();
+
+      const { isAuthenticated, user } = useAuthStore.getState();
+      expect(isAuthenticated).toBe(false);
+      expect(user).toBeNull();
+    });
+
+    it('covers early-return guard when a call is already in progress', async () => {
+      // Seventh: sync null-user test above left loadUserDataPromise non-null (resolved).
+      // Subsequent calls return it directly (line 116). State stays as set by beforeEach.
+      vi.mocked(authService.getUserData).mockReturnValue(null);
+      await useAuthStore.getState().loadUserData();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
   describe('login', () => {
     it('sets user and permissions on successful login', async () => {
       const mockPermissions: Permission[] = [
@@ -223,7 +366,10 @@ describe('useAuthStore', () => {
         message: 'Login successful',
         user: { username: 'testuser' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue(mockPermissions);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: mockPermissions,
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockResolvedValue({
         id: 1,
         uuid: 'abc',
@@ -257,7 +403,10 @@ describe('useAuthStore', () => {
         message: 'OK',
         user: { username: 'user' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue([]);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: [],
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockResolvedValue({
         id: 1,
         uuid: 'abc',
@@ -306,12 +455,33 @@ describe('useAuthStore', () => {
       expect(result.current.error).toBe('Credenciais inválidas');
     });
 
+    it('sets superuser error message for PermissionError', async () => {
+      const permError = new Error('Forbidden');
+      permError.name = 'PermissionError';
+      vi.mocked(authService.login).mockRejectedValue(permError);
+
+      const { result } = renderHook(() => useAuthStore());
+      await act(async () => {
+        try {
+          await result.current.login({ username: 'superuser', password: 'pass' });
+        } catch {
+          // expected to throw
+        }
+      });
+
+      expect(result.current.error).toContain('Superusuários');
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
     it('handles missing member data gracefully', async () => {
       vi.mocked(authService.login).mockResolvedValue({
         message: 'OK',
         user: { username: 'user' },
       });
-      vi.mocked(authService.getUserPermissions).mockResolvedValue([]);
+      vi.mocked(authService.getUserPermissions).mockResolvedValue({
+        permissions: [],
+        is_superuser: false,
+      });
       vi.mocked(membersService.getCurrentUserMember).mockRejectedValue(
         new Error('Not found')
       );

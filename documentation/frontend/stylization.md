@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza **TailwindCSS** como framework CSS principal, com tema customizado baseado no **Dracula color scheme**, proporcionando uma interface moderna, escura e visualmente agradável.
+O Axiom utiliza **TailwindCSS** como framework CSS principal, com tema customizado baseado no **Dracula color scheme**, proporcionando uma interface moderna, escura e visualmente agradável.
 
 ## Stack de Estilização
 

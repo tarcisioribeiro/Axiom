@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: namespace
+    environment: staging

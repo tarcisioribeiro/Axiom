@@ -547,7 +547,7 @@ GET /api/v1/expenses/?page=2
 ```json
 {
   "count": 150,
-  "next": "http://localhost:8002/api/v1/expenses/?page=2",
+  "next": "http://localhost:39100/api/v1/expenses/?page=2",
   "previous": null,
   "results": [...]
 }

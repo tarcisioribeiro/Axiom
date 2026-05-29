@@ -10,9 +10,11 @@ WORKDIR /app
 ARG VITE_API_BASE_URL=http://localhost:39100
 ARG VITE_API_PORT=39100
 ARG VITE_SENTRY_DSN=""
+ARG VITE_APP_ENV=development
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_API_PORT=${VITE_API_PORT}
 ENV VITE_SENTRY_DSN=${VITE_SENTRY_DSN}
+ENV VITE_APP_ENV=${VITE_APP_ENV}
 
 # Copy package files first (for layer caching)
 COPY package*.json ./
@@ -40,6 +42,10 @@ RUN npm run build
 # Stage 2: Production with nginx
 FROM nginx:alpine
 
+# Upgrade OS packages and install curl for healthcheck
+RUN apk upgrade --no-cache && apk add --no-cache curl
+
+
 # Create non-root user for nginx
 RUN addgroup -g 1000 appuser && \
     adduser -D -u 1000 -G appuser appuser && \
@@ -50,8 +56,8 @@ RUN addgroup -g 1000 appuser && \
     chown -R appuser:appuser /var/run/nginx.pid && \
     chown -R appuser:appuser /usr/share/nginx/html
 
-# Copy built assets from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy built assets from builder (--chown ensures files are owned by appuser, not root)
+COPY --chown=appuser:appuser --from=builder /app/dist /usr/share/nginx/html
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -61,6 +67,9 @@ USER appuser
 
 # Expose port 80
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:${NGINX_PORT:-80}/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

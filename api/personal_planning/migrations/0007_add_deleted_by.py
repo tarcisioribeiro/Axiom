@@ -8,29 +8,57 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('personal_planning', '0006_add_icon_field'),
+        ("personal_planning", "0006_add_icon_field"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='routinetask',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='routinetask_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="routinetask",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="routinetask_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='goal',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='goal_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="goal",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="goal_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='dailyreflection',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='dailyreflection_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="dailyreflection",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="dailyreflection_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='taskinstance',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='taskinstance_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="taskinstance",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="taskinstance_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
     ]

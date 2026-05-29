@@ -22,6 +22,7 @@ CURRENT_MONTH=$(date +%m)
 # Create media directories with year/month structure for current date
 mkdir -p /app/media/security/archives/${CURRENT_YEAR}/${CURRENT_MONTH} 2>/dev/null || true
 mkdir -p /app/media/loans 2>/dev/null || true
+mkdir -p /app/media/vault_snapshots 2>/dev/null || true
 mkdir -p /app/logs 2>/dev/null || true
 mkdir -p /app/staticfiles 2>/dev/null || true
 
@@ -53,8 +54,9 @@ END
 \$\$;
 EOF
 
-python manage.py makemigrations
-python manage.py migrate
+echo "🔍 Verificando migrações pendentes (schema drift check)..."
+python manage.py makemigrations --check --dry-run
+python manage.py migrate --fake-initial
 
 # Collectstatic - tenta com --clear primeiro para evitar problemas de permissão
 # Se falhar, tenta sem --clear, e se ainda falhar, continua sem arquivos estáticos
@@ -73,5 +75,15 @@ python createsuperuser.py
 echo "🔧 Configurando grupos e permissões do sistema..."
 python setup_members.py
 
-echo "🚀 Iniciando servidor Django..."
-python manage.py runserver 0.0.0.0:${API_PORT:-39100}
+if [ "$#" -gt 0 ]; then
+  echo "🚀 Iniciando: $*"
+  exec "$@"
+else
+  echo "🚀 Iniciando servidor com Gunicorn..."
+  exec gunicorn app.wsgi:application \
+    --bind 0.0.0.0:${API_PORT:-39100} \
+    --workers ${GUNICORN_WORKERS:-4} \
+    --timeout ${GUNICORN_TIMEOUT:-120} \
+    --access-logfile - \
+    --error-logfile -
+fi

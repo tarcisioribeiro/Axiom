@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { useBreadcrumb } from '@/hooks/use-breadcrumb';
@@ -16,7 +16,7 @@ interface BreadcrumbProps {
  *
  * @example
  * ```tsx
- * <Breadcrumb className="my-4" />
+ * <Breadcrumb className="my-md" />
  * ```
  */
 export function Breadcrumb({ className }: BreadcrumbProps) {
@@ -29,20 +29,20 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
   return (
     <nav aria-label="Breadcrumb" className={cn('flex items-center', className)}>
       {/* Versão desktop - todos os items */}
-      <ol className="hidden items-center gap-1 text-sm md:flex">
+      <ol className="hidden items-center gap-xs text-sm md:flex">
         {breadcrumbs.map((item, index) => {
           const isLast = index === breadcrumbs.length - 1;
           const Icon = item.icon;
 
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-1">
+            <li key={`${item.label}-${index}`} className="flex items-center gap-xs">
               {index > 0 && (
                 <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
               )}
               {item.href && !isLast ? (
                 <Link
                   to={item.href}
-                  className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex items-center gap-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {Icon && <Icon className="h-4 w-4" />}
                   <span>{item.label}</span>
@@ -50,7 +50,7 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
               ) : (
                 <span
                   className={cn(
-                    'flex items-center gap-1.5',
+                    'flex items-center gap-sm',
                     isLast ? 'font-medium text-foreground' : 'text-muted-foreground'
                   )}
                   aria-current={isLast ? 'page' : undefined}
@@ -65,15 +65,15 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
       </ol>
 
       {/* Versão mobile - apenas item atual */}
-      <div className="flex items-center gap-2 text-sm md:hidden">
+      <div className="flex items-center gap-sm text-sm md:hidden">
         {breadcrumbs.length > 1 && (
           <>
             <Link
-              to="/"
+              to={breadcrumbs[breadcrumbs.length - 2].href ?? '/'}
               className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Voltar ao início"
+              aria-label={`Voltar para ${breadcrumbs[breadcrumbs.length - 2].label}`}
             >
-              <ChevronRight className="h-4 w-4 rotate-180" />
+              <ChevronLeft className="h-4 w-4" />
             </Link>
             <span className="font-medium text-foreground">
               {breadcrumbs[breadcrumbs.length - 1].label}

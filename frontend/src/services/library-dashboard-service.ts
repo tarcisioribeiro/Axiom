@@ -65,6 +65,73 @@ export interface LibraryDashboardStats {
     rating_range: string;
     count: number;
   }>;
+  // Issue #18 — advanced reading statistics
+  avg_speed_pages_per_hour: number;
+  current_reading_book: {
+    title: string;
+    total_pages: number;
+    pages_read: number;
+    remaining_pages: number;
+    estimated_days_to_finish: number | null;
+  } | null;
+  current_reading_books: Array<{
+    title: string;
+    total_pages: number;
+    pages_read: number;
+    remaining_pages: number;
+    estimated_days_to_finish: number | null;
+  }>;
+  monthly_comparison: {
+    current_month: {
+      year: number;
+      month: number;
+      pages_read: number;
+      reading_time_hours: number;
+      books_completed: number;
+    };
+    previous_month: {
+      year: number;
+      month: number;
+      pages_read: number;
+      reading_time_hours: number;
+      books_completed: number;
+    };
+    changes: {
+      pages_read: number | null;
+      reading_time_hours: number | null;
+      books_completed: number | null;
+    };
+  };
+  top_genres_by_time: Array<{
+    genre: string;
+    genre_display: string;
+    total_time_hours: number;
+    total_pages: number;
+  }>;
+  total_sessions: number;
+  avg_pages_per_session: number;
+  longest_session_pages: number;
+  most_productive_day: {
+    weekday: number;
+    weekday_display: string;
+    total_pages: number;
+    session_count: number;
+  } | null;
+  reading_streak: {
+    current_streak: number;
+    longest_streak: number;
+  };
+  books_by_literary_type: Array<{
+    literarytype: string;
+    literary_type_display: string;
+    count: number;
+  }>;
+  reading_by_time_of_day: Array<{
+    time_of_day: string;
+    time_of_day_display: string;
+    session_count: number;
+    total_pages: number;
+  }>;
 }
 
 class LibraryDashboardService {

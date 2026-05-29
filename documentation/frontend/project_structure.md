@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O frontend do MindLedger é uma aplicação React + TypeScript moderna, utilizando Vite como bundler e seguindo uma arquitetura modular e escalável.
+O frontend do Axiom é uma aplicação React + TypeScript moderna, utilizando Vite como bundler e seguindo uma arquitetura modular e escalável.
 
 ## Estrutura de Diretórios
 
@@ -268,7 +268,7 @@ Configurações centralizadas da aplicação:
 ### constants.ts
 ```typescript
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
   ENDPOINTS: {
     LOGIN: '/api/v1/authentication/login/',
     LOGOUT: '/api/v1/authentication/logout/',

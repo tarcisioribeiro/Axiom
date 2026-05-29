@@ -1,0 +1,67 @@
+# =============================================================================
+# Axiom — Kustomize production configuration
+# =============================================================================
+#
+# Kustomize handles versioned image tags so that `:latest` is never deployed
+# to production. The CI deploy job updates the image tags before applying:
+#
+#   cd k8s
+#   kustomize edit set image \
+#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
+#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
+#   kustomize build . | kubectl apply -f -
+#
+# Secrets and domain-specific config still require envsubst before applying:
+#   envsubst < k8s/base/secrets.yaml     | kubectl apply -f -
+#   envsubst < k8s/base/configmap.yaml   | kubectl apply -f -
+#   envsubst < k8s/ingress.yaml          | kubectl apply -f -
+#
+# Required environment variables:
+#   AXIOM_DOMAIN       Your production domain, e.g. axiom.example.com
+#   LETSENCRYPT_EMAIL       Email for Let's Encrypt certificate notifications
+#   DB_NAME, DB_USER, DB_PASSWORD, SECRET_KEY, ENCRYPTION_KEY, ...
+#   (see k8s/base/secrets.yaml for the full list)
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: axiom
+
+resources:
+  - base/namespace.yaml
+  - postgres/configmap.yaml
+  - postgres/pvc.yaml
+  - postgres/deployment.yaml
+  - postgres/service.yaml
+  - redis/pvc.yaml
+  - redis/deployment.yaml
+  - redis/service.yaml
+  - minio/pvc.yaml
+  - minio/deployment.yaml
+  - minio/service.yaml
+  - minio/ingress.yaml
+  - api/pvc.yaml
+  - api/deployment-blue.yaml
+  - api/deployment-green.yaml
+  - api/service.yaml
+  - frontend/configmap-nginx.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - ollama/pvc.yaml
+  - ollama/deployment.yaml
+  - ollama/service.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - backup-cronjob.yaml
+  - serviceaccounts.yaml
+  - network-policy.yaml
+  - resource-quota.yaml
+
+# Image transformer — CI overrides these tags with $CI_COMMIT_SHORT_SHA before apply.
+# The `name` field is matched against the image reference in each manifest;
+# `newTag` is the fallback used for local dry-run validation.
+images:
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/api
+    newTag: latest
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/frontend
+    newTag: latest

@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este documento detalha os modelos de dados do MindLedger, incluindo campos, relacionamentos, validações e métodos especiais.
+Este documento detalha os modelos de dados do Axiom, incluindo campos, relacionamentos, validações e métodos especiais.
 
 ## BaseModel (Modelo Abstrato)
 

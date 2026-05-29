@@ -1,14 +1,26 @@
-import { Plus, Pencil, Trash2, TrendingUp, Filter, ChevronDown } from 'lucide-react';
-import { useState, useEffect } from 'react';
+/* eslint-disable max-lines */
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  TrendingUp,
+  Download,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { DataTable, type Column } from '@/components/common/DataTable';
+import { DataTable } from '@/components/common/DataTable';
+import { ExportModal } from '@/components/common/ExportModal';
+import { FilterBar } from '@/components/common/FilterBar';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { SearchInput } from '@/components/common/SearchInput';
 import { ReceiptButton } from '@/components/receipts';
 import { RevenueForm } from '@/components/revenues/RevenueForm';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
@@ -17,8 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -27,401 +37,271 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TRANSLATIONS, translate } from '@/config/constants';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useToast } from '@/hooks/use-toast';
-import { formatCurrency, formatDateTime } from '@/lib/formatters';
-import { sumByProperty } from '@/lib/helpers';
+import { useRevenuesPage } from '@/hooks/use-revenues-page';
+import { formatCurrency } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { accountsService } from '@/services/accounts-service';
-import { loansService } from '@/services/loans-service';
-import { revenuesService } from '@/services/revenues-service';
 import { useAuthStore } from '@/stores/auth-store';
-import type { Revenue, RevenueFormData, Account, Loan } from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
 
-export default function Revenues() {
-  const [revenues, setRevenues] = useState<Revenue[]>([]);
-  const [filteredRevenues, setFilteredRevenues] = useState<Revenue[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loans, setLoans] = useState<Loan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedRevenue, setSelectedRevenue] = useState<Revenue | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [selectedAccounts, setSelectedAccounts] = useState<number[]>([]);
-  const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
+function EmbeddedWrapper({ children }: { children: ReactNode }) {
+  return <div className="space-y-lg">{children}</div>;
+}
+
+export default function Revenues({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
-
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  useEffect(() => {
-    filterRevenues();
-  }, [
-    searchTerm,
-    categoryFilter,
-    statusFilter,
-    startDate,
-    endDate,
-    selectedAccounts,
+  const {
     revenues,
-  ]);
+    accounts,
+    loans,
+    isLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedRevenue,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    isExportModalOpen,
+    setIsExportModalOpen,
+    clearFilters,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+    handleExport,
+    totalRevenues,
+    hasActiveFilters,
+    columns,
+    prefillRevenueData,
+  } = useRevenuesPage();
 
-  const filterRevenues = () => {
-    let filtered = [...revenues];
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (r) =>
-          r.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          r.source?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter((r) => r.category === categoryFilter);
-    }
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((r) =>
-        statusFilter === 'received' ? r.received : !r.received
-      );
-    }
-    if (startDate) {
-      filtered = filtered.filter((r) => new Date(r.date) >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter((r) => new Date(r.date) <= endDate);
-    }
-    if (selectedAccounts.length > 0) {
-      filtered = filtered.filter((r) => selectedAccounts.includes(r.account));
-    }
-    setFilteredRevenues(filtered);
-  };
+  const BREAKDOWN_COLORS = [
+    'bg-success',
+    'bg-primary',
+    'bg-info',
+    'bg-warning',
+    'bg-accent',
+    'bg-destructive',
+  ] as const;
 
-  const toggleAccount = (accountId: number) => {
-    setSelectedAccounts((prev) =>
-      prev.includes(accountId)
-        ? prev.filter((id) => id !== accountId)
-        : [...prev, accountId]
+  const { receivedCount, receivedAmount, pendingCount, pendingAmount } = useMemo(() => {
+    const filtered = revenues.filter(
+      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
     );
-  };
+    const received = filtered.filter((r) => r.received);
+    const pending = filtered.filter((r) => !r.received);
+    return {
+      receivedCount: received.length,
+      receivedAmount: received.reduce((s, r) => s + parseFloat(r.value), 0),
+      pendingCount: pending.length,
+      pendingAmount: pending.reduce((s, r) => s + parseFloat(r.value), 0),
+    };
+  }, [revenues]);
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCategoryFilter('all');
-    setStatusFilter('all');
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setSelectedAccounts([]);
-  };
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [revenuesData, accountsData, loansData] = await Promise.all([
-        revenuesService.getAll(),
-        accountsService.getAll(),
-        loansService.getAll(),
-      ]);
-      setRevenues(revenuesData);
-      setFilteredRevenues(revenuesData);
-      setAccounts(accountsData);
-      setLoans(Array.isArray(loansData) ? loansData : []);
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao carregar dados',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const r of revenues.filter(
+      (r) => !r.related_transfer && !r.is_transfer_generated && !r.is_initial_balance
+    )) {
+      groups[r.category] = (groups[r.category] ?? 0) + parseFloat(r.value);
     }
-  };
+    const total = Object.values(groups).reduce((s, v) => s + v, 0);
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: total > 0 ? (amount / total) * 100 : 0,
+      }));
+  }, [revenues]);
 
-  const handleSubmit = async (data: RevenueFormData) => {
-    try {
-      setIsSubmitting(true);
-      if (selectedRevenue) {
-        await revenuesService.update(selectedRevenue.id, data);
-        toast({
-          title: 'Receita atualizada',
-          description: 'A receita foi atualizada com sucesso.',
-        });
-      } else {
-        await revenuesService.create(data);
-        toast({
-          title: 'Receita criada',
-          description: 'A receita foi criada com sucesso.',
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao salvar',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCreate = () => {
-    if (accounts.length === 0) {
-      toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos uma conta cadastrada antes de criar uma receita.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setSelectedRevenue(undefined);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (id: number) => {
-    const confirmed = await showConfirm({
-      title: 'Excluir receita',
-      description:
-        'Tem certeza que deseja excluir esta receita? Esta ação não pode ser desfeita.',
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
-      variant: 'destructive',
-    });
-    if (!confirmed) return;
-    try {
-      await revenuesService.delete(id);
-      toast({
-        title: 'Receita excluída',
-        description: 'A receita foi excluída com sucesso.',
-      });
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao excluir',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const totalRevenues = sumByProperty(
-    filteredRevenues.map((r) => ({ value: parseFloat(r.value) })),
-    'value'
-  );
-
-  const handleEdit = (revenue: Revenue) => {
-    setSelectedRevenue(revenue);
-    setIsDialogOpen(true);
-  };
-
-  // Definir colunas da tabela
-  const columns: Column<Revenue>[] = [
-    {
-      key: 'description',
-      label: 'Descrição',
-      render: (revenue) => (
-        <div>
-          <div className="font-medium">{revenue.description}</div>
-          {revenue.source && <div className="text-xs">Origem: {revenue.source}</div>}
-        </div>
-      ),
-    },
-    {
-      key: 'value',
-      label: 'Valor',
-      align: 'right',
-      render: (revenue) => (
-        <span className="font-semibold text-success">
-          {formatCurrency(revenue.value)}
-        </span>
-      ),
-    },
-    {
-      key: 'account',
-      label: 'Conta',
-      render: (revenue) => (
-        <span className="text-sm">{revenue.account_name || 'N/A'}</span>
-      ),
-    },
-    {
-      key: 'category',
-      label: 'Categoria',
-      render: (revenue) => (
-        <Badge variant="success">
-          {translate('revenueCategories', revenue.category)}
-        </Badge>
-      ),
-    },
-    {
-      key: 'received',
-      label: 'Status',
-      render: (revenue) => (
-        <Badge variant={revenue.received ? 'success' : 'destructive'}>
-          {revenue.received ? 'Recebido' : 'Pendente'}
-        </Badge>
-      ),
-    },
-    {
-      key: 'date',
-      label: 'Data',
-      render: (revenue) => (
-        <div>
-          <div className="text-sm">{formatDateTime(revenue.date, revenue.horary)}</div>
-          {revenue.member_name && (
-            <div className="text-xs">Membro: {revenue.member_name}</div>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const Wrapper = embedded ? EmbeddedWrapper : PageContainer;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Receitas"
-        icon={<TrendingUp />}
-        action={{
-          label: 'Nova Receita',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+    <Wrapper>
+      <PageHeader title={t('pages.revenues.title')} icon={<TrendingUp />}>
+        <div className="flex items-center gap-sm">
+          <Button
+            variant="outline"
+            onClick={() => setIsExportModalOpen(true)}
+            className="gap-sm"
+          >
+            <Download className="h-4 w-4" />
+            {t('common.actions.export')}
+          </Button>
+          <Button onClick={handleCreate} className="gap-sm">
+            <Plus className="h-4 w-4" />
+            {t('pages.revenues.newBtn')}
+          </Button>
+        </div>
+      </PageHeader>
 
-      <div className="space-y-4 rounded-lg border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
-          </div>
-          {(searchTerm ||
-            categoryFilter !== 'all' ||
-            statusFilter !== 'all' ||
-            startDate ||
-            endDate ||
-            selectedAccounts.length > 0) && (
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Limpar Filtros
-            </Button>
-          )}
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Input
-            placeholder="Buscar por descrição ou origem..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+        <SearchInput
+          placeholder={t('pages.revenues.searchPlaceholder')}
+          value={searchTerm}
+          onValueChange={setSearchTerm}
+          className="w-44 flex-none"
+        />
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder={t('pages.revenues.allCategories')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
+            {Object.keys(TRANSLATIONS.revenueCategories).map((k) => (
+              <SelectItem key={k} value={k}>
+                {translate('revenueCategories', k)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder={t('pages.revenues.allStatus')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('pages.revenues.allStatus')}</SelectItem>
+            <SelectItem value="received">
+              {t('pages.revenues.stats.received')}
+            </SelectItem>
+            <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex items-center gap-xs">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.revenues.dateFrom')}
+          </span>
+          <DatePicker
+            value={startDate}
+            onChange={setStartDate}
+            placeholder={t('pages.revenues.dateFrom')}
+            clearable
           />
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas Categorias</SelectItem>
-              {Object.entries(TRANSLATIONS.revenueCategories).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos Status</SelectItem>
-              <SelectItem value="received">Recebido</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="space-y-1">
-            <span className="text-sm">Data Inicial</span>
-            <DatePicker
-              value={startDate}
-              onChange={setStartDate}
-              placeholder="De..."
-              clearable
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm">Data Final</span>
-            <DatePicker
-              value={endDate}
-              onChange={setEndDate}
-              placeholder="Até..."
-              clearable
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm">Contas</span>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {selectedAccounts.length === 0
-                    ? 'Todas as Contas'
-                    : `${selectedAccounts.length} conta(s) selecionada(s)`}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-2">
-                <div className="max-h-60 space-y-2 overflow-y-auto">
-                  {accounts.map((account) => (
-                    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-                    <div
-                      key={account.id}
-                      className="flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-accent"
-                      onClick={() => toggleAccount(account.id)}
-                    >
-                      <Checkbox
-                        checked={selectedAccounts.includes(account.id)}
-                        onCheckedChange={() => toggleAccount(account.id)}
-                      />
-                      <span className="text-sm">{account.account_name}</span>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <div className="flex items-center justify-between border-t pt-2">
-          <span className="text-sm">
-            {filteredRevenues.length} receita(s) encontrada(s)
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
+            {t('pages.revenues.dateTo')}
           </span>
-          <span className="text-lg font-bold text-success">
-            Total: {formatCurrency(totalRevenues)}
-          </span>
+          <DatePicker
+            value={endDate}
+            onChange={setEndDate}
+            placeholder={t('pages.revenues.dateTo')}
+            clearable
+          />
         </div>
+      </FilterBar>
+
+      <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">
+              {t('pages.revenues.stats.totalAmount')}
+            </p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <TrendingUp className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">
+              {formatCurrency(totalRevenues)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.revenues.entriesCount', { count: revenues.length })}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-primary/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.revenues.stats.received')}</p>
+            <div className="rounded-lg bg-primary/10 p-sm ring-1 ring-primary/20">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{receivedCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(receivedAmount)}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.revenues.stats.pending')}</p>
+            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-warning">{pendingCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {formatCurrency(pendingAmount)}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Por categoria
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'revenue')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
+          </div>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${BREAKDOWN_COLORS[i % BREAKDOWN_COLORS.length]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'revenue')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <DataTable
-        data={filteredRevenues}
+        data={revenues}
         columns={columns}
         keyExtractor={(revenue) => revenue.id}
         isLoading={isLoading}
         emptyState={{
-          message: 'Nenhuma receita cadastrada.',
+          icon: <TrendingUp className="h-12 w-12 text-muted-foreground" />,
+          message: t('pages.revenues.emptyState'),
         }}
         actions={(revenue) => (
-          <div className="flex items-center justify-end gap-2">
-            <ReceiptButton
-              source={{ type: 'revenue', data: revenue }}
-              memberName={getMemberDisplayName(revenue.member_name, user)}
-            />
+          <div className="flex items-center justify-end gap-sm">
+            {revenue.received && (
+              <ReceiptButton
+                source={{ type: 'revenue', data: revenue }}
+                memberName={getMemberDisplayName(revenue.member_name, user)}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => handleEdit(revenue)}
-              aria-label="Editar"
+              aria-label={t('common.actions.edit')}
+              title={t('common.actions.edit')}
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
             </Button>
@@ -429,7 +309,8 @@ export default function Revenues() {
               variant="ghost"
               size="icon"
               onClick={() => handleDelete(revenue.id)}
-              aria-label="Excluir"
+              aria-label={t('common.actions.delete')}
+              title={t('common.actions.delete')}
             >
               <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
             </Button>
@@ -437,20 +318,33 @@ export default function Revenues() {
         )}
       />
 
+      <ExportModal
+        open={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        title={t('pages.revenues.exportTitle')}
+        description={t('pages.revenues.exportDesc')}
+        onExport={handleExport}
+        initialDateFrom={startDate}
+        initialDateTo={endDate}
+      />
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedRevenue ? 'Editar Receita' : 'Nova Receita'}
+              {selectedRevenue
+                ? t('pages.revenues.editTitle')
+                : t('pages.revenues.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedRevenue
-                ? 'Atualize as informações da receita'
-                : 'Adicione uma nova receita ao sistema'}
+                ? t('pages.revenues.editDesc')
+                : t('pages.revenues.newDesc')}
             </DialogDescription>
           </DialogHeader>
           <RevenueForm
             revenue={selectedRevenue}
+            prefillData={!selectedRevenue ? prefillRevenueData : undefined}
             accounts={accounts}
             loans={loans}
             onSubmit={handleSubmit}
@@ -459,6 +353,6 @@ export default function Revenues() {
           />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+    </Wrapper>
   );
 }

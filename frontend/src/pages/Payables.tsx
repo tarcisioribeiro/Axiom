@@ -1,15 +1,33 @@
-import { Plus, Pencil, Trash2, Loader2, Receipt } from 'lucide-react';
-import { useState, useEffect } from 'react';
+/* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Receipt,
+  CreditCard,
+  List,
+  CheckCircle2,
+  AlertTriangle,
+  Banknote,
+  Clock,
+} from 'lucide-react';
+import { useState, useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
+import { FilterBar } from '@/components/common/FilterBar';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { PayableForm } from '@/components/payables/PayableForm';
+import { PayableInstallmentsDialog } from '@/components/payables/PayableInstallmentsDialog';
+import { PayablePaymentDialog } from '@/components/payables/PayablePaymentDialog';
 import { ReceiptButton } from '@/components/receipts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -17,236 +35,175 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { translate } from '@/config/constants';
-import { useAlertDialog } from '@/hooks/use-alert-dialog';
-import { useToast } from '@/hooks/use-toast';
+import { usePayablesPage } from '@/hooks/use-payables-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
-import { formatLocalDate } from '@/lib/utils';
-import { membersService } from '@/services/members-service';
-import { payablesService } from '@/services/payables-service';
+import { cn } from '@/lib/utils';
+import { accountsService } from '@/services/accounts-service';
+import { payableInstallmentsService } from '@/services/payable-installments-service';
 import { useAuthStore } from '@/stores/auth-store';
-import type { Payable, PayableFormData, Member } from '@/types';
-import { getErrorMessage } from '@/utils/error-utils';
+import type { Payable, PayableInstallment } from '@/types';
 
-const EXPENSE_CATEGORIES = [
-  'food and drink',
-  'bills and services',
-  'electronics',
-  'family and friends',
-  'pets',
-  'digital signs',
-  'house',
-  'purchases',
-  'donate',
-  'education',
-  'loans',
-  'entertainment',
-  'taxes',
-  'investments',
-  'others',
-  'vestuary',
-  'health and care',
-  'professional services',
-  'supermarket',
-  'rates',
-  'transport',
-  'travels',
-];
+const STATUS_VARIANTS: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  active: 'default',
+  paid: 'secondary',
+  overdue: 'destructive',
+  cancelled: 'outline',
+};
 
-const PAYABLE_STATUSES = ['active', 'paid', 'overdue', 'cancelled'];
-
-export default function Payables() {
-  const [payables, setPayables] = useState<Payable[]>([]);
-  const [currentUserMember, setCurrentUserMember] = useState<Member | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedPayable, setSelectedPayable] = useState<Payable | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
-  const { showConfirm } = useAlertDialog();
+export default function Payables({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
+  const {
+    payables,
+    isLoading: payablesLoading,
+    isDialogOpen,
+    setIsDialogOpen,
+    selectedPayable,
+    isSubmitting,
+    searchTerm,
+    setSearchTerm,
+    filteredPayables,
+    handleCreate,
+    handleEdit,
+    handleDelete,
+    handleSubmit,
+  } = usePayablesPage();
 
-  const [formData, setFormData] = useState<PayableFormData>({
-    description: '',
-    value: 0,
-    paid_value: 0,
-    date: formatLocalDate(new Date()),
-    category: 'others',
-    status: 'active',
+  const { data: accounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => accountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    select: (data) => (Array.isArray(data) ? data : []),
   });
 
-  useEffect(() => {
-    void loadData();
-  }, []);
+  const isLoading = payablesLoading || accountsLoading;
 
-  const loadData = async () => {
+  const [paymentPayable, setPaymentPayable] = useState<Payable | null>(null);
+
+  const [installmentsPayable, setInstallmentsPayable] = useState<Payable | null>(null);
+  const [installments, setInstallments] = useState<PayableInstallment[]>([]);
+  const [isLoadingInstallments, setIsLoadingInstallments] = useState(false);
+
+  const handleOpenInstallments = async (payable: Payable) => {
+    setInstallmentsPayable(payable);
+    setIsLoadingInstallments(true);
     try {
-      setIsLoading(true);
-      const [payablesData, memberData] = await Promise.all([
-        payablesService.getAll(),
-        membersService.getCurrentUserMember(),
-      ]);
-      setPayables(Array.isArray(payablesData) ? payablesData : []);
-      setCurrentUserMember(memberData);
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao carregar dados',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-      setPayables([]);
-      setCurrentUserMember(null);
+      const data = await payableInstallmentsService.getByPayable(payable.id);
+      setInstallments(data);
+    } catch {
+      setInstallments([]);
     } finally {
-      setIsLoading(false);
+      setIsLoadingInstallments(false);
     }
   };
 
-  const handleCreate = () => {
-    setSelectedPayable(undefined);
-    setFormData({
-      description: '',
-      value: 0,
-      paid_value: 0,
-      date: formatLocalDate(new Date()),
-      category: 'others',
-      status: 'active',
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleEdit = (payable: Payable) => {
-    setSelectedPayable(payable);
-    setFormData({
-      description: payable.description,
-      value: parseFloat(payable.value),
-      paid_value: parseFloat(payable.paid_value),
-      date: payable.date,
-      due_date: payable.due_date,
-      category: payable.category,
-      notes: payable.notes,
-      status: payable.status,
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (payable: Payable) => {
-    const confirmed = await showConfirm({
-      title: 'Confirmar exclusão',
-      description: `Tem certeza que deseja excluir o valor a pagar "${payable.description}"?`,
-    });
-
-    if (confirmed) {
-      try {
-        await payablesService.delete(payable.id);
-        toast({
-          title: 'Valor a pagar excluído',
-          description: 'O valor a pagar foi excluído com sucesso.',
-        });
-        void loadData();
-      } catch (error: unknown) {
-        toast({
-          title: 'Erro ao excluir',
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const dataToSend = {
-        ...formData,
-        member: currentUserMember?.id ?? null,
-      };
-
-      if (selectedPayable) {
-        await payablesService.update(selectedPayable.id, dataToSend);
-        toast({
-          title: 'Valor a pagar atualizado',
-          description: 'O valor a pagar foi atualizado com sucesso.',
-        });
-      } else {
-        await payablesService.create(dataToSend);
-        toast({
-          title: 'Valor a pagar criado',
-          description: 'O valor a pagar foi criado com sucesso.',
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: 'Erro ao salvar',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const filteredPayables = payables.filter(
-    (payable) =>
-      payable.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payable.member_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<
-      string,
-      'default' | 'secondary' | 'destructive' | 'outline'
-    > = {
-      active: 'default',
-      paid: 'secondary',
-      overdue: 'destructive',
-      cancelled: 'outline',
+  const { activeCount, overdueCount, paidCount, totalValue } = useMemo(() => {
+    const active = payables.filter((p) => p.status === 'active');
+    const overdue = payables.filter((p) => p.status === 'overdue');
+    const paid = payables.filter((p) => p.status === 'paid');
+    const total = payables.reduce((s, p) => s + parseFloat(p.value), 0);
+    return {
+      activeCount: active.length,
+      overdueCount: overdue.length,
+      paidCount: paid.length,
+      totalValue: total,
     };
-    return (
-      <Badge variant={variants[status] || 'default'}>
-        {translate('payableStatus', status)}
-      </Badge>
-    );
-  };
+  }, [payables]);
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
+  if (isLoading) return <LoadingState />;
+
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Valores a Pagar"
-        icon={<Receipt />}
-        action={{
-          label: 'Novo Valor a Pagar',
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-        }}
-      />
+    <Wrapper>
+      <PageHeader title={t('pages.payables.title')} icon={<Receipt />}>
+        <Button onClick={handleCreate} className="gap-sm">
+          <Plus className="h-4 w-4" />
+          {t('pages.payables.newBtn')}
+        </Button>
+      </PageHeader>
 
-      <div className="flex gap-4">
+      <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
         <SearchInput
-          placeholder="Buscar valores a pagar..."
+          placeholder={t('pages.payables.searchPlaceholder')}
           value={searchTerm}
           onValueChange={setSearchTerm}
-          className="max-w-sm"
+          className="w-52 sm:w-64"
         />
+      </FilterBar>
+
+      <div className="grid grid-cols-2 gap-md lg:grid-cols-4">
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.payables.stats.total')}</p>
+            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+              <Banknote className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {formatCurrency(totalValue)}
+            </div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.totalSubtitle')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.payables.stats.active')}</p>
+            <div className="rounded-lg bg-warning/10 p-sm ring-1 ring-warning/20">
+              <Clock className="h-4 w-4 text-warning" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-warning">{activeCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.activeSubtitle')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.payables.stats.overdue')}</p>
+            <div className="rounded-lg bg-destructive/10 p-sm ring-1 ring-destructive/20">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">{overdueCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.overdueSubtitle')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
+            <p className="text-sm font-medium">{t('pages.payables.stats.paid')}</p>
+            <div className="rounded-lg bg-success/10 p-sm ring-1 ring-success/20">
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-success">{paidCount}</div>
+            <p className="mt-xs text-xs text-muted-foreground">
+              {t('pages.payables.stats.paidSubtitle')}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {filteredPayables.length === 0 ? (
@@ -254,258 +211,239 @@ export default function Payables() {
           icon={<Receipt className="h-12 w-12 text-muted-foreground" />}
           message={
             searchTerm
-              ? 'Nenhum valor a pagar encontrado para a pesquisa atual.'
-              : 'Nenhum valor a pagar cadastrado. Clique em "Novo Pagamento" para começar.'
+              ? t('pages.payables.emptySearch')
+              : t('pages.payables.emptyState')
           }
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredPayables.map((payable) => (
-            <div
-              key={payable.id}
-              className="space-y-3 rounded-lg border bg-card p-4 transition-shadow hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-semibold">{payable.description}</h3>
-                  <p className="text-sm">
-                    {translate('expenseCategories', payable.category)}
-                  </p>
+        <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
+          {filteredPayables.map((payable) => {
+            const getDueBadge = () => {
+              if (payable.status === 'overdue') {
+                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
+              }
+              if (payable.status === 'paid') return null;
+              if (!payable.due_date) return null;
+              const days = Math.ceil(
+                (new Date(payable.due_date).getTime() - Date.now()) / 86400000
+              );
+              if (days < 0)
+                return { label: 'Vencido', cls: 'bg-destructive/10 text-destructive' };
+              if (days === 0)
+                return {
+                  label: 'Vence hoje',
+                  cls: 'bg-destructive/10 text-destructive',
+                };
+              if (days <= 7)
+                return { label: `${days}d`, cls: 'bg-warning/10 text-warning' };
+              return null;
+            };
+            const dueBadge = getDueBadge();
+            const urgencyClass =
+              payable.status === 'overdue'
+                ? 'border-l-4 border-l-destructive'
+                : payable.status === 'paid'
+                  ? 'border-l-4 border-l-success'
+                  : payable.status === 'cancelled'
+                    ? 'border-l-4 border-l-muted-foreground'
+                    : (() => {
+                        if (!payable.due_date) return 'border-l-4 border-l-warning';
+                        const d = Math.ceil(
+                          (new Date(payable.due_date).getTime() - Date.now()) / 86400000
+                        );
+                        if (d <= 0) return 'border-l-4 border-l-destructive';
+                        if (d <= 7) return 'border-l-4 border-l-warning';
+                        return 'border-l-4 border-l-info';
+                      })();
+            return (
+              <div
+                key={payable.id}
+                className={cn(
+                  'space-y-3 rounded-lg border bg-card p-md transition-shadow hover:shadow-md',
+                  urgencyClass
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-sm">
+                      <h3 className="font-semibold">{payable.description}</h3>
+                      {dueBadge && (
+                        <span
+                          className={cn(
+                            'rounded-full px-xs py-0.5 text-xs font-medium',
+                            dueBadge.cls
+                          )}
+                        >
+                          {dueBadge.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {translate('expenseCategories', payable.category)}
+                    </p>
+                  </div>
+                  <Badge variant={STATUS_VARIANTS[payable.status] ?? 'default'}>
+                    {translate('payableStatus', payable.status)}
+                  </Badge>
                 </div>
-                {getStatusBadge(payable.status)}
-              </div>
 
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Valor Total:</span>
-                  <span className="font-medium">{formatCurrency(payable.value)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Valor Pago:</span>
-                  <span className="font-medium">
-                    {formatCurrency(payable.paid_value)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Saldo Restante:</span>
-                  <span className="font-medium text-destructive">
-                    {formatCurrency(
-                      parseFloat(payable.value) - parseFloat(payable.paid_value)
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Data de Registro:</span>
-                  <span className="font-medium">
-                    {formatDate(payable.date, 'dd/MM/yyyy')}
-                  </span>
-                </div>
-                {payable.due_date && (
+                {(() => {
+                  const total = parseFloat(payable.value);
+                  const paid = parseFloat(payable.paid_value);
+                  const pct = total > 0 ? Math.min((paid / total) * 100, 100) : 0;
+                  const barColor =
+                    pct >= 100
+                      ? 'bg-success'
+                      : pct >= 50
+                        ? 'bg-warning'
+                        : 'bg-destructive';
+                  return (
+                    <div className="space-y-xs">
+                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn('h-full rounded-full transition-all', barColor)}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>
+                          {t('pages.payables.paidAmount', {
+                            value: formatCurrency(paid),
+                          })}
+                        </span>
+                        <span>{pct.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="space-y-xs text-sm">
                   <div className="flex justify-between">
-                    <span>Vencimento:</span>
-                    <span className="font-medium">
-                      {formatDate(payable.due_date, 'dd/MM/yyyy')}
+                    <span className="text-muted-foreground">
+                      {t('pages.payables.totalValue')}
+                    </span>
+                    <span className="font-medium">{formatCurrency(payable.value)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {t('pages.payables.remainingBalance')}
+                    </span>
+                    <span className="font-medium text-destructive">
+                      {formatCurrency(
+                        parseFloat(payable.value) - parseFloat(payable.paid_value)
+                      )}
                     </span>
                   </div>
-                )}
-                {payable.member_name && (
-                  <div className="flex justify-between">
-                    <span>Responsável:</span>
-                    <span className="font-medium">{payable.member_name}</span>
-                  </div>
-                )}
-              </div>
+                  {payable.due_date && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.loans.dueDate')}
+                      </span>
+                      <span className="font-medium">
+                        {formatDate(payable.due_date, 'dd/MM/yyyy')}
+                      </span>
+                    </div>
+                  )}
+                  {payable.member_name && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {t('pages.payables.responsible')}
+                      </span>
+                      <span className="font-medium">{payable.member_name}</span>
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex gap-2 border-t pt-2">
-                <ReceiptButton
-                  source={{ type: 'payable', data: payable }}
-                  memberName={getMemberDisplayName(payable.member_name, user)}
-                  variant="outline"
-                  size="sm"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(payable)}
-                  className="flex-1"
-                >
-                  <Pencil className="mr-1 h-3 w-3" />
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(payable)}
-                  className="flex-1"
-                >
-                  <Trash2 className="mr-1 h-3 w-3" />
-                  Excluir
-                </Button>
+                <div className="flex flex-wrap items-center justify-end gap-xs border-t pt-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPaymentPayable(payable)}
+                    title={t('pages.payables.payment.title')}
+                    className="gap-xs text-xs"
+                  >
+                    <CreditCard className="h-3 w-3" />
+                    {t('pages.payables.payBtn')}
+                  </Button>
+                  {(payable.installments ?? 0) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleOpenInstallments(payable)}
+                      title={t('pages.payables.installments.title')}
+                      className="gap-xs text-xs"
+                    >
+                      <List className="h-3 w-3" />
+                      {t('pages.payables.installmentsBtn')}
+                    </Button>
+                  )}
+                  <ReceiptButton
+                    source={{ type: 'payable', data: payable }}
+                    memberName={getMemberDisplayName(payable.member_name, user)}
+                    variant="ghost"
+                    size="icon"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEdit(payable)}
+                    title={t('common.actions.edit')}
+                    aria-label={t('common.actions.edit')}
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(payable)}
+                    title={t('common.actions.delete')}
+                    aria-label={t('common.actions.delete')}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
+      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedPayable ? 'Editar Valor a Pagar' : 'Novo Valor a Pagar'}
+              {selectedPayable
+                ? t('pages.payables.editTitle')
+                : t('pages.payables.newTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedPayable
-                ? 'Atualize as informações do valor a pagar'
-                : 'Preencha as informações do novo valor a pagar'}
+                ? t('pages.payables.editDesc')
+                : t('pages.payables.newDesc')}
             </DialogDescription>
           </DialogHeader>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="description">Descrição *</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  required
-                  placeholder="Ex: Tratamento dentário, Conserto do carro"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="value">Valor Total *</Label>
-                <Input
-                  id="value"
-                  type="number"
-                  step="0.01"
-                  value={formData.value}
-                  onChange={(e) =>
-                    setFormData({ ...formData, value: parseFloat(e.target.value) })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="paid_value">Valor Já Pago</Label>
-                <Input
-                  id="paid_value"
-                  type="number"
-                  step="0.01"
-                  value={formData.paid_value || 0}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paid_value: parseFloat(e.target.value) })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="date">Data de Registro *</Label>
-                <DatePicker
-                  value={formData.date || undefined}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      date: date ? formatLocalDate(date) : '',
-                    })
-                  }
-                  placeholder="Selecione a data"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="due_date">Data de Vencimento</Label>
-                <DatePicker
-                  value={formData.due_date || undefined}
-                  onChange={(date) =>
-                    setFormData({
-                      ...formData,
-                      due_date: date ? formatLocalDate(date) : undefined,
-                    })
-                  }
-                  placeholder="Selecione a data de vencimento"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="category">Categoria *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EXPENSE_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {translate('expenseCategories', cat)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: 'active' | 'paid' | 'overdue' | 'cancelled') =>
-                    setFormData({ ...formData, status: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYABLE_STATUSES.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {translate('payableStatus', status)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-2">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes || ''}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
-                  placeholder="Informações adicionais sobre este valor a pagar"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 border-t pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando...
-                  </>
-                ) : (
-                  'Salvar'
-                )}
-              </Button>
-            </div>
-          </form>
+          <PayableForm
+            payable={selectedPayable}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsDialogOpen(false)}
+            isLoading={isSubmitting}
+          />
         </DialogContent>
       </Dialog>
-    </PageContainer>
+
+      <PayablePaymentDialog
+        payable={paymentPayable}
+        accounts={accounts}
+        onClose={() => setPaymentPayable(null)}
+      />
+
+      <PayableInstallmentsDialog
+        payable={installmentsPayable}
+        installments={installments}
+        isLoading={isLoadingInstallments}
+        onClose={() => setInstallmentsPayable(null)}
+      />
+    </Wrapper>
   );
 }

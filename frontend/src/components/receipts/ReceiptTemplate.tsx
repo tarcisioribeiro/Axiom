@@ -1,4 +1,6 @@
+/* eslint-disable max-lines */
 import { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { autoTranslate } from '@/config/constants';
 import {
@@ -241,6 +243,7 @@ const createStyles = (colors: typeof lightColors | typeof themeColors) => ({
  */
 export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
   ({ data, forExport = false }, ref) => {
+    const { t } = useTranslation();
     const colors = forExport ? lightColors : themeColors;
     const styles = createStyles(colors);
 
@@ -264,14 +267,21 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
       <div ref={ref} style={styles.container}>
         {/* Header */}
         <div style={styles.header}>
-          <h1 style={styles.headerTitle}>Comprovante de {data.typeLabel}</h1>
+          <h1 style={styles.headerTitle}>
+            {data.documentTitle ??
+              t('receipt.title', {
+                typeLabel: t(`receipt.types.${data.type}`, {
+                  defaultValue: data.typeLabel,
+                }),
+              })}
+          </h1>
         </div>
 
         {/* Main Content */}
         <div>
           {/* Description */}
           <div style={styles.descriptionBlock}>
-            <span style={styles.descriptionLabel}>Descrição:</span>
+            <span style={styles.descriptionLabel}>{t('receipt.description')}</span>
             <span style={styles.descriptionValue}>{data.description}</span>
           </div>
 
@@ -282,14 +292,14 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
 
           {/* Date */}
           <div style={styles.row}>
-            <span style={styles.labelCell}>Data:</span>
+            <span style={styles.labelCell}>{t('receipt.date')}</span>
             <span style={styles.valueCell}>{formatReceiptDate(data.date)}</span>
           </div>
 
           {/* Time (if available) */}
           {data.time && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Horário:</span>
+              <span style={styles.labelCell}>{t('receipt.time')}</span>
               <span style={styles.valueCell}>{formatReceiptTime(data.time)}</span>
             </div>
           )}
@@ -297,17 +307,19 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Category (if available) */}
           {data.category && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Categoria:</span>
+              <span style={styles.labelCell}>{t('receipt.category')}</span>
               <span style={styles.valueCell}>{autoTranslate(data.category)}</span>
             </div>
           )}
 
           {/* Status */}
-          {data.statusLabel && (
+          {data.status && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Status:</span>
+              <span style={styles.labelCell}>{t('receipt.status')}</span>
               <span style={{ ...styles.valueCell, ...getStatusStyle(data.status) }}>
-                {data.statusLabel}
+                {t(`receipt.statuses.${data.status}`, {
+                  defaultValue: data.statusLabel,
+                })}
               </span>
             </div>
           )}
@@ -315,7 +327,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Account (if available) */}
           {data.accountName && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Conta:</span>
+              <span style={styles.labelCell}>{t('receipt.account')}</span>
               <span style={styles.valueCell}>{data.accountName}</span>
             </div>
           )}
@@ -323,7 +335,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Card Name (for credit card types) */}
           {data.cardName && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Cartão:</span>
+              <span style={styles.labelCell}>{t('receipt.card')}</span>
               <span style={styles.valueCell}>{data.cardName}</span>
             </div>
           )}
@@ -332,11 +344,11 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {data.originAccountName && data.destinyAccountName && (
             <>
               <div style={styles.row}>
-                <span style={styles.labelCell}>Conta Origem:</span>
+                <span style={styles.labelCell}>{t('receipt.originAccount')}</span>
                 <span style={styles.valueCell}>{data.originAccountName}</span>
               </div>
               <div style={styles.row}>
-                <span style={styles.labelCell}>Conta Destino:</span>
+                <span style={styles.labelCell}>{t('receipt.destinyAccount')}</span>
                 <span style={styles.valueCell}>{data.destinyAccountName}</span>
               </div>
             </>
@@ -345,13 +357,13 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Loan specific fields */}
           {data.benefitedName && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Beneficiado:</span>
+              <span style={styles.labelCell}>{t('receipt.benefited')}</span>
               <span style={styles.valueCell}>{data.benefitedName}</span>
             </div>
           )}
           {data.creditorName && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Credor:</span>
+              <span style={styles.labelCell}>{t('receipt.creditor')}</span>
               <span style={styles.valueCell}>{data.creditorName}</span>
             </div>
           )}
@@ -359,9 +371,9 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Installments (for credit card purchases) */}
           {data.totalInstallments && data.totalInstallments > 1 && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Parcelas:</span>
+              <span style={styles.labelCell}>{t('receipt.installments')}</span>
               <span style={styles.valueCell}>
-                {data.installments || 0}/{data.totalInstallments}x de{' '}
+                {data.installments || 0}/{data.totalInstallments}x{' '}
                 {formatReceiptCurrency(data.installmentValue || 0)}
               </span>
             </div>
@@ -370,13 +382,13 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Vault specific fields */}
           {data.vaultName && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Cofre:</span>
+              <span style={styles.labelCell}>{t('receipt.vault')}</span>
               <span style={styles.valueCell}>{data.vaultName}</span>
             </div>
           )}
           {data.balanceAfter !== undefined && (
             <div style={styles.row}>
-              <span style={styles.labelCell}>Saldo Após:</span>
+              <span style={styles.labelCell}>{t('receipt.balanceAfter')}</span>
               <span style={styles.valueCell}>
                 {formatReceiptCurrency(data.balanceAfter)}
               </span>
@@ -386,18 +398,21 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
           {/* Notes (if available) */}
           {data.notes && (
             <div style={styles.notes}>
-              <span style={styles.notesLabel}>Observações:</span>
+              <span style={styles.notesLabel}>{t('receipt.notes')}</span>
               <p style={styles.notesText}>{data.notes}</p>
             </div>
           )}
 
-          {/* Extrato de Fatura (apenas para credit_card_bill com items) */}
+          {/* Statement (credit_card_bill with items) */}
           {data.type === 'credit_card_bill' &&
             data.statementItems &&
             data.statementItems.length > 0 && (
               <div style={styles.statementSection}>
                 <div style={styles.statementTitle}>
-                  Extrato ({data.totalItems} {data.totalItems === 1 ? 'item' : 'itens'}
+                  {t('receipt.statementTitle')} (
+                  {data.totalItems === 1
+                    ? t('receipt.itemSingular', { count: data.totalItems })
+                    : t('receipt.itemPlural', { count: data.totalItems })}
                   ):
                 </div>
                 <div>
@@ -428,7 +443,10 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
                   ))}
                 </div>
                 <div style={styles.statementSummary}>
-                  {data.totalPaidItems} de {data.totalItems} itens pagos
+                  {t('receipt.paidItemsSummary', {
+                    paid: data.totalPaidItems,
+                    total: data.totalItems,
+                  })}
                 </div>
               </div>
             )}
@@ -443,7 +461,7 @@ export const ReceiptTemplate = forwardRef<HTMLDivElement, ReceiptTemplateProps>(
         {/* Footer */}
         <div style={styles.footer}>
           <span style={styles.footerText}>
-            Gerado em: {formatGeneratedAt(data.generatedAt)}
+            {t('receipt.generatedAt')} {formatGeneratedAt(data.generatedAt)}
           </span>
         </div>
       </div>

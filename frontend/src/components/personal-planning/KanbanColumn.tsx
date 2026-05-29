@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useTranslation } from 'react-i18next';
 
 import type { TaskCard, KanbanStatus } from '@/types';
 
@@ -12,6 +13,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({
     id: status,
   });
@@ -38,18 +40,18 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
     <div className="flex max-h-[calc(100vh-14rem)] flex-col">
       {/* Column Header */}
       <div
-        className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-4 py-3 text-white`}
+        className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-md py-3 text-white`}
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm opacity-90">
-          {cards.length} {cards.length === 1 ? 'tarefa' : 'tarefas'}
+          {t('pages.todayTasks.taskCount', { count: cards.length })}
         </p>
       </div>
 
       {/* Column Body */}
       <div
         ref={setNodeRef}
-        className={`flex-1 ${getColorClasses()} kanban-scrollbar min-h-[200px] overflow-y-auto rounded-b-lg border-2 p-4 transition-colors ${
+        className={`flex-1 ${getColorClasses()} kanban-scrollbar min-h-[200px] overflow-y-auto rounded-b-lg border-2 p-md transition-colors ${
           isOver ? 'border-4 border-dashed border-info bg-info/20' : ''
         }`}
       >
@@ -59,8 +61,8 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
         >
           <div className="space-y-3">
             {cards.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-sm">Nenhuma tarefa</p>
+              <div className="py-xl text-center">
+                <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
               </div>
             ) : (
               cards.map((card) => <KanbanCard key={card.id} card={card} />)

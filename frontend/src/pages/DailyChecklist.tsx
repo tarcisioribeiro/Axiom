@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   DndContext,
   DragOverlay,
@@ -14,6 +15,7 @@ import {
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Save, CheckCircle2, StickyNote, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -81,6 +83,7 @@ const mapKanbanToInstance = (status: KanbanStatus): InstanceStatus => {
 };
 
 export default function DailyChecklist() {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [instances, setInstances] = useState<TaskInstance[]>([]);
   const [cards, setCards] = useState<TaskCard[]>([]);
@@ -160,12 +163,14 @@ export default function DailyChecklist() {
 
     void loadCurrentUserMember();
     void initializeDate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (ownerId > 0 && selectedDate) {
       void loadData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, ownerId]);
 
   useEffect(() => {
@@ -182,7 +187,7 @@ export default function DailyChecklist() {
       setOwnerId(member.id);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar usuário',
+        title: t('pages.dailyChecklist.loadUserError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -213,7 +218,7 @@ export default function DailyChecklist() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('pages.dailyChecklist.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -336,15 +341,15 @@ export default function DailyChecklist() {
       await Promise.all(promises);
 
       toast({
-        title: 'Dados salvos',
-        description: 'Seu checklist e reflexão foram salvos com sucesso!',
+        title: t('pages.dailyChecklist.saved'),
+        description: t('pages.dailyChecklist.savedDesc'),
       });
 
       // Recarrega dados para obter IDs e contagens atualizados
       void loadData();
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('pages.dailyChecklist.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -358,12 +363,12 @@ export default function DailyChecklist() {
       setIsSyncing(true);
       await loadData(true);
       toast({
-        title: 'Tarefas sincronizadas',
-        description: 'As tarefas foram atualizadas com os dados mais recentes.',
+        title: t('pages.dailyChecklist.synced'),
+        description: t('pages.dailyChecklist.syncedDesc'),
       });
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao sincronizar',
+        title: t('pages.dailyChecklist.syncError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -380,16 +385,16 @@ export default function DailyChecklist() {
 
   return (
     <PageContainer>
-      <PageHeader title="Checklist Diário" icon={<CheckCircle2 />} />
+      <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-end gap-2">
+      <div className="flex flex-wrap items-center gap-md">
+        <div className="flex items-end gap-sm">
           <div>
-            <Label htmlFor="date">Data</Label>
+            <Label htmlFor="date">{t('common.fields.date')}</Label>
             <DatePicker
               value={selectedDate ? parseLocalDate(selectedDate) : undefined}
               onChange={(date) => setSelectedDate(date ? formatLocalDate(date) : '')}
-              placeholder="Selecione a data"
+              placeholder={t('pages.dailyChecklist.datePlaceholder')}
               className="max-w-xs"
             />
           </div>
@@ -398,7 +403,7 @@ export default function DailyChecklist() {
             size="icon"
             onClick={handleSync}
             disabled={isSyncing || isLoading}
-            aria-label="Sincronizar tarefas com dados atuais"
+            aria-label={t('pages.dailyChecklist.syncBtn')}
           >
             <RefreshCw
               className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`}
@@ -411,7 +416,7 @@ export default function DailyChecklist() {
                 variant="outline"
                 size="icon"
                 className="relative"
-                aria-label="Adicionar reflexão do dia"
+                aria-label={t('pages.dailyChecklist.addReflection')}
               >
                 <StickyNote className="h-4 w-4" aria-hidden="true" />
                 {(reflection.trim() || mood) && (
@@ -421,17 +426,19 @@ export default function DailyChecklist() {
             </DialogTrigger>
             <DialogContent size="md">
               <DialogHeader>
-                <DialogTitle>Reflexão do Dia</DialogTitle>
+                <DialogTitle>{t('pages.dailyChecklist.reflectionTitle')}</DialogTitle>
                 <DialogDescription>
-                  Como foi o seu dia? Registre seus pensamentos e sentimentos
+                  {t('pages.dailyChecklist.reflectionPlaceholder')}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-md py-md">
                 <div>
-                  <Label htmlFor="mood">Como você se sentiu hoje?</Label>
+                  <Label htmlFor="mood">{t('pages.dailyChecklist.moodQuestion')}</Label>
                   <Select value={mood} onValueChange={setMood}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione seu humor..." />
+                      <SelectValue
+                        placeholder={t('pages.dailyChecklist.moodPlaceholder')}
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {MOOD_CHOICES.map((choice) => (
@@ -443,24 +450,26 @@ export default function DailyChecklist() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="reflection">Reflexão</Label>
+                  <Label htmlFor="reflection">
+                    {t('pages.dailyChecklist.reflectionLabel')}
+                  </Label>
                   <Textarea
                     id="reflection"
                     value={reflection}
                     onChange={(e) => setReflection(e.target.value)}
-                    placeholder="Escreva sobre o seu dia, conquistas, desafios, aprendizados..."
+                    placeholder={t('pages.dailyChecklist.reflectionTextPlaceholder')}
                     rows={6}
                   />
                   {reflection.length > 0 && reflection.length < 10 && (
-                    <p className="mt-1 text-sm text-destructive">
-                      A reflexão deve ter no mínimo 10 caracteres
+                    <p className="mt-xs text-sm text-destructive">
+                      {t('pages.dailyChecklist.reflectionMinLength')}
                     </p>
                   )}
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
-                  Fechar
+                  {t('common.actions.close')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -468,9 +477,10 @@ export default function DailyChecklist() {
         </div>
         <div className="flex-1" />
         <div className="text-lg font-semibold">
-          {completedTasks} de {cards.length} itens concluídos
+          {completedTasks}{' '}
+          {t('pages.dailyChecklist.itemsCompleted', { total: cards.length })}
           {summary.completion_rate > 0 && (
-            <span className="ml-2 text-sm">
+            <span className="ml-sm text-sm">
               ({summary.completion_rate.toFixed(0)}%)
             </span>
           )}
@@ -480,8 +490,8 @@ export default function DailyChecklist() {
       {cards.length === 0 ? (
         <EmptyState
           icon={<CheckCircle2 className="h-12 w-12 text-muted-foreground" />}
-          title="Nenhuma tarefa programada"
-          message="Nenhuma tarefa programada para este dia. Crie tarefas rotineiras para começar seu acompanhamento!"
+          title={t('pages.dailyChecklist.noTasks')}
+          message={t('pages.dailyChecklist.noTasksDesc')}
         />
       ) : (
         <DndContext
@@ -492,10 +502,22 @@ export default function DailyChecklist() {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-3 gap-6">
-            <KanbanColumn status="todo" title="A Fazer" cards={cardsByStatus.todo} />
-            <KanbanColumn status="doing" title="Fazendo" cards={cardsByStatus.doing} />
-            <KanbanColumn status="done" title="Concluído" cards={cardsByStatus.done} />
+          <div className="grid grid-cols-1 gap-md md:grid-cols-3 md:gap-lg">
+            <KanbanColumn
+              status="todo"
+              title={t('pages.dailyChecklist.todo')}
+              cards={cardsByStatus.todo}
+            />
+            <KanbanColumn
+              status="doing"
+              title={t('pages.dailyChecklist.inProgress')}
+              cards={cardsByStatus.doing}
+            />
+            <KanbanColumn
+              status="done"
+              title={t('pages.dailyChecklist.done')}
+              cards={cardsByStatus.done}
+            />
           </div>
 
           <DragOverlay>
@@ -508,13 +530,13 @@ export default function DailyChecklist() {
         <Button onClick={handleSave} disabled={isSaving} size="lg">
           {isSaving ? (
             <>
-              <Save className="mr-2 h-4 w-4 animate-pulse" />
-              Salvando...
+              <Save className="mr-sm h-4 w-4 animate-pulse" />
+              {t('common.actions.saving')}
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar
+              <Save className="mr-sm h-4 w-4" />
+              {t('common.actions.save')}
             </>
           )}
         </Button>

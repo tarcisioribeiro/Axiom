@@ -1,9 +1,14 @@
 import Cookies from 'js-cookie';
 
 import { API_CONFIG, TOKEN_CONFIG } from '@/config/constants';
-import type { LoginCredentials, User, Permission } from '@/types';
+import { logger } from '@/lib/logger';
+import type { LoginCredentials, Permission, User } from '@/types';
 
 import { apiClient } from './api-client';
+
+type LoginResponse =
+  | { message: string; user: { username: string }; requires_2fa?: false }
+  | { requires_2fa: true; temp_token: string; message: string };
 
 /**
  * Servico de autenticacao.
@@ -37,15 +42,8 @@ class AuthService {
    * @returns Promise com mensagem de sucesso e dados basicos do usuario
    * @throws {AuthenticationError} Se credenciais invalidas
    */
-  async login(
-    credentials: LoginCredentials
-  ): Promise<{ message: string; user: { username: string } }> {
-    const response = await apiClient.post<{
-      message: string;
-      user: { username: string };
-    }>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
-
-    return response;
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    return apiClient.post<LoginResponse>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
   }
 
   /**
@@ -102,23 +100,46 @@ class AuthService {
    *
    * @returns Promise com lista de permissoes do usuario
    */
-  async getUserPermissions(): Promise<Permission[]> {
-    const response = await apiClient.get<{
+  async getUserPermissions(): Promise<{
+    permissions: Permission[];
+    is_superuser: boolean;
+  }> {
+    let response: {
       username: string;
       permissions: string[];
       is_staff: boolean;
       is_superuser: boolean;
-    }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
+    };
+
+    try {
+      response = await apiClient.get<{
+        username: string;
+        permissions: string[];
+        is_staff: boolean;
+        is_superuser: boolean;
+      }>(API_CONFIG.ENDPOINTS.USER_PERMISSIONS);
+    } catch (error) {
+      // Backend retorna 403 para superusuários neste endpoint.
+      // Tratamos isso como sinal de que o usuário é superusuário.
+      if ((error as Error).name === 'PermissionError') {
+        return { permissions: [], is_superuser: true };
+      }
+      throw error;
+    }
+
+    if (response.is_superuser) {
+      return { permissions: [], is_superuser: true };
+    }
 
     if (!Array.isArray(response.permissions)) {
-      console.error(
+      logger.error(
         'Invalid permissions format received from API:',
         response.permissions
       );
-      return [];
+      return { permissions: [], is_superuser: false };
     }
 
-    return response.permissions.map((perm: string) => {
+    const permissions = response.permissions.map((perm: string) => {
       const [app_label, codename] = perm.split('.');
       return {
         app_label,
@@ -126,6 +147,8 @@ class AuthService {
         name: perm,
       };
     });
+
+    return { permissions, is_superuser: false };
   }
 
   /**
@@ -233,6 +256,154 @@ class AuthService {
     const codename = `${action}_${appName}`;
 
     return permissions.some((perm) => perm.codename === codename);
+  }
+
+  /**
+   * Solicita redefinição de senha via e-mail.
+   * Retorna 200 independente de o e-mail existir (anti-enumeração).
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PASSWORD_RESET_REQUEST}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }
+    );
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Confirma redefinição de senha com uid + token do link enviado por e-mail.
+   */
+  async confirmPasswordReset(
+    uid: string,
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PASSWORD_RESET_CONFIRM}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid,
+          token,
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      }
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? 'Erro ao redefinir senha.');
+    }
+  }
+
+  /**
+   * Reenvia e-mail de verificação para o usuário autenticado.
+   */
+  async sendEmailVerification(): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(
+      API_CONFIG.ENDPOINTS.EMAIL_VERIFICATION_SEND
+    );
+  }
+
+  /**
+   * Confirma o token de verificação de e-mail.
+   */
+  async confirmEmailVerification(token: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EMAIL_VERIFICATION_CONFIRM}?token=${token}`
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { detail?: string };
+      throw new Error(data.detail ?? 'Token inválido ou expirado.');
+    }
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Altera a senha do usuário autenticado.
+   */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(API_CONFIG.ENDPOINTS.CHANGE_PASSWORD, {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+  }
+
+  /**
+   * Consulta o status do 2FA do usuário autenticado.
+   */
+  async getTwoFactorStatus(): Promise<{ is_active: boolean }> {
+    return apiClient.get<{ is_active: boolean }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_STATUS
+    );
+  }
+
+  /**
+   * Busca o QR code para setup inicial do 2FA.
+   */
+  async getTwoFactorSetup(): Promise<{
+    secret: string;
+    qr_code: string;
+    manual_entry_key: string;
+  }> {
+    return apiClient.get<{ secret: string; qr_code: string; manual_entry_key: string }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_SETUP
+    );
+  }
+
+  /**
+   * Ativa 2FA após confirmar o primeiro código TOTP.
+   */
+  async activateTwoFactor(
+    code: string
+  ): Promise<{ message: string; backup_codes: string[] }> {
+    return apiClient.post<{ message: string; backup_codes: string[] }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_ACTIVATE,
+      { code }
+    );
+  }
+
+  /**
+   * Verifica o código TOTP durante o fluxo de login (2FA pendente).
+   */
+  async verifyTwoFactor(tempToken: string, code: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TWO_FACTOR_VERIFY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ temp_token: tempToken, code }),
+      }
+    );
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(data.error ?? 'Código inválido.');
+    }
+    return response.json() as Promise<{ message: string }>;
+  }
+
+  /**
+   * Desativa 2FA confirmando com a senha atual.
+   */
+  async disableTwoFactor(password: string): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(
+      API_CONFIG.ENDPOINTS.TWO_FACTOR_DISABLE,
+      {
+        password,
+      }
+    );
   }
 
   /**

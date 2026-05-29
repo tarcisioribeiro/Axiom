@@ -58,6 +58,31 @@ export function parseLocalDate(dateStr: string): Date | undefined {
 }
 
 /**
+ * Copia texto para a área de transferência.
+ * Usa navigator.clipboard se disponível (contexto seguro/HTTPS),
+ * com fallback via document.execCommand para HTTP/desenvolvimento.
+ */
+export async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  // Fallback para contextos não-seguros (HTTP)
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const success = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (!success) {
+    throw new Error('Falha ao copiar para a área de transferência');
+  }
+}
+
+/**
  * Converte uma string ou Date para Date object, evitando problemas de timezone
  * Se receber uma string YYYY-MM-DD, usa parseLocalDate para evitar conversão UTC
  */

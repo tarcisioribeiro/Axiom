@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Django permite criar comandos customizados de gerenciamento que podem ser executados via `python manage.py <comando>`. O MindLedger possui vários comandos úteis para manutenção, setup e operações administrativas.
+Django permite criar comandos customizados de gerenciamento que podem ser executados via `python manage.py <comando>`. O Axiom possui vários comandos úteis para manutenção, setup e operações administrativas.
 
 ## Estrutura de um Comando
 
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             raise CommandError(f'Erro ao executar: {e}')
 ```
 
-## Comandos do MindLedger
+## Comandos do Axiom
 
 ### 1. update_balances
 
@@ -802,7 +802,7 @@ crontab -e
 from celery import Celery
 from celery.schedules import crontab
 
-app = Celery('mindledger')
+app = Celery('axiom')
 
 app.conf.beat_schedule = {
     'clean-old-logs-daily': {

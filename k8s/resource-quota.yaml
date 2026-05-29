@@ -1,0 +1,51 @@
+---
+# Namespace-level ResourceQuota caps total resource consumption in production,
+# preventing a single misbehaving workload from starving the others.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: axiom-quota
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: resource-quota
+spec:
+  hard:
+    # CPU: sum of all pod requests/limits across the namespace
+    requests.cpu: "8"
+    limits.cpu: "16"
+    # Memory: Ollama alone needs 4Gi request + 8Gi limit; other services add ~2Gi/4Gi.
+    requests.memory: 8Gi
+    limits.memory: 16Gi
+    # Workload count caps
+    pods: "20"
+    persistentvolumeclaims: "10"
+    services: "10"
+    secrets: "15"
+    configmaps: "10"
+---
+# LimitRange sets default requests/limits for containers that do not declare
+# their own, and enforces a minimum/maximum per container.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: axiom-limit-range
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: resource-quota
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      max:
+        cpu: "4"
+        memory: "8Gi"
+      min:
+        cpu: "10m"
+        memory: "16Mi"

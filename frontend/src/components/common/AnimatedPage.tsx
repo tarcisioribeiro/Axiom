@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 import { pageVariants } from '@/lib/animations';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,12 @@ interface AnimatedPageProps {
 }
 
 export const AnimatedPage: React.FC<AnimatedPageProps> = ({ children, className }) => {
+  const prefersReducedMotion = useReducedMotion();
+
+  if (prefersReducedMotion) {
+    return <div className={cn(className)}>{children}</div>;
+  }
+
   return (
     <motion.div
       className={cn(className)}

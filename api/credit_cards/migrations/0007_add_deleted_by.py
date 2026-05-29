@@ -8,29 +8,57 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('credit_cards', '0006_remove_credit_card_expense_model'),
+        ("credit_cards", "0006_remove_credit_card_expense_model"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='creditcard',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='creditcard_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="creditcard",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="creditcard_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='creditcardbill',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='creditcardbill_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="creditcardbill",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="creditcardbill_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='creditcardpurchase',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='creditcardpurchase_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="creditcardpurchase",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="creditcardpurchase_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
         migrations.AddField(
-            model_name='creditcardinstallment',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='creditcardinstallment_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="creditcardinstallment",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="creditcardinstallment_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
     ]

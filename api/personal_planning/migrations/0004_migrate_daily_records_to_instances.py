@@ -14,9 +14,9 @@ def migrate_records_to_instances(apps, schema_editor):
     - Se completed=False mas quantity_completed > 0, cria instâncias parciais
     - Cada unidade do target_quantity gera uma instância separada
     """
-    DailyTaskRecord = apps.get_model('personal_planning', 'DailyTaskRecord')
-    TaskInstance = apps.get_model('personal_planning', 'TaskInstance')
-    RoutineTask = apps.get_model('personal_planning', 'RoutineTask')
+    DailyTaskRecord = apps.get_model("personal_planning", "DailyTaskRecord")
+    TaskInstance = apps.get_model("personal_planning", "TaskInstance")
+    RoutineTask = apps.get_model("personal_planning", "RoutineTask")
 
     migrated_count = 0
     skipped_count = 0
@@ -37,7 +37,7 @@ def migrate_records_to_instances(apps, schema_editor):
                     template=task,
                     scheduled_date=record.date,
                     occurrence_index=i,
-                    owner=record.owner
+                    owner=record.owner,
                 ).exists()
 
                 if existing:
@@ -45,14 +45,14 @@ def migrate_records_to_instances(apps, schema_editor):
 
                 # Determina o status baseado na quantidade completada
                 if i < record.quantity_completed:
-                    status = 'completed'
+                    status = "completed"
                     completed_at = record.completed_at or timezone.now()
                 elif record.quantity_completed > 0 and i == record.quantity_completed:
                     # Próxima tarefa não completada fica como 'in_progress'
-                    status = 'in_progress'
+                    status = "in_progress"
                     completed_at = None
                 else:
-                    status = 'pending'
+                    status = "pending"
                     completed_at = None
 
                 TaskInstance.objects.create(
@@ -65,9 +65,11 @@ def migrate_records_to_instances(apps, schema_editor):
                     occurrence_index=i,
                     status=status,
                     target_quantity=1,  # Cada instância representa 1 unidade
-                    quantity_completed=1 if status == 'completed' else 0,
+                    quantity_completed=1 if status == "completed" else 0,
                     unit=task.unit,
-                    notes=record.notes if i == 0 else None,  # Notas apenas na primeira instância
+                    notes=(
+                        record.notes if i == 0 else None
+                    ),  # Notas apenas na primeira instância
                     completed_at=completed_at,
                     owner=record.owner,
                     created_by=record.created_by,
@@ -82,7 +84,9 @@ def migrate_records_to_instances(apps, schema_editor):
             skipped_count += 1
             continue
 
-    print(f"Migração concluída: {migrated_count} instâncias criadas, {skipped_count} registros ignorados")
+    print(
+        f"Migração concluída: {migrated_count} instâncias criadas, {skipped_count} registros ignorados"
+    )
 
 
 def reverse_migration(apps, schema_editor):
@@ -92,12 +96,10 @@ def reverse_migration(apps, schema_editor):
     Nota: Esta reversão remove TODAS as TaskInstances que têm um template associado.
     Instâncias avulsas (sem template) não são afetadas.
     """
-    TaskInstance = apps.get_model('personal_planning', 'TaskInstance')
+    TaskInstance = apps.get_model("personal_planning", "TaskInstance")
 
     # Remove apenas instâncias que foram geradas a partir de templates
-    deleted_count = TaskInstance.objects.filter(
-        template__isnull=False
-    ).delete()[0]
+    deleted_count = TaskInstance.objects.filter(template__isnull=False).delete()[0]
 
     print(f"Reversão concluída: {deleted_count} instâncias removidas")
 
@@ -105,7 +107,7 @@ def reverse_migration(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('personal_planning', '0003_add_task_instance_model'),
+        ("personal_planning", "0003_add_task_instance_model"),
     ]
 
     operations = [

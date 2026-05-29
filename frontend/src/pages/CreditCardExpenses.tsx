@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Plus,
   Pencil,
@@ -6,8 +7,10 @@ import {
   ShoppingCart,
   Calendar,
   DollarSign,
+  Link2,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { DataTable, type Column } from '@/components/common/DataTable';
 import { PageContainer } from '@/components/common/PageContainer';
@@ -37,10 +40,13 @@ import {
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
 } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { translateCategory } from '@/lib/helpers';
 import { getMemberDisplayName } from '@/lib/receipt-utils';
+import { cn } from '@/lib/utils';
 import { creditCardBillsService } from '@/services/credit-card-bills-service';
 import { creditCardInstallmentsService } from '@/services/credit-card-installments-service';
 import { creditCardPurchasesService } from '@/services/credit-card-purchases-service';
@@ -56,7 +62,12 @@ import type {
 } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-export default function CreditCardExpenses() {
+export default function CreditCardExpenses({
+  embedded = false,
+}: {
+  embedded?: boolean;
+}) {
+  const { t } = useTranslation();
   const [purchases, setPurchases] = useState<CreditCardPurchase[]>([]);
   const [installments, setInstallments] = useState<CreditCardInstallment[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -71,6 +82,11 @@ export default function CreditCardExpenses() {
     CreditCardInstallment | undefined
   >();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [assigningInstallment, setAssigningInstallment] = useState<
+    CreditCardInstallment | undefined
+  >();
+  const [selectedAssignBillId, setSelectedAssignBillId] = useState<string>('');
+  const [isAssignBillDialogOpen, setIsAssignBillDialogOpen] = useState(false);
   const [cardFilter, setCardFilter] = useState<string>('all');
   const [billFilter, setBillFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -82,6 +98,7 @@ export default function CreditCardExpenses() {
 
   useEffect(() => {
     void loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mapeamento de abreviações de mês para número
@@ -125,6 +142,7 @@ export default function CreditCardExpenses() {
       const bDate = new Date(parseInt(b.year), bMonth - 1);
       return aDate.getTime() - bDate.getTime();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardFilter, bills]);
 
   // Reset bill filter when card changes
@@ -239,7 +257,7 @@ export default function CreditCardExpenses() {
       }
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao carregar dados',
+        title: t('common.messages.loadError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -291,7 +309,7 @@ export default function CreditCardExpenses() {
             card,
             label: bill
               ? `${TRANSLATIONS.months[bill.month as keyof typeof TRANSLATIONS.months]}/${bill.year}`
-              : 'Sem Fatura',
+              : t('pages.creditCardExpenses.orphanBillLabel'),
             period: bill
               ? `${formatDate(bill.invoice_beginning_date, 'dd/MM')} a ${formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')}`
               : '',
@@ -325,6 +343,7 @@ export default function CreditCardExpenses() {
           );
         })
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredInstallments, bills, creditCards]);
 
   const handleSubmit = async (data: CreditCardPurchaseFormData) => {
@@ -334,17 +353,19 @@ export default function CreditCardExpenses() {
       if (selectedPurchase) {
         await creditCardPurchasesService.update(selectedPurchase.id, data);
         toast({
-          title: 'Compra atualizada',
-          description: 'A compra foi atualizada com sucesso.',
+          title: t('pages.creditCardExpenses.updated'),
+          description: t('pages.creditCardExpenses.updatedDesc'),
         });
       } else {
         await creditCardPurchasesService.create(data);
         toast({
-          title: 'Compra criada',
+          title: t('pages.creditCardExpenses.created'),
           description:
             data.total_installments > 1
-              ? `Compra criada com ${data.total_installments} parcelas.`
-              : 'Compra criada com sucesso.',
+              ? t('pages.creditCardExpenses.createdWithInstallments', {
+                  count: data.total_installments,
+                })
+              : t('pages.creditCardExpenses.createdDesc'),
         });
       }
 
@@ -352,7 +373,7 @@ export default function CreditCardExpenses() {
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -364,9 +385,8 @@ export default function CreditCardExpenses() {
   const handleCreate = () => {
     if (creditCards.length === 0) {
       toast({
-        title: 'Ação não permitida',
-        description:
-          'É necessário ter pelo menos um cartão de crédito cadastrado antes de criar uma compra.',
+        title: t('common.messages.actionDenied'),
+        description: t('pages.creditCardExpenses.noCardMsg'),
         variant: 'destructive',
       });
       return;
@@ -388,23 +408,26 @@ export default function CreditCardExpenses() {
     if (!purchase) return;
 
     const confirmed = await showConfirm({
-      title: 'Excluir compra',
-      description: `Tem certeza que deseja excluir a compra "${purchase.description}" e todas as suas ${purchase.total_installments} parcela(s)? Esta ação não pode ser desfeita.`,
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('pages.creditCardExpenses.deleteTitle'),
+      description: t('pages.creditCardExpenses.deleteDesc', {
+        name: purchase.description,
+        count: purchase.total_installments,
+      }),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
     });
     if (!confirmed) return;
     try {
       await creditCardPurchasesService.delete(purchaseId);
       toast({
-        title: 'Compra excluída',
-        description: 'A compra e suas parcelas foram excluídas com sucesso.',
+        title: t('pages.creditCardExpenses.deleted'),
+        description: t('pages.creditCardExpenses.deletedDesc'),
       });
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao excluir',
+        title: t('common.messages.deleteError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -417,13 +440,15 @@ export default function CreditCardExpenses() {
         payed: !installment.payed,
       });
       toast({
-        title: installment.payed ? 'Parcela desmarcada' : 'Parcela paga',
-        description: `Status da parcela atualizado com sucesso.`,
+        title: installment.payed
+          ? t('pages.creditCardExpenses.installmentUnpaid')
+          : t('pages.creditCardExpenses.installmentPaid'),
+        description: t('pages.creditCardExpenses.installmentStatusDesc'),
       });
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao atualizar',
+        title: t('common.messages.updateError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -442,14 +467,54 @@ export default function CreditCardExpenses() {
       setIsSubmitting(true);
       await creditCardInstallmentsService.update(selectedInstallment.id, data);
       toast({
-        title: 'Parcela atualizada',
-        description: 'A parcela foi atualizada com sucesso.',
+        title: t('pages.creditCardExpenses.installmentUpdated'),
+        description: t('pages.creditCardExpenses.installmentUpdatedDesc'),
       });
       setIsInstallmentDialogOpen(false);
       void loadData(true);
     } catch (error: unknown) {
       toast({
-        title: 'Erro ao salvar',
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getEligibleBills = (installment: CreditCardInstallment): CreditCardBill[] => {
+    const dueDate = new Date(installment.due_date);
+    return bills.filter((bill) => {
+      if (bill.credit_card !== installment.card_id) return false;
+      const start = new Date(bill.invoice_beginning_date);
+      const end = new Date(bill.invoice_ending_date);
+      return dueDate >= start && dueDate <= end;
+    });
+  };
+
+  const handleOpenAssignBill = (installment: CreditCardInstallment) => {
+    setAssigningInstallment(installment);
+    setSelectedAssignBillId('');
+    setIsAssignBillDialogOpen(true);
+  };
+
+  const handleAssignBill = async () => {
+    if (!assigningInstallment || !selectedAssignBillId) return;
+    try {
+      setIsSubmitting(true);
+      await creditCardInstallmentsService.update(assigningInstallment.id, {
+        bill: parseInt(selectedAssignBillId),
+      });
+      toast({
+        title: t('pages.creditCardExpenses.installmentLinked'),
+        description: t('pages.creditCardExpenses.installmentLinkedDesc'),
+      });
+      setIsAssignBillDialogOpen(false);
+      void loadData(true);
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
         description: getErrorMessage(error),
         variant: 'destructive',
       });
@@ -466,10 +531,25 @@ export default function CreditCardExpenses() {
     .filter((i) => !i.payed)
     .reduce((sum, i) => sum + i.value, 0);
 
+  const categoryBreakdown = useMemo(() => {
+    const groups: Record<string, number> = {};
+    for (const i of filteredInstallments) {
+      const cat = i.category ?? 'others';
+      groups[cat] = (groups[cat] ?? 0) + i.value;
+    }
+    return Object.entries(groups)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([cat, amount]) => ({
+        cat,
+        pct: totalInstallments > 0 ? (amount / totalInstallments) * 100 : 0,
+      }));
+  }, [filteredInstallments, totalInstallments]);
+
   const columns: Column<CreditCardInstallment>[] = [
     {
       key: 'description',
-      label: 'Descrição',
+      label: t('pages.creditCardExpenses.columns.description'),
       render: (installment) => (
         <div>
           <div className="font-medium">{installment.description}</div>
@@ -481,7 +561,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'card',
-      label: 'Cartão',
+      label: t('pages.creditCardExpenses.columns.card'),
       render: (installment) => (
         <span className="text-sm">
           {installment.card_name || getCardName(installment.card_id || 0)}
@@ -490,7 +570,7 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'value',
-      label: 'Valor',
+      label: t('pages.creditCardExpenses.columns.amount'),
       align: 'right',
       render: (installment) => (
         <span className="font-semibold text-destructive">
@@ -500,39 +580,67 @@ export default function CreditCardExpenses() {
     },
     {
       key: 'category',
-      label: 'Categoria',
-      render: (installment) => (
-        <Badge variant="secondary">
-          {translate('expenseCategories', installment.category || '')}
-        </Badge>
-      ),
+      label: t('pages.creditCardExpenses.columns.category'),
+      render: (installment) => {
+        const CatIcon =
+          EXPENSE_CATEGORY_ICONS[installment.category ?? ''] ??
+          EXPENSE_CATEGORY_ICONS['others'];
+        return (
+          <Badge variant="secondary" className="gap-xs">
+            {CatIcon && <CatIcon className="h-3.5 w-3.5" />}
+            {translate('expenseCategories', installment.category ?? '')}
+          </Badge>
+        );
+      },
     },
     {
       key: 'installment',
-      label: 'Parcela',
+      label: t('pages.creditCardExpenses.columns.installment'),
       align: 'center',
-      render: (installment) => (
-        <span className="text-sm">
-          {installment.installment_number}/{installment.total_installments}
-        </span>
-      ),
+      render: (installment) => {
+        const current = installment.installment_number;
+        const total = installment.total_installments ?? 1;
+        return (
+          <div className="flex flex-col items-center gap-xs">
+            <div className="flex gap-0.5">
+              {Array.from({ length: Math.min(total, 8) }, (_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    i < current ? 'bg-success' : 'bg-muted'
+                  )}
+                />
+              ))}
+              {total > 8 && (
+                <span className="text-xs text-muted-foreground">+{total - 8}</span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {current}/{total}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: 'payed',
-      label: 'Status',
+      label: t('pages.creditCardExpenses.columns.status'),
       render: (installment) => (
         <Badge
           variant={installment.payed ? 'success' : 'destructive'}
           className="cursor-pointer"
           onClick={() => handleTogglePaid(installment)}
         >
-          {installment.payed ? 'Paga' : 'Pendente'}
+          {installment.payed
+            ? t('pages.creditCardExpenses.status.paid')
+            : t('pages.creditCardExpenses.status.pending')}
         </Badge>
       ),
     },
     {
       key: 'due_date',
-      label: 'Vencimento',
+      label: t('pages.creditCardExpenses.columns.dueDate'),
       render: (installment) => (
         <span className="text-sm">
           {formatDate(installment.due_date, 'dd/MM/yyyy')}
@@ -546,26 +654,95 @@ export default function CreditCardExpenses() {
     (c) => c.key !== 'due_date'
   );
 
+  const Wrapper = embedded
+    ? ({ children }: { children: ReactNode }) => (
+        <div className="space-y-lg">{children}</div>
+      )
+    : PageContainer;
+
   return (
-    <PageContainer>
+    <Wrapper>
       <PageHeader
-        title="Despesas de Cartão"
+        title={t('pages.creditCardExpenses.title')}
         icon={<ShoppingCart />}
         action={{
-          label: 'Nova Compra',
+          label: t('pages.creditCardExpenses.newBtn'),
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
       />
 
-      <div className="space-y-4 rounded-lg border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            <span className="font-semibold">Filtros</span>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Card className="overflow-hidden border-t-2 border-t-success/60">
+          <CardContent className="p-md">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPaid')}
+            </p>
+            <p className="text-xl font-bold text-success">
+              {formatCurrency(totalPaid)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-warning/60">
+          <CardContent className="p-md">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalPending')}
+            </p>
+            <p className="text-xl font-bold text-warning">
+              {formatCurrency(totalPending)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-t-2 border-t-destructive/60">
+          <CardContent className="p-md">
+            <p className="text-xs text-muted-foreground">
+              {t('pages.creditCardExpenses.totalAmount')}
+            </p>
+            <p className="text-xl font-bold text-destructive">
+              {formatCurrency(totalInstallments)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {categoryBreakdown.length > 1 && (
+        <div className="rounded-lg border bg-card p-md">
+          <p className="mb-sm text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t('pages.creditCardExpenses.byCategory')}
+          </p>
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div
+                key={cat}
+                className={`h-full transition-all ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                style={{ width: `${pct}%` }}
+                title={`${translateCategory(cat, 'expense')}: ${pct.toFixed(1)}%`}
+              />
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Visualização:</span>
+          <div className="mt-sm flex flex-wrap gap-md">
+            {categoryBreakdown.map(({ cat, pct }, i) => (
+              <div key={cat} className="flex items-center gap-xs">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${['bg-primary', 'bg-success', 'bg-warning', 'bg-info', 'bg-accent', 'bg-destructive'][i % 6]}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {translateCategory(cat, 'expense')} · {Math.round(pct)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-md rounded-lg border bg-card p-md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-sm">
+            <Filter className="h-4 w-4" />
+            <span className="font-semibold">{t('common.actions.filter')}</span>
+          </div>
+          <div className="flex items-center gap-sm">
+            <span className="text-sm">{t('pages.creditCardExpenses.viewMode')}</span>
             <Select
               value={viewMode}
               onValueChange={(v) => setViewMode(v as 'list' | 'grouped')}
@@ -574,19 +751,25 @@ export default function CreditCardExpenses() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="grouped">Por Fatura</SelectItem>
-                <SelectItem value="list">Lista</SelectItem>
+                <SelectItem value="grouped">
+                  {t('pages.creditCardExpenses.byBill')}
+                </SelectItem>
+                <SelectItem value="list">
+                  {t('pages.creditCardExpenses.list')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2 lg:grid-cols-4">
           <Select value={cardFilter} onValueChange={setCardFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Cartões" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCards')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Cartões</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCards')}
+              </SelectItem>
               {creditCards.map((c) => (
                 <SelectItem key={c.id} value={c.id.toString()}>
                   {getCardDisplayName(c.id)}
@@ -602,12 +785,16 @@ export default function CreditCardExpenses() {
             <SelectTrigger>
               <SelectValue
                 placeholder={
-                  availableBills.length === 0 ? 'Nenhuma fatura' : 'Todas as Faturas'
+                  availableBills.length === 0
+                    ? t('pages.creditCardExpenses.noBills')
+                    : t('pages.creditCardExpenses.allBills')
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as Faturas</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allBills')}
+              </SelectItem>
               {availableBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
                   {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
@@ -618,10 +805,12 @@ export default function CreditCardExpenses() {
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todas as Categorias" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allCategories')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as Categorias</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allCategories')}
+              </SelectItem>
               {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
                 <SelectItem key={key} value={key}>
                   {label}
@@ -631,51 +820,61 @@ export default function CreditCardExpenses() {
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Todos os Status" />
+              <SelectValue placeholder={t('pages.creditCardExpenses.allStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="paid">Pago</SelectItem>
-              <SelectItem value="pending">Pendente</SelectItem>
+              <SelectItem value="all">
+                {t('pages.creditCardExpenses.allStatus')}
+              </SelectItem>
+              <SelectItem value="paid">{t('common.status.paid')}</SelectItem>
+              <SelectItem value="pending">{t('common.status.pending')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-between border-t pt-2">
+        <div className="flex items-center justify-between border-t pt-sm">
           <span className="text-sm">
-            {filteredInstallments.length} parcela(s) encontrada(s)
+            {t('pages.creditCardExpenses.foundInstallments', {
+              count: filteredInstallments.length,
+            })}
           </span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-md">
             <span className="text-sm">
-              <span className="text-muted-foreground">Pago:</span>{' '}
+              <span className="text-muted-foreground">
+                {t('pages.creditCardExpenses.totalPaid')}
+              </span>{' '}
               <span className="font-semibold text-success">
                 {formatCurrency(totalPaid)}
               </span>
             </span>
             <span className="text-sm">
-              <span className="text-muted-foreground">Restante:</span>{' '}
+              <span className="text-muted-foreground">
+                {t('pages.creditCardExpenses.totalPending')}
+              </span>{' '}
               <span className="font-semibold text-warning">
                 {formatCurrency(totalPending)}
               </span>
             </span>
             <span className="text-lg font-bold text-destructive">
-              Total: {formatCurrency(totalInstallments)}
+              {t('pages.creditCardExpenses.totalAmount')}{' '}
+              {formatCurrency(totalInstallments)}
             </span>
           </div>
         </div>
       </div>
 
       {viewMode === 'grouped' ? (
-        <div className="space-y-6">
+        <div className="space-y-lg">
           {installmentsByBill.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center">
-                Nenhuma parcela encontrada.
+              <CardContent className="py-xl text-center">
+                {t('pages.creditCardExpenses.emptyState')}
               </CardContent>
             </Card>
           ) : (
             installmentsByBill.map(
               ({
                 key,
+                bill,
                 label,
                 period,
                 cardName,
@@ -685,15 +884,39 @@ export default function CreditCardExpenses() {
                 pending,
               }) => (
                 <Card key={key}>
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-sm">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-sm text-lg">
                           <Calendar className="h-5 w-5 text-primary" />
-                          Fatura {label}
+                          {key === 'sem-fatura'
+                            ? label
+                            : t('pages.creditCardExpenses.billLabel', { label })}
+                          {bill && (
+                            <Badge
+                              variant={
+                                bill.status === 'paid'
+                                  ? 'success'
+                                  : bill.status === 'overdue'
+                                    ? 'destructive'
+                                    : bill.status === 'closed'
+                                      ? 'secondary'
+                                      : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {bill.status === 'paid'
+                                ? t('pages.creditCardExpenses.status.paid')
+                                : bill.status === 'overdue'
+                                  ? t('pages.creditCardExpenses.status.overdue')
+                                  : bill.status === 'closed'
+                                    ? t('pages.creditCardExpenses.status.closed')
+                                    : t('pages.creditCardExpenses.status.open')}
+                            </Badge>
+                          )}
                         </CardTitle>
                         {period && (
-                          <p className="mt-1 text-sm">
+                          <p className="mt-xs text-sm">
                             {cardName && (
                               <span className="font-medium">{cardName}</span>
                             )}
@@ -701,16 +924,40 @@ export default function CreditCardExpenses() {
                             {period}
                           </p>
                         )}
+                        {bill && (
+                          <div className="mt-sm space-y-xs">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>
+                                {t('pages.creditCardExpenses.billPaidProgress')}
+                              </span>
+                              <span>
+                                {total > 0 ? Math.round((paid / total) * 100) : 0}%
+                              </span>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className="h-full rounded-full bg-success"
+                                style={{
+                                  width: `${total > 0 ? (paid / total) * 100 : 0}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-md">
                         <span className="text-sm">
-                          <span className="text-muted-foreground">Pago:</span>{' '}
+                          <span className="text-muted-foreground">
+                            {t('pages.creditCardExpenses.totalPaid')}
+                          </span>{' '}
                           <span className="font-semibold text-success">
                             {formatCurrency(paid)}
                           </span>
                         </span>
                         <span className="text-sm">
-                          <span className="text-muted-foreground">Restante:</span>{' '}
+                          <span className="text-muted-foreground">
+                            {t('pages.creditCardExpenses.totalPending')}
+                          </span>{' '}
                           <span className="font-semibold text-warning">
                             {formatCurrency(pending)}
                           </span>
@@ -727,13 +974,19 @@ export default function CreditCardExpenses() {
                       columns={groupedColumns}
                       keyExtractor={(installment) => installment.id}
                       isLoading={false}
-                      emptyState={{ message: 'Nenhuma parcela.' }}
+                      emptyState={{
+                        icon: (
+                          <ShoppingCart className="h-12 w-12 text-muted-foreground" />
+                        ),
+                        message: t('pages.creditCardExpenses.noInstallments'),
+                      }}
                       actions={(installment) => {
                         const purchase = purchases.find(
                           (p) => p.id === installment.purchase
                         );
+                        const isOrphan = !installment.bill;
                         return (
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-sm">
                             {purchase && (
                               <ReceiptButton
                                 source={{
@@ -746,11 +999,28 @@ export default function CreditCardExpenses() {
                                 )}
                               />
                             )}
+                            {isOrphan && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenAssignBill(installment)}
+                                aria-label={t('pages.creditCardExpenses.assignBillBtn')}
+                                title={t('pages.creditCardExpenses.assignBillBtn')}
+                              >
+                                <Link2
+                                  className="h-4 w-4 text-primary"
+                                  aria-hidden="true"
+                                />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditInstallment(installment)}
-                              aria-label="Editar valor da parcela"
+                              aria-label={t(
+                                'pages.creditCardExpenses.editInstallmentLabel'
+                              )}
+                              title={t('pages.creditCardExpenses.editInstallmentLabel')}
                             >
                               <DollarSign
                                 className="h-4 w-4 text-primary"
@@ -761,7 +1031,10 @@ export default function CreditCardExpenses() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditPurchase(installment.purchase)}
-                              aria-label="Editar compra"
+                              aria-label={t(
+                                'pages.creditCardExpenses.editPurchaseLabel'
+                              )}
+                              title={t('pages.creditCardExpenses.editPurchaseLabel')}
                             >
                               <Pencil className="h-4 w-4" aria-hidden="true" />
                             </Button>
@@ -769,7 +1042,10 @@ export default function CreditCardExpenses() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeletePurchase(installment.purchase)}
-                              aria-label="Excluir compra"
+                              aria-label={t(
+                                'pages.creditCardExpenses.deletePurchaseLabel'
+                              )}
+                              title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                             >
                               <Trash2
                                 className="h-4 w-4 text-destructive"
@@ -793,12 +1069,13 @@ export default function CreditCardExpenses() {
           keyExtractor={(installment) => installment.id}
           isLoading={isLoading}
           emptyState={{
-            message: 'Nenhuma parcela encontrada.',
+            icon: <ShoppingCart className="h-12 w-12 text-muted-foreground" />,
+            message: t('pages.creditCardExpenses.emptyState'),
           }}
           actions={(installment) => {
             const purchase = purchases.find((p) => p.id === installment.purchase);
             return (
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-sm">
                 {purchase && (
                   <ReceiptButton
                     source={{ type: 'credit_card_purchase', data: purchase }}
@@ -809,7 +1086,8 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleEditInstallment(installment)}
-                  aria-label="Editar valor da parcela"
+                  aria-label={t('pages.creditCardExpenses.editInstallmentLabel')}
+                  title={t('pages.creditCardExpenses.editInstallmentLabel')}
                 >
                   <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
                 </Button>
@@ -817,7 +1095,8 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleEditPurchase(installment.purchase)}
-                  aria-label="Editar compra"
+                  aria-label={t('pages.creditCardExpenses.editPurchaseLabel')}
+                  title={t('pages.creditCardExpenses.editPurchaseLabel')}
                 >
                   <Pencil className="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -825,7 +1104,8 @@ export default function CreditCardExpenses() {
                   variant="ghost"
                   size="icon"
                   onClick={() => handleDeletePurchase(installment.purchase)}
-                  aria-label="Excluir compra"
+                  aria-label={t('pages.creditCardExpenses.deletePurchaseLabel')}
+                  title={t('pages.creditCardExpenses.deletePurchaseLabel')}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                 </Button>
@@ -839,12 +1119,14 @@ export default function CreditCardExpenses() {
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedPurchase ? 'Editar' : 'Nova'} Compra de Cartão
+              {selectedPurchase
+                ? t('pages.creditCardExpenses.editPurchaseTitle')
+                : t('pages.creditCardExpenses.newPurchaseTitle')}
             </DialogTitle>
             <DialogDescription>
               {selectedPurchase
-                ? 'Edite os dados da compra. Valor total e parcelas não podem ser alterados.'
-                : 'Preencha os dados da compra. As parcelas serão geradas automaticamente.'}
+                ? t('pages.creditCardExpenses.editPurchaseDesc')
+                : t('pages.creditCardExpenses.newPurchaseDesc')}
             </DialogDescription>
           </DialogHeader>
           <CreditCardPurchaseForm
@@ -860,9 +1142,11 @@ export default function CreditCardExpenses() {
       <Dialog open={isInstallmentDialogOpen} onOpenChange={setIsInstallmentDialogOpen}>
         <DialogContent className="custom-scrollbar max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Parcela</DialogTitle>
+            <DialogTitle>
+              {t('pages.creditCardExpenses.editInstallmentTitle')}
+            </DialogTitle>
             <DialogDescription>
-              Ajuste o valor, status ou fatura desta parcela específica.
+              {t('pages.creditCardExpenses.editInstallmentDesc')}
             </DialogDescription>
           </DialogHeader>
           {selectedInstallment && (
@@ -876,6 +1160,82 @@ export default function CreditCardExpenses() {
           )}
         </DialogContent>
       </Dialog>
-    </PageContainer>
+
+      <Dialog open={isAssignBillDialogOpen} onOpenChange={setIsAssignBillDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('pages.creditCardExpenses.assignBillTitle')}</DialogTitle>
+            <DialogDescription>
+              {assigningInstallment && (
+                <>
+                  {t('pages.creditCardExpenses.assignBillDesc')}{' '}
+                  <span className="font-medium">
+                    {formatDate(assigningInstallment.due_date, 'dd/MM/yyyy')}
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {assigningInstallment &&
+            (() => {
+              const eligibleBills = getEligibleBills(assigningInstallment);
+              return (
+                <div className="space-y-md">
+                  {eligibleBills.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('pages.creditCardExpenses.noEligibleBills')}
+                    </p>
+                  ) : (
+                    <Select
+                      value={selectedAssignBillId}
+                      onValueChange={setSelectedAssignBillId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={t('pages.creditCardExpenses.allBills')}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eligibleBills.map((bill) => (
+                          <SelectItem key={bill.id} value={bill.id.toString()}>
+                            {
+                              TRANSLATIONS.months[
+                                bill.month as keyof typeof TRANSLATIONS.months
+                              ]
+                            }
+                            /{bill.year} (
+                            {formatDate(bill.invoice_beginning_date, 'dd/MM')}
+                            {' – '}
+                            {formatDate(bill.invoice_ending_date, 'dd/MM/yyyy')})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <div className="flex justify-end gap-sm">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAssignBillDialogOpen(false)}
+                      disabled={isSubmitting}
+                    >
+                      {t('common.actions.cancel')}
+                    </Button>
+                    <Button
+                      onClick={() => void handleAssignBill()}
+                      disabled={
+                        !selectedAssignBillId ||
+                        isSubmitting ||
+                        eligibleBills.length === 0
+                      }
+                    >
+                      {t('pages.creditCardExpenses.assignBillBtn')}
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
+    </Wrapper>
   );
 }

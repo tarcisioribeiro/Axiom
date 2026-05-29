@@ -29,7 +29,8 @@ class InstanceGenerator:
         cls, owner, target_date, force_regenerate: bool = False
     ) -> List[TaskInstance]:
         """
-        Gera todas as instâncias de tarefas para um owner em uma data específica.
+        Gera todas as instâncias de tarefas para um owner em uma data
+        específica.
 
         Args:
             owner: Member instance
@@ -57,7 +58,10 @@ class InstanceGenerator:
 
         # Ordena por horário
         instances.sort(
-            key=lambda x: (x.scheduled_time or time(23, 59), x.occurrence_index)
+            key=lambda x: (
+                x.scheduled_time or time(23, 59),
+                x.occurrence_index,
+            )
         )
 
         return instances
@@ -71,7 +75,9 @@ class InstanceGenerator:
         """
         return list(
             TaskInstance.objects.filter(
-                owner=owner, scheduled_date=target_date, deleted_at__isnull=True
+                owner=owner,
+                scheduled_date=target_date,
+                deleted_at__isnull=True,
             )
             .select_related("template")
             .order_by("scheduled_time", "occurrence_index")
@@ -86,12 +92,14 @@ class InstanceGenerator:
 
         Lógica de quantidade de instâncias:
         1. Se daily_occurrences > 1: usa daily_occurrences
-        2. Se target_quantity > 1: usa target_quantity (cada unidade = 1 instância)
+        2. Se target_quantity > 1: usa target_quantity
+           (cada unidade = 1 instância)
         3. Caso contrário: 1 instância
 
         Lógica de horários:
         1. Se scheduled_times está definido, usa os horários da lista
-        2. Se interval_hours está definido, calcula horários a partir de default_time
+        2. Se interval_hours está definido, calcula horários a partir de
+        default_time
         3. Caso contrário, usa default_time para todas as ocorrências
         """
         instances = []
@@ -157,9 +165,13 @@ class InstanceGenerator:
         # 2. Calcula baseado em intervalo
         if template.interval_hours and template.default_time:
             times = []
-            base_datetime = datetime.combine(datetime.today(), template.default_time)
+            base_datetime = datetime.combine(
+                datetime.today(), template.default_time
+            )
             for i in range(num_occurrences):
-                new_time = base_datetime + timedelta(hours=template.interval_hours * i)
+                new_time = base_datetime + timedelta(
+                    hours=template.interval_hours * i
+                )
                 # Garante que não passe de 23:59
                 if new_time.hour < 24:
                     times.append(new_time.time())
@@ -209,12 +221,15 @@ class InstanceGenerator:
                 existing.task_description = template.description
                 existing.category = template.category
                 existing.icon = template.icon
+                existing.priority = template.priority
                 existing.scheduled_time = scheduled_time
                 existing.unit = template.unit
                 needs_update = True
             # Sempre atualiza scheduled_time se estiver vazio
             # e temos horário do template
-            elif existing.scheduled_time is None and scheduled_time is not None:
+            elif (
+                existing.scheduled_time is None and scheduled_time is not None
+            ):
                 existing.scheduled_time = scheduled_time
                 needs_update = True
 
@@ -229,6 +244,7 @@ class InstanceGenerator:
             task_description=template.description,
             category=template.category,
             icon=template.icon,
+            priority=template.priority,
             scheduled_date=target_date,
             scheduled_time=scheduled_time,
             occurrence_index=occurrence_index,
@@ -237,14 +253,20 @@ class InstanceGenerator:
             quantity_completed=0,
             unit=template.unit,
             owner=owner,
-            created_by=owner.user if hasattr(owner, "user") and owner.user else None,
-            updated_by=owner.user if hasattr(owner, "user") and owner.user else None,
+            created_by=(
+                owner.user if hasattr(owner, "user") and owner.user else None
+            ),
+            updated_by=(
+                owner.user if hasattr(owner, "user") and owner.user else None
+            ),
         )
 
         return instance
 
     @classmethod
-    def regenerate_pending_instances(cls, owner, target_date) -> List[TaskInstance]:
+    def regenerate_pending_instances(
+        cls, owner, target_date
+    ) -> List[TaskInstance]:
         """
         Regenera instâncias pendentes com dados atualizados do template.
 
@@ -284,6 +306,10 @@ class InstanceGenerator:
             quantity_completed=0,
             unit=unit,
             owner=owner,
-            created_by=owner.user if hasattr(owner, "user") and owner.user else None,
-            updated_by=owner.user if hasattr(owner, "user") and owner.user else None,
+            created_by=(
+                owner.user if hasattr(owner, "user") and owner.user else None
+            ),
+            updated_by=(
+                owner.user if hasattr(owner, "user") and owner.user else None
+            ),
         )

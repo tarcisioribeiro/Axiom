@@ -6,81 +6,76 @@
  */
 
 import { format } from 'date-fns';
+import i18next from 'i18next';
 
 import { parseLocalDate } from './utils';
 
 /**
- * Formata valores monetários em Real Brasileiro (BRL)
+ * Formata valores monetários em Real Brasileiro (BRL) respeitando o locale ativo.
  *
  * @param value - Valor a ser formatado (string ou number)
- * @returns String formatada como moeda (ex: "R$ 1.234,56")
- *
- * @example
- * formatCurrency(1234.56) // "R$ 1.234,56"
- * formatCurrency("1234.56") // "R$ 1.234,56"
+ * @returns String formatada como moeda (ex: "R$ 1.234,56" em pt-BR, "R$1,234.56" em en-US)
  */
 export const formatCurrency = (value: string | number): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
 
   if (isNaN(num)) {
-    return 'R$ 0,00';
+    return new Intl.NumberFormat(i18next.language || 'pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(0);
   }
 
-  return new Intl.NumberFormat('pt-BR', {
+  return new Intl.NumberFormat(i18next.language || 'pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(num);
 };
 
 /**
- * Formata datas no padrão brasileiro
+ * Formata datas respeitando o locale ativo.
  *
  * @param date - Data a ser formatada (string ou Date)
- * @param formatStr - Padrão de formatação (padrão: 'dd/MM/yyyy')
+ * @param formatStr - Padrão de formatação (opcional; padrão depende do locale)
  * @returns String formatada
- *
- * @example
- * formatDate(new Date()) // "30/12/2025"
- * formatDate("2025-12-30") // "30/12/2025"
- * formatDate("2025-12-30", "dd/MM/yy") // "30/12/25"
  */
-export const formatDate = (
-  date: string | Date,
-  formatStr: string = 'dd/MM/yyyy'
-): string => {
+export const formatDate = (date: string | Date, formatStr?: string): string => {
   try {
     const dateObj = typeof date === 'string' ? parseLocalDate(date) : date;
-    if (!dateObj) return 'Data inválida';
-    return format(dateObj, formatStr);
+    if (!dateObj)
+      return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
+
+    const locale = i18next.language || 'pt-BR';
+    const defaultFormat = locale === 'en-US' ? 'MM/dd/yyyy' : 'dd/MM/yyyy';
+    return format(dateObj, formatStr ?? defaultFormat);
   } catch {
-    return 'Data inválida';
+    return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
   }
 };
 
 /**
- * Formata data e hora
+ * Formata data e hora respeitando o locale ativo.
  *
  * @param date - Data a ser formatada
  * @param time - Hora opcional (formato: "HH:mm")
  * @returns String formatada com data e hora
- *
- * @example
- * formatDateTime("2025-12-30") // "30/12/2025 00:00"
- * formatDateTime("2025-12-30", "14:30") // "30/12/2025 14:30"
  */
 export const formatDateTime = (date: string, time?: string): string => {
   try {
     const dateObj = parseLocalDate(date);
-    if (!dateObj) return 'Data inválida';
+    if (!dateObj)
+      return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
 
     if (time) {
       const [hours, minutes] = time.split(':');
       dateObj.setHours(parseInt(hours, 10), parseInt(minutes, 10));
     }
 
-    return format(dateObj, 'dd/MM/yyyy HH:mm');
+    const locale = i18next.language || 'pt-BR';
+    const fmt = locale === 'en-US' ? 'MM/dd/yyyy HH:mm' : 'dd/MM/yyyy HH:mm';
+    return format(dateObj, fmt);
   } catch {
-    return 'Data inválida';
+    return i18next.language === 'en-US' ? 'Invalid date' : 'Data inválida';
   }
 };
 
@@ -90,10 +85,6 @@ export const formatDateTime = (date: string, time?: string): string => {
  * @param value - Número a ser formatado
  * @param decimals - Número de casas decimais (padrão: 2)
  * @returns String formatada
- *
- * @example
- * formatNumber(1234.5678) // "1234.57"
- * formatNumber(1234.5678, 0) // "1235"
  */
 export const formatNumber = (value: number, decimals: number = 2): string => {
   if (isNaN(value)) {
@@ -108,10 +99,6 @@ export const formatNumber = (value: number, decimals: number = 2): string => {
  *
  * @param value - Valor decimal (ex: 0.15 para 15%)
  * @returns String formatada como percentual
- *
- * @example
- * formatPercentage(0.15) // "15.00%"
- * formatPercentage(0.5) // "50.00%"
  */
 export const formatPercentage = (value: number): string => {
   if (isNaN(value)) {

@@ -5,7 +5,7 @@
 FROM python:3.12-slim AS base
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     postgresql-client \
@@ -44,8 +44,15 @@ COPY . .
 
 RUN black --check . && isort --check . && flake8 .
 
-# Stage 5: Production image
-FROM base AS production
+# Stage 5: Production image — starts fresh to exclude build-only packages
+# (build-essential brings linux-libc-dev with kernel CVEs not needed at runtime)
+FROM python:3.12-slim AS production
+
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    netcat-openbsd \
+    curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -73,11 +80,14 @@ RUN echo '#!/bin/bash\nmkdir -p /app/media/security/archives/$(date +%Y)/$(date 
 USER appuser
 
 # Expose API port
-EXPOSE 8002
+EXPOSE 39100
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=app.settings
 ENV TZ=America/Sao_Paulo
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:${API_PORT:-39100}/live/ || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -17,7 +17,8 @@ from transfers.models import Transfer
 
 class Command(BaseCommand):
     help = (
-        "Processa transferências existentes criando despesas" " e receitas relacionadas"
+        "Processa transferências existentes criando despesas"
+        " e receitas relacionadas"
     )
 
     def add_arguments(self, parser):
@@ -46,7 +47,9 @@ class Command(BaseCommand):
 
         if dry_run:
             self.stdout.write(
-                self.style.WARNING("MODO DRY-RUN: Nenhuma alteração será feita")
+                self.style.WARNING(
+                    "MODO DRY-RUN: Nenhuma alteração será feita"
+                )
             )
 
         self.stdout.write(
@@ -58,7 +61,9 @@ class Command(BaseCommand):
         total_transfers = transfers.count()
 
         self.stdout.write(
-            self.style.NOTICE(f"Total de transferências efetivadas: {total_transfers}")
+            self.style.NOTICE(
+                f"Total de transferências efetivadas: {total_transfers}"
+            )
         )
 
         created_expenses = 0
@@ -100,7 +105,9 @@ class Command(BaseCommand):
                 if not expense_exists:
                     if not dry_run:
                         Expense.objects.create(
-                            description=f"Transferência: {transfer.description}",
+                            description=(
+                                f"Transferência: {transfer.description}"
+                            ),
                             value=transfer.value + transfer.fee,
                             date=transfer.date,
                             horary=transfer.horary,
@@ -114,11 +121,12 @@ class Command(BaseCommand):
                             payment_method="transfer",
                             member=transfer.member,
                             notes=(
-                                "Transferência ID:"
-                                f" {transfer.transaction_id or transfer.uuid}\n"
-                                f"Tipo: {transfer.get_category_display()}\n"
-                                f"Taxa: R$ {transfer.fee}\n"
-                                f"{transfer.notes or ''}"
+                                "Transferência ID: "
+                                + str(transfer.transaction_id or transfer.uuid)
+                                + "\n"
+                                + f"Tipo: {transfer.get_category_display()}\n"
+                                + f"Taxa: R$ {transfer.fee}\n"
+                                + f"{transfer.notes or ''}"
                             ),
                             created_by=transfer.created_by,
                             updated_by=transfer.updated_by,
@@ -135,7 +143,9 @@ class Command(BaseCommand):
                 if not revenue_exists:
                     if not dry_run:
                         Revenue.objects.create(
-                            description=f"Transferência: {transfer.description}",
+                            description=(
+                                f"Transferência: {transfer.description}"
+                            ),
                             value=transfer.value,
                             date=transfer.date,
                             horary=transfer.horary,
@@ -148,10 +158,11 @@ class Command(BaseCommand):
                             ),
                             member=transfer.member,
                             notes=(
-                                "Transferência ID:"
-                                f" {transfer.transaction_id or transfer.uuid}\n"
-                                f"Tipo: {transfer.get_category_display()}\n"
-                                f"{transfer.notes or ''}"
+                                "Transferência ID: "
+                                + str(transfer.transaction_id or transfer.uuid)
+                                + "\n"
+                                + f"Tipo: {transfer.get_category_display()}\n"
+                                + f"{transfer.notes or ''}"
                             ),
                             created_by=transfer.created_by,
                             updated_by=transfer.updated_by,
@@ -190,13 +201,15 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(
                 self.style.WARNING(
-                    "\n⚠ MODO DRY-RUN: Nenhuma alteração foi feita" " no banco de dados"
+                    "\n⚠ MODO DRY-RUN: Nenhuma alteração foi feita"
+                    " no banco de dados"
                 )
             )
         elif errors == 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    "\n✓ Todas as transferências foram processadas com sucesso!"
+                    "\n✓ Todas as transferências foram processadas"
+                    " com sucesso!"
                     '\n\nExecute "python manage.py update_balances"'
                     " para atualizar os saldos das contas."
                 )

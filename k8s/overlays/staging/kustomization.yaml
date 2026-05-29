@@ -1,0 +1,53 @@
+# =============================================================================
+# Axiom — Kustomize staging overlay
+# =============================================================================
+#
+# CI deploy command for staging:
+#
+#   cd k8s/overlays/staging
+#   kustomize edit set image \
+#     registry.gitlab.com/tarcisioribeiro/axiom/api:$CI_COMMIT_SHORT_SHA \
+#     registry.gitlab.com/tarcisioribeiro/axiom/frontend:$CI_COMMIT_SHORT_SHA
+#   kustomize build . | kubectl apply -f -
+#
+# Required env vars (applied separately via envsubst):
+#   AXIOM_STAGING_DOMAIN   e.g. staging.axiom.example.com
+#   LETSENCRYPT_EMAIL
+#   STAGING_DB_NAME, STAGING_DB_USER, STAGING_DB_PASSWORD, ...
+#   (see k8s/staging/secrets.yaml for the full list)
+# =============================================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: axiom-staging
+
+resources:
+  - ../../staging/namespace.yaml
+  - ../../staging/postgres/configmap.yaml
+  - ../../staging/postgres/pvc.yaml
+  - ../../staging/postgres/deployment.yaml
+  - ../../staging/postgres/service.yaml
+  - ../../staging/redis/pvc.yaml
+  - ../../staging/redis/deployment.yaml
+  - ../../staging/redis/service.yaml
+  - ../../staging/minio/pvc.yaml
+  - ../../staging/minio/deployment.yaml
+  - ../../staging/minio/service.yaml
+  - ../../staging/api/pvc.yaml
+  - ../../staging/api/deployment.yaml
+  - ../../staging/api/service.yaml
+  - ../../staging/frontend/configmap-nginx.yaml
+  - ../../staging/frontend/deployment.yaml
+  - ../../staging/frontend/service.yaml
+  - ../../staging/ollama/pvc.yaml
+  - ../../staging/ollama/deployment.yaml
+  - ../../staging/ollama/service.yaml
+  - ../../staging/serviceaccounts.yaml
+  - ../../staging/network-policy.yaml
+  - ../../staging/resource-quota.yaml
+
+images:
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/api
+    newTag: latest
+  - name: registry.gitlab.com/tarcisioribeiro/axiom/frontend
+    newTag: latest

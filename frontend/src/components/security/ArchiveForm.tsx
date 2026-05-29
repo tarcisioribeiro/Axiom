@@ -1,8 +1,22 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2 } from 'lucide-react';
+import {
+  File,
+  FileImage,
+  FileText,
+  FolderOpen,
+  Loader2,
+  MoreHorizontal,
+  Package,
+  Tag,
+  Upload,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { FileInput } from '@/components/ui/file-input';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,27 +27,28 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { ARCHIVE_CATEGORY_ICONS } from '@/config/icons';
 import { archiveSchema, type ArchiveFormData } from '@/lib/validations';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Archive, Member } from '@/types';
 
-const ARCHIVE_CATEGORIES = [
-  { value: 'personal', label: 'Pessoal' },
-  { value: 'financial', label: 'Financeiro' },
-  { value: 'legal', label: 'Jurídico' },
-  { value: 'medical', label: 'Médico' },
-  { value: 'tax', label: 'Fiscal' },
-  { value: 'work', label: 'Trabalho' },
-  { value: 'other', label: 'Outro' },
-];
+const ARCHIVE_CATEGORY_KEYS = [
+  'personal',
+  'financial',
+  'legal',
+  'medical',
+  'tax',
+  'work',
+  'other',
+] as const;
 
-const ARCHIVE_TYPES = [
-  { value: 'text', label: 'Texto' },
-  { value: 'pdf', label: 'PDF' },
-  { value: 'image', label: 'Imagem' },
-  { value: 'document', label: 'Documento' },
-  { value: 'other', label: 'Outro' },
-];
+const ARCHIVE_TYPE_OPTIONS = [
+  { value: 'text', icon: FileText, translationKey: 'text' },
+  { value: 'pdf', icon: File, translationKey: 'pdf' },
+  { value: 'image', icon: FileImage, translationKey: 'image' },
+  { value: 'document', icon: FileText, translationKey: 'document' },
+  { value: 'other', icon: Package, translationKey: 'other' },
+] as const;
 
 const FILE_TYPES_ACCEPT = [
   '.txt',
@@ -71,6 +86,7 @@ export function ArchiveForm({
   onCancel,
   isLoading = false,
 }: ArchiveFormProps) {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const {
     register,
@@ -87,7 +103,7 @@ export function ArchiveForm({
           archive_type: archive.archive_type as ArchiveFormData['archive_type'],
           text_content: archive.text_content || '',
           notes: archive.notes || '',
-          tags: archive.tags || '',
+          tags: archive.tags?.join(', ') || '',
           owner: archive.owner,
         }
       : {
@@ -105,185 +121,234 @@ export function ArchiveForm({
     const fileInput = document.getElementById('file') as HTMLInputElement;
     const file = fileInput?.files?.[0];
 
-    // Validação: para novos arquivos, deve ter arquivo OU conteúdo de texto
     if (!archive && !file && data.archive_type !== 'text') {
-      alert('Por favor, selecione um arquivo.');
+      alert(t('pages.archives.form.alertSelectFile'));
       return;
     }
 
     if (!archive && data.archive_type === 'text' && !data.text_content) {
-      alert('Por favor, insira o conteúdo do texto.');
+      alert(t('pages.archives.form.alertEnterText'));
       return;
     }
 
-    // Use logged-in user as owner for new archives
     const submitData: ArchiveFormData & { file?: File } = {
       ...data,
       owner: archive ? data.owner : user?.id || 0,
       file,
     };
 
-    // Durante update, se text_content estiver vazio e o tipo não for 'text',
-    // não enviar o campo para preservar conteúdo existente
     if (archive && !data.text_content && data.archive_type !== 'text') {
       delete submitData.text_content;
     }
 
-    // Durante update de arquivo tipo texto, se text_content estiver vazio,
-    // não enviar para preservar o conteúdo existente (exceto se usuário realmente quer limpar)
     if (
       archive &&
       data.archive_type === 'text' &&
       !data.text_content &&
       archive.archive_type === 'text'
     ) {
-      // Avisar que não pode deixar vazio
-      alert(
-        'Arquivos de texto não podem ter conteúdo vazio. Se quiser remover o conteúdo, exclua o arquivo.'
-      );
+      alert(t('pages.archives.form.alertTextNotEmpty'));
       return;
     }
 
     onSubmit(submitData);
   });
 
+  const watchedArchiveType = watch('archive_type');
+
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="col-span-2">
-          <Label htmlFor="title">Título *</Label>
-          <Input
-            id="title"
-            {...register('title')}
-            placeholder="Nome descritivo do arquivo"
-          />
-          {errors.title && (
-            <p className="mt-1 text-sm text-destructive">{errors.title.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="category">Categoria *</Label>
-          <Select
-            value={watch('category')}
-            onValueChange={(value) =>
-              setValue('category', value as ArchiveFormData['category'])
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ARCHIVE_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.category && (
-            <p className="mt-1 text-sm text-destructive">{errors.category.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="archive_type">Tipo de Arquivo *</Label>
-          <Select
-            value={watch('archive_type')}
-            onValueChange={(value) =>
-              setValue('archive_type', value as ArchiveFormData['archive_type'])
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ARCHIVE_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.archive_type && (
-            <p className="mt-1 text-sm text-destructive">
-              {errors.archive_type.message}
-            </p>
-          )}
-        </div>
-
-        {watch('archive_type') === 'text' ? (
-          <div className="col-span-2">
-            <Label htmlFor="text_content">Conteúdo de Texto *</Label>
-            <Textarea
-              id="text_content"
-              {...register('text_content')}
-              placeholder="Digite ou cole o conteúdo do texto aqui..."
-              rows={10}
-              className="font-mono text-sm"
+    <form onSubmit={handleFormSubmit} className="space-y-lg">
+      <FormSection
+        title={t('pages.archives.form.sectionIdentification')}
+        icon={FileText}
+      >
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+          <div className="space-y-sm md:col-span-2">
+            <Label htmlFor="title" className="flex items-center gap-xs">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.archives.form.titleLabel')}
+            </Label>
+            <Input
+              id="title"
+              {...register('title')}
+              placeholder={t('pages.archives.form.titlePlaceholder')}
+              disabled={isLoading}
             />
-            {errors.text_content && (
-              <p className="mt-1 text-sm text-destructive">
-                {errors.text_content.message}
+            {errors.title && (
+              <p className="mt-xs text-sm text-destructive">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-sm md:col-span-2">
+            <Label className="flex items-center gap-xs">
+              <FolderOpen className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.archives.form.categoryLabel')}
+            </Label>
+            <Select
+              value={watch('category')}
+              onValueChange={(value) =>
+                setValue('category', value as ArchiveFormData['category'])
+              }
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ARCHIVE_CATEGORY_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    <span className="flex items-center gap-2">
+                      {(() => {
+                        const CatIcon = ARCHIVE_CATEGORY_ICONS[key];
+                        return CatIcon ? <CatIcon className="h-4 w-4" /> : null;
+                      })()}
+                      {t(`pages.archives.categories.${key}`)}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.category && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.category.message}
               </p>
             )}
-            <p className="mt-1 text-xs">
-              O texto será criptografado antes de ser armazenado
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.archives.form.sectionTypeContent')} icon={Upload}>
+        <div className="space-y-md">
+          {/* Adaptação visual: toggle de tipo com ícones */}
+          <div className="space-y-sm">
+            <Label className="flex items-center gap-xs">
+              <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.archives.form.typeLabel')}
+            </Label>
+            <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+              {ARCHIVE_TYPE_OPTIONS.map(({ value, icon: Icon, translationKey }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setValue('archive_type', value)}
+                  disabled={isLoading}
+                  className={`flex flex-1 flex-col items-center justify-center gap-0.5 rounded px-2 py-1.5 text-xs font-medium transition-all duration-150 ${
+                    watchedArchiveType === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">
+                    {t(`pages.archives.types.${translationKey}`)}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {errors.archive_type && (
+              <p className="mt-xs text-sm text-destructive">
+                {errors.archive_type.message}
+              </p>
+            )}
+          </div>
+
+          {watchedArchiveType === 'text' ? (
+            <div className="space-y-sm">
+              <Label htmlFor="text_content" className="flex items-center gap-xs">
+                <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.archives.form.contentLabel')}
+              </Label>
+              <Textarea
+                id="text_content"
+                {...register('text_content')}
+                placeholder={t('pages.archives.form.contentPlaceholder')}
+                rows={10}
+                className="font-mono text-sm"
+                disabled={isLoading}
+              />
+              {errors.text_content && (
+                <p className="mt-xs text-sm text-destructive">
+                  {errors.text_content.message}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {t('pages.archives.form.textContentHint')}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-sm">
+              <Label htmlFor="file" className="flex items-center gap-xs">
+                <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.archives.form.fileLabel')}
+                {!archive && ' *'}
+              </Label>
+              <FileInput id="file" accept={FILE_TYPES_ACCEPT} onChange={() => {}} />
+              {archive ? (
+                <p className="text-xs text-warning">
+                  {t('pages.archives.form.fileHintEdit')}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.archives.form.fileHintNew')}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </FormSection>
+
+      <FormSection title={t('pages.archives.form.sectionOrganization')} icon={Tag}>
+        <div className="grid gap-md">
+          <div className="space-y-sm">
+            <Label htmlFor="tags" className="flex items-center gap-xs">
+              <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.archives.form.tagsLabel')}
+            </Label>
+            <Input
+              id="tags"
+              {...register('tags')}
+              placeholder={t('pages.archives.form.tagsPlaceholder')}
+              disabled={isLoading}
+            />
+            {errors.tags && (
+              <p className="mt-xs text-sm text-destructive">{errors.tags.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {t('pages.archives.form.tagsHint')}
             </p>
           </div>
-        ) : (
-          <div className="col-span-2">
-            <Label htmlFor="file">Arquivo {!archive && '*'}</Label>
-            <Input id="file" type="file" accept={FILE_TYPES_ACCEPT} />
-            {archive ? (
-              <p className="mt-1 text-xs text-warning">
-                Deixe vazio para manter o arquivo atual. Upload de novo arquivo
-                substituirá o existente.
-              </p>
-            ) : (
-              <p className="mt-1 text-xs">
-                O arquivo será criptografado antes de ser armazenado. Tipos suportados:
-                PDF, Word, Excel, PowerPoint, JSON, XML, CSV, imagens, compactados, etc.
-              </p>
+
+          <div className="space-y-sm">
+            <Label htmlFor="notes" className="flex items-center gap-xs">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+              {t('pages.archives.form.notesLabel')}
+            </Label>
+            <Textarea
+              id="notes"
+              {...register('notes')}
+              placeholder={t('pages.archives.form.notesPlaceholder')}
+              rows={3}
+              disabled={isLoading}
+            />
+            {errors.notes && (
+              <p className="mt-xs text-sm text-destructive">{errors.notes.message}</p>
             )}
           </div>
-        )}
-
-        <div className="col-span-2">
-          <Label htmlFor="tags">Tags</Label>
-          <Input id="tags" {...register('tags')} placeholder="tag1, tag2, tag3" />
-          {errors.tags && (
-            <p className="mt-1 text-sm text-destructive">{errors.tags.message}</p>
-          )}
-          <p className="mt-1 text-xs">Separe as tags com vírgulas</p>
         </div>
+      </FormSection>
 
-        <div className="col-span-2">
-          <Label htmlFor="notes">Observações</Label>
-          <Textarea
-            id="notes"
-            {...register('notes')}
-            placeholder="Notas adicionais sobre o arquivo..."
-            rows={3}
-          />
-          {errors.notes && (
-            <p className="mt-1 text-sm text-destructive">{errors.notes.message}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-2 border-t pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+      <div className="flex justify-end gap-sm border-t pt-md">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Salvando...
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              {t('common.actions.saving')}
             </>
           ) : (
-            'Salvar'
+            t('common.actions.save')
           )}
         </Button>
       </div>

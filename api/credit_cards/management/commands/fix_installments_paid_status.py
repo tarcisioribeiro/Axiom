@@ -3,13 +3,19 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from credit_cards.models import CreditCard, CreditCardBill, CreditCardInstallment
+from credit_cards.models import (
+    CreditCard,
+    CreditCardBill,
+    CreditCardInstallment,
+)
 
 
 class Command(BaseCommand):
     help = (
-        "Corrige o status de pagamento das parcelas baseado nas faturas pagas. "
-        "Também reseta o credit_limit dos cartões para o max_limit."
+        "Corrige o status de pagamento das parcelas"
+        " baseado nas faturas pagas. "
+        "Também reseta o credit_limit dos cartões"
+        " para o max_limit."
     )
 
     def add_arguments(self, parser):
@@ -32,7 +38,9 @@ class Command(BaseCommand):
 
         if dry_run:
             self.stdout.write(
-                self.style.WARNING("[MODO DRY-RUN] Nenhuma alteração será feita\n")
+                self.style.WARNING(
+                    "[MODO DRY-RUN] Nenhuma alteração será feita\n"
+                )
             )
 
         with transaction.atomic():
@@ -51,7 +59,9 @@ class Command(BaseCommand):
 
     def _fix_paid_bill_installments(self, dry_run):
         """Marca como pagas as parcelas de faturas que já foram pagas."""
-        self.stdout.write(self.style.HTTP_INFO("\n--- CORREÇÃO DE PARCELAS ---\n"))
+        self.stdout.write(
+            self.style.HTTP_INFO("\n--- CORREÇÃO DE PARCELAS ---\n")
+        )
 
         # Buscar faturas pagas
         paid_bills = CreditCardBill.objects.filter(
@@ -73,7 +83,8 @@ class Command(BaseCommand):
             count = unpaid_installments.count()
             if count > 0:
                 self.stdout.write(
-                    f"  Fatura {bill.credit_card.name} - {bill.month}/{bill.year}: "
+                    f"  Fatura {bill.credit_card.name}"
+                    f" - {bill.month}/{bill.year}: "
                     f"{count} parcela(s) a corrigir"
                 )
 
@@ -87,7 +98,8 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(
                     f"  Total: {total_installments_fixed} parcela(s) "
-                    f'{"seriam marcadas" if dry_run else "marcadas"} como pagas'
+                    f'{"seriam marcadas" if dry_run else "marcadas"}'
+                    " como pagas"
                 )
             )
         else:
@@ -99,7 +111,7 @@ class Command(BaseCommand):
             self.style.HTTP_INFO("\n--- RESET DE LIMITES DE CARTÕES ---\n")
         )
 
-        cards = CreditCard.objects.filter(is_deleted=False)
+        cards = CreditCard.objects.all()
 
         if not cards.exists():
             self.stdout.write("Nenhum cartão encontrado.")
@@ -113,7 +125,8 @@ class Command(BaseCommand):
 
             if credit_limit != max_limit:
                 self.stdout.write(
-                    f"  {card.name}: credit_limit {credit_limit} -> {max_limit}"
+                    f"  {card.name}: credit_limit"
+                    f" {credit_limit} -> {max_limit}"
                 )
 
                 if not dry_run:
@@ -131,4 +144,6 @@ class Command(BaseCommand):
                 )
             )
         else:
-            self.stdout.write("  Todos os cartões já têm credit_limit = max_limit.")
+            self.stdout.write(
+                "  Todos os cartões já têm credit_limit = max_limit."
+            )

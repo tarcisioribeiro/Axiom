@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: redis
+    environment: staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 500Mi

@@ -9,7 +9,12 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from app.health import health_check, live_check, ready_check
+from app.health import (
+    backup_health_check,
+    health_check,
+    live_check,
+    ready_check,
+)
 from app.views import PurgeDeletedView, current_date
 
 urlpatterns = [
@@ -20,6 +25,11 @@ urlpatterns = [
     path("health/", health_check, name="health-check"),
     path("ready/", ready_check, name="ready-check"),
     path("live/", live_check, name="live-check"),
+    path(
+        "api/v1/health/backup/",
+        backup_health_check,
+        name="backup-health-check",
+    ),
     # App utilities
     path("api/v1/app/current-date/", current_date, name="current-date"),
     path(
@@ -45,22 +55,44 @@ urlpatterns = [
     path("api/v1/personal-planning/", include("personal_planning.urls")),
     # Payables Module
     path("api/v1/", include("payables.urls")),
+    # Receivables Module
+    path("api/v1/", include("receivables.urls")),
     # Vaults Module (Cofres)
     path("api/v1/", include("vaults.urls")),
     # Notifications Module
     path("api/v1/", include("notifications.urls")),
-    # AI Assistant Module
-    path("api/v1/ai/", include("ai_assistant.urls")),
-    # API Documentation (OpenAPI/Swagger)
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path(
-        "api/docs/",
-        SpectacularSwaggerView.as_view(url_name="schema"),
-        name="swagger-ui",
-    ),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    # Budgets Module
+    path("api/v1/", include("budgets.urls")),
+    # Bank Reconciliation Module
+    path("api/v1/", include("bank_reconciliation.urls")),
+    # Agents Module
+    path("api/v1/agents/", include("agents.urls")),
+    # Admin Panel Module
+    path("api/v1/admin/", include("admin_panel.urls")),
+    # Webhooks outbound
+    path("api/v1/", include("webhooks.urls")),
+    # Exchange Rates (multi-currency)
+    path("api/v1/", include("exchange_rates.urls")),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # API Documentation (OpenAPI/Swagger) — only exposed in development
+    urlpatterns += [
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path(
+            "api/docs/",
+            SpectacularSwaggerView.as_view(url_name="schema"),
+            name="swagger-ui",
+        ),
+        path(
+            "api/redoc/",
+            SpectacularRedocView.as_view(url_name="schema"),
+            name="redoc",
+        ),
+    ]
+    urlpatterns += static(
+        settings.STATIC_URL or "", document_root=settings.STATIC_ROOT
+    )
+    urlpatterns += static(
+        settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT
+    )

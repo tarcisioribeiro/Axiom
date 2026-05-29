@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -6,23 +7,30 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Migrate existing media files from local filesystem to MinIO/S3 storage"
+    help = (
+        "Migrate existing media files from local filesystem"
+        " to MinIO/S3 storage"
+    )
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
-            help="List files that would be migrated without actually migrating them",
+            help=(
+                "List files that would be migrated without actually"
+                " migrating them"
+            ),
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
         media_root = settings.MEDIA_ROOT
 
         if not os.path.exists(media_root):
             self.stdout.write(
                 self.style.WARNING(
-                    f"Media directory {media_root} does not exist. Nothing to migrate."
+                    f"Media directory {media_root} does not exist."
+                    " Nothing to migrate."
                 )
             )
             return
@@ -38,12 +46,16 @@ class Command(BaseCommand):
                 files_found += 1
 
                 if dry_run:
-                    self.stdout.write(f"  [DRY RUN] Would migrate: {relative_path}")
+                    self.stdout.write(
+                        f"  [DRY RUN] Would migrate: {relative_path}"
+                    )
                     continue
 
                 # Check if file already exists in storage
                 if default_storage.exists(relative_path):
-                    self.stdout.write(f"  [SKIP] Already exists: {relative_path}")
+                    self.stdout.write(
+                        f"  [SKIP] Already exists: {relative_path}"
+                    )
                     files_skipped += 1
                     continue
 
@@ -62,7 +74,9 @@ class Command(BaseCommand):
         self.stdout.write("")
         if dry_run:
             self.stdout.write(
-                self.style.WARNING(f"Dry run complete. {files_found} file(s) found.")
+                self.style.WARNING(
+                    f"Dry run complete. {files_found} file(s) found."
+                )
             )
         else:
             self.stdout.write(

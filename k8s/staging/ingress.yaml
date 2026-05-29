@@ -1,0 +1,99 @@
+# Ingress — Staging
+# -------------------------------------------------------
+# Uses nginx-ingress (ingressClassName: nginx), matching the production setup
+# in k8s/ingress.yaml. The cluster runs nginx-ingress as the ingress controller,
+# not Traefik, so ingressClassName must be set explicitly for this resource to
+# be processed. Without it, nginx-ingress ignores the Ingress and returns 404
+# for every request to the staging host.
+#
+# Prerequisites (run once on the VPS):
+#
+#   # Install cert-manager (for TLS certificates via Let's Encrypt)
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+#
+# Note: The ClusterIssuers (letsencrypt-staging / letsencrypt-prod) are cluster-scoped
+# and are already defined in k8s/ingress.yaml (production). You only need to apply them once.
+# If they already exist, skip applying the ClusterIssuer sections there.
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: axiom-staging-ingress
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: ingress
+    environment: staging
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - axiom-staging.tjtux.duckdns.org
+      secretName: axiom-staging-tls
+  rules:
+    - host: axiom-staging.tjtux.duckdns.org
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /live
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /ready
+            pathType: Prefix
+            backend:
+              service:
+                name: api-service
+                port:
+                  number: 39100
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-service
+                port:
+                  number: 80

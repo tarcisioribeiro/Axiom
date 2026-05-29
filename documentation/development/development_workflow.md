@@ -1,6 +1,6 @@
 # Workflow de Desenvolvimento
 
-Este guia detalha os comandos e práticas do dia a dia no desenvolvimento do MindLedger.
+Este guia detalha os comandos e práticas do dia a dia no desenvolvimento do Axiom.
 
 ## Índice
 
@@ -68,7 +68,7 @@ docker-compose exec api bash
 docker-compose exec api python manage.py shell
 
 # Shell do PostgreSQL
-docker-compose exec db psql -U mindledger_user -d mindledger_db
+docker-compose exec db psql -U axiom_user -d axiom_db
 
 # Shell do Redis
 docker-compose exec redis redis-cli
@@ -89,12 +89,12 @@ docker-compose logs -f db
 docker-compose logs --tail=50 api
 
 # Verificar uso de recursos
-docker stats mindledger-api mindledger-db mindledger-redis
+docker stats axiom-api axiom-db axiom-redis
 ```
 
 ## Hot Reload e Desenvolvimento Iterativo
 
-O MindLedger está configurado para hot reload automático em desenvolvimento.
+O Axiom está configurado para hot reload automático em desenvolvimento.
 
 ### Backend (Django)
 
@@ -304,10 +304,10 @@ debugger; // Para aqui quando DevTools está aberto
 
 ```bash
 # Uso de CPU e memória
-docker stats mindledger-api mindledger-db mindledger-redis
+docker stats axiom-api axiom-db axiom-redis
 
 # Queries lentas no PostgreSQL
-docker-compose exec db psql -U mindledger_user -d mindledger_db -c "
+docker-compose exec db psql -U axiom_user -d axiom_db -c "
   SELECT query, calls, total_time, mean_time
   FROM pg_stat_statements
   ORDER BY total_time DESC
@@ -448,10 +448,10 @@ docker-compose exec api python manage.py migrate --fake
 
 ```bash
 # Criar backup
-docker-compose exec db pg_dump -U mindledger_user mindledger_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose exec db pg_dump -U axiom_user axiom_db > backups/backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Restaurar backup
-docker-compose exec -T db psql -U mindledger_user mindledger_db < backups/backup_20260112_103045.sql
+docker-compose exec -T db psql -U axiom_user axiom_db < backups/backup_20260112_103045.sql
 
 # Backup de um app específico (apenas dados)
 docker-compose exec api python manage.py dumpdata accounts --indent 2 > backups/accounts_data.json
@@ -464,7 +464,7 @@ docker-compose exec -T api python manage.py loaddata < backups/accounts_data.jso
 
 ```bash
 # Acessar psql
-docker-compose exec db psql -U mindledger_user -d mindledger_db
+docker-compose exec db psql -U axiom_user -d axiom_db
 
 # Exemplos de queries úteis
 \dt                           # Listar tabelas
@@ -482,8 +482,8 @@ SELECT * FROM auth_user WHERE is_superuser = true;
 # ⚠️ ATENÇÃO: Apaga TODOS os dados!
 
 # Método 1: Dropar e recriar banco
-docker-compose exec db psql -U mindledger_user -d postgres -c "DROP DATABASE mindledger_db;"
-docker-compose exec db psql -U mindledger_user -d postgres -c "CREATE DATABASE mindledger_db OWNER mindledger_user;"
+docker-compose exec db psql -U axiom_user -d postgres -c "DROP DATABASE axiom_db;"
+docker-compose exec db psql -U axiom_user -d postgres -c "CREATE DATABASE axiom_db OWNER axiom_user;"
 docker-compose exec api python manage.py migrate
 
 # Método 2: Flush (limpa dados, mantém estrutura)
@@ -497,7 +497,7 @@ docker-compose exec api python manage.py migrate
 
 ## Comandos Personalizados do Django
 
-O MindLedger possui comandos personalizados:
+O Axiom possui comandos personalizados:
 
 ```bash
 # Atualizar saldos das contas

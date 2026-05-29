@@ -1,3 +1,6 @@
+from decimal import Decimal
+from typing import Any
+
 from rest_framework import serializers
 
 from accounts.models import Account
@@ -6,9 +9,14 @@ from accounts.models import Account
 class AccountSerializer(serializers.ModelSerializer):
     account_number_masked = serializers.ReadOnlyField()
     balance = serializers.DecimalField(
-        max_digits=15, decimal_places=2, source="current_balance", required=False
+        max_digits=15,
+        decimal_places=2,
+        source="current_balance",
+        required=False,
     )
-    institution = serializers.CharField(source="institution_name", required=True)
+    institution = serializers.CharField(
+        source="institution_name", required=True
+    )
     account_number = serializers.CharField(
         write_only=True, required=False, allow_blank=True
     )
@@ -43,17 +51,37 @@ class AccountSerializer(serializers.ModelSerializer):
             "updated_by",
         ]
 
-    def create(self, validated_data):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        balance = attrs.get("current_balance", Decimal("0.00"))
+        overdraft_limit = attrs.get("overdraft_limit", Decimal("0.00"))
+        if balance < -overdraft_limit:
+            raise serializers.ValidationError(
+                {
+                    "balance": (
+                        f"Saldo não pode ser menor que -{overdraft_limit} "
+                        f"(limite do cheque especial)."
+                    )
+                }
+            )
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().create(validated_data)
+        instance: Account = super().create(  # type: ignore[assignment]
+            validated_data
+        )
         if account_number:
             instance.account_number = account_number
             instance.save()
         return instance
 
-    def update(self, instance, validated_data):
+    def update(
+        self, instance: Account, validated_data: dict[str, Any]
+    ) -> Account:
         account_number = validated_data.pop("account_number", None)
-        instance = super().update(instance, validated_data)
+        instance = super().update(  # type: ignore[assignment]
+            instance, validated_data
+        )
         if account_number:
             instance.account_number = account_number
             instance.save()

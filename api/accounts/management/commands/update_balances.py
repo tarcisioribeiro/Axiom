@@ -5,23 +5,30 @@ Este comando pode ser executado com:
 python manage.py update_balances
 """
 
+from typing import Any
+
 from django.core.management.base import BaseCommand
 
 from accounts.models import Account
-from accounts.signals import update_account_balance
+from accounts.services import recalculate_account_balance
 
 
 class Command(BaseCommand):
-    help = "Recalcula os saldos de todas as contas com base em receitas e despesas"
+    help = (
+        "Recalcula os saldos de todas as contas"
+        " com base em receitas e despesas"
+    )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         """
         Executa o comando de recálculo de saldos.
 
         Itera sobre todas as contas e recalcula seus saldos
         com base nas receitas recebidas e despesas pagas.
         """
-        self.stdout.write(self.style.WARNING("Iniciando recálculo de saldos..."))
+        self.stdout.write(
+            self.style.WARNING("Iniciando recálculo de saldos...")
+        )
 
         accounts = Account.objects.all()
         total_accounts = accounts.count()
@@ -36,9 +43,7 @@ class Command(BaseCommand):
         for account in accounts:
             try:
                 old_balance = account.current_balance
-                update_account_balance(account)
-                account.refresh_from_db()
-                new_balance = account.current_balance
+                new_balance = recalculate_account_balance(account.pk)
 
                 self.stdout.write(
                     self.style.SUCCESS(
@@ -51,7 +56,8 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stdout.write(
                     self.style.ERROR(
-                        f'✗ Erro ao atualizar conta "{account.account_name}": {e}'
+                        f"✗ Erro ao atualizar conta"
+                        f' "{account.account_name}": {e}'
                     )
                 )
                 error_count += 1
@@ -70,5 +76,7 @@ class Command(BaseCommand):
 
         if error_count == 0:
             self.stdout.write(
-                self.style.SUCCESS("\n✓ Todos os saldos foram atualizados com sucesso!")
+                self.style.SUCCESS(
+                    "\n✓ Todos os saldos foram atualizados com sucesso!"
+                )
             )

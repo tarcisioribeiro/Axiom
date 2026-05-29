@@ -1,7 +1,23 @@
+/* eslint-disable max-lines, react-hooks/incompatible-library */
+import {
+  BadgePercent,
+  CalendarDays,
+  CreditCard,
+  DollarSign,
+  Hash,
+  Lock,
+  Settings,
+  User,
+  Wallet,
+} from 'lucide-react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { CurrencyInput } from '@/components/ui/currency-input';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,12 +27,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { TRANSLATIONS } from '@/config/constants';
 import { formatLocalDate } from '@/lib/utils';
-import type { CreditCard, CreditCardFormData, Account } from '@/types';
+import type {
+  Account,
+  CreditCard as CreditCardType,
+  CreditCardFormData,
+} from '@/types';
+
+const BRAND_COLORS: Record<string, string> = {
+  VSA: 'from-blue-600 to-blue-800',
+  MSC: 'from-red-600 to-orange-700',
+  ELO: 'from-yellow-500 to-yellow-700',
+  EXP: 'from-teal-500 to-teal-800',
+  HCD: 'from-pink-600 to-rose-800',
+  DIN: 'from-slate-500 to-slate-800',
+};
+
+const BRAND_ICONS: Record<string, string> = {
+  VSA: 'VISA',
+  MSC: 'MC',
+  ELO: 'ELO',
+  EXP: 'AMEX',
+  HCD: 'HIPER',
+  DIN: 'DINERS',
+};
 
 interface CreditCardFormProps {
-  creditCard?: CreditCard;
+  creditCard?: CreditCardType;
   accounts: Account[];
   onSubmit: (data: CreditCardFormData) => void;
   onCancel: () => void;
@@ -30,6 +69,9 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<'card' | 'settings'>('card');
+
   const { register, handleSubmit, setValue, watch } = useForm<CreditCardFormData>({
     defaultValues: creditCard
       ? {
@@ -63,161 +105,339 @@ export const CreditCardForm: React.FC<CreditCardFormProps> = ({
         },
   });
 
+  const watchedFlag = watch('flag') || '';
+  const watchedName = watch('name') || '';
+  const watchedOnCardName = watch('on_card_name') || '';
+  const watchedCardNumber = watch('card_number') || '';
+  const watchedValidationDate = watch('validation_date') || '';
+  const watchedCreditLimit = watch('credit_limit') ?? 0;
+  const watchedMaxLimit = watch('max_limit') ?? 0;
+
+  const maskedCardNumber = watchedCardNumber
+    ? watchedCardNumber.replace(/\d{4}(?=\d)/g, '**** ').trim()
+    : creditCard
+      ? '**** **** **** ****'
+      : '•••• •••• •••• ••••';
+
+  const brandGradient = BRAND_COLORS[watchedFlag] || 'from-slate-600 to-slate-900';
+  const brandLabel = BRAND_ICONS[watchedFlag] || '';
+
+  const tabs = [
+    {
+      id: 'card' as const,
+      label: t('pages.creditCards.form.tabCardData'),
+      icon: CreditCard,
+    },
+    {
+      id: 'settings' as const,
+      label: t('pages.creditCards.form.tabSettings'),
+      icon: Settings,
+    },
+  ];
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Nome do Cartão *</Label>
-          <Input
-            {...register('name', { required: true })}
-            placeholder="Ex: Nubank Gold"
-            disabled={isLoading}
-          />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-lg">
+      {/* Preview do Cartão */}
+      <div
+        className={`relative h-36 w-full overflow-hidden rounded-xl bg-gradient-to-br ${brandGradient} p-md text-white shadow-lg`}
+      >
+        <div className="flex h-full flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs font-medium opacity-70">
+                {watchedName || t('pages.creditCards.form.namePlaceholder')}
+              </p>
+            </div>
+            {brandLabel && (
+              <span className="text-xs font-bold tracking-widest opacity-90">
+                {brandLabel}
+              </span>
+            )}
+          </div>
+          <div className="space-y-xs">
+            <p className="font-mono text-sm tracking-widest opacity-90">
+              {maskedCardNumber}
+            </p>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-xs opacity-60">{t('common.fields.name')}</p>
+                <p className="text-sm font-semibold uppercase tracking-wider">
+                  {watchedOnCardName || '—'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs opacity-60">VALIDADE</p>
+                <p className="font-mono text-sm">
+                  {watchedValidationDate
+                    ? watchedValidationDate.substring(0, 7)
+                    : '••/••'}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>Nome no Cartão *</Label>
-          <Input
-            {...register('on_card_name', { required: true })}
-            placeholder="Ex: FULANO DE TAL"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Bandeira *</Label>
-          <Select value={watch('flag')} onValueChange={(v) => setValue('flag', v)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
-                <SelectItem key={k} value={k}>
-                  {v}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Número do Cartão *</Label>
-          <Input
-            {...register('card_number', { required: true })}
-            placeholder="1234567890123456"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>CVV *</Label>
-          <Input
-            {...register('security_code', { required: true })}
-            placeholder="123"
-            maxLength={4}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Data de Validade *</Label>
-          <DatePicker
-            value={watch('validation_date')}
-            onChange={(date) =>
-              setValue('validation_date', date ? formatLocalDate(date) : '')
-            }
-            placeholder="Selecione a data de validade"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Limite Atual *</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register('credit_limit', { required: true, valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Limite Máximo *</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register('max_limit', { required: true, valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Conta Associada *</Label>
-          <Select
-            value={watch('associated_account')?.toString()}
-            onValueChange={(v) => setValue('associated_account', parseInt(v))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id.toString()}>
-                  {a.account_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Dia de Vencimento *</Label>
-          <Input
-            type="number"
-            min="1"
-            max="31"
-            {...register('due_day', { required: true, valueAsNumber: true })}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Dia de Fechamento *</Label>
-          <Input
-            type="number"
-            min="1"
-            max="31"
-            {...register('closing_day', { required: true, valueAsNumber: true })}
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Taxa de Juros (%) Anual</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register('interest_rate', { valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Anuidade</Label>
-          <Input
-            type="number"
-            step="0.01"
-            {...register('annual_fee', { valueAsNumber: true })}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <Label>Observações</Label>
-          <Input
-            {...register('notes')}
-            placeholder="Observações adicionais"
-            disabled={isLoading}
-          />
-        </div>
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
+        <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/5" />
       </div>
-      <div className="flex justify-end gap-2 pt-4">
+
+      {/* Tabs */}
+      <div className="flex rounded-md border border-border/70 bg-muted/30 p-0.5">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveTab(id)}
+            className={`flex flex-1 items-center justify-center gap-xs rounded px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+              activeTab === id
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Dados do Cartão */}
+      {activeTab === 'card' && (
+        <FormSection title={t('pages.creditCards.form.tabCardData')} icon={CreditCard}>
+          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.nameLabel')}
+              </Label>
+              <Input
+                {...register('name', { required: true })}
+                placeholder={t('pages.creditCards.form.namePlaceholder')}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.onCardNameLabel')}
+              </Label>
+              <Input
+                {...register('on_card_name', { required: true })}
+                placeholder={t('pages.creditCards.form.onCardNamePlaceholder')}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.flagLabel')}
+              </Label>
+              <div className="grid grid-cols-3 gap-xs">
+                {Object.entries(TRANSLATIONS.cardBrands).map(([k, v]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setValue('flag', k)}
+                    className={`rounded border p-xs text-xs font-semibold transition-all ${
+                      watchedFlag === k
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border/50 bg-muted/20 text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.cardNumberLabel')}
+              </Label>
+              <Input
+                {...register('card_number', { required: !creditCard })}
+                placeholder={
+                  creditCard
+                    ? t('pages.creditCards.form.cardNumberHiddenHint')
+                    : '0000 0000 0000 0000'
+                }
+                maxLength={16}
+                disabled={isLoading}
+              />
+              {creditCard && (
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.creditCards.form.cardNumberHiddenHint')}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.cvvLabel')}
+              </Label>
+              <Input
+                {...register('security_code', { required: !creditCard })}
+                placeholder="•••"
+                maxLength={4}
+                type="password"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.validationDateLabel')}
+              </Label>
+              <DatePicker
+                value={watch('validation_date')}
+                onChange={(date) =>
+                  setValue('validation_date', date ? formatLocalDate(date) : '')
+                }
+                placeholder={t('pages.creditCards.form.validationDatePlaceholder')}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+        </FormSection>
+      )}
+
+      {/* Tab: Configurações */}
+      {activeTab === 'settings' && (
+        <FormSection title={t('pages.creditCards.form.tabSettings')} icon={Settings}>
+          <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.creditLimitLabel')}
+              </Label>
+              <CurrencyInput
+                value={watchedCreditLimit}
+                onChange={(e) =>
+                  setValue('credit_limit', parseFloat(e.target.value) || 0)
+                }
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.maxLimitLabel')}
+              </Label>
+              <CurrencyInput
+                value={watchedMaxLimit}
+                onChange={(e) => setValue('max_limit', parseFloat(e.target.value) || 0)}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.associatedAccountLabel')}
+              </Label>
+              <Select
+                value={watch('associated_account')?.toString()}
+                onValueChange={(v) => setValue('associated_account', parseInt(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('common.actions.select')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id.toString()}>
+                      {a.account_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.dueDayLabel')}
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                max="31"
+                {...register('due_day', { required: true, valueAsNumber: true })}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.closingDayLabel')}
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                max="31"
+                {...register('closing_day', { required: true, valueAsNumber: true })}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <BadgePercent className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.interestRateLabel')}
+              </Label>
+              <Input
+                type="number"
+                step="0.01"
+                {...register('interest_rate', { valueAsNumber: true })}
+                placeholder="0.00"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm">
+              <Label className="flex items-center gap-xs">
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.annualFeeLabel')}
+              </Label>
+              <CurrencyInput
+                value={watch('annual_fee') ?? 0}
+                onChange={(e) =>
+                  setValue('annual_fee', parseFloat(e.target.value) || 0)
+                }
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-sm md:col-span-2">
+              <Label className="flex items-center gap-xs">
+                <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                {t('pages.creditCards.form.notesLabel')}
+              </Label>
+              <Textarea
+                {...register('notes')}
+                placeholder={t('pages.creditCards.form.notesPlaceholder')}
+                disabled={isLoading}
+                rows={3}
+              />
+            </div>
+          </div>
+        </FormSection>
+      )}
+
+      <div className="flex justify-end gap-sm border-t pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : creditCard ? 'Atualizar' : 'Criar'}
+          {isLoading
+            ? t('common.actions.saving')
+            : creditCard
+              ? t('common.actions.update')
+              : t('common.actions.create')}
         </Button>
       </div>
     </form>

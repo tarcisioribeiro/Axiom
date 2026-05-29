@@ -1,0 +1,26 @@
+# MinIO TLS certificate — staging namespace.
+# Depends on the ClusterIssuers defined in k8s/minio/tls.yaml which must be
+# applied first (they are cluster-scoped and shared between environments).
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-tls
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+    environment: staging
+spec:
+  secretName: minio-tls
+  duration: 8760h
+  renewBefore: 720h
+  commonName: minio-service.axiom-staging.svc.cluster.local
+  dnsNames:
+    - minio-service
+    - minio-service.axiom-staging
+    - minio-service.axiom-staging.svc
+    - minio-service.axiom-staging.svc.cluster.local
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer

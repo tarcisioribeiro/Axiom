@@ -9,13 +9,17 @@ from rest_framework.response import Response
 
 from app.permissions import GlobalDefaultPermission
 from members.models import Member
-from notifications.models import Notification
-from notifications.serializers import NotificationSerializer
+from notifications.models import Notification, NotificationPreference
+from notifications.serializers import (
+    NotificationPreferenceSerializer,
+    NotificationSerializer,
+)
 
 
 def _generate_notifications(member):
     """
-    Gera notificações para o membro, consultando tarefas, payables, loans e bills.
+    Gera notificações para o membro, consultando tarefas, payables, loans e
+    bills.
     Usa get_or_create para evitar duplicatas (unique_together).
     Limpa notificações de itens já resolvidos.
     """
@@ -30,7 +34,6 @@ def _generate_notifications(member):
         owner=member,
         scheduled_date=today,
         status__in=["pending", "in_progress"],
-        is_deleted=False,
     )
     for task in today_tasks:
         Notification.objects.get_or_create(
@@ -51,7 +54,6 @@ def _generate_notifications(member):
         owner=member,
         scheduled_date__lt=today,
         status__in=["pending", "in_progress"],
-        is_deleted=False,
     )
     for task in overdue_tasks:
         Notification.objects.get_or_create(
@@ -62,7 +64,8 @@ def _generate_notifications(member):
             defaults={
                 "title": f"Tarefa atrasada: {task.task_name}",
                 "message": (
-                    f"Programada para" f' {task.scheduled_date.strftime("%d/%m/%Y")}'
+                    f"Programada para"
+                    f' {task.scheduled_date.strftime("%d/%m/%Y")}'
                 ),
                 "due_date": task.scheduled_date,
                 "created_by": member.user,
@@ -73,12 +76,10 @@ def _generate_notifications(member):
     Notification.objects.filter(
         owner=member,
         content_type="task_instance",
-        is_deleted=False,
     ).exclude(
         object_id__in=TaskInstance.objects.filter(
             owner=member,
             status__in=["pending", "in_progress"],
-            is_deleted=False,
         ).values_list("id", flat=True)
     ).update(
         is_deleted=True, deleted_at=timezone.now()
@@ -92,7 +93,6 @@ def _generate_notifications(member):
         member=member,
         due_date__range=[today, soon],
         status="active",
-        is_deleted=False,
     )
     for payable in due_soon_payables:
         Notification.objects.get_or_create(
@@ -113,7 +113,6 @@ def _generate_notifications(member):
         member=member,
         due_date__lt=today,
         status__in=["active", "overdue"],
-        is_deleted=False,
     )
     for payable in overdue_payables:
         Notification.objects.get_or_create(
@@ -123,7 +122,9 @@ def _generate_notifications(member):
             object_id=payable.id,
             defaults={
                 "title": f"Valor a pagar atrasado: {payable.description}",
-                "message": f'Venceu em {payable.due_date.strftime("%d/%m/%Y")}',
+                "message": (
+                    "Venceu em " + payable.due_date.strftime("%d/%m/%Y")
+                ),
                 "due_date": payable.due_date,
                 "created_by": member.user,
             },
@@ -133,23 +134,18 @@ def _generate_notifications(member):
     Notification.objects.filter(
         owner=member,
         content_type="payable",
-        is_deleted=False,
     ).exclude(
         object_id__in=Payable.objects.filter(
             member=member,
             status__in=["active", "overdue"],
-            is_deleted=False,
         ).values_list("id", flat=True)
-    ).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
     # --- Loan ---
     from loans.models import Loan
 
     member_loans = Loan.objects.filter(
         Q(benefited=member) | Q(creditor=member),
-        is_deleted=False,
     )
 
     # Loans próximos do vencimento
@@ -164,7 +160,9 @@ def _generate_notifications(member):
             content_type="loan",
             object_id=loan.id,
             defaults={
-                "title": f"Empréstimo próximo do vencimento: {loan.description}",
+                "title": (
+                    "Empréstimo próximo do vencimento: " + loan.description
+                ),
                 "message": f'Vence em {loan.due_date.strftime("%d/%m/%Y")}',
                 "due_date": loan.due_date,
                 "created_by": member.user,
@@ -194,22 +192,19 @@ def _generate_notifications(member):
     active_loan_ids = Loan.objects.filter(
         Q(benefited=member) | Q(creditor=member),
         status__in=["active", "overdue"],
-        is_deleted=False,
     ).values_list("id", flat=True)
     Notification.objects.filter(
         owner=member,
         content_type="loan",
-        is_deleted=False,
-    ).exclude(object_id__in=active_loan_ids).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).exclude(
+        object_id__in=active_loan_ids
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
     # --- CreditCardBill ---
     from credit_cards.models import CreditCardBill
 
     member_bills = CreditCardBill.objects.filter(
         credit_card__owner=member,
-        is_deleted=False,
     )
 
     # Bills próximas do vencimento
@@ -224,7 +219,9 @@ def _generate_notifications(member):
             content_type="bill",
             object_id=bill.id,
             defaults={
-                "title": f"Fatura próxima do vencimento: {bill.credit_card.name}",
+                "title": (
+                    "Fatura próxima do vencimento: " + bill.credit_card.name
+                ),
                 "message": f'Vence em {bill.due_date.strftime("%d/%m/%Y")}',
                 "due_date": bill.due_date,
                 "created_by": member.user,
@@ -254,15 +251,13 @@ def _generate_notifications(member):
     active_bill_ids = CreditCardBill.objects.filter(
         credit_card__owner=member,
         status__in=["open", "closed"],
-        is_deleted=False,
     ).values_list("id", flat=True)
     Notification.objects.filter(
         owner=member,
         content_type="bill",
-        is_deleted=False,
-    ).exclude(object_id__in=active_bill_ids).update(
-        is_deleted=True, deleted_at=timezone.now()
-    )
+    ).exclude(
+        object_id__in=active_bill_ids
+    ).update(is_deleted=True, deleted_at=timezone.now())
 
 
 class NotificationListView(generics.ListAPIView):
@@ -271,15 +266,16 @@ class NotificationListView(generics.ListAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.filter(is_deleted=False)
+    queryset = Notification.objects.all()
 
     def get_queryset(self):
-        member = Member.objects.get(user=self.request.user)
+        member = Member.objects.select_related("user").get(
+            user=self.request.user
+        )
         _generate_notifications(member)
         return Notification.objects.filter(
             owner=member,
-            is_deleted=False,
-        )
+        ).select_related("owner")
 
 
 class NotificationUpdateView(generics.UpdateAPIView):
@@ -288,15 +284,16 @@ class NotificationUpdateView(generics.UpdateAPIView):
         GlobalDefaultPermission,
     )
     serializer_class = NotificationSerializer
-    queryset = Notification.objects.filter(is_deleted=False)
+    queryset = Notification.objects.all()
     http_method_names = ["patch"]
 
     def get_queryset(self):
-        member = Member.objects.get(user=self.request.user)
+        member = Member.objects.select_related("user").get(
+            user=self.request.user
+        )
         return Notification.objects.filter(
             owner=member,
-            is_deleted=False,
-        )
+        ).select_related("owner")
 
 
 @api_view(["POST"])
@@ -306,7 +303,6 @@ def mark_all_read(request):
     count = Notification.objects.filter(
         owner=member,
         is_read=False,
-        is_deleted=False,
     ).update(is_read=True)
     return Response({"marked_read": count}, status=status.HTTP_200_OK)
 
@@ -318,6 +314,55 @@ def notification_summary(request):
     unread_count = Notification.objects.filter(
         owner=member,
         is_read=False,
-        is_deleted=False,
     ).count()
     return Response({"unread_count": unread_count}, status=status.HTTP_200_OK)
+
+
+class NotificationPreferenceListCreateView(generics.ListCreateAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = NotificationPreferenceSerializer
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return NotificationPreference.objects.filter(
+            owner=member,
+            is_deleted=False,
+        )
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+
+        member = Member.objects.get(user=self.request.user)
+        notification_type = serializer.validated_data.get("notification_type")
+        if NotificationPreference.objects.filter(
+            owner=member,
+            notification_type=notification_type,
+            is_deleted=False,
+        ).exists():
+            raise ValidationError(
+                {"notification_type": "Preferência para este tipo já existe."}
+            )
+        serializer.save(owner=member, created_by=self.request.user)
+
+
+class NotificationPreferenceRetrieveUpdateDestroyView(
+    generics.RetrieveUpdateDestroyAPIView
+):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = NotificationPreferenceSerializer
+    http_method_names = ["get", "patch", "delete"]
+
+    def get_queryset(self):
+        member = Member.objects.get(user=self.request.user)
+        return NotificationPreference.objects.filter(
+            owner=member,
+            is_deleted=False,
+        )
+
+    def perform_destroy(self, instance):
+        from django.utils import timezone as tz
+
+        instance.is_deleted = True
+        instance.deleted_at = tz.now()
+        instance.deleted_by = self.request.user
+        instance.save(update_fields=["is_deleted", "deleted_at", "deleted_by"])

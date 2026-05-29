@@ -26,8 +26,7 @@ class FieldEncryptionTest(TestCase):
                 FieldEncryption.get_encryption_key()
 
             self.assertIn(
-                "ENCRYPTION_KEY nao encontrada nas variaveis de ambiente",
-                str(context.exception),
+                "ENCRYPTION_KEY nao encontrada", str(context.exception)
             )
 
     @patch.dict(os.environ)
@@ -100,9 +99,7 @@ class FieldEncryptionTest(TestCase):
         with self.assertRaises(DecryptionError) as context:
             FieldEncryption.decrypt_data("dados_nao_criptografados")
 
-        self.assertIn(
-            "Dados criptografados invalidos ou chave incorreta", str(context.exception)
-        )
+        self.assertIn("Dados criptografados invalidos", str(context.exception))
 
     @patch.dict(os.environ)
     def test_encrypt_with_wrong_key_format(self):

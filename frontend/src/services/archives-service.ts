@@ -26,7 +26,13 @@ class ArchivesService extends BaseService<
 
     if (data.text_content) formData.append('text_content', data.text_content);
     if (data.notes) formData.append('notes', data.notes);
-    if (data.tags) formData.append('tags', data.tags);
+    if (data.tags) {
+      data.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .forEach((tag) => formData.append('tags', tag));
+    }
     if (data.file) formData.append('encrypted_file', data.file);
 
     // Axios automatically sets Content-Type to multipart/form-data when FormData is passed
@@ -44,7 +50,13 @@ class ArchivesService extends BaseService<
     if (data.text_content !== undefined)
       formData.append('text_content', data.text_content);
     if (data.notes !== undefined) formData.append('notes', data.notes);
-    if (data.tags !== undefined) formData.append('tags', data.tags);
+    if (data.tags !== undefined) {
+      data.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .forEach((tag) => formData.append('tags', tag));
+    }
     if (data.file) formData.append('encrypted_file', data.file);
 
     // Axios automatically sets Content-Type to multipart/form-data when FormData is passed
@@ -55,8 +67,10 @@ class ArchivesService extends BaseService<
     return apiClient.get<ArchiveReveal>(`${this.endpoint}${id}/reveal/`);
   }
 
-  async download(id: number): Promise<Blob> {
-    return apiClient.getBlob(`${this.endpoint}${id}/download/`);
+  async getDownloadUrl(id: number): Promise<{ url: string; filename: string }> {
+    return apiClient.get<{ url: string; filename: string }>(
+      `${this.endpoint}${id}/download/`
+    );
   }
 }
 

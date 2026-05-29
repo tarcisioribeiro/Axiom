@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/incompatible-library */
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,7 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const { register, handleSubmit, setValue, watch } =
     useForm<CreditCardInstallmentUpdateData>({
       defaultValues: {
@@ -58,39 +61,51 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
       {/* Informações da parcela (somente leitura) */}
-      <div className="space-y-2 rounded-lg bg-muted/50 p-4">
+      <div className="space-y-sm rounded-lg bg-muted/50 p-md">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Compra</span>
+          <span className="text-sm font-medium">
+            {t('pages.creditCardExpenses.installmentForm.purchaseLabel')}
+          </span>
           <span className="font-semibold">{installment.description}</span>
         </div>
         {installment.merchant && (
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Estabelecimento</span>
+            <span className="text-sm font-medium">
+              {t('pages.creditCardExpenses.installmentForm.merchantLabel')}
+            </span>
             <span className="text-sm">{installment.merchant}</span>
           </div>
         )}
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Categoria</span>
+          <span className="text-sm font-medium">
+            {t('pages.creditCardExpenses.installmentForm.categoryLabel')}
+          </span>
           <Badge variant="secondary">
             {translate('expenseCategories', installment.category || '')}
           </Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Parcela</span>
+          <span className="text-sm font-medium">
+            {t('pages.creditCardExpenses.installmentForm.installmentLabel')}
+          </span>
           <span className="font-semibold">
             {installment.installment_number}/{installment.total_installments}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Vencimento</span>
+          <span className="text-sm font-medium">
+            {t('pages.creditCardExpenses.installmentForm.dueDateLabel')}
+          </span>
           <span className="text-sm">
             {formatDate(installment.due_date, 'dd/MM/yyyy')}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Data da Compra</span>
+          <span className="text-sm font-medium">
+            {t('pages.creditCardExpenses.installmentForm.purchaseDateLabel')}
+          </span>
           <span className="text-sm">
             {formatDate(installment.purchase_date || '', 'dd/MM/yyyy')}
           </span>
@@ -98,9 +113,11 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
       </div>
 
       {/* Campos editáveis */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="value">Valor da Parcela *</Label>
+      <div className="space-y-md">
+        <div className="space-y-sm">
+          <Label htmlFor="value">
+            {t('pages.creditCardExpenses.installmentForm.installmentValueLabel')}
+          </Label>
           <Input
             id="value"
             type="number"
@@ -110,39 +127,53 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
             disabled={isLoading}
           />
           <p className="text-xs text-muted-foreground">
-            Valor original: {formatCurrency(installment.value)}
+            {t('pages.creditCardExpenses.installmentForm.originalValueHint', {
+              value: formatCurrency(installment.value),
+            })}
           </p>
         </div>
 
-        <div className="space-y-2">
-          <Label>Status de Pagamento</Label>
+        <div className="space-y-sm">
+          <Label>
+            {t('pages.creditCardExpenses.installmentForm.paymentStatusLabel')}
+          </Label>
           <Select
             value={watch('payed') ? 'true' : 'false'}
             onValueChange={(v) => setValue('payed', v === 'true')}
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t(
+                  'pages.creditCardExpenses.installmentForm.billPlaceholder'
+                )}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="false">Pendente</SelectItem>
-              <SelectItem value="true">Pago</SelectItem>
+              <SelectItem value="false">{t('common.status.pending')}</SelectItem>
+              <SelectItem value="true">{t('common.status.paid')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label>Fatura</Label>
+        <div className="space-y-sm">
+          <Label>{t('pages.creditCardExpenses.installmentForm.billLabel')}</Label>
           <Select
             value={watch('bill')?.toString() || 'none'}
             onValueChange={(v) => setValue('bill', v === 'none' ? null : parseInt(v))}
             disabled={isLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue
+                placeholder={t(
+                  'pages.creditCardExpenses.installmentForm.billPlaceholder'
+                )}
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Nenhuma</SelectItem>
+              <SelectItem value="none">
+                {t('pages.creditCardExpenses.installmentForm.billNone')}
+              </SelectItem>
               {availableBills.map((b) => (
                 <SelectItem key={b.id} value={b.id.toString()}>
                   {TRANSLATIONS.months[b.month as keyof typeof TRANSLATIONS.months]}/
@@ -154,12 +185,12 @@ export const CreditCardInstallmentForm: React.FC<CreditCardInstallmentFormProps>
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : 'Salvar'}
+          {isLoading ? t('common.actions.saving') : t('common.actions.save')}
         </Button>
       </div>
     </form>

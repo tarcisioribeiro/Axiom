@@ -15,7 +15,9 @@ from transfers.models import Transfer
 
 
 @receiver(post_save, sender=Transfer)
-def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
+def create_expense_and_revenue_on_transfer(
+    sender, instance, created, **kwargs
+):
     """
     Cria despesa e receita automaticamente quando uma transferência é criada.
 
@@ -64,14 +66,19 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
             category="others",  # Categoria "Outros"
             account=instance.origin_account,
             payed=instance.transfered,
-            merchant=f"Transferência para {instance.destiny_account.account_name}",
+            merchant=(
+                f"Transferência para {instance.destiny_account.account_name}"
+            ),
             payment_method="transfer",
             member=instance.member,
             related_transfer=instance,  # Vincular à transferência
-            notes=f"Transferência ID: {instance.transaction_id or instance.uuid}\n"
-            f"Tipo: {instance.get_category_display()}\n"
-            f"Taxa: R$ {instance.fee}\n"
-            f"{instance.notes or ''}",
+            notes=(
+                f"Transferência ID:"
+                f" {instance.transaction_id or instance.uuid}\n"
+                f"Tipo: {instance.get_category_display()}\n"
+                f"Taxa: R$ {instance.fee}\n"
+                f"{instance.notes or ''}"
+            ),
             created_by=instance.created_by,
             updated_by=instance.updated_by,
         )
@@ -86,12 +93,17 @@ def create_expense_and_revenue_on_transfer(sender, instance, created, **kwargs):
             category="transfer",  # Categoria "Transferência Recebida"
             account=instance.destiny_account,
             received=instance.transfered,
-            source=f"Transferência de {instance.origin_account.account_name}",
+            source=(
+                f"Transferência de {instance.origin_account.account_name}"
+            ),
             member=instance.member,
             related_transfer=instance,  # Vincular à transferência
-            notes=f"Transferência ID: {instance.transaction_id or instance.uuid}\n"
-            f"Tipo: {instance.get_category_display()}\n"
-            f"{instance.notes or ''}",
+            notes=(
+                f"Transferência ID:"
+                f" {instance.transaction_id or instance.uuid}\n"
+                f"Tipo: {instance.get_category_display()}\n"
+                f"{instance.notes or ''}"
+            ),
             created_by=instance.created_by,
             updated_by=instance.updated_by,
         )

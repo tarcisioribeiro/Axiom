@@ -1,0 +1,501 @@
+# =============================================================================
+# Axiom — Automated Database Backup
+# =============================================================================
+#
+# Resources defined in this file (apply order matters):
+#   1. backup-pvc              PVC for local backup staging (~5 Gi)
+#   2. backup-script           ConfigMap embedding api/scripts/backup.sh
+#   3. axiom-db-backup    CronJob — daily at 02:00 BRT
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Prerequisites
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   The Secret "axiom-backup-secrets" must exist before applying.
+#   It is defined in k8s/base/secrets.yaml and requires these variables:
+#
+#     BACKUP_ENCRYPTION_KEY  Random 32+ char passphrase for AES-256 encryption.
+#                            NEVER change this after encrypting data — older
+#                            backups will become unrecoverable.
+#     MINIO_ENDPOINT         e.g. http://minio-service:9000
+#     MINIO_ACCESS_KEY       MinIO / S3 access key
+#     MINIO_SECRET_KEY       MinIO / S3 secret key
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# RPO / RTO Targets
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   RPO (Recovery Point Objective): 24 hours
+#     Backups run daily at 02:00 BRT. Worst-case data loss is one day.
+#
+#   RTO (Recovery Time Objective): ≤ 4 hours
+#     • Download encrypted dump from MinIO            ~  5 min
+#     • Decrypt with openssl                          ~  5 min
+#     • Provision / restart Kubernetes infrastructure ~ 30 min
+#     • pg_restore (size-dependent; typically)        ~ 30–120 min
+#     • Smoke-tests and service cutover               ~ 15 min
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Keeping the script in sync
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   The canonical source is api/scripts/backup.sh.
+#   After editing that file, regenerate the ConfigMap section with:
+#
+#     kubectl create configmap backup-script \
+#       --from-file=backup.sh=api/scripts/backup.sh \
+#       --dry-run=client -o yaml -n axiom
+#
+#   Then replace the data.backup\.sh field below with the new output.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Apply
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   kubectl apply -f k8s/backup-cronjob.yaml
+#
+#   Trigger a manual run:
+#     kubectl create job --from=cronjob/axiom-db-backup axiom-backup-manual -n axiom
+#
+#   Watch logs:
+#     kubectl logs -f -l app=axiom-backup -n axiom
+#
+# =============================================================================
+
+---
+# ── 1. PVC — local staging volume ─────────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: local-path
+
+---
+# ── 2. ConfigMap — backup script ──────────────────────────────────────────────
+# Source of truth: api/scripts/backup.sh
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: backup
+data:
+  backup.sh: |
+    #!/bin/bash
+    # =============================================================================
+    # Axiom Database Backup Script
+    # =============================================================================
+    #
+    # Runs inside the Docker Compose db-backup container (see docker/backup/) or a
+    # Kubernetes CronJob pod (see k8s/backup-cronjob.yaml).  Connects to PostgreSQL
+    # via the cluster/network-internal service hostname set in PGHOST.
+    #
+    # ─────────────────────────────────────────────────────────────────────────────
+    # RPO / RTO Targets
+    # ─────────────────────────────────────────────────────────────────────────────
+    #
+    #   RPO (Recovery Point Objective): 24 hours
+    #     Backups run daily at 02:00 BRT (configurable via BACKUP_CRON).
+    #     In the worst case, up to 24 h of changes may be lost after a failure.
+    #
+    #   RTO (Recovery Time Objective): ≤ 4 hours
+    #     Breakdown:
+    #       • Download encrypted backup from MinIO          ~  5 min
+    #       • Decrypt with openssl                          ~  5 min
+    #       • Provision / restart infrastructure            ~ 30 min
+    #       • pg_restore (depends on DB size; typically)   ~ 30–120 min
+    #       • Smoke-tests and service cutover               ~ 15 min
+    #
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Restore Procedure
+    # ─────────────────────────────────────────────────────────────────────────────
+    #
+    #   1. Download the encrypted dump from MinIO:
+    #        mc cp axiom-minio/axiom-backups/db/db_backup_<TS>.dump.enc .
+    #
+    #   2. Decrypt (key must match BACKUP_ENCRYPTION_KEY used during backup):
+    #        export BACKUP_ENCRYPTION_KEY="<key>"
+    #        openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 \
+    #          -pass env:BACKUP_ENCRYPTION_KEY \
+    #          -in  db_backup_<TS>.dump.enc \
+    #          -out db_backup_<TS>.dump
+    #
+    #   3. Restore:
+    #        pg_restore \
+    #          -h <PGHOST> -p <PGPORT> -U <DB_USER> -d <DB_NAME> \
+    #          --clean --if-exists --no-owner --no-privileges \
+    #          --verbose \
+    #          db_backup_<TS>.dump
+    #
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Required Environment Variables
+    # ─────────────────────────────────────────────────────────────────────────────
+    #   PGPASSWORD            PostgreSQL password
+    #   BACKUP_ENCRYPTION_KEY AES-256 passphrase
+    #   MINIO_ENDPOINT        MinIO/S3 endpoint, e.g. http://minio:9000
+    #   MINIO_ACCESS_KEY      MinIO/S3 access key
+    #   MINIO_SECRET_KEY      MinIO/S3 secret key
+    #
+    # Optional Environment Variables
+    # ─────────────────────────────────────────────────────────────────────────────
+    #   PGHOST          (default: db)
+    #   PGPORT          (default: 5432)
+    #   DB_NAME         (default: axiom_db)
+    #   DB_USER         (default: postgres)
+    #   BACKUP_DIR      (default: /backups)
+    #   MINIO_BUCKET    (default: axiom-backups)
+    #   KEEP_DAILY      (default: 7)
+    #   KEEP_WEEKLY     (default: 4)
+    #   KEEP_MONTHLY    (default: 3)
+    #   MC_BIN          (default: /tools/mc)
+    # =============================================================================
+
+    set -euo pipefail
+
+    # ── Configuration ──────────────────────────────────────────────────────────────
+    BACKUP_DIR="${BACKUP_DIR:-/backups}"
+    DATE=$(date +%Y%m%d_%H%M%S)
+    DB_NAME="${DB_NAME:-axiom_db}"
+    DB_USER="${DB_USER:-postgres}"
+    PGHOST="${PGHOST:-db}"
+    PGPORT="${PGPORT:-5432}"
+    MINIO_BUCKET="${MINIO_BUCKET:-axiom-backups}"
+    MC_BIN="${MC_BIN:-/tools/mc}"
+
+    KEEP_DAILY="${KEEP_DAILY:-7}"
+    KEEP_WEEKLY="${KEEP_WEEKLY:-4}"
+    KEEP_MONTHLY="${KEEP_MONTHLY:-3}"
+
+    export PGHOST PGPORT PGPASSWORD
+
+    : "${PGPASSWORD:?PGPASSWORD is required}"
+    : "${BACKUP_ENCRYPTION_KEY:?BACKUP_ENCRYPTION_KEY is required}"
+    : "${MINIO_ENDPOINT:?MINIO_ENDPOINT is required}"
+    : "${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY is required}"
+    : "${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}"
+
+    GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[1;33m'; NC='\033[0m'
+    log()     { echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $*"; }
+    error()   { echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR:${NC} $*" >&2; }
+    warning() { echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $*"; }
+
+    mkdir -p "$BACKUP_DIR"
+    DB_DUMP="$BACKUP_DIR/db_backup_${DATE}.dump"
+    DB_ENC="$BACKUP_DIR/db_backup_${DATE}.dump.enc"
+    DB_MANIFEST="$BACKUP_DIR/db_backup_${DATE}.manifest"
+    SENTINEL_FILE="$BACKUP_DIR/.last_successful_backup"
+    STATUS_FILE="$BACKUP_DIR/.last_backup_status"
+
+    log "════════════════════════════════════════════════════════════"
+    log "Axiom Backup — $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    log "  Database  : ${DB_NAME}@${PGHOST}:${PGPORT}"
+    log "  Bucket    : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
+    log "  Retention : ${KEEP_DAILY}d / ${KEEP_WEEKLY}w / ${KEEP_MONTHLY}m"
+    log "════════════════════════════════════════════════════════════"
+
+    echo "in_progress:${DATE}" > "$STATUS_FILE"
+
+    log "Step 1/5 — Creating database dump (custom format, compression=9)..."
+    pg_dump \
+        --host="$PGHOST" --port="$PGPORT" --username="$DB_USER" \
+        --dbname="$DB_NAME" --format=custom --compress=9 \
+        --no-password --file="$DB_DUMP"
+
+    DUMP_SIZE=$(du -h "$DB_DUMP" | cut -f1)
+    log "Dump created: $(basename "$DB_DUMP") (${DUMP_SIZE})"
+
+    log "Step 2/5 — Verifying backup integrity (pg_restore --list)..."
+    if pg_restore --list "$DB_DUMP" > "$DB_MANIFEST" 2>&1; then
+        OBJECT_COUNT=$(grep -c '^[0-9]' "$DB_MANIFEST" || echo "0")
+        log "Integrity check passed — ${OBJECT_COUNT} objects catalogued"
+    else
+        error "pg_restore --list failed — archive may be corrupt"
+        cat "$DB_MANIFEST" >&2
+        rm -f "$DB_DUMP" "$DB_MANIFEST"
+        echo "failed:integrity_check:${DATE}" > "$STATUS_FILE"
+        exit 1
+    fi
+
+    log "Step 3/5 — Encrypting backup (AES-256-CBC, PBKDF2, 600k iterations)..."
+    openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt \
+        -pass "env:BACKUP_ENCRYPTION_KEY" -in "$DB_DUMP" -out "$DB_ENC"
+
+    ENC_SIZE=$(du -h "$DB_ENC" | cut -f1)
+    log "Encrypted: $(basename "$DB_ENC") (${ENC_SIZE})"
+    rm -f "$DB_DUMP"
+    log "Unencrypted dump removed"
+
+    log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
+    "$MC_BIN" alias set axiom-minio \
+        "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY" \
+        --api S3v4 > /dev/null 2>&1
+    "$MC_BIN" mb --ignore-existing "axiom-minio/${MINIO_BUCKET}" > /dev/null 2>&1 || true
+
+    if ! "$MC_BIN" cp "$DB_ENC" "axiom-minio/${MINIO_BUCKET}/db/"; then
+        error "Failed to upload encrypted dump to MinIO"
+        echo "failed:minio_upload:${DATE}" > "$STATUS_FILE"
+        exit 1
+    fi
+    log "Encrypted dump uploaded"
+
+    if "$MC_BIN" cp "$DB_MANIFEST" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+        log "Manifest uploaded"
+    else
+        warning "Manifest upload failed (non-critical)"
+    fi
+
+    MEDIA_ARCHIVE="$BACKUP_DIR/media_backup_${DATE}.tar.gz"
+    if [ -d "/app/media" ] && [ "$(ls -A /app/media 2>/dev/null)" ]; then
+        log "Media backup — archiving /app/media..."
+        if tar -czf "$MEDIA_ARCHIVE" -C /app media/ 2>/dev/null; then
+            MEDIA_SIZE=$(du -h "$MEDIA_ARCHIVE" | cut -f1)
+            log "Media archive: $(basename "$MEDIA_ARCHIVE") (${MEDIA_SIZE})"
+            "$MC_BIN" cp "$MEDIA_ARCHIVE" "axiom-minio/${MINIO_BUCKET}/media/" > /dev/null 2>&1 \
+                && log "Media uploaded" || warning "Media upload failed (non-critical)"
+        else
+            warning "Failed to create media archive (non-critical)"
+        fi
+    else
+        log "No media files — skipping media backup"
+    fi
+
+    # ── Step 5: GFS local retention ────────────────────────────────────────────
+    log "Step 5/5 — Applying GFS retention (${KEEP_DAILY}d / ${KEEP_WEEKLY}w / ${KEEP_MONTHLY}m)..."
+
+    prune_local_backups() {
+        local -a all_files=()
+        while IFS= read -r -d '' f; do
+            all_files+=("$f")
+        done < <(find "$BACKUP_DIR" -maxdepth 1 -name 'db_backup_*.dump.enc' -print0 \
+                 | sort -rz)
+
+        local total=${#all_files[@]}
+        if (( total == 0 )); then log "No local dumps — nothing to prune"; return; fi
+
+        local -a keep=()
+        local -A seen_weeks=(); local -A seen_months=()
+        local daily_count=0
+
+        for f in "${all_files[@]}"; do
+            local base date_str year month day week ym keep_this
+            base=$(basename "$f")
+            date_str="${base#db_backup_}"; date_str="${date_str%%_*}"
+            if [[ ${#date_str} -ne 8 ]] || ! [[ $date_str =~ ^[0-9]{8}$ ]]; then
+                warning "Skipping unrecognised filename: $base"; keep+=("$f"); continue
+            fi
+            year="${date_str:0:4}"; month="${date_str:4:2}"; day="${date_str:6:2}"
+            week=$(date -d "${year}-${month}-${day}" +%G-%V 2>/dev/null) || week="${year}-${month}"
+            ym="${year}-${month}"; keep_this=false
+
+            if (( daily_count < KEEP_DAILY )); then
+                keep_this=true; (( daily_count++ )) || true
+            elif [[ -z "${seen_weeks[$week]+x}" ]] && (( ${#seen_weeks[@]} < KEEP_WEEKLY )); then
+                keep_this=true; seen_weeks["$week"]=1
+            elif [[ -z "${seen_months[$ym]+x}" ]] && (( ${#seen_months[@]} < KEEP_MONTHLY )); then
+                keep_this=true; seen_months["$ym"]=1
+            fi
+            $keep_this && keep+=("$f")
+        done
+
+        local deleted=0
+        for f in "${all_files[@]}"; do
+            local in_keep=false; local k
+            for k in "${keep[@]}"; do [[ "$k" == "$f" ]] && { in_keep=true; break; }; done
+            if ! $in_keep; then
+                rm -f "$f" "${f%.dump.enc}.manifest"
+                (( deleted++ )) || true; log "Pruned: $(basename "$f")"
+            fi
+        done
+        log "Retention: kept ${#keep[@]} / ${total} local dumps (deleted ${deleted})"
+    }
+
+    prune_local_backups
+
+    MEDIA_MAX_AGE=$(( KEEP_DAILY + KEEP_WEEKLY * 7 + KEEP_MONTHLY * 31 ))
+    find "$BACKUP_DIR" -maxdepth 1 -name "media_backup_*.tar.gz" \
+        -mtime "+${MEDIA_MAX_AGE}" -delete 2>/dev/null || true
+
+    echo "$(date +%s)" > "$SENTINEL_FILE"
+    echo "success:${DATE}" > "$STATUS_FILE"
+    log "Monitoring sentinel updated"
+
+    TOTAL_LOCAL=$(du -sh "$BACKUP_DIR" 2>/dev/null | cut -f1 || echo "N/A")
+    log "════════════════════════════════════════════════════════════"
+    log "Backup completed at $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    log "  Encrypted dump : $(basename "$DB_ENC")"
+    log "  Remote path    : ${MINIO_ENDPOINT}/${MINIO_BUCKET}/db/"
+    log "  Local dir size : ${TOTAL_LOCAL}"
+    log "════════════════════════════════════════════════════════════"
+
+---
+# ── 3. CronJob — daily at 02:00 BRT ───────────────────────────────────────────
+#
+# initContainer  minio/mc:latest  copies the mc binary into the shared
+#                                 emptyDir volume /tools so the main
+#                                 container (postgres:16) can use it.
+#
+# main container postgres:16      has pg_dump, pg_restore and openssl
+#                                 built in; runs the backup script.
+#
+# Note on api-media-pvc: it is ReadWriteOnce. To enable media backup,
+# the backup pod must be scheduled on the same node as the API pod,
+# or the PVC must be migrated to ReadWriteMany. The script skips the
+# media step gracefully when /app/media is absent.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: axiom-db-backup
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: backup
+spec:
+  # 02:00 BRT daily (BRT = UTC-3, requires Kubernetes ≥ 1.27 for timeZone)
+  schedule: "0 2 * * *"
+  timeZone: "America/Sao_Paulo"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # Fail the job if it runs longer than 1 hour
+      activeDeadlineSeconds: 3600
+      # Retry once before marking the job as failed
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: axiom-backup
+            app.kubernetes.io/name: axiom
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: sa-backup
+          automountServiceAccountToken: false
+
+          # ── initContainer: supply the mc binary ─────────────────────────────
+          initContainers:
+            - name: install-mc
+              image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+              command: ["cp", "/usr/bin/mc", "/tools/mc"]
+              resources:
+                requests:
+                  memory: "32Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "64Mi"
+                  cpu: "100m"
+              volumeMounts:
+                - name: tools
+                  mountPath: /tools
+
+          # ── main container: run the backup script ───────────────────────────
+          containers:
+            - name: backup
+              image: postgres:16
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                # PostgreSQL connection
+                - name: PGHOST
+                  value: "postgres-service"
+                - name: PGPORT
+                  value: "5432"
+                - name: DB_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-secrets
+                      key: DB_NAME
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-secrets
+                      key: DB_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-secrets
+                      key: DB_PASSWORD
+
+                # Backup encryption & off-site storage
+                - name: BACKUP_ENCRYPTION_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-backup-secrets
+                      key: BACKUP_ENCRYPTION_KEY
+                - name: MINIO_ENDPOINT
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-backup-secrets
+                      key: MINIO_ENDPOINT
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-backup-secrets
+                      key: MINIO_ACCESS_KEY
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: axiom-backup-secrets
+                      key: MINIO_SECRET_KEY
+
+                # Tunable parameters
+                - name: MINIO_BUCKET
+                  value: "axiom-backups"
+                - name: BACKUP_DIR
+                  value: "/backups"
+                # GFS retention policy (replaces the old flat RETENTION_DAYS)
+                - name: KEEP_DAILY
+                  value: "7"
+                - name: KEEP_WEEKLY
+                  value: "4"
+                - name: KEEP_MONTHLY
+                  value: "3"
+                - name: MC_BIN
+                  value: "/tools/mc"
+                - name: TZ
+                  value: "America/Sao_Paulo"
+
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+                - name: backup-script
+                  mountPath: /scripts
+                - name: tools
+                  mountPath: /tools
+
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "500m"
+
+          # ── volumes ─────────────────────────────────────────────────────────
+          volumes:
+            # PVC for staging encrypted dumps before upload
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: backup-pvc
+
+            # ConfigMap holds the backup.sh script (executable via defaultMode)
+            - name: backup-script
+              configMap:
+                name: backup-script
+                defaultMode: 0755
+
+            # Shared volume for mc binary copied by the initContainer
+            - name: tools
+              emptyDir: {}

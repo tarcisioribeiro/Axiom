@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useId } from 'react';
+import { useSyncExternalStore, useMemo, useId } from 'react';
 
 /**
  * Sistema de cores para gráficos Recharts
@@ -63,6 +63,38 @@ export const isDarkTheme = (): boolean => {
   return document.documentElement.classList.contains('dark');
 };
 
+// ── Shared module-level observer (Issue 1 fix) ────────────────────────────────
+// A single MutationObserver watches the <html> class attribute and notifies
+// all React subscribers. This replaces the pattern of each hook creating its
+// own observer (O(components) → O(1)).
+let _isDark = isDarkTheme();
+const _listeners = new Set<() => void>();
+
+new MutationObserver(() => {
+  _isDark = isDarkTheme();
+  _listeners.forEach((fn) => fn());
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+function _subscribe(listener: () => void): () => void {
+  _listeners.add(listener);
+  return () => {
+    _listeners.delete(listener);
+  };
+}
+
+function _getIsDark(): boolean {
+  return _isDark;
+}
+
+/**
+ * Hook reativo para o estado dark/light do tema.
+ * Baseado num único MutationObserver compartilhado por toda a aplicação.
+ */
+export const useIsDarkTheme = (): boolean =>
+  useSyncExternalStore(_subscribe, _getIsDark);
+
+// ── Pure (non-hook) helpers ───────────────────────────────────────────────────
+
 /**
  * Retorna a paleta de cores atual baseada no tema
  */
@@ -86,65 +118,6 @@ export const getSemanticColors = () => {
 export const getSemanticColor = (color: SemanticColor): string => {
   const colors = getSemanticColors();
   return colors[color];
-};
-
-/**
- * Hook reativo que atualiza cores quando o tema muda
- * Usa MutationObserver para detectar mudanças na classe 'dark' do HTML
- */
-export const useChartColors = () => {
-  const [colors, setColors] = useState(getChartColors);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setColors(getChartColors());
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return colors;
-};
-
-/**
- * Hook reativo para cores semânticas
- */
-export const useSemanticColors = () => {
-  const [colors, setColors] = useState(getSemanticColors);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setColors(getSemanticColors());
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return colors;
-};
-
-/**
- * Hook para gerar IDs únicos para gradientes de gráficos
- * Evita colisões entre múltiplas instâncias do mesmo componente
- */
-export const useChartGradientId = (prefix: string) => {
-  const uniqueId = useId();
-
-  return useMemo(() => {
-    // Remove caracteres especiais do useId (como :)
-    const cleanId = uniqueId.replace(/:/g, '');
-    return (index: number) => `${prefix}-${cleanId}-${index}`;
-  }, [prefix, uniqueId]);
 };
 
 /**
@@ -174,94 +147,107 @@ export const getPasswordStrengthColors = () => {
 };
 
 /**
- * Hook reativo para cores de força de senha
- */
-export const usePasswordStrengthColors = () => {
-  const [colors, setColors] = useState(getPasswordStrengthColors);
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setColors(getPasswordStrengthColors());
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return colors;
-};
-
-/**
- * Retorna cores para categorias de tarefas baseadas no tema
+ * Retorna cores para categorias de tarefas baseadas no tema.
+ * Cada categoria tem uma cor distinta para evitar ambiguidade em gráficos.
  */
 export const getTaskCategoryColors = () => {
   if (isDarkTheme()) {
-    const palette = DRACULA_PALETTE;
+    const p = DRACULA_PALETTE;
     return {
-      health: palette.green,
-      studies: palette.cyan,
-      spiritual: palette.purple,
-      exercise: palette.orange,
-      nutrition: palette.green,
-      meditation: palette.purple,
-      reading: palette.yellow,
-      writing: palette.cyan,
-      work: palette.comment,
-      leisure: palette.pink,
-      family: palette.red,
-      social: palette.orange,
-      finance: palette.green,
-      household: palette.yellow,
-      personal_care: palette.cyan,
-      other: palette.comment,
+      health: p.green,
+      studies: p.cyan,
+      spiritual: p.purple,
+      exercise: p.orange,
+      nutrition: p.yellow,
+      meditation: p.pink,
+      reading: p.comment,
+      writing: p.red,
+      work: p.comment,
+      leisure: p.pink,
+      family: p.red,
+      social: p.orange,
+      finance: p.cyan,
+      household: p.yellow,
+      personal_care: p.purple,
+      other: p.comment,
     };
   } else {
-    const palette = ALUCARD_PALETTE;
+    const p = ALUCARD_PALETTE;
     return {
-      health: palette.green,
-      studies: palette.blue,
-      spiritual: palette.purple,
-      exercise: palette.orange,
-      nutrition: palette.green,
-      meditation: palette.purple,
-      reading: palette.yellow,
-      writing: palette.blue,
-      work: palette.comment,
-      leisure: palette.pink,
-      family: palette.red,
-      social: palette.orange,
-      finance: palette.green,
-      household: palette.yellow,
-      personal_care: palette.blue,
-      other: palette.comment,
+      health: p.green,
+      studies: p.blue,
+      spiritual: p.purple,
+      exercise: p.orange,
+      nutrition: p.yellow,
+      meditation: p.pink,
+      reading: p.comment,
+      writing: p.red,
+      work: p.comment,
+      leisure: p.pink,
+      family: p.red,
+      social: p.orange,
+      finance: p.blue,
+      household: p.yellow,
+      personal_care: p.purple,
+      other: p.comment,
     };
   }
+};
+
+// ── Reactive hooks ────────────────────────────────────────────────────────────
+// All hooks use useIsDarkTheme() which is backed by the single shared observer.
+
+/**
+ * Hook reativo que retorna a paleta de cores para gráficos.
+ */
+export const useChartColors = (): string[] => {
+  const dark = useIsDarkTheme();
+  return useMemo(
+    () => (dark ? Object.values(DRACULA_PALETTE) : Object.values(ALUCARD_PALETTE)),
+    [dark]
+  );
+};
+
+/**
+ * Hook reativo para cores semânticas
+ */
+export const useSemanticColors = () => {
+  const dark = useIsDarkTheme();
+  return useMemo(() => (dark ? SEMANTIC_COLORS.dark : SEMANTIC_COLORS.light), [dark]);
+};
+
+/**
+ * Hook reativo para cores de força de senha
+ */
+export const usePasswordStrengthColors = () => {
+  const dark = useIsDarkTheme();
+  return useMemo(() => {
+    const palette = dark ? DRACULA_PALETTE : ALUCARD_PALETTE;
+    return { weak: palette.red, medium: palette.yellow, strong: palette.green };
+  }, [dark]);
 };
 
 /**
  * Hook reativo para cores de categorias de tarefas
  */
 export const useTaskCategoryColors = () => {
-  const [colors, setColors] = useState(getTaskCategoryColors);
+  const dark = useIsDarkTheme();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useMemo(() => getTaskCategoryColors(), [dark]);
+};
 
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setColors(getTaskCategoryColors());
-    });
+/**
+ * Hook para gerar IDs únicos para gradientes de gráficos
+ * Evita colisões entre múltiplas instâncias do mesmo componente
+ */
+export const useChartGradientId = (prefix: string) => {
+  const uniqueId = useId();
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return colors;
+  return useMemo(() => {
+    // Remove caracteres especiais do useId (como :)
+    const cleanId = uniqueId.replace(/:/g, '');
+    return (index: number) => `${prefix}-${cleanId}-${index}`;
+  }, [prefix, uniqueId]);
 };
 
 // Exporta as paletas para uso direto se necessário

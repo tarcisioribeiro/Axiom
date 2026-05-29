@@ -116,12 +116,12 @@ export function FormField({
   };
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-sm', className)}>
       <div className="flex items-center justify-between">
         <Label htmlFor={id}>
           {label}
           {required && (
-            <span className="ml-1 text-destructive" aria-hidden="true">
+            <span className="ml-xs text-destructive" aria-hidden="true">
               *
             </span>
           )}

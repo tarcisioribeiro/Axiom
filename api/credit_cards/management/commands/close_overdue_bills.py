@@ -5,7 +5,9 @@ from credit_cards.models import CreditCardBill
 
 
 class Command(BaseCommand):
-    help = "Fecha automaticamente faturas cujas datas de vencimento já passaram"
+    help = (
+        "Fecha automaticamente faturas cujas datas de vencimento já passaram"
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -26,12 +28,16 @@ class Command(BaseCommand):
         count = overdue_bills.count()
 
         if count == 0:
-            self.stdout.write(self.style.SUCCESS("Nenhuma fatura vencida encontrada."))
+            self.stdout.write(
+                self.style.SUCCESS("Nenhuma fatura vencida encontrada.")
+            )
             return
 
         if dry_run:
             self.stdout.write(
-                self.style.WARNING(f"[DRY RUN] {count} fatura(s) seriam fechadas:")
+                self.style.WARNING(
+                    f"[DRY RUN] {count} fatura(s) seriam fechadas:"
+                )
             )
             for bill in overdue_bills:
                 self.stdout.write(
@@ -43,7 +49,9 @@ class Command(BaseCommand):
             updated = overdue_bills.update(status="closed", closed=True)
 
             self.stdout.write(
-                self.style.SUCCESS(f"✓ {updated} fatura(s) fechada(s) com sucesso.")
+                self.style.SUCCESS(
+                    f"✓ {updated} fatura(s) fechada(s) com sucesso."
+                )
             )
 
             for bill in overdue_bills:
@@ -61,5 +69,6 @@ class Command(BaseCommand):
         )
         self.stdout.write("Exemplo de cron (execução diária às 00:00):")
         self.stdout.write(
-            "0 0 * * * cd /path/to/project && python manage.py close_overdue_bills"
+            "0 0 * * * cd /path/to/project"
+            " && python manage.py close_overdue_bills"
         )

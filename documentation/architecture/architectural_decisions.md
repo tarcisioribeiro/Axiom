@@ -2,7 +2,7 @@
 
 ## Introdução
 
-Este documento registra as principais decisões arquiteturais tomadas durante o desenvolvimento do MindLedger, suas justificativas, alternativas consideradas e trade-offs. Compreender essas decisões é fundamental para manter a coerência do sistema e tomar decisões futuras alinhadas com a filosofia do projeto.
+Este documento registra as principais decisões arquiteturais tomadas durante o desenvolvimento do Axiom, suas justificativas, alternativas consideradas e trade-offs. Compreender essas decisões é fundamental para manter a coerência do sistema e tomar decisões futuras alinhadas com a filosofia do projeto.
 
 ## Índice de Decisões
 
@@ -32,7 +32,7 @@ Este documento registra as principais decisões arquiteturais tomadas durante o 
 
 ### Contexto
 
-O MindLedger possui backend e frontend fortemente acoplados, com contratos de API que precisam evoluir em sincronia.
+O Axiom possui backend e frontend fortemente acoplados, com contratos de API que precisam evoluir em sincronia.
 
 ### Alternativas Consideradas
 
@@ -383,55 +383,47 @@ const { user, setUser } = useAuthStore();
 
 ---
 
-## 8. Embeddings Locais vs. API Externa
+## 8. Embeddings Locais via Ollama
 
 ### Decisão
 
-**Escolhido**: Embeddings locais com sentence-transformers
+**Escolhido**: `nomic-embed-text` via Ollama (local, 768 dimensões)
+
+> **Migração (Maio/2026)**: A implementação anterior usava `sentence-transformers/all-MiniLM-L6-v2` (384 dims, Python). Migrado para Ollama para unificar o stack de LLM e usar o mesmo serviço já exigido pelo módulo de agentes.
 
 ### Contexto
 
-AI Assistant precisa gerar embeddings para busca semântica. Decisão entre processar localmente ou usar API.
+O módulo de Agentes precisa gerar embeddings para RAG (busca semântica) e seleção de agentes. Decisão entre processar localmente ou usar API externa.
 
 ### Alternativas Consideradas
 
-1. **Sentence-transformers local** (escolhido)
-2. **OpenAI Embeddings API**: text-embedding-ada-002
-3. **Cohere Embeddings**: API especializada
-4. **Hugging Face Inference API**: Modelos hospedados
+1. **Ollama + nomic-embed-text** (escolhido)
+2. **sentence-transformers local** (implementação anterior)
+3. **OpenAI Embeddings API**: text-embedding-ada-002
+4. **Cohere Embeddings**: API especializada
 
 ### Justificativa
 
-**Vantagens de embeddings locais**:
+**Vantagens de embeddings via Ollama**:
 - **Custo zero**: Sem cobranças por requisição
 - **Privacidade**: Dados nunca saem do servidor
-- **Latência baixa**: ~50ms vs. ~200ms+ de API
-- **Sem rate limits**: Processa quantos quiser
-- **Offline**: Funciona sem internet
-- **Modelo pequeno**: all-MiniLM-L6-v2 (~80MB)
-
-**Por que não OpenAI?**
-- Custo por token (não gratuito)
-- Latência de rede
-- Dependência de serviço externo
-- Questões de privacidade (dados enviados para OpenAI)
+- **Stack unificado**: Mesmo serviço Ollama já usado para chat
+- **Dimensões superiores**: 768 dims (vs. 384 do MiniLM anterior)
+- **Cache no Redis**: `LLMClient.embed()` cacheia por 5 min, evita re-embedding
+- **Sem dependência Python pesada**: Não requer `torch` no container API
 
 **Especificações do modelo escolhido**:
-- Modelo: all-MiniLM-L6-v2
-- Dimensões: 384 (vs. 1536 do OpenAI)
-- Performance: 5x mais rápido que modelos maiores
-- Qualidade: Suficiente para português e inglês
+- Modelo: `nomic-embed-text` (via Ollama)
+- Dimensões: 768 floats
+- Configurável: `OLLAMA_EMBED_MODEL` env var
 
 ### Trade-offs Aceitos
 
-- Qualidade ligeiramente inferior ao text-embedding-ada-002
-- Menos dimensões (384 vs. 1536)
-- Uso de RAM (~80MB)
-- Necessita GPU para máxima performance (mas funciona em CPU)
+- Requer Ollama rodando (já obrigatório para o módulo de Agentes)
+- Performance depende do hardware disponível para Ollama
 
 **Quando reconsiderar?**
-- Se precisar de embeddings multilíngues avançados
-- Se qualidade se tornar gargalo
+- Se qualidade semântica em português se tornar gargalo — avaliar modelos multilíngues maiores
 - Se servidor não tiver recursos para processar
 
 ### Decisão Complementar
@@ -828,66 +820,54 @@ api/
 
 ---
 
-## 15. Groq vs. OpenAI vs. Modelos Locais
+## 15. Estratégia Multi-Provider de LLM
 
 ### Decisão
 
-**Escolhido**: Groq API com llama-3.3-70b-versatile
+**Escolhido**: Abstração multi-provider com `LLM_PROVIDER` — **Ollama local** como padrão, Groq e Anthropic como opções cloud.
+
+> **Migração (Maio/2026)**: A implementação anterior usava exclusivamente Groq com `llama-3.3-70b-versatile`. Migrado para suporte multi-provider para permitir uso local (privacidade) sem sacrificar a opção cloud quando necessário.
 
 ### Contexto
 
-AI Assistant precisa de LLM para gerar respostas baseadas em contexto recuperado.
+O módulo de Agentes precisa de LLM para chat e embeddings. Diferentes usuários têm requisitos diferentes de privacidade, custo e disponibilidade de hardware.
 
-### Alternativas Consideradas
+### Providers Suportados
 
-1. **Groq API** (escolhido)
-2. **OpenAI GPT-4**: Modelo mais poderoso
-3. **OpenAI GPT-3.5-turbo**: Mais barato que GPT-4
-4. **Modelos locais (Llama, Mistral)**: Executar no servidor
-5. **Anthropic Claude**: Concorrente de OpenAI
+| Provider | Configuração | Chat Model (padrão) | Embeddings |
+|---|---|---|---|
+| **Ollama** (padrão) | `LLM_PROVIDER=ollama` | `mistral:7b-instruct` | `nomic-embed-text` |
+| **Groq** | `LLM_PROVIDER=groq` | `llama-3.1-8b-instant` | via Ollama |
+| **Anthropic** | `LLM_PROVIDER=anthropic` | `claude-haiku-4-5-20251001` | via Ollama |
 
 ### Justificativa
 
-**Vantagens do Groq**:
-- **Gratuito**: Tier grátis com 6.000 req/min
-- **Rápido**: Latência muito baixa (~500ms)
-- **Qualidade**: llama-3.3-70b é excelente
-- **Português**: Suporte nativo
-- **API simples**: Compatível com OpenAI
+**Ollama como padrão**:
+- **Privacidade total**: Dados processados localmente
+- **Custo zero**: Sem cobranças por token
+- **Sem rate limits**
+- **Circuit breaker**: failover automático para `OLLAMA_MODEL` se modelo específico não instalado
 
-**Por que não OpenAI?**
-- **Custo**: Não é gratuito
-- **Privacy**: Dados enviados para OpenAI (questões de privacidade)
-- Groq é suficiente para caso de uso
+**Groq como opção cloud**:
+- Gratuito com limites generosos
+- Baixa latência (~500ms)
+- Compatível com OpenAI API
 
-**Por que não modelos locais?**
-- **Recursos**: LLMs grandes precisam de GPU potente (> 24GB VRAM)
-- **Custo de infra**: Servidor com GPU é caro
-- **Latência**: Inferência local pode ser lenta sem GPU adequada
-- **Complexidade**: Deploy e manutenção mais complexos
+**Anthropic como opção premium**:
+- Claude Haiku: barato e rápido para tarefas simples
+- Claude Sonnet/Opus: para análises complexas quando necessário
 
-**Especificações do modelo**:
-- Modelo: llama-3.3-70b-versatile
-- Parâmetros: 70 bilhões
-- Contexto: 128k tokens
-- Multilíngue: Sim
+### Trade-offs
 
-### Trade-offs Aceitos
-
-- Dependência de serviço externo
-- Rate limits (mas generosos)
-- Questões de privacidade (dados enviados para Groq)
-
-**Quando reconsiderar?**
-- Se Groq começar a cobrar ou reduzir tier grátis
-- Se privacidade se tornar preocupação crítica (considerar local)
-- Se precisar de GPT-4 level quality
+- Ollama requer hardware adequado (mínimo 8GB RAM)
+- Embeddings sempre via Ollama (independente do provider de chat)
+- Cada agente define seu modelo preferido por provider
 
 ### Mitigação de Privacidade
 
-- Contexto enviado é apenas top-k resultados (não banco completo)
-- Dados sensíveis (senhas, CVVs) não são indexados
-- Usuário pode optar por não usar AI Assistant
+- Contexto enviado ao LLM é apenas dados do próprio usuário autenticado
+- Dados do cofre (`security.*`) não são indexados nem enviados ao LLM
+- Validação de prompt injection server-side antes de qualquer chamada LLM
 
 ---
 
@@ -902,14 +882,14 @@ AI Assistant precisa de LLM para gerar respostas baseadas em contexto recuperado
 | Banco de Dados | PostgreSQL + pgvector | Relacional + vetorial |
 | Auth Token Storage | Cookies HttpOnly | Segurança contra XSS |
 | State Management | Zustand | Simplicidade |
-| Embeddings | Sentence-transformers local | Grátis e privado |
+| Embeddings | Ollama nomic-embed-text (768d) | Grátis, privado e stack unificado |
 | Exclusão | Soft Delete | Auditoria e recuperação |
 | Criptografia | Fernet (simétrica) | Simplicidade e performance |
 | API Calls | Service Layer | Centralização |
 | Orquestração | Docker Compose | Simplicidade |
 | API Versioning | URL path | Clareza |
 | Backend Structure | Apps modulares | Separação de responsabilidades |
-| LLM | Groq llama-3.3-70b | Gratuito e rápido |
+| LLM | Multi-provider (Ollama/Groq/Anthropic) | Flexibilidade privacidade vs. qualidade |
 
 ## Princípios Orientadores
 

@@ -1,0 +1,48 @@
+---
+# Staging ResourceQuota — lower limits than production since staging
+# shares a single VPS node with the production namespace.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: axiom-staging-quota
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: resource-quota
+    environment: staging
+spec:
+  hard:
+    requests.cpu: "2"
+    limits.cpu: "4"
+    requests.memory: 4Gi
+    limits.memory: 6Gi
+    pods: "15"
+    persistentvolumeclaims: "8"
+    services: "10"
+    secrets: "10"
+    configmaps: "10"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: axiom-staging-limit-range
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: resource-quota
+    environment: staging
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "250m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "50m"
+        memory: "64Mi"
+      max:
+        cpu: "2"
+        memory: "4Gi"
+      min:
+        cpu: "25m"
+        memory: "32Mi"

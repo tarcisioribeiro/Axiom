@@ -21,6 +21,7 @@
   padding: 0;
   opacity: 0;
   visibility: hidden;
+  position: absolute;
   transition:
     opacity 150ms ease,
     transform 150ms ease;
@@ -112,6 +113,16 @@
 .flatpickr-current-month .flatpickr-monthDropdown-months:focus {
   outline: none;
   background: hsl(var(--accent) / 0.2);
+}
+
+/* Dark mode: força o esquema de cores nativo do select e das options */
+.dark .flatpickr-current-month .flatpickr-monthDropdown-months {
+  color-scheme: dark;
+}
+
+.dark .flatpickr-current-month .flatpickr-monthDropdown-months option {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--foreground));
 }
 
 .flatpickr-current-month input.cur-year {
@@ -330,6 +341,121 @@ span.flatpickr-weekday {
 
 .flatpickr-calendar ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* ========================================
+   TIME PICKER (noCalendar mode)
+   ======================================== */
+
+.flatpickr-calendar.noCal {
+  width: 168px;
+}
+
+.flatpickr-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px;
+}
+
+.flatpickr-time .numInputWrapper {
+  position: relative;
+  width: 58px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.flatpickr-time .numInput {
+  width: 42px;
+  height: 48px;
+  text-align: center;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted) / 0.4);
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  outline: none;
+  padding: 0;
+  -moz-appearance: textfield;
+}
+
+.flatpickr-time .numInput::-webkit-inner-spin-button,
+.flatpickr-time .numInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.flatpickr-time .numInput:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  background: hsl(var(--accent) / 0.1);
+}
+
+.flatpickr-time .arrowUp,
+.flatpickr-time .arrowDown {
+  position: absolute;
+  right: 0;
+  width: 16px;
+  height: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.3);
+  border: 1px solid hsl(var(--border));
+  box-sizing: border-box;
+  transition:
+    background 100ms ease,
+    color 100ms ease;
+}
+
+.flatpickr-time .arrowUp {
+  top: 0;
+  border-radius: 0 calc(var(--radius) - 2px) 0 0;
+  border-bottom: none;
+}
+
+.flatpickr-time .arrowDown {
+  top: 50%;
+  border-radius: 0 0 calc(var(--radius) - 2px) 0;
+}
+
+.flatpickr-time .arrowUp:hover,
+.flatpickr-time .arrowDown:hover {
+  background: hsl(var(--accent) / 0.2);
+  color: hsl(var(--foreground));
+}
+
+.flatpickr-time .arrowUp::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 4px solid currentColor;
+}
+
+.flatpickr-time .arrowDown::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid currentColor;
+}
+
+.flatpickr-time-separator {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  padding: 0 2px;
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 48px;
 }
 
 /* ========================================

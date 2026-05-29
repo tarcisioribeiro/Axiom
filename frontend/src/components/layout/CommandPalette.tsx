@@ -74,7 +74,7 @@ export function CommandPalette() {
         onClick={() => executeCommand(command)}
         onMouseEnter={() => setSelectedIndex(index)}
         className={cn(
-          'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+          'flex w-full items-center gap-3 rounded-lg px-3 py-sm text-left transition-colors',
           isSelected
             ? 'bg-primary text-primary-foreground'
             : 'hover:bg-accent hover:text-accent-foreground'
@@ -105,7 +105,7 @@ export function CommandPalette() {
         {command.shortcut && (
           <kbd
             className={cn(
-              'hidden rounded px-1.5 py-0.5 font-mono text-xs sm:inline-flex',
+              'hidden rounded px-sm py-0.5 font-mono text-xs sm:inline-flex',
               isSelected
                 ? 'bg-primary-foreground/20 text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -126,11 +126,11 @@ export function CommandPalette() {
     if (commands.length === 0) return null;
 
     return (
-      <div key={section} className="py-2">
-        <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div key={section} className="py-sm">
+        <div className="px-3 py-sm text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {sectionLabels[section]}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-xs">
           {commands.map((command, i) => renderCommandItem(command, startIndex + i))}
         </div>
       </div>
@@ -155,7 +155,7 @@ export function CommandPalette() {
         </VisuallyHidden>
 
         {/* Header com campo de busca */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
+        <div className="flex items-center gap-3 border-b px-md py-3">
           <Search className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
           <Input
             ref={inputRef}
@@ -165,7 +165,7 @@ export function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             className="h-auto border-0 px-0 text-base shadow-none focus-visible:ring-0"
           />
-          <kbd className="hidden items-center gap-1 rounded bg-muted px-2 py-1 font-mono text-xs text-muted-foreground sm:inline-flex">
+          <kbd className="hidden items-center gap-xs rounded bg-muted px-sm py-xs font-mono text-xs text-muted-foreground sm:inline-flex">
             <CommandIcon className="h-3 w-3" />K
           </kbd>
         </div>
@@ -173,7 +173,7 @@ export function CommandPalette() {
         {/* Lista de comandos */}
         <div
           ref={listRef}
-          className="custom-scrollbar max-h-[60vh] overflow-y-auto p-2"
+          className="custom-scrollbar max-h-[60vh] overflow-y-auto p-sm"
           role="listbox"
           aria-label="Comandos disponíveis"
         >
@@ -218,20 +218,20 @@ export function CommandPalette() {
         </div>
 
         {/* Footer com dicas de atalho */}
-        <div className="flex items-center justify-between border-t bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <kbd className="rounded border bg-background px-1.5 py-0.5">↑</kbd>
-              <kbd className="rounded border bg-background px-1.5 py-0.5">↓</kbd>
+        <div className="flex items-center justify-between border-t bg-muted/50 px-md py-sm text-xs text-muted-foreground">
+          <div className="flex items-center gap-md">
+            <span className="flex items-center gap-xs">
+              <kbd className="rounded border bg-background px-sm py-0.5">↑</kbd>
+              <kbd className="rounded border bg-background px-sm py-0.5">↓</kbd>
               <span>navegar</span>
             </span>
-            <span className="flex items-center gap-1">
-              <kbd className="rounded border bg-background px-1.5 py-0.5">Enter</kbd>
+            <span className="flex items-center gap-xs">
+              <kbd className="rounded border bg-background px-sm py-0.5">Enter</kbd>
               <span>selecionar</span>
             </span>
           </div>
-          <span className="flex items-center gap-1">
-            <kbd className="rounded border bg-background px-1.5 py-0.5">Esc</kbd>
+          <span className="flex items-center gap-xs">
+            <kbd className="rounded border bg-background px-sm py-0.5">Esc</kbd>
             <span>fechar</span>
           </span>
         </div>

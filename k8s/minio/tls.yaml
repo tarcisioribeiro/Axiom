@@ -1,0 +1,91 @@
+# Internal TLS for MinIO — cert-manager resources
+# -------------------------------------------------------
+# Prerequisites:
+#   cert-manager must be installed in the cluster:
+#     kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+#     kubectl wait --namespace cert-manager --for=condition=ready pod --all --timeout=120s
+#
+# Apply order:
+#   1. kubectl apply -f k8s/minio/tls.yaml
+#   2. Wait for the minio-internal-ca Certificate to be Ready:
+#        kubectl wait --namespace cert-manager --for=condition=Ready certificate/minio-internal-ca --timeout=60s
+#   3. kubectl apply -f k8s/minio/deployment.yaml  (picks up the minio-tls secret)
+#   4. kubectl apply -f k8s/api/deployment.yaml    (picks up the ca.crt mount)
+#
+# The ClusterIssuers and the CA Certificate are cluster-scoped / cert-manager-namespaced
+# and only need to be applied once (shared by production and staging).
+---
+# Bootstrap: self-signed ClusterIssuer used only to mint the internal CA.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: minio-selfsigned-issuer
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  selfSigned: {}
+---
+# Internal CA certificate.
+# cert-manager places this secret in the cert-manager namespace so that the
+# ClusterIssuer of type `ca` (below) can reference it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-internal-ca
+  namespace: cert-manager
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  isCA: true
+  commonName: minio-internal-ca
+  secretName: minio-internal-ca
+  duration: 87600h    # 10 years — rotate manually if CA is compromised
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: minio-selfsigned-issuer
+    kind: ClusterIssuer
+---
+# CA-backed ClusterIssuer — used to sign MinIO service certificates.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: internal-ca-issuer
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  ca:
+    # Secret must be in the cert-manager namespace (default cluster-resource-namespace).
+    secretName: minio-internal-ca
+---
+# MinIO TLS certificate — production namespace.
+# The resulting Secret (minio-tls) contains:
+#   tls.crt  — MinIO server certificate
+#   tls.key  — MinIO server private key
+#   ca.crt   — CA certificate (mounted read-only into the API pod for trust)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-tls
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: tls
+spec:
+  secretName: minio-tls
+  duration: 8760h     # 1 year
+  renewBefore: 720h   # 30 days
+  commonName: minio-service.axiom.svc.cluster.local
+  dnsNames:
+    - minio-service
+    - minio-service.axiom
+    - minio-service.axiom.svc
+    - minio-service.axiom.svc.cluster.local
+  issuerRef:
+    name: internal-ca-issuer
+    kind: ClusterIssuer

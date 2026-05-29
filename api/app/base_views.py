@@ -14,7 +14,8 @@ class BaseListCreateView(generics.ListCreateAPIView):
 
 
 class BaseRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """Base retrieve + update + destroy view with standard project permissions."""
+    """Base retrieve + update + destroy view with standard project
+    permissions."""
 
     permission_classes = (
         IsAuthenticated,

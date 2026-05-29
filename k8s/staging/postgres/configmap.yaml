@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-config
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: postgres
+    environment: staging
+data:
+  init-pgvector.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO CURRENT_USER;

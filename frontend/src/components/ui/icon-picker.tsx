@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   Heart,
   BookOpen,
@@ -66,6 +67,65 @@ import {
   CreditCard,
   PiggyBank,
   TrendingUp,
+  // Saúde
+  Thermometer,
+  Eye,
+  Syringe,
+  Smile,
+  HeartPulse,
+  // Exercício
+  Trophy,
+  Medal,
+  Footprints,
+  // Nutrição
+  Salad,
+  Sandwich,
+  Wine,
+  Beef,
+  // Mental/Espiritual
+  Infinity as InfinityIcon,
+  CloudSun,
+  // Estudos
+  FileText,
+  Pencil,
+  Library,
+  Microscope,
+  Calculator,
+  // Criatividade
+  Scissors,
+  Wand2,
+  Brush,
+  // Trabalho
+  Clipboard,
+  Clock,
+  BarChart3,
+  Presentation,
+  // Lazer
+  Puzzle,
+  PartyPopper,
+  // Tech
+  Monitor,
+  Keyboard,
+  Mouse,
+  Wifi,
+  Cpu,
+  HardDrive,
+  // Casa
+  Sofa,
+  Bed,
+  Lightbulb,
+  Wrench,
+  Hammer,
+  // Pessoal
+  Award,
+  Crown,
+  ShieldCheck,
+  ThumbsUp,
+  // Viagem
+  Compass,
+  Map,
+  Backpack,
+  Train,
   type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -85,18 +145,30 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Pill: Pill,
   Stethoscope: Stethoscope,
   Activity: Activity,
+  Thermometer: Thermometer,
+  Eye: Eye,
+  Syringe: Syringe,
+  Smile: Smile,
+  HeartPulse: HeartPulse,
 
   // Exercise & Fitness
   Dumbbell: Dumbbell,
   PersonStanding: PersonStanding,
   Bike: Bike,
   Mountain: Mountain,
+  Trophy: Trophy,
+  Medal: Medal,
+  Footprints: Footprints,
 
   // Nutrition
   Utensils: Utensils,
   Apple: Apple,
   Coffee: Coffee,
   Droplets: Droplets,
+  Salad: Salad,
+  Sandwich: Sandwich,
+  Wine: Wine,
+  Beef: Beef,
 
   // Mental & Spiritual
   Brain: Brain,
@@ -106,6 +178,8 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Leaf: Leaf,
   Wind: Wind,
   Flower2: Flower2,
+  Infinity: InfinityIcon,
+  CloudSun: CloudSun,
 
   // Studies & Learning
   BookOpen: BookOpen,
@@ -113,6 +187,11 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Languages: Languages,
   Code: Code,
   Laptop: Laptop,
+  FileText: FileText,
+  Pencil: Pencil,
+  Library: Library,
+  Microscope: Microscope,
+  Calculator: Calculator,
 
   // Writing & Creativity
   Pen: Pen,
@@ -120,12 +199,19 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Camera: Camera,
   Music: Music,
   Film: Film,
+  Scissors: Scissors,
+  Wand2: Wand2,
+  Brush: Brush,
 
   // Work
   Briefcase: Briefcase,
   Target: Target,
   TrendingUp: TrendingUp,
   ListTodo: ListTodo,
+  Clipboard: Clipboard,
+  Clock: Clock,
+  BarChart3: BarChart3,
+  Presentation: Presentation,
 
   // Leisure & Entertainment
   Gamepad2: Gamepad2,
@@ -133,6 +219,8 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Tv: Tv,
   Video: Video,
   Mic: Mic,
+  Puzzle: Puzzle,
+  PartyPopper: PartyPopper,
 
   // Family & Social
   Users: Users,
@@ -150,12 +238,21 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Trash2: Trash2,
   Recycle: Recycle,
   Trees: Trees,
+  Sofa: Sofa,
+  Bed: Bed,
+  Lightbulb: Lightbulb,
+  Wrench: Wrench,
+  Hammer: Hammer,
 
   // Personal Care
   Star: Star,
   CheckCircle: CheckCircle,
   Zap: Zap,
   Flame: Flame,
+  Award: Award,
+  Crown: Crown,
+  ShieldCheck: ShieldCheck,
+  ThumbsUp: ThumbsUp,
 
   // Time & Schedule
   Timer: Timer,
@@ -167,9 +264,19 @@ export const TASK_ICONS: Record<string, LucideIcon> = {
   Plane: Plane,
   Ship: Ship,
   Globe: Globe,
+  Compass: Compass,
+  Map: Map,
+  Backpack: Backpack,
+  Train: Train,
 
   // Tech
   Smartphone: Smartphone,
+  Monitor: Monitor,
+  Keyboard: Keyboard,
+  Mouse: Mouse,
+  Wifi: Wifi,
+  Cpu: Cpu,
+  HardDrive: HardDrive,
 
   // Pets
   Dog: Dog,
@@ -191,21 +298,106 @@ export function getIconByName(name: string | null | undefined): LucideIcon | nul
 
 // Group icons by category for better organization
 const ICON_CATEGORIES = {
-  Saude: ['Heart', 'Pill', 'Stethoscope', 'Activity'],
-  Exercicio: ['Dumbbell', 'PersonStanding', 'Bike', 'Mountain'],
-  Nutricao: ['Utensils', 'Apple', 'Coffee', 'Droplets'],
-  'Mental/Espiritual': ['Brain', 'Sparkles', 'Sun', 'Moon', 'Leaf', 'Wind', 'Flower2'],
-  Estudos: ['BookOpen', 'GraduationCap', 'Languages', 'Code', 'Laptop'],
-  Criatividade: ['Pen', 'Palette', 'Camera', 'Music', 'Film'],
-  Trabalho: ['Briefcase', 'Target', 'TrendingUp', 'ListTodo'],
-  Lazer: ['Gamepad2', 'Headphones', 'Tv', 'Video', 'Mic'],
+  Saúde: [
+    'Heart',
+    'Pill',
+    'Stethoscope',
+    'Activity',
+    'Thermometer',
+    'Eye',
+    'Syringe',
+    'Smile',
+    'HeartPulse',
+  ],
+  Exercício: [
+    'Dumbbell',
+    'PersonStanding',
+    'Bike',
+    'Mountain',
+    'Trophy',
+    'Medal',
+    'Footprints',
+  ],
+  Nutrição: [
+    'Utensils',
+    'Apple',
+    'Coffee',
+    'Droplets',
+    'Salad',
+    'Sandwich',
+    'Wine',
+    'Beef',
+  ],
+  'Mental/Espiritual': [
+    'Brain',
+    'Sparkles',
+    'Sun',
+    'Moon',
+    'Leaf',
+    'Wind',
+    'Flower2',
+    'Infinity',
+    'CloudSun',
+  ],
+  Estudos: [
+    'BookOpen',
+    'GraduationCap',
+    'Languages',
+    'Code',
+    'Laptop',
+    'FileText',
+    'Pencil',
+    'Library',
+    'Microscope',
+    'Calculator',
+  ],
+  Criatividade: [
+    'Pen',
+    'Palette',
+    'Camera',
+    'Music',
+    'Film',
+    'Scissors',
+    'Wand2',
+    'Brush',
+  ],
+  Trabalho: [
+    'Briefcase',
+    'Target',
+    'TrendingUp',
+    'ListTodo',
+    'Clipboard',
+    'Clock',
+    'BarChart3',
+    'Presentation',
+  ],
+  Lazer: ['Gamepad2', 'Headphones', 'Tv', 'Video', 'Mic', 'Puzzle', 'PartyPopper'],
   Social: ['Users', 'MessageCircle', 'Baby'],
-  Financas: ['Wallet', 'CreditCard', 'PiggyBank', 'ShoppingCart'],
-  Casa: ['Home', 'Trash2', 'Recycle', 'Trees'],
-  Pessoal: ['Star', 'CheckCircle', 'Zap', 'Flame'],
+  Finanças: ['Wallet', 'CreditCard', 'PiggyBank', 'ShoppingCart'],
+  Casa: [
+    'Home',
+    'Trash2',
+    'Recycle',
+    'Trees',
+    'Sofa',
+    'Bed',
+    'Lightbulb',
+    'Wrench',
+    'Hammer',
+  ],
+  Pessoal: [
+    'Star',
+    'CheckCircle',
+    'Zap',
+    'Flame',
+    'Award',
+    'Crown',
+    'ShieldCheck',
+    'ThumbsUp',
+  ],
   Tempo: ['Timer', 'AlarmClock', 'CalendarDays'],
-  Viagem: ['Car', 'Plane', 'Ship', 'Globe'],
-  Tech: ['Smartphone'],
+  Viagem: ['Car', 'Plane', 'Ship', 'Globe', 'Compass', 'Map', 'Backpack', 'Train'],
+  Tech: ['Smartphone', 'Monitor', 'Keyboard', 'Mouse', 'Wifi', 'Cpu', 'HardDrive'],
   Pets: ['Dog', 'Cat', 'Bird', 'Fish', 'Bug'],
   Outros: ['MoreHorizontal'],
 };
@@ -249,16 +441,16 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
         >
           {SelectedIcon ? (
             <>
-              <SelectedIcon className="mr-2 h-4 w-4" />
+              <SelectedIcon className="mr-sm h-4 w-4" />
               {value}
             </>
           ) : (
-            <span className="text-muted-foreground">Selecione um icone...</span>
+            <span className="text-muted-foreground">Selecione um ícone...</span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
-        <div className="border-b p-2">
+        <div className="border-b p-sm">
           <Input
             placeholder="Buscar icone..."
             value={search}
@@ -267,27 +459,27 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
           />
         </div>
         <ScrollArea className="h-[320px]">
-          <div className="p-2 pr-4">
+          <div className="p-sm pr-md">
             {/* Clear option */}
             <Button
               variant="ghost"
               size="sm"
-              className="mb-2 w-full justify-start text-muted-foreground"
+              className="mb-sm w-full justify-start text-muted-foreground"
               onClick={() => {
                 onChange(null);
                 setOpen(false);
               }}
             >
-              <MoreHorizontal className="mr-2 h-4 w-4 opacity-50" />
-              Sem icone
+              <MoreHorizontal className="mr-sm h-4 w-4 opacity-50" />
+              Sem ícone
             </Button>
 
             {Object.entries(filteredCategories).map(([category, icons]) => (
               <div key={category} className="mb-3">
-                <div className="mb-1 px-2 text-xs font-medium text-muted-foreground">
+                <div className="mb-xs px-sm text-xs font-medium text-muted-foreground">
                   {category}
                 </div>
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-4 gap-xs">
                   {icons.map((iconName) => {
                     const Icon = TASK_ICONS[iconName];
                     return (
@@ -311,7 +503,7 @@ export function IconPicker({ value, onChange, className }: IconPickerProps) {
             ))}
 
             {Object.keys(filteredCategories).length === 0 && (
-              <div className="py-4 text-center text-sm text-muted-foreground">
+              <div className="py-md text-center text-sm text-muted-foreground">
                 Nenhum icone encontrado
               </div>
             )}

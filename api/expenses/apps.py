@@ -15,3 +15,4 @@ class ExpensesConfig(AppConfig):
         de saldo das contas sejam registrados corretamente.
         """
         import accounts.signals  # noqa: F401
+        import expenses.signals  # noqa: F401

@@ -183,32 +183,42 @@ class GlobalDefaultPermissionTest(TestCase):
         view_without_queryset = Mock()
         view_without_queryset.queryset = None
 
-        has_permission = self.permission.has_permission(request, view_without_queryset)
+        has_permission = self.permission.has_permission(
+            request, view_without_queryset
+        )
         # Deve retornar False quando não conseguir determinar o modelo
         self.assertFalse(has_permission)
 
     def test_get_model_permission_codename_success(self):
         """Testa geração de codename de permissão"""
         # Acessa método protegido para teste
-        codename = self.permission._get_model_permission_codename("GET", self.view)
+        codename = self.permission._get_model_permission_codename(
+            "GET", self.view
+        )
 
         self.assertEqual(codename, "accounts.view_account")
 
     def test_get_model_permission_codename_post(self):
         """Testa geração de codename para POST"""
-        codename = self.permission._get_model_permission_codename("POST", self.view)
+        codename = self.permission._get_model_permission_codename(
+            "POST", self.view
+        )
 
         self.assertEqual(codename, "accounts.add_account")
 
     def test_get_model_permission_codename_put(self):
         """Testa geração de codename para PUT"""
-        codename = self.permission._get_model_permission_codename("PUT", self.view)
+        codename = self.permission._get_model_permission_codename(
+            "PUT", self.view
+        )
 
         self.assertEqual(codename, "accounts.change_account")
 
     def test_get_model_permission_codename_delete(self):
         """Testa geração de codename para DELETE"""
-        codename = self.permission._get_model_permission_codename("DELETE", self.view)
+        codename = self.permission._get_model_permission_codename(
+            "DELETE", self.view
+        )
 
         self.assertEqual(codename, "accounts.delete_account")
 
@@ -227,12 +237,12 @@ class GlobalDefaultPermissionTest(TestCase):
 
         for method, expected_suffix in test_cases:
             with self.subTest(method=method):
-                suffix = self.permission._get_action_sufix(method)
+                suffix = self.permission._get_action_suffix(method)
                 self.assertEqual(suffix, expected_suffix)
 
     def test_get_action_suffix_unknown_method(self):
         """Testa sufixo para método desconhecido"""
-        suffix = self.permission._get_action_sufix("UNKNOWN")
+        suffix = self.permission._get_action_suffix("UNKNOWN")
         self.assertEqual(suffix, "")
 
     def test_superuser_bypass(self):
@@ -277,7 +287,9 @@ class GlobalDefaultPermissionTest(TestCase):
         self.assertTrue(account_permission)
 
         # Não deve ter permissão para Expense
-        expense_permission = self.permission.has_permission(request, expense_view)
+        expense_permission = self.permission.has_permission(
+            request, expense_view
+        )
         self.assertFalse(expense_permission)
 
     def test_permission_case_sensitivity(self):
@@ -298,6 +310,8 @@ class GlobalDefaultPermissionTest(TestCase):
 
         # O Django REST Framework normalmente padroniza métodos para uppercase,
         # mas testamos o comportamento com minúsculo
-        has_permission = self.permission.has_permission(request_lower, self.view)
+        has_permission = self.permission.has_permission(
+            request_lower, self.view
+        )
         print(has_permission)
         # Resultado depende da implementação - pode ser True ou False

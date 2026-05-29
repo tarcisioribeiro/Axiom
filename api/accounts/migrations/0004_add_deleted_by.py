@@ -8,14 +8,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0003_add_overdraft_limit'),
+        ("accounts", "0003_add_overdraft_limit"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='account',
-            name='deleted_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='account_deleted', to=settings.AUTH_USER_MODEL, verbose_name='Exclu\u00eddo por'),
+            model_name="account",
+            name="deleted_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="account_deleted",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Exclu\u00eddo por",
+            ),
         ),
     ]

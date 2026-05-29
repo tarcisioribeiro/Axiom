@@ -16,6 +16,7 @@ interface DatePickerProps {
   disabled?: boolean;
   className?: string;
   clearable?: boolean;
+  minDate?: Date | string;
 }
 
 // Parser customizado para formato DD/MM/YYYY
@@ -55,6 +56,7 @@ export function DatePicker({
   disabled = false,
   className,
   clearable = true,
+  minDate,
 }: DatePickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,20 +83,18 @@ export function DatePicker({
       allowInput: true,
       clickOpens: !disabled,
       disableMobile: true,
+      static: true,
+      minDate: minDate ?? undefined,
       // Usa a ref para chamar o onChange atual
+      // Não propagamos selectedDates vazio para evitar que o Flatpickr limpe o
+      // valor do formulário durante a inicialização ou transições internas.
+      // A limpeza explícita é feita pelo botão de clear (handleClear).
       onChange: (selectedDates: Date[]) => {
         if (selectedDates.length > 0) {
           onChangeRef.current?.(selectedDates[0]);
-        } else {
-          onChangeRef.current?.(undefined);
         }
       },
-      // Posiciona o calendário abaixo do input usando posicionamento inline
-      // Isso garante que o calendário fique sempre junto ao campo
-      static: true,
       wrap: false,
-      // Posição abaixo do input
-      positionElement: inputRef.current || undefined,
       // Parser customizado para aceitar DD/MM/YYYY digitado manualmente
       parseDate: (dateStr: string) => {
         const parsed = parseDateBR(dateStr);
@@ -104,13 +104,19 @@ export function DatePicker({
       onReady: (_selectedDates, _dateStr, instance) => {
         instance.calendarContainer.classList.add('flatpickr-calendar-custom');
       },
-      // Validação ao fechar - mostra erro visual se data inválida
-      onClose: (_selectedDates, dateStr, instance) => {
-        if (dateStr && !parseDateBR(dateStr)) {
-          instance.input.classList.add('flatpickr-invalid');
-          setTimeout(() => {
-            instance.input.classList.remove('flatpickr-invalid');
-          }, 1500);
+      // Validação ao fechar - se o usuário digitou uma data válida mas não pressionou
+      // Enter/Tab, confirma a data ao fechar (ex: clicou em outro campo)
+      onClose: (selectedDates, dateStr, instance) => {
+        if (dateStr) {
+          const parsed = parseDateBR(dateStr);
+          if (!parsed) {
+            instance.input.classList.add('flatpickr-invalid');
+            setTimeout(() => {
+              instance.input.classList.remove('flatpickr-invalid');
+            }, 1500);
+          } else if (selectedDates.length === 0) {
+            instance.setDate(parsed, true);
+          }
         }
       },
     };
@@ -120,6 +126,7 @@ export function DatePicker({
     return () => {
       flatpickrRef.current?.destroy();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled]);
 
   // Atualiza data quando value muda externamente
@@ -161,7 +168,7 @@ export function DatePicker({
         disabled={disabled}
         className={cn(
           'flatpickr-input',
-          'h-10 w-full py-2 pl-10 pr-10',
+          'h-10 w-full py-sm pl-10 pr-10',
           'rounded-md border border-input bg-background',
           'text-sm text-foreground placeholder:text-foreground',
           'focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring',

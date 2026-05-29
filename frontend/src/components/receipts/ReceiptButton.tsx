@@ -1,9 +1,11 @@
 import { FileText, Image, Receipt, Eye, Loader2 } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useReceiptGenerator } from '@/hooks/use-receipt-generator';
+import { logger } from '@/lib/logger';
 import {
   mapExpenseToReceipt,
   mapRevenueToReceipt,
@@ -65,6 +67,7 @@ export function ReceiptButton({
   variant = 'ghost',
   size = 'icon',
 }: ReceiptButtonProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [billItems, setBillItems] = useState<BillItem[]>([]);
@@ -80,7 +83,7 @@ export function ReceiptButton({
         const response = await creditCardBillsService.getBillItems(source.data.id);
         setBillItems(response.items);
       } catch (error) {
-        console.error('Erro ao carregar itens da fatura:', error);
+        logger.error('Erro ao carregar itens da fatura:', error);
       } finally {
         setIsLoadingItems(false);
       }
@@ -162,7 +165,7 @@ export function ReceiptButton({
             variant={variant}
             size={size}
             disabled={isGenerating}
-            title="Gerar comprovante"
+            title={t('receipt.button.tooltip')}
           >
             {isGenerating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -171,22 +174,24 @@ export function ReceiptButton({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-48 p-2" align="end">
+        <PopoverContent className="w-48 p-sm" align="end">
           {isLoadingItems ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Carregando...</span>
+            <div className="flex items-center justify-center py-md">
+              <Loader2 className="mr-sm h-4 w-4 animate-spin" />
+              <span className="text-sm text-muted-foreground">
+                {t('receipt.button.loading')}
+              </span>
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-xs">
               <Button
                 variant="ghost"
                 size="sm"
                 className="justify-start"
                 onClick={handlePreview}
               >
-                <Eye className="mr-2 h-4 w-4" />
-                Visualizar
+                <Eye className="mr-sm h-4 w-4" />
+                {t('receipt.button.preview')}
               </Button>
               <Button
                 variant="ghost"
@@ -194,8 +199,8 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('pdf')}
               >
-                <FileText className="mr-2 h-4 w-4" />
-                Exportar PDF
+                <FileText className="mr-sm h-4 w-4" />
+                {t('receipt.button.exportPdf')}
               </Button>
               <Button
                 variant="ghost"
@@ -203,8 +208,8 @@ export function ReceiptButton({
                 className="justify-start"
                 onClick={() => handleExport('png')}
               >
-                <Image className="mr-2 h-4 w-4" />
-                Exportar PNG
+                <Image className="mr-sm h-4 w-4" />
+                {t('receipt.button.exportPng')}
               </Button>
             </div>
           )}

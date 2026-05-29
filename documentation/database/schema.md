@@ -1,4 +1,4 @@
-# Schema do Banco de Dados - MindLedger
+# Schema do Banco de Dados - Axiom
 
 > Documentação completa do schema do banco de dados PostgreSQL com pgvector
 
@@ -18,7 +18,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza PostgreSQL com a extensão pgvector para armazenamento de dados financeiros, pessoais e vetoriais. Todos os modelos herdam de `BaseModel` que fornece campos comuns de auditoria e soft delete.
+O Axiom utiliza PostgreSQL com a extensão pgvector para armazenamento de dados financeiros, pessoais e vetoriais. Todos os modelos herdam de `BaseModel` que fornece campos comuns de auditoria e soft delete.
 
 ### Características Principais
 

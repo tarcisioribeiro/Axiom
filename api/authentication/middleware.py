@@ -6,6 +6,10 @@ ao header Authorization, permitindo que o JWTAuthentication do DRF
 funcione normalmente.
 """
 
+from typing import Callable
+
+from django.http import HttpRequest, HttpResponse
+
 
 class JWTCookieMiddleware:
     """
@@ -15,10 +19,12 @@ class JWTCookieMiddleware:
     adiciona o token ao header no formato 'Bearer <token>'.
     """
 
-    def __init__(self, get_response):
+    def __init__(
+        self, get_response: Callable[[HttpRequest], HttpResponse]
+    ) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         # Ler access token do cookie
         access_token = request.COOKIES.get("access_token")
 

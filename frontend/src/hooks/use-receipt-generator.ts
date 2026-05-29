@@ -2,6 +2,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useState, useCallback, useRef } from 'react';
 
+import { logger } from '@/lib/logger';
 import { generateReceiptFilename } from '@/lib/receipt-utils';
 import type { ReceiptData, ExportFormat } from '@/types/receipt';
 
@@ -100,7 +101,7 @@ export function useReceiptGenerator(): UseReceiptGeneratorReturn {
           pdf.save(filename);
         }
       } catch (err) {
-        console.error('Error generating receipt:', err);
+        logger.error('Error generating receipt:', err);
         setError(
           err instanceof Error
             ? err.message

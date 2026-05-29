@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { Copy, Check } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,10 +13,13 @@ import {
   ToastViewport,
 } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
+import { copyToClipboard } from '@/lib/utils';
 
 export function Toaster() {
   const { toasts } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleCopy = async (
     id: string,
@@ -27,55 +31,62 @@ export function Toaster() {
     const textToCopy = `${titleText}\n${descriptionText}`.trim();
 
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(textToCopy);
-      } else {
-        // Fallback para contextos não-seguros (HTTP)
-        const el = document.createElement('textarea');
-        el.value = textToCopy;
-        el.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-        document.body.appendChild(el);
-        el.focus();
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-      }
+      await copyToClipboard(textToCopy);
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      logger.error('Failed to copy:', err);
     }
   };
 
   return (
     <ToastProvider>
-      {/* ARIA live region para anunciar notificacoes */}
+      {/* ARIA live region polite para toasts informativos */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {toasts.map(({ id, title, description }) => (
-          <span key={id}>
-            {typeof title === 'string' ? title : ''}
-            {typeof description === 'string' ? ` ${description}` : ''}
-          </span>
-        ))}
+        {toasts
+          .filter(({ variant }) => variant !== 'destructive')
+          .map(({ id, title, description }) => (
+            <span key={id}>
+              {typeof title === 'string' ? title : ''}
+              {typeof description === 'string' ? ` ${description}` : ''}
+            </span>
+          ))}
+      </div>
+      {/* ARIA live region assertive para toasts destrutivos */}
+      <div role="alert" aria-live="assertive" aria-atomic="true" className="sr-only">
+        {toasts
+          .filter(({ variant }) => variant === 'destructive')
+          .map(({ id, title, description }) => (
+            <span key={id}>
+              {typeof title === 'string' ? title : ''}
+              {typeof description === 'string' ? ` ${description}` : ''}
+            </span>
+          ))}
       </div>
       <AnimatePresence>
         {toasts
           .filter((t) => t.open !== false)
           .map(function ({ id, title, description, action, ...props }) {
+            const isDestructive = props.variant === 'destructive';
             return (
-              <Toast key={id} {...props} role="alert" aria-live="assertive">
-                <div className="grid flex-1 gap-1">
+              <Toast
+                key={id}
+                {...props}
+                role={isDestructive ? 'alert' : 'status'}
+                aria-live={isDestructive ? 'assertive' : 'polite'}
+              >
+                <div className="grid flex-1 gap-xs">
                   {title && <ToastTitle>{title}</ToastTitle>}
                   {description && <ToastDescription>{description}</ToastDescription>}
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="flex items-center gap-sm">
                   {(title || description) && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7"
+                      className="h-8 w-8"
                       onClick={() => handleCopy(id, title, description)}
-                      aria-label="Copiar mensagem"
+                      aria-label={t('common.actions.copy')}
                     >
                       {copiedId === id ? (
                         <Check className="h-4 w-4" aria-hidden="true" />
@@ -85,11 +96,8 @@ export function Toaster() {
                     </Button>
                   )}
                   {action}
-                  <ToastClose
-                    aria-label="Fechar notificacao"
-                    className="static translate-y-0 opacity-100"
-                  />
                 </div>
+                <ToastClose aria-label={t('common.actions.close')} />
               </Toast>
             );
           })}

@@ -6,21 +6,45 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
+    screens: {
+      sm: '640px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1536px',
+    },
     extend: {
       fontFamily: {
+        /* Body text — SF Pro Text on macOS, Segoe UI on Windows, system-ui elsewhere */
         sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
           'system-ui',
+          'Segoe UI',
+          'Helvetica Neue',
+          'sans-serif',
+        ],
+        /* Display / headings — SF Pro Rounded on macOS 11+, Segoe UI on Windows */
+        display: [
+          'ui-rounded',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',
-          'Roboto',
-          'Oxygen',
-          'Ubuntu',
-          'Cantarell',
-          'Fira Sans',
-          'Droid Sans',
+          'system-ui',
           'Helvetica Neue',
           'sans-serif',
+        ],
+        /* Monospace — SF Mono on macOS, Cascadia Code on Windows 11, JetBrains Mono fallback */
+        mono: [
+          'ui-monospace',
+          'SFMono-Regular',
+          'SF Mono',
+          'Cascadia Code',
+          'Cascadia Mono',
+          'JetBrains Mono',
+          'Consolas',
+          'Liberation Mono',
+          'monospace',
         ],
       },
       colors: {
@@ -79,6 +103,7 @@ export default {
           nutrition: 'hsl(var(--category-nutrition))',
           work: 'hsl(var(--category-work))',
           leisure: 'hsl(var(--category-leisure))',
+          intellect: 'hsl(var(--category-intellect))',
         },
       },
       borderRadius: {
@@ -98,7 +123,7 @@ export default {
         'dialog-content-show': {
           from: {
             opacity: '0',
-            transform: 'translate(-50%, -45%) scale(0.92)',
+            transform: 'translate(-50%, -48%) scale(0.96)',
           },
           to: {
             opacity: '1',
@@ -112,7 +137,7 @@ export default {
           },
           to: {
             opacity: '0',
-            transform: 'translate(-50%, -47%) scale(0.94)',
+            transform: 'translate(-50%, -48%) scale(0.96)',
           },
         },
         'slide-up-fade': {
@@ -158,10 +183,10 @@ export default {
         },
       },
       animation: {
-        'dialog-overlay-show': 'dialog-overlay-show 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-        'dialog-overlay-hide': 'dialog-overlay-hide 180ms cubic-bezier(0.4, 0, 0.2, 1)',
-        'dialog-content-show': 'dialog-content-show 320ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-        'dialog-content-hide': 'dialog-content-hide 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+        'dialog-overlay-show': 'dialog-overlay-show 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-overlay-hide': 'dialog-overlay-hide 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-content-show': 'dialog-content-show 250ms cubic-bezier(0.16, 1, 0.3, 1)',
+        'dialog-content-hide': 'dialog-content-hide 250ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-up-fade': 'slide-up-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-down-fade': 'slide-down-fade 300ms cubic-bezier(0.16, 1, 0.3, 1)',
         'bounce-in': 'bounce-in 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
@@ -171,6 +196,7 @@ export default {
         fast: 'var(--duration-fast)',
         normal: 'var(--duration-normal)',
         slow: 'var(--duration-slow)',
+        250: '250ms',
       },
       transitionTimingFunction: {
         spring: 'var(--ease-spring)',
@@ -198,6 +224,13 @@ export default {
         md: 'var(--spacing-md)',
         lg: 'var(--spacing-lg)',
         xl: 'var(--spacing-xl)',
+      },
+      zIndex: {
+        header: '30',
+        'sidebar-overlay': '40',
+        sidebar: '50',
+        modal: '60',
+        toast: '100',
       },
     },
   },

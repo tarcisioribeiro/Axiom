@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-blue
+  namespace: axiom
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: api
+    slot: blue
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  # Must exceed the startupProbe budget (620s) so Kubernetes does not declare
+  # ProgressDeadlineExceeded before the pod has had a chance to finish starting.
+  progressDeadlineSeconds: 720
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api
+      slot: blue
+  template:
+    metadata:
+      labels:
+        app: api
+        slot: blue
+        app.kubernetes.io/name: axiom
+        app.kubernetes.io/component: api
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z postgres-service 5432; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+        - name: wait-for-redis
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z redis-service 6379; do
+                echo "Waiting for Redis..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+      hostAliases:
+        - ip: "84.247.184.151"
+          hostnames:
+            - "registry.tjtux.duckdns.org"
+      serviceAccountName: sa-api
+      # true necessário para montar o token e permitir restart do Ollama via admin panel.
+      # RBAC restringe o acesso a patch no deployment "ollama" apenas.
+      automountServiceAccountToken: true
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: api
+          # Image tag is pinned to the build digest on every deploy by CI/CD.
+          # See blue-green-switch.sh and deploy:production in .gitlab-ci.yml.
+          image: ghcr.io/owner/axiom-api:0.0.0
+          ports:
+            - containerPort: 39100
+              name: http
+          envFrom:
+            - configMapRef:
+                name: axiom-config
+            - secretRef:
+                name: axiom-secrets
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+            - name: logs
+              mountPath: /app/logs
+            - name: staticfiles
+              mountPath: /app/staticfiles
+            - name: minio-ca
+              mountPath: /etc/ssl/minio/ca.crt
+              subPath: ca.crt
+              readOnly: true
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          # startupProbe absorbs slow cold-starts (image pull + migrations +
+          # collectstatic). Kubernetes will not apply readiness/liveness probes
+          # until startupProbe succeeds. Budget: 20s initial + 60 × 10s = 620s.
+          startupProbe:
+            httpGet:
+              path: /ready/
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /ready/
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /live/
+              port: 39100
+              httpHeaders:
+                - name: Host
+                  value: api-service
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: api-media-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: api-logs-pvc
+        - name: staticfiles
+          persistentVolumeClaim:
+            claimName: api-static-pvc
+        - name: minio-ca
+          secret:
+            secretName: minio-tls
+            items:
+              - key: ca.crt
+                path: ca.crt

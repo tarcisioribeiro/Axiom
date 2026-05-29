@@ -3,6 +3,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -45,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log do erro para debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logger.error('ErrorBoundary caught an error:', error, errorInfo);
 
     // Callback opcional para logging externo (ex: Sentry)
     if (this.props.onError) {
@@ -66,21 +67,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
       // Fallback padrao
       return (
-        <div className="flex min-h-[400px] items-center justify-center p-4">
+        <div className="flex min-h-[400px] items-center justify-center p-md">
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 w-fit rounded-full bg-destructive/10 p-3">
+              <div className="mx-auto mb-md w-fit rounded-full bg-destructive/10 p-3">
                 <AlertTriangle className="h-8 w-8 text-destructive" />
               </div>
               <CardTitle className="text-xl">Algo deu errado</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-center">
+            <CardContent className="space-y-md text-center">
               <p className="text-muted-foreground">
                 Ocorreu um erro inesperado ao carregar este componente.
               </p>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="rounded-lg bg-muted p-3 text-left text-sm">
-                  <summary className="mb-2 cursor-pointer font-medium">
+                  <summary className="mb-sm cursor-pointer font-medium">
                     Detalhes do erro (desenvolvimento)
                   </summary>
                   <pre className="overflow-auto whitespace-pre-wrap text-xs text-destructive">
@@ -90,9 +91,9 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-sm">
                 <Button onClick={this.handleRetry} variant="default">
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-sm h-4 w-4" />
                   Tentar novamente
                 </Button>
                 <Button onClick={() => window.location.reload()} variant="outline">

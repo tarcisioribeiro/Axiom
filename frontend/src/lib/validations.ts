@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * Schemas de Validação com Zod
  *
@@ -11,6 +12,13 @@
  */
 
 import { z } from 'zod';
+
+import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/categories';
+
+const EXPENSE_CATEGORY_KEYS = EXPENSE_CATEGORIES_CANONICAL.map((c) => c.key) as [
+  string,
+  ...string[],
+];
 
 // ============================================================================
 // HELPERS E VALIDAÇÕES CUSTOMIZADAS
@@ -85,52 +93,64 @@ export const registerSchema = z
 // SCHEMAS DE CONTAS BANCÁRIAS
 // ============================================================================
 
-export const accountSchema = z.object({
-  account_name: z
-    .string()
-    .min(1, requiredError('Nome da conta'))
-    .max(255, maxError('Nome', 255)),
-  account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP'], {
-    message: 'Selecione um tipo de conta válido',
-  }),
-  institution: z.enum(
-    [
-      'NUB',
-      'SIC',
-      'MPG',
-      'IFB',
-      'CEF',
-      'BTG',
-      'ITA',
-      'SAN',
-      'BRB',
-      'BBR',
-      'BMG',
-      'PAY',
-      'C6B',
-      'INT',
-      'CAI',
-      'PAN',
-    ],
-    {
-      message: 'Selecione uma instituição válida',
+export const accountSchema = z
+  .object({
+    account_name: z
+      .string()
+      .min(1, requiredError('Nome da conta'))
+      .max(255, maxError('Nome', 255)),
+    account_type: z.enum(['CC', 'CS', 'FG', 'VA', 'VR', 'CP'], {
+      message: 'Selecione um tipo de conta válido',
+    }),
+    institution: z.enum(
+      [
+        'NUB',
+        'SIC',
+        'MPG',
+        'IFB',
+        'CEF',
+        'BTG',
+        'ITA',
+        'SAN',
+        'BRB',
+        'BBR',
+        'BMG',
+        'PAY',
+        'C6B',
+        'INT',
+        'CAI',
+        'PAN',
+      ],
+      {
+        message: 'Selecione uma instituição válida',
+      }
+    ),
+    account_number: z
+      .string()
+      .min(1, requiredError('Número da conta'))
+      .max(50, maxError('Número da conta', 50)),
+    balance: z.number({ message: numberError('Saldo') }),
+    overdraft_limit: z
+      .number({ message: numberError('Cheque especial') })
+      .min(0, 'Limite de cheque especial não pode ser negativo'),
+    owner: z
+      .number({ message: 'Proprietário inválido' })
+      .int('Proprietário deve ser um número inteiro')
+      .positive('Selecione um proprietário'),
+  })
+  .superRefine((data, ctx) => {
+    const minBalance = -(data.overdraft_limit ?? 0);
+    if (data.balance < minBalance) {
+      ctx.addIssue({
+        code: 'too_small',
+        minimum: minBalance,
+        origin: 'number',
+        inclusive: true,
+        message: `Saldo não pode ser menor que -${data.overdraft_limit ?? 0} (limite do cheque especial)`,
+        path: ['balance'],
+      });
     }
-  ),
-  account_number: z
-    .string()
-    .min(1, requiredError('Número da conta'))
-    .max(50, maxError('Número da conta', 50)),
-  balance: z
-    .number({ message: numberError('Saldo') })
-    .min(0, 'Saldo não pode ser negativo'),
-  overdraft_limit: z
-    .number({ message: numberError('Cheque especial') })
-    .min(0, 'Limite de cheque especial não pode ser negativo'),
-  owner: z
-    .number({ message: 'Proprietário inválido' })
-    .int('Proprietário deve ser um número inteiro')
-    .positive('Selecione um proprietário'),
-});
+  });
 
 // ============================================================================
 // SCHEMAS DE DESPESAS
@@ -138,42 +158,24 @@ export const accountSchema = z.object({
 
 export const expenseSchema = z.object({
   value: z.number({ message: numberError('Valor') }).positive(positiveError('Valor')),
-  category: z.enum(
-    [
-      'food and drink',
-      'bills and services',
-      'electronics',
-      'purchases',
-      'transportation',
-      'home',
-      'education',
-      'entertainment',
-      'clothing',
-      'health',
-      'investment',
-      'gifts and donations',
-      'taxes',
-      'personal care',
-      'travel',
-      'pets',
-      'savings',
-      'loans',
-      'other',
-    ],
-    {
-      message: 'Selecione uma categoria válida',
-    }
-  ),
+  category: z.enum(EXPENSE_CATEGORY_KEYS, {
+    message: 'Selecione uma categoria válida',
+  }),
   description: z
     .string()
     .min(1, requiredError('Descrição'))
     .max(500, maxError('Descrição', 500)),
   date: z.string().min(1, requiredError('Data')),
-  is_paid: z.boolean().default(false),
+  horary: z.string().min(1, requiredError('Horário')),
+  payed: z.boolean().default(false),
   account: z
     .number({ message: 'Conta inválida' })
     .int('Conta deve ser um número inteiro')
     .positive('Selecione uma conta'),
+  member: z.number().int().positive().optional().nullable(),
+  merchant: z.string().optional(),
+  related_loan: z.number().int().positive().optional().nullable(),
+  related_payable: z.number().int().positive().optional().nullable(),
 });
 
 // ============================================================================
@@ -373,32 +375,9 @@ export const creditCardExpenseSchema = z.object({
     .min(1, requiredError('Descrição'))
     .max(500, maxError('Descrição', 500)),
   date: z.string().min(1, requiredError('Data')),
-  category: z.enum(
-    [
-      'food and drink',
-      'bills and services',
-      'electronics',
-      'purchases',
-      'transportation',
-      'home',
-      'education',
-      'entertainment',
-      'clothing',
-      'health',
-      'investment',
-      'gifts and donations',
-      'taxes',
-      'personal care',
-      'travel',
-      'pets',
-      'savings',
-      'loans',
-      'other',
-    ],
-    {
-      message: 'Selecione uma categoria válida',
-    }
-  ),
+  category: z.enum(EXPENSE_CATEGORY_KEYS, {
+    message: 'Selecione uma categoria válida',
+  }),
   installments: z
     .number({ message: numberError('Parcelas') })
     .int('Parcelas deve ser um número inteiro')
@@ -422,7 +401,10 @@ export const passwordSchema = z.object({
     .string()
     .min(1, requiredError('Usuário'))
     .max(255, maxError('Usuário', 255)),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: z.union([
+    z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+    z.literal(''),
+  ]),
   category: z.enum(
     [
       'social',
@@ -634,6 +616,14 @@ export const publisherSchema = z.object({
 
 export const bookSchema = z.object({
   title: z.string().min(1, requiredError('Título')).max(300, maxError('Título', 300)),
+  isbn: z.string().max(13, maxError('ISBN', 13)).optional().or(z.literal('')),
+  series_name: z.string().max(200, maxError('Série', 200)).optional().or(z.literal('')),
+  series_order: z
+    .number({ message: numberError('Volume da série') })
+    .int()
+    .positive()
+    .nullable()
+    .optional(),
   authors: z
     .array(z.number({ message: 'Autor inválido' }))
     .min(1, 'Selecione pelo menos um autor'),
@@ -672,6 +662,11 @@ export const bookSchema = z.object({
     .string()
     .min(1, requiredError('Status de leitura'))
     .max(50, maxError('Status de leitura', 50)),
+  pause_reason: z
+    .string()
+    .max(2000, maxError('Motivo da pausa', 2000))
+    .optional()
+    .or(z.literal('')),
   owner: z
     .number({ message: 'Proprietário inválido' })
     .int('Proprietário deve ser um número inteiro')
@@ -693,6 +688,13 @@ export const readingSchema = z.object({
     .int('Páginas deve ser um número inteiro')
     .positive(positiveError('Páginas lidas')),
   notes: z.string().max(2000, maxError('Anotações', 2000)).optional().or(z.literal('')),
+  current_page: z
+    .number({ message: numberError('Página atual') })
+    .int('Deve ser um número inteiro')
+    .min(1, 'Deve ser maior que zero')
+    .nullable()
+    .optional(),
+  time_of_day: z.string().nullable().optional(),
   owner: z
     .number({ message: 'Proprietário inválido' })
     .int('Proprietário deve ser um número inteiro')
@@ -736,6 +738,11 @@ export const routineTaskSchema = z
       .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato invalido. Use HH:MM')
       .optional()
       .nullable(),
+    closing_time: z
+      .string()
+      .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato invalido. Use HH:MM')
+      .optional()
+      .nullable(),
     daily_occurrences: z
       .number()
       .min(1, 'Minimo 1 ocorrencia')
@@ -743,7 +750,7 @@ export const routineTaskSchema = z
     interval_hours: z
       .number()
       .min(1, 'Intervalo minimo de 1 hora')
-      .max(12, 'Intervalo maximo de 12 horas')
+      .max(23, 'Intervalo maximo de 23 horas')
       .optional()
       .nullable(),
     scheduled_times: z
@@ -751,12 +758,39 @@ export const routineTaskSchema = z
       .optional()
       .nullable(),
     is_active: z.boolean(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']),
+    allowed_skips_per_month: z
+      .number()
+      .min(0, 'Valor mínimo é 0')
+      .max(31, 'Valor máximo é 31'),
     target_quantity: z
       .number()
       .min(1, positiveError('Quantidade alvo'))
       .positive(positiveError('Quantidade alvo')),
-    unit: z.string().min(1, requiredError('Unidade')).max(50, maxError('Unidade', 50)),
+    unit: z.enum(
+      [
+        'vez',
+        'minuto',
+        'hora',
+        'ml',
+        'copo',
+        'litro',
+        'página',
+        'km',
+        'metro',
+        'passo',
+        'repetição',
+        'série',
+        'capítulo',
+        'exercício',
+        'dose',
+        'comprimido',
+      ],
+      { message: 'Selecione uma unidade válida' }
+    ),
     owner: z.number().positive(requiredError('Proprietario')),
+    linked_financial_goal: z.number().positive().optional().nullable(),
+    linked_book: z.number().positive().optional().nullable(),
   })
   .refine(
     (data) => {
@@ -825,6 +859,19 @@ export const routineTaskSchema = z
       message: 'Horario padrao e obrigatorio quando intervalo de horas esta definido',
       path: ['default_time'],
     }
+  )
+  .refine(
+    (data) => {
+      if (data.closing_time && (data.daily_occurrences ?? 1) > 1) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        'Horario de encerramento so e permitido para tarefas com uma ocorrencia por dia',
+      path: ['closing_time'],
+    }
   );
 
 export const goalSchema = z.object({
@@ -842,7 +889,7 @@ export const goalSchema = z.object({
     .positive(positiveError('Meta')),
   current_value: z.number().min(0, 'Valor atual nao pode ser negativo'),
   start_date: z.string().min(1, requiredError('Data de inicio')),
-  end_date: z.string().optional().or(z.literal('')),
+  end_date: z.string().optional().nullable().or(z.literal('')),
   status: z.string().min(1, requiredError('Status')),
   owner: z.number().positive(requiredError('Proprietario')),
 });
@@ -882,3 +929,51 @@ export type AuthorFormData = z.infer<typeof authorSchema>;
 export type PublisherFormData = z.infer<typeof publisherSchema>;
 export type BookFormData = z.infer<typeof bookSchema>;
 export type ReadingFormData = z.infer<typeof readingSchema>;
+
+// ============================================================================
+// READING GOAL SCHEMA
+// ============================================================================
+
+export const readingGoalSchema = z.object({
+  year: z
+    .number({ message: numberError('Ano') })
+    .int('Ano deve ser um número inteiro')
+    .min(2000, 'Ano deve ser maior ou igual a 2000')
+    .max(2100, 'Ano inválido'),
+  name: z.string().max(200, maxError('Nome', 200)).optional().or(z.literal('')),
+  books_goal: z
+    .number({ message: numberError('Meta de livros') })
+    .int('Meta deve ser um número inteiro')
+    .min(1, 'Meta deve ser pelo menos 1 livro')
+    .max(365, 'Meta não pode exceder 365 livros'),
+  pages_goal: z
+    .number({ message: numberError('Meta de páginas') })
+    .int('Meta deve ser um número inteiro')
+    .min(0, 'Meta não pode ser negativa')
+    .max(100000, 'Meta muito alta'),
+  owner: z
+    .number({ message: 'Proprietário inválido' })
+    .int()
+    .positive('Selecione um proprietário'),
+});
+
+export type ReadingGoalFormData = z.infer<typeof readingGoalSchema>;
+
+// ============================================================================
+// MARK AS READ SCHEMA
+// ============================================================================
+
+export const markAsReadSchema = z
+  .object({
+    start_date: z.string().min(1, requiredError('Data de início')),
+    end_date: z.string().min(1, requiredError('Data de fim')),
+  })
+  .refine(
+    (data) => !data.start_date || !data.end_date || data.end_date >= data.start_date,
+    {
+      message: 'Data de fim deve ser igual ou posterior à data de início',
+      path: ['end_date'],
+    }
+  );
+
+export type MarkAsReadFormData = z.infer<typeof markAsReadSchema>;

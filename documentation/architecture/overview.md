@@ -2,7 +2,7 @@
 
 ## Introdução
 
-O MindLedger é construído sobre uma arquitetura full-stack moderna, utilizando um monorepo que combina backend Django REST Framework e frontend React com TypeScript. A arquitetura foi projetada para ser modular, escalável e segura, com separação clara de responsabilidades entre as camadas.
+O Axiom é construído sobre uma arquitetura full-stack moderna, utilizando um monorepo que combina backend Django REST Framework e frontend React com TypeScript. A arquitetura foi projetada para ser modular, escalável e segura, com separação clara de responsabilidades entre as camadas.
 
 Este documento apresenta a visão geral da arquitetura do sistema, suas camadas principais, padrões arquiteturais adotados e como os componentes se comunicam entre si.
 
@@ -45,9 +45,10 @@ graph TB
         Cache[Cache Layer]
     end
 
-    subgraph "Serviços Externos"
-        Groq[Groq API]
-        Transformers[Sentence Transformers]
+    subgraph "LLM Providers (via LLM_PROVIDER)"
+        Ollama[Ollama local]
+        Groq[Groq cloud]
+        Anthropic[Anthropic Claude]
     end
 
     Browser --> UI
@@ -82,8 +83,9 @@ graph TB
     Security -.-> Cache
     Library -.-> Cache
 
-    AI --> Groq
-    AI --> Transformers
+    AI --> Ollama
+    AI -.-> Groq
+    AI -.-> Anthropic
 ```
 
 ## Estrutura do Monorepo
@@ -91,7 +93,7 @@ graph TB
 O projeto utiliza uma estrutura de monorepo que organiza o código em dois diretórios principais:
 
 ```
-MindLedger/
+Axiom/
 ├── api/                    # Backend Django
 │   ├── accounts/          # Gestão de contas bancárias
 │   ├── credit_cards/      # Gestão de cartões de crédito
@@ -246,18 +248,22 @@ O Django utiliza middlewares para processar requisições e respostas globalment
 - Queries otimizadas com annotations e aggregations
 - Cache de queries frequentes (futuro)
 
-### 6. Camada de Serviços Externos
+### 6. Camada de LLM Providers
 
-**Groq API**:
-- Geração de respostas via LLM (llama-3.3-70b-versatile)
-- Tier gratuito com 6.000 requisições/minuto
-- Usado pelo AI Assistant para responder perguntas
+Configurado via `LLM_PROVIDER` — padrão: **Ollama local**.
 
-**Sentence Transformers**:
-- Geração de embeddings localmente
-- Modelo: all-MiniLM-L6-v2 (384 dimensões)
-- Completamente gratuito e offline
-- ~80MB RAM, 5x mais rápido que modelos maiores
+**Ollama** (padrão):
+- Chat: `mistral:7b-instruct` (ou `qwen2.5:7b` por agente)
+- Embeddings: `nomic-embed-text` — 768 dimensões, cache Redis 5 min
+- Completamente local e gratuito — requer ≥ 8GB RAM
+
+**Groq** (cloud alternativo):
+- Chat: `llama-3.1-8b-instant`
+- Gratuito com limites; embeddings sempre via Ollama
+
+**Anthropic** (cloud premium):
+- Chat: `claude-haiku-4-5-20251001` (ou Sonnet/Opus)
+- Requer `ANTHROPIC_API_KEY`; embeddings sempre via Ollama
 
 ## Padrões Arquiteturais
 
@@ -353,7 +359,7 @@ O API Client do frontend é um singleton que garante configuração única de in
 
 **Funcionalidades principais**:
 - Busca unificada em todos os módulos
-- Geração de embeddings com sentence-transformers
+- Geração de embeddings via Ollama (`nomic-embed-text`, 768 dims)
 - Busca vetorial com pgvector
 - Geração de respostas com Groq LLM
 - Interface de chat

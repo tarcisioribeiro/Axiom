@@ -1,6 +1,6 @@
 # Criptografia de Dados Sensíveis
 
-Documentação completa do sistema de criptografia de campos sensíveis usando Fernet (symmetric encryption) no MindLedger.
+Documentação completa do sistema de criptografia de campos sensíveis usando Fernet (symmetric encryption) no Axiom.
 
 ## Sumário
 
@@ -16,7 +16,7 @@ Documentação completa do sistema de criptografia de campos sensíveis usando F
 
 ## Visão Geral
 
-O MindLedger implementa criptografia de dados sensíveis em repouso usando **Fernet** (symmetric encryption) da biblioteca `cryptography`. Dados como CVVs de cartões, números de cartões e senhas armazenadas são criptografados antes de serem salvos no banco de dados.
+O Axiom implementa criptografia de dados sensíveis em repouso usando **Fernet** (symmetric encryption) da biblioteca `cryptography`. Dados como CVVs de cartões, números de cartões e senhas armazenadas são criptografados antes de serem salvos no banco de dados.
 
 ### Por que Fernet?
 
@@ -57,7 +57,7 @@ graph TB
 ## FieldEncryption Class
 
 ### Arquivo
-`/home/tarcisio/Development/MindLedger/api/app/encryption.py`
+`/home/tarcisio/Development/Axiom/api/app/encryption.py`
 
 ### Código Completo
 
@@ -201,7 +201,7 @@ data = "123"  # CVV original
 
 ### 1. Cartões de Crédito (CreditCard)
 
-**Arquivo**: `/home/tarcisio/Development/MindLedger/api/credit_cards/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/api/credit_cards/models.py`
 
 ```python
 class CreditCard(BaseModel):
@@ -258,7 +258,7 @@ print(card._security_code)  # "gAAAAABf..." (criptografado no DB)
 
 ### 2. Cartões Armazenados (StoredCreditCard - módulo Security)
 
-**Arquivo**: `/home/tarcisio/Development/MindLedger/api/security/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/api/security/models.py`
 
 ```python
 class StoredCreditCard(BaseModel):
@@ -345,7 +345,7 @@ print(card._cvv)  # "gAAAAABg..." (criptografado)
 
 ### 3. Senhas (Password - módulo Security)
 
-**Arquivo**: `/home/tarcisio/Development/MindLedger/api/security/models.py`
+**Arquivo**: `/home/tarcisio/Development/Axiom/api/security/models.py`
 
 ```python
 class Password(BaseModel):
@@ -784,10 +784,10 @@ rm encryption_key_backup.txt
 # SEMPRE faça backup antes de qualquer operação com criptografia
 
 # Backup PostgreSQL
-docker-compose exec db pg_dump -U $DB_USER mindledger_db > backup_$(date +%Y%m%d_%H%M%S).sql
+docker-compose exec db pg_dump -U $DB_USER axiom_db > backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Backup com criptografia (gpg)
-docker-compose exec db pg_dump -U $DB_USER mindledger_db | \
+docker-compose exec db pg_dump -U $DB_USER axiom_db | \
   gpg --encrypt --recipient your-email@example.com > backup_$(date +%Y%m%d_%H%M%S).sql.gpg
 ```
 
@@ -829,7 +829,7 @@ Opções:
 
 ```bash
 # 1. Restaurar banco
-docker-compose exec -T db psql -U $DB_USER mindledger_db < backup_20260112_143000.sql
+docker-compose exec -T db psql -U $DB_USER axiom_db < backup_20260112_143000.sql
 
 # 2. Verificar ENCRYPTION_KEY no .env (deve ser a mesma de quando fez backup)
 

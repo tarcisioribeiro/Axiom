@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O backend do MindLedger é organizado em apps Django modulares, cada uma responsável por um domínio específico da aplicação. A arquitetura segue os padrões Django e REST Framework com camadas bem definidas.
+O backend do Axiom é organizado em apps Django modulares, cada uma responsável por um domínio específico da aplicação. A arquitetura segue os padrões Django e REST Framework com camadas bem definidas.
 
 ## Estrutura de Diretórios
 
@@ -17,10 +17,14 @@ api/
 ├── revenues/              # Receitas
 ├── loans/                 # Empréstimos
 ├── transfers/             # Transferências entre contas
+├── payables/              # Contas a pagar
 ├── dashboard/             # Dashboard e estatísticas
-├── security/              # Módulo de segurança (senhas, credenciais)
+├── budgets/               # Orçamentos
+├── bank_reconciliation/   # Conciliação bancária
+├── notifications/         # Sistema de notificações
+├── security/              # Módulo de segurança (senhas, credenciais, vault)
 ├── library/               # Módulo de biblioteca (livros)
-├── ai_assistant/          # Assistente AI com RAG
+├── vaults/                # Cofre de arquivos e segredos
 └── personal_planning/     # Planejamento pessoal
 ```
 
@@ -298,16 +302,11 @@ class Password(BaseModel):
 security/
 ├── models.py              # Modelos de segurança
 ├── serializers.py         # Serializers com campos mascarados
-├── views.py               # ViewSets com validação extra
+├── views.py               # Views com validação extra
 ├── urls.py
-├── activity_logs/         # Subapp de logs
-│   ├── models.py
-│   ├── serializers.py
-│   └── views.py
-└── passwords/             # Subapp de senhas
-    ├── models.py
-    ├── serializers.py
-    └── views.py
+├── vault_config.py        # Configuração do vault
+├── vault_crypto.py        # Criptografia do vault
+└── importers.py           # Importação de dados
 ```
 
 ## Módulo de Biblioteca
@@ -329,12 +328,7 @@ library/
 ├── models.py
 ├── serializers.py
 ├── views.py
-├── urls.py
-├── authors/               # Subapp de autores
-├── publishers/            # Subapp de editoras
-├── books/                 # Subapp de livros
-├── summaries/             # Subapp de resumos
-└── readings/              # Subapp de leituras
+└── urls.py
 ```
 
 **Exemplo de modelo**:
@@ -356,74 +350,84 @@ class Book(BaseModel):
     owner = models.ForeignKey(Member, on_delete=models.PROTECT)
 ```
 
-## Módulo de IA
+## Apps Complementares
 
-### 13. AI Assistant
+### 13. Payables
 
-**Responsabilidade**: Assistente de IA com RAG (Retrieval Augmented Generation).
+**Responsabilidade**: Controle de contas a pagar.
 
-**Arquitetura**:
+**Estrutura**:
 ```
-ai_assistant/
-├── models.py              # ContentEmbedding (pgvector)
-├── serializers.py         # Query/Response serializers
-├── views.py               # AIQueryView, AIStreamingQueryView
+payables/
+├── models.py
+├── serializers.py
+├── views.py
+├── signals.py
+└── urls.py
+```
+
+### 14. Budgets
+
+**Responsabilidade**: Orçamentos financeiros por categoria e período.
+
+**Estrutura**:
+```
+budgets/
+├── models.py
+├── serializers.py
+├── services.py
+├── views.py
+└── urls.py
+```
+
+### 15. Bank Reconciliation
+
+**Responsabilidade**: Conciliação bancária (importação e reconciliação de extratos).
+
+**Estrutura**:
+```
+bank_reconciliation/
+├── models.py
+├── serializers.py
+├── services.py
+├── parsers.py
+├── views.py
+└── urls.py
+```
+
+### 16. Notifications
+
+**Responsabilidade**: Sistema de notificações internas para o usuário.
+
+**Estrutura**:
+```
+notifications/
+├── models.py
+├── serializers.py
+├── services.py
+├── views.py
 ├── urls.py
-├── chat/                  # Serviço de chat
-│   ├── service.py
-│   ├── embeddings.py
-│   └── llm_client.py
-├── indexer/               # Indexação de conteúdo
-│   ├── finance_indexer.py
-│   ├── security_indexer.py
-│   └── library_indexer.py
-├── intent_classifier.py   # Classificação de intenção
-├── response_formatter.py  # Formatação de respostas
-├── session_manager.py     # Gestão de sessões
 └── management/
     └── commands/
-        └── populate_embeddings.py
 ```
 
-**Modelo de embedding**:
-```python
-class ContentEmbedding(BaseModel):
-    content_type = models.CharField(max_length=100)  # 'expense', 'book', etc.
-    content_id = models.PositiveIntegerField()
-    tipo = models.CharField(max_length=20, choices=TipoConteudo.choices)
-    sensibilidade = models.CharField(max_length=10, choices=Sensibilidade.choices)
-    tags = ArrayField(models.CharField(max_length=50), default=list)
-    data_referencia = models.DateField(null=True, blank=True)
-    texto_original = models.TextField()
-    texto_busca = models.TextField()
-    embedding = VectorField(dimensions=384)  # pgvector
-    metadata = models.JSONField(default=dict)
-    owner = models.ForeignKey(Member, on_delete=models.CASCADE)
-    is_indexed = models.BooleanField(default=False)
-    indexed_at = models.DateTimeField(null=True, blank=True)
-    embedding_model = models.CharField(max_length=100, default='all-MiniLM-L6-v2')
+### 17. Vaults
+
+**Responsabilidade**: Cofre de arquivos e segredos com criptografia por chave de vault por usuário.
+
+**Estrutura**:
+```
+vaults/
+├── models.py
+├── serializers.py
+├── views.py
+├── urls.py
+├── services/
+└── management/
+    └── commands/
 ```
 
-**Fluxo do RAG**:
-```mermaid
-graph LR
-    A[Usuário faz pergunta] --> B[Gera embedding local]
-    B --> C[Busca semântica pgvector]
-    C --> D[Ranqueia por similaridade]
-    D --> E[Envia top-k + pergunta para Groq]
-    E --> F[Retorna resposta contextualizada]
-```
-
-**Características**:
-- Embeddings gerados localmente com sentence-transformers (all-MiniLM-L6-v2)
-- Busca semântica via pgvector (PostgreSQL)
-- LLM via Groq API (llama-3.3-70b-versatile)
-- Suporte a streaming (SSE)
-- Classificação de intenção
-- Visualizações dinâmicas
-- Gestão de sessões com histórico
-
-### 14. Personal Planning
+### 18. Personal Planning
 
 **Responsabilidade**: Planejamento pessoal, metas e rotinas.
 
@@ -524,11 +528,19 @@ INSTALLED_APPS = [
     # Library Module
     'library',
 
-    # AI Assistant
-    'ai_assistant',
-
     # Personal Planning Module
     'personal_planning',
+
+    # Financial utilities
+    'payables',
+    'budgets',
+    'bank_reconciliation',
+
+    # Notifications
+    'notifications',
+
+    # Vaults
+    'vaults',
 ]
 ```
 
@@ -544,10 +556,14 @@ graph TD
     D --> G[transfers]
     D --> H[credit_cards]
     D --> I[loans]
+    D --> P[payables]
+    D --> Q[budgets]
+    D --> R[bank_reconciliation]
     C --> J[security]
     C --> K[library]
-    C --> L[ai_assistant]
     C --> M[personal_planning]
+    C --> S[vaults]
+    C --> T[notifications]
     E --> N[dashboard]
     F --> N
     H --> N
@@ -559,7 +575,7 @@ graph TD
 **Regras de dependência**:
 1. Todas as apps dependem de `app` (core)
 2. Apps financeiras dependem de `members` e `accounts`
-3. Apps de módulos (security, library, ai_assistant) dependem apenas de `members`
+3. Apps de módulos (security, library, vaults) dependem apenas de `members`
 4. Dashboard agrega dados de várias apps
 5. Evitar dependências circulares
 

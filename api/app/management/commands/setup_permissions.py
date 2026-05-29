@@ -3,6 +3,8 @@ Django management command to setup default permissions for the members group.
 This ensures all users in the members group have the necessary permissions.
 """
 
+from typing import Any
+
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
@@ -11,19 +13,25 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     help = "Setup default permissions for the members group"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # Get or create the members group
         members_group, created = Group.objects.get_or_create(name="members")
 
         if created:
             self.stdout.write(self.style.SUCCESS('Created "members" group'))
         else:
-            self.stdout.write(self.style.WARNING('Group "members" already exists'))
+            self.stdout.write(
+                self.style.WARNING('Group "members" already exists')
+            )
 
         # Define all the models that members should have full access to
         app_models = {
             "accounts": ["account"],
-            "expenses": ["expense", "fixedexpense", "fixedexpensegenerationlog"],
+            "expenses": [
+                "expense",
+                "fixedexpense",
+                "fixedexpensegenerationlog",
+            ],
             "revenues": ["revenue"],
             "credit_cards": [
                 "creditcard",
@@ -35,6 +43,7 @@ class Command(BaseCommand):
             "transfers": ["transfer"],
             "loans": ["loan"],
             "payables": ["payable"],
+            "receivables": ["receivable", "receivableinstallment"],
             "members": ["member"],
             "library": ["author", "publisher", "book", "summary", "reading"],
             "security": [
@@ -49,10 +58,21 @@ class Command(BaseCommand):
                 "taskinstance",
                 "goal",
                 "dailyreflection",
+                "workoutplan",
+                "workoutday",
+                "workoutexercise",
+                "workoutsession",
+                "workoutsessionexercise",
+                "workoutsessionset",
+                "food",
+                "mealtype",
+                "menuoption",
+                "menuoptioningredient",
+                "meallog",
             ],
             "vaults": ["vault", "vaulttransaction", "financialgoal"],
-            "ai_assistant": ["conversationhistory"],
             "notifications": ["notification"],
+            "budgets": ["budget"],
         }
 
         # Define the permissions: view, add, change, delete (full CRUD)
@@ -98,7 +118,8 @@ class Command(BaseCommand):
                 except ContentType.DoesNotExist:
                     self.stdout.write(
                         self.style.ERROR(
-                            f"✗ ContentType not found: " f"{app_label}.{model_name}"
+                            f"✗ ContentType not found: "
+                            f"{app_label}.{model_name}"
                         )
                     )
 
@@ -135,7 +156,9 @@ class Command(BaseCommand):
 
         if users_added == 0:
             self.stdout.write(
-                self.style.SUCCESS('✓ All users are already in the "members" group')
+                self.style.SUCCESS(
+                    '✓ All users are already in the "members" group'
+                )
             )
         else:
             self.stdout.write(

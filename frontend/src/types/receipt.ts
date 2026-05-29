@@ -32,6 +32,8 @@ export interface ReceiptData {
   // Type of receipt
   type: ReceiptType;
   typeLabel: string;
+  /** Custom document title. When set, replaces the default "Comprovante de {typeLabel}". */
+  documentTitle?: string;
 
   // Main information
   description: string;
@@ -79,7 +81,7 @@ export interface ReceiptData {
   generatedAt: Date;
 }
 
-// Receipt type labels in Portuguese
+// Receipt type labels — used for filename generation (keep in PT-BR)
 export const RECEIPT_TYPE_LABELS: Record<ReceiptType, string> = {
   expense: 'Despesa',
   revenue: 'Receita',
@@ -92,30 +94,21 @@ export const RECEIPT_TYPE_LABELS: Record<ReceiptType, string> = {
   vault_withdrawal: 'Saque de Cofre',
 };
 
-// Status labels in Portuguese
+// Status labels — used as fallback when i18n key is missing
 export const STATUS_LABELS: Record<string, string> = {
-  // Expense/Revenue
   payed: 'Pago',
   pending: 'Pendente',
   received: 'Recebido',
   not_received: 'Não Recebido',
-
-  // Credit Card Bill
   open: 'Aberta',
   closed: 'Fechada',
   paid: 'Paga',
   overdue: 'Vencida',
-
-  // Loan / Payable
   active: 'Ativo',
   completed: 'Quitado',
   cancelled: 'Cancelado',
-
-  // Transfer
   transfered: 'Realizada',
   not_transfered: 'Pendente',
-
-  // Generic/Additional
   processing: 'Processando',
   scheduled: 'Agendado',
   true: 'Sim',

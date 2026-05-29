@@ -1,12 +1,12 @@
-# Introdução ao MindLedger
+# Introdução ao Axiom
 
-## O que é o MindLedger?
+## O que é o Axiom?
 
-MindLedger é um sistema completo de gerenciamento pessoal que integra três módulos principais: **Finanças**, **Segurança** e **Biblioteca**. O sistema foi projetado para oferecer controle total sobre diferentes aspectos da vida pessoal através de uma plataforma unificada, segura e intuitiva.
+Axiom é um sistema completo de gerenciamento pessoal que integra três módulos principais: **Finanças**, **Segurança** e **Biblioteca**. O sistema foi projetado para oferecer controle total sobre diferentes aspectos da vida pessoal através de uma plataforma unificada, segura e intuitiva.
 
 ## Visão Geral
 
-O MindLedger é construído como uma aplicação full-stack moderna, combinando:
+O Axiom é construído como uma aplicação full-stack moderna, combinando:
 
 - **Backend robusto** em Django REST Framework
 - **Frontend responsivo** em React com TypeScript
@@ -20,13 +20,38 @@ O MindLedger é construído como uma aplicação full-stack moderna, combinando:
 Sistema completo de gestão financeira pessoal que permite:
 
 - Gerenciamento de contas bancárias e cartões de crédito
-- Controle detalhado de despesas e receitas
+- Controle detalhado de despesas (22 categorias) e receitas (10 categorias)
 - Sistema de empréstimos e transferências
 - Dashboard com visualizações e métricas financeiras
 - Categorização automática de transações
 - Criptografia de dados sensíveis (CVV, números de conta)
 
-### 2. Módulo Security (StreamFort)
+### 2. Módulo Budgets
+
+Controle orçamentário mensal integrado às despesas:
+
+- Criação de orçamentos por categoria e período
+- Monitoramento de consumo em tempo real
+- Sugestão automática de orçamentos baseada no histórico
+- Alertas visuais ao se aproximar do limite
+
+### 3. Módulo Personal Planning
+
+Planejamento pessoal e produtividade:
+
+- Rotinas recorrentes com geração automática de instâncias
+- Metas pessoais com acompanhamento de progresso
+- Reflexões diárias e anotações
+
+### 4. Módulo Bank Reconciliation
+
+Conciliação bancária via importação de extratos:
+
+- Parser de arquivos OFX 1.x SGML e CSV
+- Detecção automática de duplicatas por hash SHA-256
+- Auto-matching com despesas/receitas existentes
+
+### 5. Módulo Security (StreamFort)
 
 Gerenciador seguro de credenciais e informações confidenciais:
 
@@ -37,50 +62,86 @@ Gerenciador seguro de credenciais e informações confidenciais:
 - Sistema de auditoria e logs de atividade
 - Organização por categorias e tags
 
-### 3. Módulo Library (CodexDB)
+### 6. Módulo Library (CodexDB)
 
 Biblioteca pessoal digital com recursos avançados:
 
 - Catálogo completo de livros
 - Gestão de autores e editoras
-- Resumos de leitura com busca semântica
+- Resumos de leitura com busca semântica (pgvector RAG)
 - Controle de progresso de leitura
 - Metadados completos (ISBN, ano, páginas)
 - Sistema de avaliações e notas
 
-### 4. AI Assistant
+### 7. Módulo Agents (IA Conversacional)
 
-Assistente inteligente com busca semântica:
+Assistente de IA especializado em domínios financeiros e pessoais:
 
-- Busca unificada em todos os módulos
-- Respostas contextualizadas via LLM (Groq)
-- Embeddings locais com sentence-transformers
-- Citação de fontes com score de relevância
-- Interface de chat interativa
-- Suporte multilíngue (incluindo português)
+- 6 agentes especializados: finanças, orçamento, projeção, planejamento, biblioteca, insights
+- Suporte a 3 providers de LLM: Ollama (local), Groq e Anthropic Claude
+- Respostas em streaming (SSE) ou modo síncrono
+- Memória de sessão via Redis + histórico permanente no PostgreSQL
+- RAG via pgvector para o `LibraryAgent`
 
 ## Tecnologias Core
 
 ### Backend
-- **Django 5.2.5** - Framework web principal
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2-092E20?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-3.16-ff1709?style=flat-square&logo=django&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-HttpOnly_Cookies-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Fernet](https://img.shields.io/badge/Fernet-Field_Encryption-FFD43B?style=flat-square&logo=python&logoColor=black)
+
+- **Django 5.2.12** - Framework web principal
 - **Django REST Framework 3.16.1** - API RESTful
 - **PostgreSQL 16** com **pgvector** - Banco de dados
-- **Sentence Transformers** - Embeddings semânticos
-- **Groq API** - Geração de respostas via LLM
+- **Ollama** - LLM local (padrão: `mistral:7b-instruct`, embeddings: `nomic-embed-text` 768 dims)
+- **Groq / Anthropic** - Providers cloud alternativos via `LLM_PROVIDER`
 - **Cryptography (Fernet)** - Criptografia de dados
 
 ### Frontend
-- **React 18** - Biblioteca UI
-- **TypeScript** - Tipagem estática
-- **TailwindCSS** - Framework CSS
-- **Zustand** - Gerenciamento de estado
+
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Radix UI](https://img.shields.io/badge/Radix_UI-primitives-161618?style=flat-square&logo=radixui&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-state_management-443E38?style=flat-square)
+![React Router](https://img.shields.io/badge/React_Router-v7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-animations-0055FF?style=flat-square&logo=framer&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-charts-22B5BF?style=flat-square)
+![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154?style=flat-square&logo=reactquery&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-validation-3E67B1?style=flat-square)
+
+- **React 19** - Biblioteca UI
+- **TypeScript 5.9** - Tipagem estática
+- **Vite 7** - Build tool e dev server
+- **TailwindCSS 3** - Framework CSS
+- **Radix UI** - Componentes primitivos acessíveis
+- **Zustand** - Gerenciamento de estado global
 - **React Router v7** - Roteamento
+- **Framer Motion** - Animações
 - **Recharts** - Visualização de dados
+- **TanStack Query v5** - Cache e sincronização de dados do servidor
+- **Zod** - Validação de formulários (com React Hook Form)
 
 ### Infraestrutura
+
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-reverse_proxy-009639?style=flat-square&logo=nginx&logoColor=white)
+![MinIO](https://img.shields.io/badge/MinIO-object_storage-C72E49?style=flat-square&logo=minio&logoColor=white)
+![Sentry](https://img.shields.io/badge/Sentry-error_tracking-362D59?style=flat-square&logo=sentry&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-metrics-E6522C?style=flat-square&logo=prometheus&logoColor=white)
+
 - **Docker & Docker Compose** - Containerização
-- **Nginx** (opcional) - Proxy reverso
-- **JWT** - Autenticação baseada em tokens
+- **Nginx** - Proxy reverso e servidor de assets do frontend
+- **MinIO** - Armazenamento de objetos (mídia)
+- **Sentry** - Error tracking (frontend, via `VITE_SENTRY_DSN`)
+- **Prometheus** - Coleta de métricas (via django-prometheus)
+- **JWT** - Autenticação baseada em tokens (HttpOnly cookies)
 
 ## Arquitetura de Alto Nível
 
@@ -95,20 +156,21 @@ graph TB
     subgraph "Backend - Django"
         Gateway[API Gateway]
         Auth[Autenticação JWT]
-        Finance[Módulo Finance]
+        Finance[Finance + Budgets]
         Security[Módulo Security]
         Library[Módulo Library]
-        AI[AI Assistant]
+        Planning[Personal Planning]
+        Agents[Agents / IA]
     end
 
     subgraph "Dados"
         DB[(PostgreSQL + pgvector)]
-        Cache[Cache Layer]
+        Cache[Redis Cache]
     end
 
-    subgraph "Serviços Externos"
-        Groq[Groq API]
-        ST[Sentence Transformers]
+    subgraph "LLM"
+        Ollama[Ollama local]
+        Cloud[Groq / Anthropic]
     end
 
     UI --> Store
@@ -118,19 +180,19 @@ graph TB
     Auth --> Finance
     Auth --> Security
     Auth --> Library
-    Auth --> AI
+    Auth --> Planning
+    Auth --> Agents
 
     Finance --> DB
     Security --> DB
     Library --> DB
-    AI --> DB
-
-    AI --> Groq
-    AI --> ST
+    Planning --> DB
+    Agents --> DB
+    Agents --> Cache
 
     Finance -.-> Cache
-    Security -.-> Cache
-    Library -.-> Cache
+    Agents --> Ollama
+    Agents -.-> Cloud
 ```
 
 ## Principais Características
@@ -166,11 +228,11 @@ graph TB
 - **Tipagem forte** em TypeScript
 - **Arquitetura modular** com separação de responsabilidades
 - **Documentação completa** em português
-- **Testes automatizados** (em desenvolvimento)
+- **Testes automatizados** backend (pytest) e frontend (Vitest)
 
 ## Público-Alvo
 
-O MindLedger é ideal para:
+O Axiom é ideal para:
 
 - Indivíduos que buscam controle financeiro detalhado
 - Profissionais que necessitam gerenciar múltiplas credenciais
@@ -180,16 +242,16 @@ O MindLedger é ideal para:
 
 ## Próximos Passos
 
-Para começar a usar o MindLedger, consulte:
+Para começar a usar o Axiom, consulte:
 
-- [Guia de Instalação](../08-development/instalacao.md)
-- [Configuração Inicial](../08-development/configuracao.md)
-- [Arquitetura do Sistema](../02-architecture/visao-geral.md)
+- [Guia de Instalação](../development/installation.md)
+- [Configuração Inicial](../development/configuration.md)
+- [Arquitetura do Sistema](../architecture/overview.md)
 
 ## Suporte e Comunidade
 
 - **Documentação**: Este repositório de documentação
-- **Issues**: [GitHub Issues](https://github.com/tarcisioribeiro/mindledger/issues)
+- **Issues**: GitLab Issues (repositório interno)
 - **Email**: tarcisio.ribeiro.1840@hotmail.com
 
 ## Licença

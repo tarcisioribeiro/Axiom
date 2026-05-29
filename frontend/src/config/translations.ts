@@ -1,3 +1,6 @@
+/* eslint-disable max-lines */
+import i18next from 'i18next';
+
 // Translations - English (API) to Portuguese (UI)
 export const TRANSLATIONS = {
   // Account Types
@@ -105,29 +108,14 @@ export const TRANSLATIONS = {
   revenueCategories: {
     deposit: 'Depósito',
     award: 'Prêmio',
-    bonus: 'Bônus',
     salary: 'Salário',
     ticket: 'Vale',
     income: 'Rendimentos',
-    interest: 'Juros',
-    dividend: 'Dividendos',
     refund: 'Reembolso',
     cashback: 'Cashback',
     transfer: 'Transferência Recebida',
     received_loan: 'Empréstimo Recebido',
     loan_devolution: 'Devolução de Empréstimo',
-    freelance: 'Freelance',
-    rental: 'Aluguel Recebido',
-    commission: 'Comissão',
-    gift: 'Presente',
-    inheritance: 'Herança',
-    sale: 'Venda',
-    reimbursement: 'Reembolso',
-    pension: 'Pensão',
-    retirement: 'Aposentadoria',
-    investment_return: 'Retorno de Investimento',
-    other: 'Outro',
-    others: 'Outros',
   },
 
   // Card Brands
@@ -439,6 +427,10 @@ export const TRANSLATIONS = {
     loan_overdue: 'Empréstimo Atrasado',
     bill_due_soon: 'Fatura Vencendo',
     bill_overdue: 'Fatura Atrasada',
+    budget_warning: 'Alerta de Orçamento',
+    budget_exceeded: 'Orçamento Estourado',
+    financial_goal_reached: 'Meta Financeira Atingida',
+    financial_goal_approaching: 'Meta Financeira Próxima do Prazo',
   },
 
   // Common Terms
@@ -473,6 +465,19 @@ export const TRANSLATIONS = {
     current: 'Atual',
     previous: 'Anterior',
     next: 'Próximo',
+  },
+
+  // Categorization Rules
+  categorizationRules: {
+    autoCategorized: 'Auto',
+    merchantContains: 'Estabelecimento contém',
+    applyRules: 'Aplicar Regras',
+    rulesApplied: 'regras aplicadas',
+    noRulesFound: 'Nenhuma regra encontrada',
+    newRule: 'Nova Regra',
+    editRule: 'Editar Regra',
+    ruleActive: 'Ativa',
+    ruleInactive: 'Inativa',
   },
 };
 
@@ -552,8 +557,225 @@ export const REVERSE_TRANSLATIONS = {
   ),
 };
 
+// English display labels (for en-US locale)
+export const TRANSLATIONS_EN = {
+  accountTypes: {
+    CC: 'Checking Account',
+    CS: 'Salary Account',
+    FG: 'Severance Fund',
+    VA: 'Meal Voucher',
+    VR: 'Food Voucher',
+    CP: 'Savings Account',
+  },
+
+  months: {
+    Jan: 'January',
+    Feb: 'February',
+    Mar: 'March',
+    Apr: 'April',
+    May: 'May',
+    Jun: 'June',
+    Jul: 'July',
+    Aug: 'August',
+    Sep: 'September',
+    Oct: 'October',
+    Nov: 'November',
+    Dec: 'December',
+  },
+
+  billStatus: {
+    open: 'Open',
+    closed: 'Closed',
+    paid: 'Paid',
+    overdue: 'Overdue',
+  },
+
+  passwordCategories: {
+    social: 'Social Networks',
+    email: 'E-mail',
+    banking: 'Banking',
+    bank: 'Banking',
+    shopping: 'Shopping',
+    streaming: 'Streaming',
+    gaming: 'Gaming',
+    work: 'Work',
+    education: 'Education',
+    government: 'Government',
+    healthcare: 'Healthcare',
+    health: 'Health',
+    utilities: 'Utilities',
+    entertainment: 'Entertainment',
+    finance: 'Finance',
+    financial: 'Financial',
+    travel: 'Travel',
+    food: 'Food',
+    communication: 'Communication',
+    productivity: 'Productivity',
+    development: 'Development',
+    cloud: 'Cloud',
+    security: 'Security',
+    crypto: 'Crypto',
+    cryptocurrency: 'Cryptocurrency',
+    investment: 'Investments',
+    insurance: 'Insurance',
+    personal: 'Personal',
+    family: 'Family',
+    other: 'Other',
+    others: 'Others',
+  },
+
+  passwordStrength: {
+    weak: 'Weak',
+    medium: 'Medium',
+    strong: 'Strong',
+    very_strong: 'Very Strong',
+  },
+  institutions: {
+    NUB: 'Nubank',
+    SIC: 'Sicoob',
+    MPG: 'Mercado Pago',
+    IFB: 'Ifood Benefícios',
+    CEF: 'Caixa Econômica Federal',
+    BB: 'Banco do Brasil',
+    SAN: 'Santander',
+    ITA: 'Itaú',
+    BRA: 'Bradesco',
+    INT: 'Inter',
+    C6B: 'C6 Bank',
+    PIC: 'PicPay',
+  },
+  payableStatus: {
+    active: 'Active',
+    paid: 'Paid',
+    overdue: 'Overdue',
+    cancelled: 'Cancelled',
+  },
+  expenseCategories: {
+    'food and drink': 'Food and Drink',
+    food: 'Food',
+    'bills and services': 'Bills and Services',
+    electronics: 'Electronics',
+    'family and friends': 'Family and Friends',
+    pets: 'Pets',
+    'digital signs': 'Digital Subscriptions',
+    subscriptions: 'Subscriptions',
+    house: 'Home',
+    home: 'Home',
+    housing: 'Housing',
+    purchases: 'Purchases',
+    shopping: 'Shopping',
+    donate: 'Donations',
+    donation: 'Donation',
+    education: 'Education',
+    loans: 'Loans',
+    entertainment: 'Entertainment',
+    leisure: 'Leisure',
+    taxes: 'Taxes',
+    investments: 'Investments',
+    others: 'Others',
+    other: 'Other',
+    vestuary: 'Clothing',
+    clothing: 'Clothing',
+    'health and care': 'Health and Personal Care',
+    health: 'Health',
+    healthcare: 'Healthcare',
+    'professional services': 'Professional Services',
+    services: 'Services',
+    supermarket: 'Supermarket',
+    groceries: 'Groceries',
+    rates: 'Fees',
+    fees: 'Fees',
+    transport: 'Transport',
+    transportation: 'Transport',
+    travels: 'Travel',
+    travel: 'Travel',
+    utilities: 'Utilities',
+    insurance: 'Insurance',
+    personal: 'Personal',
+    beauty: 'Beauty',
+    fitness: 'Fitness',
+    gym: 'Gym',
+    restaurant: 'Restaurant',
+    restaurants: 'Restaurants',
+    cafe: 'Café',
+    delivery: 'Delivery',
+    rent: 'Rent',
+    fuel: 'Fuel',
+    parking: 'Parking',
+    maintenance: 'Maintenance',
+    repairs: 'Repairs',
+    gifts: 'Gifts',
+    charity: 'Charity',
+    kids: 'Kids',
+    baby: 'Baby',
+    pharmacy: 'Pharmacy',
+    medical: 'Medical',
+    dental: 'Dental',
+    vision: 'Vision',
+    streaming: 'Streaming',
+    games: 'Games',
+    books: 'Books',
+    hobbies: 'Hobbies',
+    sports: 'Sports',
+    vacation: 'Vacation',
+    flight: 'Flight',
+    hotel: 'Hotel',
+    accommodation: 'Accommodation',
+    fatura_cartao: 'Credit Card Bill',
+  },
+  revenueCategories: {
+    deposit: 'Deposit',
+    award: 'Award',
+    salary: 'Salary',
+    ticket: 'Voucher',
+    income: 'Income',
+    refund: 'Refund',
+    cashback: 'Cashback',
+    transfer: 'Transfer Received',
+    received_loan: 'Loan Received',
+    loan_devolution: 'Loan Repayment',
+  },
+  taskCategories: {
+    health: 'Health',
+    intellect: 'Intellect',
+    studies: 'Studies',
+    spiritual: 'Spiritual',
+    exercise: 'Exercise',
+    nutrition: 'Nutrition',
+    meditation: 'Meditation',
+    reading: 'Reading',
+    writing: 'Writing',
+    work: 'Work',
+    leisure: 'Leisure',
+    family: 'Family',
+    social: 'Social',
+    finance: 'Finance',
+    household: 'Household',
+    personal_care: 'Personal Care',
+    creativity: 'Creativity',
+    learning: 'Learning',
+    career: 'Career',
+    relationships: 'Relationships',
+    mindfulness: 'Mindfulness',
+    sleep: 'Sleep',
+    hydration: 'Hydration',
+    gratitude: 'Gratitude',
+    journaling: 'Journaling',
+    planning: 'Planning',
+    review: 'Review',
+    other: 'Other',
+    others: 'Others',
+  },
+};
+
 // Helper function to translate
 export const translate = (category: keyof typeof TRANSLATIONS, key: string): string => {
+  if (i18next.language === 'en-US' && category in TRANSLATIONS_EN) {
+    const enSection = TRANSLATIONS_EN[category as keyof typeof TRANSLATIONS_EN];
+    const found = (enSection as Record<string, string>)[key];
+    if (found) return found;
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+  }
   return (
     TRANSLATIONS[category][key as keyof (typeof TRANSLATIONS)[typeof category]] || key
   );
@@ -587,21 +809,32 @@ export const autoTranslate = (key: string): string => {
   if (!key) return key;
 
   const normalizedKey = key.toLowerCase().trim();
+  const isEnglish = i18next.language === 'en-US';
+  const primaryMap = isEnglish ? TRANSLATIONS_EN : TRANSLATIONS;
 
-  // Procura em todas as seções de tradução
-  for (const section of Object.values(TRANSLATIONS)) {
+  for (const section of Object.values(primaryMap)) {
     const found = (section as Record<string, string>)[normalizedKey];
     if (found) return found;
   }
 
-  // Se não encontrou, tenta com underscores convertidos para espaços
   const withSpaces = normalizedKey.replace(/_/g, ' ');
-  for (const section of Object.values(TRANSLATIONS)) {
+  for (const section of Object.values(primaryMap)) {
     const found = (section as Record<string, string>)[withSpaces];
     if (found) return found;
   }
 
-  // Retorna o termo original com primeira letra maiúscula
+  if (!isEnglish) {
+    for (const section of Object.values(TRANSLATIONS)) {
+      const found = (section as Record<string, string>)[normalizedKey];
+      if (found) return found;
+    }
+    const withSpacesFallback = normalizedKey.replace(/_/g, ' ');
+    for (const section of Object.values(TRANSLATIONS)) {
+      const found = (section as Record<string, string>)[withSpacesFallback];
+      if (found) return found;
+    }
+  }
+
   return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
 };
 

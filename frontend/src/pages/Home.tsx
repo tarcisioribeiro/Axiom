@@ -14,9 +14,11 @@ import {
   Library,
   Calendar,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { PageContainer } from '@/components/common/PageContainer';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
 
@@ -29,108 +31,94 @@ interface ModuleCard {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+
   const modules: ModuleCard[] = [
     {
-      title: 'Planejamento Pessoal',
+      title: t('pages.home.planning.title'),
       icon: <Calendar className="h-8 w-8" />,
       href: '/planning/dashboard',
       color: 'from-warning to-warning/70',
-      features: [
-        'Checklist Diário',
-        'Tarefas Rotineiras',
-        'Objetivos e Metas',
-        'Acompanhamento de Progresso',
-        'Organização Pessoal',
-      ],
+      features: t('pages.home.planning.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Controle Financeiro',
+      title: t('pages.home.finance.title'),
       icon: <Wallet className="h-8 w-8" />,
       href: '/dashboard',
       color: 'from-success to-success/70',
-      features: [
-        'Controle de Contas Bancárias',
-        'Gestão de Despesas e Receitas',
-        'Cartões de Crédito e Faturas',
-        'Empréstimos e Transferências',
-        'Dashboard com Gráficos',
-      ],
+      features: t('pages.home.finance.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Segurança',
+      title: t('pages.home.security.title'),
       icon: <Shield className="h-8 w-8" />,
       href: '/security/passwords',
       color: 'from-info to-primary',
-      features: [
-        'Armazenamento Seguro de Senhas',
-        'Cartões e Contas Bancárias',
-        'Arquivos Criptografados',
-        'Logs de Atividade',
-        'Criptografia de Ponta',
-      ],
+      features: t('pages.home.security.features', { returnObjects: true }) as string[],
     },
     {
-      title: 'Leitura',
+      title: t('pages.home.library.title'),
       icon: <Library className="h-8 w-8" />,
       href: '/library/books',
       color: 'from-primary to-accent',
-      features: [
-        'Catálogo de Livros',
-        'Autores e Editoras',
-        'Resumos e Anotações',
-        'Controle de Leituras',
-        'Estatísticas de Leitura',
-      ],
+      features: t('pages.home.library.features', { returnObjects: true }) as string[],
     },
   ];
 
   const quickActions = [
     {
       icon: <TrendingDown className="h-5 w-5" />,
-      label: 'Nova Despesa',
+      label: t('pages.home.quickActions.newExpense'),
       href: '/expenses',
     },
     {
       icon: <TrendingUp className="h-5 w-5" />,
-      label: 'Nova Receita',
+      label: t('pages.home.quickActions.newRevenue'),
       href: '/revenues',
     },
     {
       icon: <ArrowLeftRight className="h-5 w-5" />,
-      label: 'Transferência',
+      label: t('pages.home.quickActions.transfer'),
       href: '/transfers',
     },
     {
       icon: <CreditCard className="h-5 w-5" />,
-      label: 'Cartões',
+      label: t('pages.home.quickActions.cards'),
       href: '/credit-cards',
     },
-    { icon: <Key className="h-5 w-5" />, label: 'Senhas', href: '/security/passwords' },
-    { icon: <BookOpen className="h-5 w-5" />, label: 'Livros', href: '/library/books' },
+    {
+      icon: <Key className="h-5 w-5" />,
+      label: t('pages.home.quickActions.passwords'),
+      href: '/security/passwords',
+    },
+    {
+      icon: <BookOpen className="h-5 w-5" />,
+      label: t('pages.home.quickActions.books'),
+      href: '/library/books',
+    },
   ];
 
   return (
-    <PageContainer className="space-y-8">
+    <PageContainer className="space-y-xl">
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-sm">
             <LayoutDashboard className="h-5 w-5" />
-            Ações Rápidas
+            {t('pages.home.quickActionsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <motion.div
-            className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6"
+            className="grid grid-cols-2 gap-md md:grid-cols-3 lg:grid-cols-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            {quickActions.map((action, index) => (
-              <motion.div key={index} variants={itemVariants}>
+            {quickActions.map((action) => (
+              <motion.div key={action.href} variants={itemVariants}>
                 <Link
                   to={action.href}
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border p-4 transition-all hover:scale-105 hover:border-primary hover:bg-accent"
+                  className="flex flex-col items-center justify-center gap-sm rounded-lg border border-border p-md transition-all hover:scale-105 hover:border-primary hover:bg-accent"
                 >
                   <div className="rounded-full bg-primary/10 p-3 text-primary">
                     {action.icon}
@@ -146,21 +134,27 @@ export default function Home() {
       </Card>
 
       {/* Modules */}
-      <div>
-        <h2 className="mb-6 text-2xl font-bold">Módulos Disponíveis</h2>
+      <div className="space-y-lg">
+        <PageHeader title={t('pages.home.modulesTitle')} />
         <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-lg md:grid-cols-2 lg:grid-cols-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {modules.map((module, index) => (
-            <motion.div key={index} variants={itemVariants}>
-              <Link to={module.href} className="group block h-full">
+          {modules.map((module) => (
+            <motion.div key={module.href} variants={itemVariants}>
+              <Link
+                to={module.href}
+                className="group block h-full"
+                aria-label={t('pages.home.modules.navigateTo', {
+                  module: module.title,
+                })}
+              >
                 <Card className="h-full border-2 transition-all hover:scale-[1.02] hover:border-primary hover:shadow-xl">
                   <CardHeader>
                     <motion.div
-                      className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-4 flex items-center justify-center text-white`}
+                      className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${module.color} mb-md flex items-center justify-center text-white`}
                       whileHover={{ scale: 1.15, rotate: 5 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
@@ -169,9 +163,9 @@ export default function Home() {
                     <CardTitle className="text-xl">{module.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
-                      {module.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm">
+                    <ul className="space-y-sm">
+                      {module.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-sm text-sm">
                           <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                           {feature}
                         </li>
@@ -187,7 +181,7 @@ export default function Home() {
 
       {/* Info Cards */}
       <motion.div
-        className="grid grid-cols-1 gap-4 md:grid-cols-3"
+        className="grid grid-cols-1 gap-md md:grid-cols-3"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -196,16 +190,13 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-success/20 bg-gradient-to-br from-success/10 to-success/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-success">
+              <CardTitle className="flex items-center gap-sm text-success">
                 <Wallet className="h-5 w-5" />
-                Finanças Organizadas
+                {t('pages.home.infoCards.financeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Controle total das suas finanças pessoais com dashboards intuitivos e
-                relatórios detalhados.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.financeDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -213,16 +204,13 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-info/20 bg-gradient-to-br from-info/10 to-primary/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-info">
+              <CardTitle className="flex items-center gap-sm text-info">
                 <Lock className="h-5 w-5" />
-                Segurança Máxima
+                {t('pages.home.infoCards.securityTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Seus dados protegidos com criptografia de ponta a ponta e armazenamento
-                seguro.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.securityDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -230,15 +218,13 @@ export default function Home() {
         <motion.div variants={itemVariants}>
           <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-accent/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
+              <CardTitle className="flex items-center gap-sm text-primary">
                 <BookMarked className="h-5 w-5" />
-                Conhecimento
+                {t('pages.home.infoCards.knowledgeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm">
-                Organize sua biblioteca pessoal e acompanhe seu progresso de leitura.
-              </p>
+              <p className="text-sm">{t('pages.home.infoCards.knowledgeDesc')}</p>
             </CardContent>
           </Card>
         </motion.div>

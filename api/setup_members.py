@@ -14,7 +14,9 @@ print("🔧 Configurando grupo members e permissões...")
 
 # Criar grupo
 group, created = Group.objects.get_or_create(name="members")
-print(f'Grupo members: {"criado" if created else "já existia"} - ID: {group.id}')
+print(
+    f'Grupo members: {"criado" if created else "já existia"} - ID: {group.id}'
+)
 
 # Limpar permissões existentes
 group.permissions.clear()
@@ -35,9 +37,11 @@ apps = [
     "library",
     "personal_planning",
     "payables",
+    "receivables",
     "vaults",
     "notifications",
-    "ai_assistant",
+    "budgets",
+    "bank_reconciliation",
 ]
 
 # Buscar e adicionar permissões

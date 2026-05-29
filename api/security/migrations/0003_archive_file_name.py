@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('security', '0002_alter_activitylog_action_and_more'),
+        ("security", "0002_alter_activitylog_action_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='archive',
-            name='file_name',
-            field=models.CharField(blank=True, max_length=255, null=True, verbose_name='Nome do Arquivo'),
+            model_name="archive",
+            name="file_name",
+            field=models.CharField(
+                blank=True, max_length=255, null=True, verbose_name="Nome do Arquivo"
+            ),
         ),
     ]

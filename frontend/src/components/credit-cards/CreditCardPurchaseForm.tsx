@@ -1,5 +1,7 @@
+/* eslint-disable max-lines */
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +16,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { TRANSLATIONS, EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { TimePicker } from '@/components/ui/time-picker';
+import {
+  TRANSLATIONS,
+  EXPENSE_CATEGORIES_CANONICAL,
+  translate,
+} from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { formatCurrency } from '@/lib/formatters';
 import { formatLocalDate } from '@/lib/utils';
@@ -39,6 +46,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const { showAlert } = useAlertDialog();
   const { register, handleSubmit, setValue, watch } =
     useForm<CreditCardPurchaseFormData>({
@@ -112,6 +120,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         setValue('member', firstCard.owner);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [purchase, creditCards.length]);
 
   // Atualizar membro quando cartão muda
@@ -124,6 +133,7 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
         setValue('member', selectedCard.owner);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchedCard]);
 
   // Carregar dados da compra em edição
@@ -145,16 +155,16 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   const handleFormSubmit = async (data: CreditCardPurchaseFormData) => {
     if (!data.card || data.card === 0) {
       await showAlert({
-        title: 'Campo obrigatório',
-        description: 'Por favor, selecione um cartão de crédito',
+        title: t('pages.creditCardExpenses.form.requiredField'),
+        description: t('pages.creditCardExpenses.form.selectCardRequired'),
         confirmText: 'Ok',
       });
       return;
     }
     if (!data.category) {
       await showAlert({
-        title: 'Campo obrigatório',
-        description: 'Por favor, selecione uma categoria',
+        title: t('pages.creditCardExpenses.form.requiredField'),
+        description: t('pages.creditCardExpenses.form.selectCategoryRequired'),
         confirmText: 'Ok',
       });
       return;
@@ -166,8 +176,11 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
       data.total_value > selectedCardInfo.availableCredit
     ) {
       await showAlert({
-        title: 'Limite insuficiente',
-        description: `O valor de ${formatCurrency(data.total_value)} excede o limite disponível de ${formatCurrency(selectedCardInfo.availableCredit)} no cartão selecionado.`,
+        title: t('pages.creditCardExpenses.form.limitExceededTitle'),
+        description: t('pages.creditCardExpenses.form.limitExceededDesc', {
+          value: formatCurrency(data.total_value),
+          limit: formatCurrency(selectedCardInfo.availableCredit),
+        }),
         confirmText: 'Ok',
       });
       return;
@@ -179,20 +192,24 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
   const isEditMode = !!purchase;
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="description">Descrição *</Label>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-md">
+      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+        <div className="space-y-sm md:col-span-2">
+          <Label htmlFor="description">
+            {t('pages.creditCardExpenses.form.descriptionLabel')}
+          </Label>
           <Input
             id="description"
             {...register('description', { required: true })}
-            placeholder="Ex: Compra no mercado"
+            placeholder={t('pages.creditCardExpenses.form.descriptionPlaceholder')}
             disabled={isLoading}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="total_value">Valor Total *</Label>
+        <div className="space-y-sm">
+          <Label htmlFor="total_value">
+            {t('pages.creditCardExpenses.form.totalValueLabel')}
+          </Label>
           <Input
             id="total_value"
             type="number"
@@ -203,61 +220,64 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           />
           {isEditMode && (
             <p className="text-xs text-warning">
-              Valor total não pode ser alterado após criação
+              {t('pages.creditCardExpenses.form.totalValueLocked')}
             </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label>Categoria *</Label>
+        <div className="space-y-sm">
+          <Label>{t('pages.creditCardExpenses.form.categoryLabel')}</Label>
           <Select
             value={watch('category') || ''}
             onValueChange={(v) => setValue('category', v)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
-              {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
+              {EXPENSE_CATEGORIES_CANONICAL.map(({ key }) => (
                 <SelectItem key={key} value={key}>
-                  {label}
+                  {translate('expenseCategories', key)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="purchase_date">Data da Compra *</Label>
+        <div className="space-y-sm">
+          <Label htmlFor="purchase_date">
+            {t('pages.creditCardExpenses.form.purchaseDateLabel')}
+          </Label>
           <DatePicker
             value={watch('purchase_date')}
             onChange={(date) =>
               setValue('purchase_date', date ? formatLocalDate(date) : '')
             }
-            placeholder="Selecione a data"
+            placeholder={t('common.fields.selectDate')}
             disabled={isLoading}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="purchase_time">Horário *</Label>
-          <Input
-            id="purchase_time"
-            type="time"
-            {...register('purchase_time', { required: true })}
+        <div className="space-y-sm">
+          <Label htmlFor="purchase_time">
+            {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
+          </Label>
+          <TimePicker
+            value={watch('purchase_time')}
+            onChange={(t) => setValue('purchase_time', t ?? '')}
             disabled={isLoading}
           />
         </div>
 
-        <div className="space-y-2">
-          <Label>Cartão de Crédito *</Label>
+        <div className="space-y-sm">
+          <Label>{t('pages.creditCardExpenses.form.cardLabel')}</Label>
           <Select
             value={watch('card')?.toString() || ''}
             onValueChange={(v) => setValue('card', parseInt(v))}
             disabled={isEditMode}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
+              <SelectValue placeholder={t('common.actions.select')} />
             </SelectTrigger>
             <SelectContent>
               {creditCards.map((c) => {
@@ -265,10 +285,12 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                   getCardDisplayInfo(c);
                 return (
                   <SelectItem key={c.id} value={c.id.toString()}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-sm">
                       <span className="font-medium">{c.name}</span>
                       <span className="text-sm">
-                        {hasNumber ? `**** ${last4}` : 'Não cadastrado'}
+                        {hasNumber
+                          ? `**** ${last4}`
+                          : t('pages.creditCardExpenses.form.noCardNumber')}
                       </span>
                       <Badge variant="secondary" className="text-xs">
                         {brandName}
@@ -282,16 +304,18 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           </Select>
           {isEditMode && (
             <p className="text-xs text-warning">
-              Cartão não pode ser alterado após criação
+              {t('pages.creditCardExpenses.form.cardLocked')}
             </p>
           )}
           {/* Exibir limite disponível do cartão selecionado */}
           {selectedCardInfo && !isEditMode && (
             <div
-              className={`rounded-md p-2 text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
+              className={`rounded-md p-sm text-sm ${exceedsLimit ? 'border border-destructive/30 bg-destructive/10' : 'bg-muted'}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Limite disponível:</span>
+                <span className="text-muted-foreground">
+                  {t('pages.creditCardExpenses.form.availableLimit')}:
+                </span>
                 <span
                   className={`font-semibold ${exceedsLimit ? 'text-destructive' : 'text-success'}`}
                 >
@@ -299,17 +323,22 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
                 </span>
               </div>
               {exceedsLimit && watchedTotalValue > 0 && (
-                <p className="mt-1 text-xs text-destructive">
-                  Valor excede o limite em{' '}
-                  {formatCurrency(watchedTotalValue - selectedCardInfo.availableCredit)}
+                <p className="mt-xs text-xs text-destructive">
+                  {t('pages.creditCardExpenses.form.exceedsLimitBy', {
+                    amount: formatCurrency(
+                      watchedTotalValue - selectedCardInfo.availableCredit
+                    ),
+                  })}
                 </p>
               )}
             </div>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="total_installments">Número de Parcelas *</Label>
+        <div className="space-y-sm">
+          <Label htmlFor="total_installments">
+            {t('pages.creditCardExpenses.form.installmentsLabel')}
+          </Label>
           <Input
             id="total_installments"
             type="number"
@@ -323,50 +352,61 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
             })}
             disabled={isLoading || isEditMode}
           />
-          <div className="rounded-md bg-muted p-2">
+          <div className="rounded-md bg-muted p-sm">
             {watchedTotalInstallments > 1 ? (
               <p className="text-sm font-medium text-primary">
-                {formatCurrency(watchedTotalValue)} em {watchedTotalInstallments}x de{' '}
-                {formatCurrency(installmentValue)}
+                {t('pages.creditCardExpenses.form.installmentsSummary', {
+                  total: formatCurrency(watchedTotalValue),
+                  count: watchedTotalInstallments,
+                  installmentValue: formatCurrency(installmentValue),
+                })}
               </p>
             ) : (
-              <p className="text-sm">Pagamento à vista</p>
+              <p className="text-sm">
+                {t('pages.creditCardExpenses.form.cashPayment')}
+              </p>
             )}
           </div>
           {isEditMode && (
             <p className="text-xs text-warning">
-              Parcelas não podem ser alteradas após criação
+              {t('pages.creditCardExpenses.form.installmentsLocked')}
             </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="merchant">Estabelecimento</Label>
+        <div className="space-y-sm">
+          <Label htmlFor="merchant">
+            {t('pages.creditCardExpenses.form.merchantLabel')}
+          </Label>
           <Input
             id="merchant"
             {...register('merchant')}
-            placeholder="Ex: Supermercado XYZ"
+            placeholder={t('pages.creditCardExpenses.form.merchantPlaceholder')}
             disabled={isLoading}
           />
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="notes">Observações</Label>
+        <div className="space-y-sm md:col-span-2">
+          <Label htmlFor="notes">{t('pages.creditCardExpenses.form.notesLabel')}</Label>
           <Textarea
             id="notes"
             {...register('notes')}
-            placeholder="Informações adicionais..."
+            placeholder={t('pages.creditCardExpenses.form.notesPlaceholder')}
             disabled={isLoading}
           />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-sm pt-md">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
-          Cancelar
+          {t('common.actions.cancel')}
         </Button>
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Salvando...' : purchase ? 'Atualizar' : 'Criar Compra'}
+          {isLoading
+            ? t('common.actions.saving')
+            : purchase
+              ? t('common.actions.update')
+              : t('pages.creditCardExpenses.form.createBtn')}
         </Button>
       </div>
     </form>

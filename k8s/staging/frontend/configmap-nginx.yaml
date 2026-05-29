@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: frontend
+    environment: staging
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name _;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        access_log /dev/stdout main;
+        error_log /dev/stderr warn;
+
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        # React Router — serve index.html para qualquer rota desconhecida
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # .mjs must be served as JavaScript for PDF.js worker; a types{} block
+        # inside server{} replaces ALL inherited MIME types, so use default_type
+        # inside a location instead.
+        location ~* \.mjs$ {
+            default_type application/javascript;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location = /index.html {
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            expires 0;
+        }
+    }

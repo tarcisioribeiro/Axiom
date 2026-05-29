@@ -2,6 +2,12 @@ import uuid
 
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.query import QuerySet
+
+
+class ActiveManager(models.Manager):
+    def get_queryset(self) -> QuerySet:
+        return super().get_queryset().filter(is_deleted=False)
 
 
 class BaseModel(models.Model):
@@ -30,8 +36,12 @@ class BaseModel(models.Model):
     uuid = models.UUIDField(
         default=uuid.uuid4, editable=False, unique=True, verbose_name="UUID"
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    created_at = models.DateTimeField(
+        auto_now_add=True, verbose_name="Criado em"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True, verbose_name="Atualizado em"
+    )
     created_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -49,7 +59,9 @@ class BaseModel(models.Model):
         verbose_name="Atualizado por",
     )
     is_deleted = models.BooleanField(default=False, verbose_name="Excluído")
-    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Excluído em")
+    deleted_at = models.DateTimeField(
+        null=True, blank=True, verbose_name="Excluído em"
+    )
     deleted_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -58,6 +70,9 @@ class BaseModel(models.Model):
         related_name="%(class)s_deleted",
         verbose_name="Excluído por",
     )
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True
@@ -96,3 +111,7 @@ BILL_STATUS_CHOICES = (
     ("paid", "Paga"),
     ("overdue", "Em atraso"),
 )
+
+# Import ChangeLog so Django's migration framework detects it
+# under the 'app' label
+from app.audit import ChangeLog  # noqa: E402, F401

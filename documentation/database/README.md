@@ -1,6 +1,6 @@
 # Documentação de Banco de Dados
 
-Esta seção contém a documentação completa sobre o banco de dados PostgreSQL do MindLedger, incluindo schema, otimizações e recursos avançados.
+Esta seção contém a documentação completa sobre o banco de dados PostgreSQL do Axiom, incluindo schema, otimizações e recursos avançados.
 
 ## Arquivos Disponíveis
 
@@ -12,7 +12,7 @@ Documentação completa do schema do banco de dados:
 - Diagramas ER (Entity-Relationship)
 - Campos de auditoria e soft delete
 
-### [indices-otimizacao.md](indices-otimizacao.md)
+### [index_otimization.md](index_otimization.md)
 Estratégias de otimização e performance:
 - Índices criados e suas justificativas
 - Índices compostos para queries frequentes
@@ -187,10 +187,10 @@ graph TB
 ### Acesso ao PostgreSQL
 ```bash
 # Via Docker
-docker-compose exec db psql -U mindledger_user -d mindledger_db
+docker-compose exec db psql -U axiom_user -d axiom_db
 
 # Local
-psql -h localhost -p 5435 -U mindledger_user -d mindledger_db
+psql -h localhost -p 39102 -U axiom_user -d axiom_db
 ```
 
 ### Inspeção do Schema
@@ -211,11 +211,15 @@ psql -h localhost -p 5435 -U mindledger_user -d mindledger_db
 ### Backup e Restore
 ```bash
 # Backup
-docker-compose exec db pg_dump -U mindledger_user mindledger_db > backup.sql
+docker-compose exec db pg_dump -U axiom_user axiom_db > backup.sql
 
 # Restore
-docker-compose exec -T db psql -U mindledger_user mindledger_db < backup.sql
+docker-compose exec -T db psql -U axiom_user axiom_db < backup.sql
 ```
+
+---
+
+[Voltar ao índice da documentação](../README.md)
 
 ## Links Relacionados
 

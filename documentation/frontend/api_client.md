@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O MindLedger utiliza **Axios** como cliente HTTP base, com interceptors customizados para autenticação automática, refresh de tokens e tratamento de erros centralizado.
+O Axiom utiliza **Axios** como cliente HTTP base, com interceptors customizados para autenticação automática, refresh de tokens e tratamento de erros centralizado.
 
 ## Arquitetura
 
@@ -529,7 +529,7 @@ Centralize endpoints em `config/constants.ts`:
 
 ```typescript
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:39100',
   ENDPOINTS: {
     // Auth
     LOGIN: '/api/v1/authentication/login/',

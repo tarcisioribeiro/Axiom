@@ -3,7 +3,13 @@ from decimal import Decimal
 from django.db import models
 from rest_framework import serializers
 
-from .models import FinancialGoal, Vault, VaultTransaction
+from .models import (
+    FinancialGoal,
+    Vault,
+    VaultRecurringContribution,
+    VaultTransaction,
+)
+from .services.goal_progress import compute_progress
 
 
 class VaultTransactionSerializer(serializers.ModelSerializer):
@@ -43,7 +49,9 @@ class VaultTransactionSerializer(serializers.ModelSerializer):
 class VaultSerializer(serializers.ModelSerializer):
     """Serializer para cofres."""
 
-    account_name = serializers.CharField(source="account.account_name", read_only=True)
+    account_name = serializers.CharField(
+        source="account.account_name", read_only=True
+    )
     account_balance = serializers.DecimalField(
         source="account.current_balance",
         max_digits=15,
@@ -84,6 +92,7 @@ class VaultSerializer(serializers.ModelSerializer):
             "pending_yield",
             "is_active",
             "notes",
+            "currency_code",
             "total_deposits",
             "total_withdrawals",
             "recent_transactions",
@@ -104,7 +113,9 @@ class VaultSerializer(serializers.ModelSerializer):
         ]
 
     def get_yield_rate_percentage(self, obj):
-        """Retorna a taxa de rendimento diária (legado) em formato de porcentagem."""
+        """
+        Retorna a taxa de rendimento diária (legado) em formato de porcentagem.
+        """
         return float(obj.yield_rate * 100)
 
     def get_annual_yield_rate_percentage(self, obj):
@@ -139,9 +150,7 @@ class VaultSerializer(serializers.ModelSerializer):
 
     def get_recent_transactions(self, obj):
         """Retorna as últimas 5 transações."""
-        transactions = obj.transactions.filter(is_deleted=False).order_by(
-            "-created_at"
-        )[:5]
+        transactions = obj.transactions.order_by("-created_at")[:5]
         return VaultTransactionSerializer(transactions, many=True).data
 
 
@@ -214,6 +223,86 @@ class VaultTransactionUpdateSerializer(serializers.ModelSerializer):
         return data
 
 
+class VaultRecurringContributionSerializer(serializers.ModelSerializer):
+    """Serializer para contribuições recorrentes de cofre."""
+
+    vault_description = serializers.CharField(
+        source="vault.description", read_only=True
+    )
+    account_name = serializers.CharField(
+        source="vault.account.account_name", read_only=True
+    )
+    next_contribution_date = serializers.DateField(read_only=True)
+    fixed_expense_id = serializers.IntegerField(
+        source="fixed_expense.id", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = VaultRecurringContribution
+        fields = [
+            "id",
+            "uuid",
+            "vault",
+            "vault_description",
+            "account_name",
+            "amount",
+            "day_of_month",
+            "is_active",
+            "start_date",
+            "end_date",
+            "description",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "uuid",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate(self, data):
+        end_date = data.get("end_date") or (
+            self.instance and self.instance.end_date
+        )
+        start_date = data.get("start_date") or (
+            self.instance and self.instance.start_date
+        )
+        if end_date and start_date and end_date < start_date:
+            raise serializers.ValidationError(
+                {
+                    "end_date": (
+                        "A data de término deve ser posterior"
+                        " à data de início."
+                    )
+                }
+            )
+        return data
+
+
+class VaultRecurringContributionCreateSerializer(
+    VaultRecurringContributionSerializer
+):
+    """
+    Serializer para criação de contribuições recorrentes (vault é obrigatório).
+    """
+
+    class Meta(VaultRecurringContributionSerializer.Meta):
+        read_only_fields = [
+            "uuid",
+            "fixed_expense_id",
+            "last_generated_month",
+            "next_contribution_date",
+            "created_at",
+            "updated_at",
+        ]
+
+
 class VaultSummarySerializer(serializers.Serializer):
     """Serializer para resumo de cofres (usado em metas)."""
 
@@ -221,7 +310,9 @@ class VaultSummarySerializer(serializers.Serializer):
     uuid = serializers.UUIDField()
     description = serializers.CharField()
     current_balance = serializers.DecimalField(max_digits=15, decimal_places=2)
-    accumulated_yield = serializers.DecimalField(max_digits=15, decimal_places=2)
+    accumulated_yield = serializers.DecimalField(
+        max_digits=15, decimal_places=2
+    )
     account_name = serializers.CharField()
 
 
@@ -246,6 +337,7 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
     )
     vaults_summary = serializers.SerializerMethodField()
     vaults_count = serializers.SerializerMethodField()
+    computed_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = FinancialGoal
@@ -269,6 +361,9 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
             "is_completed",
             "completed_at",
             "notes",
+            "linked_expense_category",
+            "linked_account",
+            "computed_progress",
             "created_at",
             "updated_at",
             "created_by",
@@ -292,6 +387,16 @@ class FinancialGoalSerializer(serializers.ModelSerializer):
         """Retorna o número de cofres associados."""
         return obj.vaults.filter(is_deleted=False, is_active=True).count()
 
+    def get_computed_progress(self, obj):
+        """Retorna o progresso calculado com base na categoria da meta."""
+        progress = compute_progress(obj)
+        return {
+            "current_value": str(progress["current_value"]),
+            "target_value": str(progress["target_value"]),
+            "percentage": str(progress["percentage"]),
+            "data_source": progress["data_source"],
+        }
+
 
 class FinancialGoalListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de metas."""
@@ -306,6 +411,7 @@ class FinancialGoalListSerializer(serializers.ModelSerializer):
         max_digits=5, decimal_places=2, read_only=True
     )
     vaults_count = serializers.SerializerMethodField()
+    computed_progress = serializers.SerializerMethodField()
 
     class Meta:
         model = FinancialGoal
@@ -322,9 +428,20 @@ class FinancialGoalListSerializer(serializers.ModelSerializer):
             "target_date",
             "is_active",
             "is_completed",
+            "computed_progress",
             "created_at",
         ]
 
     def get_vaults_count(self, obj):
         """Retorna o número de cofres associados."""
         return obj.vaults.filter(is_deleted=False, is_active=True).count()
+
+    def get_computed_progress(self, obj):
+        """Retorna o progresso calculado com base na categoria da meta."""
+        progress = compute_progress(obj)
+        return {
+            "current_value": str(progress["current_value"]),
+            "target_value": str(progress["target_value"]),
+            "percentage": str(progress["percentage"]),
+            "data_source": progress["data_source"],
+        }

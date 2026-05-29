@@ -1,6 +1,6 @@
 # Recursos e Funcionalidades
 
-Este documento detalha todos os recursos e funcionalidades disponíveis no MindLedger, organizados por módulo.
+Este documento detalha todos os recursos e funcionalidades disponíveis no Axiom, organizados por módulo.
 
 ## Módulo Finance (ExpenseLit)
 
@@ -31,7 +31,7 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no MindL
 
 ### Despesas
 
-#### Categorias de Despesas (17)
+#### Categorias de Despesas (22)
 - Comida e bebida
 - Contas e serviços
 - Eletrônicos
@@ -74,7 +74,7 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no MindL
 
 ### Receitas
 
-#### Categorias de Receitas (9)
+#### Categorias de Receitas (10)
 - Depósito
 - Prêmio
 - Salário
@@ -339,7 +339,7 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no MindL
 
 #### Funcionalidades Especiais
 - Resumo detalhado do livro
-- **Vetorização automática com sentence-transformers**
+- **Vetorização automática via `nomic-embed-text` (Ollama, 768 dims)**
 - **Busca semântica via pgvector**
 - Citações favoritas
 - Insights e aprendizados
@@ -359,49 +359,50 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no MindL
 - Progresso de leitura anual
 - Média de avaliações
 
-## AI Assistant
+## Módulo Agents (IA Conversacional)
 
-### Busca Semântica
+### Agentes Especializados
 
-#### Fontes de Dados
-- **Finance**: Descrições de despesas, receitas, empréstimos
-- **Security**: Títulos de senhas, notas de arquivos
-- **Library**: Resumos de leitura, notas de livros
+| Agente | Domínio | Descrição |
+|---|---|---|
+| `FinanceAgent` | Finanças | Análise de gastos, categorias, evolução temporal |
+| `BudgetAgent` | Orçamentos | Status de orçamentos, desvios, projeções de estouro |
+| `ForecastAgent` | Projeções | Saldo projetado, fluxo de caixa, despesas fixas |
+| `PlanningAgent` | Planejamento | Rotinas, metas, reflexões diárias |
+| `LibraryAgent` | Biblioteca | Resumos de livros via RAG (pgvector) |
+| `InsightAgent` | Geral | Orquestrador, briefing diário, perguntas gerais |
 
-#### Tecnologia
-- **Embeddings locais** com sentence-transformers (all-MiniLM-L6-v2)
-- **384 dimensões** por embedding
-- **Busca vetorial** com pgvector (cosine similarity)
-- **Ranking** por score de relevância
+### Tecnologia
 
-### Geração de Respostas
-
-#### LLM Integration (Groq)
-- Modelo: `llama-3.3-70b-versatile`
-- Contexto: Top-k resultados mais relevantes
-- Citação automática de fontes
-- Resposta em português
-- Limite de tokens configurável
+- **Embeddings**: `nomic-embed-text` via Ollama — **768 dimensões**, armazenados em `vectors.agent_embeddings` (pgvector)
+- **Busca vetorial**: operador `<=>` (distância coseno) — TOP-5 chunks mais similares
+- **LLM Providers**: `LLM_PROVIDER=ollama` (padrão), `groq` ou `anthropic`
+- **Seleção de agente**: score por palavras-chave + similaridade semântica (peso 0.15)
+- **Memória**: Redis (TTL 1h, últimos 10 turnos) + PostgreSQL (histórico permanente)
+- **Segurança**: validação de prompt injection server-side (padrões em PT-BR e EN)
 
 ### Interface de Chat
 
 #### Funcionalidades
-- Interface de chat interativa
-- Histórico de conversas
-- Exibição de fontes citadas
-- Score de relevância por fonte
-- Feedback visual durante processamento
-- Suporte a perguntas em português e inglês
+- Respostas em streaming (SSE) token a token
+- Histórico de sessões com `session_id`
+- Exibição de fontes de dados usadas pelo agente
+- Cancelamento de stream via AbortController
+- Modo síncrono (`/ask/`) para integrações programáticas
 
 ### Casos de Uso
 
 #### Exemplos de Perguntas
 - "Quanto gastei com supermercado em janeiro?"
-- "Quais livros li sobre programação?"
-- "Mostre minhas senhas da categoria trabalho"
-- "Qual o saldo total das minhas contas?"
-- "Resumo do livro X"
-- "Empréstimos em aberto"
+- "Como está meu orçamento de alimentação este mês?"
+- "Qual meu saldo projetado para o final do mês?"
+- "Quais rotinas tenho pendentes hoje?"
+- "Resuma o livro X da minha biblioteca"
+- "Dê um briefing geral das minhas finanças"
+
+### Documentação Detalhada
+
+Consulte [`backend/agents.md`](../backend/agents.md) para pipeline completo (diagramas de sequência, roteador, providers, RAG, endpoints e configuração).
 
 ## Sistema de Membros Unificado
 
@@ -461,39 +462,22 @@ Este documento detalha todos os recursos e funcionalidades disponíveis no MindL
 
 - Índices otimizados no banco
 - Lazy loading de componentes
-- Queries otimizadas
-- Cache estratégico
-- Paginação (em desenvolvimento)
+- Queries otimizadas com `select_related` / `prefetch_related`
+- Cache estratégico (Redis) com TTLs alinhados ao frontend (TanStack Query)
+- Paginação `PAGE_SIZE=50` com `PageNumberPagination`
 
-## Próximas Funcionalidades Planejadas
+## Funcionalidades Pendentes de Implementação
 
-### Finance
-- Relatórios exportáveis (PDF, CSV)
-- Orçamento mensal com alertas
-- Metas financeiras
-- Conciliação bancária
-- Importação de OFX
+Consulte [`development/pending_features.md`](../development/pending_features.md) para guias detalhados de como implementar cada item.
 
-### Security
-- Gerador de senhas fortes
-- Verificação de vazamento de senhas
-- 2FA (autenticação em dois fatores)
-- Backup criptografado
-- Compartilhamento seguro
-
-### Library
-- Integração com APIs de livros (Google Books)
-- Wishlist de livros
-- Empréstimo de livros para amigos
-- Estatísticas de leitura detalhadas
-- Export de biblioteca (CSV)
-
-### AI Assistant
-- Modo de voz
-- Sugestões inteligentes
-- Análise preditiva de gastos
-- Recomendações de leitura
-- Alertas personalizados
+| Funcionalidade | Status |
+|---|---|
+| Notificações por email | ✅ Backend pronto — só falta configurar SMTP no `.env` |
+| Import de extrato bancário (frontend) | 🚧 Backend pronto — falta UI de 3 etapas |
+| Export ZIP do cofre (Security) | 📋 Planejado |
+| Reset de senha | 📋 Planejado |
+| Confirmação de email | 📋 Planejado |
+| 2FA / TOTP | 📋 Planejado |
 
 ## Links Relacionados
 

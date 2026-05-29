@@ -5,6 +5,19 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 
+@receiver(post_delete, sender="payables.Payable")
+def nullify_expenses_on_payable_delete(sender, instance, **kwargs):
+    """Nulifica related_payable nas Expenses vinculadas ao deletar um Payable.
+
+    Preserva as despesas — apenas remove o vínculo para evitar órfãos.
+    """
+    from expenses.models import Expense
+
+    Expense.objects.filter(related_payable=instance).update(
+        related_payable=None
+    )
+
+
 def update_payable_paid_value(payable):
     """
     Recalcula o paid_value de um Payable baseado nas despesas vinculadas.

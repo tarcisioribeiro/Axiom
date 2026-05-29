@@ -10,19 +10,21 @@ describe('EmptyState', () => {
     expect(screen.getByText('Nenhum item encontrado')).toBeInTheDocument();
   });
 
-  it('has role="status" for accessibility', () => {
-    render(<EmptyState message="Nenhum item" />);
-    expect(screen.getByRole('status')).toBeInTheDocument();
+  it('has an aria-label for accessibility', () => {
+    const { container } = render(<EmptyState message="Nenhum item" />);
+    expect(container.firstChild).toHaveAttribute('aria-label');
   });
 
   it('uses message as aria-label when no title is provided', () => {
-    render(<EmptyState message="Nenhum item" />);
-    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Nenhum item');
+    const { container } = render(<EmptyState message="Nenhum item" />);
+    expect(container.firstChild).toHaveAttribute('aria-label', 'Nenhum item');
   });
 
   it('uses title as aria-label when title is provided', () => {
-    render(<EmptyState title="Sem dados" message="Nenhum item" />);
-    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Sem dados');
+    const { container } = render(
+      <EmptyState title="Sem dados" message="Nenhum item" />
+    );
+    expect(container.firstChild).toHaveAttribute('aria-label', 'Sem dados');
   });
 
   it('renders title when provided', () => {
@@ -38,12 +40,12 @@ describe('EmptyState', () => {
   it('renders icon when provided', () => {
     render(<EmptyState icon={<svg data-testid="test-icon" />} message="Nenhum item" />);
     expect(screen.getByTestId('test-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-container')).toBeInTheDocument();
   });
 
   it('does not render icon container when icon is not provided', () => {
-    const { container } = render(<EmptyState message="Nenhum item" />);
-    // No flex justify-center wrapper for icon
-    expect(container.querySelector('.flex.justify-center')).not.toBeInTheDocument();
+    render(<EmptyState message="Nenhum item" />);
+    expect(screen.queryByTestId('icon-container')).not.toBeInTheDocument();
   });
 
   it('renders an action button when action prop is provided', () => {

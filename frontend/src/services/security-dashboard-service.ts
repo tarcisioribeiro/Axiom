@@ -1,4 +1,31 @@
+import { API_CONFIG } from '@/config/api-config';
+
 import { apiClient } from './api-client';
+
+export interface VaultHealthIssuesSummary {
+  weak: number;
+  medium: number;
+  duplicate: number;
+  outdated: number;
+}
+
+export interface VaultHealthPassword {
+  id: number;
+  title: string;
+  username: string;
+  category: string;
+  category_display: string;
+  last_password_change: string;
+  issues: Array<'weak' | 'medium' | 'duplicate' | 'outdated'>;
+  duplicate_group: number | null;
+}
+
+export interface VaultHealthReport {
+  score: number;
+  total_passwords: number;
+  issues_summary: VaultHealthIssuesSummary;
+  problematic_passwords: VaultHealthPassword[];
+}
 
 export interface SecurityDashboardStats {
   total_passwords: number;
@@ -42,6 +69,12 @@ class SecurityDashboardService {
   async getStats(): Promise<SecurityDashboardStats> {
     return await apiClient.get<SecurityDashboardStats>(
       '/api/v1/security/dashboard/stats/'
+    );
+  }
+
+  async getHealthReport(): Promise<VaultHealthReport> {
+    return await apiClient.get<VaultHealthReport>(
+      API_CONFIG.ENDPOINTS.SECURITY_VAULT_HEALTH
     );
   }
 }
