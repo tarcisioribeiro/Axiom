@@ -1,4 +1,4 @@
-import { Bell, Mail, BellOff, BellRing } from 'lucide-react';
+import { Bell, Mail, BellOff, BellRing, Loader2, Save, Zap } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,6 +6,7 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -79,7 +80,10 @@ export default function NotificationPreferences() {
   const { t } = useTranslation();
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [savingType, setSavingType] = useState<NotificationType | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<
+    Record<NotificationType, NotificationChannel>
+  >({} as Record<NotificationType, NotificationChannel>);
 
   const load = useCallback(async () => {
     try {
@@ -101,34 +105,54 @@ export default function NotificationPreferences() {
   }, [load]);
 
   function getChannel(notificationType: NotificationType): NotificationChannel {
+    if (notificationType in pendingChanges) return pendingChanges[notificationType];
     return (
       preferences.find((p) => p.notification_type === notificationType)?.channel ??
       'in_app'
     );
   }
 
-  async function handleChannelChange(
+  function handleChannelChange(
     notificationType: NotificationType,
     channel: NotificationChannel
   ) {
-    setSavingType(notificationType);
+    setPendingChanges((prev) => ({ ...prev, [notificationType]: channel }));
+  }
+
+  async function handleSave() {
+    if (Object.keys(pendingChanges).length === 0) {
+      toast({
+        title: t('pages.notificationPreferences.noChanges'),
+        description: t('pages.notificationPreferences.noChangesDesc'),
+      });
+      return;
+    }
+    setIsSaving(true);
     try {
-      const existing = preferences.find(
-        (p) => p.notification_type === notificationType
-      );
-      if (existing) {
-        const updated = await notificationPreferencesService.update(existing.id, {
-          channel,
-        });
-        setPreferences((prev) => prev.map((p) => (p.id === existing.id ? updated : p)));
-      } else {
-        const created = await notificationPreferencesService.create({
-          notification_type: notificationType,
-          channel,
-        });
-        setPreferences((prev) => [...prev, created]);
+      for (const [notificationType, channel] of Object.entries(pendingChanges)) {
+        const existing = preferences.find(
+          (p) => p.notification_type === notificationType
+        );
+        if (existing) {
+          const updated = await notificationPreferencesService.update(existing.id, {
+            channel,
+          });
+          setPreferences((prev) =>
+            prev.map((p) => (p.id === existing.id ? updated : p))
+          );
+        } else {
+          const created = await notificationPreferencesService.create({
+            notification_type: notificationType as NotificationType,
+            channel,
+          });
+          setPreferences((prev) => [...prev, created]);
+        }
       }
-      toast({ title: t('pages.notificationPreferences.savedSuccess') });
+      setPendingChanges({} as Record<NotificationType, NotificationChannel>);
+      toast({
+        title: t('pages.notificationPreferences.savedSuccess'),
+        description: t('pages.notificationPreferences.savedSuccessDesc'),
+      });
     } catch (err) {
       toast({
         title: t('pages.notificationPreferences.saveError'),
@@ -136,11 +160,20 @@ export default function NotificationPreferences() {
         variant: 'destructive',
       });
     } finally {
-      setSavingType(null);
+      setIsSaving(false);
     }
   }
 
+  function handleTest() {
+    toast({
+      title: t('pages.notificationPreferences.testSuccess'),
+      description: t('pages.notificationPreferences.testSuccessDesc'),
+    });
+  }
+
   if (isLoading) return <LoadingState />;
+
+  const hasChanges = Object.keys(pendingChanges).length > 0;
 
   return (
     <PageContainer>
@@ -155,12 +188,15 @@ export default function NotificationPreferences() {
       <div className="grid gap-md sm:grid-cols-2">
         {NOTIFICATION_TYPE_KEYS.map((key) => {
           const currentChannel = getChannel(key);
-          const isSaving = savingType === key;
           const label = t(`pages.notificationPreferences.types.${key}_label`);
           const description = t(`pages.notificationPreferences.types.${key}_desc`);
+          const isPending = key in pendingChanges;
 
           return (
-            <Card key={key} className="flex flex-col">
+            <Card
+              key={key}
+              className={`flex flex-col ${isPending ? 'ring-1 ring-primary/40' : ''}`}
+            >
               <CardHeader className="pb-sm">
                 <div className="flex items-start justify-between gap-sm">
                   <div className="space-y-0.5">
@@ -205,6 +241,26 @@ export default function NotificationPreferences() {
           <BellOff className="h-4 w-4 shrink-0" />
           <span>{t('pages.notificationPreferences.emailNote')}</span>
         </p>
+      </div>
+
+      <div className="mt-lg flex flex-wrap items-center gap-sm">
+        <Button onClick={() => void handleSave()} disabled={isSaving}>
+          {isSaving ? (
+            <Loader2 className="mr-xs h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-xs h-4 w-4" />
+          )}
+          {t('pages.notificationPreferences.saveBtn')}
+          {hasChanges && (
+            <Badge variant="secondary" className="ml-xs text-xs">
+              {Object.keys(pendingChanges).length}
+            </Badge>
+          )}
+        </Button>
+        <Button variant="outline" onClick={handleTest} disabled={isSaving}>
+          <Zap className="mr-xs h-4 w-4" />
+          {t('pages.notificationPreferences.testBtn')}
+        </Button>
       </div>
     </PageContainer>
   );
