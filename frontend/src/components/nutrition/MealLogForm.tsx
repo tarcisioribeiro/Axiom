@@ -2,7 +2,6 @@
 import {
   CalendarDays,
   CheckCircle2,
-  Clock,
   Loader2,
   Moon,
   StickyNote,
@@ -17,8 +16,8 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DatePicker } from '@/components/ui/date-picker';
 import { FormSection } from '@/components/ui/form-section';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -28,8 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
+import { cn, formatLocalDate } from '@/lib/utils';
 import type { MealLog, MealLogFormData, MealType } from '@/types/nutrition';
 
 interface MealLogFormProps {
@@ -136,23 +136,21 @@ export function MealLogForm({
             <Label className="text-xs text-muted-foreground">
               {t('pages.nutritionLog.logDate')}
             </Label>
-            <div className="relative">
-              <CalendarDays className="absolute left-sm top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="date"
-                {...register('date', { required: true })}
-                className={cn('pl-8', errors.date && 'border-destructive')}
-              />
-            </div>
+            <DatePicker
+              value={watch('date')}
+              onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+              disabled={isLoading}
+            />
           </div>
           <div className="space-y-xs">
             <Label className="text-xs text-muted-foreground">
               {t('pages.nutritionLog.logTime')}
             </Label>
-            <div className="relative">
-              <Clock className="absolute left-sm top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input type="time" {...register('time')} className="pl-8" />
-            </div>
+            <TimePicker
+              value={watch('time') || undefined}
+              onChange={(t) => setValue('time', t ?? '')}
+              disabled={isLoading}
+            />
           </div>
         </div>
       </FormSection>
