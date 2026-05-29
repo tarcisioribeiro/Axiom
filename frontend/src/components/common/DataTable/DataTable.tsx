@@ -87,6 +87,11 @@ export interface DataTableProps<T> {
   rowClassName?: (item: T) => string;
   /** Row keys that are currently being deleted (fade + collapse animation) */
   deletingKeys?: Set<string | number>;
+  /**
+   * Custom mobile card renderer. When provided, replaces the default key-value
+   * grid with a specialized layout for this resource type.
+   */
+  mobileCard?: (item: T) => React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -101,6 +106,7 @@ export function DataTable<T>({
   actions,
   rowClassName,
   deletingKeys,
+  mobileCard,
 }: DataTableProps<T>) {
   const cellPad = density === 'compact' ? 'px-md py-sm' : 'px-lg py-md';
   const { t } = useTranslation();
@@ -181,21 +187,29 @@ export function DataTable<T>({
       <div className="block overflow-hidden rounded-lg border bg-card md:hidden">
         <div className="divide-y">
           {data.map((item) => (
-            <div key={keyExtractor(item)} className="space-y-sm px-md py-3">
-              {columns.map((column) => (
-                <div
-                  key={column.key}
-                  className="flex items-start justify-between gap-sm"
-                >
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {column.label}
-                  </span>
-                  <span className={`text-sm ${getAlignClass(column.align)}`}>
-                    {renderColumnContent(item, column)}
-                  </span>
+            <div key={keyExtractor(item)}>
+              {mobileCard ? (
+                mobileCard(item)
+              ) : (
+                <div className="space-y-sm px-md py-3">
+                  {columns.map((column) => (
+                    <div
+                      key={column.key}
+                      className="flex items-start justify-between gap-sm"
+                    >
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {column.label}
+                      </span>
+                      <span className={`text-sm ${getAlignClass(column.align)}`}>
+                        {renderColumnContent(item, column)}
+                      </span>
+                    </div>
+                  ))}
+                  {actions && (
+                    <div className="flex justify-end pt-xs">{actions(item)}</div>
+                  )}
                 </div>
-              ))}
-              {actions && <div className="flex justify-end pt-xs">{actions(item)}</div>}
+              )}
             </div>
           ))}
         </div>
@@ -269,8 +283,8 @@ export function DataTable<T>({
                         <td
                           key={column.key}
                           className={`${cellPad} ${getAlignClass(column.align)} ${
-                            column.className || ''
-                          }`}
+                            column.align === 'right' ? 'numeric' : ''
+                          } ${column.className || ''}`}
                         >
                           {renderColumnContent(item, column)}
                         </td>

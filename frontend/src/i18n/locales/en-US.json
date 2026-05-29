@@ -22,6 +22,10 @@
       "download": "Download",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
+      "filters": {
+        "fromDate": "From: DD/MM/YYYY",
+        "toDate": "To: DD/MM/YYYY"
+      },
       "yes": "Yes",
       "no": "No",
       "seeMore": "See more",
@@ -43,6 +47,7 @@
       "actionDenied": "Action not allowed",
       "confirmDeleteTitle": "Confirm deletion",
       "confirmDeleteDesc": "This action cannot be undone.",
+      "confirmDeleteNamedDesc": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "copied": "Copied!",
       "copiedDesc": "{{label}} copied to clipboard.",
       "revealError": "Error revealing data",
@@ -253,6 +258,8 @@
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
     "userSettings": "Account settings",
+    "userMenu": "User menu",
+    "sectionModules": "Modules",
     "adminPanel": "Admin Panel",
     "superuser": "Superuser",
     "adminNav": {
@@ -324,6 +331,8 @@
       "usernamePlaceholder": "Enter your username",
       "password": "Password",
       "passwordPlaceholder": "Enter your password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
       "submit": "Sign in",
       "loading": "Signing in...",
       "noAccount": "Don't have an account?",
@@ -371,6 +380,7 @@
     "twoFactor": {
       "title": "Two-step verification",
       "description": "Enter the code from your authenticator app.",
+      "step": "Step 2 of 2",
       "codeLabel": "Verification code",
       "backupHint": "You can also use a backup code.",
       "submit": "Verify",
@@ -1874,6 +1884,15 @@
           "overdue_other": "· {{count}} overdue"
         }
       },
+      "anomalies": {
+        "title": "Anomalous Spending",
+        "subtitle": "Categories with spending above historical average",
+        "emptyState": "No anomalies detected.",
+        "currentAmount": "Current Amount",
+        "average": "Average",
+        "zScore": "Z-Score",
+        "aboveAverage": "above average"
+      },
       "greetingMorning": "Good morning",
       "greetingAfternoon": "Good afternoon",
       "greetingEvening": "Good evening",
@@ -1949,7 +1968,8 @@
         "deductible": "Deductible Expenses",
         "loans": "Loans",
         "errorDesc": "Could not generate the IR report."
-      }
+      },
+      "monthComposition": "Month overview"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -3208,7 +3228,20 @@
       "insightWeekendDrop": "Your consistency drops {{diff}}% on weekends ({{weekendRate}}% vs {{weekdayRate}}% on weekdays).",
       "insightWeekendBetter": "You are more consistent on weekends ({{weekendRate}}% vs {{weekdayRate}}% on weekdays).",
       "insightOverallExcellent": "Excellent! Your average completion rate over the last 90 days is {{rate}}%.",
-      "insightOverallLow": "Your average completion rate is {{rate}}%. Try reducing the number of tasks to focus on what matters most."
+      "insightOverallLow": "Your average completion rate is {{rate}}%. Try reducing the number of tasks to focus on what matters most.",
+      "workoutsTitle": "Workouts — last 30 days",
+      "sessions30d": "Sessions (30d)",
+      "thisWeek": "This week",
+      "totalTime30d": "Total time (30d)",
+      "activeWorkoutPlan": "Active plan",
+      "planExercises": "exercises",
+      "nutritionTitle": "Nutrition — this week",
+      "mealsToday": "Meals today",
+      "activeMealTypes": "Active types",
+      "workoutsByDayTitle": "Workouts by day of week — last 30 days",
+      "noWorkoutsRegistered": "No workouts registered",
+      "sessionCount_one": "{{count}} session",
+      "sessionCount_other": "{{count}} sessions"
     },
     "routineTasks": {
       "title": "Routine Tasks",
@@ -3994,9 +4027,16 @@
       "title": "Notification Preferences",
       "subtitle": "Choose how you want to receive each type of alert: in-app only, by email, or both.",
       "emailNote": "To receive emails, make sure a valid email address is registered in your account.",
-      "savedSuccess": "Preference saved successfully.",
+      "savedSuccess": "Preferences saved successfully.",
+      "savedSuccessDesc": "Your notification settings have been updated.",
+      "saveBtn": "Save settings",
+      "testBtn": "Test notification",
+      "testSuccess": "Test notification sent",
+      "testSuccessDesc": "This is a test notification from Axiom. Your settings are working!",
+      "noChanges": "No changes",
+      "noChangesDesc": "No settings were changed.",
       "loadError": "Error loading preferences",
-      "saveError": "Error saving preference",
+      "saveError": "Error saving preferences",
       "channelInApp": "In-App Only",
       "channelEmail": "Email Only",
       "channelBoth": "App and Email",
@@ -4459,6 +4499,7 @@
       "dayNamePlaceholder": "e.g. Workout A",
       "muscleGroups": "Muscle Groups",
       "muscleGroupsPlaceholder": "e.g. Back / Shoulders / Biceps",
+      "muscleGroupsHint": "Select groups above or type manually.",
       "order": "Order",
       "exercisesSection": "Exercises",
       "addExercise": "Add Exercise",
@@ -4488,7 +4529,33 @@
       "noExercises": "No exercises in this split",
       "setsRepsLabel": "{{sets}}x {{repsMin}}-{{repsMax}} reps",
       "loadError": "Error loading plans",
-      "saveError": "Error saving"
+      "saveError": "Error saving",
+      "muscleChips": {
+        "chest": "Chest",
+        "back": "Back",
+        "shoulders": "Shoulders",
+        "biceps": "Biceps",
+        "triceps": "Triceps",
+        "abs": "Abs",
+        "quads": "Quads",
+        "hamstrings": "Hamstrings",
+        "glutes": "Glutes",
+        "calves": "Calves",
+        "forearms": "Forearms",
+        "lowerBack": "Lower Back",
+        "traps": "Trapezius",
+        "adductors": "Adductors",
+        "abductors": "Abductors",
+        "core": "Core",
+        "push": "Push",
+        "pull": "Pull",
+        "cardio": "Cardio",
+        "hiit": "HIIT",
+        "running": "Running",
+        "cycling": "Cycling",
+        "swimming": "Swimming",
+        "fullBody": "Full Body"
+      }
     },
     "exercises": {
       "title": "Exercises",
@@ -4683,7 +4750,11 @@
       "registerMeal": "Log",
       "loadError": "Error loading records",
       "saveError": "Error saving",
-      "deleteError": "Error deleting"
+      "deleteError": "Error deleting",
+      "prevDay": "Previous day",
+      "nextDay": "Next day",
+      "selectDate": "Select date",
+      "adherenceDay": "Day adherence"
     },
     "knowledgeGraph": {
       "title": "Knowledge Graph",

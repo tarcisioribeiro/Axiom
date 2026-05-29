@@ -27,19 +27,31 @@ interface WorkoutDayFormProps {
   isLoading?: boolean;
 }
 
-const MUSCLE_CHIPS = [
-  { label: 'Peito', icon: Dumbbell },
-  { label: 'Costas', icon: Dumbbell },
-  { label: 'Ombros', icon: Dumbbell },
-  { label: 'Bíceps', icon: Zap },
-  { label: 'Tríceps', icon: Zap },
-  { label: 'Abdômen', icon: Target },
-  { label: 'Quadríceps', icon: Flame },
-  { label: 'Posteriores', icon: Flame },
-  { label: 'Glúteos', icon: Flame },
-  { label: 'Panturrilha', icon: Flame },
-  { label: 'Cardio', icon: Activity },
-  { label: 'Full Body', icon: Layers },
+const MUSCLE_CHIP_KEYS = [
+  { key: 'chest', icon: Dumbbell },
+  { key: 'back', icon: Dumbbell },
+  { key: 'shoulders', icon: Dumbbell },
+  { key: 'biceps', icon: Zap },
+  { key: 'triceps', icon: Zap },
+  { key: 'abs', icon: Target },
+  { key: 'quads', icon: Flame },
+  { key: 'hamstrings', icon: Flame },
+  { key: 'glutes', icon: Flame },
+  { key: 'calves', icon: Flame },
+  { key: 'forearms', icon: Zap },
+  { key: 'lowerBack', icon: Flame },
+  { key: 'traps', icon: Dumbbell },
+  { key: 'adductors', icon: Flame },
+  { key: 'abductors', icon: Flame },
+  { key: 'core', icon: Target },
+  { key: 'push', icon: Dumbbell },
+  { key: 'pull', icon: Dumbbell },
+  { key: 'cardio', icon: Activity },
+  { key: 'hiit', icon: Activity },
+  { key: 'running', icon: Activity },
+  { key: 'cycling', icon: Activity },
+  { key: 'swimming', icon: Activity },
+  { key: 'fullBody', icon: Layers },
 ];
 
 export function WorkoutDayForm({
@@ -156,21 +168,24 @@ export function WorkoutDayForm({
       <FormSection title={t('pages.workoutPlans.muscleGroups')} icon={Flame}>
         <div className="space-y-sm">
           <div className="flex flex-wrap gap-xs">
-            {MUSCLE_CHIPS.map(({ label }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => toggleChip(label)}
-                className={cn(
-                  'rounded-full border px-sm py-1 text-xs font-medium transition-all',
-                  selectedChips.includes(label)
-                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
-                )}
-              >
-                {label}
-              </button>
-            ))}
+            {MUSCLE_CHIP_KEYS.map(({ key }) => {
+              const label = t(`pages.workoutPlans.muscleChips.${key}`);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleChip(label)}
+                  className={cn(
+                    'rounded-full border px-sm py-1 text-xs font-medium transition-all',
+                    selectedChips.includes(label)
+                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <Input
             placeholder={t('pages.workoutPlans.muscleGroupsPlaceholder')}
@@ -187,7 +202,7 @@ export function WorkoutDayForm({
             className="text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            Selecione os grupos acima ou digite manualmente.
+            {t('pages.workoutPlans.muscleGroupsHint')}
           </p>
         </div>
       </FormSection>
