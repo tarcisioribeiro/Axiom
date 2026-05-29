@@ -347,6 +347,7 @@ export const TRANSLATIONS = {
   // Task Categories (Planning Module)
   taskCategories: {
     health: 'Saúde',
+    intellect: 'Intelecto',
     studies: 'Estudos',
     spiritual: 'Espiritual',
     exercise: 'Exercício',
