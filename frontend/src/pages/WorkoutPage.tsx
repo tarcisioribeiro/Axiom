@@ -1101,20 +1101,32 @@ function ExerciseCatalogCard({
   );
 }
 
-const CATALOG_MUSCLE_CHIPS = [
-  'Peito',
-  'Costas',
-  'Ombros',
-  'Bíceps',
-  'Tríceps',
-  'Abdômen',
-  'Quadríceps',
-  'Posteriores',
-  'Glúteos',
-  'Panturrilha',
-  'Cardio',
-  'Full Body',
-];
+const CATALOG_MUSCLE_CHIP_KEYS = [
+  'chest',
+  'back',
+  'shoulders',
+  'biceps',
+  'triceps',
+  'abs',
+  'quads',
+  'hamstrings',
+  'glutes',
+  'calves',
+  'forearms',
+  'lowerBack',
+  'traps',
+  'adductors',
+  'abductors',
+  'core',
+  'push',
+  'pull',
+  'cardio',
+  'hiit',
+  'running',
+  'cycling',
+  'swimming',
+  'fullBody',
+] as const;
 
 function ExerciseCatalogForm({
   exercise,
@@ -1192,21 +1204,24 @@ function ExerciseCatalogForm({
       <FormSection title={t('pages.exercises.fieldMuscles')} icon={Layers}>
         <div className="space-y-sm">
           <div className="flex flex-wrap gap-xs">
-            {CATALOG_MUSCLE_CHIPS.map((label) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => toggleChip(label)}
-                className={cn(
-                  'rounded-full border px-sm py-xs text-xs font-medium transition-all',
-                  selectedChips.includes(label)
-                    ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
-                    : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
-                )}
-              >
-                {label}
-              </button>
-            ))}
+            {CATALOG_MUSCLE_CHIP_KEYS.map((key) => {
+              const label = t(`pages.workoutPlans.muscleChips.${key}`);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleChip(label)}
+                  className={cn(
+                    'rounded-full border px-sm py-xs text-xs font-medium transition-all',
+                    selectedChips.includes(label)
+                      ? 'border-category-exercise bg-category-exercise/15 text-category-exercise'
+                      : 'border-border bg-background text-muted-foreground hover:border-category-exercise/40 hover:bg-category-exercise/5 hover:text-category-exercise'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <Input
             placeholder={t('pages.exercises.fieldMusclesPlaceholder')}
@@ -1552,10 +1567,9 @@ function SessionCard({ session, onEdit, onDelete, t }: SessionCardProps) {
   const exerciseCount = session.session_exercises?.length ?? 0;
   const date = new Date(session.date + 'T12:00:00');
   const dayNum = date.getDate();
-  const monthLabel = date
-    .toLocaleDateString('pt-BR', { month: 'short' })
-    .replace('.', '')
-    .toUpperCase();
+  const monthLabel = t(
+    `pages.planningDashboard.monthShort.${date.getMonth()}`
+  ).toUpperCase();
 
   return (
     <div className="group flex gap-md rounded-lg border border-border bg-card p-md transition-all hover:border-category-exercise/30 hover:shadow-sm">

@@ -69,11 +69,6 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { titleKey: 'nav.home', href: '/', icon: Home },
   { titleKey: 'nav.agents', href: '/agents', icon: BotMessageSquare },
-  {
-    titleKey: 'nav.notificationPreferences',
-    href: '/settings/notifications',
-    icon: Bell,
-  },
 ];
 
 export const navModules: NavModule[] = [

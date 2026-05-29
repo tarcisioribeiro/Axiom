@@ -328,7 +328,7 @@ export default function PersonalPlanningDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <Dumbbell className="h-4 w-4 text-category-health" />
-              Treinos — últimos 30 dias
+              {t('pages.planningDashboard.workoutsTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -336,14 +336,18 @@ export default function PersonalPlanningDashboard() {
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <Dumbbell className="h-4 w-4" />
-                  <span className="text-xs">Sessões (30d)</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.sessions30d')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold">{workoutStats.sessions30d}</span>
               </div>
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <Activity className="h-4 w-4" />
-                  <span className="text-xs">Esta semana</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.thisWeek')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold text-info">
                   {workoutStats.sessionsWeek}
@@ -352,7 +356,9 @@ export default function PersonalPlanningDashboard() {
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <Timer className="h-4 w-4" />
-                  <span className="text-xs">Tempo total (30d)</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.totalTime30d')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold">
                   {workoutStats.totalMinutes30d > 0
@@ -363,7 +369,9 @@ export default function PersonalPlanningDashboard() {
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <ClipboardList className="h-4 w-4" />
-                  <span className="text-xs">Plano ativo</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.activeWorkoutPlan')}
+                  </span>
                 </div>
                 {workoutStats.activePlanName ? (
                   <span
@@ -373,7 +381,9 @@ export default function PersonalPlanningDashboard() {
                     {workoutStats.activePlanName}
                   </span>
                 ) : (
-                  <span className="text-sm text-muted-foreground">Nenhum</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('common.actions.none')}
+                  </span>
                 )}
               </div>
             </div>
@@ -384,13 +394,13 @@ export default function PersonalPlanningDashboard() {
                   <span className="font-semibold text-foreground">
                     {workoutStats.activePlanDays}
                   </span>{' '}
-                  dias
+                  {t('pages.planningDashboard.days')}
                 </span>
                 <span>
                   <span className="font-semibold text-foreground">
                     {workoutStats.activePlanExercises}
                   </span>{' '}
-                  exercícios
+                  {t('pages.planningDashboard.planExercises')}
                 </span>
               </div>
             )}
@@ -402,7 +412,7 @@ export default function PersonalPlanningDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <UtensilsCrossed className="h-4 w-4 text-category-health" />
-              Nutrição — esta semana
+              {t('pages.planningDashboard.nutritionTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -410,7 +420,9 @@ export default function PersonalPlanningDashboard() {
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <Utensils className="h-4 w-4" />
-                  <span className="text-xs">Refeições hoje</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.mealsToday')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold text-success">
                   {nutritionStats.todayMeals}
@@ -419,14 +431,18 @@ export default function PersonalPlanningDashboard() {
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span className="text-xs">Esta semana</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.thisWeek')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold">{nutritionStats.weekMeals}</span>
               </div>
               <div className="flex flex-col gap-xs">
                 <div className="flex items-center gap-sm text-muted-foreground">
                   <ClipboardList className="h-4 w-4" />
-                  <span className="text-xs">Tipos ativos</span>
+                  <span className="text-xs">
+                    {t('pages.planningDashboard.activeMealTypes')}
+                  </span>
                 </div>
                 <span className="text-2xl font-bold">
                   {nutritionStats.activeMealTypes}
@@ -617,7 +633,7 @@ export default function PersonalPlanningDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <Dumbbell className="h-4 w-4" />
-              Treinos por dia da semana — últimos 30 dias
+              {t('pages.planningDashboard.workoutsByDayTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -626,9 +642,11 @@ export default function PersonalPlanningDashboard() {
               data={workoutByDayData}
               dataKey="count"
               nameKey="day"
-              formatter={(value) => `${value} sessão(ões)`}
+              formatter={(value) =>
+                t('pages.planningDashboard.sessionCount', { count: Number(value) })
+              }
               colors={COLORS}
-              emptyMessage="Nenhum treino registrado"
+              emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
               lockChartType="bar"
               height={200}
             />
