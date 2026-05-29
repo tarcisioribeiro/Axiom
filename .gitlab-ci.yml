@@ -625,7 +625,7 @@ deploy:staging:
     name: staging
     url: $STAGING_URL
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     # Pause both deployments so all spec changes (configmap, service, deployment)
@@ -735,7 +735,7 @@ deploy:staging:
     - kubectl -n axiom-staging rollout status deployment/api --timeout=1440s
     - kubectl -n axiom-staging rollout status deployment/frontend --timeout=300s
   after_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
     - |
       if [ "$CI_JOB_STATUS" = "failed" ]; then
@@ -773,7 +773,7 @@ seed:staging:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - |
@@ -821,7 +821,7 @@ seed:staging:
 #   rules:
 #     - if: $CI_COMMIT_BRANCH == "develop"
 #   before_script:
-#     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+#     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
 #     - export KUBECONFIG=/tmp/kubeconfig
 #   script:
 #     # Upsert the backup secret (MINIO_ENDPOINT points to the in-cluster service)
@@ -979,7 +979,7 @@ seed:staging:
 #     - if: $CI_COMMIT_BRANCH == "develop"
 #       when: on_failure
 #   before_script:
-#     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+#     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
 #     - export KUBECONFIG=/tmp/kubeconfig
 #   script:
 #     - echo "Smoke tests failed — collecting diagnostics before rollback..."
@@ -1033,7 +1033,7 @@ seed:staging:
 #     url: $STAGING_URL
 #     action: start
 #   before_script:
-#     - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+#     - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
 #     - export KUBECONFIG=/tmp/kubeconfig
 #   script:
 #     - echo "Manual rollback triggered — rolling back staging deployment..."
@@ -1336,7 +1336,7 @@ deploy:production:
     name: production
     url: $PRODUCTION_URL
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     # ── 0. Guard: abort early if any required production variable is unset ───────
@@ -1463,7 +1463,7 @@ smoke:production:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - |
@@ -1577,7 +1577,7 @@ deploy:rollback:production:
     - if: $CI_COMMIT_BRANCH == "main"
       when: on_failure
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - echo "Smoke tests failed — rolling back production deployment..."
@@ -1772,7 +1772,7 @@ rollback:production:
     url: $PRODUCTION_URL
     action: start
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - echo "Manual rollback triggered — rolling back production deployment..."
@@ -1973,7 +1973,7 @@ cleanup:k8s:staging:
     - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - echo "=== Limpeza de Jobs em axiom-staging ==="
@@ -2011,7 +2011,7 @@ cleanup:k8s:production:
     - if: $CI_COMMIT_BRANCH == "main"
       when: on_success
   before_script:
-    - echo "$KUBECONFIG_CONTENT" | base64 -d > /tmp/kubeconfig
+    - printf '%s' "$KUBECONFIG_CONTENT" | tr -d '\n\r ' | base64 -d > /tmp/kubeconfig
     - export KUBECONFIG=/tmp/kubeconfig
   script:
     - echo "=== Limpeza de Jobs em axiom ==="
