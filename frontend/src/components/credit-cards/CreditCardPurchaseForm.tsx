@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import {
   TRANSLATIONS,
   EXPENSE_CATEGORIES_CANONICAL,
@@ -261,10 +262,9 @@ export const CreditCardPurchaseForm: React.FC<CreditCardPurchaseFormProps> = ({
           <Label htmlFor="purchase_time">
             {t('pages.creditCardExpenses.form.purchaseTimeLabel')}
           </Label>
-          <Input
-            id="purchase_time"
-            type="time"
-            {...register('purchase_time', { required: true })}
+          <TimePicker
+            value={watch('purchase_time')}
+            onChange={(t) => setValue('purchase_time', t ?? '')}
             disabled={isLoading}
           />
         </div>

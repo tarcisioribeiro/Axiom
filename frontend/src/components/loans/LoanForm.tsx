@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import { EXPENSE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
 import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { formatCurrency } from '@/lib/formatters';
@@ -345,12 +346,9 @@ export function LoanForm({
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                 {t('pages.loans.form.timeLabel')}
               </Label>
-              <Input
-                id="horary"
-                type="time"
-                value={formData.horary}
-                onChange={(e) => set({ horary: e.target.value })}
-                required
+              <TimePicker
+                value={formData.horary || undefined}
+                onChange={(t) => set({ horary: t ?? '' })}
               />
             </div>
           </div>
