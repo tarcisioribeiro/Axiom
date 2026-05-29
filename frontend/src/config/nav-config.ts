@@ -24,7 +24,6 @@ import {
   PiggyBank,
   Receipt,
   Tag,
-  Bell,
   BotMessageSquare,
   Dumbbell,
   UtensilsCrossed,
