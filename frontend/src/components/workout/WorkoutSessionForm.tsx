@@ -5,6 +5,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,7 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker } from '@/components/ui/time-picker';
 import { useToast } from '@/hooks/use-toast';
+import { formatLocalDate } from '@/lib/utils';
 import type { WorkoutDay } from '@/types/workout';
 
 const LOAD_UNITS = ['kg', 'lb'] as const;
@@ -78,23 +81,17 @@ export function WorkoutSessionForm({
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<WorkoutSessionFormValues>({
-    defaultValues: {
-      workout_day: '',
-      date: today,
-      started_at: '',
-      finished_at: '',
-      notes: '',
-      exercises: [],
-    },
-  });
+  const { register, handleSubmit, control, watch, setValue } =
+    useForm<WorkoutSessionFormValues>({
+      defaultValues: {
+        workout_day: '',
+        date: today,
+        started_at: '',
+        finished_at: '',
+        notes: '',
+        exercises: [],
+      },
+    });
 
   const {
     fields: exerciseFields,
@@ -136,11 +133,10 @@ export function WorkoutSessionForm({
       <div className="grid grid-cols-2 gap-sm">
         <div className="space-y-sm">
           <Label htmlFor="session-date">{t('pages.workoutSessions.date')}</Label>
-          <Input
-            id="session-date"
-            type="date"
-            {...register('date', { required: true })}
-            className={errors.date ? 'border-destructive' : ''}
+          <DatePicker
+            value={watch('date')}
+            onChange={(date) => setValue('date', date ? formatLocalDate(date) : '')}
+            disabled={isLoading}
           />
         </div>
         <div className="space-y-sm">
@@ -171,12 +167,18 @@ export function WorkoutSessionForm({
 
       <div className="grid grid-cols-2 gap-sm">
         <div className="space-y-sm">
-          <Label htmlFor="session-start">{t('pages.workoutSessions.startTime')}</Label>
-          <Input id="session-start" type="time" {...register('started_at')} />
+          <Label>{t('pages.workoutSessions.startTime')}</Label>
+          <TimePicker
+            value={watch('started_at') || undefined}
+            onChange={(t) => setValue('started_at', t ?? '')}
+          />
         </div>
         <div className="space-y-sm">
-          <Label htmlFor="session-end">{t('pages.workoutSessions.endTime')}</Label>
-          <Input id="session-end" type="time" {...register('finished_at')} />
+          <Label>{t('pages.workoutSessions.endTime')}</Label>
+          <TimePicker
+            value={watch('finished_at') || undefined}
+            onChange={(t) => setValue('finished_at', t ?? '')}
+          />
         </div>
       </div>
 
