@@ -24,38 +24,38 @@ export const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+      staggerChildren: 0.04,
+      delayChildren: 0.05,
     },
   },
 };
 
 export const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 6 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: DURATION.normal, ease: EASING.bounce },
+    transition: { duration: DURATION.normal, ease: EASING.smooth },
   },
 };
 
 // Card animations
 export const cardVariants: Variants = {
-  initial: { opacity: 0, scale: 0.95, y: 12 },
+  initial: { opacity: 0, scale: 0.98, y: 6 },
   animate: {
     opacity: 1,
     scale: 1,
     y: 0,
     transition: {
       duration: DURATION.normal,
-      ease: EASING.bounce,
+      ease: EASING.smooth,
     },
   },
   hover: {
-    scale: 1.05,
-    y: -5,
+    scale: 1.012,
+    y: -2,
     boxShadow: 'var(--shadow-card-hover)',
-    transition: { duration: DURATION.normal, ease: EASING.snappy },
+    transition: { duration: DURATION.fast, ease: EASING.snappy },
   },
   tap: { scale: 0.98 },
 };
@@ -76,8 +76,8 @@ export const counterVariants: Variants = {
 // Form error shake
 export const shakeVariants: Variants = {
   shake: {
-    x: [0, -10, 10, -10, 10, 0],
-    transition: { duration: 0.5 },
+    x: [0, -6, 6, -6, 0],
+    transition: { duration: 0.4 },
   },
 };
 
@@ -150,12 +150,12 @@ export const checkboxVariants: Variants = {
 
 // Empty state
 export const emptyStateVariants: Variants = {
-  initial: { opacity: 0, y: 40 },
+  initial: { opacity: 0, y: 8 },
   animate: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: DURATION.slow,
+      duration: DURATION.normal,
       ease: EASING.smooth,
     },
   },

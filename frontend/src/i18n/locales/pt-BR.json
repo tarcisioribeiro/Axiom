@@ -22,6 +22,10 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "filters": {
+        "fromDate": "De: DD/MM/AAAA",
+        "toDate": "Até: DD/MM/AAAA"
+      },
       "yes": "Sim",
       "no": "Não",
       "seeMore": "Ver mais",
@@ -43,6 +47,7 @@
       "actionDenied": "Ação não permitida",
       "confirmDeleteTitle": "Confirmar exclusão",
       "confirmDeleteDesc": "Esta ação não pode ser desfeita.",
+      "confirmDeleteNamedDesc": "Tem certeza que deseja excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
       "copied": "Copiado!",
       "copiedDesc": "{{label}} copiado para a área de transferência.",
       "revealError": "Erro ao revelar dados",
@@ -253,6 +258,8 @@
     "expandSidebar": "Expandir menu lateral",
     "collapseSidebar": "Recolher menu lateral",
     "userSettings": "Configurações da conta",
+    "userMenu": "Menu do usuário",
+    "sectionModules": "Módulos",
     "adminPanel": "Painel Administrativo",
     "superuser": "Superusuário",
     "adminNav": {
@@ -324,6 +331,8 @@
       "usernamePlaceholder": "Digite seu usuário",
       "password": "Senha",
       "passwordPlaceholder": "Digite sua senha",
+      "showPassword": "Mostrar senha",
+      "hidePassword": "Ocultar senha",
       "submit": "Entrar",
       "loading": "Entrando...",
       "noAccount": "Não tem uma conta?",
@@ -371,6 +380,7 @@
     "twoFactor": {
       "title": "Verificação em duas etapas",
       "description": "Digite o código do seu aplicativo autenticador.",
+      "step": "Etapa 2 de 2",
       "codeLabel": "Código de verificação",
       "backupHint": "Você também pode usar um código de backup.",
       "submit": "Verificar",
@@ -1929,7 +1939,8 @@
         "emptyState": "Nenhuma anomalia detectada.",
         "currentAmount": "Gasto Atual",
         "average": "Média",
-        "zScore": "Z-Score"
+        "zScore": "Z-Score",
+        "aboveAverage": "acima da média"
       },
       "reconciliation": {
         "title": "Reconciliação de Saldo",
@@ -2013,7 +2024,8 @@
         "deductible": "Despesas Dedutíveis",
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
-      }
+      },
+      "monthComposition": "Composição do mês"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",

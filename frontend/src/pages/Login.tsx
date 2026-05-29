@@ -1,3 +1,4 @@
+import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,6 +15,7 @@ import { useAuthStore } from '@/stores/auth-store';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const { login, verify2FA, isLoading, error, requires2FA } = useAuthStore();
   const { logo } = useThemeAssets();
@@ -45,15 +47,20 @@ export default function Login() {
   // Etapa 2FA
   if (requires2FA) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
+      <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-md">
         <ThemeToggle className="absolute right-4 top-4" />
         <AppVersionBadge className="absolute bottom-4 right-4" />
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-md text-center">
-            <div className="mx-auto flex items-center justify-center">
-              <img src={logo} alt="Axiom" className="h-auto w-64" />
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 ring-1 ring-inset ring-primary/20">
+              <ShieldCheck className="h-7 w-7 text-primary" aria-hidden="true" />
             </div>
             <div>
+              <div className="mb-xs flex items-center justify-center gap-xs">
+                <span className="rounded-full bg-muted px-sm py-0.5 text-xs text-muted-foreground">
+                  {t('auth.twoFactor.step', { defaultValue: 'Etapa 2 de 2' })}
+                </span>
+              </div>
               <h2 className="text-xl font-semibold">
                 {t('auth.twoFactor.title', {
                   defaultValue: 'Verificação em duas etapas',
@@ -98,12 +105,11 @@ export default function Login() {
               </div>
               <Button
                 type="submit"
-                className="gradient-primary w-full font-semibold text-white"
-                disabled={isLoading || twoFactorCode.length < 6}
+                className="w-full"
+                loading={isLoading}
+                disabled={twoFactorCode.length < 6}
               >
-                {isLoading
-                  ? t('auth.twoFactor.loading', { defaultValue: 'Verificando...' })
-                  : t('auth.twoFactor.submit', { defaultValue: 'Verificar' })}
+                {t('auth.twoFactor.submit', { defaultValue: 'Verificar' })}
               </Button>
             </form>
             <div className="mt-md text-center">
@@ -129,7 +135,7 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/30 p-md">
+    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 p-md">
       <ThemeToggle className="absolute right-4 top-4" />
       <AppVersionBadge className="absolute bottom-4 right-4" />
 
@@ -162,23 +168,39 @@ export default function Login() {
 
             <div className="space-y-sm">
               <Label htmlFor="password">{t('auth.login.password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t('auth.login.passwordPlaceholder')}
-                required
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t('auth.login.passwordPlaceholder')}
+                  required
+                  disabled={isLoading}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={
+                    showPassword
+                      ? t('auth.login.hidePassword')
+                      : t('auth.login.showPassword')
+                  }
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <Button
-              type="submit"
-              className="gradient-primary w-full font-semibold text-white"
-              disabled={isLoading}
-            >
-              {isLoading ? t('auth.login.loading') : t('auth.login.submit')}
+            <Button type="submit" className="w-full" loading={isLoading}>
+              {t('auth.login.submit')}
             </Button>
           </form>
 

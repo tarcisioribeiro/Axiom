@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { create } from 'zustand';
 
 /** Variante visual do dialog */
@@ -82,6 +83,7 @@ export const useAlertDialogStore = create<AlertDialogStore>((set) => ({
  */
 export const useAlertDialog = () => {
   const store = useAlertDialogStore();
+  const { t } = useTranslation();
 
   /**
    * Exibe dialog de confirmacao com botoes Confirmar/Cancelar.
@@ -249,10 +251,10 @@ export const useAlertDialog = () => {
     options?: Partial<DefaultOptions>
   ): Promise<boolean> => {
     return showConfirm({
-      title: 'Confirmar exclusao',
-      description: `Tem certeza que deseja excluir ${itemName}? Esta acao nao pode ser desfeita.`,
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
+      title: t('common.messages.confirmDeleteTitle'),
+      description: t('common.messages.confirmDeleteNamedDesc', { name: itemName }),
+      confirmText: t('common.actions.delete'),
+      cancelText: t('common.actions.cancel'),
       variant: 'destructive',
       animation: 'shake',
       ...options,
