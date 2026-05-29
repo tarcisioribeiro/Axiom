@@ -51,13 +51,13 @@
     --info: 198 96% 30%;
     --info-foreground: 48 100% 96%;
 
-    /* Borders e Inputs - Selection suavizada */
+    /* Borders e Inputs — input mais escuro para atingir 3:1 (WCAG non-text contrast) */
     --border: 240 19% 72%;
-    --input: 240 19% 72%;
+    --input: 240 19% 50%;
     --ring: 252 54% 54%;
 
     /* Border radius */
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Animation duration tokens */
     --duration-fast: 200ms;
@@ -742,7 +742,7 @@
     --info-foreground: 220 23% 95%;
 
     --border: 220 14% 76%;
-    --input: 220 14% 76%;
+    --input: 220 14% 50%;
     --ring: 266 85% 58%;
 
     --category-finance: 109 58% 40%;
@@ -817,7 +817,7 @@
     --info-foreground: 35 61% 95%;
 
     --border: 12 8% 78%;
-    --input: 12 8% 78%;
+    --input: 12 8% 52%;
     --ring: 277 24% 57%;
 
     --category-finance: 197 53% 34%;
@@ -892,7 +892,7 @@
     --info-foreground: 48 39% 92%;
 
     --border: 48 27% 74%;
-    --input: 48 27% 74%;
+    --input: 48 27% 50%;
     --ring: 201 55% 50%;
 
     --category-finance: 67 99% 32%;
@@ -967,7 +967,7 @@
     --info-foreground: 46 79% 88%;
 
     --border: 41 38% 65%;
-    --input: 41 38% 65%;
+    --input: 41 38% 44%;
     --ring: 40 74% 42%;
 
     --category-finance: 60 71% 35%;
@@ -1042,7 +1042,7 @@
     --info-foreground: 44 87% 94%;
 
     --border: 44 47% 80%;
-    --input: 44 47% 80%;
+    --input: 44 47% 52%;
     --ring: 205 69% 49%;
 
     --category-finance: 68 100% 30%;
@@ -1117,7 +1117,7 @@
     --info-foreground: 218 27% 94%;
 
     --border: 219 26% 74%;
-    --input: 219 26% 74%;
+    --input: 219 26% 48%;
     --ring: 213 32% 46%;
 
     --category-finance: 92 35% 38%;

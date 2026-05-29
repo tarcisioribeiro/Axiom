@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Mail, Settings, Shield } from 'lucide-react';
+import { Bell, CheckCircle2, ChevronRight, Mail, Settings, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmailVerificationSection } from '@/components/user-profile/EmailVerificationSection';
 import { PasswordSection } from '@/components/user-profile/PasswordSection';
 import { PersonalDataSection } from '@/components/user-profile/PersonalDataSection';
@@ -16,6 +18,7 @@ import { useAuthStore } from '@/stores/auth-store';
 export default function UserProfile() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
+  const navigate = useNavigate();
 
   const { data: member } = useQuery({
     queryKey: ['members', 'me'],
@@ -73,6 +76,27 @@ export default function UserProfile() {
           <TwoFactorRow />
           <div className="h-px bg-border" />
           <PasswordSection />
+        </Section>
+
+        <Section
+          icon={<Bell className="h-4 w-4" />}
+          title={t('pages.notificationPreferences.title')}
+          description={t('pages.notificationPreferences.subtitle')}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {t('nav.notificationPreferences')}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void navigate('/settings/notifications')}
+              className="flex items-center gap-xs"
+            >
+              {t('common.actions.edit')}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </Section>
       </div>
     </PageContainer>

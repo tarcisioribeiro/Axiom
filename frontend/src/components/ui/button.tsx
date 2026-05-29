@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import * as React from 'react';
 
 import { DURATION } from '@/lib/animations/transitions';
@@ -49,14 +50,26 @@ export interface ButtonProps
    * @example <Button asChild variant="outline"><Link to="/foo">Go</Link></Button>
    */
   asChild?: boolean;
+  /** Shows a spinner and disables the button automatically while loading. */
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, disabled, asChild = false, children, ...props },
+    {
+      className,
+      variant,
+      size,
+      disabled,
+      loading,
+      asChild = false,
+      children,
+      ...props
+    },
     ref
   ) => {
     const classes = cn(buttonVariants({ variant, size, className }));
+    const isDisabled = disabled || loading;
 
     if (asChild && React.isValidElement(children)) {
       const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
@@ -70,11 +83,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <motion.button
         className={classes}
         ref={ref}
-        disabled={disabled}
-        whileTap={disabled ? undefined : { scale: 0.95 }}
+        disabled={isDisabled}
+        whileTap={isDisabled ? undefined : { scale: 0.95 }}
         transition={{ duration: DURATION.fast }}
         {...(props as React.ComponentProps<typeof motion.button>)}
       >
+        {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
         {children}
       </motion.button>
     );

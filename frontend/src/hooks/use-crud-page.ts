@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { ToastAction, type ToastActionElement } from '@/components/ui/toast';
+import { useSoundFeedback } from '@/hooks/use-sound-feedback';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/utils';
 
@@ -115,6 +116,7 @@ export function useCrudPage<
   const [selectedItem, setSelectedItem] = useState<T | undefined>();
 
   const { toast } = useToast();
+  const { playSuccess, playDelete, playError } = useSoundFeedback();
 
   // Mensagens padrao — memoizadas para evitar re-criação a cada render
   const defaultMessages = useMemo(
@@ -198,6 +200,7 @@ export function useCrudPage<
         });
       };
 
+      playDelete();
       toast({
         title: defaultMessages.deleteSuccess,
         action: React.createElement(
@@ -220,6 +223,7 @@ export function useCrudPage<
               restored.splice(Math.min(itemIndex, restored.length), 0, deletedItem);
               return restored;
             });
+            playError();
             toast({
               title: defaultMessages.deleteError,
               description: getErrorMessage(error),
@@ -228,7 +232,7 @@ export function useCrudPage<
           });
       }, 5000);
     },
-    [items, service, toast, onSuccess, defaultMessages]
+    [items, service, toast, onSuccess, defaultMessages, playDelete, playError]
   );
 
   // Submete formulario
@@ -249,6 +253,7 @@ export function useCrudPage<
           setItems((prev) =>
             prev.map((item) => (item.id === selectedItem.id ? result : item))
           );
+          playSuccess();
           toast({ title: defaultMessages.updateSuccess });
           onSuccess?.('update', result);
         } catch (error: unknown) {
@@ -256,6 +261,7 @@ export function useCrudPage<
           setItems((prev) =>
             prev.map((item) => (item.id === selectedItem.id ? originalItem : item))
           );
+          playError();
           toast({
             title: defaultMessages.saveError,
             description: getErrorMessage(error),
@@ -269,11 +275,13 @@ export function useCrudPage<
         try {
           setIsSubmitting(true);
           const result = await service.create(data as CreateData);
+          playSuccess();
           toast({ title: defaultMessages.createSuccess });
           onSuccess?.('create', result);
           closeDialog();
           await loadData();
         } catch (error: unknown) {
+          playError();
           toast({
             title: defaultMessages.saveError,
             description: getErrorMessage(error),
@@ -284,7 +292,17 @@ export function useCrudPage<
         }
       }
     },
-    [selectedItem, service, toast, closeDialog, loadData, onSuccess, defaultMessages]
+    [
+      selectedItem,
+      service,
+      toast,
+      closeDialog,
+      loadData,
+      onSuccess,
+      defaultMessages,
+      playSuccess,
+      playError,
+    ]
   );
 
   return {
