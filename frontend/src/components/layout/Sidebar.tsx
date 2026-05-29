@@ -1,10 +1,24 @@
 /* eslint-disable max-lines */
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, X, PanelLeftClose, PanelLeft } from 'lucide-react';
+import {
+  ChevronDown,
+  X,
+  PanelLeftClose,
+  PanelLeft,
+  Settings,
+  LogOut,
+} from 'lucide-react';
 import { useEffect, useReducer, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
 import {
   navItems,
@@ -124,7 +138,8 @@ function NavLink({ item, isCollapsed, indent = 'md', onClick }: NavLinkProps) {
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { hasPermission, user } = useAuthStore();
+  const navigate = useNavigate();
+  const { hasPermission, user, logout } = useAuthStore();
   const { isOpen, isCollapsed, close, toggleCollapsed } = useSidebar();
   const isMobile = useIsMobile();
   const { icon } = useThemeAssets();
@@ -382,11 +397,7 @@ export const Sidebar = () => {
           isCollapsed && !isMobile ? 'justify-center' : 'justify-between'
         )}
       >
-        <Link
-          to="/"
-          className="flex items-center gap-sm"
-          aria-label="Axiom — página inicial"
-        >
+        <Link to="/" className="flex items-center gap-sm" aria-label={t('nav.home')}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg ring-1 ring-border/50">
             <img
               src={icon}
@@ -402,7 +413,7 @@ export const Sidebar = () => {
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15 }}
-                className="gradient-primary bg-clip-text text-lg font-bold tracking-tight text-transparent"
+                className="text-lg font-semibold tracking-tight text-foreground"
               >
                 Axiom
               </motion.span>
@@ -438,12 +449,16 @@ export const Sidebar = () => {
 
             <div className="my-sm border-t border-border/40" />
 
+            <p className="px-md pb-xs text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+              {t('layout.sectionModules')}
+            </p>
+
             {navModules.map((module) => renderModule(module))}
           </div>
         )}
       </nav>
 
-      {/* User profile */}
+      {/* User profile — dropdown with Settings + Logout */}
       {user && (
         <div
           className={cn(
@@ -451,52 +466,89 @@ export const Sidebar = () => {
             isCollapsed && !isMobile ? 'flex justify-center' : ''
           )}
         >
-          {isCollapsed && !isMobile ? (
-            <Tooltip
-              content={`${user.first_name} ${user.last_name}`.trim() || user.username}
-              side="right"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50">
-                {user.profile_photo ? (
-                  <img
-                    src={user.profile_photo}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <span className="text-xs font-semibold text-primary">
-                    {(user.first_name?.[0] ?? user.username?.[0] ?? '?').toUpperCase()}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
-          ) : (
-            <div className="flex items-center gap-sm">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50">
-                {user.profile_photo ? (
-                  <img
-                    src={user.profile_photo}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <span className="text-xs font-semibold text-primary">
-                    {(user.first_name?.[0] ?? user.username?.[0] ?? '?').toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {`${user.first_name} ${user.last_name}`.trim() || user.username}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user.username}
-                </p>
-              </div>
-            </div>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {isCollapsed && !isMobile ? (
+                <Tooltip
+                  content={
+                    `${user.first_name} ${user.last_name}`.trim() || user.username
+                  }
+                  side="right"
+                >
+                  <button
+                    className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50 transition-opacity hover:opacity-80"
+                    aria-label={t('layout.userMenu')}
+                  >
+                    {user.profile_photo ? (
+                      <img
+                        src={user.profile_photo}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold text-primary">
+                        {(
+                          user.first_name?.[0] ??
+                          user.username?.[0] ??
+                          '?'
+                        ).toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                </Tooltip>
+              ) : (
+                <button
+                  className="flex w-full items-center gap-sm rounded-lg px-sm py-xs transition-colors hover:bg-muted/60"
+                  aria-label={t('layout.userMenu')}
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/10 ring-1 ring-border/50">
+                    {user.profile_photo ? (
+                      <img
+                        src={user.profile_photo}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <span className="text-xs font-semibold text-primary">
+                        {(
+                          user.first_name?.[0] ??
+                          user.username?.[0] ??
+                          '?'
+                        ).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {`${user.first_name} ${user.last_name}`.trim() || user.username}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {user.username}
+                    </p>
+                  </div>
+                </button>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-52">
+              <DropdownMenuItem
+                onClick={() => void navigate('/settings/profile')}
+                className="gap-sm"
+              >
+                <Settings className="h-4 w-4" aria-hidden="true" />
+                {t('layout.userSettings')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={logout}
+                className="gap-sm text-destructive focus:text-destructive"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                {t('layout.logout')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
@@ -582,7 +634,7 @@ export const Sidebar = () => {
           'flex h-screen flex-col border-r border-border/50 bg-card',
           // desktop width transition
           'transition-[width,padding] duration-300 ease-in-out',
-          isCollapsed && !isMobile ? 'w-[3.75rem] p-sm' : 'w-72 p-md',
+          isCollapsed && !isMobile ? 'w-[3.75rem] p-sm' : 'w-64 p-md',
           // mobile slide
           'transform md:transform-none',
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'

@@ -37,6 +37,7 @@ interface MealLogFormProps {
   mealTypes: MealType[];
   ownerId: number;
   prefillMealTypeId?: number;
+  prefillDate?: string;
   onSubmit: (data: MealLogFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -56,13 +57,14 @@ export function MealLogForm({
   mealTypes,
   ownerId,
   prefillMealTypeId,
+  prefillDate,
   onSubmit,
   onCancel,
   isLoading = false,
 }: MealLogFormProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = prefillDate ?? new Date().toISOString().slice(0, 10);
 
   const {
     register,
