@@ -1,21 +1,13 @@
 import type { ChartTooltipProps } from '@/lib/chart-types';
 
-/**
- * Tooltip customizado para gráficos Recharts
- * Design moderno com:
- * - Visual limpo e minimalista
- * - Indicadores de cor arredondados
- * - Formatação de valores
- * - Suporte a múltiplos itens
- * - Animação suave
- */
 export const EnhancedTooltip = ({
   active,
   payload,
   label,
   formatter,
   labelFormatter,
-}: ChartTooltipProps) => {
+  nameFormatter,
+}: ChartTooltipProps & { nameFormatter?: (name: string) => string | null }) => {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
@@ -42,7 +34,16 @@ export const EnhancedTooltip = ({
                 className="h-2.5 w-2.5 flex-shrink-0 rounded-sm shadow-sm"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="truncate text-xs text-foreground/75">{entry.name}</span>
+              {(() => {
+                const displayName = nameFormatter
+                  ? nameFormatter(String(entry.name))
+                  : String(entry.name);
+                return displayName ? (
+                  <span className="truncate text-xs text-foreground/75">
+                    {displayName}
+                  </span>
+                ) : null;
+              })()}
             </div>
 
             {/* Valor */}

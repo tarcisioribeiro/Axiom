@@ -82,7 +82,9 @@ function SkillCard({
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{skill.name}</p>
-            <p className="text-xs text-muted-foreground">{skill.category_display}</p>
+            <p className="text-xs text-muted-foreground">
+              {t(`pages.skills.category.${skill.category}`)}
+            </p>
           </div>
         </div>
         <span
@@ -91,14 +93,14 @@ function SkillCard({
             STATUS_COLORS[skill.status]
           )}
         >
-          {skill.status_display}
+          {t(`pages.skills.status.${skill.status}`)}
         </span>
       </div>
 
       <div className="flex items-center justify-between">
         <ProficiencyDots level={skill.proficiency_level} />
         <span className="text-xs text-muted-foreground">
-          {skill.proficiency_display}
+          {t(`pages.skills.proficiency.${skill.proficiency}`)}
         </span>
       </div>
 
@@ -326,7 +328,7 @@ export default function Skills() {
                     <span className="text-sm font-medium">{skill.name}</span>
                   </div>
                   <Badge variant="outline" className="text-xs">
-                    {skill.category_display}
+                    {t(`pages.skills.category.${skill.category}`)}
                   </Badge>
                 </div>
               ))}
