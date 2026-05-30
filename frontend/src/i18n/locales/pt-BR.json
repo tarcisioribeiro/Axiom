@@ -2586,7 +2586,22 @@
       "contentDistributionDesc": "Livros lidos vs. Cursos concluídos",
       "booksReadLabel": "Livros Lidos",
       "coursesCompletedLabel": "Cursos Concluídos",
-      "noContentDistribution": "Leia livros ou conclua cursos para ver a distribuição"
+      "noContentDistribution": "Leia livros ou conclua cursos para ver a distribuição",
+      "completionRate": "Taxa de Conclusão",
+      "avgProgress": "Progresso Médio",
+      "proficiencyDistribution": "Distribuição por proficiência",
+      "coursesByCategory": "Cursos por categoria",
+      "coursesByPlatform": "Cursos por plataforma",
+      "skillsByCategory": "Habilidades por categoria",
+      "skillsByProficiency": "Habilidades por proficiência",
+      "courseCount_one": "{{count}} curso",
+      "courseCount_other": "{{count}} cursos",
+      "skillCount_one": "{{count}} habilidade",
+      "skillCount_other": "{{count}} habilidades",
+      "courseStatusCompleted": "Concluídos",
+      "courseStatusInProgress": "Em andamento",
+      "courseStatusPaused": "Pausados",
+      "courseStatusNotStarted": "Não iniciados"
     },
     "books": {
       "title": "Obras",
