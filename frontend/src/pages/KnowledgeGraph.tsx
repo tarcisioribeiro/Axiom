@@ -22,6 +22,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -386,17 +387,26 @@ function NodeDetailPanel({
 
       {/* Actions */}
       <div className="border-t border-border p-md">
-        <Button
-          size="sm"
-          variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
-          className="w-full"
-          onClick={() => onStartLink(node)}
-        >
-          <Link2 className="mr-sm h-3.5 w-3.5" />
-          {linkingFrom?.id === node.id
-            ? t('pages.knowledgeGraph.clickToConnect')
-            : t('pages.knowledgeGraph.createLink')}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="sm"
+              variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
+              className="w-full"
+              onClick={() => onStartLink(node)}
+            >
+              <Link2 className="mr-sm h-3.5 w-3.5" />
+              {linkingFrom?.id === node.id
+                ? t('pages.knowledgeGraph.cancelLink')
+                : t('pages.knowledgeGraph.createLink')}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs text-center">
+            {linkingFrom?.id === node.id
+              ? t('pages.knowledgeGraph.cancelLinkTooltip')
+              : t('pages.knowledgeGraph.createLinkTooltip')}
+          </TooltipContent>
+        </Tooltip>
       </div>
     </motion.div>
   );
@@ -512,6 +522,17 @@ function CreateLinkModal({
 // MAIN PAGE
 // ============================================================================
 
+const KG_POSITIONS_KEY = 'axiom-kg-node-positions';
+
+function loadSavedPositions(): Record<string, { x: number; y: number }> {
+  try {
+    const raw = localStorage.getItem(KG_POSITIONS_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, { x: number; y: number }>) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function KnowledgeGraph() {
   const { t } = useTranslation();
   const graphRef = useRef<{ zoomToFit: (ms?: number) => void } | null>(null);
@@ -543,6 +564,18 @@ export default function KnowledgeGraph() {
     });
     return () => observer.disconnect();
   }, []);
+
+  // Cancel linking mode on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && linkingFrom) {
+        setLinkingFrom(null);
+        setLinkTarget(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [linkingFrom]);
 
   // Dimensions observer
   useEffect(() => {
@@ -600,16 +633,36 @@ export default function KnowledgeGraph() {
     },
   });
 
-  // Filtered graph data
+  // Save node positions when simulation stops
+  const handleEngineStop = useCallback(() => {
+    const g = graphRef.current as { graphData?: () => { nodes: GraphNode[] } } | null;
+    const nodes = g?.graphData?.()?.nodes;
+    if (!nodes) return;
+    const positions: Record<string, { x: number; y: number }> = {};
+    nodes.forEach((n) => {
+      if (n.x !== undefined && n.y !== undefined) {
+        positions[n.id] = { x: n.x, y: n.y };
+      }
+    });
+    localStorage.setItem(KG_POSITIONS_KEY, JSON.stringify(positions));
+  }, []);
+
+  // Filtered graph data with saved positions applied
   const filteredGraphData = useMemo(() => {
     if (!graphData) return { nodes: [], links: [] };
 
+    const savedPositions = loadSavedPositions();
     const lowerSearch = search.toLowerCase();
-    const visibleNodes = graphData.nodes.filter(
-      (n) =>
-        activeTypes.has(n.type) &&
-        (lowerSearch === '' || n.label.toLowerCase().includes(lowerSearch))
-    );
+    const visibleNodes = graphData.nodes
+      .filter(
+        (n) =>
+          activeTypes.has(n.type) &&
+          (lowerSearch === '' || n.label.toLowerCase().includes(lowerSearch))
+      )
+      .map((n) => {
+        const saved = savedPositions[n.id];
+        return saved ? { ...n, x: saved.x, y: saved.y, fx: saved.x, fy: saved.y } : n;
+      });
     const visibleIds = new Set(visibleNodes.map((n) => n.id));
 
     const visibleLinks = graphData.links.filter((l) => {
@@ -936,13 +989,22 @@ export default function KnowledgeGraph() {
                 <p className="text-sm">{t('pages.knowledgeGraph.loading')}</p>
               </div>
             ) : filteredGraphData.nodes.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center gap-md text-muted-foreground">
-                <Sparkles className="h-12 w-12 opacity-30" />
-                <p className="text-sm">
-                  {search
-                    ? t('pages.knowledgeGraph.emptySearch')
-                    : t('pages.knowledgeGraph.empty')}
-                </p>
+              <div className="flex h-full flex-col items-center justify-center gap-md px-xl text-center text-muted-foreground">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-inset ring-primary/20">
+                  <Sparkles className="h-8 w-8 text-primary" />
+                </div>
+                <div className="space-y-xs">
+                  <p className="text-base font-semibold text-foreground">
+                    {search
+                      ? t('pages.knowledgeGraph.emptySearch')
+                      : t('pages.knowledgeGraph.empty')}
+                  </p>
+                  {!search && (
+                    <p className="max-w-xs text-sm text-muted-foreground">
+                      {t('pages.knowledgeGraph.emptyHint')}
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <ForceGraph2D
@@ -979,6 +1041,7 @@ export default function KnowledgeGraph() {
                   setLinkingFrom(null);
                   setLinkTarget(null);
                 }}
+                onEngineStop={handleEngineStop}
                 nodeLabel=""
                 cooldownTicks={80}
                 d3AlphaDecay={0.02}
@@ -1025,20 +1088,30 @@ export default function KnowledgeGraph() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute left-1/2 top-md -translate-x-1/2 rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
+                  className="absolute left-1/2 top-md -translate-x-1/2 flex items-center gap-sm rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
                 >
-                  <Link2 className="mr-xs inline h-3 w-3" />
-                  {t('pages.knowledgeGraph.clickToConnectWith')}{' '}
-                  <strong>
-                    {linkingFrom.label.length > 20
-                      ? linkingFrom.label.slice(0, 20) + '…'
-                      : linkingFrom.label}
-                  </strong>
+                  <Link2 className="h-3 w-3 shrink-0" />
+                  <span>
+                    {t('pages.knowledgeGraph.clickToConnectWith')}{' '}
+                    <strong>
+                      {linkingFrom.label.length > 20
+                        ? linkingFrom.label.slice(0, 20) + '…'
+                        : linkingFrom.label}
+                    </strong>
+                  </span>
+                  <span className="mx-xs text-accent/40">·</span>
+                  <kbd className="rounded border border-accent/30 bg-accent/10 px-xs py-0.5 font-mono text-[10px]">
+                    Esc
+                  </kbd>
                   <button
-                    onClick={() => setLinkingFrom(null)}
-                    className="ml-sm text-accent/70 hover:text-accent"
+                    onClick={() => {
+                      setLinkingFrom(null);
+                      setLinkTarget(null);
+                    }}
+                    className="ml-xs text-accent/70 hover:text-accent"
+                    aria-label={t('pages.knowledgeGraph.cancelLink')}
                   >
-                    <X className="inline h-3 w-3" />
+                    <X className="h-3 w-3" />
                   </button>
                 </motion.div>
               )}
