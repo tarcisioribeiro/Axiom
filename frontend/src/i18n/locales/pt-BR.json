@@ -3615,7 +3615,8 @@
       "saveError": "Erro ao salvar",
       "loadUserError": "Erro ao carregar usuário",
       "loadError": "Erro ao carregar dados",
-      "viewAllReflections": "Ver todas as reflexões →"
+      "viewAllReflections": "Ver todas as reflexões →",
+      "overdueBanner": "{{count}} tarefa(s) atrasada(s). Verifique o sino de notificações para detalhes."
     },
     "activityLogs": {
       "title": "Logs de Atividade",
