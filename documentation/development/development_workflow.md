@@ -89,7 +89,7 @@ docker-compose logs -f db
 docker-compose logs --tail=50 api
 
 # Verificar uso de recursos
-docker stats axiom-api axiom-db axiom-redis
+docker stats axiom-api axiom-db axiom-cache
 ```
 
 ## Hot Reload e Desenvolvimento Iterativo
@@ -304,7 +304,7 @@ debugger; // Para aqui quando DevTools está aberto
 
 ```bash
 # Uso de CPU e memória
-docker stats axiom-api axiom-db axiom-redis
+docker stats axiom-api axiom-db axiom-cache
 
 # Queries lentas no PostgreSQL
 docker-compose exec db psql -U axiom_user -d axiom_db -c "

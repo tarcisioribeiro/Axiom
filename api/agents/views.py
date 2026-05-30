@@ -394,6 +394,8 @@ class AgentStreamView(APIView):
         agent = AgentRouter.select(ctx, agent_override=data.get("agent_name"))
 
         def event_stream() -> Generator[str, None, None]:
+            from agents.core.response_formatter import format_response
+
             full_content = ""
             persisted = False
             try:
@@ -408,6 +410,7 @@ class AgentStreamView(APIView):
                         "agent": agent.name,
                         "sources": sources,
                         "query_id": query_id,
+                        "formatted_content": format_response(full_content),
                     }
                 )
                 yield f"data: {done_payload}\n\n"
