@@ -1845,6 +1845,8 @@
       "loadForecastError": "Error loading cash flow projection",
       "financialAlerts": {
         "title": "Financial Alerts",
+        "proactiveTitle": "{{count}} critical alert(s) detected",
+        "proactiveDesc": "You have urgent financial alerts. Check the alerts section.",
         "dismiss": "Dismiss",
         "loadError": "Error loading financial alerts",
         "types": {

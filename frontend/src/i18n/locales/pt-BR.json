@@ -1890,6 +1890,8 @@
       "loadForecastError": "Erro ao carregar projeção de fluxo de caixa",
       "financialAlerts": {
         "title": "Alertas Financeiros",
+        "proactiveTitle": "{{count}} alerta(s) crítico(s) detectado(s)",
+        "proactiveDesc": "Você tem alertas financeiros urgentes. Verifique a seção de alertas.",
         "dismiss": "Dispensar",
         "loadError": "Erro ao carregar alertas financeiros",
         "types": {
