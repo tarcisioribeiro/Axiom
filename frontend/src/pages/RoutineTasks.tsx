@@ -9,6 +9,7 @@ import {
   Download,
   FileText,
   Sheet,
+  Bookmark,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import React, { useState, useEffect } from 'react';
@@ -70,6 +71,15 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { isExporting, exportPDF, exportExcel } = useRoutineExport();
+
+  const handleSaveAsTemplate = () => {
+    if (tasks.length === 0) return;
+    const templateName = `Rotina ${new Date().toLocaleDateString('pt-BR')}`;
+    const stored = JSON.parse(localStorage.getItem('axiom-user-routine-templates') ?? '[]') as Array<{name: string; tasks: RoutineTask[]; savedAt: string}>;
+    stored.unshift({ name: templateName, tasks, savedAt: new Date().toISOString() });
+    localStorage.setItem('axiom-user-routine-templates', JSON.stringify(stored.slice(0, 10)));
+    toast({ title: t('pages.routineTasks.templates.saved'), description: templateName });
+  };
 
   useEffect(() => {
     void loadData();
@@ -440,6 +450,17 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
             <Library className="mr-sm h-4 w-4" />
             {t('pages.routineTasks.templates.importBtn')}
           </Button>
+          {tasks.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSaveAsTemplate}
+              title={t('pages.routineTasks.templates.saveAsTemplate')}
+            >
+              <Bookmark className="mr-sm h-4 w-4" />
+              {t('pages.routineTasks.templates.saveAsTemplate')}
+            </Button>
+          )}
           <Button onClick={handleCreate} className="gap-sm">
             <Plus className="h-4 w-4" />
             {t('pages.routineTasks.newBtn')}
