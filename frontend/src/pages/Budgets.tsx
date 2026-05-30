@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   PiggyBank,
   Plus,
@@ -11,7 +12,7 @@ import {
   CalendarDays,
   RotateCcw,
 } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -48,6 +49,7 @@ import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { budgetsService } from '@/services/budgets-service';
@@ -70,8 +72,18 @@ function getDefaultFormData(): BudgetFormData {
   };
 }
 
+type SuggestResp = {
+  suggestions?: {
+    category: string;
+    avg_monthly_spent: number;
+    suggested_limit: number;
+    reasoning: string | null;
+  }[];
+};
+
 export default function Budgets() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const MONTHS = useMemo(
     () =>
       (t('pages.budgets.months', { returnObjects: true }) as string[]).map(
@@ -79,12 +91,8 @@ export default function Budgets() {
       ),
     [t]
   );
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [budgetStatuses, setBudgetStatuses] = useState<BudgetStatus[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState<Budget | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>(
     String(new Date().getMonth() + 1)
@@ -95,54 +103,78 @@ export default function Budgets() {
 
   const [formData, setFormData] = useState<BudgetFormData>(getDefaultFormData());
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState<
-    Array<{
-      category: string;
-      avg_monthly_spent: number;
-      suggested_limit: number;
-      reasoning: string | null;
-    }>
-  >([]);
-  const [isSuggestLoading, setIsSuggestLoading] = useState(false);
 
-  const handleSuggest = async () => {
-    setIsSuggestOpen(true);
-    if (suggestions.length > 0) return;
-    try {
-      setIsSuggestLoading(true);
-      type SuggestResp = {
-        suggestions?: {
-          category: string;
-          avg_monthly_spent: number;
-          suggested_limit: number;
-          reasoning: string | null;
-        }[];
-      };
-      const resp = await apiClient.post<SuggestResp>(
-        API_CONFIG.ENDPOINTS.BUDGET_SUGGEST,
-        {
-          include_llm_reasoning: true,
-        }
-      );
-      setSuggestions(resp.suggestions ?? []);
-    } catch {
-      toast({
-        title: 'Sem histórico suficiente para sugerir orçamentos.',
-        variant: 'destructive',
+  const { data: budgets = [], isLoading } = useQuery({
+    queryKey: ['budgets'],
+    queryFn: async () => {
+      const data = await budgetsService.getAll();
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: budgetStatuses = [] } = useQuery({
+    queryKey: ['budgets', 'status'],
+    queryFn: () => budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: suggestions = [], isFetching: isSuggestLoading } = useQuery({
+    queryKey: ['budgets', 'suggest'],
+    queryFn: async () => {
+      const resp = await apiClient.post<SuggestResp>(API_CONFIG.ENDPOINTS.BUDGET_SUGGEST, {
+        include_llm_reasoning: true,
       });
-      setIsSuggestOpen(false);
-    } finally {
-      setIsSuggestLoading(false);
-    }
+      return resp.suggestions ?? [];
+    },
+    enabled: isSuggestOpen,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const invalidateBudgets = () => {
+    void queryClient.invalidateQueries({ queryKey: ['budgets'] });
   };
 
-  const handleApplySuggestion = async (s: {
-    category: string;
-    suggested_limit: number;
-  }) => {
-    const now = new Date();
-    try {
-      await budgetsService.create({
+  const createMutation = useMutation({
+    mutationFn: (data: BudgetFormData) => budgetsService.create(data),
+    onSuccess: () => {
+      toast({ title: t('pages.budgets.created'), description: t('pages.budgets.createdDesc') });
+      setIsDialogOpen(false);
+      invalidateBudgets();
+    },
+    onError: (error) => {
+      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: BudgetFormData }) =>
+      budgetsService.update(id, data),
+    onSuccess: () => {
+      toast({ title: t('pages.budgets.updated'), description: t('pages.budgets.updatedDesc') });
+      setIsDialogOpen(false);
+      invalidateBudgets();
+    },
+    onError: (error) => {
+      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string | number) => budgetsService.delete(id),
+    onSuccess: () => {
+      toast({ title: t('pages.budgets.deleted'), description: t('pages.budgets.deletedDesc') });
+      invalidateBudgets();
+    },
+    onError: (error) => {
+      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+    },
+  });
+
+  const applySuggestionMutation = useMutation({
+    mutationFn: (s: { category: string; suggested_limit: number }) => {
+      const now = new Date();
+      return budgetsService.create({
         category: s.category,
         limit_amount: s.suggested_limit,
         month: now.getMonth() + 1,
@@ -151,41 +183,15 @@ export default function Budgets() {
         rollover_enabled: false,
         rollover_amount: 0,
       });
-      toast({
-        title: `Orçamento de ${translate('expenseCategories', s.category)} criado.`,
-      });
-      void loadData();
-    } catch {
+    },
+    onSuccess: (_, s) => {
+      toast({ title: `Orçamento de ${translate('expenseCategories', s.category)} criado.` });
+      invalidateBudgets();
+    },
+    onError: () => {
       toast({ title: 'Erro ao criar orçamento.', variant: 'destructive' });
-    }
-  };
-
-  useEffect(() => {
-    void loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [data, statuses] = await Promise.all([
-        budgetsService.getAll(),
-        budgetsService.getStatus().catch(() => [] as BudgetStatus[]),
-      ]);
-      setBudgets(Array.isArray(data) ? data : []);
-      setBudgetStatuses(Array.isArray(statuses) ? statuses : []);
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.loadError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-      setBudgets([]);
-      setBudgetStatuses([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
   const handleCreate = () => {
     setSelectedBudget(undefined);
@@ -217,54 +223,19 @@ export default function Budgets() {
       description: `Tem certeza que deseja excluir o orçamento de "${categoryLabel}" para ${monthLabel}/${budget.year}?`,
     });
 
-    if (confirmed) {
-      try {
-        await budgetsService.delete(budget.id);
-        toast({
-          title: t('pages.budgets.deleted'),
-          description: t('pages.budgets.deletedDesc'),
-        });
-        void loadData();
-      } catch (error: unknown) {
-        toast({
-          title: t('common.messages.deleteError'),
-          description: getErrorMessage(error),
-          variant: 'destructive',
-        });
-      }
-    }
+    if (confirmed) deleteMutation.mutate(budget.id);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (selectedBudget) {
-        await budgetsService.update(selectedBudget.id, formData);
-        toast({
-          title: t('pages.budgets.updated'),
-          description: t('pages.budgets.updatedDesc'),
-        });
-      } else {
-        await budgetsService.create(formData);
-        toast({
-          title: t('pages.budgets.created'),
-          description: t('pages.budgets.createdDesc'),
-        });
-      }
-      setIsDialogOpen(false);
-      void loadData();
-    } catch (error: unknown) {
-      toast({
-        title: t('common.messages.saveError'),
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
+    if (selectedBudget) {
+      updateMutation.mutate({ id: selectedBudget.id, data: formData });
+    } else {
+      createMutation.mutate(formData);
     }
   };
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   const filteredBudgets = budgets.filter((budget) => {
     const categoryLabel = translate('expenseCategories', budget.category).toLowerCase();
@@ -286,7 +257,7 @@ export default function Budgets() {
       <PageHeader title={t('pages.budgets.title')} icon={<PiggyBank />}>
         <Button
           variant="outline"
-          onClick={() => void handleSuggest()}
+          onClick={() => setIsSuggestOpen(true)}
           className="gap-sm"
         >
           <Sparkles className="h-4 w-4" />
@@ -348,7 +319,8 @@ export default function Budgets() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => void handleApplySuggestion(s)}
+                    onClick={() => applySuggestionMutation.mutate(s)}
+                    disabled={applySuggestionMutation.isPending}
                   >
                     Aplicar
                   </Button>
@@ -495,7 +467,7 @@ export default function Budgets() {
             </DialogTitle>
             <DialogDescription>{t('pages.budgets.formDesc')}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-lg">
+          <form onSubmit={handleSubmit} className="space-y-lg">
             {/* Seção: Classificação */}
             <FormSection title={t('common.form.sections.classification')} icon={Tag}>
               <div className="space-y-sm">

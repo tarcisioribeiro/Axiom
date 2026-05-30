@@ -323,11 +323,9 @@ function ThinkingBubble() {
 function AgentSelector({
   selected,
   onSelect,
-  onConfirm,
 }: {
   selected: AgentName | null;
   onSelect: (key: AgentName) => void;
-  onConfirm: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -359,17 +357,6 @@ function AgentSelector({
           />
         ))}
       </div>
-
-      {selected && (
-        <motion.button
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={onConfirm}
-          className="rounded-lg bg-primary px-lg py-sm text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          {t('pages.agents.agentSelector.' + selected + '.name')} →
-        </motion.button>
-      )}
     </motion.div>
   );
 }
@@ -382,7 +369,13 @@ export default function Agents() {
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
 
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [sessionId] = useState(() => {
+    const stored = localStorage.getItem('axiom-agent-session-id');
+    if (stored) return stored;
+    const id = crypto.randomUUID();
+    localStorage.setItem('axiom-agent-session-id', id);
+    return id;
+  });
   const [query, setQuery] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
@@ -491,6 +484,11 @@ export default function Agents() {
     }
   };
 
+  const handleSelectAgent = (key: AgentName) => {
+    setSelectedAgent(key);
+    setConversationStarted(true);
+  };
+
   const handleChangeAgent = () => {
     setConversationStarted(false);
     setSelectedAgent(null);
@@ -580,10 +578,7 @@ export default function Agents() {
               <AgentSelector
                 key="selector"
                 selected={selectedAgent}
-                onSelect={setSelectedAgent}
-                onConfirm={() => {
-                  if (selectedAgent) setConversationStarted(true);
-                }}
+                onSelect={handleSelectAgent}
               />
             ) : historyLoading ? (
               <div key="loading" className="flex h-full items-center justify-center">

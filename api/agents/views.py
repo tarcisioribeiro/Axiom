@@ -397,7 +397,6 @@ class AgentStreamView(APIView):
             from agents.core.response_formatter import format_response
 
             full_content = ""
-            persisted = False
             try:
                 for token in agent.stream(ctx):
                     full_content += token
@@ -424,8 +423,6 @@ class AgentStreamView(APIView):
                     agent.name,
                     query_id,
                 )
-                persisted = True
-                print(persisted)
 
             except GeneratorExit:
                 # Persiste o que foi acumulado antes da desconexão do cliente
