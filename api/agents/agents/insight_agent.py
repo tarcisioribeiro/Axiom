@@ -28,9 +28,9 @@ class InsightAgent(BaseAgent):
 
     name = "insight"
     description = "Briefing geral: síntese financeira, orçamentos e rotinas"
-    ollama_model = "llama3.1:8b"
+    ollama_model = "qwen2.5:14b"
     anthropic_model = "claude-sonnet-4-6"
-    groq_model = "llama-3.3-70b-versatile"
+    groq_model = "llama-3.3-70b-specdec"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()

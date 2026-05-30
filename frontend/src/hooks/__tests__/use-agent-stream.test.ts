@@ -55,6 +55,50 @@ describe('useAgentStream', () => {
     expect(result.current.accumulatedText).toBe('Hello world');
   });
 
+  it('replaces accumulatedText with formatted_content from done event when present', async () => {
+    vi.mocked(agentService.stream).mockReturnValue(
+      makeStream([
+        { token: 'food and drink' },
+        {
+          done: true,
+          agent: 'financial',
+          sources: [],
+          query_id: 'q-fmt',
+          formatted_content: 'Comida e Bebida',
+        },
+      ])
+    );
+
+    const { result } = renderHook(() => useAgentStream());
+
+    act(() => {
+      void result.current.send('categorias', 'default');
+    });
+
+    await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+    expect(result.current.accumulatedText).toBe('Comida e Bebida');
+  });
+
+  it('keeps accumulatedText unchanged when done event has no formatted_content', async () => {
+    vi.mocked(agentService.stream).mockReturnValue(
+      makeStream([
+        { token: 'Resposta' },
+        { done: true, agent: 'financial', sources: [], query_id: 'q-nofmt' },
+      ])
+    );
+
+    const { result } = renderHook(() => useAgentStream());
+
+    act(() => {
+      void result.current.send('pergunta', 'default');
+    });
+
+    await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+    expect(result.current.accumulatedText).toBe('Resposta');
+  });
+
   it('sets isStreaming=true while consuming events', async () => {
     let resolve!: () => void;
     const blocker = new Promise<void>((r) => {
