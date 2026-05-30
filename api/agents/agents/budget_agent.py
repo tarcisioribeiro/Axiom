@@ -30,9 +30,9 @@ _TRIGGER_WORDS = [
 class BudgetAgent(BaseAgent):
     name = "budget"
     description = "Monitoramento de orçamentos e detecção de desvios"
-    ollama_model = "qwen2.5:7b"
-    anthropic_model = "claude-haiku-4-5-20251001"
-    groq_model = "llama-3.1-8b-instant"
+    ollama_model = "qwen2.5:14b"
+    anthropic_model = "claude-sonnet-4-6"
+    groq_model = "deepseek-r1-distill-llama-70b"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
