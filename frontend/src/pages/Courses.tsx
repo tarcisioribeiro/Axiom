@@ -102,10 +102,12 @@ function CourseCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold leading-tight">{course.title}</p>
-          <p className="text-xs text-muted-foreground">{course.platform_display}</p>
+          <p className="text-xs text-muted-foreground">
+            {t(`pages.courses.platform.${course.platform}`)}
+          </p>
         </div>
         <Badge variant={STATUS_BADGE[course.status]} className="shrink-0 text-xs">
-          {course.status_display}
+          {t(`pages.courses.status.${course.status}`)}
         </Badge>
       </div>
 
@@ -139,7 +141,7 @@ function CourseCard({
         </div>
 
         <Badge variant="outline" className="w-fit text-xs">
-          {course.category_display}
+          {t(`pages.courses.category.${course.category}`)}
         </Badge>
       </div>
 

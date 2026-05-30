@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { EXPENSE_CATEGORIES_CANONICAL } from '@/config/constants';
+import { EXPENSE_CATEGORY_ICONS } from '@/config/icons';
 import { useExpensesPage } from '@/hooks/use-expenses-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -161,11 +162,18 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.expenses.allCategories')}</SelectItem>
-            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
+            {EXPENSE_CATEGORIES_CANONICAL.map(({ key, label }) => {
+              const Icon = EXPENSE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {label}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
