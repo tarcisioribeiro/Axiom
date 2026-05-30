@@ -28,7 +28,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #
 #   1. Download the encrypted dump from MinIO:
-#        mc cp axiom-minio/axiom-backups/db/db_backup_<TS>_kv<VER>.dump.enc .
+#        mc cp axiom-storage/axiom-backups/db/db_backup_<TS>_kv<VER>.dump.enc .
 #
 #   2. Decrypt (use the key that matches the _kv<VER> suffix in the filename;
 #      store historical keys as BACKUP_ENCRYPTION_KEY_v1, _v2, etc.):
@@ -221,7 +221,7 @@ log "Unencrypted dump removed"
 log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
 
 # Configure mc alias (stdout/stderr suppressed to avoid leaking credentials)
-"$MC_BIN" alias set axiom-minio \
+"$MC_BIN" alias set axiom-storage \
     "$MINIO_ENDPOINT" \
     "$MINIO_ACCESS_KEY" \
     "$MINIO_SECRET_KEY" \
@@ -229,10 +229,10 @@ log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
     > /dev/null 2>&1
 
 # Ensure bucket exists (idempotent)
-"$MC_BIN" mb --ignore-existing "axiom-minio/${MINIO_BUCKET}" > /dev/null 2>&1 || true
+"$MC_BIN" mb --ignore-existing "axiom-storage/${MINIO_BUCKET}" > /dev/null 2>&1 || true
 
 # Upload encrypted dump — failure is fatal
-if ! "$MC_BIN" cp "$DB_ENC" "axiom-minio/${MINIO_BUCKET}/db/"; then
+if ! "$MC_BIN" cp "$DB_ENC" "axiom-storage/${MINIO_BUCKET}/db/"; then
     error "Failed to upload encrypted dump to MinIO — backup not stored off-site"
     echo "failed:minio_upload:${DATE}" > "$STATUS_FILE"
     exit 1
@@ -240,7 +240,7 @@ fi
 log "Encrypted dump uploaded"
 
 # Upload manifest — failure is non-fatal (aids auditing without decryption)
-if "$MC_BIN" cp "$DB_MANIFEST" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+if "$MC_BIN" cp "$DB_MANIFEST" "axiom-storage/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
     log "Manifest uploaded"
 else
     warning "Manifest upload failed (non-critical)"
@@ -258,7 +258,7 @@ if [ -d "/app/media" ] && [ "$(ls -A /app/media 2>/dev/null)" ]; then
     if tar -czf "$MEDIA_ARCHIVE" -C /app media/ 2>/dev/null; then
         MEDIA_SIZE=$(du -h "$MEDIA_ARCHIVE" | cut -f1)
         log "Media archive created: $(basename "$MEDIA_ARCHIVE") (${MEDIA_SIZE})"
-        if "$MC_BIN" cp "$MEDIA_ARCHIVE" "axiom-minio/${MINIO_BUCKET}/media/" > /dev/null 2>&1; then
+        if "$MC_BIN" cp "$MEDIA_ARCHIVE" "axiom-storage/${MINIO_BUCKET}/media/" > /dev/null 2>&1; then
             log "Media archive uploaded to MinIO"
         else
             warning "Media archive upload failed (non-critical)"

@@ -123,7 +123,7 @@ data:
     # ─────────────────────────────────────────────────────────────────────────────
     #
     #   1. Download the encrypted dump from MinIO:
-    #        mc cp axiom-minio/axiom-backups/db/db_backup_<TS>.dump.enc .
+    #        mc cp axiom-storage/axiom-backups/db/db_backup_<TS>.dump.enc .
     #
     #   2. Decrypt (key must match BACKUP_ENCRYPTION_KEY used during backup):
     #        export BACKUP_ENCRYPTION_KEY="<key>"
@@ -238,19 +238,19 @@ data:
     log "Unencrypted dump removed"
 
     log "Step 4/5 — Uploading to MinIO (${MINIO_ENDPOINT})..."
-    "$MC_BIN" alias set axiom-minio \
+    "$MC_BIN" alias set axiom-storage \
         "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY" \
         --api S3v4 > /dev/null 2>&1
-    "$MC_BIN" mb --ignore-existing "axiom-minio/${MINIO_BUCKET}" > /dev/null 2>&1 || true
+    "$MC_BIN" mb --ignore-existing "axiom-storage/${MINIO_BUCKET}" > /dev/null 2>&1 || true
 
-    if ! "$MC_BIN" cp "$DB_ENC" "axiom-minio/${MINIO_BUCKET}/db/"; then
+    if ! "$MC_BIN" cp "$DB_ENC" "axiom-storage/${MINIO_BUCKET}/db/"; then
         error "Failed to upload encrypted dump to MinIO"
         echo "failed:minio_upload:${DATE}" > "$STATUS_FILE"
         exit 1
     fi
     log "Encrypted dump uploaded"
 
-    if "$MC_BIN" cp "$DB_MANIFEST" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+    if "$MC_BIN" cp "$DB_MANIFEST" "axiom-storage/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
         log "Manifest uploaded"
     else
         warning "Manifest upload failed (non-critical)"
@@ -262,7 +262,7 @@ data:
         if tar -czf "$MEDIA_ARCHIVE" -C /app media/ 2>/dev/null; then
             MEDIA_SIZE=$(du -h "$MEDIA_ARCHIVE" | cut -f1)
             log "Media archive: $(basename "$MEDIA_ARCHIVE") (${MEDIA_SIZE})"
-            "$MC_BIN" cp "$MEDIA_ARCHIVE" "axiom-minio/${MINIO_BUCKET}/media/" > /dev/null 2>&1 \
+            "$MC_BIN" cp "$MEDIA_ARCHIVE" "axiom-storage/${MINIO_BUCKET}/media/" > /dev/null 2>&1 \
                 && log "Media uploaded" || warning "Media upload failed (non-critical)"
         else
             warning "Failed to create media archive (non-critical)"

@@ -49,6 +49,7 @@ export interface AgentStreamDone {
   agent: string;
   sources: string[];
   query_id: string;
+  formatted_content?: string;
 }
 
 export type AgentStreamEvent = AgentStreamToken | AgentStreamDone;
