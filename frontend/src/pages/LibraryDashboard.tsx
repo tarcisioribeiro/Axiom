@@ -27,8 +27,11 @@ import {
   CheckCircle2,
   Play,
   Award,
+  PieChart,
+  BarChart2,
+  Activity,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   BarChart,
@@ -47,6 +50,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { ReadingGoalCard } from '@/components/library/ReadingGoalCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CollapsibleSection } from '@/components/ui/collapsible-section';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { coursesService } from '@/services/courses-service';
@@ -318,6 +322,46 @@ export default function LibraryDashboard() {
     URL.revokeObjectURL(url);
   };
 
+  const SECTION_STORAGE_KEY = 'axiom-library-dashboard-sections';
+  const defaultSections: Record<string, boolean> = {
+    overview: true,
+    courses: true,
+    skills: true,
+    content: true,
+    stats: true,
+    sessions: true,
+    monthly: true,
+    genres: true,
+    timeline: true,
+    ratings: true,
+    timeOfDay: true,
+  };
+
+  const [sections, setSections] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem(SECTION_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, boolean>;
+        return { ...defaultSections, ...parsed };
+      }
+    } catch {
+      // ignore
+    }
+    return defaultSections;
+  });
+
+  const toggle = (key: string) => {
+    setSections((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem(SECTION_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   if (isLoading) {
     return <LoadingState fullScreen />;
   }
@@ -345,136 +389,144 @@ export default function LibraryDashboard() {
 
       {/* Block 1: Métricas + Status de Leitura (esquerda) | Meta de Leitura (direita) */}
       <div className="grid grid-cols-1 gap-md lg:grid-cols-3">
-        <div className="flex flex-col gap-md lg:col-span-2">
-          {/* Métricas Principais */}
-          <Card>
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('pages.libraryDashboard.overview')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-md sm:grid-cols-5">
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="text-xs">{t('pages.libraryDashboard.books')}</span>
+        <CollapsibleSection
+          title={t('pages.libraryDashboard.overview')}
+          icon={<BookOpen className="h-4 w-4" />}
+          open={sections.overview}
+          onToggle={() => toggle('overview')}
+          className="lg:col-span-2"
+        >
+          <div className="flex flex-col gap-md">
+            {/* Métricas Principais */}
+            <Card>
+              <CardHeader className="pb-sm">
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.libraryDashboard.overview')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-md sm:grid-cols-5">
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex items-center gap-sm text-muted-foreground">
+                      <BookOpen className="h-4 w-4" />
+                      <span className="text-xs">{t('pages.libraryDashboard.books')}</span>
+                    </div>
+                    <span className="text-2xl font-bold">{stats?.total_books || 0}</span>
                   </div>
-                  <span className="text-2xl font-bold">{stats?.total_books || 0}</span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.authors')}
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex items-center gap-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      <span className="text-xs">
+                        {t('pages.libraryDashboard.authors')}
+                      </span>
+                    </div>
+                    <span className="text-2xl font-bold">
+                      {stats?.total_authors || 0}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold">
-                    {stats?.total_authors || 0}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <Building2 className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.publishers')}
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex items-center gap-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span className="text-xs">
+                        {t('pages.libraryDashboard.publishers')}
+                      </span>
+                    </div>
+                    <span className="text-2xl font-bold">
+                      {stats?.total_publishers || 0}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold">
-                    {stats?.total_publishers || 0}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <FileText className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.pagesRead')}
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex items-center gap-sm text-muted-foreground">
+                      <FileText className="h-4 w-4" />
+                      <span className="text-xs">
+                        {t('pages.libraryDashboard.pagesRead')}
+                      </span>
+                    </div>
+                    <span className="text-2xl font-bold">
+                      {stats?.total_pages_read || 0}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold">
-                    {stats?.total_pages_read || 0}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-xs">
-                  <div className="flex items-center gap-sm text-muted-foreground">
-                    <Star className="h-4 w-4" />
-                    <span className="text-xs">
-                      {t('pages.libraryDashboard.averageRating')}
+                  <div className="flex flex-col gap-xs">
+                    <div className="flex items-center gap-sm text-muted-foreground">
+                      <Star className="h-4 w-4" />
+                      <span className="text-xs">
+                        {t('pages.libraryDashboard.averageRating')}
+                      </span>
+                    </div>
+                    <span className="text-2xl font-bold">
+                      {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
                     </span>
                   </div>
-                  <span className="text-2xl font-bold">
-                    {stats?.average_rating ? stats.average_rating.toFixed(1) : '—'}
-                  </span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Status de Leitura */}
-          <Card>
-            <CardHeader className="pb-sm">
-              <CardTitle className="text-sm font-medium">
-                {t('pages.libraryDashboard.readingStatus')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col justify-between gap-md">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BookMarked className="h-5 w-5 text-info" />
-                  <span className="text-sm font-medium">
-                    {t('pages.libraryDashboard.reading')}
-                  </span>
+            {/* Status de Leitura */}
+            <Card>
+              <CardHeader className="pb-sm">
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.libraryDashboard.readingStatus')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-col justify-between gap-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BookMarked className="h-5 w-5 text-info" />
+                    <span className="text-sm font-medium">
+                      {t('pages.libraryDashboard.reading')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold text-info">
+                      {stats?.books_reading || 0}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.libraryDashboard.inProgressSubtitle')}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-info">
-                    {stats?.books_reading || 0}
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    {t('pages.libraryDashboard.inProgressSubtitle')}
-                  </p>
+                <div className="border-t" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-5 w-5 text-warning" />
+                    <span className="text-sm font-medium">
+                      {t('pages.libraryDashboard.toRead')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold text-warning">
+                      {stats?.books_to_read || 0}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.libraryDashboard.inQueueSubtitle')}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="border-t" />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BookOpen className="h-5 w-5 text-warning" />
-                  <span className="text-sm font-medium">
-                    {t('pages.libraryDashboard.toRead')}
-                  </span>
+                <div className="border-t" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <BookCheck className="h-5 w-5 text-success" />
+                    <span className="text-sm font-medium">
+                      {t('pages.libraryDashboard.read')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold text-success">
+                      {stats?.books_read || 0}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.libraryDashboard.completedCount', {
+                        count: stats?.books_read || 0,
+                      })}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-warning">
-                    {stats?.books_to_read || 0}
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    {t('pages.libraryDashboard.inQueueSubtitle')}
-                  </p>
-                </div>
-              </div>
-              <div className="border-t" />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BookCheck className="h-5 w-5 text-success" />
-                  <span className="text-sm font-medium">
-                    {t('pages.libraryDashboard.read')}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-2xl font-bold text-success">
-                    {stats?.books_read || 0}
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    {t('pages.libraryDashboard.completedCount', {
-                      count: stats?.books_read || 0,
-                    })}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CollapsibleSection>
 
-        {/* Meta de Leitura */}
+        {/* Meta de Leitura — always visible, outside any collapsible section */}
         <ReadingGoalCard
           onGoalChange={() =>
             queryClient.invalidateQueries({ queryKey: ['libraryDashboard'] })
@@ -482,17 +534,25 @@ export default function LibraryDashboard() {
         />
       </div>
 
-      {/* Intelecto: Cursos — métricas principais */}
-      <Card>
-        <CardHeader className="pb-sm">
-          <div className="flex items-center gap-sm">
-            <GraduationCap className="h-4 w-4 text-category-intellect" />
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.coursesTitle')}
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
+      {/* Courses Section */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.coursesTitle')}
+        icon={<GraduationCap className="h-4 w-4" />}
+        open={sections.courses}
+        onToggle={() => toggle('courses')}
+      >
+        <div className="flex flex-col gap-md">
+        {/* Intelecto: Cursos — métricas principais */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="flex items-center gap-sm">
+              <GraduationCap className="h-4 w-4 text-category-intellect" />
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.coursesTitle')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
           <div className="grid grid-cols-2 gap-md sm:grid-cols-6">
             <div className="flex flex-col gap-xs">
               <div className="flex items-center gap-sm text-muted-foreground">
@@ -665,18 +725,28 @@ export default function LibraryDashboard() {
           </CardContent>
         </Card>
       </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Intelecto: Habilidades — métricas principais */}
-      <Card>
-        <CardHeader className="pb-sm">
-          <div className="flex items-center gap-sm">
-            <Brain className="h-4 w-4 text-category-intellect" />
-            <CardTitle className="text-sm font-medium">
-              {t('pages.libraryDashboard.skillsTitle')}
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
+      {/* Skills Section */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.skillsTitle')}
+        icon={<Brain className="h-4 w-4" />}
+        open={sections.skills}
+        onToggle={() => toggle('skills')}
+      >
+        <div className="flex flex-col gap-md">
+        {/* Intelecto: Habilidades — métricas principais */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <div className="flex items-center gap-sm">
+              <Brain className="h-4 w-4 text-category-intellect" />
+              <CardTitle className="text-sm font-medium">
+                {t('pages.libraryDashboard.skillsTitle')}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
           <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
             <div className="flex flex-col gap-xs">
               <div className="flex items-center gap-sm text-muted-foreground">
@@ -807,37 +877,52 @@ export default function LibraryDashboard() {
           </CardContent>
         </Card>
       </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Distribuição de Conteúdo */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
-          <p className="text-sm">
-            {t('pages.libraryDashboard.contentDistributionDesc')}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer
-            chartId="intellect-content-distribution"
-            data={contentDistributionData}
-            dataKey="value"
-            nameKey="name"
-            formatter={(value) => String(value)}
-            colors={[COLORS[0], 'hsl(var(--category-intellect))']}
-            emptyMessage={t('pages.libraryDashboard.noContentDistribution')}
-            lockChartType="pie"
-            height={250}
-          />
-        </CardContent>
-      </Card>
+      {/* Content Distribution */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.contentDistribution')}
+        icon={<PieChart className="h-4 w-4" />}
+        open={sections.content}
+        onToggle={() => toggle('content')}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('pages.libraryDashboard.contentDistribution')}</CardTitle>
+            <p className="text-sm">
+              {t('pages.libraryDashboard.contentDistributionDesc')}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              chartId="intellect-content-distribution"
+              data={contentDistributionData}
+              dataKey="value"
+              nameKey="name"
+              formatter={(value) => String(value)}
+              colors={[COLORS[0], 'hsl(var(--category-intellect))']}
+              emptyMessage={t('pages.libraryDashboard.noContentDistribution')}
+              lockChartType="pie"
+              height={250}
+            />
+          </CardContent>
+        </Card>
+      </CollapsibleSection>
 
-      {/* Block 2: Estatísticas Gerais */}
-      <Card>
-        <CardHeader className="pb-sm">
-          <CardTitle className="text-sm font-medium">
-            {t('pages.libraryDashboard.generalStats')}
-          </CardTitle>
-        </CardHeader>
+      {/* General Stats */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.generalStats')}
+        icon={<BarChart2 className="h-4 w-4" />}
+        open={sections.stats}
+        onToggle={() => toggle('stats')}
+      >
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="text-sm font-medium">
+              {t('pages.libraryDashboard.generalStats')}
+            </CardTitle>
+          </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <div className="flex flex-col gap-xs">
@@ -923,11 +1008,18 @@ export default function LibraryDashboard() {
               )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </CollapsibleSection>
 
-      {/* Block 3: Sessões & Ritmo | Previsão de Conclusão */}
-      <div className="grid grid-cols-1 gap-md md:grid-cols-2">
+      {/* Sessions & Pace */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.sessionsAndPace')}
+        icon={<Activity className="h-4 w-4" />}
+        open={sections.sessions}
+        onToggle={() => toggle('sessions')}
+      >
+        <div className="grid grid-cols-1 gap-md md:grid-cols-2">
         {/* Sessões & Ritmo */}
         <Card>
           <CardHeader className="pb-sm">
@@ -1072,10 +1164,17 @@ export default function LibraryDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Block 4: Comparativo Mensal (barras independentes) + Top 3 Gêneros */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      {/* Monthly Comparison */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.monthlyComparison')}
+        icon={<TrendingUp className="h-4 w-4" />}
+        open={sections.monthly}
+        onToggle={() => toggle('monthly')}
+      >
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.monthlyComparison')}</CardTitle>
@@ -1227,9 +1326,17 @@ export default function LibraryDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
 
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      {/* Genre & Reading Status */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.genreDistribution')}
+        icon={<BookOpen className="h-4 w-4" />}
+        open={sections.genres}
+        onToggle={() => toggle('genres')}
+      >
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         {/* Livros por Gênero */}
         <Card>
           <CardHeader>
@@ -1277,10 +1384,17 @@ export default function LibraryDashboard() {
             />
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Timeline e Top Autores */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      {/* Reading Timeline */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.readingTimeline')}
+        icon={<TrendingUp className="h-4 w-4" />}
+        open={sections.timeline}
+        onToggle={() => toggle('timeline')}
+      >
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.readingTimeline')}</CardTitle>
@@ -1366,10 +1480,17 @@ export default function LibraryDashboard() {
             />
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Ratings e Distribuições */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      {/* Ratings & Distributions */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.ratingDistribution')}
+        icon={<Star className="h-4 w-4" />}
+        open={sections.ratings}
+        onToggle={() => toggle('ratings')}
+      >
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>{t('pages.libraryDashboard.ratingDistribution')}</CardTitle>
@@ -1461,10 +1582,17 @@ export default function LibraryDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
 
-      {/* Período do Dia + Leituras Recentes */}
-      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
+      {/* When You Read + Recent Readings */}
+      <CollapsibleSection
+        title={t('pages.libraryDashboard.whenYouRead')}
+        icon={<Clock className="h-4 w-4" />}
+        open={sections.timeOfDay}
+        onToggle={() => toggle('timeOfDay')}
+      >
+        <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         {/* Quando você mais lê */}
         <Card>
           <CardHeader>
@@ -1562,7 +1690,8 @@ export default function LibraryDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </CollapsibleSection>
     </PageContainer>
   );
 }

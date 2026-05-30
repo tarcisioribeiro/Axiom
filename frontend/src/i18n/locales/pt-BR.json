@@ -188,7 +188,9 @@
       "registrations": "Cadastros",
       "records": "Registros",
       "books": "Acervo",
-      "intellect": "Aprendizado"
+      "intellect": "Aprendizado",
+      "daily": "Rotina Diária",
+      "health": "Saúde & Corpo"
     },
     "items": {
       "accounts": "Contas",
@@ -241,7 +243,9 @@
       "mealLog": "Diário Alimentar",
       "courses": "Cursos",
       "skills": "Habilidades",
-      "knowledgeGraph": "Grafo de Conhecimento"
+      "knowledgeGraph": "Grafo de Conhecimento",
+      "reflections": "Reflexões Diárias",
+      "tags": "Tags"
     },
     "agents": "Agentes IA"
   },
@@ -628,6 +632,20 @@
         "relatedPayableHint": "Vincule esta despesa a um valor a pagar",
         "none": "Nenhum",
         "balanceInfo": "Saldo: R$ {{value}}"
+      },
+      "splits": {
+        "title": "Divisões da Despesa",
+        "manage": "Gerenciar divisões",
+        "add": "Adicionar divisão",
+        "empty": "Nenhuma divisão registrada.",
+        "description": "Descrição",
+        "descriptionPlaceholder": "Ex: Parte do João",
+        "markPaid": "Marcar como pago",
+        "total": "Total dividido",
+        "created": "Divisão criada",
+        "deleted": "Divisão excluída",
+        "deleteTitle": "Excluir divisão",
+        "deleteDesc": "Tem certeza que deseja excluir esta divisão?"
       }
     },
     "revenues": {
@@ -1830,6 +1848,8 @@
       "monthExpenses": "Despesas do Mês",
       "monthRevenues": "Receitas do Mês",
       "creditLimit": "Limite de Crédito",
+      "viewExpenses": "Ver despesas detalhadas",
+      "viewRevenues": "Ver receitas detalhadas",
       "expensesByCategory": "Despesas por Categoria (Top 5)",
       "expensesByCategoryDesc": "Distribuição das maiores categorias de gastos",
       "noExpenses": "Nenhuma despesa cadastrada",
@@ -3259,6 +3279,12 @@
       "noData": "Nenhum dado disponível",
       "weekdayAnalytics": "Desempenho por Dia da Semana",
       "analyticsPeriod": "Baseado nos últimos {{days}} dias",
+      "level": "Nível",
+      "tasksCompleted": "tarefas concluídas",
+      "toNextLevel": "para o próximo nível",
+      "ctaChecklist": "▶ Abrir Checklist de Hoje",
+      "ctaTasks": "Ver Tarefas e Objetivos",
+      "ctaReflect": "Escrever Reflexão",
       "insights": "Insights de Hábitos",
       "taskCount_one": "{{count}} tarefa",
       "taskCount_other": "{{count}} tarefas",
@@ -3586,7 +3612,8 @@
       "savedDesc": "Seu checklist e reflexão foram salvos com sucesso!",
       "saveError": "Erro ao salvar",
       "loadUserError": "Erro ao carregar usuário",
-      "loadError": "Erro ao carregar dados"
+      "loadError": "Erro ao carregar dados",
+      "viewAllReflections": "Ver todas as reflexões →"
     },
     "activityLogs": {
       "title": "Logs de Atividade",

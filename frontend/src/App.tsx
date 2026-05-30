@@ -71,6 +71,9 @@ const FinancialGoals = lazy(() => import('./pages/FinancialGoals'));
 // Budgets Module
 const Budgets = lazy(() => import('./pages/Budgets'));
 
+// Tags Module
+const Tags = lazy(() => import('./pages/Tags'));
+
 // Webhooks
 const Webhooks = lazy(() => import('./pages/Webhooks'));
 
@@ -224,6 +227,14 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <CategorizationRules />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/tags"
+            element={
+              <PageWrapper>
+                <Tags />
               </PageWrapper>
             }
           />
