@@ -36,7 +36,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TRANSLATIONS, translate } from '@/config/constants';
+import { REVENUE_CATEGORIES_CANONICAL, translate } from '@/config/constants';
+import { REVENUE_CATEGORY_ICONS } from '@/config/icons';
 import { useRevenuesPage } from '@/hooks/use-revenues-page';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { translateCategory } from '@/lib/helpers';
@@ -157,11 +158,18 @@ export default function Revenues({ embedded = false }: { embedded?: boolean }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('pages.revenues.allCategories')}</SelectItem>
-            {Object.keys(TRANSLATIONS.revenueCategories).map((k) => (
-              <SelectItem key={k} value={k}>
-                {translate('revenueCategories', k)}
-              </SelectItem>
-            ))}
+            {REVENUE_CATEGORIES_CANONICAL.map(({ key }) => {
+              const Icon = REVENUE_CATEGORY_ICONS[key];
+              return (
+                <SelectItem
+                  key={key}
+                  value={key}
+                  icon={Icon ? <Icon className="h-4 w-4" /> : undefined}
+                >
+                  {translate('revenueCategories', key)}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
