@@ -35,6 +35,7 @@ interface ChartContainerProps {
   lockChartType?: ChartType;
   xAxisTickFormatter?: (value: string) => string;
   tooltipLabelFormatter?: (label: string | number) => string;
+  tooltipNameFormatter?: (name: string) => string | null;
 }
 
 /**
@@ -67,6 +68,7 @@ export const ChartContainer = ({
   lockChartType,
   xAxisTickFormatter,
   tooltipLabelFormatter,
+  tooltipNameFormatter,
 }: ChartContainerProps) => {
   const { chartType: storedChartType, cycleChartType } = useChartType(
     chartId,
@@ -164,6 +166,7 @@ export const ChartContainer = ({
               customColors={customColors}
               layout={layout}
               height={height}
+              nameFormatter={tooltipNameFormatter}
             />
           )}
 
