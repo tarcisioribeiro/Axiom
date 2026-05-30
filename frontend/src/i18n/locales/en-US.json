@@ -2524,7 +2524,22 @@
       "contentDistributionDesc": "Books read vs. Courses completed",
       "booksReadLabel": "Books Read",
       "coursesCompletedLabel": "Courses Completed",
-      "noContentDistribution": "Read books or complete courses to see the distribution"
+      "noContentDistribution": "Read books or complete courses to see the distribution",
+      "completionRate": "Completion Rate",
+      "avgProgress": "Average Progress",
+      "proficiencyDistribution": "Proficiency distribution",
+      "coursesByCategory": "Courses by category",
+      "coursesByPlatform": "Courses by platform",
+      "skillsByCategory": "Skills by category",
+      "skillsByProficiency": "Skills by proficiency",
+      "courseCount_one": "{{count}} course",
+      "courseCount_other": "{{count}} courses",
+      "skillCount_one": "{{count}} skill",
+      "skillCount_other": "{{count}} skills",
+      "courseStatusCompleted": "Completed",
+      "courseStatusInProgress": "In progress",
+      "courseStatusPaused": "Paused",
+      "courseStatusNotStarted": "Not started"
     },
     "books": {
       "title": "Works",
