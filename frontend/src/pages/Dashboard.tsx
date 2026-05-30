@@ -37,7 +37,7 @@ import {
   Download,
   FileText,
 } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -306,6 +306,25 @@ export default function Dashboard() {
     () => (Array.isArray(anomaliesQuery.data) ? anomaliesQuery.data : []),
     [anomaliesQuery.data]
   );
+
+  // Show a proactive toast when critical alerts load for the first time
+  const alertsNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (alertsNotifiedRef.current) return;
+    const critical = financialAlerts.filter(
+      (a) => a.severity === 'critical' || a.severity === 'high'
+    );
+    if (critical.length > 0) {
+      alertsNotifiedRef.current = true;
+      toast({
+        title: t('pages.dashboard.financialAlerts.proactiveTitle', {
+          count: critical.length,
+        }),
+        description: t('pages.dashboard.financialAlerts.proactiveDesc'),
+        variant: 'destructive',
+      });
+    }
+  }, [financialAlerts, t, toast]);
 
   // Overall loading: show full-screen spinner only until the primary stats
   // query resolves. Secondary queries (charts, forecast, alerts) load in the
