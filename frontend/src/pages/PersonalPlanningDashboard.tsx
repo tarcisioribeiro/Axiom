@@ -649,6 +649,7 @@ export default function PersonalPlanningDashboard() {
               emptyMessage={t('pages.planningDashboard.noWorkoutsRegistered')}
               lockChartType="bar"
               height={200}
+              tooltipNameFormatter={() => null}
             />
           </CardContent>
         </Card>
