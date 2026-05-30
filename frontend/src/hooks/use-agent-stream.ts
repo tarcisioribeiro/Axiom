@@ -74,6 +74,7 @@ export function useAgentStream() {
             setState((prev) => ({
               ...prev,
               isStreaming: false,
+              accumulatedText: event.formatted_content ?? prev.accumulatedText,
               currentAgent: event.agent,
               sources: event.sources,
               queryId: event.query_id,

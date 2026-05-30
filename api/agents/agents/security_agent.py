@@ -133,7 +133,7 @@ class SecurityAgent(BaseAgent):
         "e boas práticas (metadados apenas — nunca expõe valores)"
     )
     ollama_model = "mistral:7b-instruct"
-    anthropic_model = "claude-sonnet-4-6"
+    anthropic_model = "claude-haiku-4-5-20251001"
     groq_model = "llama-3.1-8b-instant"
 
     def can_handle(self, query: str) -> float:
