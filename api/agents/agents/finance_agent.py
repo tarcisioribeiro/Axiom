@@ -40,8 +40,8 @@ class FinanceAgent(BaseAgent):
     name = "finance"
     description = "Análise de despesas, receitas e padrões de consumo"
     ollama_model = "qwen2.5:7b"
-    anthropic_model = "claude-haiku-4-5-20251001"
-    groq_model = "llama-3.1-8b-instant"
+    anthropic_model = "claude-sonnet-4-6"
+    groq_model = "llama-3.3-70b-specdec"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
