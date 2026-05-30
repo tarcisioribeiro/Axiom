@@ -3,6 +3,7 @@ import { Portuguese } from 'flatpickr/dist/l10n/pt';
 import type { Options as FlatpickrOptions } from 'flatpickr/dist/types/options';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn, toLocalDate, formatLocalDate } from '@/lib/utils';
 
@@ -53,13 +54,15 @@ function parseDateBR(dateStr: string): Date | undefined {
 export function DatePicker({
   value,
   onChange,
-  placeholder = 'Selecione uma data',
+  placeholder,
   disabled = false,
   className,
   clearable = true,
   minDate,
   maxDate,
 }: DatePickerProps) {
+  const { t } = useTranslation();
+  const resolvedPlaceholder = placeholder ?? t('common.fields.selectDate');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const flatpickrRef = useRef<flatpickr.Instance | null>(null);
@@ -167,7 +170,7 @@ export function DatePicker({
       <input
         ref={inputRef}
         type="text"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         disabled={disabled}
         className={cn(
           'flatpickr-input',
