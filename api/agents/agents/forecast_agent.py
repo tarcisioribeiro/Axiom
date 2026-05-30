@@ -32,7 +32,7 @@ class ForecastAgent(BaseAgent):
     description = "Previsão de saldo e fluxo de caixa futuro"
     ollama_model = "qwen2.5:14b"
     anthropic_model = "claude-sonnet-4-6"
-    groq_model = "llama-3.3-70b-versatile"
+    groq_model = "deepseek-r1-distill-llama-70b"
 
     def can_handle(self, query: str) -> float:
         q = query.lower()
