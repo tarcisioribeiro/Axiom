@@ -128,7 +128,7 @@ dryrun()  { echo -e "${YELLOW}[DRY-RUN]${NC} $*"; }
 
 # ── MinIO setup ───────────────────────────────────────────────────────────────
 if $OPT_UPLOAD || $OPT_DELETE_OLD_REMOTE; then
-    "$MC_BIN" alias set axiom-minio \
+    "$MC_BIN" alias set axiom-storage \
         "$MINIO_ENDPOINT" \
         "$MINIO_ACCESS_KEY" \
         "$MINIO_SECRET_KEY" \
@@ -224,7 +224,7 @@ for OLD_ENC in "${FILES[@]}"; do
 
     # Upload new file
     if $OPT_UPLOAD; then
-        if "$MC_BIN" cp "$NEW_ENC" "axiom-minio/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
+        if "$MC_BIN" cp "$NEW_ENC" "axiom-storage/${MINIO_BUCKET}/db/" > /dev/null 2>&1; then
             log "  Uploaded to MinIO: ${NEW_BASE}"
         else
             warning "  MinIO upload failed for ${NEW_BASE} (local file retained)"
@@ -233,7 +233,7 @@ for OLD_ENC in "${FILES[@]}"; do
 
     # Delete old remote file
     if $OPT_DELETE_OLD_REMOTE; then
-        if "$MC_BIN" rm "axiom-minio/${MINIO_BUCKET}/db/${OLD_BASE}" > /dev/null 2>&1; then
+        if "$MC_BIN" rm "axiom-storage/${MINIO_BUCKET}/db/${OLD_BASE}" > /dev/null 2>&1; then
             log "  Deleted from MinIO: ${OLD_BASE}"
         else
             warning "  MinIO delete failed for ${OLD_BASE}"

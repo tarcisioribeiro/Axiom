@@ -177,6 +177,7 @@ class BaseAgent(ABC):
     def run(self, ctx: AgentContext) -> AgentResponse:
         from agents.core import context_compressor
         from agents.core.llm_client import LLMClient
+        from agents.core.response_formatter import format_response
 
         data = self.build_context_safely(ctx)
 
@@ -194,7 +195,7 @@ class BaseAgent(ABC):
             agent_name=self.name,
         )
         return AgentResponse(
-            content=raw,
+            content=format_response(raw),
             agent_name=self.name,
             sources=compressed_data.get("sources", []),
         )
