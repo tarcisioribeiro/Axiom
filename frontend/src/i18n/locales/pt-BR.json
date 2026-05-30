@@ -3256,6 +3256,27 @@
         "emptyState": "Adicione habilidades para visualizar o radar"
       }
     },
+    "planningOnboarding": {
+      "skip": "Pular",
+      "next": "Próximo",
+      "start": "Começar agora",
+      "step0": {
+        "title": "Bem-vindo ao Planejamento Pessoal",
+        "desc": "Organize sua rotina diária, objetivos de saúde e reflexões em um só lugar."
+      },
+      "step1": {
+        "title": "Checklist Diário",
+        "desc": "Crie tarefas rotineiras e acompanhe sua conclusão dia a dia com um kanban visual."
+      },
+      "step2": {
+        "title": "Objetivos e Metas",
+        "desc": "Defina metas mensuráveis, acompanhe o progresso e mantenha o foco no que importa."
+      },
+      "step3": {
+        "title": "Treino e Nutrição",
+        "desc": "Registre sessões de treino e refeições para ter uma visão completa da sua saúde."
+      }
+    },
     "planningDashboard": {
       "title": "Dashboard de Planejamento Pessoal",
       "todayTasks": "Tarefas de Hoje",

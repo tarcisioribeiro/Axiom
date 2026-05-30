@@ -35,8 +35,13 @@ import { CircularProgress } from '@/components/ui/circular-progress';
 import { translate } from '@/config/constants';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_CONFIG } from '@/config/api-config';
+import {
+  PlanningOnboarding,
+  usePlanningOnboarding,
+} from '@/components/personal-planning/PlanningOnboarding';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
@@ -89,6 +94,8 @@ function renderInsight(
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
+  const { shouldShow: showOnboarding } = usePlanningOnboarding();
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
 
@@ -249,6 +256,9 @@ export default function PersonalPlanningDashboard() {
 
   return (
     <PageContainer>
+      {showOnboarding && !onboardingDone && (
+        <PlanningOnboarding onDone={() => setOnboardingDone(true)} />
+      )}
       <PageHeader title={t('pages.planningDashboard.title')} icon={<Calendar />} />
 
       {/* Linha 1: Tarefas de Hoje | Taxa 7d | Tarefas ativas | Taxa 30d */}

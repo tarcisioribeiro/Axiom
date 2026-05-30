@@ -3194,6 +3194,27 @@
         "emptyState": "Add skills to visualize the radar"
       }
     },
+    "planningOnboarding": {
+      "skip": "Skip",
+      "next": "Next",
+      "start": "Get started",
+      "step0": {
+        "title": "Welcome to Personal Planning",
+        "desc": "Organize your daily routine, health goals, and reflections all in one place."
+      },
+      "step1": {
+        "title": "Daily Checklist",
+        "desc": "Create routine tasks and track completion day by day with a visual kanban board."
+      },
+      "step2": {
+        "title": "Goals & Objectives",
+        "desc": "Define measurable goals, track progress, and stay focused on what matters."
+      },
+      "step3": {
+        "title": "Workout & Nutrition",
+        "desc": "Log workout sessions and meals to have a complete view of your health."
+      }
+    },
     "planningDashboard": {
       "title": "Personal Planning Dashboard",
       "todayTasks": "Today's Tasks",
