@@ -539,7 +539,9 @@ export default function LibraryDashboard() {
             <div className="flex flex-col gap-xs">
               <div className="flex items-center gap-sm text-muted-foreground">
                 <TrendingUp className="h-4 w-4" />
-                <span className="text-xs">Taxa de conclusão</span>
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.completionRate')}
+                </span>
               </div>
               <span className="text-2xl font-bold text-category-intellect">
                 {courseStats.completionRate.toFixed(0)}%
@@ -548,12 +550,16 @@ export default function LibraryDashboard() {
             <div className="flex flex-col gap-xs">
               <div className="flex items-center gap-sm text-muted-foreground">
                 <Zap className="h-4 w-4" />
-                <span className="text-xs">Progresso médio</span>
+                <span className="text-xs">
+                  {t('pages.libraryDashboard.avgProgress')}
+                </span>
               </div>
               <span className="text-2xl font-bold">
                 {courseStats.avgProgress.toFixed(0)}%
               </span>
-              <span className="text-xs text-muted-foreground">em andamento</span>
+              <span className="text-xs text-muted-foreground">
+                {t('pages.libraryDashboard.inProgressSubtitle')}
+              </span>
             </div>
           </div>
 
@@ -562,22 +568,22 @@ export default function LibraryDashboard() {
             <div className="mt-md space-y-sm border-t pt-md">
               {[
                 {
-                  label: 'Concluídos',
+                  label: t('pages.libraryDashboard.courseStatusCompleted'),
                   count: courseStats.completed,
                   colorClass: 'bg-success',
                 },
                 {
-                  label: 'Em andamento',
+                  label: t('pages.libraryDashboard.courseStatusInProgress'),
                   count: courseStats.inProgress,
                   colorClass: 'bg-info',
                 },
                 {
-                  label: 'Pausados',
+                  label: t('pages.libraryDashboard.courseStatusPaused'),
                   count: courseStats.paused,
                   colorClass: 'bg-warning',
                 },
                 {
-                  label: 'Não iniciados',
+                  label: t('pages.libraryDashboard.courseStatusNotStarted'),
                   count: courseStats.notStarted,
                   colorClass: 'bg-muted-foreground/40',
                 },
@@ -615,7 +621,7 @@ export default function LibraryDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <GraduationCap className="h-4 w-4" />
-              Cursos por categoria
+              {t('pages.libraryDashboard.coursesByCategory')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -624,9 +630,11 @@ export default function LibraryDashboard() {
               data={courseStats.byCategoryData}
               dataKey="count"
               nameKey="name"
-              formatter={(value) => `${value} curso(s)`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.courseCount', { count: Number(value) })
+              }
               colors={COLORS}
-              emptyMessage="Nenhum curso cadastrado"
+              emptyMessage={t('pages.libraryDashboard.noCourses')}
               lockChartType="pie"
               height={250}
             />
@@ -637,7 +645,7 @@ export default function LibraryDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <Play className="h-4 w-4" />
-              Cursos por plataforma
+              {t('pages.libraryDashboard.coursesByPlatform')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -646,9 +654,11 @@ export default function LibraryDashboard() {
               data={courseStats.byPlatformData}
               dataKey="count"
               nameKey="name"
-              formatter={(value) => `${value} curso(s)`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.courseCount', { count: Number(value) })
+              }
               colors={COLORS}
-              emptyMessage="Nenhum curso cadastrado"
+              emptyMessage={t('pages.libraryDashboard.noCourses')}
               lockChartType="pie"
               height={250}
             />
@@ -716,7 +726,7 @@ export default function LibraryDashboard() {
           {skillStats.byProficiencyData.length > 0 && (
             <div className="mt-md space-y-sm border-t pt-md">
               <p className="mb-sm text-xs font-semibold text-muted-foreground">
-                Distribuição por proficiência
+                {t('pages.libraryDashboard.proficiencyDistribution')}
               </p>
               {skillStats.byProficiencyData.map((item, i) => {
                 const max = Math.max(
@@ -753,7 +763,7 @@ export default function LibraryDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <Brain className="h-4 w-4" />
-              Habilidades por categoria
+              {t('pages.libraryDashboard.skillsByCategory')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -762,9 +772,11 @@ export default function LibraryDashboard() {
               data={skillStats.byCategoryData}
               dataKey="count"
               nameKey="name"
-              formatter={(value) => `${value} habilidade(s)`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.skillCount', { count: Number(value) })
+              }
               colors={COLORS}
-              emptyMessage="Nenhuma habilidade cadastrada"
+              emptyMessage={t('pages.libraryDashboard.noSkills')}
               lockChartType="pie"
               height={250}
             />
@@ -775,7 +787,7 @@ export default function LibraryDashboard() {
           <CardHeader className="pb-sm">
             <CardTitle className="flex items-center gap-sm text-sm">
               <Award className="h-4 w-4" />
-              Habilidades por proficiência
+              {t('pages.libraryDashboard.skillsByProficiency')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -784,9 +796,11 @@ export default function LibraryDashboard() {
               data={skillStats.byProficiencyData}
               dataKey="count"
               nameKey="name"
-              formatter={(value) => `${value} habilidade(s)`}
+              formatter={(value) =>
+                t('pages.libraryDashboard.skillCount', { count: Number(value) })
+              }
               colors={COLORS}
-              emptyMessage="Nenhuma habilidade cadastrada"
+              emptyMessage={t('pages.libraryDashboard.noSkills')}
               lockChartType="bar"
               height={250}
             />

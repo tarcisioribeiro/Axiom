@@ -26,6 +26,7 @@ interface EnhancedBarChartProps {
   customColors?: (entry: ChartDataPoint) => string;
   layout?: BarLayout;
   height?: number;
+  nameFormatter?: (name: string) => string | null;
 }
 
 /**
@@ -51,6 +52,7 @@ export const EnhancedBarChart = ({
   customColors,
   layout = 'vertical',
   height = 300,
+  nameFormatter,
 }: EnhancedBarChartProps) => {
   const dims = useChartDimensions();
 
@@ -154,7 +156,9 @@ export const EnhancedBarChart = ({
         )}
 
         <Tooltip
-          content={<EnhancedTooltip formatter={formatter} />}
+          content={
+            <EnhancedTooltip formatter={formatter} nameFormatter={nameFormatter} />
+          }
           cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
         />
 
