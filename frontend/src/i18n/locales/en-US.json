@@ -3355,7 +3355,9 @@
         "importSuccess": "Template imported",
         "importSuccessDesc": "{{count}} task(s) created from template \"{{name}}\".",
         "alreadyImported": "Nothing to import",
-        "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list."
+        "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list.",
+        "saveAsTemplate": "Save as Template",
+        "saved": "Template saved locally"
       },
       "export": {
         "btn": "Export Routine",

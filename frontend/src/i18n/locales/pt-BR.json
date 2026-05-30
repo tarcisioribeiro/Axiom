@@ -3417,7 +3417,9 @@
         "importSuccess": "Template importado",
         "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
         "alreadyImported": "Nada a importar",
-        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista.",
+        "saveAsTemplate": "Salvar como Template",
+        "saved": "Template salvo localmente"
       },
       "export": {
         "btn": "Exportar Rotina",
