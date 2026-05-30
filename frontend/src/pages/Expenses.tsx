@@ -7,8 +7,9 @@ import {
   Download,
   CheckCircle2,
   Clock,
+  GitFork,
 } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DataTable } from '@/components/common/DataTable';
@@ -19,6 +20,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
 import { ExpenseForm } from '@/components/expenses/ExpenseForm';
+import { ExpenseSplitsModal } from '@/components/expenses/ExpenseSplitsModal';
 import { ReceiptButton } from '@/components/receipts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -84,6 +86,8 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
     columns,
     prefillExpenseData,
   } = useExpensesPage();
+
+  const [splitExpense, setSplitExpense] = useState<(typeof expenses)[0] | null>(null);
 
   const BREAKDOWN_COLORS = [
     'bg-primary',
@@ -319,6 +323,15 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setSplitExpense(expense)}
+                aria-label={t('pages.expenses.splits.manage')}
+                title={t('pages.expenses.splits.manage')}
+              >
+                <GitFork className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => handleEdit(expense)}
                 aria-label={t('common.actions.edit')}
               >
@@ -343,6 +356,15 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
                 memberName={getMemberDisplayName(expense.member_name, user)}
               />
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSplitExpense(expense)}
+              aria-label={t('pages.expenses.splits.manage')}
+              title={t('pages.expenses.splits.manage')}
+            >
+              <GitFork className="h-4 w-4" aria-hidden="true" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -373,6 +395,12 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         onExport={handleExport}
         initialDateFrom={startDate}
         initialDateTo={endDate}
+      />
+
+      <ExpenseSplitsModal
+        expense={splitExpense}
+        open={!!splitExpense}
+        onOpenChange={(v) => { if (!v) setSplitExpense(null); }}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

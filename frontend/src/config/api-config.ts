@@ -125,6 +125,7 @@ export const API_CONFIG = {
     REFLECTIONS: '/api/v1/personal-planning/reflections/',
     TASK_INSTANCES: '/api/v1/personal-planning/instances/',
     PERSONAL_PLANNING_ANALYTICS: '/api/v1/personal-planning/analytics/',
+    GAMIFICATION_PROFILE: '/api/v1/personal-planning/gamification/',
     // Workout
     EXERCISES: '/api/v1/personal-planning/exercises/',
     WORKOUT_PLANS: '/api/v1/personal-planning/workout-plans/',

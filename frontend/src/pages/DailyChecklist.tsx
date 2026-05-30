@@ -13,8 +13,9 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Save, CheckCircle2, StickyNote, RefreshCw } from 'lucide-react';
+import { Save, CheckCircle2, StickyNote, RefreshCw, ExternalLink } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/EmptyState';
@@ -467,7 +468,15 @@ export default function DailyChecklist() {
                   )}
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
+                <Link
+                  to="/planning/reflections"
+                  className="flex items-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+                  onClick={() => setIsReflectionOpen(false)}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('pages.dailyChecklist.viewAllReflections')}
+                </Link>
                 <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
                   {t('common.actions.close')}
                 </Button>

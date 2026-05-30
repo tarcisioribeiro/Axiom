@@ -38,6 +38,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -217,18 +218,23 @@ export default function Dashboard() {
     queryKey: ['dashboard', 'cashFlowForecast', forecastDays],
     queryFn: () => dashboardService.getCashFlowForecast(forecastDays),
     staleTime: STALE_TIMES.CASH_FLOW_FORECAST,
+    refetchOnWindowFocus: false,
   });
 
+  // ML-based alerts: expensive to recompute; 5-min stale window avoids
+  // spurious refetches on tab focus while still refreshing after navigation.
   const financialAlertsQuery = useQuery({
     queryKey: ['dashboard', 'financialAlerts'],
     queryFn: () => dashboardService.getFinancialAlerts(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
+    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
+    refetchOnWindowFocus: false,
   });
 
   const anomaliesQuery = useQuery({
     queryKey: ['dashboard', 'anomalies'],
     queryFn: () => dashboardService.getAnomalies(),
-    staleTime: STALE_TIMES.DEFAULT_LIST,
+    staleTime: STALE_TIMES.CATEGORY_BREAKDOWN,
+    refetchOnWindowFocus: false,
   });
 
   const lgpdMutation = useMutation({
@@ -680,21 +686,25 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.monthExpenses')}
-              value={formatCurrency(stats?.total_expenses || 0)}
-              icon={<TrendingDown className="h-4 w-4" />}
-              variant="danger"
-            />
+            <Link to="/transactions" title={t('pages.dashboard.viewExpenses')} className="block transition-opacity hover:opacity-80">
+              <StatCard
+                title={t('pages.dashboard.monthExpenses')}
+                value={formatCurrency(stats?.total_expenses || 0)}
+                icon={<TrendingDown className="h-4 w-4" />}
+                variant="danger"
+              />
+            </Link>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <StatCard
-              title={t('pages.dashboard.monthRevenues')}
-              value={formatCurrency(stats?.total_revenues || 0)}
-              icon={<TrendingUp className="h-4 w-4" />}
-              variant="success"
-            />
+            <Link to="/transactions" title={t('pages.dashboard.viewRevenues')} className="block transition-opacity hover:opacity-80">
+              <StatCard
+                title={t('pages.dashboard.monthRevenues')}
+                value={formatCurrency(stats?.total_revenues || 0)}
+                icon={<TrendingUp className="h-4 w-4" />}
+                variant="success"
+              />
+            </Link>
           </motion.div>
 
           <motion.div variants={itemVariants}>

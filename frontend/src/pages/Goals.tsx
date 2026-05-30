@@ -12,6 +12,7 @@ import {
   Calendar,
   AlertTriangle,
   Loader2,
+  Download,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -404,6 +405,27 @@ export default function Goals({ embedded = false }: GoalsProps) {
     }
   };
 
+  const exportGoalsCSV = () => {
+    const headers = ['Nome', 'Tipo', 'Status', 'Progresso (%)', 'Dias Ativos', 'Data Início', 'Data Fim'];
+    const rows = goals.map((g) => [
+      g.name,
+      g.goal_type,
+      g.status,
+      String(g.progress_percentage ?? 0),
+      String(g.active_days ?? 0),
+      g.start_date ?? '',
+      g.end_date ?? '',
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `objetivos_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) return <LoadingState />;
 
   const activeGoals = goals.filter((g) => g.status === 'active');
@@ -436,7 +458,18 @@ export default function Goals({ embedded = false }: GoalsProps) {
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
         }}
-      />
+      >
+        {goals.length > 0 && (
+          <button
+            onClick={exportGoalsCSV}
+            className="flex items-center gap-xs rounded-md border border-border px-sm py-xs text-xs text-muted-foreground transition-colors hover:bg-muted"
+            title={t('common.actions.exportCSV')}
+          >
+            <Download className="h-3.5 w-3.5" />
+            {t('common.actions.exportCSV')}
+          </button>
+        )}
+      </PageHeader>
 
       {goals.length === 0 ? (
         <EmptyState

@@ -19,6 +19,7 @@ import {
   Timer,
   Utensils,
   ClipboardList,
+  Zap,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,9 +35,12 @@ import { CircularProgress } from '@/components/ui/circular-progress';
 import { translate } from '@/config/constants';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { Link } from 'react-router-dom';
+import { API_CONFIG } from '@/config/api-config';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
+import { apiClient } from '@/services/api-client';
 import type { HabitInsight } from '@/types';
 
 function renderInsight(
@@ -126,6 +130,21 @@ export default function PersonalPlanningDashboard() {
   const { data: mealTypes = [] } = useQuery({
     queryKey: ['mealTypes'],
     queryFn: () => mealTypeService.getAll({ page_size: 50 }),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: gamification } = useQuery({
+    queryKey: ['gamificationProfile'],
+    queryFn: () =>
+      apiClient.get<{
+        total_xp: number;
+        current_level: number;
+        level_progress_pct: number;
+        xp_in_level: number;
+        xp_needed_for_next_level: number;
+        tasks_completed_total: number;
+        badges: Array<{ slug: string; name: string; icon: string; category: string }>;
+      }>(API_CONFIG.ENDPOINTS.GAMIFICATION_PROFILE),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -313,6 +332,56 @@ export default function PersonalPlanningDashboard() {
             </p>
           </div>
         </Card>
+
+        {gamification && (
+          <Card className="col-span-1 flex flex-col gap-sm p-5 sm:col-span-2 lg:col-span-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold leading-none">
+                    {t('pages.planningDashboard.level')} {gamification.current_level}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {gamification.total_xp} XP · {gamification.tasks_completed_total} {t('pages.planningDashboard.tasksCompleted')}
+                  </p>
+                </div>
+              </div>
+              {gamification.badges.length > 0 && (
+                <div className="flex -space-x-1">
+                  {gamification.badges.slice(0, 5).map((b) => (
+                    <span
+                      key={b.slug}
+                      title={b.name}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-sm"
+                    >
+                      {b.icon}
+                    </span>
+                  ))}
+                  {gamification.badges.length > 5 && (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full border border-background bg-muted text-xs font-medium text-muted-foreground">
+                      +{gamification.badges.length - 5}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="mb-xs flex justify-between text-xs text-muted-foreground">
+                <span>{gamification.xp_in_level} XP</span>
+                <span>{gamification.xp_needed_for_next_level} XP {t('pages.planningDashboard.toNextLevel')}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
+                />
+              </div>
+            </div>
+          </Card>
+        )}
 
         <StatCard
           title={t('pages.planningDashboard.completedGoals')}
@@ -702,7 +771,7 @@ export default function PersonalPlanningDashboard() {
                   {t('pages.planningDashboard.insights')}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-md">
                 <ul className="space-y-3">
                   {analytics.insights.map((insight, i) => (
                     <li key={i} className="flex gap-sm text-sm leading-relaxed">
@@ -711,6 +780,26 @@ export default function PersonalPlanningDashboard() {
                     </li>
                   ))}
                 </ul>
+                <div className="flex flex-wrap gap-sm border-t pt-sm">
+                  <Link
+                    to="/planning/daily-checklist"
+                    className="rounded-md bg-primary/10 px-sm py-xs text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+                  >
+                    {t('pages.planningDashboard.ctaChecklist')}
+                  </Link>
+                  <Link
+                    to="/planning/tasks-goals"
+                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                  >
+                    {t('pages.planningDashboard.ctaTasks')}
+                  </Link>
+                  <Link
+                    to="/planning/reflections"
+                    className="rounded-md bg-muted px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground"
+                  >
+                    {t('pages.planningDashboard.ctaReflect')}
+                  </Link>
+                </div>
               </CardContent>
             </Card>
           )}
