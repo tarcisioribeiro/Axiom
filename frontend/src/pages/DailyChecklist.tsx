@@ -13,7 +13,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Save, CheckCircle2, StickyNote, RefreshCw, ExternalLink } from 'lucide-react';
+import { Save, CheckCircle2, StickyNote, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
+import { useNotificationsStore } from '@/stores/notifications-store';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { Button } from '@/components/ui/button';
@@ -380,6 +381,11 @@ export default function DailyChecklist() {
 
   const completedTasks = cardsByStatus.done.length;
 
+  const { notifications } = useNotificationsStore();
+  const overdueTaskNotifications = notifications.filter(
+    (n) => n.notification_type === 'task_overdue' && !n.is_read
+  );
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -387,6 +393,17 @@ export default function DailyChecklist() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
+
+      {overdueTaskNotifications.length > 0 && (
+        <div className="flex items-center gap-sm rounded-lg border border-destructive/30 bg-destructive/10 px-md py-sm text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>
+            {t('pages.dailyChecklist.overdueBanner', {
+              count: overdueTaskNotifications.length,
+            })}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-md">
         <div className="flex items-end gap-sm">

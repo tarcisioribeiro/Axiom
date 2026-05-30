@@ -3553,7 +3553,8 @@
       "saveError": "Error saving",
       "loadUserError": "Error loading user",
       "loadError": "Error loading data",
-      "viewAllReflections": "View all reflections →"
+      "viewAllReflections": "View all reflections →",
+      "overdueBanner": "{{count}} overdue task(s). Check the notification bell for details."
     },
     "activityLogs": {
       "title": "Activity Logs",
