@@ -1005,6 +1005,10 @@
       "deleted": "Fixed expense deleted",
       "deletedDesc": "The fixed expense was deleted successfully.",
       "emptyState": "No fixed expenses found.",
+      "historyBtn": "View generated transactions",
+      "historyTitle": "Transaction History",
+      "historyDesc": "Expenses generated from this fixed expense template.",
+      "historyEmpty": "No transactions generated yet.",
       "launchSection": "Launch Month Expenses",
       "launchDesc": "Generate all fixed expenses for the selected month",
       "launchBtn": "Launch Expenses",
@@ -3246,6 +3250,8 @@
       "ctaChecklist": "▶ Open Today's Checklist",
       "ctaTasks": "View Tasks & Goals",
       "ctaReflect": "Write Reflection",
+      "ctaLogWorkout": "+ Log Workout",
+      "ctaLogMeal": "+ Log Meal",
       "insights": "Habit Insights",
       "taskCount_one": "{{count}} task",
       "taskCount_other": "{{count}} tasks",
@@ -3815,6 +3821,8 @@
         "pending": "Pending",
         "linkManually": "Link manually",
         "linkBtn": "Link",
+        "unmatchBtn": "Unlink",
+        "ignoreBtn": "Ignore",
         "createExpenseTitle": "Create expense from this entry",
         "createRevenueTitle": "Create revenue from this entry",
         "createExpenseBtn": "Expense",
@@ -4001,7 +4009,8 @@
         "passwordPlaceholder": "Enter your master password",
         "unlocking": "Unlocking...",
         "unlockBtn": "Unlock Vault",
-        "failTitle": "Vault not unlocked"
+        "failTitle": "Vault not unlocked",
+        "useRecoveryKey": "Forgot password? Use recovery key"
       },
       "setup": {
         "title": "Protect Your Vault",
@@ -4937,7 +4946,25 @@
       "twoFactorActive": "Active",
       "twoFactorInactive": "Inactive",
       "twoFactorManage": "Manage 2FA",
-      "twoFactorDesc": "Add an extra layer of protection to your account"
+      "twoFactorDesc": "Add an extra layer of protection to your account",
+      "recoveryKey": {
+        "menuBtn": "Recovery Key",
+        "generateTitle": "Generate Recovery Key",
+        "generateDesc": "This key allows unlocking the vault without the master password in an emergency. Store it in a safe place.",
+        "generateWarning": "Generating a new key will invalidate the previous one.",
+        "generateBtn": "Generate Recovery Key",
+        "generateError": "Error generating recovery key",
+        "oneTimeWarning": "This key is shown only once. Copy and store it in a safe place.",
+        "yourKey": "Your Recovery Key",
+        "saveHint": "Save in a password manager or a secure offline location.",
+        "savedConfirm": "I confirm I saved the key",
+        "useTitle": "Unlock with Recovery Key",
+        "useDesc": "Use your recovery key to unlock the vault without the master password.",
+        "inputLabel": "Recovery Key",
+        "unlockBtn": "Unlock",
+        "unlockSuccess": "Vault unlocked via recovery key",
+        "unlockError": "Invalid recovery key"
+      }
     },
     "avatar": {
       "change": "Change profile photo",

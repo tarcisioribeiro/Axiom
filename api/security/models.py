@@ -334,6 +334,19 @@ class VaultConfig(models.Model):
     encrypted_vault_key = models.TextField(
         verbose_name="Chave do Cofre (cifrada com senha mestre)"
     )
+    # Recovery key: hash SHA-256 (plaintext nunca armazenado)
+    recovery_key_hash = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        verbose_name="Hash da Chave de Recuperação (SHA-256)",
+    )
+    # vault_key cifrada com a chave de recuperação (envelope encryption)
+    recovery_encrypted_vault_key = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Chave do Cofre (cifrada com chave de recuperação)",
+    )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Criado em"
     )
