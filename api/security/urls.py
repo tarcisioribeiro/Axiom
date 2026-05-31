@@ -2,7 +2,9 @@ from django.urls import path
 
 from security.vault_config import (
     VaultChangePasswordView,
+    VaultGenerateRecoveryKeyView,
     VaultLockView,
+    VaultRecoveryUnlockView,
     VaultSetupView,
     VaultStatusView,
     VaultUnlockView,
@@ -46,6 +48,16 @@ urlpatterns = [
         "vault/change-master-password/",
         VaultChangePasswordView.as_view(),
         name="vault-change-password",
+    ),
+    path(
+        "vault/recovery-key/generate/",
+        VaultGenerateRecoveryKeyView.as_view(),
+        name="vault-recovery-key-generate",
+    ),
+    path(
+        "vault/recovery-unlock/",
+        VaultRecoveryUnlockView.as_view(),
+        name="vault-recovery-unlock",
     ),
     # Dashboard
     path(

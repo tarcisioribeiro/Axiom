@@ -1005,6 +1005,10 @@
       "deleted": "Despesa fixa excluída",
       "deletedDesc": "A despesa fixa foi excluída com sucesso.",
       "emptyState": "Nenhuma despesa fixa encontrada.",
+      "historyBtn": "Ver lançamentos gerados",
+      "historyTitle": "Histórico de Lançamentos",
+      "historyDesc": "Despesas geradas a partir deste template de despesa fixa.",
+      "historyEmpty": "Nenhum lançamento gerado ainda.",
       "launchSection": "Lançar Despesas do Mês",
       "launchDesc": "Gere todas as despesas fixas para o mês selecionado",
       "launchBtn": "Lançar Despesas",
@@ -3308,6 +3312,8 @@
       "ctaChecklist": "▶ Abrir Checklist de Hoje",
       "ctaTasks": "Ver Tarefas e Objetivos",
       "ctaReflect": "Escrever Reflexão",
+      "ctaLogWorkout": "+ Registrar Treino",
+      "ctaLogMeal": "+ Registrar Refeição",
       "insights": "Insights de Hábitos",
       "taskCount_one": "{{count}} tarefa",
       "taskCount_other": "{{count}} tarefas",
@@ -3877,6 +3883,8 @@
         "pending": "Pendentes",
         "linkManually": "Vincular manualmente",
         "linkBtn": "Vincular",
+        "unmatchBtn": "Desvincular",
+        "ignoreBtn": "Ignorar",
         "createExpenseTitle": "Criar despesa a partir desta entrada",
         "createRevenueTitle": "Criar receita a partir desta entrada",
         "createExpenseBtn": "Despesa",
@@ -4063,7 +4071,8 @@
         "passwordPlaceholder": "Digite sua senha mestre",
         "unlocking": "Desbloqueando...",
         "unlockBtn": "Desbloquear Cofre",
-        "failTitle": "Cofre não desbloqueado"
+        "failTitle": "Cofre não desbloqueado",
+        "useRecoveryKey": "Esqueceu a senha? Use a chave de recuperação"
       },
       "setup": {
         "title": "Proteja seu Cofre",
@@ -4999,7 +5008,25 @@
       "twoFactorActive": "Ativa",
       "twoFactorInactive": "Inativa",
       "twoFactorManage": "Gerenciar 2FA",
-      "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta"
+      "twoFactorDesc": "Adicione uma camada extra de proteção à sua conta",
+      "recoveryKey": {
+        "menuBtn": "Chave de Recuperação",
+        "generateTitle": "Gerar Chave de Recuperação",
+        "generateDesc": "Esta chave permite desbloquear o cofre sem a senha mestre em caso de emergência. Guarde-a em local seguro.",
+        "generateWarning": "Ao gerar uma nova chave, a chave anterior será invalidada.",
+        "generateBtn": "Gerar Chave de Recuperação",
+        "generateError": "Erro ao gerar chave de recuperação",
+        "oneTimeWarning": "Esta chave será exibida apenas uma vez. Copie e guarde em local seguro.",
+        "yourKey": "Sua Chave de Recuperação",
+        "saveHint": "Salve em um gerenciador de senhas ou local seguro offline.",
+        "savedConfirm": "Confirmei que salvei a chave",
+        "useTitle": "Desbloquear com Chave de Recuperação",
+        "useDesc": "Use sua chave de recuperação para desbloquear o cofre sem a senha mestre.",
+        "inputLabel": "Chave de Recuperação",
+        "unlockBtn": "Desbloquear",
+        "unlockSuccess": "Cofre desbloqueado via chave de recuperação",
+        "unlockError": "Chave de recuperação inválida"
+      }
     },
     "avatar": {
       "change": "Alterar foto de perfil",

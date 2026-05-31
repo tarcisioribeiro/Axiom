@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle } from 'lucide-react';
+import { Lock, Shield, Eye, EyeOff, Clock, AlertTriangle, Key } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +17,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/services/api-client';
 import { vaultConfigService } from '@/services/security-vault-service';
+import { API_CONFIG } from '@/config/api-config';
 import { getErrorMessage } from '@/utils/error-utils';
 
 // ============================================================================
@@ -334,6 +336,7 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
   const [masterPassword, setMasterPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   const { toast } = useToast();
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -400,7 +403,96 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
                 ? t('pages.vaultGuard.locked.unlocking')
                 : t('pages.vaultGuard.locked.unlockBtn')}
             </Button>
+
+            <button
+              type="button"
+              onClick={() => setShowRecovery(true)}
+              className="flex w-full items-center justify-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+            >
+              <Key className="h-3 w-3" />
+              {t('pages.vaultGuard.locked.useRecoveryKey')}
+            </button>
           </form>
+        </CardContent>
+      </Card>
+
+      {showRecovery && (
+        <VaultRecoveryKeyModalInline
+          onClose={() => setShowRecovery(false)}
+          onSuccess={onSuccess}
+        />
+      )}
+    </div>
+  );
+}
+
+function VaultRecoveryKeyModalInline({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [recoveryKey, setRecoveryKey] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleUnlock = async () => {
+    if (!recoveryKey.trim()) return;
+    setLoading(true);
+    try {
+      await apiClient.post(API_CONFIG.ENDPOINTS.SECURITY_VAULT_RECOVERY_UNLOCK, {
+        recovery_key: recoveryKey.trim(),
+      });
+      toast({ title: t('pages.security.recoveryKey.unlockSuccess') });
+      await onSuccess();
+      onClose();
+    } catch (err) {
+      toast({
+        title: t('pages.security.recoveryKey.unlockError'),
+        description: getErrorMessage(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <Card className="mx-md w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-sm text-base">
+            <Key className="h-4 w-4" />
+            {t('pages.security.recoveryKey.useTitle')}
+          </CardTitle>
+          <CardDescription>{t('pages.security.recoveryKey.useDesc')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-md">
+          <Input
+            value={recoveryKey}
+            onChange={(e) => setRecoveryKey(e.target.value)}
+            placeholder="XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX"
+            className="font-mono text-sm"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void handleUnlock();
+            }}
+          />
+          <div className="flex gap-sm">
+            <Button variant="outline" className="flex-1" onClick={onClose}>
+              {t('common.actions.cancel')}
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={loading || !recoveryKey.trim()}
+              onClick={() => void handleUnlock()}
+            >
+              {loading
+                ? t('common.actions.loading')
+                : t('pages.security.recoveryKey.unlockBtn')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

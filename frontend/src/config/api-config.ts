@@ -83,6 +83,9 @@ export const API_CONFIG = {
     SECURITY_VAULT_SETUP: '/api/v1/security/vault/setup/',
     SECURITY_VAULT_UNLOCK: '/api/v1/security/vault/unlock/',
     SECURITY_VAULT_LOCK: '/api/v1/security/vault/lock/',
+    SECURITY_VAULT_RECOVERY_KEY_GENERATE:
+      '/api/v1/security/vault/recovery-key/generate/',
+    SECURITY_VAULT_RECOVERY_UNLOCK: '/api/v1/security/vault/recovery-unlock/',
     SECURITY_VAULT_CHANGE_PASSWORD: '/api/v1/security/vault/change-master-password/',
     SECURITY_VAULT_HEALTH: '/api/v1/security/passwords/health/',
     SECURITY_VAULT_EXPORT: '/api/v1/security/vault/export/',

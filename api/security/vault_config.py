@@ -10,9 +10,11 @@ Endpoints:
 """
 
 import base64
+import hashlib
 import logging
 import os
 import re
+import secrets
 from datetime import datetime
 from datetime import timezone as dt_timezone
 from typing import Optional
@@ -717,3 +719,195 @@ class VaultChangePasswordView(APIView):
         _store_vault_key_in_cache(request.user.id, vault_key)
 
         return Response({"message": "Senha mestre alterada com sucesso."})
+
+
+# ============================================================================
+# VAULT RECOVERY KEY VIEWS
+# ============================================================================
+
+
+class VaultGenerateRecoveryKeyView(APIView):
+    """
+    POST /api/v1/security/vault/recovery-key/generate/
+
+    Gera uma chave de recuperação de emergência para o cofre.
+    Requer que o cofre esteja desbloqueado.
+    A chave é exibida UMA ÚNICA VEZ — o hash SHA-256 é armazenado no DB.
+    A vault_key é também cifrada com a recovery_key (envelope encryption),
+    permitindo desbloquear o cofre sem a senha mestre.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        member = _get_member(request.user)
+        if not member:
+            return Response(
+                {"error": "Membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # O cofre precisa estar desbloqueado para obter a vault_key
+        vault_key = _get_vault_key_from_cache(request.user.id)
+        if not vault_key:
+            return Response(
+                {
+                    "error": (
+                        "O cofre precisa estar desbloqueado"
+                        " para gerar a chave de recuperação."
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            vault_config = VaultConfig.objects.get(owner=member)
+        except VaultConfig.DoesNotExist:
+            return Response(
+                {"error": "O cofre não está configurado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Gera recovery key: 6 grupos de 6 chars hex (tipo BitWarden)
+        groups = [secrets.token_hex(3).upper() for _ in range(6)]
+        recovery_key_plain = "-".join(groups)
+
+        # Armazena apenas o hash SHA-256 (nunca o plaintext)
+        key_hash = hashlib.sha256(recovery_key_plain.encode()).hexdigest()
+
+        # Cifra a vault_key com PBKDF2+Fernet usando salt derivado do hash
+        salt_bytes = hashlib.sha256(
+            f"recovery-salt:{key_hash}".encode()
+        ).digest()[:16]
+        from cryptography.fernet import Fernet
+        from cryptography.hazmat.primitives import hashes as crypto_hashes
+        from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+        kdf = PBKDF2HMAC(
+            algorithm=crypto_hashes.SHA256(),
+            length=32,
+            salt=salt_bytes,
+            iterations=100_000,
+        )
+        recovery_derived = kdf.derive(recovery_key_plain.encode())
+        recovery_fernet_key = base64.urlsafe_b64encode(recovery_derived)
+        f = Fernet(recovery_fernet_key)
+        recovery_encrypted_vault_key = f.encrypt(vault_key).decode()
+
+        vault_config.recovery_key_hash = key_hash
+        vault_config.recovery_encrypted_vault_key = (
+            recovery_encrypted_vault_key
+        )
+        vault_config.save(
+            update_fields=[
+                "recovery_key_hash",
+                "recovery_encrypted_vault_key",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            {
+                "recovery_key": recovery_key_plain,
+                "message": (
+                    "Salve esta chave em local seguro. "
+                    "Ela não será exibida novamente."
+                ),
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class VaultRecoveryUnlockView(APIView):
+    """
+    POST /api/v1/security/vault/recovery-unlock/
+
+    Desbloqueia o cofre usando a chave de recuperação de emergência,
+    sem necessitar da senha mestre.
+
+    Body: { "recovery_key": str }
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [VaultUnlockRateThrottle]
+
+    def post(self, request):
+        recovery_key = (request.data.get("recovery_key") or "").strip()
+        if not recovery_key:
+            return Response(
+                {"error": "Chave de recuperação obrigatória."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        member = _get_member(request.user)
+        if not member:
+            return Response(
+                {"error": "Membro não encontrado."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            vault_config = VaultConfig.objects.get(owner=member)
+        except VaultConfig.DoesNotExist:
+            return Response(
+                {"error": "O cofre não está configurado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (
+            not vault_config.recovery_key_hash
+            or not vault_config.recovery_encrypted_vault_key
+        ):
+            return Response(
+                {
+                    "error": (
+                        "Nenhuma chave de recuperação foi"
+                        " gerada para este cofre."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verifica o hash
+        submitted_hash = hashlib.sha256(recovery_key.encode()).hexdigest()
+        if not secrets.compare_digest(
+            submitted_hash, vault_config.recovery_key_hash
+        ):
+            return Response(
+                {"error": "Chave de recuperação inválida."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Decifra a vault_key
+        try:
+            salt_bytes = hashlib.sha256(
+                f"recovery-salt:{vault_config.recovery_key_hash}".encode()
+            ).digest()[:16]
+            from cryptography.fernet import Fernet, InvalidToken
+            from cryptography.hazmat.primitives import hashes as crypto_hashes
+            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+            kdf = PBKDF2HMAC(
+                algorithm=crypto_hashes.SHA256(),
+                length=32,
+                salt=salt_bytes,
+                iterations=100_000,
+            )
+            recovery_derived = kdf.derive(recovery_key.encode())
+            recovery_fernet_key = base64.urlsafe_b64encode(recovery_derived)
+            f = Fernet(recovery_fernet_key)
+            vault_key = f.decrypt(
+                vault_config.recovery_encrypted_vault_key.encode()
+            )
+        except (InvalidToken, Exception):
+            return Response(
+                {"error": "Falha ao decifrar com a chave de recuperação."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        _reset_failed_attempts(request.user.id)
+        _store_vault_key_in_cache(request.user.id, vault_key)
+
+        return Response(
+            {"message": "Cofre desbloqueado via chave de recuperação."}
+        )

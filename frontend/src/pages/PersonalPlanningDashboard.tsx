@@ -355,7 +355,8 @@ export default function PersonalPlanningDashboard() {
                     {t('pages.planningDashboard.level')} {gamification.current_level}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {gamification.total_xp} XP · {gamification.tasks_completed_total} {t('pages.planningDashboard.tasksCompleted')}
+                    {gamification.total_xp} XP · {gamification.tasks_completed_total}{' '}
+                    {t('pages.planningDashboard.tasksCompleted')}
                   </p>
                 </div>
               </div>
@@ -381,12 +382,17 @@ export default function PersonalPlanningDashboard() {
             <div>
               <div className="mb-xs flex justify-between text-xs text-muted-foreground">
                 <span>{gamification.xp_in_level} XP</span>
-                <span>{gamification.xp_needed_for_next_level} XP {t('pages.planningDashboard.toNextLevel')}</span>
+                <span>
+                  {gamification.xp_needed_for_next_level} XP{' '}
+                  {t('pages.planningDashboard.toNextLevel')}
+                </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${Math.min(gamification.level_progress_pct, 100)}%` }}
+                  style={{
+                    width: `${Math.min(gamification.level_progress_pct, 100)}%`,
+                  }}
                 />
               </div>
             </div>
@@ -405,10 +411,18 @@ export default function PersonalPlanningDashboard() {
         {/* Card: Resumo de Treinos */}
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <Dumbbell className="h-4 w-4 text-category-health" />
-              {t('pages.planningDashboard.workoutsTitle')}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-sm text-sm">
+                <Dumbbell className="h-4 w-4 text-category-health" />
+                {t('pages.planningDashboard.workoutsTitle')}
+              </CardTitle>
+              <Link
+                to="/planning/workout"
+                className="rounded-md bg-primary/10 px-sm py-0.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                {t('pages.planningDashboard.ctaLogWorkout')}
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-md sm:grid-cols-4">
@@ -489,10 +503,18 @@ export default function PersonalPlanningDashboard() {
         {/* Card: Nutrição */}
         <Card>
           <CardHeader className="pb-sm">
-            <CardTitle className="flex items-center gap-sm text-sm">
-              <UtensilsCrossed className="h-4 w-4 text-category-health" />
-              {t('pages.planningDashboard.nutritionTitle')}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-sm text-sm">
+                <UtensilsCrossed className="h-4 w-4 text-category-health" />
+                {t('pages.planningDashboard.nutritionTitle')}
+              </CardTitle>
+              <Link
+                to="/planning/nutrition"
+                className="rounded-md bg-success/10 px-sm py-0.5 text-xs font-medium text-success transition-colors hover:bg-success/20"
+              >
+                {t('pages.planningDashboard.ctaLogMeal')}
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-md">
