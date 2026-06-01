@@ -3,6 +3,7 @@ from django.urls import path
 from library.views import (  # noqa: E501
     AuthorDetailView,
     AuthorListCreateView,
+    IntellectBadgeListView,
     AuthorPhotoStreamView,
     BookCoverStreamView,
     BookDetailView,
@@ -213,6 +214,12 @@ urlpatterns = [
         "skills/<int:pk>/",
         SkillRetrieveUpdateDestroyView.as_view(),
         name="skill-detail",
+    ),
+    # Intellect Badges
+    path(
+        "badges/",
+        IntellectBadgeListView.as_view(),
+        name="intellect-badge-list",
     ),
     # Knowledge Graph
     path(

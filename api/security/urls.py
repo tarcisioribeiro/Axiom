@@ -9,6 +9,7 @@ from security.vault_config import (
 )
 from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAccount/Archive/ActivityLog/Dashboard views
     ActivityLogListView,
+    HibpCheckView,
     ArchiveDetailView,
     ArchiveDownloadView,
     ArchiveListCreateView,
@@ -164,5 +165,11 @@ urlpatterns = [
         "share/<uuid:token>/",
         RedeemShareTokenView.as_view(),
         name="share-token-redeem",
+    ),
+    # HIBP (HaveIBeenPwned) check — k-anonymity proxy
+    path(
+        "hibp-check/",
+        HibpCheckView.as_view(),
+        name="hibp-check",
     ),
 ]

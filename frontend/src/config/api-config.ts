@@ -115,6 +115,8 @@ export const API_CONFIG = {
     SKILLS: '/api/v1/library/skills/',
     KNOWLEDGE_GRAPH: '/api/v1/library/knowledge-graph/',
     KNOWLEDGE_LINKS: '/api/v1/library/knowledge-links/',
+    INTELLECT_BADGES: '/api/v1/library/badges/',
+    HIBP_CHECK: '/api/v1/security/hibp-check/',
 
     // Personal Planning Module
     GOALS: '/api/v1/personal-planning/goals/',

@@ -34,6 +34,7 @@ from library.models import (
     CourseLesson,
     CourseModule,
     CourseSession,
+    IntellectBadge,
     KnowledgeLink,
     LiteraryTypeGoal,
     Publisher,
@@ -58,6 +59,7 @@ from library.serializers import (
     CourseSerializer,
     CourseSessionCreateUpdateSerializer,
     CourseSessionSerializer,
+    IntellectBadgeSerializer,
     KnowledgeLinkCreateUpdateSerializer,
     KnowledgeLinkSerializer,
     LiteraryTypeGoalCreateUpdateSerializer,
@@ -2542,3 +2544,22 @@ class KnowledgeGraphView(APIView):
             )
 
         return Response({"nodes": nodes, "links": links})
+
+
+
+# ============================================================================
+# INTELLECT BADGE VIEWS
+# ============================================================================
+
+
+class IntellectBadgeListView(generics.ListAPIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+    serializer_class = IntellectBadgeSerializer
+
+    def get_queryset(self):
+        from members.models import Member
+
+        member = Member.objects.get(user=self.request.user)
+        return IntellectBadge.objects.filter(
+            owner=member, deleted_at__isnull=True
+        ).order_by("-awarded_at")

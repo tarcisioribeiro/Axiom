@@ -2159,3 +2159,43 @@ class VaultExportZipView(VaultLockedMixin, APIView):
         response = HttpResponse(buffer.read(), content_type="application/zip")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
+
+
+# ============================================================================
+# HIBP (HaveIBeenPwned) CHECK VIEW
+# ============================================================================
+
+
+class HibpCheckView(APIView):
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request):
+        import urllib.request
+
+        prefix = request.data.get("prefix", "").upper()
+        if not prefix or len(prefix) != 5:
+            return Response(
+                {"detail": "Informe os 5 primeiros caracteres do hash SHA-1."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not re.match(r"^[0-9A-F]{5}$", prefix):
+            return Response(
+                {"detail": "Prefixo inválido."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            url = f"https://api.pwnedpasswords.com/range/{prefix}"
+            req = urllib.request.Request(
+                url,
+                headers={"Add-Padding": "true", "User-Agent": "Axiom-App/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                body = resp.read().decode("utf-8")
+            return Response({"suffixes": body})
+        except Exception:
+            return Response(
+                {"detail": "Serviço HIBP indisponível no momento."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
