@@ -2081,6 +2081,13 @@
         "gaming": "Gaming",
         "other": "Other"
       },
+      "hibp": {
+        "check": "Check for Breaches",
+        "safe": "Password Safe",
+        "breached": "Exposed {{count}}x",
+        "errorTitle": "Check failed",
+        "errorDesc": "Could not check password. Please try again."
+      },
       "keepCurrentPassword": "Leave blank to keep current"
     },
     "sharePassword": {

@@ -20,6 +20,8 @@ import {
   Globe,
   FileText,
   Tag,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -68,6 +70,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/formatters';
 import { cn, copyToClipboard } from '@/lib/utils';
 import { passwordSchema } from '@/lib/validations';
+import { hibpService } from '@/services/hibp-service';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
 import type { Password, PasswordFormData, Member } from '@/types';
@@ -191,7 +194,31 @@ function DetailPanel({
   onClose,
 }: DetailPanelProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const catConfig = CATEGORY_CONFIG_DETAIL[password.category] ?? CATEGORY_CONFIG_DETAIL.other;
+  const [hibpState, setHibpState] = useState<{
+    status: 'idle' | 'checking' | 'safe' | 'breached';
+    count: number;
+  }>({ status: 'idle', count: 0 });
+
+  const handleHibpCheck = async () => {
+    if (!revealedPassword) return;
+    setHibpState({ status: 'checking', count: 0 });
+    try {
+      const result = await hibpService.checkPassword(revealedPassword);
+      setHibpState({
+        status: result.breached ? 'breached' : 'safe',
+        count: result.count,
+      });
+    } catch {
+      toast({
+        title: t('pages.passwords.hibp.errorTitle'),
+        description: t('pages.passwords.hibp.errorDesc'),
+        variant: 'destructive',
+      });
+      setHibpState({ status: 'idle', count: 0 });
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -329,6 +356,38 @@ function DetailPanel({
             </>
           )}
         </Button>
+        {revealedPassword && (
+          <Button
+            size="sm"
+            variant={
+              hibpState.status === 'breached'
+                ? 'destructive'
+                : hibpState.status === 'safe'
+                  ? 'outline'
+                  : 'outline'
+            }
+            onClick={handleHibpCheck}
+            disabled={hibpState.status === 'checking'}
+            className={cn(
+              'flex-1',
+              hibpState.status === 'safe' &&
+                'border-[hsl(var(--success))] text-[hsl(var(--success))]'
+            )}
+          >
+            {hibpState.status === 'checking' ? (
+              <Loader2 className="mr-xs h-3 w-3 animate-spin" />
+            ) : hibpState.status === 'safe' ? (
+              <ShieldCheck className="mr-xs h-3 w-3" />
+            ) : (
+              <ShieldAlert className="mr-xs h-3 w-3" />
+            )}
+            {hibpState.status === 'safe'
+              ? t('pages.passwords.hibp.safe')
+              : hibpState.status === 'breached'
+                ? t('pages.passwords.hibp.breached', { count: hibpState.count })
+                : t('pages.passwords.hibp.check')}
+          </Button>
+        )}
         <Button
           size="sm"
           variant="outline"
