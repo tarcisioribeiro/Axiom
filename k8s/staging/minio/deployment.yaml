@@ -84,3 +84,70 @@ spec:
         - name: minio-data
           persistentVolumeClaim:
             claimName: minio-pvc
+---
+# Job de inicialização — cria o bucket axiom-staging na primeira execução.
+# Re-executar é seguro (--ignore-existing).
+# Rodar manualmente após aplicar o deployment:
+#   kubectl apply -f k8s/staging/minio/deployment.yaml -n axiom-staging
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init
+  namespace: axiom-staging
+  labels:
+    app.kubernetes.io/name: axiom
+    app.kubernetes.io/component: minio
+    environment: staging
+spec:
+  template:
+    metadata:
+      labels:
+        app: minio-init
+        app.kubernetes.io/name: axiom
+        app.kubernetes.io/component: minio
+        environment: staging
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: sa-minio
+      automountServiceAccountToken: false
+      initContainers:
+        - name: wait-for-minio
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z minio-service 9000; do
+                echo "Waiting for MinIO..."
+                sleep 2
+              done
+              echo "MinIO is ready!"
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2024-11-21T17-21-54Z
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: axiom-secrets
+                  key: MINIO_ROOT_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              mc alias set myminio http://minio-service:9000 \
+                "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"
+              mc mb --ignore-existing myminio/axiom-staging
+              echo "Bucket axiom-staging created (or already exists)"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"

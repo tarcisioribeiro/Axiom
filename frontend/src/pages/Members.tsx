@@ -390,7 +390,7 @@ export default function Members() {
                           aria-label={t('pages.members.viewReport')}
                           title={t('pages.members.viewReport')}
                         >
-                          <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
+                          <BarChart3 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       )}
                       <Button
@@ -404,7 +404,7 @@ export default function Members() {
                         aria-label={t('common.actions.edit')}
                         title={t('common.actions.edit')}
                       >
-                        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -415,7 +415,7 @@ export default function Members() {
                         title={t('common.actions.delete')}
                       >
                         <Trash2
-                          className="h-3.5 w-3.5 text-destructive"
+                          className="h-4 w-4 text-destructive"
                           aria-hidden="true"
                         />
                       </Button>
