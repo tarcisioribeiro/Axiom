@@ -2650,6 +2650,16 @@
       "priorityHigh": "Alta",
       "priorityMedium": "Média",
       "priorityLow": "Baixa",
+      "askIntellect": "Perguntar ao Intelecto",
+      "quickCapture": {
+        "title": "Registrar Progresso",
+        "desc": "Registre rapidamente as páginas lidas hoje",
+        "selectBook": "Livro em leitura",
+        "selectBookPlaceholder": "Selecione um livro",
+        "pagesRead": "Páginas lidas",
+        "pagesPlaceholder": "Ex: 30",
+        "saved": "Progresso registrado com sucesso"
+      },
       "form": {
         "coverLabel": "Capa do Livro",
         "coverAlt": "Capa",
@@ -3467,7 +3477,16 @@
         "sectionIdentification": "Identificação",
         "sectionPeriodicity": "Periodicidade",
         "sectionGoalUnit": "Meta & Unidade",
-        "sectionBehavior": "Comportamento"
+        "sectionBehavior": "Comportamento",
+        "periodicityTooltip": "Define com que frequência a tarefa aparece no seu checklist diário. Use 'Personalizado' para dias específicos da semana.",
+        "targetQuantityTooltip": "Quantidade que você precisa realizar para contar a tarefa como concluída. Ex: 30 minutos de leitura, 8 copos de água.",
+        "frequencyPreview": {
+          "daily": "Todos os dias",
+          "weekdays": "Segunda a Sexta-feira",
+          "weekly": "Toda {{day}}",
+          "monthly": "Todo dia {{day}} do mês",
+          "custom": "Dias personalizados"
+        }
       }
     },
     "goals": {
