@@ -241,7 +241,10 @@
       "mealLog": "Diário Alimentar",
       "courses": "Cursos",
       "skills": "Habilidades",
-      "knowledgeGraph": "Grafo de Conhecimento"
+      "knowledgeGraph": "Grafo de Conhecimento",
+      "financialCalendar": "Calendário Financeiro",
+      "netWorth": "Patrimônio Líquido",
+      "subscriptions": "Assinaturas"
     },
     "agents": "Agentes IA"
   },
@@ -2025,7 +2028,8 @@
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
       },
-      "monthComposition": "Composição do mês"
+      "monthComposition": "Composição do mês",
+      "monthCompositionShort": "Este mês"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -3783,6 +3787,11 @@
       "lastImport": "Última Importação",
       "emptyTitle": "Nenhum extrato importado",
       "emptyMessage": "Clique em 'Importar Extrato' para começar.",
+      "flowTitle": "Como funciona a conciliação bancária:",
+      "flowStep1": "Importar Extrato",
+      "flowStep2": "Revisar Transações",
+      "flowStep3": "Confirmar Conciliação",
+      "emptyGuide": "Comece importando o extrato bancário no formato OFX ou CSV. Em seguida, revise as transações identificadas e confirme a conciliação.",
       "columns": {
         "file": "Arquivo",
         "format": "Formato",
@@ -5178,5 +5187,55 @@
     "capsule": "cápsula",
     "mcg": "mcg",
     "ui": "UI"
+  },
+  "financialCalendar": {
+    "title": "Calendário Financeiro",
+    "subtitle": "Visão temporal unificada de todos os vencimentos",
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "summaryDue": "{{count}} vencimento(s) este mês",
+    "noEvents": "Nenhum vencimento neste dia",
+    "eventTypes": {
+      "payable": "A Pagar",
+      "receivable": "A Receber",
+      "creditCard": "Fatura Cartão",
+      "loan": "Parcela Empréstimo"
+    },
+    "dayDetail": "Vencimentos em {{date}}",
+    "loading": "Carregando calendário..."
+  },
+  "netWorth": {
+    "title": "Patrimônio Líquido",
+    "subtitle": "Ativos menos passivos — sua riqueza real",
+    "netWorthLabel": "Patrimônio Líquido",
+    "assetsLabel": "Ativos",
+    "liabilitiesLabel": "Passivos",
+    "assetsSection": "Detalhamento dos Ativos",
+    "liabilitiesSection": "Detalhamento dos Passivos",
+    "bankAccounts": "Contas Bancárias",
+    "vaults": "Cofres / Investimentos",
+    "loans": "Empréstimos",
+    "creditCards": "Cartões de Crédito",
+    "noAssets": "Nenhum ativo encontrado",
+    "noLiabilities": "Nenhum passivo encontrado",
+    "loading": "Calculando patrimônio..."
+  },
+  "subscriptions": {
+    "title": "Assinaturas",
+    "subtitle": "Controle de gastos recorrentes mensais",
+    "monthlyTotal": "Total Mensal",
+    "activeCount": "{{count}} assinatura(s) ativa(s)",
+    "dueSoon": "Vence em breve",
+    "dueSoonDesc": "Renovação nos próximos 7 dias",
+    "noSubscriptions": "Nenhuma assinatura encontrada",
+    "noSubscriptionsDesc": "Assinaturas são despesas fixas com frequência mensal ou categoria de assinatura.",
+    "groups": {
+      "streaming": "Streaming",
+      "software": "Software",
+      "services": "Serviços",
+      "other": "Outros"
+    },
+    "renewalOn": "Renova dia {{day}}",
+    "loading": "Carregando assinaturas..."
   }
 }

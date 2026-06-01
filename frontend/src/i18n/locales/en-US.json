@@ -241,7 +241,10 @@
       "mealLog": "Meal Diary",
       "courses": "Courses",
       "skills": "Skills",
-      "knowledgeGraph": "Knowledge Graph"
+      "knowledgeGraph": "Knowledge Graph",
+      "financialCalendar": "Financial Calendar",
+      "netWorth": "Net Worth",
+      "subscriptions": "Subscriptions"
     },
     "agents": "AI Agents"
   },
@@ -1969,7 +1972,8 @@
         "loans": "Loans",
         "errorDesc": "Could not generate the IR report."
       },
-      "monthComposition": "Month overview"
+      "monthComposition": "Month overview",
+      "monthCompositionShort": "This month"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -3721,6 +3725,11 @@
       "lastImport": "Last Import",
       "emptyTitle": "No statements imported",
       "emptyMessage": "Click 'Import Statement' to get started.",
+      "flowTitle": "How bank reconciliation works:",
+      "flowStep1": "Import Statement",
+      "flowStep2": "Review Transactions",
+      "flowStep3": "Confirm Reconciliation",
+      "emptyGuide": "Start by importing a bank statement in OFX or CSV format. Then review the identified transactions and confirm the reconciliation.",
       "columns": {
         "file": "File",
         "format": "Format",
@@ -5116,5 +5125,55 @@
     "capsule": "capsule",
     "mcg": "mcg",
     "ui": "IU"
+  },
+  "financialCalendar": {
+    "title": "Financial Calendar",
+    "subtitle": "Unified temporal view of all due dates",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "summaryDue": "{{count}} due date(s) this month",
+    "noEvents": "No due dates on this day",
+    "eventTypes": {
+      "payable": "Payable",
+      "receivable": "Receivable",
+      "creditCard": "Credit Card Bill",
+      "loan": "Loan Installment"
+    },
+    "dayDetail": "Due dates on {{date}}",
+    "loading": "Loading calendar..."
+  },
+  "netWorth": {
+    "title": "Net Worth",
+    "subtitle": "Assets minus liabilities — your real wealth",
+    "netWorthLabel": "Net Worth",
+    "assetsLabel": "Assets",
+    "liabilitiesLabel": "Liabilities",
+    "assetsSection": "Asset Breakdown",
+    "liabilitiesSection": "Liability Breakdown",
+    "bankAccounts": "Bank Accounts",
+    "vaults": "Vaults / Investments",
+    "loans": "Loans",
+    "creditCards": "Credit Cards",
+    "noAssets": "No assets found",
+    "noLiabilities": "No liabilities found",
+    "loading": "Calculating net worth..."
+  },
+  "subscriptions": {
+    "title": "Subscriptions",
+    "subtitle": "Monthly recurring expense tracker",
+    "monthlyTotal": "Monthly Total",
+    "activeCount": "{{count}} active subscription(s)",
+    "dueSoon": "Due soon",
+    "dueSoonDesc": "Renewal in the next 7 days",
+    "noSubscriptions": "No subscriptions found",
+    "noSubscriptionsDesc": "Subscriptions are fixed expenses with monthly frequency or subscription category.",
+    "groups": {
+      "streaming": "Streaming",
+      "software": "Software",
+      "services": "Services",
+      "other": "Other"
+    },
+    "renewalOn": "Renews on day {{day}}",
+    "loading": "Loading subscriptions..."
   }
 }
