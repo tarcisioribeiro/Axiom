@@ -1,10 +1,17 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 
+import { useCounter } from '@/lib/animations';
 import type { TaskCard, KanbanStatus } from '@/types';
 
 import { KanbanCard } from './KanbanCard';
+
+function AnimatedCount({ value }: { value: number }) {
+  const count = useCounter(value, 0.4);
+  return <span>{count}</span>;
+}
 
 interface KanbanColumnProps {
   status: KanbanStatus;
@@ -38,17 +45,26 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
 
   return (
     <div className="flex max-h-[calc(100vh-14rem)] flex-col">
-      {/* Column Header */}
       <div
         className={`${getHeaderColor()} flex-shrink-0 rounded-t-lg px-md py-3 text-white`}
       >
-        <h3 className="text-lg font-semibold">{title}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <motion.span
+            key={cards.length}
+            initial={{ scale: 1.4, opacity: 0.6 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm font-bold"
+          >
+            <AnimatedCount value={cards.length} />
+          </motion.span>
+        </div>
         <p className="text-sm opacity-90">
           {t('pages.todayTasks.taskCount', { count: cards.length })}
         </p>
       </div>
 
-      {/* Column Body */}
       <div
         ref={setNodeRef}
         className={`flex-1 ${getColorClasses()} kanban-scrollbar min-h-[200px] overflow-y-auto rounded-b-lg border-2 p-md transition-colors ${
@@ -60,13 +76,21 @@ export function KanbanColumn({ status, title, cards }: KanbanColumnProps) {
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">
-            {cards.length === 0 ? (
-              <div className="py-xl text-center">
-                <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
-              </div>
-            ) : (
-              cards.map((card) => <KanbanCard key={card.id} card={card} />)
-            )}
+            <AnimatePresence>
+              {cards.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="py-xl text-center"
+                >
+                  <p className="text-sm">{t('pages.todayTasks.emptyColumn')}</p>
+                </motion.div>
+              ) : (
+                cards.map((card) => <KanbanCard key={card.id} card={card} />)
+              )}
+            </AnimatePresence>
           </div>
         </SortableContext>
       </div>
