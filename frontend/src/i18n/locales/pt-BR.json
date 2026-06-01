@@ -470,6 +470,12 @@
           "Mapa de Habilidades"
         ]
       },
+      "knowledgeGraph": {
+        "title": "Grafo de Conhecimento",
+        "nodes": "nós",
+        "links": "conexões",
+        "desc": "Ver grafo completo"
+      },
       "quickActionsTitle": "Ações Rápidas",
       "modulesTitle": "Módulos Disponíveis",
       "modules": {

@@ -470,6 +470,12 @@
           "Skills Map"
         ]
       },
+      "knowledgeGraph": {
+        "title": "Knowledge Graph",
+        "nodes": "nodes",
+        "links": "connections",
+        "desc": "View full graph"
+      },
       "quickActionsTitle": "Quick Actions",
       "modulesTitle": "Available Modules",
       "modules": {
