@@ -70,14 +70,14 @@ export default function FinancialCalendar() {
   const endStr = format(monthEnd, 'yyyy-MM-dd');
 
   const payablesQuery = useQuery({
-    queryKey: ['payables', 'calendar', startStr, endStr],
-    queryFn: () => payablesService.getAll({ due_date_from: startStr, due_date_to: endStr }),
+    queryKey: ['payables', 'calendar'],
+    queryFn: () => payablesService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const receivablesQuery = useQuery({
-    queryKey: ['receivables', 'calendar', startStr, endStr],
-    queryFn: () => receivablesService.getAll({ due_date_from: startStr, due_date_to: endStr }),
+    queryKey: ['receivables', 'calendar'],
+    queryFn: () => receivablesService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -103,7 +103,13 @@ export default function FinancialCalendar() {
     const result: CalendarEvent[] = [];
 
     (payablesQuery.data ?? []).forEach((p: Payable) => {
-      if (p.due_date && p.status !== 'paid' && p.status !== 'cancelled') {
+      if (
+        p.due_date &&
+        p.status !== 'paid' &&
+        p.status !== 'cancelled' &&
+        p.due_date >= startStr &&
+        p.due_date <= endStr
+      ) {
         result.push({
           id: `payable-${p.id}`,
           type: 'payable',
@@ -115,7 +121,13 @@ export default function FinancialCalendar() {
     });
 
     (receivablesQuery.data ?? []).forEach((r: Receivable) => {
-      if (r.due_date && r.status !== 'received' && r.status !== 'cancelled') {
+      if (
+        r.due_date &&
+        r.status !== 'received' &&
+        r.status !== 'cancelled' &&
+        r.due_date >= startStr &&
+        r.due_date <= endStr
+      ) {
         result.push({
           id: `receivable-${r.id}`,
           type: 'receivable',

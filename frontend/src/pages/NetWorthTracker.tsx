@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, TrendingDown, Wallet, Vault, CreditCard, HandCoins } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Vault as VaultIcon, CreditCard, HandCoins } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -217,7 +217,7 @@ export default function NetWorthTracker() {
                 {totalVaultAssets > 0 && (
                   <div className="flex items-center justify-between rounded-lg bg-blue-500/5 p-sm">
                     <div className="flex items-center gap-sm">
-                      <Vault className="h-4 w-4 text-blue-500" />
+                      <VaultIcon className="h-4 w-4 text-blue-500" />
                       <span className="text-sm">{t('netWorth.vaults')}</span>
                     </div>
                     <span className="font-semibold text-blue-500">
