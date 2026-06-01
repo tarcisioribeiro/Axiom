@@ -31,7 +31,11 @@ function getDefaultForm(): ExpenseSplitFormData {
   return { description: '', value: 0, payed: false };
 }
 
-export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplitsModalProps) {
+export function ExpenseSplitsModal({
+  expense,
+  open,
+  onOpenChange,
+}: ExpenseSplitsModalProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
@@ -40,7 +44,7 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
   const [form, setForm] = useState<ExpenseSplitFormData>(getDefaultForm());
   const [addingNew, setAddingNew] = useState(false);
 
-  const expenseId = expense?.id as number | undefined;
+  const expenseId = expense?.id;
 
   const { data: splits = [], isLoading } = useQuery({
     queryKey: ['expense-splits', expenseId],
@@ -61,7 +65,11 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
       invalidate();
     },
     onError: (e) =>
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(e), variant: 'destructive' }),
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      }),
   });
 
   const toggleMutation = useMutation({
@@ -77,7 +85,11 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
       invalidate();
     },
     onError: (e) =>
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(e), variant: 'destructive' }),
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      }),
   });
 
   const handleDelete = async (splitId: number) => {
@@ -105,9 +117,11 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
 
         <div className="space-y-sm">
           {isLoading ? (
-            <p className="text-center text-sm text-muted-foreground py-md">{t('common.messages.loading')}</p>
+            <p className="py-md text-center text-sm text-muted-foreground">
+              {t('common.messages.loading')}
+            </p>
           ) : splits.length === 0 && !addingNew ? (
-            <p className="text-center text-sm text-muted-foreground py-md">
+            <p className="py-md text-center text-sm text-muted-foreground">
               {t('pages.expenses.splits.empty')}
             </p>
           ) : (
@@ -127,11 +141,15 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{split.description}</p>
                     {split.member_name && (
-                      <p className="text-xs text-muted-foreground">{split.member_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {split.member_name}
+                      </p>
                     )}
                   </div>
                   <div className="flex shrink-0 items-center gap-sm">
-                    <span className={`text-sm font-semibold ${split.payed ? 'text-success' : 'text-foreground'}`}>
+                    <span
+                      className={`text-sm font-semibold ${split.payed ? 'text-success' : 'text-foreground'}`}
+                    >
                       {formatCurrency(parseFloat(split.value))}
                     </span>
                     {split.payed ? (
@@ -154,7 +172,13 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
           {splits.length > 0 && (
             <div className="flex justify-between border-t pt-xs text-xs text-muted-foreground">
               <span>{t('pages.expenses.splits.total')}</span>
-              <span className={totalSplitValue > expenseTotal ? 'text-destructive' : 'text-foreground'}>
+              <span
+                className={
+                  totalSplitValue > expenseTotal
+                    ? 'text-destructive'
+                    : 'text-foreground'
+                }
+              >
                 {formatCurrency(totalSplitValue)} / {formatCurrency(expenseTotal)}
               </span>
             </div>
@@ -163,11 +187,15 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
           {addingNew ? (
             <div className="space-y-sm rounded-md border border-border p-sm">
               <div className="space-y-xs">
-                <Label htmlFor="split-desc">{t('pages.expenses.splits.description')}</Label>
+                <Label htmlFor="split-desc">
+                  {t('pages.expenses.splits.description')}
+                </Label>
                 <Input
                   id="split-desc"
                   value={form.description}
-                  onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, description: e.target.value }))
+                  }
                   placeholder={t('pages.expenses.splits.descriptionPlaceholder')}
                 />
               </div>
@@ -190,17 +218,28 @@ export function ExpenseSplitsModal({ expense, open, onOpenChange }: ExpenseSplit
                   checked={form.payed}
                   onCheckedChange={(v) => setForm((p) => ({ ...p, payed: !!v }))}
                 />
-                <Label htmlFor="split-payed">{t('pages.expenses.splits.markPaid')}</Label>
+                <Label htmlFor="split-payed">
+                  {t('pages.expenses.splits.markPaid')}
+                </Label>
               </div>
               <div className="flex gap-sm">
                 <Button
                   size="sm"
                   onClick={() => createMutation.mutate(form)}
-                  disabled={!form.description || !form.value || createMutation.isPending}
+                  disabled={
+                    !form.description || !form.value || createMutation.isPending
+                  }
                 >
                   {t('common.actions.save')}
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => { setAddingNew(false); setForm(getDefaultForm()); }}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setAddingNew(false);
+                    setForm(getDefaultForm());
+                  }}
+                >
                   {t('common.actions.cancel')}
                 </Button>
               </div>

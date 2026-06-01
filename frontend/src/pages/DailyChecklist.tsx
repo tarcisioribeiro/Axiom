@@ -13,16 +13,22 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Save, CheckCircle2, StickyNote, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
+import {
+  Save,
+  CheckCircle2,
+  StickyNote,
+  RefreshCw,
+  ExternalLink,
+  AlertCircle,
+} from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
-import { useNotificationsStore } from '@/stores/notifications-store';
 import { KanbanCard } from '@/components/personal-planning/KanbanCard';
 import { KanbanColumn } from '@/components/personal-planning/KanbanColumn';
 import { Button } from '@/components/ui/button';
@@ -51,6 +57,7 @@ import { appService } from '@/services/app-service';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
 import { taskInstancesService } from '@/services/task-instances-service';
+import { useNotificationsStore } from '@/stores/notifications-store';
 import {
   MOOD_CHOICES,
   type TaskInstance,
@@ -551,6 +558,33 @@ export default function DailyChecklist() {
           </DragOverlay>
         </DndContext>
       )}
+
+      {/* End-of-day reflection prompt when all tasks are done (#244) */}
+      {cards.length > 0 &&
+        cardsByStatus.todo.length === 0 &&
+        cardsByStatus.doing.length === 0 &&
+        cardsByStatus.done.length === cards.length &&
+        !reflection.trim() && (
+          <div className="flex items-center gap-md rounded-lg border border-success/30 bg-success/5 px-md py-md">
+            <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {t('pages.dailyChecklist.allDone')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.dailyChecklist.reflectionPrompt')}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsReflectionOpen(true)}
+            >
+              <StickyNote className="mr-xs h-3.5 w-3.5" />
+              {t('pages.dailyChecklist.addReflection')}
+            </Button>
+          </div>
+        )}
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving} size="lg">

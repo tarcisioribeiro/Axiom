@@ -172,7 +172,8 @@
         "paymentConfig": "Configuration",
         "configuration": "Configuration"
       }
-    }
+    },
+    "noResults": "No results found"
   },
   "nav": {
     "home": "Home",
@@ -1995,7 +1996,10 @@
         "loans": "Loans",
         "errorDesc": "Could not generate the IR report."
       },
-      "monthComposition": "Month overview"
+      "monthComposition": "Month overview",
+      "monthOverMonth": "Month over month",
+      "vsPrevMonth": "vs prev. month:",
+      "installmentSimulator": "Installment Simulator"
     },
     "vaultSimulator": {
       "title": "Vault Simulator",
@@ -2097,7 +2101,18 @@
         "gaming": "Gaming",
         "other": "Other"
       },
-      "keepCurrentPassword": "Leave blank to keep current"
+      "keepCurrentPassword": "Leave blank to keep current",
+      "copyWithoutReveal": "Copy without revealing",
+      "copied": "Copied!",
+      "copiedClipboard": "Password copied to clipboard",
+      "autoHideIn": "Hides in {{seconds}}s",
+      "passwordStrength": {
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      }
     },
     "sharePassword": {
       "title": "Share Credential",
@@ -2307,7 +2322,8 @@
         "sectionAccountData": "Account Data",
         "sectionPasswords": "Passwords",
         "sectionLink": "Financial Link",
-        "sectionNotes": "Notes"
+        "sectionNotes": "Notes",
+        "bankSearchPlaceholder": "Search bank by name or ISPB code..."
       }
     },
     "archives": {
@@ -2565,7 +2581,12 @@
       "courseStatusCompleted": "Completed",
       "courseStatusInProgress": "In progress",
       "courseStatusPaused": "Paused",
-      "courseStatusNotStarted": "Not started"
+      "courseStatusNotStarted": "Not started",
+      "streakDays": "days in a row",
+      "bestStreak": "best",
+      "studyTimer": "Study timer",
+      "studyMode": "Study mode",
+      "breakMode": "Break mode"
     },
     "books": {
       "title": "Works",
@@ -3583,7 +3604,9 @@
       "loadUserError": "Error loading user",
       "loadError": "Error loading data",
       "viewAllReflections": "View all reflections →",
-      "overdueBanner": "{{count}} overdue task(s). Check the notification bell for details."
+      "overdueBanner": "{{count}} overdue task(s). Check the notification bell for details.",
+      "allDone": "All tasks completed! 🎉",
+      "reflectionPrompt": "How about recording a reflection on your day?"
     },
     "activityLogs": {
       "title": "Activity Logs",
@@ -3932,7 +3955,9 @@
         "typing": "typing",
         "sources": "Sources",
         "error": "Error receiving agent response"
-      }
+      },
+      "stop": "Stop generation",
+      "sessions": "Session history"
     },
     "twoFactor": {
       "title": "Two-Factor Authentication (2FA)",
@@ -4010,7 +4035,9 @@
         "unlocking": "Unlocking...",
         "unlockBtn": "Unlock Vault",
         "failTitle": "Vault not unlocked",
-        "useRecoveryKey": "Forgot password? Use recovery key"
+        "useRecoveryKey": "Forgot password? Use recovery key",
+        "attemptsRemaining": "{{count}} attempts remaining",
+        "tooManyAttempts": "Too many attempts. Use the recovery key."
       },
       "setup": {
         "title": "Protect Your Vault",
@@ -4033,7 +4060,8 @@
           "fair": "Fair",
           "good": "Good",
           "strong": "Strong"
-        }
+        },
+        "irreversibleWarning": "Warning: the master password is not stored. If lost, there is no automatic recovery — use the recovery key."
       },
       "expiry": {
         "hours": "Vault expires in {{hours}}h {{minutes}}min",
@@ -4904,7 +4932,8 @@
       "legend": {
         "explicit": "Explicit connection",
         "implicit": "Implicit connection"
-      }
+      },
+      "exportPNG": "Export as PNG"
     }
   },
   "userProfile": {
@@ -5200,5 +5229,20 @@
     "capsule": "capsule",
     "mcg": "mcg",
     "ui": "IU"
+  },
+  "components": {
+    "installmentSimulator": {
+      "title": "Installment Simulator",
+      "purchaseValue": "Purchase Value",
+      "annualRate": "Annual Interest Rate",
+      "rateHint": "Leave 0 for interest-free",
+      "installments": "Installments",
+      "monthly": "Monthly payment",
+      "total": "Total paid",
+      "interest": "Interest",
+      "cash": "Cash",
+      "noInterest": "Interest-free",
+      "enterValue": "Enter the purchase value to calculate installments"
+    }
   }
 }

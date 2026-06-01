@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { BarChart2, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 import { useChartType } from '@/hooks/use-chart-type';
@@ -98,11 +98,14 @@ export const ChartContainer = ({
   // Empty state
   if (!data || data.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ height }}>
-        <div className="mb-3 flex h-12 w-12 items-center justify-center opacity-40">
-          <RefreshCw className="h-8 w-8" />
+      <div
+        className="flex flex-col items-center justify-center gap-sm text-muted-foreground"
+        style={{ height }}
+      >
+        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50">
+          <BarChart2 className="h-6 w-6 opacity-40" />
         </div>
-        <p className="text-sm">{emptyMessage}</p>
+        <p className="text-center text-sm text-muted-foreground">{emptyMessage}</p>
       </div>
     );
   }

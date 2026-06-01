@@ -284,6 +284,7 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         columns={columns}
         keyExtractor={(expense) => expense.id}
         isLoading={isLoading}
+        rowClassName={(expense) => (expense.payed ? '' : 'opacity-75 bg-warning/5')}
         emptyState={{
           icon: <TrendingDown className="h-12 w-12 text-muted-foreground" />,
           message: t('pages.expenses.emptyState'),
@@ -400,7 +401,9 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
       <ExpenseSplitsModal
         expense={splitExpense}
         open={!!splitExpense}
-        onOpenChange={(v) => { if (!v) setSplitExpense(null); }}
+        onOpenChange={(v) => {
+          if (!v) setSplitExpense(null);
+        }}
       />
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  Download,
   Highlighter,
   Link2,
   Maximize2,
@@ -22,7 +23,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip } from '@/components/ui/tooltip';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -387,25 +388,25 @@ function NodeDetailPanel({
 
       {/* Actions */}
       <div className="border-t border-border p-md">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
-              className="w-full"
-              onClick={() => onStartLink(node)}
-            >
-              <Link2 className="mr-sm h-3.5 w-3.5" />
-              {linkingFrom?.id === node.id
-                ? t('pages.knowledgeGraph.cancelLink')
-                : t('pages.knowledgeGraph.createLink')}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-xs text-center">
-            {linkingFrom?.id === node.id
+        <Tooltip
+          content={
+            linkingFrom?.id === node.id
               ? t('pages.knowledgeGraph.cancelLinkTooltip')
-              : t('pages.knowledgeGraph.createLinkTooltip')}
-          </TooltipContent>
+              : t('pages.knowledgeGraph.createLinkTooltip')
+          }
+          side="top"
+        >
+          <Button
+            size="sm"
+            variant={linkingFrom?.id === node.id ? 'default' : 'outline'}
+            className="w-full"
+            onClick={() => onStartLink(node)}
+          >
+            <Link2 className="mr-sm h-3.5 w-3.5" />
+            {linkingFrom?.id === node.id
+              ? t('pages.knowledgeGraph.cancelLink')
+              : t('pages.knowledgeGraph.createLink')}
+          </Button>
         </Tooltip>
       </div>
     </motion.div>
@@ -844,6 +845,15 @@ export default function KnowledgeGraph() {
     [showConfirm, deleteLinkMutation, t]
   );
 
+  const handleExportPNG = useCallback(() => {
+    const canvas = containerRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `knowledge-graph-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }, []);
+
   const toggleType = (type: KnowledgeNodeType) => {
     setActiveTypes((prev) => {
       const next = new Set(prev);
@@ -1051,6 +1061,14 @@ export default function KnowledgeGraph() {
 
             {/* Zoom controls */}
             <div className="absolute bottom-md right-md flex flex-col gap-xs">
+              <Tooltip content={t('pages.knowledgeGraph.exportPNG')} side="left">
+                <button
+                  onClick={handleExportPNG}
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:text-foreground"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </button>
+              </Tooltip>
               <button
                 onClick={() => {
                   const g = graphRef.current as {
@@ -1088,7 +1106,7 @@ export default function KnowledgeGraph() {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="absolute left-1/2 top-md -translate-x-1/2 flex items-center gap-sm rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
+                  className="absolute left-1/2 top-md flex -translate-x-1/2 items-center gap-sm rounded-full border border-accent/40 bg-accent/10 px-md py-xs text-xs text-accent backdrop-blur-sm"
                 >
                   <Link2 className="h-3 w-3 shrink-0" />
                   <span>

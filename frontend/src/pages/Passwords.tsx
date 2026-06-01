@@ -8,13 +8,14 @@ import {
   EyeOff,
   Loader2,
   Copy,
+  Check,
   ExternalLink,
   Key,
   Share2,
   Wand2,
   Upload,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -129,10 +130,15 @@ export default function Passwords() {
     new Map()
   );
   const [revealingId, setRevealingId] = useState<number | null>(null);
+  const [copyingId, setCopyingId] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
+  const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
   const [showGenerator, setShowGenerator] = useState(false);
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const autoHideInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const { t } = useTranslation();
@@ -162,6 +168,53 @@ export default function Passwords() {
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-hide revealed passwords after 30 seconds with countdown
+  useEffect(() => {
+    if (revealedAt.size === 0) {
+      if (autoHideInterval.current) {
+        clearInterval(autoHideInterval.current);
+        autoHideInterval.current = null;
+      }
+      setCountdown(new Map());
+      return;
+    }
+
+    autoHideInterval.current = setInterval(() => {
+      const now = Date.now();
+      const newCountdown = new Map<number, number>();
+      const toRemove: number[] = [];
+
+      for (const [id, ts] of revealedAt) {
+        const elapsed = (now - ts) / 1000;
+        const remaining = Math.max(0, 30 - elapsed);
+        if (remaining <= 0) {
+          toRemove.push(id);
+        } else {
+          newCountdown.set(id, Math.ceil(remaining));
+        }
+      }
+
+      if (toRemove.length > 0) {
+        setRevealedPasswords((prev) => {
+          const next = new Map(prev);
+          toRemove.forEach((id) => next.delete(id));
+          return next;
+        });
+        setRevealedAt((prev) => {
+          const next = new Map(prev);
+          toRemove.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+
+      setCountdown(newCountdown);
+    }, 1000);
+
+    return () => {
+      if (autoHideInterval.current) clearInterval(autoHideInterval.current);
+    };
+  }, [revealedAt]);
 
   const loadData = async () => {
     try {
@@ -248,23 +301,22 @@ export default function Passwords() {
 
   const handleReveal = async (id: number) => {
     if (revealedPasswords.has(id)) {
-      // Ocultar senha
       const newMap = new Map(revealedPasswords);
       newMap.delete(id);
       setRevealedPasswords(newMap);
+      setRevealedAt((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
       return;
     }
 
     try {
       setRevealingId(id);
       const revealData = await passwordsService.reveal(id);
-      const newMap = new Map(revealedPasswords);
-      newMap.set(id, revealData.password);
-      setRevealedPasswords(newMap);
-      toast({
-        title: t('pages.passwords.revealed'),
-        description: t('pages.passwords.revealedDesc'),
-      });
+      setRevealedPasswords((prev) => new Map(prev).set(id, revealData.password));
+      setRevealedAt((prev) => new Map(prev).set(id, Date.now()));
     } catch (error: unknown) {
       toast({
         title: t('pages.passwords.revealError'),
@@ -278,12 +330,31 @@ export default function Passwords() {
 
   const handleCopyPassword = async (id: number) => {
     const password = revealedPasswords.get(id);
-    if (password) {
-      await copyToClipboard(password);
+    if (!password) return;
+    await copyToClipboard(password);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
+  };
+
+  const handleCopyWithoutReveal = async (id: number) => {
+    try {
+      setCopyingId(id);
+      const revealData = await passwordsService.reveal(id);
+      await copyToClipboard(revealData.password);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId((prev) => (prev === id ? null : prev)), 2000);
       toast({
-        title: t('common.messages.copied'),
-        description: t('pages.passwords.copiedDesc'),
+        title: t('pages.passwords.copied'),
+        description: t('pages.passwords.copiedClipboard'),
       });
+    } catch (error: unknown) {
+      toast({
+        title: t('pages.passwords.revealError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    } finally {
+      setCopyingId(null);
     }
   };
 
@@ -423,17 +494,96 @@ export default function Passwords() {
                     )}
 
                     {revealedPasswords.has(password.id) && (
-                      <div className="flex items-center gap-sm rounded bg-muted p-sm">
-                        <code className="flex-1 text-sm">
-                          {revealedPasswords.get(password.id)}
-                        </code>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCopyPassword(password.id)}
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
+                      <div className="space-y-xs rounded bg-muted p-sm">
+                        <div className="flex items-center gap-sm">
+                          <code className="flex-1 break-all text-sm">
+                            {revealedPasswords.get(password.id)}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => void handleCopyPassword(password.id)}
+                            title={t('common.actions.copy')}
+                          >
+                            {copiedId === password.id ? (
+                              <Check className="h-3 w-3 text-success" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
+                        {(() => {
+                          const pwd = revealedPasswords.get(password.id) ?? '';
+                          const criteria = [
+                            /[A-Z]/.test(pwd),
+                            /[a-z]/.test(pwd),
+                            /\d/.test(pwd),
+                            /[!@#$%^&*\-_=+[\]{};:'",.<>?/\\|`~]/.test(pwd),
+                          ];
+                          const met = criteria.filter(Boolean).length;
+                          const score =
+                            pwd.length < 8
+                              ? 1
+                              : met < 2
+                                ? 2
+                                : met === 2 || pwd.length < 12
+                                  ? 3
+                                  : met === 3
+                                    ? 4
+                                    : 5;
+                          const colors = [
+                            '',
+                            'bg-red-500',
+                            'bg-orange-500',
+                            'bg-yellow-500',
+                            'bg-blue-500',
+                            'bg-green-500',
+                          ];
+                          const labels = [
+                            '',
+                            t('pages.passwords.passwordStrength.veryWeak'),
+                            t('pages.passwords.passwordStrength.weak'),
+                            t('pages.passwords.passwordStrength.fair'),
+                            t('pages.passwords.passwordStrength.good'),
+                            t('pages.passwords.passwordStrength.strong'),
+                          ];
+                          return (
+                            <div className="space-y-0.5">
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3, 4, 5].map((i) => (
+                                  <div
+                                    key={i}
+                                    className={cn(
+                                      'h-1 flex-1 rounded-full',
+                                      i <= score ? colors[score] : 'bg-border'
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={cn(
+                                    'text-[10px]',
+                                    score >= 4
+                                      ? 'text-success'
+                                      : score >= 3
+                                        ? 'text-warning'
+                                        : 'text-destructive'
+                                  )}
+                                >
+                                  {labels[score]}
+                                </span>
+                                {countdown.has(password.id) && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {t('pages.passwords.autoHideIn', {
+                                      seconds: countdown.get(password.id),
+                                    })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
 
@@ -441,7 +591,7 @@ export default function Passwords() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleReveal(password.id)}
+                        onClick={() => void handleReveal(password.id)}
                         disabled={revealingId === password.id}
                         className="flex-1"
                       >
@@ -457,6 +607,23 @@ export default function Passwords() {
                             <Eye className="mr-xs h-3 w-3" />
                             {t('common.actions.reveal')}
                           </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => void handleCopyWithoutReveal(password.id)}
+                        disabled={copyingId === password.id}
+                        title={t('pages.passwords.copyWithoutReveal')}
+                        aria-label={t('pages.passwords.copyWithoutReveal')}
+                      >
+                        {copyingId === password.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : copiedId === password.id &&
+                          !revealedPasswords.has(password.id) ? (
+                          <Check className="h-3 w-3 text-success" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
                         )}
                       </Button>
                       <Button

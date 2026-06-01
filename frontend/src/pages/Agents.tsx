@@ -8,9 +8,11 @@ import {
   Brain,
   CheckCircle2,
   DollarSign,
+  History,
   Loader2,
   Send,
   Shield,
+  Square,
   Trash2,
   User,
   XCircle,
@@ -380,6 +382,8 @@ export default function Agents() {
   const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
 
+  const [showHistory, setShowHistory] = useState(false);
+
   const {
     isStreaming,
     accumulatedText,
@@ -387,6 +391,7 @@ export default function Agents() {
     sources,
     error,
     send: sendStream,
+    cancel: cancelStream,
     reset: resetStream,
   } = useAgentStream();
 
@@ -551,6 +556,16 @@ export default function Agents() {
                 {t('pages.agents.changeAgent')}
               </button>
             )}
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              title={t('pages.agents.sessions')}
+              className={cn(
+                'rounded-lg border border-border bg-background p-sm text-muted-foreground hover:bg-muted',
+                showHistory && 'bg-muted text-foreground'
+              )}
+            >
+              <History className="h-3.5 w-3.5" />
+            </button>
             {messages.length > 0 && (
               <button
                 onClick={() => void handleClearHistory()}
@@ -630,18 +645,25 @@ export default function Agents() {
                 aria-label={inputPlaceholder}
                 className="max-h-40 flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
               />
-              <button
-                onClick={() => void handleSend()}
-                disabled={!query.trim() || inputDisabled}
-                className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:bg-primary/90 disabled:opacity-40"
-                aria-label={t('pages.agents.send')}
-              >
-                {isStreaming ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
+              {isStreaming ? (
+                <button
+                  onClick={cancelStream}
+                  className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-destructive text-destructive-foreground transition-opacity hover:bg-destructive/90"
+                  aria-label={t('pages.agents.stop')}
+                  title={t('pages.agents.stop')}
+                >
+                  <Square className="h-4 w-4 fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => void handleSend()}
+                  disabled={!query.trim() || inputDisabled}
+                  className="mb-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:bg-primary/90 disabled:opacity-40"
+                  aria-label={t('pages.agents.send')}
+                >
                   <Send className="h-4 w-4" />
-                )}
-              </button>
+                </button>
+              )}
             </div>
             <p className="mt-sm text-center text-[11px] text-muted-foreground/60">
               {t('pages.agents.keyboardHint')}

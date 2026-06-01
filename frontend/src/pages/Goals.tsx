@@ -406,17 +406,27 @@ export default function Goals({ embedded = false }: GoalsProps) {
   };
 
   const exportGoalsCSV = () => {
-    const headers = ['Nome', 'Tipo', 'Status', 'Progresso (%)', 'Dias Ativos', 'Data Início', 'Data Fim'];
-    const rows = goals.map((g) => [
-      g.name,
+    const headers = [
+      'Nome',
+      'Tipo',
+      'Status',
+      'Progresso (%)',
+      'Dias Ativos',
+      'Data Início',
+      'Data Fim',
+    ];
+    const rows: string[][] = goals.map((g): string[] => [
+      g.title,
       g.goal_type,
       g.status,
-      String(g.progress_percentage ?? 0),
-      String(g.active_days ?? 0),
-      g.start_date ?? '',
+      String(g.progress_percentage),
+      String(g.days_active),
+      g.start_date,
       g.end_date ?? '',
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const csv = [headers, ...rows]
+      .map((r) => r.map((c) => `"${c}"`).join(','))
+      .join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

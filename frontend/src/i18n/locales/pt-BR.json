@@ -172,7 +172,8 @@
         "paymentConfig": "Configuração",
         "configuration": "Configuração"
       }
-    }
+    },
+    "noResults": "Nenhum resultado encontrado"
   },
   "nav": {
     "home": "Início",
@@ -2051,7 +2052,10 @@
         "loans": "Empréstimos",
         "errorDesc": "Não foi possível gerar o relatório IR."
       },
-      "monthComposition": "Composição do mês"
+      "monthComposition": "Composição do mês",
+      "monthOverMonth": "Comparativo mês a mês",
+      "vsPrevMonth": "vs mês anterior:",
+      "installmentSimulator": "Simulador de Parcelas"
     },
     "vaultSimulator": {
       "title": "Simulador de Cofre",
@@ -2157,6 +2161,17 @@
         "streaming": "Streaming",
         "gaming": "Games",
         "other": "Outro"
+      },
+      "copyWithoutReveal": "Copiar sem revelar",
+      "copied": "Copiada!",
+      "copiedClipboard": "Senha copiada para a área de transferência",
+      "autoHideIn": "Oculta em {{seconds}}s",
+      "passwordStrength": {
+        "veryWeak": "Muito fraca",
+        "weak": "Fraca",
+        "fair": "Razoável",
+        "good": "Boa",
+        "strong": "Forte"
       }
     },
     "sharePassword": {
@@ -2369,7 +2384,8 @@
         "sectionAccountData": "Dados da Conta",
         "sectionPasswords": "Senhas",
         "sectionLink": "Vínculo Financeiro",
-        "sectionNotes": "Notas"
+        "sectionNotes": "Notas",
+        "bankSearchPlaceholder": "Buscar banco por nome ou código ISPB..."
       }
     },
     "archives": {
@@ -2627,7 +2643,12 @@
       "courseStatusCompleted": "Concluídos",
       "courseStatusInProgress": "Em andamento",
       "courseStatusPaused": "Pausados",
-      "courseStatusNotStarted": "Não iniciados"
+      "courseStatusNotStarted": "Não iniciados",
+      "streakDays": "dias seguidos",
+      "bestStreak": "melhor",
+      "studyTimer": "Timer de estudo",
+      "studyMode": "Modo estudo",
+      "breakMode": "Modo pausa"
     },
     "books": {
       "title": "Obras",
@@ -3645,7 +3666,9 @@
       "loadUserError": "Erro ao carregar usuário",
       "loadError": "Erro ao carregar dados",
       "viewAllReflections": "Ver todas as reflexões →",
-      "overdueBanner": "{{count}} tarefa(s) atrasada(s). Verifique o sino de notificações para detalhes."
+      "overdueBanner": "{{count}} tarefa(s) atrasada(s). Verifique o sino de notificações para detalhes.",
+      "allDone": "Todas as tarefas concluídas! 🎉",
+      "reflectionPrompt": "Que tal registrar uma reflexão sobre o seu dia?"
     },
     "activityLogs": {
       "title": "Logs de Atividade",
@@ -3994,7 +4017,9 @@
         "typing": "digitando",
         "sources": "Fontes",
         "error": "Erro ao receber resposta do agente"
-      }
+      },
+      "stop": "Parar geração",
+      "sessions": "Histórico de sessões"
     },
     "twoFactor": {
       "title": "Autenticação de dois fatores (2FA)",
@@ -4072,7 +4097,9 @@
         "unlocking": "Desbloqueando...",
         "unlockBtn": "Desbloquear Cofre",
         "failTitle": "Cofre não desbloqueado",
-        "useRecoveryKey": "Esqueceu a senha? Use a chave de recuperação"
+        "useRecoveryKey": "Esqueceu a senha? Use a chave de recuperação",
+        "attemptsRemaining": "{{count}} tentativas restantes",
+        "tooManyAttempts": "Muitas tentativas. Use a chave de recuperação."
       },
       "setup": {
         "title": "Proteja seu Cofre",
@@ -4095,7 +4122,8 @@
           "fair": "Razoável",
           "good": "Boa",
           "strong": "Forte"
-        }
+        },
+        "irreversibleWarning": "Atenção: a senha mestre não é armazenada. Se perdida, não há recuperação automática — use a chave de recuperação."
       },
       "expiry": {
         "hours": "Cofre expira em {{hours}}h {{minutes}}min",
@@ -4966,7 +4994,8 @@
       "legend": {
         "explicit": "Conexão explícita",
         "implicit": "Conexão implícita"
-      }
+      },
+      "exportPNG": "Exportar como PNG"
     }
   },
   "userProfile": {
@@ -5262,5 +5291,20 @@
     "capsule": "cápsula",
     "mcg": "mcg",
     "ui": "UI"
+  },
+  "components": {
+    "installmentSimulator": {
+      "title": "Simulador de Parcelamento",
+      "purchaseValue": "Valor da Compra",
+      "annualRate": "Taxa de Juros Anual",
+      "rateHint": "Deixe 0 para sem juros",
+      "installments": "Parcelas",
+      "monthly": "Parcela mensal",
+      "total": "Total pago",
+      "interest": "Juros",
+      "cash": "À vista",
+      "noInterest": "Sem juros",
+      "enterValue": "Informe o valor da compra para calcular as parcelas"
+    }
   }
 }
