@@ -2662,7 +2662,10 @@
       "courseStatusCompleted": "Concluídos",
       "courseStatusInProgress": "Em andamento",
       "courseStatusPaused": "Pausados",
-      "courseStatusNotStarted": "Não iniciados"
+      "courseStatusNotStarted": "Não iniciados",
+      "badges": {
+        "title": "Conquistas"
+      }
     },
     "books": {
       "title": "Obras",
@@ -3451,7 +3454,15 @@
         "importSuccess": "Template importado",
         "importSuccessDesc": "{{count}} tarefa(s) criada(s) a partir do template \"{{name}}\".",
         "alreadyImported": "Nada a importar",
-        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista."
+        "alreadyImportedDesc": "Todas as tarefas do template \"{{name}}\" já existem na sua lista.",
+        "saveAsTemplate": "Salvar como Template",
+        "saveAsTemplateTitle": "Salvar como Template",
+        "saveAsTemplateDesc": "Dê um nome ao template para poder reutilizá-lo no futuro.",
+        "templateNameLabel": "Nome do Template",
+        "templateNamePlaceholder": "Ex: Rotina Matinal",
+        "saveBtn": "Salvar Template",
+        "saveSuccess": "Template salvo!",
+        "saveSuccessDesc": "O template \"{{name}}\" foi salvo com sucesso."
       },
       "export": {
         "btn": "Exportar Rotina",
@@ -3821,6 +3832,19 @@
         "household": "Casa",
         "personal_care": "Cuidado Pessoal",
         "other": "Outros"
+      },
+      "pomodoroTitle": "Modo Foco",
+      "pomodoroStart": "Iniciar",
+      "pomodoroPause": "Pausar",
+      "pomodoroReset": "Reiniciar",
+      "pomodoroFocusDone": "Foco concluído! Faça uma pausa.",
+      "pomodoroBreakDone": "Pausa encerrada! Hora de focar.",
+      "pomodoroCycles_one": "{{count}} ciclo concluído",
+      "pomodoroCycles_other": "{{count}} ciclos concluídos",
+      "pomodoroMode": {
+        "focus": "Foco",
+        "shortBreak": "Pausa Curta",
+        "longBreak": "Pausa Longa"
       }
     },
     "categorizationRules": {
@@ -4773,6 +4797,18 @@
       "emptySessions": "Nenhuma sessão registrada",
       "emptySessionsDesc": "Registre seus treinos para acompanhar sua frequência e evolução ao longo do tempo.",
       "emptyAction": "Registrar primeiro treino",
+      "quickLogBtn": "Registrar Treino Rápido",
+      "quickLogTitle": "Registrar Treino Rápido",
+      "quickLogDesc": "Registre um treino em 2 passos sem preencher todos os detalhes.",
+      "quickLogStep1": "Selecionar Plano",
+      "quickLogStep2": "Confirmar Duração",
+      "quickLogPlanLabel": "Plano de treino",
+      "quickLogNoPlan": "Sem plano (sessão avulsa)",
+      "quickLogDuration": "Duração do treino",
+      "quickLogMin": "min",
+      "quickLogNext": "Próximo",
+      "quickLogConfirm": "Registrar Treino",
+      "quickLogSuccess": "Treino registrado!",
       "date": "Data",
       "startTime": "Início",
       "endTime": "Término",
