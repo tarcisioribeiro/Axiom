@@ -2141,6 +2141,13 @@
         "streaming": "Streaming",
         "gaming": "Games",
         "other": "Outro"
+      },
+      "hibp": {
+        "check": "Verificar Vazamento",
+        "safe": "Senha Segura",
+        "breached": "Exposta {{count}}x",
+        "errorTitle": "Erro na verificação",
+        "errorDesc": "Não foi possível verificar a senha. Tente novamente."
       }
     },
     "sharePassword": {
@@ -2462,6 +2469,16 @@
     },
     "libraryDashboard": {
       "title": "Dashboard Intelecto",
+      "monthAnalysis": {
+        "title": "Análise do Mês",
+        "totalPages": "Total de páginas lidas",
+        "pagesUnit": "páginas este mês",
+        "dailyAverage": "Média diária",
+        "pagesPerDay": "páginas por dia",
+        "bestDay": "Melhor dia da semana",
+        "pagesOnBestDay_one": "{{count}} página neste dia",
+        "pagesOnBestDay_other": "{{count}} páginas neste dia"
+      },
       "overview": "Visão Geral",
       "books": "Obras",
       "authors": "Autores",
@@ -3368,7 +3385,13 @@
       "workoutsByDayTitle": "Treinos por dia da semana — últimos 30 dias",
       "noWorkoutsRegistered": "Nenhum treino registrado",
       "sessionCount_one": "{{count}} sessão",
-      "sessionCount_other": "{{count}} sessões"
+      "sessionCount_other": "{{count}} sessões",
+      "weeklyXP": "Progresso Semanal — XP",
+      "xpLabel": "XP esta semana",
+      "xpProgress": "Nível {{level}}",
+      "insightCTAWorstDay": "Ajustar rotina",
+      "insightCTAWorkout": "Registrar treino",
+      "insightCTAGoals": "Ver metas"
     },
     "routineTasks": {
       "title": "Tarefas Rotineiras",
