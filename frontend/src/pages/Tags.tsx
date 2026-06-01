@@ -9,17 +9,8 @@ import { LoadingState } from '@/components/common/LoadingState';
 import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SearchInput } from '@/components/common/SearchInput';
+import { TagFormDialog } from '@/components/tags/TagFormDialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { STALE_TIMES } from '@/lib/query-client';
@@ -27,13 +18,10 @@ import { tagsService } from '@/services/tags-service';
 import type { Tag, TagFormData } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
-const DEFAULT_COLORS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
-  '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
-];
+const DEFAULT_TAG_COLOR = '#6366f1';
 
 function getDefaultForm(): TagFormData {
-  return { name: '', color: DEFAULT_COLORS[0] };
+  return { name: '', color: DEFAULT_TAG_COLOR };
 }
 
 export default function Tags() {
@@ -65,31 +53,55 @@ export default function Tags() {
   const createMutation = useMutation({
     mutationFn: (d: TagFormData) => tagsService.create(d),
     onSuccess: () => {
-      toast({ title: t('pages.tags.created'), description: t('pages.tags.createdDesc') });
+      toast({
+        title: t('pages.tags.created'),
+        description: t('pages.tags.createdDesc'),
+      });
       setDialogOpen(false);
       invalidate();
     },
-    onError: (e) => toast({ title: t('common.messages.saveError'), description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e) =>
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<TagFormData> }) =>
       tagsService.update(id, data),
     onSuccess: () => {
-      toast({ title: t('pages.tags.updated'), description: t('pages.tags.updatedDesc') });
+      toast({
+        title: t('pages.tags.updated'),
+        description: t('pages.tags.updatedDesc'),
+      });
       setDialogOpen(false);
       invalidate();
     },
-    onError: (e) => toast({ title: t('common.messages.saveError'), description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e) =>
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => tagsService.delete(id),
     onSuccess: () => {
-      toast({ title: t('pages.tags.deleted'), description: t('pages.tags.deletedDesc') });
+      toast({
+        title: t('pages.tags.deleted'),
+        description: t('pages.tags.deletedDesc'),
+      });
       invalidate();
     },
-    onError: (e) => toast({ title: t('common.messages.deleteError'), description: getErrorMessage(e), variant: 'destructive' }),
+    onError: (e) =>
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(e),
+        variant: 'destructive',
+      }),
   });
 
   const handleCreate = () => {
@@ -153,7 +165,11 @@ export default function Tags() {
             title={t('pages.tags.emptyState')}
             action={
               !search
-                ? { label: t('pages.tags.newBtn'), icon: <Plus className="mr-xs h-4 w-4" />, onClick: handleCreate }
+                ? {
+                    label: t('pages.tags.newBtn'),
+                    icon: <Plus className="mr-xs h-4 w-4" />,
+                    onClick: handleCreate,
+                  }
                 : undefined
             }
           />
@@ -198,71 +214,15 @@ export default function Tags() {
           </div>
         )}
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-sm">
-            <DialogHeader>
-              <DialogTitle>
-                {selected ? t('pages.tags.editTitle') : t('pages.tags.newTitle')}
-              </DialogTitle>
-              <DialogDescription>
-                {selected ? t('pages.tags.editDesc') : t('pages.tags.newDesc')}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-md">
-              <div className="space-y-sm">
-                <Label htmlFor="tag-name">{t('pages.tags.name')}</Label>
-                <Input
-                  id="tag-name"
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  placeholder={t('pages.tags.name')}
-                  required
-                />
-              </div>
-              <div className="space-y-sm">
-                <Label>{t('pages.tags.color')}</Label>
-                <div className="flex flex-wrap gap-sm">
-                  {DEFAULT_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setForm((p) => ({ ...p, color: c }))}
-                      className="h-7 w-7 rounded-full transition-transform hover:scale-110"
-                      style={{
-                        backgroundColor: c,
-                        outline: form.color === c ? `3px solid ${c}` : 'none',
-                        outlineOffset: '2px',
-                      }}
-                    />
-                  ))}
-                  <input
-                    type="color"
-                    value={form.color}
-                    onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
-                    className="h-7 w-7 cursor-pointer rounded-full border-0 bg-transparent p-0"
-                    title={t('pages.tags.color')}
-                  />
-                </div>
-                {form.color && (
-                  <span
-                    className="inline-block rounded-full px-sm py-0.5 text-xs font-medium"
-                    style={{ backgroundColor: `${form.color}22`, color: form.color }}
-                  >
-                    {form.name || t('pages.tags.name')}
-                  </span>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  {t('common.actions.cancel')}
-                </Button>
-                <Button type="submit" disabled={isPending || !form.name.trim()}>
-                  {isPending ? t('common.actions.saving') : selected ? t('common.actions.save') : t('common.actions.create')}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <TagFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          selected={selected}
+          form={form}
+          setForm={setForm}
+          onSubmit={handleSubmit}
+          isPending={isPending}
+        />
       </PageContainer>
     </AnimatedPage>
   );

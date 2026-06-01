@@ -1,6 +1,6 @@
+import { Key, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Key, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { API_CONFIG } from '@/config/api-config';
+import { useToast } from '@/hooks/use-toast';
 import { apiClient } from '@/services/api-client';
 import { getErrorMessage } from '@/utils/error-utils';
 

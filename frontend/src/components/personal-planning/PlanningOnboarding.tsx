@@ -1,18 +1,10 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  CheckCircle2,
-  Dumbbell,
-  Target,
-  Calendar,
-  ArrowRight,
-  X,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle2, Dumbbell, Target, Calendar, ArrowRight, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-
-const ONBOARDING_KEY = 'axiom-planning-onboarding-done';
+import { ONBOARDING_KEY } from '@/hooks/use-planning-onboarding';
 
 const STEPS = [
   { icon: Calendar, colorClass: 'bg-primary/10 text-primary' },
@@ -96,16 +88,13 @@ export function PlanningOnboarding({ onDone }: PlanningOnboardingProps) {
             </Button>
           )}
           <Button onClick={handleNext} className="flex-1 gap-sm">
-            {isLast ? t('pages.planningOnboarding.start') : t('pages.planningOnboarding.next')}
+            {isLast
+              ? t('pages.planningOnboarding.start')
+              : t('pages.planningOnboarding.next')}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </motion.div>
     </div>
   );
-}
-
-export function usePlanningOnboarding() {
-  const isDone = localStorage.getItem(ONBOARDING_KEY) === 'true';
-  return { shouldShow: !isDone };
 }

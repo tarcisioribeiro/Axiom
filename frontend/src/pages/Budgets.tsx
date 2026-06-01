@@ -122,9 +122,12 @@ export default function Budgets() {
   const { data: suggestions = [], isFetching: isSuggestLoading } = useQuery({
     queryKey: ['budgets', 'suggest'],
     queryFn: async () => {
-      const resp = await apiClient.post<SuggestResp>(API_CONFIG.ENDPOINTS.BUDGET_SUGGEST, {
-        include_llm_reasoning: true,
-      });
+      const resp = await apiClient.post<SuggestResp>(
+        API_CONFIG.ENDPOINTS.BUDGET_SUGGEST,
+        {
+          include_llm_reasoning: true,
+        }
+      );
       return resp.suggestions ?? [];
     },
     enabled: isSuggestOpen,
@@ -138,12 +141,19 @@ export default function Budgets() {
   const createMutation = useMutation({
     mutationFn: (data: BudgetFormData) => budgetsService.create(data),
     onSuccess: () => {
-      toast({ title: t('pages.budgets.created'), description: t('pages.budgets.createdDesc') });
+      toast({
+        title: t('pages.budgets.created'),
+        description: t('pages.budgets.createdDesc'),
+      });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -151,23 +161,37 @@ export default function Budgets() {
     mutationFn: ({ id, data }: { id: string | number; data: BudgetFormData }) =>
       budgetsService.update(id, data),
     onSuccess: () => {
-      toast({ title: t('pages.budgets.updated'), description: t('pages.budgets.updatedDesc') });
+      toast({
+        title: t('pages.budgets.updated'),
+        description: t('pages.budgets.updatedDesc'),
+      });
       setIsDialogOpen(false);
       invalidateBudgets();
     },
     onError: (error) => {
-      toast({ title: t('common.messages.saveError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string | number) => budgetsService.delete(id),
     onSuccess: () => {
-      toast({ title: t('pages.budgets.deleted'), description: t('pages.budgets.deletedDesc') });
+      toast({
+        title: t('pages.budgets.deleted'),
+        description: t('pages.budgets.deletedDesc'),
+      });
       invalidateBudgets();
     },
     onError: (error) => {
-      toast({ title: t('common.messages.deleteError'), description: getErrorMessage(error), variant: 'destructive' });
+      toast({
+        title: t('common.messages.deleteError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
     },
   });
 
@@ -185,7 +209,9 @@ export default function Budgets() {
       });
     },
     onSuccess: (_, s) => {
-      toast({ title: `Orçamento de ${translate('expenseCategories', s.category)} criado.` });
+      toast({
+        title: `Orçamento de ${translate('expenseCategories', s.category)} criado.`,
+      });
       invalidateBudgets();
     },
     onError: () => {

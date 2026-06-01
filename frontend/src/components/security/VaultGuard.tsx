@@ -14,12 +14,12 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { API_CONFIG } from '@/config/api-config';
 import { useToast } from '@/hooks/use-toast';
 import { useVaultStatus } from '@/hooks/use-vault-status';
 import { cn } from '@/lib/utils';
 import { apiClient } from '@/services/api-client';
 import { vaultConfigService } from '@/services/security-vault-service';
-import { API_CONFIG } from '@/config/api-config';
 import { getErrorMessage } from '@/utils/error-utils';
 
 // ============================================================================
@@ -153,7 +153,7 @@ function useVaultCountdown(expiresAt: string | null) {
   return secondsLeft;
 }
 
-function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
+export function VaultExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
   const { t } = useTranslation();
   const secondsLeft = useVaultCountdown(expiresAt);
 
@@ -254,6 +254,11 @@ function VaultSetupScreen({ onSuccess }: VaultSetupScreenProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSetup} className="space-y-md">
+            <div className="flex items-start gap-sm rounded-lg bg-warning/10 p-sm text-xs text-warning">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>{t('pages.vaultGuard.setup.irreversibleWarning')}</span>
+            </div>
+
             <div className="space-y-xs">
               <Label htmlFor="master-password">
                 {t('pages.vaultGuard.setup.passwordLabel')}
@@ -331,21 +336,31 @@ interface VaultUnlockScreenProps {
   onSuccess: () => Promise<void>;
 }
 
+const MAX_ATTEMPTS = 5;
+
 function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
   const { t } = useTranslation();
   const [masterPassword, setMasterPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const { toast } = useToast();
+
+  const remaining = MAX_ATTEMPTS - failedAttempts;
+  const isLocked = remaining <= 0;
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) return;
     setIsSubmitting(true);
     try {
       await vaultConfigService.unlock({ master_password: masterPassword });
       await onSuccess();
     } catch (err) {
+      const next = failedAttempts + 1;
+      setFailedAttempts(next);
+      setMasterPassword('');
       toast({
         title: t('pages.vaultGuard.locked.failTitle'),
         description: getErrorMessage(err),
@@ -398,7 +413,24 @@ function VaultUnlockScreen({ onSuccess }: VaultUnlockScreenProps) {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {failedAttempts > 0 && !isLocked && (
+              <div className="flex items-center gap-sm rounded-lg bg-warning/10 px-sm py-xs text-xs text-warning">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                {t('pages.vaultGuard.locked.attemptsRemaining', { count: remaining })}
+              </div>
+            )}
+            {isLocked && (
+              <div className="flex items-center gap-sm rounded-lg bg-destructive/10 px-sm py-xs text-xs text-destructive">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                {t('pages.vaultGuard.locked.tooManyAttempts')}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting || isLocked}
+            >
               {isSubmitting
                 ? t('pages.vaultGuard.locked.unlocking')
                 : t('pages.vaultGuard.locked.unlockBtn')}

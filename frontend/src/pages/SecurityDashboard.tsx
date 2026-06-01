@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
 import { Shield, Key, CreditCard, Wallet, Archive, Download } from 'lucide-react';
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';

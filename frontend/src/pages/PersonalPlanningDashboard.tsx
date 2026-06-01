@@ -21,8 +21,9 @@ import {
   ClipboardList,
   Zap,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -30,22 +31,18 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
+import { PlanningOnboarding } from '@/components/personal-planning/PlanningOnboarding';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { API_CONFIG } from '@/config/api-config';
 import { translate } from '@/config/constants';
+import { usePlanningOnboarding } from '@/hooks/use-planning-onboarding';
 import { useChartColors, useTaskCategoryColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { API_CONFIG } from '@/config/api-config';
-import {
-  PlanningOnboarding,
-  usePlanningOnboarding,
-} from '@/components/personal-planning/PlanningOnboarding';
+import { apiClient } from '@/services/api-client';
 import { mealLogService, mealTypeService } from '@/services/nutrition-service';
 import { personalPlanningDashboardService } from '@/services/personal-planning-dashboard-service';
 import { workoutPlanService, workoutSessionService } from '@/services/workout-service';
-import { apiClient } from '@/services/api-client';
 import type { HabitInsight } from '@/types';
 
 function renderInsight(
@@ -361,7 +358,7 @@ export default function PersonalPlanningDashboard() {
                 </div>
               </div>
               {gamification.badges.length > 0 && (
-                <div className="flex -space-x-1">
+                <div className="flex -space-x-xs">
                   {gamification.badges.slice(0, 5).map((b) => (
                     <span
                       key={b.slug}

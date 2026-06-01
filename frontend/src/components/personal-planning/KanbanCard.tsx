@@ -1,10 +1,11 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Clock } from 'lucide-react';
+import { GripVertical, Clock, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge';
 import { getIconByName } from '@/components/ui/icon-picker';
+import { cn } from '@/lib/utils';
 import type { TaskCard } from '@/types';
 
 function TaskIconDisplay({ icon }: { icon: string | null | undefined }) {
@@ -51,18 +52,27 @@ export function KanbanCard({ card }: KanbanCardProps) {
     return colors[category] || 'bg-muted text-muted-foreground border-transparent';
   };
 
+  const isDone = card.status === 'done';
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className="cursor-grab rounded-lg border-2 border-border bg-card p-md shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+      className={cn(
+        'cursor-grab rounded-lg border-2 bg-card p-md shadow-sm transition-all hover:shadow-md active:cursor-grabbing',
+        isDone ? 'border-success/40 bg-success/5 opacity-80' : 'border-border'
+      )}
     >
       <div className="flex items-start gap-3">
-        {/* Drag Handle */}
+        {/* Drag Handle / Done indicator */}
         <div className="mt-xs hover:text-foreground">
-          <GripVertical className="h-5 w-5" />
+          {isDone ? (
+            <CheckCircle2 className="h-5 w-5 text-success" />
+          ) : (
+            <GripVertical className="h-5 w-5" />
+          )}
         </div>
 
         {/* Card Content */}
@@ -70,7 +80,12 @@ export function KanbanCard({ card }: KanbanCardProps) {
           {/* Title and Category */}
           <div className="flex items-start justify-between gap-sm">
             <div className="flex-1">
-              <h4 className="flex items-center gap-sm text-sm font-semibold leading-tight">
+              <h4
+                className={cn(
+                  'flex items-center gap-sm text-sm font-semibold leading-tight',
+                  isDone && 'line-through opacity-60'
+                )}
+              >
                 <TaskIconDisplay icon={card.icon} />
                 <span>
                   {card.task_name}

@@ -75,10 +75,18 @@ export default function RoutineTasks({ embedded = false }: RoutineTasksProps) {
   const handleSaveAsTemplate = () => {
     if (tasks.length === 0) return;
     const templateName = `Rotina ${new Date().toLocaleDateString('pt-BR')}`;
-    const stored = JSON.parse(localStorage.getItem('axiom-user-routine-templates') ?? '[]') as Array<{name: string; tasks: RoutineTask[]; savedAt: string}>;
+    const stored = JSON.parse(
+      localStorage.getItem('axiom-user-routine-templates') ?? '[]'
+    ) as Array<{ name: string; tasks: RoutineTask[]; savedAt: string }>;
     stored.unshift({ name: templateName, tasks, savedAt: new Date().toISOString() });
-    localStorage.setItem('axiom-user-routine-templates', JSON.stringify(stored.slice(0, 10)));
-    toast({ title: t('pages.routineTasks.templates.saved'), description: templateName });
+    localStorage.setItem(
+      'axiom-user-routine-templates',
+      JSON.stringify(stored.slice(0, 10))
+    );
+    toast({
+      title: t('pages.routineTasks.templates.saved'),
+      description: templateName,
+    });
   };
 
   useEffect(() => {
