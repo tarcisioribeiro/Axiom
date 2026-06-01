@@ -708,6 +708,28 @@ class ArchiveDownloadView(APIView):
 # ============================================================================
 
 
+class PasswordFavoriteToggleView(VaultLockedMixin, APIView):
+    """
+    PATCH /api/v1/security/passwords/<pk>/favorite/
+    Alterna o campo is_favorite da senha.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def patch(self, request, pk):
+        password = get_object_or_404(
+            Password,
+            pk=pk,
+            owner__user=request.user,
+            is_deleted=False,
+        )
+        password.is_favorite = not password.is_favorite
+        password.save(update_fields=["is_favorite"])
+        from security.serializers import PasswordSerializer as PS
+
+        return Response(PS(password).data)
+
+
 class ActivityLogListView(generics.ListAPIView):
     """Lista logs de atividades (somente leitura)."""
 
@@ -719,6 +741,49 @@ class ActivityLogListView(generics.ListAPIView):
         return ActivityLog.objects.filter(user=self.request.user).order_by(
             "-created_at"
         )
+
+
+class ActivityLogExportCSVView(APIView):
+    """
+    GET /api/v1/security/activity-logs/export/
+    Exporta o log de atividades do usuário em CSV.
+    """
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get(self, request):
+        from django.utils import timezone as tz
+
+        from app.export_utils import build_csv_response
+
+        qs = ActivityLog.objects.filter(user=request.user).order_by(
+            "-created_at"
+        )
+
+        headers = [
+            "Data/Hora",
+            "Ação",
+            "Descrição",
+            "Modelo",
+            "IP",
+            "User Agent",
+        ]
+
+        def _rows():
+            for log in qs.iterator(chunk_size=500):
+                yield [
+                    log.created_at.astimezone(
+                        tz.get_current_timezone()
+                    ).strftime("%d/%m/%Y %H:%M:%S"),
+                    log.get_action_display(),
+                    log.description,
+                    log.model_name or "",
+                    log.ip_address or "",
+                    log.user_agent or "",
+                ]
+
+        filename = f"axiom_activity_log_{tz.now().strftime('%Y%m%d_%H%M%S')}"
+        return build_csv_response(_rows(), headers, filename)
 
 
 # ============================================================================

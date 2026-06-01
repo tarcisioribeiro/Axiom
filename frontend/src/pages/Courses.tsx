@@ -464,6 +464,15 @@ export default function Courses() {
               search ? t('pages.courses.emptySearch') : t('pages.courses.emptyState')
             }
             icon={<GraduationCap className="h-10 w-10 text-muted-foreground" />}
+            action={
+              !search
+                ? {
+                    label: t('pages.courses.newBtn'),
+                    icon: <Plus className="mr-xs h-4 w-4" />,
+                    onClick: openNew,
+                  }
+                : undefined
+            }
           />
         ) : (
           <AnimatePresence>

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from agents.models import AgentConversation, EmbeddingDocument
+from agents.models import AgentConversation
 
 _VALID_AGENT_NAMES = {
     "personal",
@@ -63,20 +63,6 @@ class AgentConversationSerializer(serializers.ModelSerializer):
             "content",
             "agent_name",
             "created_at",
-        ]
-        read_only_fields = fields
-
-
-class EmbeddingDocumentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmbeddingDocument
-        fields = [
-            "id",
-            "source_type",
-            "source_title",
-            "content",
-            "created_at",
-            "updated_at",
         ]
         read_only_fields = fields
 
