@@ -50,8 +50,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useChartColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
 import { coursesService } from '@/services/courses-service';
+import type { IntellectBadge } from '@/services/intellect-badges-service';
+import { intellectBadgesService } from '@/services/intellect-badges-service';
 import { libraryDashboardService } from '@/services/library-dashboard-service';
 import { skillsService } from '@/services/skills-service';
+
+const BADGE_LEVEL_COLORS: Record<string, string> = {
+  bronze: 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900/30 dark:text-orange-300',
+  silver: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
+  gold: 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300',
+};
+
+function BadgeChip({ badge }: { badge: IntellectBadge }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-xs rounded-full border px-sm py-xs text-xs font-medium ${BADGE_LEVEL_COLORS[badge.level] ?? ''}`}
+    >
+      <Award className="h-3 w-3 shrink-0" />
+      {badge.code_display}
+    </span>
+  );
+}
 
 export default function LibraryDashboard() {
   const { t } = useTranslation();
@@ -60,6 +79,12 @@ export default function LibraryDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['libraryDashboard'],
     queryFn: () => libraryDashboardService.getStats(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const { data: badges = [] } = useQuery({
+    queryKey: ['intellectBadges'],
+    queryFn: () => intellectBadgesService.getAll(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -1627,6 +1652,24 @@ export default function LibraryDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {badges.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-sm">
+                <Award className="h-5 w-5" />
+                {t('pages.libraryDashboard.badges.title')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-sm">
+                {badges.map((badge) => (
+                  <BadgeChip key={badge.id} badge={badge} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageContainer>
   );

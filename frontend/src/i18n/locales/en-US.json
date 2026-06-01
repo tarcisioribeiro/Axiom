@@ -2600,7 +2600,10 @@
       "courseStatusCompleted": "Completed",
       "courseStatusInProgress": "In progress",
       "courseStatusPaused": "Paused",
-      "courseStatusNotStarted": "Not started"
+      "courseStatusNotStarted": "Not started",
+      "badges": {
+        "title": "Achievements"
+      }
     },
     "books": {
       "title": "Works",
@@ -3389,7 +3392,15 @@
         "importSuccess": "Template imported",
         "importSuccessDesc": "{{count}} task(s) created from template \"{{name}}\".",
         "alreadyImported": "Nothing to import",
-        "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list."
+        "alreadyImportedDesc": "All tasks from template \"{{name}}\" already exist in your list.",
+        "saveAsTemplate": "Save as Template",
+        "saveAsTemplateTitle": "Save as Template",
+        "saveAsTemplateDesc": "Give this template a name so you can reuse it in the future.",
+        "templateNameLabel": "Template Name",
+        "templateNamePlaceholder": "e.g. Morning Routine",
+        "saveBtn": "Save Template",
+        "saveSuccess": "Template saved!",
+        "saveSuccessDesc": "The template \"{{name}}\" was saved successfully."
       },
       "export": {
         "btn": "Export Routine",
@@ -3759,6 +3770,19 @@
         "household": "Household",
         "personal_care": "Personal Care",
         "other": "Other"
+      },
+      "pomodoroTitle": "Focus Mode",
+      "pomodoroStart": "Start",
+      "pomodoroPause": "Pause",
+      "pomodoroReset": "Reset",
+      "pomodoroFocusDone": "Focus session complete! Take a break.",
+      "pomodoroBreakDone": "Break over! Time to focus.",
+      "pomodoroCycles_one": "{{count}} cycle completed",
+      "pomodoroCycles_other": "{{count}} cycles completed",
+      "pomodoroMode": {
+        "focus": "Focus",
+        "shortBreak": "Short Break",
+        "longBreak": "Long Break"
       }
     },
     "categorizationRules": {
@@ -4711,6 +4735,18 @@
       "emptySessions": "No sessions logged",
       "emptySessionsDesc": "Log your workouts to track your frequency and progress over time.",
       "emptyAction": "Log first workout",
+      "quickLogBtn": "Quick Log Workout",
+      "quickLogTitle": "Quick Log Workout",
+      "quickLogDesc": "Log a workout in 2 steps without filling in all details.",
+      "quickLogStep1": "Select Plan",
+      "quickLogStep2": "Confirm Duration",
+      "quickLogPlanLabel": "Workout plan",
+      "quickLogNoPlan": "No plan (ad-hoc session)",
+      "quickLogDuration": "Workout duration",
+      "quickLogMin": "min",
+      "quickLogNext": "Next",
+      "quickLogConfirm": "Log Workout",
+      "quickLogSuccess": "Workout logged!",
       "date": "Date",
       "startTime": "Start",
       "endTime": "End",
