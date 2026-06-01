@@ -1,7 +1,17 @@
 /* eslint-disable max-lines */
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Key, CreditCard, Wallet, Archive, Download } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import {
+  Shield,
+  Key,
+  CreditCard,
+  Wallet,
+  Archive,
+  Download,
+  Search,
+  X,
+} from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -12,15 +22,263 @@ import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { translate } from '@/config/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useChartColors, usePasswordStrengthColors } from '@/lib/chart-colors';
 import { STALE_TIMES } from '@/lib/query-client';
+import { archivesService } from '@/services/archives-service';
+import { passwordsService } from '@/services/passwords-service';
 import { securityDashboardService } from '@/services/security-dashboard-service';
 import { vaultConfigService } from '@/services/security-vault-service';
+import { storedAccountsService } from '@/services/stored-accounts-service';
+import { storedCardsService } from '@/services/stored-cards-service';
+import type { Password, StoredCreditCard, StoredBankAccount, Archive as ArchiveType } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
+
+type SearchResultType = 'password' | 'card' | 'account' | 'archive';
+
+interface SearchResultItem {
+  id: number;
+  type: SearchResultType;
+  label: string;
+  sublabel: string;
+  route: string;
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+function VaultSearch() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const debouncedQuery = useDebounce(query, 300);
+
+  const enabled = debouncedQuery.trim().length >= 2;
+
+  const { data: passwords = [] } = useQuery<Password[]>({
+    queryKey: ['vault-search', 'passwords'],
+    queryFn: () => passwordsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: true,
+  });
+
+  const { data: cards = [] } = useQuery<StoredCreditCard[]>({
+    queryKey: ['vault-search', 'cards'],
+    queryFn: () => storedCardsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: true,
+  });
+
+  const { data: accounts = [] } = useQuery<StoredBankAccount[]>({
+    queryKey: ['vault-search', 'accounts'],
+    queryFn: () => storedAccountsService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: true,
+  });
+
+  const { data: archives = [] } = useQuery<ArchiveType[]>({
+    queryKey: ['vault-search', 'archives'],
+    queryFn: () => archivesService.getAll(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+    enabled: true,
+  });
+
+  const results = useMemo<SearchResultItem[]>(() => {
+    if (!enabled) return [];
+    const q = debouncedQuery.toLowerCase();
+
+    const passwordResults: SearchResultItem[] = (passwords as Password[])
+      .filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.username.toLowerCase().includes(q) ||
+          p.site?.toLowerCase().includes(q)
+      )
+      .map((p) => ({
+        id: p.id,
+        type: 'password' as const,
+        label: p.title,
+        sublabel: p.username,
+        route: '/security/passwords',
+      }));
+
+    const cardResults: SearchResultItem[] = (cards as StoredCreditCard[])
+      .filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.cardholder_name.toLowerCase().includes(q) ||
+          c.last_four_digits?.includes(q)
+      )
+      .map((c) => ({
+        id: c.id,
+        type: 'card' as const,
+        label: c.name,
+        sublabel: c.cardholder_name,
+        route: '/security/stored-cards',
+      }));
+
+    const accountResults: SearchResultItem[] = (accounts as StoredBankAccount[])
+      .filter(
+        (a) =>
+          a.name.toLowerCase().includes(q) ||
+          a.institution_name.toLowerCase().includes(q) ||
+          a.account_number_masked?.includes(q)
+      )
+      .map((a) => ({
+        id: a.id,
+        type: 'account' as const,
+        label: a.name,
+        sublabel: a.institution_name,
+        route: '/security/stored-accounts',
+      }));
+
+    const archiveResults: SearchResultItem[] = (archives as ArchiveType[])
+      .filter(
+        (a) =>
+          a.title.toLowerCase().includes(q) ||
+          a.category.toLowerCase().includes(q)
+      )
+      .map((a) => ({
+        id: a.id,
+        type: 'archive' as const,
+        label: a.title,
+        sublabel: a.category_display,
+        route: '/security/archives',
+      }));
+
+    return [...passwordResults, ...cardResults, ...accountResults, ...archiveResults];
+  }, [debouncedQuery, enabled, passwords, cards, accounts, archives]);
+
+  const grouped = useMemo(() => {
+    const groups: Record<SearchResultType, SearchResultItem[]> = {
+      password: [],
+      card: [],
+      account: [],
+      archive: [],
+    };
+    for (const r of results) {
+      groups[r.type].push(r);
+    }
+    return groups;
+  }, [results]);
+
+  const groupConfig: Array<{ type: SearchResultType; label: string; icon: React.ReactNode }> = [
+    { type: 'password', label: t('pages.securityDashboard.vaultSearch.groupPasswords'), icon: <Key className="h-4 w-4 text-info" /> },
+    { type: 'card', label: t('pages.securityDashboard.vaultSearch.groupCards'), icon: <CreditCard className="h-4 w-4 text-warning" /> },
+    { type: 'account', label: t('pages.securityDashboard.vaultSearch.groupAccounts'), icon: <Wallet className="h-4 w-4 text-success" /> },
+    { type: 'archive', label: t('pages.securityDashboard.vaultSearch.groupArchives'), icon: <Archive className="h-4 w-4 text-accent" /> },
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (item: SearchResultItem) => {
+    navigate(item.route);
+    setQuery('');
+    setIsOpen(false);
+  };
+
+  const hasResults = results.length > 0;
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => setIsOpen(true)}
+          placeholder={t('pages.securityDashboard.vaultSearch.placeholder')}
+          className="pl-10 pr-10"
+        />
+        {query && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+            onClick={() => {
+              setQuery('');
+              setIsOpen(false);
+            }}
+            aria-label={t('common.actions.close')}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+
+      {isOpen && enabled && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-96 overflow-y-auto rounded-xl border bg-popover shadow-xl">
+          {!hasResults ? (
+            <div className="flex flex-col items-center justify-center gap-sm py-lg text-center">
+              <Search className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm font-medium">
+                {t('pages.securityDashboard.vaultSearch.noResults')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.securityDashboard.vaultSearch.noResultsDesc')}
+              </p>
+            </div>
+          ) : (
+            <div className="py-sm">
+              {groupConfig.map(({ type, label, icon }) => {
+                const items = grouped[type];
+                if (items.length === 0) return null;
+                return (
+                  <div key={type}>
+                    <div className="flex items-center gap-xs px-md py-xs">
+                      {icon}
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {label}
+                      </span>
+                    </div>
+                    {items.map((item) => (
+                      <button
+                        key={`${item.type}-${item.id}`}
+                        className="flex w-full items-center gap-sm px-md py-sm text-left transition-colors hover:bg-accent/50"
+                        onClick={() => handleSelect(item)}
+                        type="button"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{item.label}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {item.sublabel}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SecurityDashboard() {
   const { t } = useTranslation();
@@ -114,6 +372,8 @@ export default function SecurityDashboard() {
               : t('pages.securityDashboard.exportVault')}
           </Button>
         </div>
+
+        <VaultSearch />
 
         {/* Métricas + Saúde do Cofre */}
         <div className="grid grid-cols-1 gap-md lg:grid-cols-3">
