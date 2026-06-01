@@ -8,6 +8,7 @@ import {
   Brain,
   CheckCircle2,
   DollarSign,
+  ExternalLink,
   Loader2,
   Send,
   Shield,
@@ -16,9 +17,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import type { Components } from 'react-markdown';
 
 import { PageContainer } from '@/components/common/PageContainer';
 import { useAgentStream } from '@/hooks/use-agent-stream';
@@ -27,6 +30,69 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { agentService } from '@/services/agent-service';
 import type { AgentMessage, AgentName } from '@/types';
+
+const SOURCE_PATTERN = /^\[Fonte: (.+)\]$/;
+
+function CitationLink({
+  href,
+  children,
+}: {
+  href?: string;
+  children?: React.ReactNode;
+}) {
+  const text = typeof children === 'string' ? children : String(children ?? '');
+  const match = SOURCE_PATTERN.exec(text);
+  if (match) {
+    const label = match[1];
+    return (
+      <a
+        href={href ?? '#'}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-xs rounded-full bg-primary/10 px-sm py-0.5 text-[11px] font-medium text-primary no-underline hover:bg-primary/20"
+      >
+        <ExternalLink className="h-2.5 w-2.5" />
+        {label}
+      </a>
+    );
+  }
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  );
+}
+
+const markdownComponents: Components = {
+  a: CitationLink as Components['a'],
+};
+
+const SUGGESTED_QUESTIONS: Record<AgentName, string[]> = {
+  intellect: [
+    'O que aprendi no último livro?',
+    'Qual meu progresso nos cursos?',
+    'Quais são minhas habilidades dominadas?',
+    'Quanto li este mês?',
+  ],
+  financial: [
+    'Quanto gastei este mês?',
+    'Vou estourar o orçamento?',
+    'Qual minha previsão de saldo?',
+    'Quais foram minhas maiores despesas?',
+  ],
+  personal: [
+    'Como estão minhas rotinas?',
+    'Treinei esta semana?',
+    'Qual meu progresso nas metas?',
+    'Como está minha alimentação?',
+  ],
+  security: [
+    'Tenho senhas desatualizadas?',
+    'Qual foi minha atividade recente no cofre?',
+    'Existe algum risco de segurança?',
+    'Quantas senhas estão armazenadas?',
+  ],
+};
 
 // Mapeamento agente → CSS class (sem cores hardcoded — usa variáveis CSS)
 const AGENT_BADGE_CLASS: Record<string, string> = {
@@ -198,7 +264,7 @@ function MessageBubble({
             <p className="whitespace-pre-wrap">{message.content}</p>
           ) : (
             <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {message.content}
               </ReactMarkdown>
             </div>
@@ -264,7 +330,7 @@ function StreamingBubble({
             </span>
           ) : (
             <div className="prose prose-sm dark:prose-invert prose-p:my-xs prose-ul:my-xs prose-li:my-0.5 prose-headings:my-sm prose-code:rounded prose-code:bg-black/10 prose-code:px-xs prose-code:py-0.5 dark:prose-code:bg-white/10 max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{text}</ReactMarkdown>
               {isStreaming && (
                 <span
                   aria-hidden="true"
@@ -381,9 +447,10 @@ export default function Agents() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
 
   const [sessionId] = useState(() => crypto.randomUUID());
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(() => searchParams.get('context') ?? '');
   const [selectedAgent, setSelectedAgent] = useState<AgentName | null>(null);
   const [conversationStarted, setConversationStarted] = useState(false);
 
@@ -623,6 +690,23 @@ export default function Agents() {
           showStreamingBubble ||
           messages.length > 0) && (
           <div className="flex-shrink-0 border-t border-border bg-card px-md py-3">
+            {selectedAgent &&
+              messages.length === 0 &&
+              !showStreamingBubble &&
+              !query && (
+                <div className="mb-sm flex flex-wrap gap-xs">
+                  {(SUGGESTED_QUESTIONS[selectedAgent] ?? []).map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setQuery(q)}
+                      className="rounded-full border border-border bg-muted px-sm py-xs text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
             <div className="flex items-end gap-sm rounded-lg border border-border bg-background px-3 py-sm focus-within:ring-2 focus-within:ring-primary/40">
               <textarea
                 ref={textareaRef}
