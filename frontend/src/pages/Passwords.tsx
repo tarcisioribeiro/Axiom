@@ -12,10 +12,11 @@ import {
   ExternalLink,
   Key,
   Share2,
+  Star,
   Wand2,
   Upload,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -135,6 +136,7 @@ export default function Passwords() {
   const [revealedAt, setRevealedAt] = useState<Map<number, number>>(new Map());
   const [countdown, setCountdown] = useState<Map<number, number>>(new Map());
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const [sharingPassword, setSharingPassword] = useState<Password | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -397,12 +399,50 @@ export default function Passwords() {
     }
   };
 
-  const filteredPasswords = passwords.filter(
-    (pwd) =>
+  // Atalhos de teclado: F=favoritos, Escape=fechar dialogo
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+      if (e.key === 'f' || e.key === 'F') {
+        setShowFavoritesOnly((v) => !v);
+      }
+      if (e.key === 'Escape' && isDialogOpen) {
+        setIsDialogOpen(false);
+      }
+    },
+    [isDialogOpen]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  const handleToggleFavorite = async (password: Password) => {
+    try {
+      const updated = await passwordsService.toggleFavorite(password.id);
+      setPasswords((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    } catch (error: unknown) {
+      toast({
+        title: t('common.messages.saveError'),
+        description: getErrorMessage(error),
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const filteredPasswords = passwords.filter((pwd) => {
+    if (showFavoritesOnly && !pwd.is_favorite) return false;
+    return (
       pwd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pwd.site?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    );
+  });
 
   if (isLoading) {
     return <LoadingState />;
@@ -428,13 +468,29 @@ export default function Passwords() {
           </div>
         </PageHeader>
 
-        <FilterBar hasActiveFilters={!!searchTerm} onClear={() => setSearchTerm('')}>
+        <FilterBar
+          hasActiveFilters={!!searchTerm || showFavoritesOnly}
+          onClear={() => {
+            setSearchTerm('');
+            setShowFavoritesOnly(false);
+          }}
+        >
           <SearchInput
             placeholder={t('pages.passwords.searchPlaceholder')}
             value={searchTerm}
             onValueChange={setSearchTerm}
             className="w-52 sm:w-64"
           />
+          <Button
+            variant={showFavoritesOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFavoritesOnly((v) => !v)}
+            className="gap-xs"
+            title={t('pages.passwords.favoritesFilter')}
+          >
+            <Star className={cn('h-4 w-4', showFavoritesOnly && 'fill-current')} />
+            {t('pages.passwords.favoritesFilter')}
+          </Button>
         </FilterBar>
 
         <div className="grid gap-md md:grid-cols-2 lg:grid-cols-3">
@@ -467,6 +523,23 @@ export default function Passwords() {
                         {password.username}
                       </CardDescription>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleFavorite(password)}
+                      title={
+                        password.is_favorite
+                          ? t('pages.passwords.removeFavorite')
+                          : t('pages.passwords.addFavorite')
+                      }
+                      className="shrink-0 text-warning transition-colors hover:text-warning/80"
+                    >
+                      <Star
+                        className={cn(
+                          'h-4 w-4',
+                          password.is_favorite && 'fill-current'
+                        )}
+                      />
+                    </button>
                     <Badge
                       variant="outline"
                       className={cn('shrink-0 text-xs', catConfig.badge)}

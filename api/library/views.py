@@ -2207,6 +2207,52 @@ class CourseLessonToggleView(APIView):
         return Response(CourseLessonSerializer(lesson).data)
 
 
+class CourseLessonBulkCompleteView(APIView):
+    """
+    POST /api/v1/library/course-lessons/bulk-complete/
+
+    Marca múltiplas aulas como concluídas ou pendentes.
+    Body: { "lesson_ids": [1, 2, 3], "is_completed": true }
+    """
+
+    permission_classes = (IsAuthenticated, GlobalDefaultPermission)
+
+    def post(self, request):
+        lesson_ids = request.data.get("lesson_ids", [])
+        is_completed = request.data.get("is_completed", True)
+
+        if not isinstance(lesson_ids, list) or not lesson_ids:
+            return Response(
+                {"error": "lesson_ids deve ser uma lista não-vazia."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lessons = CourseLesson.objects.filter(
+            pk__in=lesson_ids,
+            owner__user=request.user,
+            deleted_at__isnull=True,
+        )
+
+        now = timezone.now()
+        updated = []
+        for lesson in lessons:
+            if is_completed and not lesson.is_completed:
+                lesson.is_completed = True
+                lesson.completed_at = now
+            elif not is_completed and lesson.is_completed:
+                lesson.is_completed = False
+                lesson.completed_at = None
+            else:
+                continue
+            lesson.save(update_fields=["is_completed", "completed_at"])
+            updated.append(lesson.id)
+
+        return Response(
+            {"updated": updated, "count": len(updated)},
+            status=status.HTTP_200_OK,
+        )
+
+
 # ============================================================================
 # COURSE SESSION VIEWS
 # ============================================================================

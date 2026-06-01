@@ -36,6 +36,7 @@ class PasswordSerializer(serializers.ModelSerializer):
             "category",
             "category_display",
             "notes",
+            "is_favorite",
             "last_password_change",
             "owner",
             "owner_name",
@@ -69,6 +70,7 @@ class PasswordCreateUpdateSerializer(serializers.ModelSerializer):
             "password",
             "category",
             "notes",
+            "is_favorite",
             "owner",
         ]
 

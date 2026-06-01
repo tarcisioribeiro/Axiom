@@ -61,12 +61,14 @@ def _cache_key(user_id: int) -> str:
     return VAULT_CACHE_KEY.format(user_id=user_id)
 
 
-def _store_vault_key_in_cache(user_id: int, vault_key: bytes) -> None:
+def _store_vault_key_in_cache(
+    user_id: int, vault_key: bytes, ttl: int = VAULT_UNLOCK_TTL
+) -> None:
     """Armazena a vault_key no Redis com TTL."""
     cache.set(
         _cache_key(user_id),
         base64.b64encode(vault_key).decode(),
-        timeout=VAULT_UNLOCK_TTL,
+        timeout=ttl,
     )
 
 
@@ -626,12 +628,19 @@ class VaultUnlockView(APIView):
             )
 
         _reset_failed_attempts(request.user.id)
-        _store_vault_key_in_cache(request.user.id, vault_key)
+        # Usa TTL personalizado do usuário se definido (em minutos → segundos)
+        ttl = (
+            vault_config.session_ttl_minutes * 60
+            if vault_config.session_ttl_minutes
+            else VAULT_UNLOCK_TTL
+        )
+        _store_vault_key_in_cache(request.user.id, vault_key, ttl=ttl)
 
         return Response(
             {
                 "message": "Cofre desbloqueado com sucesso.",
-                "expires_in": VAULT_UNLOCK_TTL,
+                "expires_in": ttl,
+                "session_ttl_minutes": ttl // 60,
             }
         )
 
@@ -911,3 +920,69 @@ class VaultRecoveryUnlockView(APIView):
         return Response(
             {"message": "Cofre desbloqueado via chave de recuperação."}
         )
+
+
+class VaultPreferencesView(APIView):
+    """
+    GET  /api/v1/security/vault/preferences/
+    PATCH /api/v1/security/vault/preferences/
+
+    Lê e atualiza preferências do cofre: session_ttl_minutes (15-240).
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_vault_config(self, request):
+        member = _get_member(request.user)
+        if member is None:
+            return None
+        try:
+            return VaultConfig.objects.get(owner=member)
+        except VaultConfig.DoesNotExist:
+            return None
+
+    def get(self, request):
+        vault_config = self._get_vault_config(request)
+        if vault_config is None:
+            return Response(
+                {"error": "O cofre não está configurado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ttl_minutes = vault_config.session_ttl_minutes or (
+            VAULT_UNLOCK_TTL // 60
+        )
+        return Response(
+            {
+                "session_ttl_minutes": ttl_minutes,
+                "session_ttl_minutes_default": VAULT_UNLOCK_TTL // 60,
+            }
+        )
+
+    def patch(self, request):
+        vault_config = self._get_vault_config(request)
+        if vault_config is None:
+            return Response(
+                {"error": "O cofre não está configurado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ttl = request.data.get("session_ttl_minutes")
+        if ttl is None:
+            return Response(
+                {"error": "Campo session_ttl_minutes obrigatório."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            ttl = int(ttl)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "session_ttl_minutes deve ser um número inteiro."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not (15 <= ttl <= 240):
+            return Response(
+                {"error": "session_ttl_minutes deve estar entre 15 e 240."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        vault_config.session_ttl_minutes = ttl
+        vault_config.save(update_fields=["session_ttl_minutes", "updated_at"])
+        return Response({"session_ttl_minutes": ttl})
