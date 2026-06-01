@@ -1197,6 +1197,7 @@
         "duePrefix": "Vence"
       },
       "form": {
+        "sectionBasic": "Dados da Fatura",
         "creditCardLabel": "Cartão de Crédito *",
         "creditCardPlaceholder": "Selecione",
         "yearLabel": "Ano *",
@@ -2166,6 +2167,10 @@
       "copied": "Copiada!",
       "copiedClipboard": "Senha copiada para a área de transferência",
       "autoHideIn": "Oculta em {{seconds}}s",
+      "favoritesFilter": "Favoritos",
+      "addFavorite": "Adicionar aos favoritos",
+      "removeFavorite": "Remover dos favoritos",
+      "passwordRequired": "Senha obrigatória",
       "passwordStrength": {
         "veryWeak": "Muito fraca",
         "weak": "Fraca",
@@ -3199,7 +3204,11 @@
         "orderLabel": "Ordem",
         "completed": "Concluída",
         "pending": "Pendente",
-        "toggleError": "Erro ao atualizar aula"
+        "toggleError": "Erro ao atualizar aula",
+        "selectAll": "Selecionar todas",
+        "selected": "selecionada(s)",
+        "markDone": "Concluir",
+        "markPending": "Desfazer"
       },
       "sessions": {
         "title": "Sessões de Estudo",
@@ -3674,6 +3683,8 @@
       "title": "Logs de Atividade",
       "emptyState": "Nenhum log de atividade encontrado.",
       "dateGroupFormat": "EEEE, dd 'de' MMMM 'de' yyyy",
+      "exportBtn": "Exportar CSV",
+      "exportSuccess": "Log exportado com sucesso",
       "columns": {
         "dateTime": "Data/Hora",
         "action": "Ação",
@@ -4747,6 +4758,7 @@
       "fieldDescriptionPlaceholder": "Técnica, variações, dicas..."
     },
     "workoutSessions": {
+      "sectionSession": "Dados da Sessão",
       "newSessionBtn": "Registrar Sessão",
       "newSessionTitle": "Registrar Sessão de Treino",
       "editSessionTitle": "Editar Sessão",

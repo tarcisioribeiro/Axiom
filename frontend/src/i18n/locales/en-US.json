@@ -1197,6 +1197,7 @@
         "duePrefix": "Due"
       },
       "form": {
+        "sectionBasic": "Bill Details",
         "creditCardLabel": "Credit Card *",
         "creditCardPlaceholder": "Select",
         "yearLabel": "Year *",
@@ -2106,6 +2107,10 @@
       "copied": "Copied!",
       "copiedClipboard": "Password copied to clipboard",
       "autoHideIn": "Hides in {{seconds}}s",
+      "favoritesFilter": "Favorites",
+      "addFavorite": "Add to favorites",
+      "removeFavorite": "Remove from favorites",
+      "passwordRequired": "Password is required",
       "passwordStrength": {
         "veryWeak": "Very weak",
         "weak": "Weak",
@@ -3137,7 +3142,11 @@
         "orderLabel": "Order",
         "completed": "Completed",
         "pending": "Pending",
-        "toggleError": "Error updating lesson"
+        "toggleError": "Error updating lesson",
+        "selectAll": "Select all",
+        "selected": "selected",
+        "markDone": "Mark done",
+        "markPending": "Mark pending"
       },
       "sessions": {
         "title": "Study Sessions",
@@ -3612,6 +3621,8 @@
       "title": "Activity Logs",
       "emptyState": "No activity logs found.",
       "dateGroupFormat": "EEEE, MMMM d, yyyy",
+      "exportBtn": "Export CSV",
+      "exportSuccess": "Log exported successfully",
       "columns": {
         "dateTime": "Date/Time",
         "action": "Action",
@@ -4685,6 +4696,7 @@
       "fieldDescriptionPlaceholder": "Technique, variations, tips..."
     },
     "workoutSessions": {
+      "sectionSession": "Session Details",
       "newSessionBtn": "Log Session",
       "newSessionTitle": "Log Workout Session",
       "editSessionTitle": "Edit Session",

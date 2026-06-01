@@ -150,7 +150,48 @@ export default function Expenses({ embedded = false }: { embedded?: boolean }) {
         </div>
       </PageHeader>
 
-      <FilterBar hasActiveFilters={hasActiveFilters} onClear={clearFilters}>
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClear={clearFilters}
+        activeFilters={[
+          ...(categoryFilter !== 'all'
+            ? [
+                {
+                  key: 'category',
+                  label: `${t('pages.expenses.allCategories')}: ${EXPENSE_CATEGORIES_CANONICAL.find((c) => c.key === categoryFilter)?.label ?? categoryFilter}`,
+                  onRemove: () => setCategoryFilter('all'),
+                },
+              ]
+            : []),
+          ...(statusFilter !== 'all'
+            ? [
+                {
+                  key: 'status',
+                  label: `${t('common.fields.status')}: ${statusFilter === 'paid' ? t('common.status.paid') : t('common.status.pending')}`,
+                  onRemove: () => setStatusFilter('all'),
+                },
+              ]
+            : []),
+          ...(startDate
+            ? [
+                {
+                  key: 'startDate',
+                  label: `${t('common.fields.from')}: ${startDate}`,
+                  onRemove: () => setStartDate(''),
+                },
+              ]
+            : []),
+          ...(endDate
+            ? [
+                {
+                  key: 'endDate',
+                  label: `${t('common.fields.to')}: ${endDate}`,
+                  onRemove: () => setEndDate(''),
+                },
+              ]
+            : []),
+        ]}
+      >
         <SearchInput
           placeholder={t('pages.expenses.searchPlaceholder')}
           value={searchTerm}

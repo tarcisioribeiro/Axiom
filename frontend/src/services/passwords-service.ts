@@ -59,6 +59,10 @@ class PasswordsService extends BaseService<Password, PasswordFormData> {
       options
     );
   }
+
+  async toggleFavorite(id: number): Promise<Password> {
+    return apiClient.patch<Password>(`${this.endpoint}${id}/favorite/`, {});
+  }
 }
 
 export const passwordsService = new PasswordsService();
