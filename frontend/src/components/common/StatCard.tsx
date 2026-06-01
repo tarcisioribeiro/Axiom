@@ -20,6 +20,10 @@ interface StatCardProps {
     period?: string;
   };
   variant?: 'default' | 'success' | 'warning' | 'danger';
+  /** Accent color applied to the left border highlight and icon badge. When provided, overrides variant styling. */
+  accentColor?: 'green' | 'red' | 'blue' | 'orange' | 'purple';
+  /** If true, renders the value in a larger text size to emphasize importance */
+  prominent?: boolean;
 }
 
 const extractNumber = (val: string | number): number => {
@@ -37,6 +41,31 @@ const extractNumber = (val: string | number): number => {
   return parseFloat(cleaned.replace(/,/g, ''));
 };
 
+const accentCardClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
+  green: 'border-l-4 border-l-success border-success/30 bg-success/[0.03]',
+  red: 'border-l-4 border-l-destructive border-destructive/30 bg-destructive/[0.03]',
+  blue: 'border-l-4 border-l-primary border-primary/30 bg-primary/[0.03]',
+  orange: 'border-l-4 border-l-warning border-warning/30 bg-warning/[0.03]',
+  purple: 'border-l-4 border-l-purple-500 border-purple-500/30 bg-purple-500/[0.03]',
+};
+
+const accentIconClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
+  green: 'bg-success/12 text-success ring-1 ring-inset ring-success/25',
+  red: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
+  blue: 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20',
+  orange: 'bg-warning/12 text-warning ring-1 ring-inset ring-warning/25',
+  purple:
+    'bg-purple-500/12 text-purple-500 ring-1 ring-inset ring-purple-500/25',
+};
+
+const accentValueClasses: Record<NonNullable<StatCardProps['accentColor']>, string> = {
+  green: 'text-success',
+  red: 'text-destructive',
+  blue: 'text-primary',
+  orange: 'text-warning',
+  purple: 'text-purple-500',
+};
+
 export const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
@@ -44,6 +73,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   description,
   trend,
   variant = 'default',
+  accentColor,
+  prominent = false,
 }) => {
   const { i18n } = useTranslation();
   const variantClasses = {
@@ -61,6 +92,12 @@ export const StatCard: React.FC<StatCardProps> = ({
       'bg-warning/12 text-[hsl(var(--warning))] ring-1 ring-inset ring-warning/25',
     danger: 'bg-destructive/12 text-destructive ring-1 ring-inset ring-destructive/25',
   };
+
+  const cardClass = accentColor
+    ? accentCardClasses[accentColor]
+    : variantClasses[variant];
+
+  const iconClass = accentColor ? accentIconClasses[accentColor] : iconBadgeClasses[variant];
 
   const { isRatio, isPercentage, isCurrency, numericValue, isNumeric } = useMemo(() => {
     const ratio = typeof value === 'string' && value.includes('/');
@@ -88,6 +125,8 @@ export const StatCard: React.FC<StatCardProps> = ({
           ? Math.round(animatedCount).toLocaleString(i18n.language)
           : value;
 
+  const valueClass = accentColor ? accentValueClasses[accentColor] : '';
+
   return (
     <motion.div
       variants={cardVariants}
@@ -96,7 +135,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       whileHover="hover"
       whileTap="tap"
     >
-      <Card className={`transition-shadow ${variantClasses[variant]}`}>
+      <Card className={`transition-shadow ${cardClass}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-sm">
           <p className="text-sm font-medium tracking-tight">{title}</p>
           {icon && (
@@ -105,7 +144,7 @@ export const StatCard: React.FC<StatCardProps> = ({
               transition={{ duration: 0.25 }}
               className={cn(
                 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg [&>svg]:h-4 [&>svg]:w-4',
-                iconBadgeClasses[variant]
+                iconClass
               )}
             >
               {icon}
@@ -113,7 +152,13 @@ export const StatCard: React.FC<StatCardProps> = ({
           )}
         </CardHeader>
         <CardContent>
-          <div className="numeric text-2xl font-bold tracking-tight">
+          <div
+            className={cn(
+              'numeric font-bold tracking-tight',
+              prominent ? 'text-3xl' : 'text-2xl',
+              valueClass
+            )}
+          >
             {displayValue}
           </div>
           {description && (

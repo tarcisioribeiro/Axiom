@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { ArrowLeftRight, FileUp, RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, FileUp, RefreshCw, Upload, Search, CheckCircle2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -286,6 +286,50 @@ export default function BankReconciliation() {
         }}
       />
 
+      {/* Flow orientation banner */}
+      <div className="mt-md rounded-lg border bg-muted/40 p-md">
+        <p className="mb-md text-sm font-medium text-muted-foreground">
+          {t('pages.bankReconciliation.flowTitle')}
+        </p>
+        <div className="flex flex-col gap-md sm:flex-row sm:items-center">
+          <div className="flex items-center gap-sm">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+              1
+            </div>
+            <div className="flex items-center gap-xs">
+              <Upload className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                {t('pages.bankReconciliation.flowStep1')}
+              </span>
+            </div>
+          </div>
+          <div className="hidden h-px flex-1 bg-border sm:block" />
+          <div className="flex items-center gap-sm">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+              2
+            </div>
+            <div className="flex items-center gap-xs">
+              <Search className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                {t('pages.bankReconciliation.flowStep2')}
+              </span>
+            </div>
+          </div>
+          <div className="hidden h-px flex-1 bg-border sm:block" />
+          <div className="flex items-center gap-sm">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+              3
+            </div>
+            <div className="flex items-center gap-xs">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">
+                {t('pages.bankReconciliation.flowStep3')}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-lg mt-lg grid grid-cols-1 gap-md sm:grid-cols-2">
         <StatCard
           title={t('pages.bankReconciliation.totalImports')}
@@ -322,11 +366,11 @@ export default function BankReconciliation() {
       {imports.length === 0 ? (
         <EmptyState
           title={t('pages.bankReconciliation.emptyTitle')}
-          message={t('pages.bankReconciliation.emptyMessage')}
+          message={t('pages.bankReconciliation.emptyGuide')}
           icon={<ArrowLeftRight className="h-8 w-8" />}
           action={{
-            label: t('pages.bankReconciliation.importBtn'),
-            onClick: () => setUploadOpen(true),
+            label: t('pages.bankReconciliation.flowStep1'),
+            onClick: () => void navigate('/bank-reconciliation/import'),
           }}
         />
       ) : (

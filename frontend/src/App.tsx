@@ -99,6 +99,11 @@ const DailyReflections = lazy(() => import('./pages/DailyReflections'));
 const WorkoutPage = lazy(() => import('./pages/WorkoutPage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
 
+// Finance extras
+const FinancialCalendar = lazy(() => import('./pages/FinancialCalendar'));
+const NetWorthTracker = lazy(() => import('./pages/NetWorthTracker'));
+const SubscriptionTracker = lazy(() => import('./pages/SubscriptionTracker'));
+
 // Agents
 const Agents = lazy(() => import('./pages/Agents'));
 
@@ -550,6 +555,32 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <VaultSimulator />
+              </PageWrapper>
+            }
+          />
+
+          {/* Finance extras */}
+          <Route
+            path="/finance/calendar"
+            element={
+              <PageWrapper>
+                <FinancialCalendar />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/net-worth"
+            element={
+              <PageWrapper>
+                <NetWorthTracker />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/finance/subscriptions"
+            element={
+              <PageWrapper>
+                <SubscriptionTracker />
               </PageWrapper>
             }
           />
