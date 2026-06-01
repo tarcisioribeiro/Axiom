@@ -482,6 +482,71 @@ export default function LibraryDashboard() {
         />
       </div>
 
+      {/* Análise do Mês */}
+      {stats?.monthly_comparison && (
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+              <TrendingUp className="h-4 w-4 text-primary" />
+              {t('pages.libraryDashboard.monthAnalysis.title')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-md sm:grid-cols-3">
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.totalPages')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {stats.monthly_comparison.current_month.pages_read}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.libraryDashboard.monthAnalysis.pagesUnit')}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <CalendarClock className="h-4 w-4" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.dailyAverage')}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">
+                  {(
+                    stats.monthly_comparison.current_month.pages_read /
+                    new Date().getDate()
+                  ).toFixed(1)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.libraryDashboard.monthAnalysis.pagesPerDay')}
+                </span>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <div className="flex items-center gap-sm text-muted-foreground">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  <span className="text-xs">
+                    {t('pages.libraryDashboard.monthAnalysis.bestDay')}
+                  </span>
+                </div>
+                <span className="text-lg font-bold">
+                  {stats.most_productive_day?.weekday_display ?? '—'}
+                </span>
+                {stats.most_productive_day && (
+                  <span className="text-xs text-muted-foreground">
+                    {t('pages.libraryDashboard.monthAnalysis.pagesOnBestDay', {
+                      count: stats.most_productive_day.total_pages,
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Intelecto: Cursos — métricas principais */}
       <Card>
         <CardHeader className="pb-sm">

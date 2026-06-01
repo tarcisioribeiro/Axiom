@@ -2400,6 +2400,16 @@
     },
     "libraryDashboard": {
       "title": "Intellect Dashboard",
+      "monthAnalysis": {
+        "title": "Month Analysis",
+        "totalPages": "Total pages read",
+        "pagesUnit": "pages this month",
+        "dailyAverage": "Daily average",
+        "pagesPerDay": "pages per day",
+        "bestDay": "Best weekday",
+        "pagesOnBestDay_one": "{{count}} page on this day",
+        "pagesOnBestDay_other": "{{count}} pages on this day"
+      },
       "overview": "Overview",
       "books": "Works",
       "authors": "Authors",
@@ -3306,7 +3316,13 @@
       "workoutsByDayTitle": "Workouts by day of week — last 30 days",
       "noWorkoutsRegistered": "No workouts registered",
       "sessionCount_one": "{{count}} session",
-      "sessionCount_other": "{{count}} sessions"
+      "sessionCount_other": "{{count}} sessions",
+      "weeklyXP": "Weekly Progress — XP",
+      "xpLabel": "XP this week",
+      "xpProgress": "Level {{level}}",
+      "insightCTAWorstDay": "Adjust routine",
+      "insightCTAWorkout": "Log workout",
+      "insightCTAGoals": "See goals"
     },
     "routineTasks": {
       "title": "Routine Tasks",
