@@ -6,6 +6,7 @@ import {
   Calendar,
   Check,
   CheckCircle2,
+  CheckSquare,
   Circle,
   Edit,
   ExternalLink,
@@ -13,6 +14,7 @@ import {
   Layers,
   Loader2,
   Plus,
+  Square,
   Timer,
   Trash2,
   Upload,
@@ -94,6 +96,7 @@ function ModuleItem({
   const [isEditing, setIsEditing] = useState(false);
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [newLessonTitle, setNewLessonTitle] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const { data: lessons = [], refetch: refetchLessons } = useQuery({
     queryKey: ['course-lessons', mod.id],
@@ -149,6 +152,36 @@ function ModuleItem({
     },
     onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
   });
+
+  const bulkComplete = useMutation({
+    mutationFn: ({ ids, done }: { ids: number[]; done: boolean }) =>
+      courseLessonsService.bulkComplete(ids, done),
+    onSuccess: () => {
+      setSelectedIds(new Set());
+      void refetchLessons();
+      onUpdated();
+    },
+    onError: (err) => toast({ title: getErrorMessage(err), variant: 'destructive' }),
+  });
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allSelected = lessons.length > 0 && selectedIds.size === lessons.length;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(lessons.map((l) => l.id)));
+    }
+  };
 
   const completedCount = lessons.filter((l) => l.is_completed).length;
 
@@ -218,12 +251,72 @@ function ModuleItem({
         />
       )}
 
+      {/* Bulk action bar */}
+      {lessons.length > 0 && (
+        <div className="mt-sm flex items-center justify-between gap-sm">
+          <button
+            type="button"
+            className="flex items-center gap-xs text-xs text-muted-foreground hover:text-foreground"
+            onClick={toggleSelectAll}
+          >
+            {allSelected ? (
+              <CheckSquare className="h-3.5 w-3.5 text-category-intellect" />
+            ) : (
+              <Square className="h-3.5 w-3.5" />
+            )}
+            {t('pages.courses.lessons.selectAll')}
+          </button>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-xs">
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.size} {t('pages.courses.lessons.selected')}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 gap-xs px-sm text-xs text-success"
+                disabled={bulkComplete.isPending}
+                onClick={() =>
+                  bulkComplete.mutate({ ids: [...selectedIds], done: true })
+                }
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                {t('pages.courses.lessons.markDone')}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 gap-xs px-sm text-xs"
+                disabled={bulkComplete.isPending}
+                onClick={() =>
+                  bulkComplete.mutate({ ids: [...selectedIds], done: false })
+                }
+              >
+                <Circle className="h-3 w-3" />
+                {t('pages.courses.lessons.markPending')}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="mt-sm space-y-xs">
         {lessons.map((lesson) => (
           <div
             key={lesson.id}
             className="flex items-center justify-between gap-sm rounded px-sm py-xs transition-colors hover:bg-muted/40"
           >
+            <button
+              type="button"
+              className="flex shrink-0"
+              onClick={() => toggleSelect(lesson.id)}
+            >
+              {selectedIds.has(lesson.id) ? (
+                <CheckSquare className="h-4 w-4 text-category-intellect" />
+              ) : (
+                <Square className="h-4 w-4 text-muted-foreground/40 hover:text-muted-foreground" />
+              )}
+            </button>
             <button
               type="button"
               className="flex min-w-0 flex-1 items-center gap-sm"

@@ -4,18 +4,21 @@ from security.vault_config import (
     VaultChangePasswordView,
     VaultGenerateRecoveryKeyView,
     VaultLockView,
+    VaultPreferencesView,
     VaultRecoveryUnlockView,
     VaultSetupView,
     VaultStatusView,
     VaultUnlockView,
 )
 from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAccount/Archive/ActivityLog/Dashboard views
+    ActivityLogExportCSVView,
     ActivityLogListView,
     ArchiveDetailView,
     ArchiveDownloadView,
     ArchiveListCreateView,
     ArchiveRevealView,
     PasswordDetailView,
+    PasswordFavoriteToggleView,
     PasswordGenerateView,
     PasswordImportConfirmView,
     PasswordImportPreviewView,
@@ -48,6 +51,11 @@ urlpatterns = [
         "vault/change-master-password/",
         VaultChangePasswordView.as_view(),
         name="vault-change-password",
+    ),
+    path(
+        "vault/preferences/",
+        VaultPreferencesView.as_view(),
+        name="vault-preferences",
     ),
     path(
         "vault/recovery-key/generate/",
@@ -100,6 +108,11 @@ urlpatterns = [
         "passwords/<int:pk>/reveal/",
         PasswordRevealView.as_view(),
         name="password-reveal",
+    ),
+    path(
+        "passwords/<int:pk>/favorite/",
+        PasswordFavoriteToggleView.as_view(),
+        name="password-favorite-toggle",
     ),
     # Stored Credit Cards
     path(
@@ -159,6 +172,11 @@ urlpatterns = [
         "activity-logs/",
         ActivityLogListView.as_view(),
         name="activity-log-list",
+    ),
+    path(
+        "activity-logs/export/",
+        ActivityLogExportCSVView.as_view(),
+        name="activity-log-export",
     ),
     # Credential Share Tokens
     path(

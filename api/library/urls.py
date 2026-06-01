@@ -15,6 +15,7 @@ from library.views import (  # noqa: E501
     BookMarkAsReadView,
     BookReadingQueueView,
     BookReorderView,
+    CourseLessonBulkCompleteView,
     CourseLessonListCreateView,
     CourseLessonRetrieveUpdateDestroyView,
     CourseLessonToggleView,
@@ -195,6 +196,11 @@ urlpatterns = [
         "course-lessons/<int:pk>/toggle/",
         CourseLessonToggleView.as_view(),
         name="course-lesson-toggle",
+    ),
+    path(
+        "course-lessons/bulk-complete/",
+        CourseLessonBulkCompleteView.as_view(),
+        name="course-lesson-bulk-complete",
     ),
     # Course Sessions
     path(
