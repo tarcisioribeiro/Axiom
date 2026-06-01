@@ -2588,6 +2588,16 @@
       "priorityHigh": "High",
       "priorityMedium": "Medium",
       "priorityLow": "Low",
+      "askIntellect": "Ask Intellect",
+      "quickCapture": {
+        "title": "Log Progress",
+        "desc": "Quickly log today's pages read",
+        "selectBook": "Book in progress",
+        "selectBookPlaceholder": "Select a book",
+        "pagesRead": "Pages read",
+        "pagesPlaceholder": "e.g. 30",
+        "saved": "Progress logged successfully"
+      },
       "form": {
         "coverLabel": "Book Cover",
         "coverAlt": "Cover",
@@ -3405,7 +3415,16 @@
         "sectionIdentification": "Identification",
         "sectionPeriodicity": "Periodicity",
         "sectionGoalUnit": "Goal & Unit",
-        "sectionBehavior": "Behavior"
+        "sectionBehavior": "Behavior",
+        "periodicityTooltip": "Defines how often the task appears in your daily checklist. Use 'Custom' to pick specific days of the week.",
+        "targetQuantityTooltip": "The quantity you need to complete to count the task as done. E.g.: 30 minutes of reading, 8 glasses of water.",
+        "frequencyPreview": {
+          "daily": "Every day",
+          "weekdays": "Monday to Friday",
+          "weekly": "Every {{day}}",
+          "monthly": "Every {{day}}th of the month",
+          "custom": "Custom days"
+        }
       }
     },
     "goals": {
