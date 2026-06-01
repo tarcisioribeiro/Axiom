@@ -12,9 +12,20 @@ import {
   Timer,
   Trash2,
   Edit,
+  Brain,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
 import { AnimatedPage } from '@/components/common/AnimatedPage';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -25,6 +36,8 @@ import { CourseDetailModal } from '@/components/library/CourseDetailModal';
 import { CourseForm } from '@/components/library/CourseForm';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useChartColors } from '@/lib/chart-colors';
 import {
   Dialog,
   DialogContent,
@@ -40,7 +53,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cardVariants } from '@/lib/animations';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
-import { coursesService } from '@/services/courses-service';
+import { coursesService, courseSessionsService } from '@/services/courses-service';
 import { membersService } from '@/services/members-service';
 import type { Course, CourseFormData, CourseStatus } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -68,11 +81,13 @@ function CourseCard({
   onOpen,
   onEdit,
   onDelete,
+  onAskIntellect,
 }: {
   course: Course;
   onOpen: (c: Course) => void;
   onEdit: (c: Course) => void;
   onDelete: (c: Course) => void;
+  onAskIntellect: (c: Course) => void;
 }) {
   const { t } = useTranslation();
 
@@ -150,6 +165,18 @@ function CourseCard({
         <Button
           size="sm"
           variant="ghost"
+          className="h-7 gap-xs text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAskIntellect(course);
+          }}
+          title={t('pages.courses.askIntellect')}
+        >
+          <Brain className="h-3 w-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           className="h-7 flex-1 gap-xs text-xs"
           onClick={(e) => {
             e.stopPropagation();
@@ -181,6 +208,7 @@ export default function Courses() {
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<CourseStatus | 'all'>('all');
@@ -204,6 +232,38 @@ export default function Courses() {
     queryFn: () => coursesService.getAll(params),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
+
+  const weekStart = useMemo(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    return monday.toISOString().split('T')[0];
+  }, []);
+
+  const { data: weekSessions = [] } = useQuery({
+    queryKey: ['course-sessions', 'week', weekStart],
+    queryFn: () =>
+      courseSessionsService
+        .getAll({ page_size: 200, session_date__gte: weekStart })
+        .then((r) => (Array.isArray(r) ? r : (r as { results: typeof r }).results ?? r)),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const COLORS = useChartColors();
+
+  const weeklyHoursData = useMemo(() => {
+    const dayNames = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const totals: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const sessions = Array.isArray(weekSessions) ? weekSessions : [];
+    sessions.forEach((s) => {
+      const d = new Date(s.session_date + 'T00:00:00');
+      const dow = (d.getDay() + 6) % 7;
+      totals[dow] = (totals[dow] ?? 0) + (s.duration_hours ?? s.duration_minutes / 60);
+    });
+    return dayNames.map((name, i) => ({ name, hours: Number((totals[i] ?? 0).toFixed(1)) }));
+  }, [weekSessions]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['courses'] });
 
@@ -267,6 +327,11 @@ export default function Courses() {
     setFormOpen(true);
   };
 
+  const handleAskIntellect = (course: Course) => {
+    const context = encodeURIComponent(`Curso: ${course.title}`);
+    void navigate(`/intellect/agents?context=${context}`);
+  };
+
   const inProgressCount = courses.filter((c) => c.status === 'in_progress').length;
   const completedCount = courses.filter((c) => c.status === 'completed').length;
   const totalHours = courses.reduce((s, c) => s + c.invested_hours, 0);
@@ -323,6 +388,41 @@ export default function Courses() {
           ))}
         </div>
 
+        {/* Study hours this week */}
+        <Card>
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+              <Clock className="h-4 w-4 text-primary" />
+              {t('pages.courses.studyHours.title')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={weeklyHoursData} margin={{ top: 4, right: 8, bottom: 0, left: -24 }}>
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip
+                  formatter={(value: number) =>
+                    [`${value}h`, t('pages.courses.studyHours.hours')]
+                  }
+                />
+                <Bar dataKey="hours" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                  {weeklyHoursData.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[0]}
+                      fillOpacity={_.hours > 0 ? 1 : 0.25}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="mt-xs text-center text-xs text-muted-foreground">
+              {t('pages.courses.studyHours.subtitle')}
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-sm">
           <div className="relative flex-1">
@@ -378,6 +478,7 @@ export default function Courses() {
                   }}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  onAskIntellect={handleAskIntellect}
                 />
               ))}
             </div>
