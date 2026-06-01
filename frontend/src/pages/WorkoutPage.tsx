@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Activity,
@@ -36,6 +37,7 @@ import {
 } from '@/components/ui/dialog';
 import { FormSection } from '@/components/ui/form-section';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { WorkoutDayForm } from '@/components/workout/WorkoutDayForm';
@@ -78,6 +80,7 @@ type DialogMode =
   | { type: 'edit-session'; session: WorkoutSession }
   | { type: 'new-catalog-exercise' }
   | { type: 'edit-catalog-exercise'; exercise: Exercise }
+  | { type: 'quick-log' }
   | null;
 
 interface ExerciseCatalogFormValues {
@@ -559,6 +562,8 @@ export default function WorkoutPage() {
         return t('pages.exercises.newTitle');
       case 'edit-catalog-exercise':
         return t('pages.exercises.editTitle');
+      case 'quick-log':
+        return t('pages.workoutSessions.quickLogTitle');
     }
   };
 
@@ -585,6 +590,8 @@ export default function WorkoutPage() {
         return t('pages.exercises.newDesc');
       case 'edit-catalog-exercise':
         return t('pages.exercises.editDesc');
+      case 'quick-log':
+        return t('pages.workoutSessions.quickLogDesc');
     }
   };
 
@@ -616,7 +623,14 @@ export default function WorkoutPage() {
 
           {/* ── Sessões ─────────────────────────────────────────────────── */}
           <TabsContent value="sessions" className="mt-0 flex-1">
-            <div className="mb-md flex justify-end">
+            <div className="mb-md flex justify-end gap-sm">
+              <Button
+                variant="outline"
+                onClick={() => setDialog({ type: 'quick-log' })}
+              >
+                <Zap className="mr-sm h-4 w-4" />
+                {t('pages.workoutSessions.quickLogBtn')}
+              </Button>
               <Button onClick={() => setDialog({ type: 'new-session' })}>
                 <Plus className="mr-sm h-4 w-4" />
                 {t('pages.workoutSessions.newSessionBtn')}
@@ -630,6 +644,11 @@ export default function WorkoutPage() {
                 title={t('pages.workoutSessions.emptySessions')}
                 description={t('pages.workoutSessions.emptySessionsDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
+                action={{
+                  label: t('pages.workoutSessions.emptyAction'),
+                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  onClick: () => setDialog({ type: 'new-session' }),
+                }}
               />
             ) : (
               <SessionsGrouped
@@ -657,6 +676,11 @@ export default function WorkoutPage() {
                 title={t('pages.workoutPlans.emptyPlans')}
                 description={t('pages.workoutPlans.emptyPlansDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
+                action={{
+                  label: t('pages.workoutPlans.emptyPlansAction'),
+                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  onClick: () => setDialog({ type: 'new-plan' }),
+                }}
               />
             ) : (
               <div className="space-y-xl">
@@ -922,6 +946,11 @@ export default function WorkoutPage() {
                 title={t('pages.exercises.empty')}
                 description={t('pages.exercises.emptyDesc')}
                 icon={<Dumbbell className="h-8 w-8" />}
+                action={{
+                  label: t('pages.exercises.emptyAction'),
+                  icon: <Plus className="mr-xs h-4 w-4" />,
+                  onClick: () => setDialog({ type: 'new-catalog-exercise' }),
+                }}
               />
             ) : (
               <div className="grid gap-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -1050,10 +1079,155 @@ export default function WorkoutPage() {
                 }
               />
             )}
+
+            {dialog?.type === 'quick-log' && (
+              <QuickLogForm
+                plans={plans}
+                days={allDaysList}
+                ownerId={ownerId}
+                onSuccess={() => {
+                  void invalidateSessions();
+                  setDialog(null);
+                }}
+                onCancel={() => setDialog(null)}
+                t={t}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </PageContainer>
     </AnimatedPage>
+  );
+}
+
+// ── Quick Log Form ──────────────────────────────────────────────────────────
+
+interface QuickLogFormProps {
+  plans: WorkoutPlan[];
+  days: WorkoutDay[];
+  ownerId: number;
+  onSuccess: () => void;
+  onCancel: () => void;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}
+
+function QuickLogForm({ plans, days, ownerId, onSuccess, onCancel, t }: QuickLogFormProps) {
+  const { toast } = useToast();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [selectedDayId, setSelectedDayId] = useState<string>('none');
+  const [duration, setDuration] = useState<number>(45);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const activePlans = plans.filter((p) => p.is_active);
+  const relevantDays = activePlans.length > 0
+    ? days.filter((d) => activePlans.some((p) => p.id === d.plan))
+    : days;
+
+  const handleConfirm = async () => {
+    try {
+      setIsSubmitting(true);
+      const now = new Date();
+      const finished = new Date(now.getTime() + duration * 60 * 1000);
+      const toTimeStr = (d: Date) =>
+        `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      await workoutSessionService.create({
+        date: format(now, 'yyyy-MM-dd'),
+        started_at: toTimeStr(now),
+        finished_at: toTimeStr(finished),
+        owner: ownerId,
+        workout_day:
+          selectedDayId && selectedDayId !== 'none'
+            ? Number(selectedDayId)
+            : undefined,
+      });
+      toast({ title: t('pages.workoutSessions.quickLogSuccess') });
+      onSuccess();
+    } catch {
+      toast({
+        title: t('pages.workoutSessions.saveError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-lg">
+      {step === 1 && (
+        <div className="space-y-md">
+          <FormSection title={t('pages.workoutSessions.quickLogStep1')} icon={ClipboardList}>
+            <div className="space-y-sm">
+              <Label>{t('pages.workoutSessions.quickLogPlanLabel')}</Label>
+              <select
+                value={selectedDayId}
+                onChange={(e) => setSelectedDayId(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-sm py-xs text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="none">
+                  {t('pages.workoutSessions.quickLogNoPlan')}
+                </option>
+                {relevantDays.map((day) => (
+                  <option key={day.id} value={day.id.toString()}>
+                    {day.name}
+                    {day.muscle_groups ? ` — ${day.muscle_groups}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </FormSection>
+          <div className="flex justify-end gap-sm border-t pt-md">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t('common.actions.cancel')}
+            </Button>
+            <Button type="button" onClick={() => setStep(2)}>
+              {t('pages.workoutSessions.quickLogNext')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-md">
+          <FormSection title={t('pages.workoutSessions.quickLogStep2')} icon={Clock}>
+            <div className="space-y-sm">
+              <div className="flex items-center justify-between">
+                <Label>{t('pages.workoutSessions.quickLogDuration')}</Label>
+                <span className="text-sm font-bold text-primary">
+                  {duration} {t('pages.workoutSessions.quickLogMin')}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={15}
+                max={180}
+                step={5}
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>15 min</span>
+                <span>180 min</span>
+              </div>
+            </div>
+          </FormSection>
+          <div className="flex justify-end gap-sm border-t pt-md">
+            <Button type="button" variant="outline" onClick={() => setStep(1)}>
+              {t('common.actions.back')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleConfirm()}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && <Loader2 className="mr-sm h-4 w-4 animate-spin" />}
+              {t('pages.workoutSessions.quickLogConfirm')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

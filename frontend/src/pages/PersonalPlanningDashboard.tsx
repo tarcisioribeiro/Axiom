@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import {
   Target,
   CheckCircle2,
@@ -19,8 +20,11 @@ import {
   Timer,
   Utensils,
   ClipboardList,
+  Zap,
+  Star,
 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ChartContainer } from '@/components/charts';
@@ -29,6 +33,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { HabitHeatmap } from '@/components/personal-planning/HabitHeatmap';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { translate } from '@/config/constants';
@@ -85,6 +90,7 @@ function renderInsight(
 
 export default function PersonalPlanningDashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const COLORS = useChartColors();
   const categoryColors = useTaskCategoryColors();
 
@@ -168,6 +174,21 @@ export default function PersonalPlanningDashboard() {
       byMealTypeData,
     };
   }, [mealLogsWeek, mealTypes, today]);
+
+  const weeklyXP = useMemo(() => {
+    const sessionsWeek = workoutSessions30d.filter(
+      (s) => s.date >= weekStart && s.date <= weekEnd
+    );
+    const weeklyTasksCompleted =
+      stats?.weekly_progress?.reduce((sum, d) => sum + d.completed, 0) ?? 0;
+    const reflectionsCount = mealLogsWeek.length > 0 ? 1 : 0;
+    const xp =
+      weeklyTasksCompleted * 10 + sessionsWeek.length * 20 + reflectionsCount * 5;
+    const level = Math.floor(xp / 100);
+    const xpInLevel = xp % 100;
+    const streak = stats?.current_streak ?? 0;
+    return { xp, level, xpInLevel, streak };
+  }, [stats, workoutSessions30d, mealLogsWeek, weekStart, weekEnd]);
 
   const workoutByDayData = useMemo(() => {
     const weekDays: Record<string, number> = {};
@@ -320,6 +341,57 @@ export default function PersonalPlanningDashboard() {
           icon={<CheckCircle2 className="h-4 w-4" />}
         />
       </div>
+
+      {/* Linha 2b: XP Semanal */}
+      <Card>
+        <CardHeader className="pb-sm">
+          <CardTitle className="flex items-center gap-sm text-sm">
+            <Zap className="h-4 w-4 text-warning" />
+            {t('pages.planningDashboard.weeklyXP')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-lg">
+            <div className="flex items-center gap-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning/15">
+                <Star className="h-5 w-5 text-warning" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold leading-none">{weeklyXP.xp}</p>
+                <p className="mt-xs text-xs text-muted-foreground">
+                  {t('pages.planningDashboard.xpLabel')}
+                </p>
+              </div>
+            </div>
+            <div className="flex-1 space-y-xs">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{t('pages.planningDashboard.xpProgress', { level: weeklyXP.level })}</span>
+                <span>{weeklyXP.xpInLevel}/100 XP</span>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  className="h-full rounded-full bg-warning"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${weeklyXP.xpInLevel}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+            {weeklyXP.streak > 3 && (
+              <motion.div
+                className="flex items-center gap-xs rounded-full bg-orange-500/15 px-sm py-xs"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Flame className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-bold text-orange-500">
+                  {weeklyXP.streak}
+                </span>
+              </motion.div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Linha 3: Treinos */}
       <div className="grid grid-cols-1 gap-md lg:grid-cols-2">
@@ -704,12 +776,45 @@ export default function PersonalPlanningDashboard() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {analytics.insights.map((insight, i) => (
-                    <li key={i} className="flex gap-sm text-sm leading-relaxed">
-                      <span className="mt-0.5 shrink-0 text-primary">•</span>
-                      <span>{renderInsight(insight, t)}</span>
-                    </li>
-                  ))}
+                  {analytics.insights.map((insight, i) => {
+                    const insightCTA =
+                      insight.type === 'worst_day'
+                        ? {
+                            label: t('pages.planningDashboard.insightCTAWorstDay'),
+                            onClick: () => navigate('/planning/routine-tasks'),
+                          }
+                        : insight.type === 'overall_low'
+                          ? {
+                              label: t('pages.planningDashboard.insightCTAWorkout'),
+                              onClick: () => navigate('/planning/workout'),
+                            }
+                          : insight.type === 'overall_excellent' ||
+                              insight.type === 'best_day'
+                            ? {
+                                label: t('pages.planningDashboard.insightCTAGoals'),
+                                onClick: () => navigate('/planning/goals'),
+                              }
+                            : null;
+
+                    return (
+                      <li key={i} className="flex items-start justify-between gap-sm text-sm leading-relaxed">
+                        <div className="flex gap-sm">
+                          <span className="mt-0.5 shrink-0 text-primary">•</span>
+                          <span>{renderInsight(insight, t)}</span>
+                        </div>
+                        {insightCTA && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto shrink-0 px-sm py-xs text-xs text-primary hover:text-primary"
+                            onClick={insightCTA.onClick}
+                          >
+                            {insightCTA.label}
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </CardContent>
             </Card>
