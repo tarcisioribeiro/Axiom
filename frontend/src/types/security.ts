@@ -28,11 +28,17 @@ export interface Password {
   category: string;
   category_display: string;
   notes?: string;
+  is_favorite: boolean;
   last_password_change: string;
   owner: number;
   owner_name: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface VaultPreferences {
+  session_ttl_minutes: number;
+  session_ttl_minutes_default: number;
 }
 
 export interface PasswordFormData {

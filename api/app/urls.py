@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -93,6 +95,24 @@ if settings.DEBUG:
     urlpatterns += static(
         settings.STATIC_URL or "", document_root=settings.STATIC_ROOT
     )
-    urlpatterns += static(
-        settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT
-    )
+    # Only serve local media when MinIO is not configured — when MinIO is
+    # active the proxy route below handles /media/, and static() would shadow
+    # it (and fail with 404 because the file is in MinIO, not on disk).
+    if not getattr(settings, "MINIO_ENDPOINT", ""):
+        urlpatterns += static(
+            settings.MEDIA_URL or "", document_root=settings.MEDIA_ROOT
+        )
+
+# Proxy MinIO files through Django when MINIO_ENDPOINT is set but
+# MINIO_EXTERNAL_ENDPOINT is not (staging). In production, the browser
+# reaches MinIO directly via presigned URLs on the external endpoint.
+if getattr(settings, "MINIO_ENDPOINT", "") and not os.getenv(
+    "MINIO_EXTERNAL_ENDPOINT"
+):
+    from app.media_proxy import MediaProxyView
+
+    urlpatterns += [
+        path(
+            "media/<path:name>", MediaProxyView.as_view(), name="media-proxy"
+        ),
+    ]

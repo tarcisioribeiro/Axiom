@@ -45,6 +45,7 @@ class Password(BaseModel):
     )
     notes = models.TextField(blank=True, null=True, verbose_name="Observações")
     last_password_change = models.DateTimeField(auto_now_add=True)
+    is_favorite = models.BooleanField(default=False, verbose_name="Favorito")
     owner = models.ForeignKey(
         "members.Member", on_delete=models.PROTECT, related_name="passwords"
     )
@@ -333,6 +334,26 @@ class VaultConfig(models.Model):
     # vault_key cifrada com derived_key(master_password, salt)
     encrypted_vault_key = models.TextField(
         verbose_name="Chave do Cofre (cifrada com senha mestre)"
+    )
+    # Recovery key: hash SHA-256 (plaintext nunca armazenado)
+    recovery_key_hash = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        verbose_name="Hash da Chave de Recuperação (SHA-256)",
+    )
+    # vault_key cifrada com a chave de recuperação (envelope encryption)
+    recovery_encrypted_vault_key = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="Chave do Cofre (cifrada com chave de recuperação)",
+    )
+    # TTL da sessão do cofre em minutos (None = usar padrão global de 60 min)
+    session_ttl_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="TTL da Sessão (minutos)",
+        help_text="Tempo de sessão do cofre em minutos. Mín: 15, Máx: 240.",
     )
     created_at = models.DateTimeField(
         auto_now_add=True, verbose_name="Criado em"

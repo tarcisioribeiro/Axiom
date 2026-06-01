@@ -603,6 +603,11 @@ export default function WorkoutPage() {
         <PageHeader
           title={t('pages.workoutPlans.title')}
           icon={<Dumbbell className="h-6 w-6 text-category-exercise" />}
+          action={{
+            label: t('pages.workoutSessions.newSessionBtn'),
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => setDialog({ type: 'new-session' }),
+          }}
         />
 
         <Tabs defaultValue="sessions" className="flex flex-1 flex-col">

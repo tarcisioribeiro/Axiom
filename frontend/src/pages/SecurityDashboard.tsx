@@ -20,6 +20,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
+import { VaultRecoveryKeyModal } from '@/components/security/VaultRecoveryKeyModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -284,6 +285,9 @@ export default function SecurityDashboard() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [recoveryKeyModal, setRecoveryKeyModal] = useState<'generate' | 'use' | null>(
+    null
+  );
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['securityDashboard'],
@@ -359,6 +363,15 @@ export default function SecurityDashboard() {
       <PageContainer>
         <div className="flex items-center justify-between">
           <PageHeader title={t('pages.securityDashboard.title')} icon={<Shield />} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setRecoveryKeyModal('generate')}
+            className="gap-sm"
+          >
+            <Key className="h-4 w-4" />
+            {t('pages.security.recoveryKey.menuBtn')}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -530,6 +543,16 @@ export default function SecurityDashboard() {
           </Card>
         </div>
       </PageContainer>
+
+      {recoveryKeyModal && (
+        <VaultRecoveryKeyModal
+          open={true}
+          onOpenChange={(v) => {
+            if (!v) setRecoveryKeyModal(null);
+          }}
+          mode={recoveryKeyModal}
+        />
+      )}
     </VaultGuard>
   );
 }
