@@ -2031,7 +2031,17 @@
       "exportVaultDesc": "Download passwords, cards and accounts as a ZIP file",
       "exportVaultSuccess": "Export started",
       "exportVaultSuccessDesc": "The ZIP file download has started.",
-      "exportVaultError": "Error exporting vault"
+      "exportVaultError": "Error exporting vault",
+      "vaultSearch": {
+        "placeholder": "Search vault (passwords, cards, accounts, files)...",
+        "title": "Global Vault Search",
+        "noResults": "No results found",
+        "noResultsDesc": "Try a different search term.",
+        "groupPasswords": "Passwords",
+        "groupCards": "Cards",
+        "groupAccounts": "Accounts",
+        "groupArchives": "Archives"
+      }
     },
     "passwords": {
       "title": "Passwords",

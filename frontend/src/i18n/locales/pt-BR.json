@@ -2087,7 +2087,17 @@
       "exportVaultDesc": "Baixar senhas, cartões e contas em arquivo ZIP",
       "exportVaultSuccess": "Exportação iniciada",
       "exportVaultSuccessDesc": "O download do arquivo ZIP foi iniciado.",
-      "exportVaultError": "Erro ao exportar cofre"
+      "exportVaultError": "Erro ao exportar cofre",
+      "vaultSearch": {
+        "placeholder": "Buscar no cofre (senhas, cartões, contas, arquivos)...",
+        "title": "Busca Global no Cofre",
+        "noResults": "Nenhum resultado encontrado",
+        "noResultsDesc": "Tente um termo diferente de busca.",
+        "groupPasswords": "Senhas",
+        "groupCards": "Cartões",
+        "groupAccounts": "Contas",
+        "groupArchives": "Arquivos"
+      }
     },
     "passwords": {
       "title": "Senhas",
