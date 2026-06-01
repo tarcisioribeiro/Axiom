@@ -2087,7 +2087,17 @@
       "exportVaultDesc": "Baixar senhas, cartões e contas em arquivo ZIP",
       "exportVaultSuccess": "Exportação iniciada",
       "exportVaultSuccessDesc": "O download do arquivo ZIP foi iniciado.",
-      "exportVaultError": "Erro ao exportar cofre"
+      "exportVaultError": "Erro ao exportar cofre",
+      "vaultSearch": {
+        "placeholder": "Buscar no cofre (senhas, cartões, contas, arquivos)...",
+        "title": "Busca Global no Cofre",
+        "noResults": "Nenhum resultado encontrado",
+        "noResultsDesc": "Tente um termo diferente de busca.",
+        "groupPasswords": "Senhas",
+        "groupCards": "Cartões",
+        "groupAccounts": "Contas",
+        "groupArchives": "Arquivos"
+      }
     },
     "passwords": {
       "title": "Senhas",
@@ -2158,7 +2168,31 @@
       "revoked": "Link revogado",
       "revokedDesc": "O link de compartilhamento foi revogado.",
       "revokeError": "Erro ao revogar link",
-      "loadError": "Erro ao carregar links"
+      "loadError": "Erro ao carregar links",
+      "step1Title": "Destinatário",
+      "step2Title": "Configuração",
+      "step3Title": "Confirmação",
+      "step1Desc": "Selecione para quem você deseja compartilhar",
+      "step2Desc": "Configure as opções de compartilhamento",
+      "step3Desc": "Confirme e gere o link",
+      "searchMembers": "Buscar membros...",
+      "noMembers": "Nenhum membro encontrado.",
+      "loadMembersError": "Erro ao carregar membros",
+      "selectMemberFirst": "Selecione um destinatário antes de continuar.",
+      "expiresIn1h": "1 hora",
+      "expiresIn6h": "6 horas",
+      "expiresIn24h": "24 horas",
+      "expiresIn7d": "7 dias",
+      "expiryLabel": "Validade do link",
+      "previewLabel": "Pré-visualização",
+      "confirmTitle": "Resumo do Compartilhamento",
+      "confirmRecipient": "Destinatário",
+      "confirmExpiry": "Validade",
+      "confirmMaxUses": "Usos máximos",
+      "confirmPassword": "Credencial",
+      "nextBtn": "Próximo",
+      "backBtn": "Voltar",
+      "confirmBtn": "Gerar Link"
     },
     "shareCredential": {
       "title": "Credencial Compartilhada",

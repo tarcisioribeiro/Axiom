@@ -2031,7 +2031,17 @@
       "exportVaultDesc": "Download passwords, cards and accounts as a ZIP file",
       "exportVaultSuccess": "Export started",
       "exportVaultSuccessDesc": "The ZIP file download has started.",
-      "exportVaultError": "Error exporting vault"
+      "exportVaultError": "Error exporting vault",
+      "vaultSearch": {
+        "placeholder": "Search vault (passwords, cards, accounts, files)...",
+        "title": "Global Vault Search",
+        "noResults": "No results found",
+        "noResultsDesc": "Try a different search term.",
+        "groupPasswords": "Passwords",
+        "groupCards": "Cards",
+        "groupAccounts": "Accounts",
+        "groupArchives": "Archives"
+      }
     },
     "passwords": {
       "title": "Passwords",
@@ -2098,7 +2108,31 @@
       "revoked": "Link revoked",
       "revokedDesc": "The sharing link has been revoked.",
       "revokeError": "Error revoking link",
-      "loadError": "Error loading links"
+      "loadError": "Error loading links",
+      "step1Title": "Recipient",
+      "step2Title": "Configuration",
+      "step3Title": "Confirmation",
+      "step1Desc": "Select who you want to share with",
+      "step2Desc": "Configure sharing options",
+      "step3Desc": "Confirm and generate the link",
+      "searchMembers": "Search members...",
+      "noMembers": "No members found.",
+      "loadMembersError": "Error loading members",
+      "selectMemberFirst": "Select a recipient before continuing.",
+      "expiresIn1h": "1 hour",
+      "expiresIn6h": "6 hours",
+      "expiresIn24h": "24 hours",
+      "expiresIn7d": "7 days",
+      "expiryLabel": "Link expiry",
+      "previewLabel": "Preview",
+      "confirmTitle": "Sharing Summary",
+      "confirmRecipient": "Recipient",
+      "confirmExpiry": "Expiry",
+      "confirmMaxUses": "Max uses",
+      "confirmPassword": "Credential",
+      "nextBtn": "Next",
+      "backBtn": "Back",
+      "confirmBtn": "Generate Link"
     },
     "shareCredential": {
       "title": "Shared Credential",
