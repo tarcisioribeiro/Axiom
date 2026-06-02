@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Shield,
   Key,
@@ -9,10 +9,12 @@ import {
   Download,
   Search,
   X,
+  Bell,
+  Loader2,
 } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { ChartContainer } from '@/components/charts';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -20,6 +22,10 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { VaultGuard } from '@/components/security/VaultGuard';
 import { VaultHealthSection } from '@/components/security/VaultHealthSection';
+import {
+  VaultOnboardingWizard,
+  useVaultOnboarding,
+} from '@/components/security/VaultOnboardingWizard';
 import { VaultRecoveryKeyModal } from '@/components/security/VaultRecoveryKeyModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +40,12 @@ import { securityDashboardService } from '@/services/security-dashboard-service'
 import { vaultConfigService } from '@/services/security-vault-service';
 import { storedAccountsService } from '@/services/stored-accounts-service';
 import { storedCardsService } from '@/services/stored-cards-service';
-import type { Password, StoredCreditCard, StoredBankAccount, Archive as ArchiveType } from '@/types';
+import type {
+  Password,
+  StoredCreditCard,
+  StoredBankAccount,
+  Archive as ArchiveType,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
@@ -100,7 +111,7 @@ function VaultSearch() {
     if (!enabled) return [];
     const q = debouncedQuery.toLowerCase();
 
-    const passwordResults: SearchResultItem[] = (passwords as Password[])
+    const passwordResults: SearchResultItem[] = passwords
       .filter(
         (p) =>
           p.title.toLowerCase().includes(q) ||
@@ -115,7 +126,7 @@ function VaultSearch() {
         route: '/security/passwords',
       }));
 
-    const cardResults: SearchResultItem[] = (cards as StoredCreditCard[])
+    const cardResults: SearchResultItem[] = cards
       .filter(
         (c) =>
           c.name.toLowerCase().includes(q) ||
@@ -130,7 +141,7 @@ function VaultSearch() {
         route: '/security/stored-cards',
       }));
 
-    const accountResults: SearchResultItem[] = (accounts as StoredBankAccount[])
+    const accountResults: SearchResultItem[] = accounts
       .filter(
         (a) =>
           a.name.toLowerCase().includes(q) ||
@@ -145,11 +156,9 @@ function VaultSearch() {
         route: '/security/stored-accounts',
       }));
 
-    const archiveResults: SearchResultItem[] = (archives as ArchiveType[])
+    const archiveResults: SearchResultItem[] = archives
       .filter(
-        (a) =>
-          a.title.toLowerCase().includes(q) ||
-          a.category.toLowerCase().includes(q)
+        (a) => a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)
       )
       .map((a) => ({
         id: a.id,
@@ -175,16 +184,39 @@ function VaultSearch() {
     return groups;
   }, [results]);
 
-  const groupConfig: Array<{ type: SearchResultType; label: string; icon: React.ReactNode }> = [
-    { type: 'password', label: t('pages.securityDashboard.vaultSearch.groupPasswords'), icon: <Key className="h-4 w-4 text-info" /> },
-    { type: 'card', label: t('pages.securityDashboard.vaultSearch.groupCards'), icon: <CreditCard className="h-4 w-4 text-warning" /> },
-    { type: 'account', label: t('pages.securityDashboard.vaultSearch.groupAccounts'), icon: <Wallet className="h-4 w-4 text-success" /> },
-    { type: 'archive', label: t('pages.securityDashboard.vaultSearch.groupArchives'), icon: <Archive className="h-4 w-4 text-accent" /> },
+  const groupConfig: Array<{
+    type: SearchResultType;
+    label: string;
+    icon: React.ReactNode;
+  }> = [
+    {
+      type: 'password',
+      label: t('pages.securityDashboard.vaultSearch.groupPasswords'),
+      icon: <Key className="h-4 w-4 text-info" />,
+    },
+    {
+      type: 'card',
+      label: t('pages.securityDashboard.vaultSearch.groupCards'),
+      icon: <CreditCard className="h-4 w-4 text-warning" />,
+    },
+    {
+      type: 'account',
+      label: t('pages.securityDashboard.vaultSearch.groupAccounts'),
+      icon: <Wallet className="h-4 w-4 text-success" />,
+    },
+    {
+      type: 'archive',
+      label: t('pages.securityDashboard.vaultSearch.groupArchives'),
+      icon: <Archive className="h-4 w-4 text-accent" />,
+    },
   ];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -193,7 +225,7 @@ function VaultSearch() {
   }, []);
 
   const handleSelect = (item: SearchResultItem) => {
-    navigate(item.route);
+    void navigate(item.route);
     setQuery('');
     setIsOpen(false);
   };
@@ -231,7 +263,7 @@ function VaultSearch() {
       </div>
 
       {isOpen && enabled && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-96 overflow-y-auto rounded-xl border bg-popover shadow-xl">
+        <div className="absolute left-0 right-0 top-full z-50 mt-xs max-h-96 overflow-y-auto rounded-lg border bg-popover shadow-lg">
           {!hasResults ? (
             <div className="flex flex-col items-center justify-center gap-sm py-lg text-center">
               <Search className="h-8 w-8 text-muted-foreground/40" />
@@ -281,6 +313,129 @@ function VaultSearch() {
   );
 }
 
+function VaultAlertConfigPanel() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: alertConfig, isLoading } = useQuery({
+    queryKey: ['vaultAlertConfig'],
+    queryFn: () => securityDashboardService.getAlertConfig(),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: Parameters<typeof securityDashboardService.updateAlertConfig>[0]) =>
+      securityDashboardService.updateAlertConfig(data),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['vaultAlertConfig'] });
+      toast({
+        title: t('pages.securityDashboard.alertConfigSaved', {
+          defaultValue: 'Configurações salvas',
+        }),
+      });
+    },
+    onError: () => {
+      toast({
+        title: t('common.messages.saveError'),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const toggle = (field: string, value: boolean) => {
+    if (!alertConfig) return;
+    mutation.mutate({ ...alertConfig, [field]: value });
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-lg">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const rows: {
+    field: string;
+    label: string;
+    desc: string;
+    value: boolean;
+  }[] = [
+    {
+      field: 'alert_on_new_ip',
+      label: t('pages.securityDashboard.alertOnNewIp', {
+        defaultValue: 'Alerta por novo IP',
+      }),
+      desc: t('pages.securityDashboard.alertOnNewIpDesc', {
+        defaultValue: 'Notificar ao acessar o cofre de um novo endereço IP.',
+      }),
+      value: alertConfig?.alert_on_new_ip ?? true,
+    },
+    {
+      field: 'alert_on_failed_unlock',
+      label: t('pages.securityDashboard.alertOnFailedUnlock', {
+        defaultValue: 'Alerta por tentativas falhas',
+      }),
+      desc: t('pages.securityDashboard.alertOnFailedUnlockDesc', {
+        defaultValue: 'Notificar após múltiplas tentativas de desbloqueio incorretas.',
+      }),
+      value: alertConfig?.alert_on_failed_unlock ?? true,
+    },
+    {
+      field: 'alert_on_reveal',
+      label: t('pages.securityDashboard.alertOnReveal', {
+        defaultValue: 'Alerta ao revelar senha',
+      }),
+      desc: t('pages.securityDashboard.alertOnRevealDesc', {
+        defaultValue: 'Notificar cada vez que uma senha for revelada.',
+      }),
+      value: alertConfig?.alert_on_reveal ?? false,
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-sm text-base">
+          <Bell className="h-4 w-4" />
+          {t('pages.securityDashboard.alertConfig', {
+            defaultValue: 'Configurações de Alertas',
+          })}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-sm">
+        {rows.map(({ field, label, desc, value }) => (
+          <div key={field} className="flex items-start justify-between gap-md">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground">{desc}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={value}
+              disabled={mutation.isPending}
+              onClick={() => toggle(field, !value)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 ${
+                value ? 'bg-primary' : 'bg-muted-foreground/30'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                  value ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SecurityDashboard() {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -288,6 +443,16 @@ export default function SecurityDashboard() {
   const [recoveryKeyModal, setRecoveryKeyModal] = useState<'generate' | 'use' | null>(
     null
   );
+  const { isCompleted } = useVaultOnboarding();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Show onboarding wizard on first visit
+    if (!isCompleted()) {
+      setShowOnboarding(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['securityDashboard'],
@@ -542,6 +707,9 @@ export default function SecurityDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Alert Config (#209) */}
+        <VaultAlertConfigPanel />
       </PageContainer>
 
       {recoveryKeyModal && (
@@ -553,6 +721,10 @@ export default function SecurityDashboard() {
           mode={recoveryKeyModal}
         />
       )}
+      <VaultOnboardingWizard
+        open={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
     </VaultGuard>
   );
 }

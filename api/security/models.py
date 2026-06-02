@@ -49,8 +49,15 @@ class Password(BaseModel):
     owner = models.ForeignKey(
         "members.Member", on_delete=models.PROTECT, related_name="passwords"
     )
+    totp_enabled = models.BooleanField(
+        default=False, verbose_name="TOTP Habilitado"
+    )
+    _totp_secret = models.TextField(
+        blank=True, null=True, verbose_name="Segredo TOTP (Criptografado)"
+    )
 
     password = VaultEncryptedField("_password")
+    totp_secret = VaultEncryptedField("_totp_secret")
 
     class Meta:
         verbose_name = "Senha"
@@ -633,3 +640,110 @@ class DeletionRecord(models.Model):
             f"{self.model_name} {self.record_uuid} "
             f"purged at {self.purged_at.strftime('%Y-%m-%dT%H:%M:%SZ')}"
         )
+
+
+# ============================================================================
+# PASSWORD HISTORY MODEL
+# ============================================================================
+
+
+class PasswordHistory(BaseModel):
+    """Histório de versões anteriores de uma senha."""
+
+    password = models.ForeignKey(
+        "Password",
+        on_delete=models.CASCADE,
+        related_name="history",
+        verbose_name="Senha",
+    )
+    _old_password = models.TextField(
+        verbose_name="Senha Anterior (Criptografada)"
+    )
+    changed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Alterado por",
+    )
+
+    old_password = VaultEncryptedField("_old_password")
+
+    class Meta:
+        verbose_name = "Histórico de Senha"
+        verbose_name_plural = "Histórico de Senhas"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Histórico de {self.password.title} — {self.created_at}"
+
+
+# ============================================================================
+# VAULT HEALTH SNAPSHOT MODEL
+# ============================================================================
+
+
+class VaultHealthSnapshot(BaseModel):
+    """Snapshot diário do score de saúde do cofre para histórico e evolução."""
+
+    owner = models.ForeignKey(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="health_snapshots",
+        verbose_name="Proprietário",
+    )
+    score = models.IntegerField(verbose_name="Score")
+    weak_passwords = models.IntegerField(default=0)
+    medium_passwords = models.IntegerField(default=0)
+    duplicate_passwords = models.IntegerField(default=0)
+    outdated_passwords = models.IntegerField(default=0)
+    total_passwords = models.IntegerField(default=0)
+    snapshot_date = models.DateField(
+        auto_now_add=True, verbose_name="Data do Snapshot"
+    )
+
+    class Meta:
+        verbose_name = "Snapshot de Saúde do Cofre"
+        verbose_name_plural = "Snapshots de Saúde do Cofre"
+        ordering = ["-snapshot_date"]
+        unique_together = ("owner", "snapshot_date")
+
+    def __str__(self):
+        return (
+            f"Snapshot {self.owner} — {self.snapshot_date} score={self.score}"
+        )
+
+
+# ============================================================================
+# VAULT ALERT CONFIG MODEL
+# ============================================================================
+
+
+class VaultAlertConfig(BaseModel):
+    """Configuração de alertas de atividade suspeita no cofre por usuário."""
+
+    owner = models.OneToOneField(
+        "members.Member",
+        on_delete=models.CASCADE,
+        related_name="vault_alert_config",
+        verbose_name="Proprietário",
+    )
+    alert_on_new_ip = models.BooleanField(
+        default=True, verbose_name="Alertar em novo IP"
+    )
+    alert_on_failed_unlock = models.BooleanField(
+        default=True, verbose_name="Alertar em falha de desbloqueio"
+    )
+    alert_on_reveal = models.BooleanField(
+        default=False, verbose_name="Alertar em revelação de senha"
+    )
+    failed_unlock_threshold = models.IntegerField(
+        default=3, verbose_name="Threshold de falhas de desbloqueio"
+    )
+
+    class Meta:
+        verbose_name = "Configuração de Alertas do Cofre"
+        verbose_name_plural = "Configurações de Alertas do Cofre"
+
+    def __str__(self):
+        return f"VaultAlertConfig({self.owner})"

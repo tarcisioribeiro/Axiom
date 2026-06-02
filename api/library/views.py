@@ -17,7 +17,7 @@ from django.db.models import (
 )
 from django.http import FileResponse
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -2590,7 +2590,6 @@ class KnowledgeGraphView(APIView):
             )
 
         return Response({"nodes": nodes, "links": links})
-
 
 
 # ============================================================================

@@ -323,9 +323,9 @@ def _generate_notifications(member):
         owner=member,
         notification_type="reading_goal_achieved",
         content_type="reading_goal",
-    ).exclude(
-        object_id__in=achieved_goal_ids
-    ).update(is_deleted=True, deleted_at=timezone.now())
+    ).exclude(object_id__in=achieved_goal_ids).update(
+        is_deleted=True, deleted_at=timezone.now()
+    )
 
 
 class NotificationListView(generics.ListAPIView):
