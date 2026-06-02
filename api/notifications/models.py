@@ -19,6 +19,8 @@ NOTIFICATION_TYPE_CHOICES = (
     ("reading_goal_achieved", "Meta de Leitura Atingida"),
     ("reading_goal_behind", "Meta de Leitura Atrasada"),
     ("reconciliation_pending", "Reconciliação Bancária Pendente"),
+    ("stored_card_expiring", "Cartão Armazenado Próximo do Vencimento"),
+    ("credential_share_accessed", "Credencial Acessada via Link"),
 )
 
 NOTIFICATION_CHANNEL_CHOICES = (

@@ -259,6 +259,74 @@ def _generate_notifications(member):
         object_id__in=active_bill_ids
     ).update(is_deleted=True, deleted_at=timezone.now())
 
+    # --- ReadingGoal ---
+    from library.models import ReadingGoal
+
+    current_year = today.year
+    current_month = today.month
+    expected_progress_pct = round((current_month / 12) * 100, 1)
+
+    active_reading_goals = ReadingGoal.objects.filter(
+        owner=member,
+        year=current_year,
+        deleted_at__isnull=True,
+    )
+
+    achieved_goal_ids = []
+    for goal in active_reading_goals:
+        actual_pct = goal.progress_percentage
+        lag = expected_progress_pct - actual_pct
+
+        if actual_pct >= 100:
+            achieved_goal_ids.append(goal.id)
+            Notification.objects.get_or_create(
+                owner=member,
+                notification_type="reading_goal_achieved",
+                content_type="reading_goal",
+                object_id=goal.id,
+                defaults={
+                    "title": f"Meta de leitura {current_year} concluída!",
+                    "message": (
+                        f"Parabéns! Você leu {goal.books_read_this_year}"
+                        f" de {goal.books_goal} livros previstos."
+                    ),
+                    "created_by": member.user,
+                },
+            )
+        elif lag >= 20:
+            Notification.objects.get_or_create(
+                owner=member,
+                notification_type="reading_goal_behind",
+                content_type="reading_goal",
+                object_id=goal.id,
+                defaults={
+                    "title": f"Meta de leitura {current_year} atrasada",
+                    "message": (
+                        f"Você leu {goal.books_read_this_year}"
+                        f" de {goal.books_goal} livros. "
+                        f"O progresso esperado para este mês é"
+                        f" {expected_progress_pct}%, mas está em"
+                        f" {actual_pct}%."
+                    ),
+                    "created_by": member.user,
+                },
+            )
+        else:
+            Notification.objects.filter(
+                owner=member,
+                notification_type="reading_goal_behind",
+                content_type="reading_goal",
+                object_id=goal.id,
+            ).update(is_deleted=True, deleted_at=timezone.now())
+
+    Notification.objects.filter(
+        owner=member,
+        notification_type="reading_goal_achieved",
+        content_type="reading_goal",
+    ).exclude(object_id__in=achieved_goal_ids).update(
+        is_deleted=True, deleted_at=timezone.now()
+    )
+
 
 class NotificationListView(generics.ListAPIView):
     permission_classes = (

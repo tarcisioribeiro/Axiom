@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { Plus, Pencil, Trash2, Calendar, TrendingDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar, TrendingDown, History } from 'lucide-react';
 import { useState, useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,12 +21,19 @@ import {
 import { translate } from '@/config/constants';
 import { useAlertDialog } from '@/hooks/use-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { accountsService } from '@/services/accounts-service';
 import { creditCardsService } from '@/services/credit-cards-service';
+import { expensesService } from '@/services/expenses-service';
 import { fixedExpensesService } from '@/services/fixed-expenses-service';
-import type { FixedExpense, FixedExpenseFormData, Account, CreditCard } from '@/types';
+import type {
+  Expense,
+  FixedExpense,
+  FixedExpenseFormData,
+  Account,
+  CreditCard,
+} from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
 
 export default function FixedExpenses({ embedded = false }: { embedded?: boolean }) {
@@ -39,6 +46,9 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<FixedExpense | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [historyItem, setHistoryItem] = useState<FixedExpense | null>(null);
+  const [historyExpenses, setHistoryExpenses] = useState<Expense[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const { toast } = useToast();
   const { showConfirm } = useAlertDialog();
 
@@ -46,6 +56,20 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
     void loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openHistory = async (item: FixedExpense) => {
+    setHistoryItem(item);
+    setHistoryExpenses([]);
+    setHistoryLoading(true);
+    try {
+      const results = await expensesService.getAll({ fixed_expense_template: item.id });
+      setHistoryExpenses(Array.isArray(results) ? results : []);
+    } catch {
+      setHistoryExpenses([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -322,6 +346,17 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         }
         actions={(item) => (
           <div className="flex items-center justify-end gap-sm">
+            {item.total_generated > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => void openHistory(item)}
+                aria-label={t('pages.fixedExpenses.historyBtn')}
+                title={t('pages.fixedExpenses.historyBtn')}
+              >
+                <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -380,6 +415,67 @@ export default function FixedExpenses({ embedded = false }: { embedded?: boolean
         fixedExpenses={fixedExpenses.filter((e) => e.is_active)}
         onSuccess={loadData}
       />
+
+      {/* History Dialog */}
+      <Dialog
+        open={!!historyItem}
+        onOpenChange={(v) => {
+          if (!v) setHistoryItem(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-sm">
+              <History className="h-4 w-4" />
+              {t('pages.fixedExpenses.historyTitle')}: {historyItem?.description}
+            </DialogTitle>
+            <DialogDescription>
+              {t('pages.fixedExpenses.historyDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          {historyLoading ? (
+            <p className="py-md text-center text-sm text-muted-foreground">
+              {t('common.actions.loading')}
+            </p>
+          ) : historyExpenses.length === 0 ? (
+            <p className="py-md text-center text-sm text-muted-foreground">
+              {t('pages.fixedExpenses.historyEmpty')}
+            </p>
+          ) : (
+            <div className="max-h-96 overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="pb-xs pr-md">{t('common.fields.date')}</th>
+                    <th className="pb-xs pr-md">{t('common.fields.description')}</th>
+                    <th className="pb-xs text-right">{t('common.fields.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {historyExpenses.map((exp) => (
+                    <tr key={exp.id}>
+                      <td className="py-xs pr-md text-muted-foreground">
+                        {formatDate(exp.date)}
+                      </td>
+                      <td className="py-xs pr-md">{exp.description}</td>
+                      <td
+                        className={cn(
+                          'py-xs text-right font-medium',
+                          exp.payed
+                            ? 'text-muted-foreground line-through'
+                            : 'text-destructive'
+                        )}
+                      >
+                        {formatCurrency(exp.value)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Wrapper>
   );
 }

@@ -7,12 +7,6 @@ from pgvector.django import VectorField  # type: ignore[import-untyped]
 
 from app.models import BaseModel
 
-SOURCE_TYPE_CHOICES = (
-    ("book_summary", "Resumo de Livro"),
-    ("reading_note", "Nota de Leitura"),
-    ("book_highlight", "Destaque"),
-)
-
 ROLE_CHOICES = (
     ("user", "Usuário"),
     ("agent", "Agente"),
@@ -42,8 +36,7 @@ AGENT_SOURCE_TYPE_CHOICES = (
 
 class AgentEmbedding(models.Model):
     """
-    Embedding vetorial real (pgvector) por domínio e fonte.
-    Substitui EmbeddingDocument para buscas semânticas em prod.
+    Embedding vetorial (pgvector) por domínio e fonte.
     Armazenado em vectors.agent_embeddings (schema dedicado no PostgreSQL).
     """
 
@@ -119,56 +112,6 @@ class AgentEmbedding(models.Model):
 
     def __str__(self) -> str:
         return f"{self.source_title} ({self.domain}/{self.source_type})"
-
-
-class EmbeddingDocument(BaseModel):
-    """
-    DEPRECATED: Substituído por AgentEmbedding (VectorField real,
-    schema vectors).
-    Mantido com managed=True para não quebrar o migration history.
-    Não deve ser usado em novos fluxos — use AgentEmbedding.
-    """
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="embedding_documents",
-        verbose_name="Usuário",
-    )
-    source_type = models.CharField(
-        max_length=50,
-        choices=SOURCE_TYPE_CHOICES,
-        verbose_name="Tipo de Fonte",
-    )
-    source_id = models.UUIDField(
-        verbose_name="ID da Fonte",
-        help_text="UUID do objeto de origem (livro, leitura, etc.)",
-    )
-    source_title = models.CharField(
-        max_length=255,
-        verbose_name="Título da Fonte",
-    )
-    content = models.TextField(verbose_name="Conteúdo do Chunk")
-    embedding_json = models.TextField(
-        verbose_name="Embedding (JSON)",
-        help_text=(
-            "Lista de floats serializada como JSON."
-            " Usada com pgvector em prod."
-        ),
-        blank=True,
-        default="[]",
-    )
-
-    class Meta:
-        verbose_name = "Documento Vetorizado"
-        verbose_name_plural = "Documentos Vetorizados"
-        indexes = [
-            models.Index(fields=["user", "source_type"]),
-            models.Index(fields=["source_id"]),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.source_title} ({self.source_type})"
 
 
 class AgentConversation(BaseModel):
