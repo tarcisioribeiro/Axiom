@@ -325,8 +325,9 @@ function VaultAlertConfigPanel() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: Parameters<typeof securityDashboardService.updateAlertConfig>[0]) =>
-      securityDashboardService.updateAlertConfig(data),
+    mutationFn: (
+      data: Parameters<typeof securityDashboardService.updateAlertConfig>[0]
+    ) => securityDashboardService.updateAlertConfig(data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vaultAlertConfig'] });
       toast({
