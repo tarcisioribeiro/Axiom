@@ -48,7 +48,11 @@ const { mockShowConfirm } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/hooks/use-alert-dialog', () => ({
-  useAlertDialog: () => ({ showConfirm: mockShowConfirm }),
+  useAlertDialog: () => ({
+    showConfirm: mockShowConfirm,
+    showDelete: (name: string) =>
+      mockShowConfirm({ variant: 'destructive', title: name }),
+  }),
 }));
 
 vi.mock('react-router-dom', async (importOriginal) => {
