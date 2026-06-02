@@ -548,78 +548,91 @@
     --shadow-opacity-strong: 0.75;
   }
 
-  /* ── Flat Remix (Dark Variant) ── */
-  .dark[data-dark-theme='flat-remix'] {
+  /* ── Flat Remix Blue Darkest (Dark Variant) ── */
+  .dark[data-dark-theme='flat-remix-blue-darkest'] {
     color-scheme: dark;
 
-    --background: 224 14% 25%;
-    --foreground: 210 22% 86%;
+    /* Background — #1A1C23 */
+    --background: 227 15% 12%;
+    /* Foreground — #D3DAE3 */
+    --foreground: 214 22% 86%;
 
-    --card: 226 14% 34%;
-    --card-foreground: 210 22% 86%;
+    /* Card — #22252E */
+    --card: 225 15% 16%;
+    --card-foreground: 214 22% 86%;
 
-    --popover: 226 14% 34%;
-    --popover-foreground: 210 22% 86%;
+    /* Popover — #22252E */
+    --popover: 225 15% 16%;
+    --popover-foreground: 214 22% 86%;
 
     /* Primary — Blue (#5294E2) */
-    --primary: 213 68% 60%;
-    --primary-foreground: 224 14% 25%;
+    --primary: 213 71% 60%;
+    --primary-foreground: 227 15% 12%;
 
-    --secondary: 226 14% 34%;
-    --secondary-foreground: 210 22% 86%;
+    /* Secondary — Card surface */
+    --secondary: 225 15% 16%;
+    --secondary-foreground: 214 22% 86%;
 
-    --muted: 224 14% 29%;
-    --muted-foreground: 220 7% 62%;
+    /* Muted — entre background e card */
+    --muted: 226 15% 14%;
+    /* Muted foreground — #7C818C ajustado para WCAG AA no fundo escuro */
+    --muted-foreground: 221 9% 60%;
 
     /* Accent — Purple (#B98EAD) */
-    --accent: 311 19% 63%;
-    --accent-foreground: 224 14% 25%;
+    --accent: 317 23% 64%;
+    --accent-foreground: 227 15% 12%;
 
     /* Destructive — Red (#EC6A88) */
-    --destructive: 344 76% 67%;
-    --destructive-foreground: 224 14% 25%;
+    --destructive: 346 77% 67%;
+    --destructive-foreground: 227 15% 12%;
 
     /* Success — Green (#5BC0A0) */
-    --success: 162 41% 55%;
-    --success-foreground: 224 14% 25%;
+    --success: 161 44% 55%;
+    --success-foreground: 227 15% 12%;
 
     /* Warning — Yellow (#F9C859) */
-    --warning: 43 92% 66%;
-    --warning-foreground: 224 14% 25%;
+    --warning: 42 93% 66%;
+    --warning-foreground: 227 15% 12%;
 
     /* Info — Cyan (#5BC0CF) */
-    --info: 187 45% 59%;
-    --info-foreground: 224 14% 25%;
+    --info: 188 55% 58%;
+    --info-foreground: 227 15% 12%;
 
-    --border: 226 14% 42%;
-    --input: 226 14% 42%;
-    --ring: 213 68% 60%;
+    --border: 226 14% 22%;
+    --input: 226 14% 22%;
+    --ring: 213 71% 60%;
 
-    --category-finance: 162 41% 55%;
-    --category-health: 187 45% 59%;
-    --category-studies: 213 68% 60%;
-    --category-spiritual: 311 19% 63%;
-    --category-exercise: 24 70% 60%;
-    --category-nutrition: 43 92% 66%;
-    --category-work: 220 7% 62%;
-    --category-leisure: 344 76% 67%;
-    --category-intellect: 265 68% 70%; /* purple Flat Remix */
+    --category-finance: 161 44% 55%; /* green  #5BC0A0 */
+    --category-health: 188 55% 58%; /* cyan   #5BC0CF */
+    --category-studies: 213 71% 60%; /* blue   #5294E2 */
+    --category-spiritual: 317 23% 64%; /* purple #B98EAD */
+    --category-exercise: 24 72% 62%; /* orange (derivado da paleta) */
+    --category-nutrition: 42 93% 66%; /* yellow #F9C859 */
+    --category-work: 221 9% 60%; /* comment #7C818C */
+    --category-leisure: 346 77% 67%; /* red    #EC6A88 */
+    --category-intellect: 265 68% 70%; /* purple Flat Remix Blue Darkest */
 
-    --on-primary: 224 14% 25%;
-    --on-secondary: 210 22% 86%;
-    --on-accent: 224 14% 25%;
-    --on-success: 224 14% 25%;
-    --on-warning: 224 14% 25%;
-    --on-destructive: 224 14% 25%;
-    --on-info: 224 14% 25%;
+    --on-primary: 227 15% 12%;
+    --on-secondary: 214 22% 86%;
+    --on-accent: 227 15% 12%;
+    --on-success: 227 15% 12%;
+    --on-warning: 227 15% 12%;
+    --on-destructive: 227 15% 12%;
+    --on-info: 227 15% 12%;
 
-    --border-subtle: 224 14% 22%;
-    --star: 43 92% 58%;
+    --border-subtle: 226 15% 10%;
+    --star: 42 93% 58%;
 
-    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.55);
-    --shadow-opacity-soft: 0.35;
-    --shadow-opacity-medium: 0.45;
-    --shadow-opacity-strong: 0.55;
+    /* Heatmap dark overrides */
+    --heatmap-missed: hsl(var(--destructive) / 0.28);
+    --heatmap-low: hsl(var(--success) / 0.15);
+    --heatmap-medium-low: hsl(var(--success) / 0.3);
+    --heatmap-medium: hsl(var(--success) / 0.55);
+
+    --shadow-card-hover: 0 20px 40px rgba(0, 0, 0, 0.65);
+    --shadow-opacity-soft: 0.4;
+    --shadow-opacity-medium: 0.5;
+    --shadow-opacity-strong: 0.65;
   }
 
   /* ── Everforest (Dark Variant) ── */

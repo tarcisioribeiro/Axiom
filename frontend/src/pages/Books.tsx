@@ -668,7 +668,10 @@ export default function Books() {
                     handleFilterChange();
                   }}
                 >
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger
+                    className="w-36"
+                    startIcon={<BookOpen className="h-3.5 w-3.5" />}
+                  >
                     <SelectValue placeholder={t('pages.books.statusPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -687,7 +690,10 @@ export default function Books() {
                     handleFilterChange();
                   }}
                 >
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger
+                    className="w-36"
+                    startIcon={<Library className="h-3.5 w-3.5" />}
+                  >
                     <SelectValue placeholder={t('pages.books.genrePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>

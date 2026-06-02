@@ -22,6 +22,7 @@
       "download": "Baixar",
       "filter": "Filtros",
       "clearFilters": "Limpar Filtros",
+      "remove": "Remover",
       "filters": {
         "fromDate": "De: DD/MM/AAAA",
         "toDate": "Até: DD/MM/AAAA"
@@ -5468,6 +5469,7 @@
     "vaults": "Cofres / Investimentos",
     "loans": "Empréstimos",
     "creditCards": "Cartões de Crédito",
+    "overdraft": "Cheque Especial Utilizado",
     "noAssets": "Nenhum ativo encontrado",
     "noLiabilities": "Nenhum passivo encontrado",
     "loading": "Calculando patrimônio..."
@@ -5480,11 +5482,11 @@
     "dueSoon": "Vence em breve",
     "dueSoonDesc": "Renovação nos próximos 7 dias",
     "noSubscriptions": "Nenhuma assinatura encontrada",
-    "noSubscriptionsDesc": "Assinaturas são despesas fixas com frequência mensal ou categoria de assinatura.",
+    "noSubscriptionsDesc": "Assinaturas são despesas fixas com categoria de assinatura digital, entretenimento ou contas/serviços, ou vinculadas a um cartão de crédito.",
     "groups": {
-      "streaming": "Streaming",
-      "software": "Software",
-      "services": "Serviços",
+      "digital_signs": "Assinaturas Digitais",
+      "entertainment": "Entretenimento",
+      "bills_and_services": "Contas e Serviços",
       "other": "Outros"
     },
     "renewalOn": "Renova dia {{day}}",

@@ -22,6 +22,7 @@
       "download": "Download",
       "filter": "Filters",
       "clearFilters": "Clear Filters",
+      "remove": "Remove",
       "filters": {
         "fromDate": "From: DD/MM/YYYY",
         "toDate": "To: DD/MM/YYYY"
@@ -5408,6 +5409,7 @@
     "vaults": "Vaults / Investments",
     "loans": "Loans",
     "creditCards": "Credit Cards",
+    "overdraft": "Overdraft Used",
     "noAssets": "No assets found",
     "noLiabilities": "No liabilities found",
     "loading": "Calculating net worth..."
@@ -5420,11 +5422,11 @@
     "dueSoon": "Due soon",
     "dueSoonDesc": "Renewal in the next 7 days",
     "noSubscriptions": "No subscriptions found",
-    "noSubscriptionsDesc": "Subscriptions are fixed expenses with monthly frequency or subscription category.",
+    "noSubscriptionsDesc": "Subscriptions are fixed expenses with digital signs, entertainment, or bills & services categories, or linked to a credit card.",
     "groups": {
-      "streaming": "Streaming",
-      "software": "Software",
-      "services": "Services",
+      "digital_signs": "Digital Subscriptions",
+      "entertainment": "Entertainment",
+      "bills_and_services": "Bills & Services",
       "other": "Other"
     },
     "renewalOn": "Renews on day {{day}}",
