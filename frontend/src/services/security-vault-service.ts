@@ -1,6 +1,7 @@
 import { API_CONFIG } from '@/config/constants';
 import type {
   VaultChangePasswordData,
+  VaultPreferences,
   VaultSetupData,
   VaultStatus,
   VaultUnlockData,
@@ -39,6 +40,19 @@ class VaultConfigService {
     return apiClient.post<{ message: string }>(
       API_CONFIG.ENDPOINTS.SECURITY_VAULT_CHANGE_PASSWORD,
       data
+    );
+  }
+
+  async getPreferences(): Promise<VaultPreferences> {
+    return apiClient.get<VaultPreferences>(
+      API_CONFIG.ENDPOINTS.SECURITY_VAULT_PREFERENCES
+    );
+  }
+
+  async updatePreferences(ttl_minutes: number): Promise<VaultPreferences> {
+    return apiClient.patch<VaultPreferences>(
+      API_CONFIG.ENDPOINTS.SECURITY_VAULT_PREFERENCES,
+      { session_ttl_minutes: ttl_minutes }
     );
   }
 

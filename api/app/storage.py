@@ -67,8 +67,12 @@ class MinIOStorage(S3Boto3Storage):
         http_method: Optional[str] = None,
     ) -> str:
         """
-        Generate a presigned URL signed with the external endpoint so that
-        the SigV4 Host header in the signature matches what the browser sends.
+        Generate a URL for a stored file.
+
+        - With MINIO_EXTERNAL_ENDPOINT: presigned URL signed with the external
+          (browser-accessible) endpoint so the SigV4 Host header matches.
+        - Without MINIO_EXTERNAL_ENDPOINT: Django proxy URL (/media/<name>) so
+          the browser doesn't need to reach MinIO directly (staging).
         """
         if self.external_endpoint and hasattr(self, "_url_signing_client"):
             params: dict[str, Any] = {"Bucket": self.bucket_name, "Key": name}
@@ -81,11 +85,4 @@ class MinIOStorage(S3Boto3Storage):
                     ExpiresIn=expire,
                 )
             )
-        return str(
-            super().url(  # type: ignore[return-value]
-                name,
-                parameters=parameters,
-                expire=expire,
-                http_method=http_method,
-            )
-        )
+        return f"/media/{name}"
