@@ -6,5 +6,8 @@ module.exports = {
       'always',
       ['feat', 'fix', 'chore', 'refactor', 'docs', 'test', 'ci', 'perf', 'revert', 'style'],
     ],
+    'body-max-line-length': [2, 'always', 100],
+    'footer-leading-blank': [2, 'always'],
+    'footer-max-line-length': [2, 'always', 100],
   },
 };
