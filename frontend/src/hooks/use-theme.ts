@@ -8,7 +8,7 @@ export type DarkVariant =
   | 'tokyo-night'
   | 'gruvbox-dark'
   | 'cyberpunk'
-  | 'flat-remix'
+  | 'flat-remix-blue-darkest'
   | 'everforest';
 
 export type LightVariant =
@@ -66,7 +66,7 @@ function isValidDarkVariant(value: string): value is DarkVariant {
     'tokyo-night',
     'gruvbox-dark',
     'cyberpunk',
-    'flat-remix',
+    'flat-remix-blue-darkest',
     'everforest',
   ].includes(value);
 }
@@ -109,7 +109,7 @@ function applyLightVariantAttr(variant: LightVariant) {
  * - Falling back to system preference
  * - Smooth transitions when changing themes
  * - Persisting preference to localStorage
- * - Dark mode variant selection (Dracula, Catppuccin Mocha, Tokyo Night, Gruvbox Dark, Cyberpunk, Flat Remix, Everforest)
+ * - Dark mode variant selection (Dracula, Catppuccin Mocha, Tokyo Night, Gruvbox Dark, Cyberpunk, Flat Remix Blue Darkest, Everforest)
  * - Light mode variant selection (Alucard, Catppuccin Latte, Rosé Pine Dawn, Everforest Light, Gruvbox Light, Solarized Light, Nord Light)
  *
  * @example
