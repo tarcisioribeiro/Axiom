@@ -2,6 +2,7 @@
 vi.mock('@/services/security-dashboard-service', () => ({
   securityDashboardService: {
     getStats: vi.fn(),
+    getAlertConfig: vi.fn(),
   },
 }));
 
@@ -11,8 +12,33 @@ vi.mock('@/services/security-vault-service', () => ({
   },
 }));
 
+vi.mock('@/services/passwords-service', () => ({
+  passwordsService: { getAll: vi.fn().mockResolvedValue([]) },
+}));
+
+vi.mock('@/services/stored-cards-service', () => ({
+  storedCardsService: { getAll: vi.fn().mockResolvedValue([]) },
+}));
+
+vi.mock('@/services/stored-accounts-service', () => ({
+  storedAccountsService: { getAll: vi.fn().mockResolvedValue([]) },
+}));
+
+vi.mock('@/services/archives-service', () => ({
+  archivesService: { getAll: vi.fn().mockResolvedValue([]) },
+}));
+
 vi.mock('@/components/security/VaultGuard', () => ({
   VaultGuard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/security/VaultOnboardingWizard', () => ({
+  VaultOnboardingWizard: () => null,
+  useVaultOnboarding: () => ({ isCompleted: () => true, markCompleted: vi.fn() }),
+}));
+
+vi.mock('@/components/security/VaultRecoveryKeyModal', () => ({
+  VaultRecoveryKeyModal: () => null,
 }));
 
 vi.mock('@/components/security/VaultHealthSection', () => ({
@@ -100,6 +126,12 @@ describe('SecurityDashboard', () => {
     queryClient.clear();
     mockToast.mockClear();
     vi.mocked(securityDashboardService.getStats).mockResolvedValue(sampleStats);
+    vi.mocked(securityDashboardService.getAlertConfig).mockResolvedValue({
+      alert_on_new_ip: true,
+      alert_on_failed_unlock: true,
+      alert_on_reveal: false,
+      failed_unlock_threshold: 5,
+    });
     vi.mocked(vaultConfigService.exportVaultZip).mockResolvedValue(undefined);
   });
 

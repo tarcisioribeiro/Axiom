@@ -46,4 +46,9 @@ app.conf.beat_schedule = {
         "task": "exchange_rates.fetch_ptax_rates",
         "schedule": crontab(hour=14, minute=0, day_of_week="1-5"),
     },
+    # Verifica cartões armazenados vencendo em 30/60 dias (diário às 09h).
+    "check-stored-card-expiry-daily": {
+        "task": "security.tasks.check_stored_card_expiry",
+        "schedule": crontab(hour=9, minute=0),
+    },
 }

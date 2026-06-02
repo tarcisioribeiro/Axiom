@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Wallet,
@@ -13,6 +15,8 @@ import {
   Shield,
   Library,
   Calendar,
+  GitFork,
+  ExternalLink,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -21,6 +25,8 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { containerVariants, itemVariants } from '@/lib/animations';
+import { STALE_TIMES } from '@/lib/query-client';
+import { knowledgeGraphService } from '@/services/knowledge-graph-service';
 
 interface ModuleCard {
   title: string;
@@ -32,6 +38,12 @@ interface ModuleCard {
 
 export default function Home() {
   const { t } = useTranslation();
+
+  const { data: graphData } = useQuery({
+    queryKey: ['knowledge-graph', 'summary'],
+    queryFn: () => knowledgeGraphService.getGraph(false),
+    staleTime: STALE_TIMES.DEFAULT_LIST,
+  });
 
   const modules: ModuleCard[] = [
     {
@@ -178,6 +190,43 @@ export default function Home() {
           ))}
         </motion.div>
       </div>
+
+      {/* Knowledge Graph Widget */}
+      <Link to="/intellect/knowledge-graph" className="block">
+        <Card className="border-primary/20 transition-all hover:border-primary hover:shadow-md">
+          <CardHeader className="pb-sm">
+            <CardTitle className="flex items-center gap-sm text-sm font-medium">
+              <GitFork className="h-4 w-4 text-primary" />
+              {t('pages.home.knowledgeGraph.title')}
+              <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-lg">
+              <div className="flex flex-col gap-xs">
+                <span className="text-2xl font-bold">
+                  {graphData?.nodes?.length ?? '—'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.home.knowledgeGraph.nodes')}
+                </span>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div className="flex flex-col gap-xs">
+                <span className="text-2xl font-bold">
+                  {graphData?.links?.length ?? '—'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {t('pages.home.knowledgeGraph.links')}
+                </span>
+              </div>
+              <p className="ml-auto text-xs text-muted-foreground">
+                {t('pages.home.knowledgeGraph.desc')}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Info Cards */}
       <motion.div
