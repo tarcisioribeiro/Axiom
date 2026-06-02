@@ -91,6 +91,12 @@ class ExpenseFilter(filters.FilterSet):
 
         self.filters["account_name"].extra["choices"] = ACCOUNT_NAMES
 
+    # Filter by source fixed expense template
+    fixed_expense_template = filters.NumberFilter(
+        field_name="fixed_expense_template__id",
+        help_text="Filter expenses by source fixed expense template ID",
+    )
+
     def filter_search(self, queryset, name, value):
         """Custom search filter for description"""
         if value:

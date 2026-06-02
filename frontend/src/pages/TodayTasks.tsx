@@ -1,5 +1,22 @@
-import { CheckCircle2, Moon, Sun, Sunset } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+/* eslint-disable max-lines */
+import {
+  CheckCircle2,
+  Moon,
+  Sun,
+  Sunset,
+  Timer,
+  Play,
+  Pause,
+  RotateCcw,
+} from 'lucide-react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LoadingState } from '@/components/common/LoadingState';
@@ -7,12 +24,152 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { TodayKanbanView } from '@/components/today-tasks/TodayKanbanView';
 import { TodayListView } from '@/components/today-tasks/TodayListView';
+import { Button } from '@/components/ui/button';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { useToast } from '@/hooks/use-toast';
 import { useTodayTasks } from '@/hooks/use-today-tasks';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'list' | 'kanban';
 const VIEW_MODE_KEY = 'todayTasks.viewMode';
+const POMODORO_CYCLES_KEY = 'todayTasks.pomodoroCycles';
+
+type PomodoroMode = 'focus' | 'shortBreak' | 'longBreak';
+
+const POMODORO_DURATIONS: Record<PomodoroMode, number> = {
+  focus: 25 * 60,
+  shortBreak: 5 * 60,
+  longBreak: 15 * 60,
+};
+
+function PomodoroTimer() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [mode, setMode] = useState<PomodoroMode>('focus');
+  const [secondsLeft, setSecondsLeft] = useState(POMODORO_DURATIONS.focus);
+  const [running, setRunning] = useState(false);
+  const [cycles, setCycles] = useState<number>(() => {
+    const stored = localStorage.getItem(POMODORO_CYCLES_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  });
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const total = POMODORO_DURATIONS[mode];
+  const progress = ((total - secondsLeft) / total) * 100;
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+  const timeString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  const handleComplete = useCallback(() => {
+    setRunning(false);
+    if (mode === 'focus') {
+      const newCycles = cycles + 1;
+      setCycles(newCycles);
+      localStorage.setItem(POMODORO_CYCLES_KEY, String(newCycles));
+      toast({ title: t('pages.todayTasks.pomodoroFocusDone') });
+    } else {
+      toast({ title: t('pages.todayTasks.pomodoroBreakDone') });
+    }
+  }, [mode, cycles, toast, t]);
+
+  useEffect(() => {
+    if (running) {
+      intervalRef.current = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current!);
+            handleComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [running, handleComplete]);
+
+  const switchMode = (newMode: PomodoroMode) => {
+    setRunning(false);
+    setMode(newMode);
+    setSecondsLeft(POMODORO_DURATIONS[newMode]);
+  };
+
+  const reset = () => {
+    setRunning(false);
+    setSecondsLeft(POMODORO_DURATIONS[mode]);
+  };
+
+  const ringColor =
+    mode === 'focus'
+      ? 'hsl(var(--primary))'
+      : mode === 'shortBreak'
+        ? 'hsl(var(--chart-2))'
+        : 'hsl(var(--warning))';
+
+  return (
+    <div className="flex items-center gap-md rounded-lg border bg-card px-lg py-md">
+      <div className="flex items-center gap-sm">
+        <Timer className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-muted-foreground">
+          {t('pages.todayTasks.pomodoroTitle')}
+        </span>
+      </div>
+      <div className="flex items-center gap-xs rounded-md border p-0.5">
+        {(['focus', 'shortBreak', 'longBreak'] as PomodoroMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => switchMode(m)}
+            className={cn(
+              'rounded px-sm py-xs text-xs transition-colors',
+              mode === m
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {t(`pages.todayTasks.pomodoroMode.${m}`)}
+          </button>
+        ))}
+      </div>
+      <CircularProgress value={progress} size={52} strokeWidth={4} color={ringColor}>
+        <span className="text-xs font-bold tabular-nums">{timeString}</span>
+      </CircularProgress>
+      <div className="flex items-center gap-xs">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setRunning((r) => !r)}
+          aria-label={
+            running
+              ? t('pages.todayTasks.pomodoroPause')
+              : t('pages.todayTasks.pomodoroStart')
+          }
+        >
+          {running ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={reset}
+          aria-label={t('pages.todayTasks.pomodoroReset')}
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+      {cycles > 0 && (
+        <span className="ml-auto text-xs text-muted-foreground">
+          {t('pages.todayTasks.pomodoroCycles', { count: cycles })}
+        </span>
+      )}
+    </div>
+  );
+}
 
 interface TodayTasksProps {
   embedded?: boolean;
@@ -144,6 +301,8 @@ export default function TodayTasks({ embedded = false }: TodayTasksProps) {
       <PageHeader title={t('pages.todayTasks.title')} icon={<CheckCircle2 />}>
         {viewToggle}
       </PageHeader>
+
+      <PomodoroTimer />
 
       <div className="flex items-center gap-lg rounded-lg border bg-card px-lg py-md">
         <CircularProgress

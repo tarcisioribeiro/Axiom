@@ -13,9 +13,17 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { Save, CheckCircle2, StickyNote, RefreshCw } from 'lucide-react';
+import {
+  Save,
+  CheckCircle2,
+  StickyNote,
+  RefreshCw,
+  ExternalLink,
+  AlertCircle,
+} from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingState } from '@/components/common/LoadingState';
@@ -49,6 +57,7 @@ import { appService } from '@/services/app-service';
 import { dailyReflectionsService } from '@/services/daily-reflections-service';
 import { membersService } from '@/services/members-service';
 import { taskInstancesService } from '@/services/task-instances-service';
+import { useNotificationsStore } from '@/stores/notifications-store';
 import {
   MOOD_CHOICES,
   type TaskInstance,
@@ -379,6 +388,11 @@ export default function DailyChecklist() {
 
   const completedTasks = cardsByStatus.done.length;
 
+  const { notifications } = useNotificationsStore();
+  const overdueTaskNotifications = notifications.filter(
+    (n) => n.notification_type === 'task_overdue' && !n.is_read
+  );
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -386,6 +400,17 @@ export default function DailyChecklist() {
   return (
     <PageContainer>
       <PageHeader title={t('pages.dailyChecklist.title')} icon={<CheckCircle2 />} />
+
+      {overdueTaskNotifications.length > 0 && (
+        <div className="flex items-center gap-sm rounded-lg border border-destructive/30 bg-destructive/10 px-md py-sm text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>
+            {t('pages.dailyChecklist.overdueBanner', {
+              count: overdueTaskNotifications.length,
+            })}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-md">
         <div className="flex items-end gap-sm">
@@ -467,7 +492,15 @@ export default function DailyChecklist() {
                   )}
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-sm sm:flex-row sm:items-center sm:justify-between">
+                <Link
+                  to="/planning/reflections"
+                  className="flex items-center gap-xs text-xs text-muted-foreground transition-colors hover:text-primary"
+                  onClick={() => setIsReflectionOpen(false)}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('pages.dailyChecklist.viewAllReflections')}
+                </Link>
                 <Button variant="outline" onClick={() => setIsReflectionOpen(false)}>
                   {t('common.actions.close')}
                 </Button>
@@ -525,6 +558,33 @@ export default function DailyChecklist() {
           </DragOverlay>
         </DndContext>
       )}
+
+      {/* End-of-day reflection prompt when all tasks are done (#244) */}
+      {cards.length > 0 &&
+        cardsByStatus.todo.length === 0 &&
+        cardsByStatus.doing.length === 0 &&
+        cardsByStatus.done.length === cards.length &&
+        !reflection.trim() && (
+          <div className="flex items-center gap-md rounded-lg border border-success/30 bg-success/5 px-md py-md">
+            <CheckCircle2 className="h-6 w-6 shrink-0 text-success" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {t('pages.dailyChecklist.allDone')}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t('pages.dailyChecklist.reflectionPrompt')}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsReflectionOpen(true)}
+            >
+              <StickyNote className="mr-xs h-3.5 w-3.5" />
+              {t('pages.dailyChecklist.addReflection')}
+            </Button>
+          </div>
+        )}
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving} size="lg">
