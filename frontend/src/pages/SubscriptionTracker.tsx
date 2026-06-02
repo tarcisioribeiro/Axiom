@@ -19,18 +19,21 @@ import { fixedExpensesService } from '@/services/fixed-expenses-service';
 import type { FixedExpense } from '@/types';
 
 const SUBSCRIPTION_CATEGORIES = new Set([
-  'subscription',
-  'streaming',
-  'software',
-  'services',
+  'digital signs',
+  'entertainment',
+  'bills and services',
 ]);
 
-type SubscriptionGroup = 'streaming' | 'software' | 'services' | 'other';
+type SubscriptionGroup =
+  | 'digital_signs'
+  | 'entertainment'
+  | 'bills_and_services'
+  | 'other';
 
 function getGroup(category: string): SubscriptionGroup {
-  if (category === 'streaming') return 'streaming';
-  if (category === 'software') return 'software';
-  if (category === 'services') return 'services';
+  if (category === 'digital signs') return 'digital_signs';
+  if (category === 'entertainment') return 'entertainment';
+  if (category === 'bills and services') return 'bills_and_services';
   return 'other';
 }
 
@@ -61,9 +64,7 @@ export default function SubscriptionTracker() {
   const subscriptions = useMemo<FixedExpense[]>(() => {
     const all: FixedExpense[] = fixedExpensesQuery.data ?? [];
     return all.filter(
-      (e) =>
-        e.is_active &&
-        (SUBSCRIPTION_CATEGORIES.has(e.category) || e.payment_method === 'credit_card')
+      (e) => e.is_active && (SUBSCRIPTION_CATEGORIES.has(e.category) || !!e.credit_card)
     );
   }, [fixedExpensesQuery.data]);
 
@@ -74,9 +75,9 @@ export default function SubscriptionTracker() {
 
   const grouped = useMemo(() => {
     const map: Record<SubscriptionGroup, FixedExpense[]> = {
-      streaming: [],
-      software: [],
-      services: [],
+      digital_signs: [],
+      entertainment: [],
+      bills_and_services: [],
       other: [],
     };
     for (const s of subscriptions) {

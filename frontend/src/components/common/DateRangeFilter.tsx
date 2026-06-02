@@ -23,7 +23,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       <DatePicker
         value={startDate}
         onChange={onStartChange}
-        placeholder={t('common.filters.fromDate')}
+        placeholder={t('common.actions.filters.fromDate')}
         clearable
       />
       <ArrowRight
@@ -33,7 +33,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
       <DatePicker
         value={endDate}
         onChange={onEndChange}
-        placeholder={t('common.filters.toDate')}
+        placeholder={t('common.actions.filters.toDate')}
         clearable
       />
     </div>

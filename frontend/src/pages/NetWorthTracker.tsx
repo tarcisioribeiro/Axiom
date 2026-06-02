@@ -7,6 +7,7 @@ import {
   Vault as VaultIcon,
   CreditCard,
   HandCoins,
+  AlertTriangle,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,7 @@ import { PageContainer } from '@/components/common/PageContainer';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useChartColors } from '@/lib/chart-colors';
 import { formatCurrency } from '@/lib/formatters';
 import { STALE_TIMES } from '@/lib/query-client';
 import { cn } from '@/lib/utils';
@@ -32,25 +34,25 @@ export default function NetWorthTracker() {
 
   const accountsQuery = useQuery({
     queryKey: ['accounts', 'netWorth'],
-    queryFn: () => accountsService.getAll(),
+    queryFn: () => accountsService.getAllPages(),
     staleTime: STALE_TIMES.ACCOUNT_BALANCES,
   });
 
   const vaultsQuery = useQuery({
     queryKey: ['vaults', 'netWorth'],
-    queryFn: () => vaultsService.getAll(),
+    queryFn: () => vaultsService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const loansQuery = useQuery({
     queryKey: ['loans', 'netWorth'],
-    queryFn: () => loansService.getAll(),
+    queryFn: () => loansService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
   const creditCardsQuery = useQuery({
     queryKey: ['creditCards', 'netWorth'],
-    queryFn: () => creditCardsService.getAll(),
+    queryFn: () => creditCardsService.getAllPages(),
     staleTime: STALE_TIMES.DEFAULT_LIST,
   });
 
@@ -62,10 +64,12 @@ export default function NetWorthTracker() {
 
   const {
     positiveAccounts,
+    overdraftAccounts,
     totalBankAssets,
     totalVaultAssets,
     totalLoanLiabilities,
     totalCreditCardLiabilities,
+    totalOverdraftLiabilities,
     totalAssets,
     totalLiabilities,
     netWorth,
@@ -76,7 +80,12 @@ export default function NetWorthTracker() {
     const cards: CreditCardType[] = creditCardsQuery.data ?? [];
 
     const positiveAccts = accounts.filter((a) => parseFloat(a.balance) > 0);
+    const overdraftAccts = accounts.filter((a) => parseFloat(a.balance) < 0);
     const bankAssets = positiveAccts.reduce((s, a) => s + parseFloat(a.balance), 0);
+    const overdraftLiabilities = overdraftAccts.reduce(
+      (s, a) => s + Math.abs(parseFloat(a.balance)),
+      0
+    );
 
     const vaultAssets = vaults
       .filter((v) => v.is_active)
@@ -89,19 +98,23 @@ export default function NetWorthTracker() {
     const cardLiabilities = cards.reduce((s, c) => s + (c.used_credit ?? 0), 0);
 
     const assets = bankAssets + vaultAssets;
-    const liabilities = loanLiabilities + cardLiabilities;
+    const liabilities = loanLiabilities + cardLiabilities + overdraftLiabilities;
 
     return {
       positiveAccounts: positiveAccts,
+      overdraftAccounts: overdraftAccts,
       totalBankAssets: bankAssets,
       totalVaultAssets: vaultAssets,
       totalLoanLiabilities: loanLiabilities,
       totalCreditCardLiabilities: cardLiabilities,
+      totalOverdraftLiabilities: overdraftLiabilities,
       totalAssets: assets,
       totalLiabilities: liabilities,
       netWorth: assets - liabilities,
     };
   }, [accountsQuery.data, vaultsQuery.data, loansQuery.data, creditCardsQuery.data]);
+
+  const chartColors = useChartColors();
 
   const pieData = useMemo(() => {
     const data = [];
@@ -117,16 +130,18 @@ export default function NetWorthTracker() {
     if (totalCreditCardLiabilities > 0) {
       data.push({ name: t('netWorth.creditCards'), value: totalCreditCardLiabilities });
     }
+    if (totalOverdraftLiabilities > 0) {
+      data.push({ name: t('netWorth.overdraft'), value: totalOverdraftLiabilities });
+    }
     return data;
   }, [
     totalBankAssets,
     totalVaultAssets,
     totalLoanLiabilities,
     totalCreditCardLiabilities,
+    totalOverdraftLiabilities,
     t,
   ]);
-
-  const PIE_COLORS = ['#22c55e', '#3b82f6', '#ef4444', '#f97316'];
 
   if (isLoading) return <LoadingState fullScreen />;
 
@@ -187,7 +202,7 @@ export default function NetWorthTracker() {
                       {pieData.map((_, index) => (
                         <Cell
                           key={index}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
+                          fill={chartColors[index % chartColors.length]}
                         />
                       ))}
                     </Pie>
@@ -285,6 +300,29 @@ export default function NetWorthTracker() {
                     </span>
                   </div>
                 )}
+                {totalOverdraftLiabilities > 0 && (
+                  <div className="flex items-center justify-between rounded-lg bg-destructive/5 p-sm">
+                    <div className="flex items-center gap-sm">
+                      <AlertTriangle className="h-4 w-4 text-destructive" />
+                      <span className="text-sm">{t('netWorth.overdraft')}</span>
+                    </div>
+                    <span className="font-semibold text-destructive">
+                      {formatCurrency(totalOverdraftLiabilities)}
+                    </span>
+                  </div>
+                )}
+                {totalOverdraftLiabilities > 0 &&
+                  overdraftAccounts.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between px-sm text-xs text-muted-foreground"
+                    >
+                      <span>{a.account_name}</span>
+                      <span className="font-medium text-destructive">
+                        {formatCurrency(parseFloat(a.balance))}
+                      </span>
+                    </div>
+                  ))}
                 {totalLiabilities === 0 && (
                   <p
                     className={cn(
