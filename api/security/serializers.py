@@ -747,3 +747,66 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["created_at"]
+
+
+# ============================================================================
+# PASSWORD HISTORY SERIALIZER
+# ============================================================================
+
+
+class PasswordHistorySerializer(serializers.ModelSerializer):
+    changed_by_username = serializers.CharField(
+        source="changed_by.username", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        from security.models import PasswordHistory
+
+        model = PasswordHistory
+        fields = ["id", "changed_at", "changed_by_username", "created_at"]
+        read_only_fields = fields
+
+    # alias: changed_at is created_at
+    changed_at = serializers.DateTimeField(source="created_at", read_only=True)
+
+
+# ============================================================================
+# VAULT HEALTH SNAPSHOT SERIALIZER
+# ============================================================================
+
+
+class VaultHealthSnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        from security.models import VaultHealthSnapshot
+
+        model = VaultHealthSnapshot
+        fields = [
+            "id",
+            "score",
+            "weak_passwords",
+            "medium_passwords",
+            "duplicate_passwords",
+            "outdated_passwords",
+            "total_passwords",
+            "snapshot_date",
+        ]
+        read_only_fields = fields
+
+
+# ============================================================================
+# VAULT ALERT CONFIG SERIALIZER
+# ============================================================================
+
+
+class VaultAlertConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        from security.models import VaultAlertConfig
+
+        model = VaultAlertConfig
+        fields = [
+            "id",
+            "alert_on_new_ip",
+            "alert_on_failed_unlock",
+            "alert_on_reveal",
+            "failed_unlock_threshold",
+        ]

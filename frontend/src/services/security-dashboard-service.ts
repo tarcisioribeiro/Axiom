@@ -65,6 +65,32 @@ export interface SecurityDashboardStats {
   }>;
 }
 
+export interface VaultHealthSnapshot {
+  id: number;
+  score: number;
+  weak_passwords: number;
+  medium_passwords: number;
+  duplicate_passwords: number;
+  outdated_passwords: number;
+  total_passwords: number;
+  snapshot_date: string;
+}
+
+export interface VaultAlertConfig {
+  id?: number;
+  alert_on_new_ip: boolean;
+  alert_on_failed_unlock: boolean;
+  alert_on_reveal: boolean;
+  failed_unlock_threshold: number;
+}
+
+export interface PasswordHistoryEntry {
+  id: number;
+  changed_at: string;
+  changed_by_username: string | null;
+  created_at: string;
+}
+
 class SecurityDashboardService {
   async getStats(): Promise<SecurityDashboardStats> {
     return await apiClient.get<SecurityDashboardStats>(
@@ -75,6 +101,38 @@ class SecurityDashboardService {
   async getHealthReport(): Promise<VaultHealthReport> {
     return await apiClient.get<VaultHealthReport>(
       API_CONFIG.ENDPOINTS.SECURITY_VAULT_HEALTH
+    );
+  }
+
+  async getVaultHealthHistory(): Promise<VaultHealthSnapshot[]> {
+    const res = await apiClient.get<{ results: VaultHealthSnapshot[] }>(
+      '/api/v1/security/vault-health-history/'
+    );
+    return res.results ?? (res as unknown as VaultHealthSnapshot[]);
+  }
+
+  async getPasswordHistory(passwordId: number): Promise<PasswordHistoryEntry[]> {
+    const res = await apiClient.get<{ results: PasswordHistoryEntry[] }>(
+      `/api/v1/security/passwords/${passwordId}/history/`
+    );
+    return res.results ?? (res as unknown as PasswordHistoryEntry[]);
+  }
+
+  async verifyTOTP(passwordId: number, code: string): Promise<{ valid: boolean }> {
+    return await apiClient.post<{ valid: boolean }>(
+      `/api/v1/security/passwords/${passwordId}/totp/verify/`,
+      { code }
+    );
+  }
+
+  async getAlertConfig(): Promise<VaultAlertConfig> {
+    return await apiClient.get<VaultAlertConfig>('/api/v1/security/alert-config/');
+  }
+
+  async updateAlertConfig(data: Partial<VaultAlertConfig>): Promise<VaultAlertConfig> {
+    return await apiClient.put<VaultAlertConfig>(
+      '/api/v1/security/alert-config/',
+      data
     );
   }
 }

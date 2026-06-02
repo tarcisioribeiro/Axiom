@@ -1952,6 +1952,31 @@ class RedeemShareTokenView(APIView):
             user_agent=request.META.get("HTTP_USER_AGENT", ""),
         )
 
+        # #203 — notificar o criador do token in-app
+        if token_obj.created_by:
+            try:
+                from members.models import Member
+                from notifications.models import Notification
+
+                creator_member = Member.objects.get(user=token_obj.created_by)
+                accessed_at = timezone.now().strftime("%d/%m/%Y às %H:%M")
+                Notification.objects.get_or_create(
+                    owner=creator_member,
+                    notification_type="credential_share_accessed",
+                    content_type="CredentialShareToken",
+                    object_id=token_obj.id,
+                    defaults={
+                        "title": "Credencial acessada via link compartilhado",
+                        "message": (
+                            f'Sua senha "{token_obj.password.title}" foi '
+                            f"acessada via link em {accessed_at}."
+                        ),
+                        "is_read": False,
+                    },
+                )
+            except Exception:
+                logger.exception("Falha ao criar notificação de share_token")
+
         pw = token_obj.password
         return Response(
             {
@@ -2256,7 +2281,7 @@ class HibpCheckView(APIView):
                 url,
                 headers={"Add-Padding": "true", "User-Agent": "Axiom-App/1.0"},
             )
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:  # nosec B310
                 body = resp.read().decode("utf-8")
             return Response({"suffixes": body})
         except Exception:
@@ -2264,3 +2289,124 @@ class HibpCheckView(APIView):
                 {"detail": "Serviço HIBP indisponível no momento."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+
+
+# ============================================================================
+# PASSWORD HISTORY VIEWS
+# ============================================================================
+
+
+class PasswordHistoryListView(VaultLockedMixin, generics.ListAPIView):
+    """GET /api/v1/security/passwords/<pk>/history/."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get_serializer_class(self):
+        from security.serializers import PasswordHistorySerializer
+
+        return PasswordHistorySerializer
+
+    def get_queryset(self):
+        from members.models import Member
+        from security.models import PasswordHistory
+
+        pk = self.kwargs["pk"]
+        try:
+            member = Member.objects.get(user=self.request.user)
+        except Member.DoesNotExist:
+            return PasswordHistory.objects.none()
+        return PasswordHistory.objects.filter(
+            password__pk=pk, password__owner=member
+        )[:10]
+
+
+# ============================================================================
+# TOTP VERIFY VIEW
+# ============================================================================
+
+
+class TOTPVerifyView(VaultLockedMixin, APIView):
+    """POST /api/v1/security/passwords/<pk>/totp/verify/."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        import pyotp
+
+        from members.models import Member
+
+        code = request.data.get("code", "")
+        try:
+            member = Member.objects.get(user=request.user)
+            pw = Password.objects.get(pk=pk, owner=member)
+        except (Member.DoesNotExist, Password.DoesNotExist):
+            return Response({"detail": "Não encontrado."}, status=404)
+
+        if not pw.totp_enabled or not pw._totp_secret:
+            return Response({"valid": False, "error": "TOTP não habilitado."})
+
+        secret = pw.totp_secret
+        totp = pyotp.TOTP(secret)
+        valid = totp.verify(code)
+        return Response({"valid": valid})
+
+
+# ============================================================================
+# VAULT HEALTH SNAPSHOT / HISTORY VIEWS
+# ============================================================================
+
+
+class VaultHealthHistoryView(VaultLockedMixin, generics.ListAPIView):
+    """GET /api/v1/security/vault-health-history/ — histórico de scores."""
+
+    permission_classes = [IsAuthenticated, GlobalDefaultPermission]
+
+    def get_serializer_class(self):
+        from security.serializers import VaultHealthSnapshotSerializer
+
+        return VaultHealthSnapshotSerializer
+
+    def get_queryset(self):
+        from members.models import Member
+        from security.models import VaultHealthSnapshot
+
+        try:
+            member = Member.objects.get(user=self.request.user)
+        except Member.DoesNotExist:
+            return VaultHealthSnapshot.objects.none()
+        return VaultHealthSnapshot.objects.filter(owner=member)[:30]
+
+
+# ============================================================================
+# VAULT ALERT CONFIG VIEW
+# ============================================================================
+
+
+class VaultAlertConfigView(APIView):
+    """GET/PUT /api/v1/security/alert-config/."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_member(self, request):
+        from members.models import Member
+
+        return Member.objects.get(user=request.user)
+
+    def get(self, request):
+        from security.models import VaultAlertConfig
+        from security.serializers import VaultAlertConfigSerializer
+
+        member = self._get_member(request)
+        config, _ = VaultAlertConfig.objects.get_or_create(owner=member)
+        return Response(VaultAlertConfigSerializer(config).data)
+
+    def put(self, request):
+        from security.models import VaultAlertConfig
+        from security.serializers import VaultAlertConfigSerializer
+
+        member = self._get_member(request)
+        config, _ = VaultAlertConfig.objects.get_or_create(owner=member)
+        s = VaultAlertConfigSerializer(config, data=request.data, partial=True)
+        s.is_valid(raise_exception=True)
+        s.save()
+        return Response(s.data)

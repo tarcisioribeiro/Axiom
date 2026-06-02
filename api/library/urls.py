@@ -1,9 +1,8 @@
 from django.urls import path
 
-from library.views import (  # noqa: E501
+from library.views import (
     AuthorDetailView,
     AuthorListCreateView,
-    IntellectBadgeListView,
     AuthorPhotoStreamView,
     BookCoverStreamView,
     BookDetailView,
@@ -26,6 +25,7 @@ from library.views import (  # noqa: E501
     CourseRetrieveUpdateDestroyView,
     CourseSessionListCreateView,
     CourseSessionRetrieveUpdateDestroyView,
+    IntellectBadgeListView,
     KnowledgeGraphView,
     KnowledgeLinkListCreateView,
     KnowledgeLinkRetrieveUpdateDestroyView,

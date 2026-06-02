@@ -1,8 +1,10 @@
-from celery import shared_task
+from typing import Any, Callable
+
 from django.utils import timezone
 
+from celery import shared_task
 
-BADGE_RULES = [
+BADGE_RULES: list[dict[str, Any]] = [
     {
         "code": "first_book",
         "level": "bronze",
@@ -91,9 +93,7 @@ def _compute_reading_streak(member):
 
     today = timezone.now().date()
     readings = (
-        Reading.objects.filter(
-            owner=member, deleted_at__isnull=True
-        )
+        Reading.objects.filter(owner=member, deleted_at__isnull=True)
         .values_list("reading_date", flat=True)
         .distinct()
         .order_by("-reading_date")
@@ -113,11 +113,9 @@ def _compute_reading_streak(member):
 
 
 def _compute_knowledge_nodes(member):
-    from library.models import Book, Course, Skill, Summary, BookHighlight
+    from library.models import Book, BookHighlight, Course, Skill, Summary
 
-    books = Book.objects.filter(
-        owner=member, deleted_at__isnull=True
-    ).count()
+    books = Book.objects.filter(owner=member, deleted_at__isnull=True).count()
     courses = Course.objects.filter(
         owner=member, deleted_at__isnull=True
     ).count()
@@ -173,7 +171,10 @@ def award_intellect_badges_for_member(self, member_id: int) -> dict:
 
         awarded = []
         for rule in BADGE_RULES:
-            if rule["check"](stats):
+            check_fn: Callable[[dict[str, Any]], bool] = rule[
+                "check"
+            ]  # type: ignore[assignment]
+            if check_fn(stats):
                 _, created = IntellectBadge.objects.get_or_create(
                     owner=member,
                     code=rule["code"],

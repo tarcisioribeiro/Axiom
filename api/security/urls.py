@@ -13,14 +13,15 @@ from security.vault_config import (
 from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAccount/Archive/ActivityLog/Dashboard views
     ActivityLogExportCSVView,
     ActivityLogListView,
-    HibpCheckView,
     ArchiveDetailView,
     ArchiveDownloadView,
     ArchiveListCreateView,
     ArchiveRevealView,
+    HibpCheckView,
     PasswordDetailView,
     PasswordFavoriteToggleView,
     PasswordGenerateView,
+    PasswordHistoryListView,
     PasswordImportConfirmView,
     PasswordImportPreviewView,
     PasswordListCreateView,
@@ -35,7 +36,10 @@ from security.views import (  # noqa: E501  # Password/StoredCard/StoredBankAcco
     StoredCreditCardDetailView,
     StoredCreditCardListCreateView,
     StoredCreditCardRevealView,
+    TOTPVerifyView,
+    VaultAlertConfigView,
     VaultExportZipView,
+    VaultHealthHistoryView,
     VaultHealthReportView,
 )
 
@@ -201,5 +205,29 @@ urlpatterns = [
         "hibp-check/",
         HibpCheckView.as_view(),
         name="hibp-check",
+    ),
+    # Password History
+    path(
+        "passwords/<int:pk>/history/",
+        PasswordHistoryListView.as_view(),
+        name="password-history",
+    ),
+    # TOTP verify
+    path(
+        "passwords/<int:pk>/totp/verify/",
+        TOTPVerifyView.as_view(),
+        name="password-totp-verify",
+    ),
+    # Vault Health History (score evolution)
+    path(
+        "vault-health-history/",
+        VaultHealthHistoryView.as_view(),
+        name="vault-health-history",
+    ),
+    # Vault Alert Config
+    path(
+        "alert-config/",
+        VaultAlertConfigView.as_view(),
+        name="vault-alert-config",
     ),
 ]

@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Plus,
@@ -22,6 +23,8 @@ import {
   Tag,
   ShieldAlert,
   ShieldCheck,
+  History,
+  Shield,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -73,6 +76,7 @@ import { passwordSchema } from '@/lib/validations';
 import { hibpService } from '@/services/hibp-service';
 import { membersService } from '@/services/members-service';
 import { passwordsService } from '@/services/passwords-service';
+import { securityDashboardService } from '@/services/security-dashboard-service';
 import type { Password, PasswordFormData, Member } from '@/types';
 import { PASSWORD_CATEGORIES } from '@/types';
 import { getErrorMessage } from '@/utils/error-utils';
@@ -128,10 +132,7 @@ const CATEGORY_CONFIG: Record<
   },
 };
 
-const CATEGORY_CONFIG_DETAIL: Record<
-  string,
-  { badge: string; avatar: string }
-> = {
+const CATEGORY_CONFIG_DETAIL: Record<string, { badge: string; avatar: string }> = {
   social: {
     badge: 'bg-info/10 text-info border-info/25',
     avatar: 'bg-info/10 text-info ring-1 ring-info/25',
@@ -195,11 +196,19 @@ function DetailPanel({
 }: DetailPanelProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const catConfig = CATEGORY_CONFIG_DETAIL[password.category] ?? CATEGORY_CONFIG_DETAIL.other;
+  const catConfig =
+    CATEGORY_CONFIG_DETAIL[password.category] ?? CATEGORY_CONFIG_DETAIL.other;
+  const [activeTab, setActiveTab] = useState<'details' | 'history'>('details');
   const [hibpState, setHibpState] = useState<{
     status: 'idle' | 'checking' | 'safe' | 'breached';
     count: number;
   }>({ status: 'idle', count: 0 });
+
+  const { data: historyEntries, isLoading: isHistoryLoading } = useQuery({
+    queryKey: ['password-history', password.id],
+    queryFn: () => securityDashboardService.getPasswordHistory(password.id),
+    enabled: activeTab === 'history',
+  });
 
   const handleHibpCheck = async () => {
     if (!revealedPassword) return;
@@ -226,7 +235,7 @@ function DetailPanel({
         <div className="flex min-w-0 items-center gap-3">
           <div
             className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-bold',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-base font-bold',
               catConfig.avatar
             )}
           >
@@ -234,104 +243,193 @@ function DetailPanel({
           </div>
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold">{password.title}</h2>
-            <p className="truncate text-sm text-muted-foreground">{password.username}</p>
+            <p className="truncate text-sm text-muted-foreground">
+              {password.username}
+            </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onClose}
-          className="shrink-0"
-          aria-label={t('common.actions.close')}
+        <div className="flex items-center gap-xs">
+          {password.totp_enabled && (
+            <Shield className="h-4 w-4 text-success" aria-label="TOTP habilitado" />
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onClose}
+            className="shrink-0"
+            aria-label={t('common.actions.close')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b">
+        <button
+          type="button"
+          className={cn(
+            'flex flex-1 items-center justify-center gap-xs px-md py-sm text-sm font-medium transition-colors',
+            activeTab === 'details'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          onClick={() => setActiveTab('details')}
         >
-          <X className="h-4 w-4" />
-        </Button>
+          <FileText className="h-3.5 w-3.5" />
+          {t('common.actions.details', { defaultValue: 'Detalhes' })}
+        </button>
+        <button
+          type="button"
+          className={cn(
+            'flex flex-1 items-center justify-center gap-xs px-md py-sm text-sm font-medium transition-colors',
+            activeTab === 'history'
+              ? 'border-b-2 border-primary text-primary'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+          onClick={() => setActiveTab('history')}
+        >
+          <History className="h-3.5 w-3.5" />
+          {t('pages.passwords.history', { defaultValue: 'Histórico' })}
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-lg">
-        <div className="space-y-md">
-          <div className="flex items-center gap-sm">
-            <Tag className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {t('common.fields.category')}
-            </span>
-            <Badge
-              variant="outline"
-              className={cn('ml-auto shrink-0 text-xs', catConfig.badge)}
-            >
-              {t(`pages.passwords.categories.${password.category}`, {
-                defaultValue: password.category_display,
-              })}
-            </Badge>
-          </div>
-
-          {password.site && (
-            <div className="flex items-center gap-sm">
-              <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {t('common.fields.site')}
-              </span>
-              <a
-                href={password.site}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto flex min-w-0 items-center gap-xs truncate text-sm hover:underline"
-              >
-                <span className="truncate">{password.site}</span>
-                <ExternalLink className="h-3 w-3 shrink-0" />
-              </a>
-            </div>
-          )}
-
-          <div className="flex items-center gap-sm">
-            <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {t('common.fields.username')}
-            </span>
-            <span className="ml-auto truncate text-sm">{password.username}</span>
-          </div>
-
-          <div className="rounded-lg border bg-muted/30 p-md">
-            <p className="mb-sm text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {t('auth.login.password')}
-            </p>
-            {revealedPassword ? (
-              <div className="flex items-center gap-sm">
-                <code className="flex-1 font-mono text-sm">{revealedPassword}</code>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onCopy(password.id)}
-                  aria-label={t('common.actions.copy')}
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
+        {activeTab === 'history' ? (
+          <div className="space-y-sm">
+            {isHistoryLoading ? (
+              <div className="flex justify-center py-lg">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : !historyEntries || historyEntries.length === 0 ? (
+              <div className="flex flex-col items-center gap-sm py-lg text-center">
+                <History className="h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">
+                  {t('pages.passwords.noHistory', {
+                    defaultValue: 'Nenhuma alteração de senha registrada.',
+                  })}
+                </p>
               </div>
             ) : (
-              <p className="font-mono text-sm text-muted-foreground">••••••••</p>
+              historyEntries.map((entry, idx) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between rounded-lg border bg-muted/20 px-md py-sm"
+                >
+                  <div className="flex items-center gap-sm">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">••••••••</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(entry.created_at, 'dd/MM/yyyy HH:mm')}
+                        {entry.changed_by_username
+                          ? ` · ${entry.changed_by_username}`
+                          : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
+        ) : (
+          <div className="space-y-md">
+            <div className="flex items-center gap-sm">
+              <Tag className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {t('common.fields.category')}
+              </span>
+              <Badge
+                variant="outline"
+                className={cn('ml-auto shrink-0 text-xs', catConfig.badge)}
+              >
+                {t(`pages.passwords.categories.${password.category}`, {
+                  defaultValue: password.category_display,
+                })}
+              </Badge>
+            </div>
 
-          {password.notes && (
-            <div className="space-y-xs">
+            {password.site && (
               <div className="flex items-center gap-sm">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  {t('common.fields.notes')}
+                  {t('common.fields.site')}
+                </span>
+                <a
+                  href={password.site}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto flex min-w-0 items-center gap-xs truncate text-sm hover:underline"
+                >
+                  <span className="truncate">{password.site}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              </div>
+            )}
+
+            <div className="flex items-center gap-sm">
+              <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {t('common.fields.username')}
+              </span>
+              <span className="ml-auto truncate text-sm">{password.username}</span>
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-md">
+              <p className="mb-sm text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {t('auth.login.password')}
+              </p>
+              {revealedPassword ? (
+                <div className="flex items-center gap-sm">
+                  <code className="flex-1 font-mono text-sm">{revealedPassword}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onCopy(password.id)}
+                    aria-label={t('common.actions.copy')}
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <p className="font-mono text-sm text-muted-foreground">••••••••</p>
+              )}
+            </div>
+
+            {password.totp_enabled && (
+              <div className="flex items-center gap-sm rounded-lg border border-success/30 bg-success/5 px-md py-sm">
+                <Shield className="h-4 w-4 shrink-0 text-success" />
+                <span className="text-sm text-success">
+                  {t('pages.passwords.totpEnabled', {
+                    defaultValue: 'TOTP (2FA) habilitado',
+                  })}
                 </span>
               </div>
-              <p className="rounded-lg bg-muted/30 p-sm text-sm">{password.notes}</p>
-            </div>
-          )}
+            )}
 
-          <div className="flex items-center gap-sm border-t pt-md text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5 shrink-0" />
-            <span>
-              {t('common.fields.createdAt')}{' '}
-              {formatDate(password.created_at, 'dd/MM/yyyy HH:mm')}
-            </span>
+            {password.notes && (
+              <div className="space-y-xs">
+                <div className="flex items-center gap-sm">
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {t('common.fields.notes')}
+                  </span>
+                </div>
+                <p className="rounded-lg bg-muted/30 p-sm text-sm">{password.notes}</p>
+              </div>
+            )}
+
+            <div className="flex items-center gap-sm border-t pt-md text-xs text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
+              <span>
+                {t('common.fields.createdAt')}{' '}
+                {formatDate(password.created_at, 'dd/MM/yyyy HH:mm')}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-sm border-t p-lg">
@@ -456,6 +554,8 @@ export default function Passwords() {
       category: 'other',
       notes: '',
       owner: 0,
+      totp_enabled: false,
+      totp_secret: '',
     },
   });
 
@@ -516,6 +616,8 @@ export default function Passwords() {
       category: password.category,
       notes: password.notes || '',
       owner: password.owner,
+      totp_enabled: password.totp_enabled ?? false,
+      totp_secret: '',
     });
     setIsDialogOpen(true);
   };
@@ -674,18 +776,8 @@ export default function Passwords() {
           />
         </FilterBar>
 
-        <div
-          className={cn(
-            'flex gap-lg',
-            detailPassword ? 'lg:flex-row' : 'flex-col'
-          )}
-        >
-          <div
-            className={cn(
-              'min-w-0',
-              detailPassword ? 'lg:w-[40%]' : 'w-full'
-            )}
-          >
+        <div className={cn('flex gap-lg', detailPassword ? 'lg:flex-row' : 'flex-col')}>
+          <div className={cn('min-w-0', detailPassword ? 'lg:w-[40%]' : 'w-full')}>
             <div className="grid gap-md md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {filteredPasswords.map((password) => {
                 const catConfig =
@@ -859,7 +951,7 @@ export default function Passwords() {
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 className="hidden lg:block lg:w-[60%] lg:shrink-0"
               >
-                <div className="sticky top-4 rounded-xl border bg-card shadow-lg">
+                <div className="sticky top-4 rounded-lg border bg-card shadow-lg">
                   <DetailPanel
                     password={detailPassword}
                     revealedPassword={revealedPasswords.get(detailPassword.id)}
@@ -884,7 +976,7 @@ export default function Passwords() {
               if (!open) setDetailPassword(null);
             }}
           >
-            <DialogContent className="lg:hidden sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] lg:hidden">
               <DetailPanel
                 password={detailPassword}
                 revealedPassword={revealedPasswords.get(detailPassword.id)}
@@ -1066,6 +1158,47 @@ export default function Passwords() {
                 />
                 {errors.notes && (
                   <p className="text-sm text-destructive">{errors.notes.message}</p>
+                )}
+              </div>
+
+              {/* TOTP (#195) */}
+              <div className="rounded-lg border bg-muted/20 p-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-sm">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <Label className="cursor-pointer" htmlFor="totp_enabled">
+                      {t('pages.passwords.totpEnable', {
+                        defaultValue: 'Habilitar TOTP (2FA)',
+                      })}
+                    </Label>
+                  </div>
+                  <input
+                    id="totp_enabled"
+                    type="checkbox"
+                    {...register('totp_enabled')}
+                    className="h-4 w-4 rounded border accent-primary"
+                  />
+                </div>
+                {watch('totp_enabled') && (
+                  <div className="mt-sm space-y-xs">
+                    <Label htmlFor="totp_secret">
+                      {t('pages.passwords.totpSecret', {
+                        defaultValue: 'Segredo TOTP',
+                      })}
+                    </Label>
+                    <Input
+                      id="totp_secret"
+                      {...register('totp_secret')}
+                      placeholder="JBSWY3DPEHPK3PXP"
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('pages.passwords.totpSecretHint', {
+                        defaultValue:
+                          'Cole o segredo base32 do serviço para gerar códigos TOTP.',
+                      })}
+                    </p>
+                  </div>
                 )}
               </div>
 
